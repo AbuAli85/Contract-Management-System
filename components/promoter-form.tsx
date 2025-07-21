@@ -279,7 +279,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="name_en"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
                   <FormItem>
                     <ShadcnFormLabel>Name (English)</ShadcnFormLabel>
                     <FormControl>
@@ -296,7 +296,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="name_ar"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
                   <FormItem>
                     <ShadcnFormLabel>الاسم (عربي)</ShadcnFormLabel>
                     <FormControl>
@@ -316,7 +316,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
             <FormField
               control={form.control}
               name="id_card_number"
-              render={({ field }) => (
+              render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
                 <FormItem>
                   <ShadcnFormLabel>ID Card Number / رقم البطاقة الشخصية</ShadcnFormLabel>
                   <FormControl>
@@ -335,7 +335,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof Select> }) => (
                   <FormItem>
                     <ShadcnFormLabel>Status / الحالة</ShadcnFormLabel>
                     <Select
@@ -370,7 +370,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="id_card_image"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof ImageUploadField> }) => (
                   <FormItem>
                     <ShadcnFormLabel htmlFor={field.name}>
                       ID Card Image / صورة البطاقة
@@ -378,12 +378,13 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                     <FormControl>
                       <ImageUploadField
                         id={field.name}
-                        field={field}
+                        value={field.value as File | null | undefined}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
                         initialImageUrl={form.watch("existing_id_card_url")}
                         disabled={formActuallyDisabled}
-                        onImageRemove={() => {
-                          form.setValue("existing_id_card_url", null)
-                        }}
+                        onImageRemove={() => form.setValue("existing_id_card_url", null)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -393,7 +394,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="id_card_expiry_date"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof DatePickerWithPresetsField> }) => (
                   <FormItem>
                     <ShadcnFormLabel>ID Card Expiry Date / تاريخ انتهاء البطاقة</ShadcnFormLabel>
                     <FormControl>
@@ -421,7 +422,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="passport_image"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof ImageUploadField> }) => (
                   <FormItem>
                     <ShadcnFormLabel htmlFor={field.name}>
                       Passport Image / صورة الجواز
@@ -429,12 +430,13 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                     <FormControl>
                       <ImageUploadField
                         id={field.name}
-                        field={field}
+                        value={field.value as File | null | undefined}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
                         initialImageUrl={form.watch("existing_passport_url")}
                         disabled={formActuallyDisabled}
-                        onImageRemove={() => {
-                          form.setValue("existing_passport_url", null)
-                        }}
+                        onImageRemove={() => form.setValue("existing_passport_url", null)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -444,7 +446,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="passport_expiry_date"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof DatePickerWithPresetsField> }) => (
                   <FormItem>
                     <ShadcnFormLabel>Passport Expiry Date / تاريخ انتهاء الجواز</ShadcnFormLabel>
                     <FormControl>
@@ -479,7 +481,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="notify_days_before_id_expiry"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
                   <FormItem>
                     <ShadcnFormLabel>
                       ID Expiry Alert (Days) / تنبيه انتهاء البطاقة (أيام)
@@ -490,7 +492,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         placeholder="e.g., 30"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           field.onChange(
                             e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
                           )
@@ -505,7 +507,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="notify_days_before_passport_expiry"
-                render={({ field }) => (
+                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
                   <FormItem>
                     <ShadcnFormLabel>
                       Passport Expiry Alert (Days) / تنبيه انتهاء الجواز (أيام)
@@ -516,7 +518,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         placeholder="e.g., 90"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) =>
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           field.onChange(
                             e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
                           )
@@ -537,7 +539,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
             <FormField
               control={form.control}
               name="notes"
-              render={({ field }) => (
+              render={({ field }: { field: React.ComponentProps<typeof Textarea> }) => (
                 <FormItem>
                   <ShadcnFormLabel>Internal Notes / ملاحظات داخلية</ShadcnFormLabel>
                   <FormControl>

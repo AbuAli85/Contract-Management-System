@@ -17,36 +17,32 @@ export function ProtectedRoute({
   fallback = <div>Loading...</div>
 }: ProtectedRouteProps) {
   const router = useRouter()
-  const { role, loading } = useUserRole()
+  const role = useUserRole()
 
   useEffect(() => {
-    if (!loading && !role) {
+    if (role === null) {
       // No user, redirect to login
       const currentPath = window.location.pathname
       router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`)
       return
     }
 
-    if (!loading && requiredRole) {
+    if (requiredRole) {
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-      if (!roles.includes(role)) {
+      if (!roles.includes(role as Role)) {
         // User doesn't have required role
         router.push('/unauthorized')
       }
     }
-  }, [loading, role, requiredRole, router])
+  }, [role, requiredRole, router])
 
-  if (loading) {
+  if (role === null) {
     return fallback
-  }
-
-  if (!role) {
-    return null
   }
 
   if (requiredRole) {
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole]
-    if (!roles.includes(role)) {
+    if (!roles.includes(role as Role)) {
       return null
     }
   }

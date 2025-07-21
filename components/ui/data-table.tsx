@@ -32,14 +32,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
-interface DataTableProps<TData, TValue> {
+interface DataWithId {
+  id: string | number
+}
+
+interface DataTableProps<TData extends DataWithId, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   searchKey?: string
   onRowSelectionChange?: (selectedIds: string[]) => void
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends DataWithId, TValue>({
   columns,
   data,
   searchKey,
@@ -73,7 +77,7 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     if (onRowSelectionChange) {
       const selectedRows = table.getFilteredSelectedRowModel().rows
-      const selectedIds = selectedRows.map((row) => (row.original as TData).id)
+      const selectedIds = selectedRows.map((row) => String((row.original as TData).id))
       onRowSelectionChange(selectedIds)
     }
   }, [rowSelection, onRowSelectionChange, table])

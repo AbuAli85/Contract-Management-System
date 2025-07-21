@@ -8,7 +8,7 @@ export function useRealtimeContracts() {
 
   const fetchContracts = useCallback(async () => {
     const { data } = await supabase.from("contracts").select("*").order("created_at", { ascending: false })
-    setContracts((data as unknown) || [])
+    setContracts(Array.isArray(data) ? (data as Contract[]) : [])
   }, [])
 
   useRealtimeTable("contracts", fetchContracts)

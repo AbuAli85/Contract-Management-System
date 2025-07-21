@@ -52,9 +52,9 @@ export function parsePromoterCSV(csvText: string): PromoterCSVRow[] {
       
       // Convert numeric fields
       if (['notify_days_before_id_expiry', 'notify_days_before_passport_expiry'].includes(header)) {
-        entry[header] = value ? parseInt(value, 10) : null
+        (entry as Record<string, any>)[header] = value ? parseInt(value, 10) : null
       } else {
-        entry[header] = value || null
+        (entry as Record<string, any>)[header] = value || null
       }
     })
     

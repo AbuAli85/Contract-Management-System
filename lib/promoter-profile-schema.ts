@@ -12,12 +12,7 @@ const fileSchema = createOptionalFileSchema(
   ".jpg, .jpeg, .png and .webp files are accepted.",
 )
 
-const dateOptionalNullableSchema = z
-  .date({
-    coerce: true, // Automatically try to convert string to Date
-  })
-  .optional()
-  .nullable()
+const dateOptionalNullableSchema = z.coerce.date().optional().nullable()
 
 export const promoterStatuses = z.enum(["active", "inactive", "suspended"])
 export type PromoterStatus = z.infer<typeof promoterStatuses>

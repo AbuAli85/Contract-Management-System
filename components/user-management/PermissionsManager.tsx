@@ -28,6 +28,7 @@ interface User {
   full_name?: string;
   role: 'admin' | 'manager' | 'user' | 'viewer';
   permissions?: string[];
+  status?: string; // Added to fix type error
 }
 
 interface PermissionsManagerProps {
@@ -258,7 +259,7 @@ export default function PermissionsManager({
                       checked={isCategorySelected(category)}
                       ref={(el) => {
                         if (el) {
-                          el.indeterminate = isCategoryPartiallySelected(category);
+                          (el as HTMLInputElement).indeterminate = isCategoryPartiallySelected(category);
                         }
                       }}
                       onCheckedChange={(checked) => handleCategoryToggle(category, checked as boolean)}

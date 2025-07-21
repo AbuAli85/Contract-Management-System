@@ -92,13 +92,14 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }, [user, isOpen])
 
   const fetchUserActivity = async () => {
-    if (!user || (user as unknown as { id?: string })?.id) return
+    const userId = (user as unknown as { id?: string })?.id;
+    if (!user || !userId) return
     
     try {
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
-        .eq('user_id', (user as unknown as { id?: string })?.id)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(10)
       
@@ -111,19 +112,20 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }
 
   const fetchUserStats = async () => {
-    if (!user || (user as unknown as { id?: string })?.id) return
+    const userId = (user as unknown as { id?: string })?.id;
+    if (!user || !userId) return
     
     try {
       // Fetch user statistics
       const { data: contracts, error: contractsError } = await supabase
         .from('contracts')
         .select('id, status')
-        .eq('user_id', (user as unknown as { id?: string })?.id)
+        .eq('user_id', userId)
       
       const { data: parties, error: partiesError } = await supabase
         .from('parties')
         .select('id')
-        .eq('owner_id', (user as unknown as { id?: string })?.id)
+        .eq('owner_id', userId)
       
       if (!contractsError && !partiesError) {
         setUserStats({
@@ -142,6 +144,17 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
     setLoading(true)
     
     try {
+      const userId = (user as unknown as { id?: string })?.id;
+      if (!userId) {
+        toast({
+          title: "Error",
+          description: "User ID is missing.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('app_users')
         .update({
@@ -157,7 +170,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
           permissions: formData.permissions,
           updated_at: new Date().toISOString()
         })
-        .eq('id', (user as unknown as { id?: string })?.id)
+        .eq('id', userId);
 
       if (error) throw error
 

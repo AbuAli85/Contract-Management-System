@@ -37,7 +37,7 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
 
     return () => {
       if (channel) {
-        supabase.removeChannel(channel as SupabaseChannel)
+        supabase.removeChannel(channel as RealtimeChannel)
       }
     }
   }, [table, onChange, isAuthenticated])

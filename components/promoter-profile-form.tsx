@@ -341,7 +341,7 @@ export default function PromoterProfileForm({
                       <FormLabel>ID Card Image</FormLabel>
                       <FormControl>
                         <ImageUploadField
-                          field={fileField}
+                          field={{ ...fileField, value: fileField.value as File | null | undefined }}
                           initialImageUrl={form.watch("existing_id_card_url")}
                           disabled={formDisabled}
                           onImageRemove={() => {
@@ -464,7 +464,7 @@ export default function PromoterProfileForm({
                       <FormLabel>Passport Image</FormLabel>
                       <FormControl>
                         <ImageUploadField
-                          field={fileField}
+                          field={{ ...fileField, value: fileField.value as File | null | undefined }}
                           initialImageUrl={form.watch("existing_passport_url")}
                           disabled={formDisabled}
                           onImageRemove={() => {

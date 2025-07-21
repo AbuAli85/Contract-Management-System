@@ -8,7 +8,7 @@ export function useRealtimePromoters() {
 
   const fetchPromoters = useCallback(async () => {
     const { data } = await supabase.from("promoters").select("*")
-    setPromoters((data as unknown) || [])
+    setPromoters(Array.isArray(data) ? (data as Promoter[]) : [])
   }, [])
 
   useRealtimeTable("promoters", fetchPromoters)

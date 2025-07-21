@@ -53,7 +53,6 @@ import {
 } from "lucide-react"
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
-import { useToast } from "@/hooks/use-toast"
 import type { Database } from "@/types/supabase"
 import {
   contractGeneratorSchema,
@@ -63,7 +62,7 @@ import {
 } from "@/lib/schema-generator"
 import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
-import type { Promoter } from "@/types/custom"
+import type { Promoter } from "@/lib/types"
 import { 
   JOB_TITLES, 
   CURRENCIES, 
@@ -99,7 +98,7 @@ export default function UnifiedContractGeneratorForm({
 }: UnifiedContractGeneratorFormProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { toast } = useToast()
+  // const { toast } = useToast()
 
   // State management
   const [currentSection, setCurrentSection] = useState(0)
@@ -643,8 +642,8 @@ export default function UnifiedContractGeneratorForm({
                             </SelectTrigger>
                             <SelectContent>
                               {JOB_TITLES.map((title) => (
-                                <SelectItem key={title} value={title}>
-                                  {title}
+                                <SelectItem key={typeof title === 'string' ? title : title.value} value={typeof title === 'string' ? title : title.value}>
+                                  {typeof title === 'string' ? title : title.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -668,8 +667,8 @@ export default function UnifiedContractGeneratorForm({
                             </SelectTrigger>
                             <SelectContent>
                               {WORK_LOCATIONS.map((location) => (
-                                <SelectItem key={location} value={location}>
-                                  {location}
+                                <SelectItem key={typeof location === 'string' ? location : location.value} value={typeof location === 'string' ? location : location.value}>
+                                  {typeof location === 'string' ? location : location.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -733,8 +732,8 @@ export default function UnifiedContractGeneratorForm({
                             </SelectTrigger>
                             <SelectContent>
                               {CURRENCIES.map((currency) => (
-                                <SelectItem key={currency.code} value={currency.code}>
-                                  {currency.code} - {currency.name}
+                                <SelectItem key={currency.value} value={currency.value}>
+                                  {currency.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>

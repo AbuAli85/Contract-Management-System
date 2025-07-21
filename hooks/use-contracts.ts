@@ -14,29 +14,29 @@ import { useEffect } from "react"
 // Detailed contract type including joined relational data
 // This mirrors what the `fetchContracts` query selects
 export type ContractWithRelations = Database["public"]["Tables"]["contracts"]["Row"] & {
-  first_party?: {
+  first_party: {
     id: string
     name_en: string
     name_ar: string
     crn: string
-    type?: "Employer" | "Client" | "Generic" | null
-  } | null
-  second_party?: {
+    type: "Employer" | "Client" | "Generic" | null
+  }
+  second_party: {
     id: string
     name_en: string
     name_ar: string
     crn: string
-    type?: "Employer" | "Client" | "Generic" | null
-  } | null
-  promoters?: {
+    type: "Employer" | "Client" | "Generic" | null
+  }
+  promoters: {
     id: string
     name_en: string
     name_ar: string
     id_card_number: string
-    id_card_url?: string | null
-    passport_url?: string | null
-    status?: string | null
-  } | null
+    id_card_url: string | null
+    passport_url: string | null
+    status: string | null
+  }
 }
 // Minimal fields required when creating a new contract
 export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
@@ -90,6 +90,36 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
   devLog("📊 Fetched contracts data:", data)
   if (data && data.length > 0) {
     devLog("📊 Sample contract structure:", data[0])
+  }
+  
+  // In fetchContracts, after fetching data, map to provide fallbacks for required fields
+  if (data) {
+    data = data.map((contract: any) => ({
+      ...contract,
+      first_party: contract.first_party ?? {
+        id: "",
+        name_en: "",
+        name_ar: "",
+        crn: "",
+        type: null as "Employer" | "Client" | "Generic" | null
+      },
+      second_party: contract.second_party ?? {
+        id: "",
+        name_en: "",
+        name_ar: "",
+        crn: "",
+        type: null as "Employer" | "Client" | "Generic" | null
+      },
+      promoters: contract.promoters ?? {
+        id: "",
+        name_en: "",
+        name_ar: "",
+        id_card_number: "",
+        id_card_url: null,
+        passport_url: null,
+        status: null
+      }
+    }))
   }
   
   return (data as ContractWithRelations[]) || []

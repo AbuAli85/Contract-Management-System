@@ -26,7 +26,7 @@ export function useUserRole() {
       supabase
         .from('profiles')
         .select('role')
-        .eq('id', user.id)
+        .eq('id', (user && typeof user === 'object' && user !== null && 'id' in user && typeof (user as any).id === 'string') ? (user as any).id : '')
         .single()
         .then(({ data }) => setRole(data?.role ?? null))
     }

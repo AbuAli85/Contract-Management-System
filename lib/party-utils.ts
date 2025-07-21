@@ -246,9 +246,9 @@ export const sortParties = (
     }
 
     if (sortOrder === "asc") {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      return (aValue as string) < (bValue as string) ? -1 : (aValue as string) > (bValue as string) ? 1 : 0
     } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      return (aValue as string) > (bValue as string) ? -1 : (aValue as string) < (bValue as string) ? 1 : 0
     }
   })
 }

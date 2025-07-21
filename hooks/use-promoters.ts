@@ -4,7 +4,8 @@ import { supabase, createRealtimeChannel, subscribeToChannel, handleRealtimeErro
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
-import type { Promoter } from "@/types/custom"
+import type { Promoter } from "@/lib/types"
+import type { RealtimeChannel } from '@supabase/supabase-js'
 
 const fetchPromoters = async (): Promise<Promoter[]> => {
   const { data, error } = await supabase
@@ -26,7 +27,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryKey = useMemo(() => ["promoters"], [])
   const { toast } = useToast()
   const { isAuthenticated } = useAuth()
-  const channelRef = useRef<unknown>(null)
+  const channelRef = useRef<RealtimeChannel | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const queryResult = useQuery<Promoter[], Error>({

@@ -22,6 +22,12 @@ function genId() {
   return count.toString()
 }
 
+type Action =
+  | { type: "ADD_TOAST"; toast: ToasterToast }
+  | { type: "UPDATE_TOAST"; toast: ToasterToast }
+  | { type: "DISMISS_TOAST"; toastId?: string }
+  | { type: "REMOVE_TOAST"; toastId?: string }
+
 interface State {
   toasts: ToasterToast[]
 }

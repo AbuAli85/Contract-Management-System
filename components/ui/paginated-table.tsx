@@ -22,7 +22,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-interface PaginatedTableProps<T> {
+interface PaginatedTableProps<T extends { [key: string]: any }> {
   data: T[]
   columns: {
     key: string
@@ -37,7 +37,7 @@ interface PaginatedTableProps<T> {
   loading?: boolean
 }
 
-export function PaginatedTable<T>({
+export function PaginatedTable<T extends { [key: string]: any }>({
   data,
   columns,
   title,
