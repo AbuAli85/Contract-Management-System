@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import type React from "react"
 
 import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
+import type { Resolver } from "react-hook-form";
 import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
 import { supabase } from "@/lib/supabase"
