@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import type React from "react"
 
-import { useForm, useWatch } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
