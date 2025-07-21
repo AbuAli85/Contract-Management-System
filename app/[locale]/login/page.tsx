@@ -3,7 +3,8 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-export default async function LoginPage({ params }: { params: { locale: string } }) {
+export default async function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const cookieStore = await cookies()
   
   const supabase = createServerClient(
@@ -32,7 +33,7 @@ export default async function LoginPage({ params }: { params: { locale: string }
   // TEMPORARILY DISABLED: Server-side redirect to prevent redirect loop
   // const { data: { session } } = await supabase.auth.getSession()
   // if (session?.user) {
-  //   redirect(`/${params.locale}/dashboard`)
+  //   redirect(`/${locale}/dashboard`)
   // }
 
   return (

@@ -79,7 +79,14 @@ export function GlobalPerformanceOptimizer() {
     // Simple fetch optimization
     const originalFetch = window.fetch
     window.fetch = async (input, init) => {
-      const url = typeof input === 'string' ? input : input.url
+      const url =
+        typeof input === "string"
+          ? input
+          : input instanceof Request
+            ? input.url
+            : input instanceof URL
+              ? input.toString()
+              : "";
       
       // Add cache headers for static resources
       if (init?.method === 'GET' && (url.includes('/api/') || url.includes('/static/'))) {

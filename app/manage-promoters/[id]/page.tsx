@@ -10,18 +10,13 @@ import Link from "next/link"
 import { Edit } from "lucide-react"
 import { Promoter } from "@/lib/types";
 
-interface PromoterDetailsPageProps {
-  params: {
-    id: string
-  }
-}
-
-export default async function PromoterDetailsPage({ params }: PromoterDetailsPageProps) {
+export default async function PromoterDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   // Redirect to the default locale version if accessed directly without locale
   // redirect("/en/manage-promoters")
 
+  const { id } = await params
   const t = await getTranslations("PromoterDetailsPage")
-  const promoter: Promoter | null = await getPromoterById(params.id)
+  const promoter: Promoter | null = await getPromoterById(id)
 
   if (!promoter) {
     notFound()

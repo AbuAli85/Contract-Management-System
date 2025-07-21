@@ -247,8 +247,9 @@ export default function NewUsersPage() {
           
           // Handle date sorting
           if (sortBy === "created_at" || sortBy === "last_login") {
-            valA = valA ? new Date(valA as string).getTime() : 0;
-            valB = valB ? new Date(valB as string).getTime() : 0;
+            const timeA = valA ? new Date(valA as string).getTime() : 0;
+            const timeB = valB ? new Date(valB as string).getTime() : 0;
+            return sortDir === "asc" ? timeA - timeB : timeB - timeA;
           }
           
           // Handle string sorting
@@ -259,7 +260,10 @@ export default function NewUsersPage() {
           }
           
           // Handle number sorting
-          return sortDir === "asc" ? (valA as number) - (valB as number) : (valB as number) - (valA as number);
+          if (typeof valA === "number" && typeof valB === "number") {
+            return sortDir === "asc" ? valA - valB : valB - valA;
+          }
+          return 0;
         });
       }
       
@@ -575,7 +579,7 @@ export default function NewUsersPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          {currentUserRole !== "viewer" && (
+          {["admin", "manager", "user"].includes(currentUserRole) && (
             <Button onClick={() => setShowAddModal(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Add User
@@ -794,7 +798,7 @@ export default function NewUsersPage() {
                           )}
                         </div>
                       </th>
-                      {currentUserRole !== "viewer" && (
+                      {["admin", "manager", "user"].includes(currentUserRole) && (
                         <th className="text-right p-4 font-medium">Actions</th>
                       )}
                     </tr>
@@ -866,10 +870,10 @@ export default function NewUsersPage() {
                         <td className="p-4">
                           <div className="flex items-center space-x-2">
                             <Clock className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm">{relativeTime(user.last_login)}</span>
+                            <span className="text-sm">{relativeTime(user.last_login ?? null)}</span>
                           </div>
                         </td>
-                        {currentUserRole !== "viewer" && (
+                        {["admin", "manager", "user"].includes(currentUserRole) && (
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               {currentUserRole === "admin" && (

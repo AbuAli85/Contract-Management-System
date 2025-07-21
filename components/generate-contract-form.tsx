@@ -42,14 +42,15 @@ import {
   getOptionLabel 
 } from "@/constants/contract-options"
 import { validateContractData } from "@/lib/contract-utils"
+import { useParties } from "@/hooks/use-parties"
+import { usePromoters } from "@/hooks/use-promoters"
 
 // Lazy load heavy components
 const DatePickerWithManualInput = lazy(() => import("./date-picker-with-manual-input"))
 const ComboboxField = lazy(() => import("@/components/combobox-field"))
 
 // Lazy load hooks
-const useParties = lazy(() => import("@/hooks/use-parties")).then(module => module.useParties)
-const usePromoters = lazy(() => import("@/hooks/use-promoters")).then(module => module.usePromoters)
+
 
 interface ContractGeneratorFormProps {
   /** Existing contract when editing; new contract if undefined. */
@@ -244,32 +245,6 @@ export default function ContractGeneratorForm({
       console.error("Error setting promoter fields:", error)
     }
   }, [selectedPromoter, form])
-
-  // Surface load errors
-  useEffect(() => {
-    try {
-      if (employerPartiesError)
-        toast({
-          title: "Error loading Employer parties",
-          description: employerPartiesError.message,
-          variant: "destructive",
-        })
-      if (clientPartiesError)
-        toast({
-          title: "Error loading Client parties",
-          description: clientPartiesError.message,
-          variant: "destructive",
-        })
-      if (promotersError)
-        toast({
-          title: "Error loading promoters",
-          description: promotersError.message,
-          variant: "destructive",
-        })
-    } catch (error) {
-      console.error("Error showing load errors:", error)
-    }
-  }, [employerPartiesError, clientPartiesError, promotersError, toast])
 
   // Mutation: call your API routes instead of supabase.from(...)
   const mutation = useMutation({

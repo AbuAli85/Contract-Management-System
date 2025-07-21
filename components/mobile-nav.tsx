@@ -8,21 +8,15 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet"
 import { useAuth } from "@/src/components/auth/auth-provider"
 
-const navItems = [
-  { title: "Dashboard", href: "/dashboard" },
-  { title: "Contracts", href: "/contracts" },
-  { title: "Generate Contract", href: "/generate-contract" },
-  { title: "Manage Parties", href: "/manage-parties" },
-  { title: "Manage Promoters", href: "/manage-promoters" },
-]
+interface MobileNavProps {
+  navItems: { title: string; href: string }[];
+  locale: string;
+}
 
-export function MobileNav() {
+export function MobileNav({ navItems, locale }: MobileNavProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, signOut } = useAuth()
-
-  // Extract locale from pathname
-  const locale = pathname?.split('/')[1] || 'en'
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -55,7 +49,7 @@ export function MobileNav() {
           {navItems.map((item) => (
             <Link
               key={item.title}
-              href={`/${locale}${item.href}`}
+              href={`/${locale}${item.href === "/" ? "" : item.href}`}
               className={`py-2 text-lg font-medium transition-colors hover:text-primary ${
                 pathname?.includes(item.href) ? 'text-primary' : 'text-foreground/80'
               }`}

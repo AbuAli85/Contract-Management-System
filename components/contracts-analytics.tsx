@@ -32,7 +32,7 @@ import {
   Users
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { CONTRACT_STATUSES } from "./enhanced-status-badge"
+import { CONTRACT_STATUSES } from "./unified-status-badge"
 
 interface ContractAnalytics {
   totalContracts: number

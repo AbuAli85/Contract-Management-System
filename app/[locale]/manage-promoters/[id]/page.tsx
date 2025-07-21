@@ -246,7 +246,7 @@ export default function PromoterDetailPage() {
                           <TableCell className="font-medium">{contract.contract_name}</TableCell>
                           <TableCell>{party?.name_en ?? "N/A"}</TableCell>
                           <TableCell>
-                            <DocumentStatusBadge status={statusInfo.status} label={statusInfo.text} expiryDate={contract.end_date} />
+                            <DocumentStatusBadge type="document" status={statusInfo.status} label={statusInfo.text} expiryDate={contract.end_date} />
                           </TableCell>
                           <TableCell>
                             {contract.end_date

@@ -187,12 +187,12 @@ export default function ContractDetailPage() {
                   <div className="p-4 border border-gray-200 rounded-lg">
                     <h4 className="font-semibold text-gray-900">First Party (Employer)</h4>
                     <p className="text-gray-600">{contract?.first_party_name_en || contract?.employer?.name_en || "Not specified"}</p>
-                    <p className="text-sm text-gray-500">{contract?.employer?.email || &quot;No email provided&quot;}</p>
+                    <p className="text-sm text-gray-500">{contract?.employer?.email || "No email provided"}</p>
                   </div>
                   <div className="p-4 border border-gray-200 rounded-lg">
                     <h4 className="font-semibold text-gray-900">Second Party (Employee)</h4>
                     <p className="text-gray-600">{contract?.second_party_name_en || "Not specified"}</p>
-                    <p className="text-sm text-gray-500">{contract?.email || &quot;No email provided&quot;}</p>
+                    <p className="text-sm text-gray-500">{contract?.email || "No email provided"}</p>
                   </div>
                 </div>
               </CardContent>

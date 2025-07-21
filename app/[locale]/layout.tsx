@@ -2,19 +2,12 @@ import { i18n } from '@/src/i18n/i18n-config'
 import { ClientLayout } from '@/src/components/client-layout'
 import { cookies } from 'next/headers'
 
-interface LocaleLayoutProps {
-    children: React.ReactNode
-    params: { locale: string }
-}
-
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
 }
 
-async function getLocale(params: { locale?: string }) {
+async function getLocale(locale?: string) {
   try {
-    const resolvedParams = await Promise.resolve(params)
-    const locale = resolvedParams?.locale
     if (locale && i18n.locales.includes(locale)) {
       return locale
     }
@@ -25,10 +18,11 @@ async function getLocale(params: { locale?: string }) {
   }
 }
 
-export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
-  const locale = await getLocale(params)
+export default async function LocaleLayout({ children, params }: { children: React.ReactNode, params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const resolvedLocale = await getLocale(locale)
   return (
-    <ClientLayout locale={locale}>
+    <ClientLayout locale={resolvedLocale}>
       {children}
     </ClientLayout>
   )

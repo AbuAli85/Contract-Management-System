@@ -72,10 +72,15 @@ import { cn } from "@/lib/utils"
 interface Contract {
   id: string
   contract_number: string
+  first_party_id: string
+  second_party_id: string
+  promoter_id: string
   first_party_name_en: string
   first_party_name_ar: string
+  first_party_crn: string
   second_party_name_en: string
   second_party_name_ar: string
+  second_party_crn: string
   promoter_name_en: string
   promoter_name_ar: string
   email: string
@@ -365,12 +370,43 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     try {
       const { data, error } = await supabase
         .from('contracts')
-        .select('*')
+        .select(`
+    *,
+    first_party:parties!contracts_first_party_id_fkey (name_en, name_ar, crn),
+    second_party:parties!contracts_second_party_id_fkey (name_en, name_ar, crn),
+    promoter:promoters!contracts_promoter_id_fkey (name_en, name_ar)
+  `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
       
-      setContracts(data || [])
+      setContracts(
+        (data || []).map((contract) => ({
+          id: contract.id || "",
+          contract_number: contract.contract_number || "",
+          first_party_id: contract.first_party_id || "",
+          second_party_id: contract.second_party_id || "",
+          promoter_id: contract.promoter_id || "",
+          first_party_name_en: contract.first_party?.name_en || "",
+          first_party_name_ar: contract.first_party?.name_ar || "",
+          first_party_crn: contract.first_party?.crn || "",
+          second_party_name_en: contract.second_party?.name_en || "",
+          second_party_name_ar: contract.second_party?.name_ar || "",
+          second_party_crn: contract.second_party?.crn || "",
+          promoter_name_en: contract.promoter?.name_en || "",
+          promoter_name_ar: contract.promoter?.name_ar || "",
+          email: contract.email || "",
+          job_title: contract.job_title || "",
+          work_location: contract.work_location || "",
+          contract_start_date: contract.contract_start_date || "",
+          contract_end_date: contract.contract_end_date || "",
+          contract_value: contract.contract_value ?? 0,
+          status: contract.status || "",
+          is_current: contract.is_current ?? false,
+          created_at: contract.created_at || "",
+          updated_at: contract.updated_at || "",
+        }))
+      )
     } catch (err) {
       console.error('Error fetching contracts:', err)
       setError('Failed to fetch contracts')
@@ -419,14 +455,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
       
       const newContract = {
         contract_number: newContractNumber,
-        first_party_name_en: contract.first_party_name_en,
-        first_party_name_ar: contract.first_party_name_ar,
-        first_party_crn: contract.first_party_crn,
-        second_party_name_en: contract.second_party_name_en,
-        second_party_name_ar: contract.second_party_name_ar,
-        second_party_crn: contract.second_party_crn,
-        promoter_name_en: contract.promoter_name_en,
-        promoter_name_ar: contract.promoter_name_ar,
+        first_party_id: contract.first_party_id,      // Use the foreign key, not the name/crn
+        second_party_id: contract.second_party_id,
+        promoter_id: contract.promoter_id,
         email: contract.email,
         job_title: contract.job_title,
         work_location: contract.work_location,
@@ -435,6 +466,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         contract_value: contract.contract_value,
         status: 'draft',
         is_current: true
+        // ...any other fields that exist in the contracts table
       }
 
       const { error } = await supabase

@@ -221,7 +221,7 @@ export default function UsersPageComponent() {
           usersArray = [];
         }
         
-        usersArray = usersArray.filter(user => 
+        usersArray = usersArray.filter((user: any) => 
           user && 
           typeof user === 'object' && 
           user.email && 
@@ -312,7 +312,7 @@ export default function UsersPageComponent() {
             <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          {currentUserRole !== "viewer" && (
+          {["admin", "manager", "user"].includes(currentUserRole) && (
             <Button onClick={() => setShowAddModal(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Add User
@@ -388,7 +388,7 @@ export default function UsersPageComponent() {
                       <th className="text-left p-4 font-medium">Status</th>
                       <th className="text-left p-4 font-medium">Created</th>
                       <th className="text-left p-4 font-medium">Last Login</th>
-                      {currentUserRole !== "viewer" && (
+                      {["admin", "manager", "user"].includes(currentUserRole) && (
                         <th className="text-right p-4 font-medium">Actions</th>
                       )}
                     </tr>
@@ -441,7 +441,7 @@ export default function UsersPageComponent() {
                             <span className="text-sm">{relativeTime(user.last_login)}</span>
                           </div>
                         </td>
-                        {currentUserRole !== "viewer" && (
+                        {["admin", "manager", "user"].includes(currentUserRole) && (
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               <Button
