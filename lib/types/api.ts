@@ -33,7 +33,7 @@ export interface UpdateContractRequest {
 }
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   message: string
   data?: T
   error?: string

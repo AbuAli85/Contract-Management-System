@@ -166,7 +166,7 @@ export interface ActivityLog {
   description: string;
   created_at: string;
   user_id?: string;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 export interface PartyNote {

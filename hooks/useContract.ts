@@ -93,10 +93,10 @@ export function useContract(contractId: string): UseContractResult {
         // Instead of directly assigning oldData, validate and transform as with new schema
         if (oldData) {
           const promoter = Array.isArray(oldData.promoters) ? oldData.promoters[0] : oldData.promoters;
-          const validParty = (p: any): p is Party => !!p && typeof p === 'object' && 'id' in p && 'name_en' in p && 'name_ar' in p && 'crn' in p;
+          const validParty = (p: unknown): p is Party => !!p && typeof p === 'object' && 'id' in p && 'name_en' in p && 'name_ar' in p && 'crn' in p;
           const firstPartyOld = validParty(oldData.first_party) ? oldData.first_party : null;
           const secondPartyOld = validParty(oldData.second_party) ? oldData.second_party : null;
-          const transformedOldData: any = {
+          const transformedOldData: unknown = {
             ...oldData,
             parties: [firstPartyOld, secondPartyOld].filter(Boolean) as Party[],
             promoters: Array.isArray(oldData.promoters) ? oldData.promoters : (oldData.promoters ? [oldData.promoters] : []),
@@ -120,10 +120,10 @@ export function useContract(contractId: string): UseContractResult {
         // Transform the data to match the ContractDetail type
         const promoter = Array.isArray(data.promoters) ? data.promoters[0] : data.promoters;
         // Ensure first_party and second_party are valid Party objects
-        const validParty = (p: any): p is Party => !!p && typeof p === 'object' && 'id' in p && 'name_en' in p && 'name_ar' in p && 'crn' in p;
+        const validParty = (p: unknown): p is Party => !!p && typeof p === 'object' && 'id' in p && 'name_en' in p && 'name_ar' in p && 'crn' in p;
         const firstParty = validParty(data.first_party) ? data.first_party : null;
         const secondParty = validParty(data.second_party) ? data.second_party : null;
-        const transformedData = {
+        const transformedData: unknown = {
           ...data,
           parties: [firstParty, secondParty].filter(Boolean) as Party[],
           first_party: firstParty,

@@ -5,7 +5,7 @@ export function devLog(...args: unknown[]): void {
 }
 
 // Debug function for navigation issues
-export function debugNavigation(message: string, data?: any) {
+export function debugNavigation(message: string, data?: unknown) {
   if (process.env.NODE_ENV === 'development') {
     console.log(`🔍 [Navigation Debug] ${message}`, data || '')
   }

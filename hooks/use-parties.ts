@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/lib/supabase" // Your Supabase client instance
 import type { Database } from "@/types/supabase" // Assuming generated Supabase types
-import { useToast } from "@/hooks/use-toast"
 import { devLog } from "@/lib/dev-log"
 
 // Define the structure of a Party based on your select query
@@ -31,7 +30,6 @@ const fetchParties = async (partyType?: "Employer" | "Client"): Promise<Party[]>
 }
 
 export const useParties = (partyType?: "Employer" | "Client") => {
-  const { toast } = useToast()
   return useQuery<Party[], Error>({
     queryKey: ["parties", partyType || "all"], // Unique query key based on type
     queryFn: () => fetchParties(partyType),

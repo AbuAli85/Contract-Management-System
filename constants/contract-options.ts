@@ -163,11 +163,11 @@ export function getContractTypesByCategory(): Record<string, Array<{value: strin
   const categories: Record<string, Array<{value: string, label: string, category?: string}>> = {}
   
   CONTRACT_TYPES.forEach(contractType => {
-    const category = (contractType as any).category || 'Other'
+    const category = (contractType as unknown as { category?: string }).category || 'Other'
     if (!categories[category]) {
       categories[category] = []
     }
-    categories[category].push(contractType as any)
+    categories[category].push(contractType as unknown as { value: string, label: string, category?: string })
   })
   
   return categories
@@ -180,5 +180,5 @@ export function isMakecomEnabled(contractTypeValue: string): boolean {
 
 // Helper function to get Make.com enabled contract types only
 export function getMakecomContractTypes(): Array<{value: string, label: string, category?: string}> {
-  return CONTRACT_TYPES.filter(type => isMakecomEnabled(type.value)) as any
+  return CONTRACT_TYPES.filter(type => isMakecomEnabled(type.value)) as unknown as Array<{value: string, label: string, category?: string}>
 }

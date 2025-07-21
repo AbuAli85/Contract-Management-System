@@ -12,11 +12,11 @@ export async function signIn(
       password 
     })
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Sign in error:', error)
     toast({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error
@@ -26,7 +26,7 @@ export async function signIn(
 export async function signUp(
   email: string, 
   password: string, 
-  metadata?: any,
+  metadata?: unknown,
   toast?: ToastAPI
 ) {
   try {
@@ -39,11 +39,11 @@ export async function signUp(
       }
     })
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Sign up error:', error)
     toast?.({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error
@@ -54,11 +54,11 @@ export async function signOut(toast?: ToastAPI) {
   try {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Sign out error:', error)
     toast?.({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error
@@ -75,11 +75,11 @@ export async function resetPassword(
       redirectTo: redirectTo || `${window.location.origin}/auth/reset-password`
     })
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Password reset error:', error)
     toast?.({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error
@@ -95,11 +95,11 @@ export async function updatePassword(
       password: newPassword
     })
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Password update error:', error)
     toast?.({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error
@@ -119,11 +119,11 @@ export async function signInWithOAuth(
       }
     })
     if (error) throw error
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('OAuth sign in error:', error)
     toast?.({ 
       title: 'Error', 
-      description: error.message,
+      description: (error as Error).message,
       variant: 'destructive'
     })
     throw error

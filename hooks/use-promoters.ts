@@ -26,7 +26,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryKey = useMemo(() => ["promoters"], [])
   const { toast } = useToast()
   const { isAuthenticated } = useAuth()
-  const channelRef = useRef<any>(null)
+  const channelRef = useRef<unknown>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const queryResult = useQuery<Promoter[], Error>({

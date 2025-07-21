@@ -1,7 +1,6 @@
-import { render, screen, act } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { useAuth } from '@/context/AuthProvider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { createClient } from '@supabase/supabase-js'
 
 // Mock the Supabase client
 jest.mock('@supabase/supabase-js', () => ({

@@ -130,7 +130,7 @@ export function PaginatedTable<T>({
                     <TableRow key={index}>
                       {columns.map((column) => (
                         <TableCell key={column.key}>
-                          {column.render ? column.render(item) : (item as any)[column.key]}
+                          {column.render ? column.render(item) : (item as T)[column.key]}
                         </TableCell>
                       ))}
                     </TableRow>

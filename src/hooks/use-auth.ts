@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 
 // DISABLED: This hook conflicts with the AuthProvider and causes redirect loops
 // Use the useAuth hook from src/components/auth/auth-provider.tsx instead

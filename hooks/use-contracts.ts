@@ -77,7 +77,7 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
       throw new Error(oldError.message)
     }
 
-    data = oldData as any
+    data = oldData as unknown as ContractWithRelations[] // Replace 'any' with 'unknown'
     error = null
   }
 

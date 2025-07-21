@@ -15,9 +15,7 @@ import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { 
   User, 
-  Mail, 
   Shield, 
-  Calendar, 
   Activity, 
   Settings, 
   Key, 
@@ -25,15 +23,13 @@ import {
   EyeOff,
   Save,
   X,
-  Loader2,
-  AlertCircle,
-  CheckCircle
+  Loader2
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { createClient } from '@/lib/supabase/client'
 
 interface UserProfileModalProps {
-  user: any
+  user: unknown
   isOpen: boolean
   onClose: () => void
   onUpdate: () => void
@@ -57,16 +53,16 @@ const STATUS_OPTIONS = [
 export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: UserProfileModalProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    email: user?.email || '',
-    role: user?.role || 'user',
-    status: user?.status || 'active',
-    full_name: user?.full_name || '',
-    phone: user?.phone || '',
-    department: user?.department || '',
-    position: user?.position || '',
-    avatar_url: user?.avatar_url || '',
-    notes: user?.notes || '',
-    permissions: user?.permissions || {}
+    email: (user as unknown as { email?: string })?.email || '',
+    role: (user as unknown as { role?: string })?.role || 'user',
+    status: (user as unknown as { status?: string })?.status || 'active',
+    full_name: (user as unknown as { full_name?: string })?.full_name || '',
+    phone: (user as unknown as { phone?: string })?.phone || '',
+    department: (user as unknown as { department?: string })?.department || '',
+    position: (user as unknown as { position?: string })?.position || '',
+    avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || '',
+    notes: (user as unknown as { notes?: string })?.notes || '',
+    permissions: (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {}
   })
   const [showPassword, setShowPassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
@@ -79,16 +75,16 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   useEffect(() => {
     if (user && isOpen) {
       setFormData({
-        email: user.email || '',
-        role: user.role || 'user',
-        status: user.status || 'active',
-        full_name: user.full_name || '',
-        phone: user.phone || '',
-        department: user.department || '',
-        position: user.position || '',
-        avatar_url: user.avatar_url || '',
-        notes: user.notes || '',
-        permissions: user.permissions || {}
+        email: (user as unknown as { email?: string })?.email || '',
+        role: (user as unknown as { role?: string })?.role || 'user',
+        status: (user as unknown as { status?: string })?.status || 'active',
+        full_name: (user as unknown as { full_name?: string })?.full_name || '',
+        phone: (user as unknown as { phone?: string })?.phone || '',
+        department: (user as unknown as { department?: string })?.department || '',
+        position: (user as unknown as { position?: string })?.position || '',
+        avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || '',
+        notes: (user as unknown as { notes?: string })?.notes || '',
+        permissions: (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {}
       })
       fetchUserActivity()
       fetchUserStats()
@@ -96,13 +92,13 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }, [user, isOpen])
 
   const fetchUserActivity = async () => {
-    if (!user?.id) return
+    if (!user || (user as unknown as { id?: string })?.id) return
     
     try {
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as unknown as { id?: string })?.id)
         .order('created_at', { ascending: false })
         .limit(10)
       
@@ -115,19 +111,19 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }
 
   const fetchUserStats = async () => {
-    if (!user?.id) return
+    if (!user || (user as unknown as { id?: string })?.id) return
     
     try {
       // Fetch user statistics
       const { data: contracts, error: contractsError } = await supabase
         .from('contracts')
         .select('id, status')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as unknown as { id?: string })?.id)
       
       const { data: parties, error: partiesError } = await supabase
         .from('parties')
         .select('id')
-        .eq('owner_id', user.id)
+        .eq('owner_id', (user as unknown as { id?: string })?.id)
       
       if (!contractsError && !partiesError) {
         setUserStats({
@@ -161,7 +157,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
           permissions: formData.permissions,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.id)
+        .eq('id', (user as unknown as { id?: string })?.id)
 
       if (error) throw error
 

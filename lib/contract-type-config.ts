@@ -1,5 +1,4 @@
 // lib/contract-type-config.ts
-import { z } from "zod"
 import { 
   getMakecomTemplateConfig, 
   generateMakecomWebhookPayload,
@@ -15,8 +14,8 @@ export interface ContractTypeConfig {
   requiredFields: string[]
   optionalFields: string[]
   templatePlaceholders: string[]
-  validationRules: Record<string, any>
-  defaultValues: Record<string, any>
+  validationRules: Record<string, unknown>
+  defaultValues: Record<string, unknown>
   businessRules: string[]
   omanCompliant: boolean
   uaeCompliant?: boolean
@@ -385,7 +384,7 @@ export const ENHANCED_CONTRACT_TYPE_CONFIGS: Record<string, EnhancedContractType
   },
   
   "oman-fixed-term-makecom": {
-    ...CONTRACT_TYPE_CONFIGS["fixed-term-contract"],
+    ...CONTRACT_TYPE_CONFIGS["limited-contract"],
     id: "oman-fixed-term-makecom", 
     name: "Oman Fixed-Term Contract (Make.com Automated)",
     description: "Automated fixed-term contract with Make.com PDF generation",
@@ -482,7 +481,7 @@ export function getContractTypesByCategory(): Record<string, ContractTypeConfig[
   return categories
 }
 
-export function validateContractTypeData(contractType: string, formData: any): { 
+export function validateContractTypeData(contractType: string, formData: Record<string, unknown>): { 
   isValid: boolean; 
   errors: string[]; 
   warnings: string[] 
@@ -504,8 +503,8 @@ export function validateContractTypeData(contractType: string, formData: any): {
 
   // Type-specific validations
   if (config.maxDuration && formData.contract_start_date && formData.contract_end_date) {
-    const startDate = new Date(formData.contract_start_date)
-    const endDate = new Date(formData.contract_end_date)
+    const startDate = new Date(formData.contract_start_date as string)
+    const endDate = new Date(formData.contract_end_date as string)
     const durationMonths = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
     
     if (durationMonths > config.maxDuration) {
@@ -514,7 +513,7 @@ export function validateContractTypeData(contractType: string, formData: any): {
   }
 
   // Salary validations
-  if (!config.allowsSalary && formData.basic_salary && formData.basic_salary > 0) {
+  if (!config.allowsSalary && formData.basic_salary && formData.basic_salary !== "") {
     warnings.push(`Salary is typically not applicable for ${config.name}`)
   }
 
@@ -532,7 +531,7 @@ export function getMakecomEnabledContractTypes(): EnhancedContractTypeConfig[] {
 
 export function generateContractWithMakecom(
   contractTypeId: string,
-  contractData: any
+  contractData: Record<string, unknown>
 ): { webhookPayload: any; templateConfig: MakecomTemplateConfig | null; validation: any } {
   const contractConfig = getEnhancedContractTypeConfig(contractTypeId)
   const templateConfig = contractConfig?.makecomTemplateId 

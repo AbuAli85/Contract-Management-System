@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useMemo, useCallback } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { format, parseISO, differenceInDays, addMonths } from "date-fns"
+import { differenceInDays } from "date-fns"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -44,17 +44,12 @@ import { Label } from "@/components/ui/label"
 import { 
   Loader2, 
   AlertTriangle, 
-  CheckCircle, 
-  Info, 
-  Calculator,
-  Calendar,
-  Users,
-  Briefcase,
-  MapPin,
-  DollarSign,
+  FileText,
   Settings,
   Sparkles,
-  FileText
+  Calculator,
+  Users,
+  Briefcase,
 } from "lucide-react"
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
@@ -66,16 +61,13 @@ import {
   CONTRACT_FORM_SECTIONS,
   getRequiredFields
 } from "@/lib/schema-generator"
-import { useParties, type Party as PartyType } from "@/hooks/use-parties"
+import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import type { Promoter } from "@/types/custom"
 import { 
   JOB_TITLES, 
-  DEPARTMENTS, 
-  CONTRACT_TYPES, 
   CURRENCIES, 
   WORK_LOCATIONS,
-  getOptionLabel 
 } from "@/constants/contract-options"
 import { createContract, updateContract, ContractInsert } from "@/app/actions/contracts"
 
@@ -96,11 +88,6 @@ const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
-}
-
-const fieldVariants = {
-  hidden: { opacity: 0, x: -10 },
-  visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
 }
 
 export default function UnifiedContractGeneratorForm({
@@ -124,19 +111,16 @@ export default function UnifiedContractGeneratorForm({
   const {
     data: clientParties,
     isLoading: isLoadingClientParties,
-    error: clientPartiesError,
   } = useParties("Client")
   
   const {
     data: employerParties,
     isLoading: isLoadingEmployerParties,
-    error: employerPartiesError,
   } = useParties("Employer")
   
   const {
     data: promoters,
     isLoading: isLoadingPromoters,
-    error: promotersError,
   } = usePromoters()
 
   // Form setup with enhanced defaults

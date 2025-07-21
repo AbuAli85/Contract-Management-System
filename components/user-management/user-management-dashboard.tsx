@@ -14,13 +14,6 @@ import {
   SelectValue 
 } from '@/components/ui/select'
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
-} from '@/components/ui/dialog'
-import { 
   Table, 
   TableBody, 
   TableCell, 
@@ -35,9 +28,6 @@ import {
   Trash2, 
   Search, 
   Filter, 
-  Download, 
-  Upload,
-  MoreHorizontal,
   Eye,
   Shield,
   Activity,
@@ -70,14 +60,6 @@ const STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' }
 ]
 
-const SORT_OPTIONS = [
-  { value: 'created_at', label: 'Created Date' },
-  { value: 'email', label: 'Email' },
-  { value: 'role', label: 'Role' },
-  { value: 'status', label: 'Status' },
-  { value: 'last_login', label: 'Last Login' }
-]
-
 export function UserManagementDashboard() {
   const [filters, setFilters] = useState<UserFilters>({
     page: 1,
@@ -86,8 +68,6 @@ export function UserManagementDashboard() {
     sortOrder: 'desc'
   })
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showBulkActions, setShowBulkActions] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [profileMode, setProfileMode] = useState<'view' | 'edit'>('view')
@@ -100,8 +80,6 @@ export function UserManagementDashboard() {
     pagination, 
     statistics,
     fetchUsers, 
-    createUser, 
-    updateUser, 
     deleteUser,
     bulkUpdateUsers,
     bulkDeleteUsers
@@ -303,7 +281,7 @@ export function UserManagementDashboard() {
             <Filter className="mr-2 h-4 w-4" />
             Filters
           </Button>
-          <Button onClick={() => setShowAddModal(true)}>
+          <Button onClick={() => setShowProfileModal(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>

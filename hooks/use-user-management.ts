@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo, useRef } from 'react'
 import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
 
 export interface User {
   id: string
@@ -51,7 +50,6 @@ export function useUserManagement() {
     totalPages: 0
   })
   const { toast } = useToast()
-  const supabase = createClient()
   const abortControllerRef = useRef<AbortController | null>(null)
 
   // Memoized statistics to prevent recalculation

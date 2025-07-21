@@ -40,7 +40,7 @@ export function parsePromoterCSV(csvText: string): PromoterCSVRow[] {
 
   return dataRows.map(line => {
     const values = line.split(',')
-    const entry: any = {}
+    const entry: unknown = {}
     
     headers.forEach((header, index) => {
       let value = values[index] ? values[index].trim() : ''

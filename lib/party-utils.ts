@@ -221,7 +221,7 @@ export const sortParties = (
   sortOrder: "asc" | "desc"
 ): EnhancedParty[] => {
   return [...parties].sort((a, b) => {
-    let aValue: any, bValue: any
+    let aValue: unknown, bValue: unknown
     
     switch (sortBy) {
       case "name":

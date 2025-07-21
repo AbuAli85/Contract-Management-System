@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { supabase } from "@/lib/supabase"
 import { useAuth } from "@/hooks/use-auth"
 import { devLog } from "@/lib/dev-log"
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export function useRealtimeTable(table: string, onChange: (payload: any) => void) {
   const { isAuthenticated } = useAuth()
@@ -12,7 +13,7 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
       return
     }
 
-    let channel: any = null
+    let channel: RealtimeChannel | null = null
 
     try {
       channel = supabase
@@ -36,7 +37,7 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
 
     return () => {
       if (channel) {
-        supabase.removeChannel(channel)
+        supabase.removeChannel(channel as SupabaseChannel)
       }
     }
   }, [table, onChange, isAuthenticated])

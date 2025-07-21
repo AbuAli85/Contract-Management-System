@@ -25,7 +25,7 @@ export function createOptionalFileSchema(
   typeMessage: string,
 ) {
   return z
-    .any()
+    .unknown()
     .refine(
       (file) =>
         !file ||
@@ -44,7 +44,7 @@ export function createOptionalFileSchema(
     .nullable()
 }
 
-export function getPartyDetails(parties: any[]) {
+export function getPartyDetails(parties: { role: string; }[]) {
     const employer = parties.find(p => p.role === 'employer');
     const employee = parties.find(p => p.role === 'employee');
     const promoter = parties.find(p => p.role === 'promoter');

@@ -66,9 +66,9 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
       }
 
       toast({ title: "Success", description: "Contract generation started." })
-    } catch (error: any) {
-      set({ error: error.message })
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+    } catch (error: unknown) {
+      set({ error: (error as Error).message })
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" })
     } finally {
       set({ isLoading: false })
     }

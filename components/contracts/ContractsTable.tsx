@@ -326,7 +326,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
 
   // Memoized filtered and sorted contracts
   const filteredAndSortedContracts = useMemo(() => {
-    let filtered = contracts.filter(contract => {
+    const filtered = contracts.filter(contract => {
       const matchesSearch = 
         contract.contract_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contract.first_party_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||

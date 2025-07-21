@@ -25,24 +25,6 @@ const RBACContext = createContext<RBACContextType>({
   hasAllRoles: () => false,
 })
 
-const roleHierarchy: Record<Role, number> = {
-  admin: 3,
-  manager: 2,
-  user: 1,
-}
-
-const rolePermissions: Record<Role, string[]> = {
-  admin: ['*'],
-  manager: [
-    'read:contracts',
-    'write:contracts',
-    'delete:contracts',
-    'read:analytics',
-    'manage:users',
-  ],
-  user: ['read:contracts', 'write:contracts'],
-}
-
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
 
@@ -68,17 +50,6 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
     loadUserRoles()
   }, [user])
-
-  const checkPermission = (permission: string) => {
-    if (!user) return false
-
-    const highestRole = userRoles.reduce((max, role) => 
-      roleHierarchy[role] > roleHierarchy[max] ? role : max
-    , 'user' as Role)
-
-    const permissions = rolePermissions[highestRole]
-    return permissions.includes('*') || permissions.includes(permission)
-  }
 
   const value = {
     userRoles,

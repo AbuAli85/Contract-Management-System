@@ -38,10 +38,9 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [role, setRole] = useState<string | null>(null)
+  const [role] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<Session['user'] | null>(null)
-  const [redirectHandled, setRedirectHandled] = useState(false)
 
   useEffect(() => {
     let mounted = true

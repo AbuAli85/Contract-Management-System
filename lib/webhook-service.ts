@@ -14,7 +14,7 @@ export class WebhookService {
   /**
    * Send contract data to main Make.com webhook for processing
    */
-  static async sendToMainWebhook(contractData: any) {
+  static async sendToMainWebhook(contractData: unknown) {
     if (!this.MAIN_WEBHOOK_URL) {
       throw new Error('Main webhook URL not configured')
     }
@@ -41,7 +41,6 @@ export class WebhookService {
 
       // Try to parse as JSON, fallback to text if it fails
       let result
-      const contentType = response.headers.get('content-type')
       const responseText = await response.text()
       
       try {
@@ -117,7 +116,7 @@ export class WebhookService {
   /**
    * Process contract and trigger both webhooks in sequence
    */
-  static async processContract(contractData: any) {
+  static async processContract(contractData: unknown) {
     try {
       // Step 1: Send to main webhook for processing
       const mainResult = await this.sendToMainWebhook(contractData)
@@ -125,11 +124,11 @@ export class WebhookService {
       // Step 2: If main processing succeeds and we have a PDF URL, notify Slack
       if (mainResult?.pdf_url) {
         await this.sendToSlackWebhook({
-          contract_number: contractData.contract_number || contractData.id,
+          contract_number: (contractData as unknown as { contract_number?: string; id?: string }).contract_number || (contractData as unknown as { id?: string }).id,
           pdf_url: mainResult.pdf_url,
           status: mainResult.status || 'ready',
-          client_name: contractData.client_name || contractData.second_party_name,
-          employer_name: contractData.employer_name || contractData.first_party_name
+          client_name: (contractData as unknown as { client_name?: string; second_party_name?: string }).client_name || (contractData as unknown as { second_party_name?: string }).second_party_name,
+          employer_name: (contractData as unknown as { employer_name?: string; first_party_name?: string }).employer_name || (contractData as unknown as { first_party_name?: string }).first_party_name
         })
       }
 

@@ -153,7 +153,7 @@ export const filterPromoters = (
   promoters: Promoter[],
   searchTerm: string,
   filterStatus: string,
-  documentFilter: string
+  _documentFilter: unknown // This parameter is no longer used
 ): Promoter[] => {
   return promoters.filter(promoter => {
     // Search filter
@@ -181,7 +181,7 @@ export const sortPromoters = (
   sortOrder: "asc" | "desc"
 ): EnhancedPromoter[] => {
   return [...promoters].sort((a, b) => {
-    let aValue: any, bValue: any
+    let aValue: number | undefined, bValue: number | undefined
     
     switch (sortBy) {
       case "name":

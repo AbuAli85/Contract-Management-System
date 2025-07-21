@@ -73,7 +73,7 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     if (onRowSelectionChange) {
       const selectedRows = table.getFilteredSelectedRowModel().rows
-      const selectedIds = selectedRows.map((row) => (row.original as any).id)
+      const selectedIds = selectedRows.map((row) => (row.original as TData).id)
       onRowSelectionChange(selectedIds)
     }
   }, [rowSelection, onRowSelectionChange, table])
