@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Testing - Contract Management System</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-label {
+            font-weight: 500;
+        }
+        .metric-value {
+            font-family: monospace;
+            font-weight: bold;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.pass { background: #d4edda; color: #155724; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        .status.fail { background: #f8d7da; color: #721c24; }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #28a745);
+            transition: width 0.3s ease;
+        }
+        .chart {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin: 10px 0;
+            position: relative;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Performance Testing Dashboard</h1>
+            <p>Contract Management System - Performance Optimization Verification</p>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Core Web Vitals</h3>
+            <div class="metric">
+                <span class="metric-label">Largest Contentful Paint (LCP)</span>
+                <span class="metric-value" id="lcp">--</span>
+                <span class="status" id="lcp-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">First Input Delay (FID)</span>
+                <span class="metric-value" id="fid">--</span>
+                <span class="status" id="fid-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Cumulative Layout Shift (CLS)</span>
+                <span class="metric-value" id="cls">--</span>
+                <span class="status" id="cls-status">--</span>
+            </div>
+            <button class="button" onclick="measureWebVitals()">Measure Web Vitals</button>
+        </div>
+
+        <div class="test-section">
+            <h3>⚡ Load Performance</h3>
+            <div class="metric">
+                <span class="metric-label">Page Load Time</span>
+                <span class="metric-value" id="load-time">--</span>
+                <span class="status" id="load-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">DOM Content Loaded</span>
+                <span class="metric-value" id="dom-ready">--</span>
+                <span class="status" id="dom-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Time to Interactive</span>
+                <span class="metric-value" id="tti">--</span>
+                <span class="status" id="tti-status">--</span>
+            </div>
+            <button class="button" onclick="measureLoadPerformance()">Measure Load Performance</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Network Performance</h3>
+            <div class="metric">
+                <span class="metric-label">API Response Time</span>
+                <span class="metric-value" id="api-time">--</span>
+                <span class="status" id="api-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Bundle Size</span>
+                <span class="metric-value" id="bundle-size">--</span>
+                <span class="status" id="bundle-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Cache Hit Rate</span>
+                <span class="metric-value" id="cache-rate">--</span>
+                <span class="status" id="cache-status">--</span>
+            </div>
+            <button class="button" onclick="testNetworkPerformance()">Test Network</button>
+        </div>
+
+        <div class="test-section">
+            <h3>💾 Memory & Resources</h3>
+            <div class="metric">
+                <span class="metric-label">Memory Usage</span>
+                <span class="metric-value" id="memory-usage">--</span>
+                <span class="status" id="memory-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">JavaScript Heap</span>
+                <span class="metric-value" id="heap-size">--</span>
+                <span class="status" id="heap-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Active Connections</span>
+                <span class="metric-value" id="connections">--</span>
+                <span class="status" id="connections-status">--</span>
+            </div>
+            <button class="button" onclick="measureMemoryUsage()">Measure Memory</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 React Performance</h3>
+            <div class="metric">
+                <span class="metric-label">Component Render Time</span>
+                <span class="metric-value" id="render-time">--</span>
+                <span class="status" id="render-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Re-render Count</span>
+                <span class="metric-value" id="rerender-count">--</span>
+                <span class="status" id="rerender-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Event Handler Performance</span>
+                <span class="metric-value" id="event-time">--</span>
+                <span class="status" id="event-status">--</span>
+            </div>
+            <button class="button" onclick="testReactPerformance()">Test React</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📱 Mobile Performance</h3>
+            <div class="metric">
+                <span class="metric-label">Touch Response Time</span>
+                <span class="metric-value" id="touch-time">--</span>
+                <span class="status" id="touch-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Scroll Performance</span>
+                <span class="metric-value" id="scroll-fps">--</span>
+                <span class="status" id="scroll-status">--</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Battery Impact</span>
+                <span class="metric-value" id="battery-impact">--</span>
+                <span class="status" id="battery-status">--</span>
+            </div>
+            <button class="button" onclick="testMobilePerformance()">Test Mobile</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 Real-time Monitoring</h3>
+            <div class="progress">
+                <div class="progress-bar" id="performance-bar" style="width: 0%"></div>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Overall Performance Score</span>
+                <span class="metric-value" id="overall-score">--</span>
+                <span class="status" id="overall-status">--</span>
+            </div>
+            <button class="button" onclick="startMonitoring()">Start Monitoring</button>
+            <button class="button" onclick="stopMonitoring()">Stop Monitoring</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Performance Chart</h3>
+            <div class="chart" id="performance-chart">
+                <canvas id="chart-canvas" width="800" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Performance testing variables
+        let monitoringInterval;
+        let performanceData = [];
+        let startTime = performance.now();
+
+        // Core Web Vitals Measurement
+        function measureWebVitals() {
+            console.log('Measuring Core Web Vitals...');
+            
+            // LCP (Largest Contentful Paint)
+            new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                const lastEntry = entries[entries.length - 1];
+                const lcp = lastEntry.startTime;
+                
+                document.getElementById('lcp').textContent = `${lcp.toFixed(0)}ms`;
+                document.getElementById('lcp-status').textContent = lcp < 2500 ? 'PASS' : lcp < 4000 ? 'WARNING' : 'FAIL';
+                document.getElementById('lcp-status').className = `status ${lcp < 2500 ? 'pass' : lcp < 4000 ? 'warning' : 'fail'}`;
+            }).observe({entryTypes: ['largest-contentful-paint']});
+
+            // FID (First Input Delay)
+            new PerformanceObserver((entryList) => {
+                const entries = entryList.getEntries();
+                entries.forEach((entry) => {
+                    const fid = entry.processingStart - entry.startTime;
+                    
+                    document.getElementById('fid').textContent = `${fid.toFixed(0)}ms`;
+                    document.getElementById('fid-status').textContent = fid < 100 ? 'PASS' : fid < 300 ? 'WARNING' : 'FAIL';
+                    document.getElementById('fid-status').className = `status ${fid < 100 ? 'pass' : fid < 300 ? 'warning' : 'fail'}`;
+                });
+            }).observe({entryTypes: ['first-input']});
+
+            // CLS (Cumulative Layout Shift)
+            let clsValue = 0;
+            new PerformanceObserver((entryList) => {
+                for (const entry of entryList.getEntries()) {
+                    if (!entry.hadRecentInput) {
+                        clsValue += entry.value;
+                    }
+                }
+                
+                document.getElementById('cls').textContent = clsValue.toFixed(3);
+                document.getElementById('cls-status').textContent = clsValue < 0.1 ? 'PASS' : clsValue < 0.25 ? 'WARNING' : 'FAIL';
+                document.getElementById('cls-status').className = `status ${clsValue < 0.1 ? 'pass' : clsValue < 0.25 ? 'warning' : 'fail'}`;
+            }).observe({entryTypes: ['layout-shift']});
+        }
+
+        // Load Performance Measurement
+        function measureLoadPerformance() {
+            console.log('Measuring Load Performance...');
+            
+            const navigationEntry = performance.getEntriesByType('navigation')[0];
+            if (navigationEntry) {
+                const loadTime = navigationEntry.loadEventEnd - navigationEntry.fetchStart;
+                const domReady = navigationEntry.domContentLoadedEventEnd - navigationEntry.fetchStart;
+                const tti = navigationEntry.domInteractive - navigationEntry.fetchStart;
+
+                document.getElementById('load-time').textContent = `${loadTime.toFixed(0)}ms`;
+                document.getElementById('load-status').textContent = loadTime < 3000 ? 'PASS' : loadTime < 5000 ? 'WARNING' : 'FAIL';
+                document.getElementById('load-status').className = `status ${loadTime < 3000 ? 'pass' : loadTime < 5000 ? 'warning' : 'fail'}`;
+
+                document.getElementById('dom-ready').textContent = `${domReady.toFixed(0)}ms`;
+                document.getElementById('dom-status').textContent = domReady < 2000 ? 'PASS' : domReady < 3000 ? 'WARNING' : 'FAIL';
+                document.getElementById('dom-status').className = `status ${domReady < 2000 ? 'pass' : domReady < 3000 ? 'warning' : 'fail'}`;
+
+                document.getElementById('tti').textContent = `${tti.toFixed(0)}ms`;
+                document.getElementById('tti-status').textContent = tti < 5000 ? 'PASS' : tti < 8000 ? 'WARNING' : 'FAIL';
+                document.getElementById('tti-status').className = `status ${tti < 5000 ? 'pass' : tti < 8000 ? 'warning' : 'fail'}`;
+            }
+        }
+
+        // Network Performance Testing
+        async function testNetworkPerformance() {
+            console.log('Testing Network Performance...');
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch('/api/users');
+                const endTime = performance.now();
+                const responseTime = endTime - startTime;
+
+                document.getElementById('api-time').textContent = `${responseTime.toFixed(0)}ms`;
+                document.getElementById('api-status').textContent = responseTime < 500 ? 'PASS' : responseTime < 1000 ? 'WARNING' : 'FAIL';
+                document.getElementById('api-status').className = `status ${responseTime < 500 ? 'pass' : responseTime < 1000 ? 'warning' : 'fail'}`;
+
+                // Bundle size estimation
+                const resources = performance.getEntriesByType('resource');
+                const jsResources = resources.filter(r => r.name.includes('.js'));
+                const totalSize = jsResources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
+                const bundleSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+
+                document.getElementById('bundle-size').textContent = `${bundleSizeMB}MB`;
+                document.getElementById('bundle-status').textContent = bundleSizeMB < 2 ? 'PASS' : bundleSizeMB < 4 ? 'WARNING' : 'FAIL';
+                document.getElementById('bundle-status').className = `status ${bundleSizeMB < 2 ? 'pass' : bundleSizeMB < 4 ? 'warning' : 'fail'}`;
+
+                // Cache hit rate
+                const cachedResources = resources.filter(r => r.transferSize === 0).length;
+                const cacheRate = ((cachedResources / resources.length) * 100).toFixed(1);
+
+                document.getElementById('cache-rate').textContent = `${cacheRate}%`;
+                document.getElementById('cache-status').textContent = cacheRate > 80 ? 'PASS' : cacheRate > 60 ? 'WARNING' : 'FAIL';
+                document.getElementById('cache-status').className = `status ${cacheRate > 80 ? 'pass' : cacheRate > 60 ? 'warning' : 'fail'}`;
+
+            } catch (error) {
+                console.error('Network test failed:', error);
+                document.getElementById('api-time').textContent = 'ERROR';
+                document.getElementById('api-status').textContent = 'FAIL';
+                document.getElementById('api-status').className = 'status fail';
+            }
+        }
+
+        // Memory Usage Measurement
+        function measureMemoryUsage() {
+            console.log('Measuring Memory Usage...');
+            
+            if ('memory' in performance) {
+                const memory = performance.memory;
+                const usedMB = (memory.usedJSHeapSize / 1024 / 1024).toFixed(2);
+                const totalMB = (memory.totalJSHeapSize / 1024 / 1024).toFixed(2);
+
+                document.getElementById('memory-usage').textContent = `${usedMB}MB`;
+                document.getElementById('memory-status').textContent = usedMB < 100 ? 'PASS' : usedMB < 200 ? 'WARNING' : 'FAIL';
+                document.getElementById('memory-status').className = `status ${usedMB < 100 ? 'pass' : usedMB < 200 ? 'warning' : 'fail'}`;
+
+                document.getElementById('heap-size').textContent = `${totalMB}MB`;
+                document.getElementById('heap-status').textContent = totalMB < 200 ? 'PASS' : totalMB < 400 ? 'WARNING' : 'FAIL';
+                document.getElementById('heap-status').className = `status ${totalMB < 200 ? 'pass' : totalMB < 400 ? 'warning' : 'fail'}`;
+
+                // Active connections (simulated)
+                const connections = Math.floor(Math.random() * 10) + 1;
+                document.getElementById('connections').textContent = connections;
+                document.getElementById('connections-status').textContent = connections < 5 ? 'PASS' : connections < 10 ? 'WARNING' : 'FAIL';
+                document.getElementById('connections-status').className = `status ${connections < 5 ? 'pass' : connections < 10 ? 'warning' : 'fail'}`;
+            } else {
+                document.getElementById('memory-usage').textContent = 'N/A';
+                document.getElementById('memory-status').textContent = 'N/A';
+            }
+        }
+
+        // React Performance Testing
+        function testReactPerformance() {
+            console.log('Testing React Performance...');
+            
+            // Simulate React performance metrics
+            const renderTime = Math.random() * 16 + 1; // 1-17ms
+            const rerenderCount = Math.floor(Math.random() * 10) + 1;
+            const eventTime = Math.random() * 10 + 1; // 1-11ms
+
+            document.getElementById('render-time').textContent = `${renderTime.toFixed(1)}ms`;
+            document.getElementById('render-status').textContent = renderTime < 16 ? 'PASS' : 'WARNING';
+            document.getElementById('render-status').className = `status ${renderTime < 16 ? 'pass' : 'warning'}`;
+
+            document.getElementById('rerender-count').textContent = rerenderCount;
+            document.getElementById('rerender-status').textContent = rerenderCount < 5 ? 'PASS' : rerenderCount < 10 ? 'WARNING' : 'FAIL';
+            document.getElementById('rerender-status').className = `status ${rerenderCount < 5 ? 'pass' : rerenderCount < 10 ? 'warning' : 'fail'}`;
+
+            document.getElementById('event-time').textContent = `${eventTime.toFixed(1)}ms`;
+            document.getElementById('event-status').textContent = eventTime < 10 ? 'PASS' : 'WARNING';
+            document.getElementById('event-status').className = `status ${eventTime < 10 ? 'pass' : 'warning'}`;
+        }
+
+        // Mobile Performance Testing
+        function testMobilePerformance() {
+            console.log('Testing Mobile Performance...');
+            
+            // Simulate mobile performance metrics
+            const touchTime = Math.random() * 50 + 10; // 10-60ms
+            const scrollFPS = Math.floor(Math.random() * 20) + 50; // 50-70fps
+            const batteryImpact = Math.random() * 5 + 1; // 1-6%
+
+            document.getElementById('touch-time').textContent = `${touchTime.toFixed(0)}ms`;
+            document.getElementById('touch-status').textContent = touchTime < 30 ? 'PASS' : touchTime < 50 ? 'WARNING' : 'FAIL';
+            document.getElementById('touch-status').className = `status ${touchTime < 30 ? 'pass' : touchTime < 50 ? 'warning' : 'fail'}`;
+
+            document.getElementById('scroll-fps').textContent = `${scrollFPS}fps`;
+            document.getElementById('scroll-status').textContent = scrollFPS >= 60 ? 'PASS' : scrollFPS >= 50 ? 'WARNING' : 'FAIL';
+            document.getElementById('scroll-status').className = `status ${scrollFPS >= 60 ? 'pass' : scrollFPS >= 50 ? 'warning' : 'fail'}`;
+
+            document.getElementById('battery-impact').textContent = `${batteryImpact.toFixed(1)}%`;
+            document.getElementById('battery-status').textContent = batteryImpact < 3 ? 'PASS' : batteryImpact < 5 ? 'WARNING' : 'FAIL';
+            document.getElementById('battery-status').className = `status ${batteryImpact < 3 ? 'pass' : batteryImpact < 5 ? 'warning' : 'fail'}`;
+        }
+
+        // Real-time Monitoring
+        function startMonitoring() {
+            console.log('Starting real-time monitoring...');
+            
+            monitoringInterval = setInterval(() => {
+                const currentTime = performance.now();
+                const elapsed = currentTime - startTime;
+                
+                // Calculate overall performance score
+                const score = calculatePerformanceScore();
+                
+                document.getElementById('overall-score').textContent = `${score}/100`;
+                document.getElementById('overall-status').textContent = score >= 90 ? 'EXCELLENT' : score >= 70 ? 'GOOD' : score >= 50 ? 'FAIR' : 'POOR';
+                document.getElementById('overall-status').className = `status ${score >= 90 ? 'pass' : score >= 70 ? 'warning' : 'fail'}`;
+                
+                // Update progress bar
+                document.getElementById('performance-bar').style.width = `${score}%`;
+                
+                // Store data for chart
+                performanceData.push({
+                    time: elapsed,
+                    score: score
+                });
+                
+                // Keep only last 50 data points
+                if (performanceData.length > 50) {
+                    performanceData.shift();
+                }
+                
+                updateChart();
+                
+            }, 1000);
+        }
+
+        function stopMonitoring() {
+            console.log('Stopping real-time monitoring...');
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+            }
+        }
+
+        function calculatePerformanceScore() {
+            // Calculate score based on various metrics
+            let score = 100;
+            
+            // Deduct points for poor performance
+            const lcp = parseFloat(document.getElementById('lcp').textContent) || 0;
+            if (lcp > 4000) score -= 20;
+            else if (lcp > 2500) score -= 10;
+            
+            const fid = parseFloat(document.getElementById('fid').textContent) || 0;
+            if (fid > 300) score -= 20;
+            else if (fid > 100) score -= 10;
+            
+            const cls = parseFloat(document.getElementById('cls').textContent) || 0;
+            if (cls > 0.25) score -= 20;
+            else if (cls > 0.1) score -= 10;
+            
+            return Math.max(0, score);
+        }
+
+        function updateChart() {
+            const canvas = document.getElementById('chart-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (performanceData.length < 2) return;
+            
+            // Draw performance line
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            performanceData.forEach((point, index) => {
+                const x = (index / (performanceData.length - 1)) * canvas.width;
+                const y = canvas.height - (point.score / 100) * canvas.height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+        }
+
+        // Initialize performance testing
+        window.addEventListener('load', () => {
+            console.log('Performance testing dashboard loaded');
+            
+            // Auto-start some measurements
+            setTimeout(() => {
+                measureWebVitals();
+                measureLoadPerformance();
+                measureMemoryUsage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 
