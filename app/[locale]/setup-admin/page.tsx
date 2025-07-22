@@ -23,6 +23,8 @@ export default function SetupAdminPage() {
     setError(null)
 
     try {
+      console.log('Setting up admin for user:', user.email)
+      
       const response = await fetch('/api/setup-admin', {
         method: 'POST',
         headers: {
@@ -31,7 +33,10 @@ export default function SetupAdminPage() {
         body: JSON.stringify({ email: user.email }),
       })
 
+      console.log('Setup admin response status:', response.status)
+      
       const data = await response.json()
+      console.log('Setup admin response data:', data)
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to setup admin')
@@ -39,6 +44,7 @@ export default function SetupAdminPage() {
 
       setSuccess(true)
     } catch (err: any) {
+      console.error('Setup admin error:', err)
       setError(err.message || 'An error occurred')
     } finally {
       setLoading(false)
@@ -116,20 +122,40 @@ export default function SetupAdminPage() {
               </ul>
             </div>
 
-            <Button
-              onClick={setupAdmin}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Setting up admin...
-                </>
-              ) : (
-                "Setup Admin Access"
-              )}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                onClick={setupAdmin}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up admin...
+                  </>
+                ) : (
+                  "Setup Admin Access"
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/test-db')
+                    const data = await response.json()
+                    console.log('Database test result:', data)
+                    alert('Check console for database test results')
+                  } catch (error) {
+                    console.error('Database test error:', error)
+                    alert('Database test failed - check console')
+                  }
+                }}
+                className="w-full"
+              >
+                Test Database Connection
+              </Button>
+            </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
               ⚠️ This is for testing purposes only. Remove this page in production.
