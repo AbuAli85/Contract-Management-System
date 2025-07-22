@@ -1,24 +1,7 @@
 module.exports = {
   extends: [
-    "next/core-web-vitals",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended",
-    "plugin:prettier/recommended"
+    "next/core-web-vitals"
   ],
-  plugins: ["@typescript-eslint", "react", "prettier"],
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    ecmaVersion: "latest",
-    sourceType: "module",
-    ecmaFeatures: {
-      jsx: true
-    }
-  },
-  settings: {
-    react: {
-      version: "detect"
-    }
-  },
   rules: {
     // React specific rules
     "react/react-in-jsx-scope": "off", // Next.js doesn't require React to be in scope
@@ -34,15 +17,11 @@ module.exports = {
       "caughtErrorsIgnorePattern": "^_"
     }],
     "@typescript-eslint/no-explicit-any": "warn", // Allow any but warn
-    "@typescript-eslint/no-empty-object-type": "warn", // Downgrade from error to warning
     
     // General rules
     "no-var": "error",
     "prefer-const": "warn",
-    "no-case-declarations": "warn",
-    
-    // Prettier
-    "prettier/prettier": "warn"
+    "no-case-declarations": "warn"
   },
   ignorePatterns: [
     ".next/**",

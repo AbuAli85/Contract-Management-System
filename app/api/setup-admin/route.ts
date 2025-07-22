@@ -53,15 +53,16 @@ export async function POST(request: NextRequest) {
       })
     } else {
       // Create new admin user
+      if (!user.email) {
+        return NextResponse.json({ error: 'User email is required' }, { status: 400 })
+      }
+
       const { data: newUser, error: createError } = await supabase
         .from('users')
         .insert({
-          id: user.id,
           email: user.email,
           role: 'admin',
-          status: 'active',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          created_at: new Date().toISOString()
         })
         .select()
         .single()
