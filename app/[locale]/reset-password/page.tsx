@@ -1,76 +1,70 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Eye, EyeOff, Mail, Lock, User, Briefcase } from "lucide-react"
+import { Loader2, Eye, EyeOff, Lock, CheckCircle } from "lucide-react"
 import { useAuth } from "@/src/components/auth/auth-provider"
 import Link from "next/link"
 
-export default function SignupPage() {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    fullName: ""
-  })
+export default function ResetPasswordPage() {
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signUp, user } = useAuth()
+  const [success, setSuccess] = useState(false)
+  const { updatePassword } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  // Redirect if already authenticated
+  // Check if we have the required tokens
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
+    const accessToken = searchParams?.get('access_token')
+    const refreshToken = searchParams?.get('refresh_token')
+    
+    if (!accessToken || !refreshToken) {
+      setError("Invalid or missing reset link. Please request a new password reset.")
     }
-  }, [user, router])
+  }, [searchParams])
 
-  const validateForm = () => {
-    if (!formData.email || !formData.password || !formData.confirmPassword || !formData.fullName) {
-      setError("All fields are required")
-      return false
+  const validatePassword = (password: string) => {
+    if (password.length < 8) {
+      return "Password must be at least 8 characters long"
     }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long")
-      return false
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      return "Password must contain at least one uppercase letter, one lowercase letter, and one number"
     }
-
-    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      setError("Password must contain at least one uppercase letter, one lowercase letter, and one number")
-      return false
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return false
-    }
-
-    return true
+    return null
   }
-
-  const [showConfirmation, setShowConfirmation] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    if (!validateForm()) {
+    // Validate passwords
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setError(passwordError)
+      setLoading(false)
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
       setLoading(false)
       return
     }
 
     try {
-      await signUp(formData.email, formData.password)
-      setShowConfirmation(true)
+      await updatePassword(password)
+      setSuccess(true)
     } catch (err: any) {
       setError(err?.message || "An unexpected error occurred. Please try again.")
     } finally {
@@ -78,34 +72,33 @@ export default function SignupPage() {
     }
   }
 
-  if (showConfirmation) {
+  if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
         <div className="w-full max-w-md">
           <Card className="shadow-xl border-0">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Check your email</CardTitle>
+              <div className="flex items-center justify-center mb-4">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl text-center">Password updated!</CardTitle>
               <CardDescription className="text-center">
-                We've sent a confirmation link to {formData.email}
+                Your password has been successfully updated
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  Please check your email and click the confirmation link to activate your account. 
-                  If you don't see the email, check your spam folder.
+                  You can now sign in with your new password.
                 </AlertDescription>
               </Alert>
               
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.push('/login')}
-                >
-                  Back to login
-                </Button>
-              </div>
+              <Button
+                className="w-full"
+                onClick={() => router.push('/login')}
+              >
+                Sign in
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -119,22 +112,22 @@ export default function SignupPage() {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <Briefcase className="h-12 w-12 text-blue-600" />
+            <Lock className="h-12 w-12 text-blue-600" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Contract Management System
+            Reset Password
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Create your account
+            Enter your new password
           </p>
         </div>
 
-        {/* Signup Card */}
+        {/* Reset Password Card */}
         <Card className="shadow-xl border-0">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Create account</CardTitle>
+            <CardTitle className="text-2xl text-center">Set new password</CardTitle>
             <CardDescription className="text-center">
-              Enter your information to create your account
+              Choose a strong password for your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -146,47 +139,15 @@ export default function SignupPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="fullName"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">New Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder="Enter your new password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
@@ -212,9 +173,9 @@ export default function SignupPage() {
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                    placeholder="Confirm your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="pl-10 pr-10"
                     required
                   />
@@ -238,15 +199,15 @@ export default function SignupPage() {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    Updating password...
                   </>
                 ) : (
-                  "Create account"
+                  "Update password"
                 )}
               </Button>
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                Already have an account?{" "}
+                Remember your password?{" "}
                 <Link
                   href="/login"
                   className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"

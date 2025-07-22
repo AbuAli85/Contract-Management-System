@@ -1,84 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-// Helper function to get user from request headers
-async function getUserFromRequest(request: NextRequest) {
-  const supabase = await createClient();
-  
-  // Get the authorization header
-  const authHeader = request.headers.get('authorization');
-  
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      return { user, error };
-    } catch (error) {
-      return { user: null, error: 'Invalid token' };
-    }
-  }
-  
-  // Try to get session from cookies
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    
-    if (error) {
-      console.log('🔍 Session error:', error)
-      return { user: null, error: error.message }
-    }
-    
-    if (session?.user) {
-      console.log('🔍 Found user in session:', session.user.email)
-      return { user: session.user, error: null }
-    }
-    
-    console.log('🔍 No session found')
-    return { user: null, error: 'No session found' }
-  } catch (error) {
-    console.log('🔍 Error getting session:', error)
-    return { user: null, error: 'Session error' }
-  }
-}
-
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Test Auth API - Starting request');
+    const supabase = await createClient()
     
-    // Log all headers for debugging
-    const headersList = request.headers;
-    console.log('🔍 Request headers:', Object.fromEntries(headersList.entries()));
+    // Test basic connection
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    // Get user from request
-    const { user, error: authError } = await getUserFromRequest(request);
+    // Test signup with a test user
+    const testEmail = `test-${Date.now()}@example.com`
+    const testPassword = 'TestPassword123'
     
-    console.log('🔍 Auth check result:', {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError
-    });
-    
-    if (authError || !user) {
-      console.log('❌ Authentication failed:', authError || 'No user found');
-      return NextResponse.json({ 
-        error: 'Unauthorized',
-        authError: authError,
-        hasUser: !!user,
-        message: 'No active session found. Please log in first.'
-      }, { status: 401 });
-    }
-    
-    return NextResponse.json({ 
+    const { data: signupData, error: signupError } = await supabase.auth.signUp({
+      email: testEmail,
+      password: testPassword,
+      options: {
+        emailRedirectTo: `${request.nextUrl.origin}/auth/callback`
+      }
+    })
+
+    // Test signin with the test user
+    const { data: signinData, error: signinError } = await supabase.auth.signInWithPassword({
+      email: testEmail,
+      password: testPassword
+    })
+
+    return NextResponse.json({
       success: true,
-      user: {
-        id: user.id,
-        email: user.email
+      session: !!session,
+      sessionError: sessionError?.message,
+      signup: {
+        success: !signupError,
+        error: signupError?.message,
+        user: signupData.user?.email,
+        confirmed: signupData.user?.email_confirmed_at
       },
-      message: 'Authentication successful'
-    });
-    
+      signin: {
+        success: !signinError,
+        error: signinError?.message,
+        user: signinData.user?.email
+      },
+      config: {
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      }
+    })
   } catch (error) {
-    console.error('Error in test auth API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Auth test error:', error)
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 } 

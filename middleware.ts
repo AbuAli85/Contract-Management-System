@@ -39,7 +39,8 @@ export async function middleware(req: NextRequest) {
     '/signup',
     '/forgot-password',
     '/reset-password',
-    '/auth/callback'
+    '/auth/callback',
+    '/auth/reset-password'
   ]
 
   // Check if current path is a public route
