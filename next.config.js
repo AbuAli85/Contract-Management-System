@@ -3,15 +3,6 @@ const nextConfig = {
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
-    // Enable modularize imports for better tree shaking
-    modularizeImports: {
-      'lucide-react': {
-        transform: 'lucide-react/dist/esm/icons/{{kebabCase}}',
-      },
-      '@radix-ui/react-icons': {
-        transform: '@radix-ui/react-icons/dist/{{member}}',
-      },
-    },
     // Disable heavy features in development
     ...(process.env.NODE_ENV === 'development' && {
       // Disable some heavy optimizations in development
@@ -20,7 +11,6 @@ const nextConfig = {
       bundlePagesRouterDependencies: false,
       // Disable heavy features
       optimizePackageImports: false,
-      modularizeImports: {},
     }),
   },
 
