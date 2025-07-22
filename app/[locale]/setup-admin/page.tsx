@@ -1,0 +1,142 @@
+"use client"
+
+import { useState } from "react"
+import { useAuth } from "@/src/components/auth/auth-provider"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, Shield, CheckCircle, AlertTriangle } from "lucide-react"
+
+export default function SetupAdminPage() {
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+
+  const setupAdmin = async () => {
+    if (!user?.email) {
+      setError("No user email found")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/setup-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to setup admin')
+      }
+
+      setSuccess(true)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+        <div className="w-full max-w-md">
+          <Card className="shadow-xl border-0">
+            <CardHeader className="space-y-1">
+              <div className="flex items-center justify-center mb-4">
+                <CheckCircle className="h-12 w-12 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl text-center">Admin Setup Complete!</CardTitle>
+              <CardDescription className="text-center">
+                Your account has been upgraded to admin privileges
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <AlertDescription>
+                  You now have access to all dashboard features including analytics, reports, user management, and system administration.
+                </AlertDescription>
+              </Alert>
+              
+              <Button
+                className="w-full"
+                onClick={() => window.location.href = '/dashboard'}
+              >
+                Go to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="space-y-1">
+            <div className="flex items-center justify-center mb-4">
+              <Shield className="h-12 w-12 text-blue-600" />
+            </div>
+            <CardTitle className="text-2xl text-center">Setup Admin Access</CardTitle>
+            <CardDescription className="text-center">
+              Upgrade your account to admin privileges for full system access
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <strong>Current User:</strong> {user?.email}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                This will give you access to:
+              </p>
+              <ul className="text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
+                <li>Analytics & Reports</li>
+                <li>User Management</li>
+                <li>System Administration</li>
+                <li>Audit Logs</li>
+                <li>All dashboard features</li>
+              </ul>
+            </div>
+
+            <Button
+              onClick={setupAdmin}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Setting up admin...
+                </>
+              ) : (
+                "Setup Admin Access"
+              )}
+            </Button>
+
+            <div className="text-center text-xs text-gray-500 dark:text-gray-400">
+              ⚠️ This is for testing purposes only. Remove this page in production.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+} 

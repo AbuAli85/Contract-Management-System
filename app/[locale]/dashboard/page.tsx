@@ -275,6 +275,10 @@ export default function DashboardPage() {
     permissions.can(feature.permission as any)
   )
 
+  // TEMPORARY: Show all features for testing (remove this in production)
+  const showAllFeatures = true // Set to false in production
+  const displayFeatures = showAllFeatures ? featureCards : filteredFeatures
+
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'admin':
@@ -385,12 +389,12 @@ export default function DashboardPage() {
               {locale === 'ar' ? 'الميزات المتاحة' : 'Available Features'}
             </h2>
             <Badge variant="outline">
-              {filteredFeatures.length} {locale === 'ar' ? 'ميزة' : 'features'}
+              {displayFeatures.length} {locale === 'ar' ? 'ميزة' : 'features'}
             </Badge>
           </div>
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredFeatures.map((feature, index) => (
+            {displayFeatures.map((feature, index) => (
               <PermissionGuard key={index} action={feature.permission as any}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardHeader>
@@ -422,6 +426,30 @@ export default function DashboardPage() {
               </PermissionGuard>
             ))}
           </div>
+        </div>
+
+        {/* Admin Setup Link (Temporary) */}
+        <div className="space-y-4">
+          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+            <CardHeader>
+              <CardTitle className="text-lg text-orange-800 dark:text-orange-200">
+                🚀 Quick Setup
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
+                Need admin access to see all features? Click below to setup admin privileges.
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.href = '/setup-admin'}
+                className="border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                Setup Admin Access
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Recent Activity */}

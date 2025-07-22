@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { usePathname } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useAuth } from "@/src/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
@@ -124,6 +125,10 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
+  const pathname = usePathname()
+  
+  // Extract locale from pathname
+  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
 
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -155,25 +160,25 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
     {
       label: "New Contract",
       icon: FilePlus,
-      href: "/generate-contract",
+      href: `/${locale}/generate-contract`,
       permission: "contract:create"
     },
     {
       label: "Add Promoter",
       icon: UserPlus,
-      href: "/manage-promoters",
+      href: `/${locale}/manage-promoters`,
       permission: "promoter:create"
     },
     {
       label: "Add Party",
       icon: Building2,
-      href: "/manage-parties",
+      href: `/${locale}/manage-parties`,
       permission: "party:create"
     },
     {
       label: "Analytics",
       icon: BarChart3,
-      href: "/dashboard/analytics",
+      href: `/${locale}/dashboard/analytics`,
       permission: "system:analytics"
     }
   ].filter(action => permissions.can(action.permission as any))
@@ -296,7 +301,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
             <DropdownMenuSeparator />
             
             <DropdownMenuItem asChild>
-              <a href="/dashboard/profile" className="flex items-center">
+              <a href={`/${locale}/dashboard/profile`} className="flex items-center">
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </a>
@@ -304,7 +309,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
             
             <PermissionGuard action="system:settings">
               <DropdownMenuItem asChild>
-                <a href="/dashboard/settings" className="flex items-center">
+                <a href={`/${locale}/dashboard/settings`} className="flex items-center">
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </a>
@@ -313,7 +318,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
             
             <PermissionGuard action="system:analytics">
               <DropdownMenuItem asChild>
-                <a href="/dashboard/analytics" className="flex items-center">
+                <a href={`/${locale}/dashboard/analytics`} className="flex items-center">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
                 </a>

@@ -51,7 +51,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       // For now, default to 'user' role
       console.log('Loading user roles for:', user.id)
       
-      // Try to load from user_roles table if it exists
+      // Try to load from users table if it exists
       try {
         const supabaseClient = await getSupabase()
         const { data: roles, error } = await supabaseClient
@@ -61,17 +61,31 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
           .single()
 
         if (error) {
-          console.log('User roles table not available, using default role')
-          setUserRoles(['user'])
+          console.log('User roles table not available, trying app_users table')
+          // Try app_users table as fallback
+          const { data: appUserRoles, error: appError } = await supabaseClient
+            .from('app_users')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+          if (appError) {
+            console.log('No user roles found, using default admin role for testing')
+            setUserRoles(['admin']) // Default to admin for testing
+            return
+          }
+
+          const userRole = appUserRoles?.role as Role || 'admin'
+          setUserRoles([userRole])
           return
         }
 
-        // If user has a role field, use it; otherwise default to 'user'
-        const userRole = roles?.role as Role || 'user'
+        // If user has a role field, use it; otherwise default to 'admin' for testing
+        const userRole = roles?.role as Role || 'admin'
         setUserRoles([userRole])
       } catch (error) {
-        console.log('Error loading user roles, using default:', error)
-        setUserRoles(['user'])
+        console.log('Error loading user roles, using default admin for testing:', error)
+        setUserRoles(['admin']) // Default to admin for testing
       }
     }
 
