@@ -10,6 +10,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { usePermissions, PermissionGuard } from "@/hooks/use-permissions"
 import {
   Table,
   TableBody,
@@ -94,6 +95,7 @@ interface PromoterStats {
 }
 
 export default function ManagePromotersPage() {
+  const permissions = usePermissions()
   const [promoters, setPromoters] = useState<Promoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
   const [selectedPromoters, setSelectedPromoters] = useState<string[]>([])
@@ -540,13 +542,15 @@ export default function ManagePromotersPage() {
                 <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
               </Link>
             </Button>
-            <Button
-              onClick={handleAddNew}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <PlusCircleIcon className="mr-2 h-5 w-5" />
-              Add New Promoter
-            </Button>
+            <PermissionGuard action="promoter:create">
+              <Button
+                onClick={handleAddNew}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <PlusCircleIcon className="mr-2 h-5 w-5" />
+                Add New Promoter
+              </Button>
+            </PermissionGuard>
           </div>
         </div>
 
@@ -731,32 +735,36 @@ export default function ManagePromotersPage() {
                   {selectedPromoters.length} promoter(s) selected
                 </span>
                 <div className="flex gap-2 ml-auto">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportCSV}
-                    disabled={isExporting}
-                  >
-                    {isExporting ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="mr-2 h-4 w-4" />
-                    )}
-                    Export Selected
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleBulkDelete}
-                    disabled={bulkActionLoading}
-                  >
-                    {bulkActionLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="mr-2 h-4 w-4" />
-                    )}
-                    Delete Selected
-                  </Button>
+                  <PermissionGuard action="promoter:export">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Download className="mr-2 h-4 w-4" />
+                      )}
+                      Export Selected
+                    </Button>
+                  </PermissionGuard>
+                  <PermissionGuard action="promoter:bulk_delete">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleBulkDelete}
+                      disabled={bulkActionLoading}
+                    >
+                      {bulkActionLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="mr-2 h-4 w-4" />
+                      )}
+                      Delete Selected
+                    </Button>
+                  </PermissionGuard>
                 </div>
               </div>
             )}
