@@ -219,6 +219,48 @@ export default function SetupAdminPage() {
               </Button>
               
               <Button
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/setup-admin-service', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ email: user?.email || '' }),
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Service role setup admin response:', data)
+                    
+                    if (data.success) {
+                      alert('Admin setup completed successfully (Service Role)!')
+                      window.location.reload()
+                    } else {
+                      alert(`Setup failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Service role setup admin error:', error)
+                    alert('Setup failed - check console for details')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                variant="outline"
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up admin...
+                  </>
+                ) : (
+                  "Setup Admin (SERVICE ROLE)"
+                )}
+              </Button>
+              
+              <Button
                 onClick={setupAdminBypass}
                 disabled={loading}
                 variant="outline"
@@ -304,6 +346,31 @@ export default function SetupAdminPage() {
                 className="w-full"
               >
                 Test Supabase Connection
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/debug-setup-admin')
+                    const data = await response.json()
+                    console.log('=== COMPREHENSIVE DEBUG RESULTS ===')
+                    console.log('Debug result:', data)
+                    console.log('Summary:', data.summary)
+                    console.log('Environment:', data.debugInfo?.environment)
+                    console.log('Supabase:', data.debugInfo?.supabase)
+                    console.log('Database:', data.debugInfo?.database)
+                    console.log('Errors:', data.debugInfo?.errors)
+                    console.log('=== END DEBUG RESULTS ===')
+                    alert('Comprehensive debug completed - check console for detailed results')
+                  } catch (error) {
+                    console.error('Debug error:', error)
+                    alert('Debug failed - check console')
+                  }
+                }}
+                className="w-full border-red-300 text-red-700 hover:bg-red-100"
+              >
+                🔍 Comprehensive Debug
               </Button>
             </div>
 
