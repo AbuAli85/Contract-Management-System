@@ -110,7 +110,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       titleAr: "لوحة التحكم",
       items: [
         {
-          href: `/${locale}/dashboard`,
+          href: `/${locale}/dashboard/overview`,
           label: "Overview",
           labelAr: "نظرة عامة",
           icon: Home,
