@@ -1,5 +1,8 @@
 "use client"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
+
+// Force dynamic rendering to avoid build-time Supabase issues
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"

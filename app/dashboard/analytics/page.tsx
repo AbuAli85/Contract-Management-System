@@ -3,6 +3,9 @@ import { useEffect, useState } from "react"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
+
+// Force dynamic rendering to avoid build-time Supabase issues
+export const dynamic = 'force-dynamic'
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend } from "recharts"
 import { Loader2 } from "lucide-react"
 
