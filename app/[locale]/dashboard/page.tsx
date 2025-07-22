@@ -440,14 +440,34 @@ export default function DashboardPage() {
               <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
                 Need admin access to see all features? Click below to setup admin privileges.
               </p>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/setup-admin'}
-                className="border-orange-300 text-orange-700 hover:bg-orange-100"
-              >
-                Setup Admin Access
-              </Button>
+              <div className="space-y-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = '/setup-admin'}
+                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
+                >
+                  Setup Admin Access
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/test-users')
+                      const data = await response.json()
+                      console.log('User Management Test:', data)
+                      alert('Check console for user management test results')
+                    } catch (error) {
+                      console.error('User management test error:', error)
+                      alert('User management test failed - check console')
+                    }
+                  }}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                >
+                  Test User Management
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

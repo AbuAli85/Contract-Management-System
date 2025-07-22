@@ -155,6 +155,24 @@ export default function SetupAdminPage() {
               >
                 Test Database Connection
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/debug-tables')
+                    const data = await response.json()
+                    console.log('Debug tables result:', data)
+                    alert('Check console for table debug results')
+                  } catch (error) {
+                    console.error('Debug tables error:', error)
+                    alert('Debug tables failed - check console')
+                  }
+                }}
+                className="w-full"
+              >
+                Debug Tables
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
