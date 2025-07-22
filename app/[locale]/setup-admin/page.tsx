@@ -51,6 +51,44 @@ export default function SetupAdminPage() {
     }
   }
 
+  const setupAdminBypass = async () => {
+    if (!user?.email) {
+      setError("No user email found")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      console.log('BYPASS: Setting up admin for user:', user.email)
+      
+      const response = await fetch('/api/setup-admin-bypass', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: user.email }),
+      })
+
+      console.log('Bypass setup admin response status:', response.status)
+      
+      const data = await response.json()
+      console.log('Bypass setup admin response data:', data)
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to setup admin')
+      }
+
+      setSuccess(true)
+    } catch (err: any) {
+      console.error('Bypass setup admin error:', err)
+      setError(err.message || 'An error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
@@ -139,6 +177,22 @@ export default function SetupAdminPage() {
               </Button>
               
               <Button
+                onClick={setupAdminBypass}
+                disabled={loading}
+                variant="outline"
+                className="w-full border-green-300 text-green-700 hover:bg-green-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up admin...
+                  </>
+                ) : (
+                  "Setup Admin (BYPASS)"
+                )}
+              </Button>
+              
+              <Button
                 variant="outline"
                 onClick={async () => {
                   try {
@@ -172,6 +226,24 @@ export default function SetupAdminPage() {
                 className="w-full"
               >
                 Debug Tables
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/test-simple')
+                    const data = await response.json()
+                    console.log('Simple test result:', data)
+                    alert('Check console for simple test results')
+                  } catch (error) {
+                    console.error('Simple test error:', error)
+                    alert('Simple test failed - check console')
+                  }
+                }}
+                className="w-full"
+              >
+                Simple Test
               </Button>
             </div>
 

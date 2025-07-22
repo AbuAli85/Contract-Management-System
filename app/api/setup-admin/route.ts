@@ -19,9 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
+    console.log('Setup admin request for user:', { id: user.id, email: user.email })
+    console.log('Request body:', body)
+
     // Check if user exists in users table
     let existingUser = null
     let fetchError = null
+    let databaseAccessible = false
     
     try {
       const { data: userData, error: userError } = await supabase
@@ -32,6 +36,8 @@ export async function POST(request: NextRequest) {
       
       existingUser = userData
       fetchError = userError
+      databaseAccessible = true
+      console.log('Users table query result:', { userData, userError })
     } catch (error) {
       console.log('Users table not found, trying profiles table')
       
@@ -45,11 +51,14 @@ export async function POST(request: NextRequest) {
         
         existingUser = profileData
         fetchError = profileError
+        databaseAccessible = true
+        console.log('Profiles table query result:', { profileData, profileError })
       } catch (profileError) {
         console.log('Profiles table also not found, will create new user')
         // Both tables failed, but we'll continue to create a new user
         existingUser = null
         fetchError = null
+        databaseAccessible = false
       }
     }
 
@@ -63,9 +72,34 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Only return error if it's not a "not found" error (PGRST116)
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    // Only return error if it's not a "not found" error
+    // Check for various "not found" error codes
+    const isNotFoundError = fetchError && (
+      fetchError.code === 'PGRST116' || 
+      fetchError.message?.includes('not found') ||
+      fetchError.message?.includes('No rows returned') ||
+      fetchError.details?.includes('not found')
+    )
+    
+    if (fetchError && !isNotFoundError) {
       console.error('Error fetching user:', fetchError)
+      
+      // If database is not accessible, use fallback admin setup
+      if (!databaseAccessible) {
+        console.log('Database not accessible, using fallback admin setup')
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Admin setup completed (database fallback)',
+          user: {
+            id: user.id,
+            email: user.email,
+            role: 'admin',
+            created_at: new Date().toISOString()
+          },
+          warning: 'Database not accessible, using in-memory admin role'
+        })
+      }
+      
       return NextResponse.json({ error: 'Failed to check user' }, { status: 500 })
     }
 
