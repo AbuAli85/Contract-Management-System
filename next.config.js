@@ -178,9 +178,7 @@ const nextConfig = {
     ignoreBuildErrors: process.env.NODE_ENV === 'development',
   },
 
-  eslint: {
-    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
-  },
+
 
   // Enable React strict mode for better development experience
   reactStrictMode: true,
