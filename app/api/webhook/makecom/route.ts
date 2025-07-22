@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Create Supabase client function to avoid build-time issues
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+  
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Get the contract with related data
+    const supabase = createSupabaseClient()
     const { data: contracts, error } = await supabase
       .from('contracts')
       .select(`
@@ -121,6 +129,7 @@ export async function PATCH(request: Request) {
     }
 
     // Update contract with PDF URL
+    const supabase = createSupabaseClient()
     const { data: updateResult, error: updateError } = await supabase
       .from('contracts')
       .update({ 

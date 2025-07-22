@@ -11,10 +11,17 @@ import {
   generateMakecomBlueprint
 } from '@/lib/makecom-template-config'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Create Supabase client function to avoid build-time issues
+function createSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Missing Supabase environment variables')
+  }
+  
+  return createClient(supabaseUrl, supabaseKey)
+}
 
 // GET: List all Make.com enabled contract types
 export async function GET(request: NextRequest) {
@@ -131,6 +138,7 @@ export async function POST(request: NextRequest) {
     }
 
     // First, create the contract in the database
+    const supabase = createSupabaseClient()
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
       .insert({
