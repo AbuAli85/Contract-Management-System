@@ -19,6 +19,8 @@ const fontLexend = Lexend({
   weight: ["400", "500", "600", "700"],
 })
 
+export { ClientLayout };
+
 export default function ClientLayout({
   children,
   params,

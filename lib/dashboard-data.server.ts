@@ -60,6 +60,8 @@ export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<D
   }
 }
 
+export { getDashboardAnalyticsSrv as getDashboardAnalytics };
+
 // Add other server-only implementations
 export async function getPendingReviewsSrv(): Promise<ServerActionResponse<PendingReview[]>> {
   const supabase = await createSupabaseClient()

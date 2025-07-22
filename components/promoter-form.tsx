@@ -3,7 +3,6 @@ import { useState, useEffect } from "react"
 import type React from "react"
 
 import { useForm } from "react-hook-form"
-import type { Resolver } from "react-hook-form";
 import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
 import { supabase } from "@/lib/supabase"
@@ -21,6 +20,7 @@ import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import ImageUploadField from "@/components/image-upload-field"
 import DatePickerWithPresetsField from "@/components/date-picker-with-presets-field"
 import { cn } from "@/lib/utils"
+import { zodResolver } from "@hookform/resolvers/zod";
 
 const BUCKET_NAME = "promoter-documents"
 
