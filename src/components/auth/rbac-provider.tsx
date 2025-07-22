@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { User } from '@supabase/supabase-js'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
 
 export type Role = 'admin' | 'manager' | 'user'
 
@@ -25,6 +26,17 @@ const RBACContext = createContext<RBACContextType>({
   hasAllRoles: () => false,
 })
 
+// Lazy import to avoid build-time issues
+let supabase: SupabaseClient<Database> | null = null
+
+async function getSupabase(): Promise<SupabaseClient<Database>> {
+  if (!supabase) {
+    const { supabase: supabaseClient } = await import('@/lib/supabase')
+    supabase = supabaseClient
+  }
+  return supabase
+}
+
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
 
@@ -41,7 +53,8 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       
       // Try to load from user_roles table if it exists
       try {
-        const { data: roles, error } = await supabase
+        const supabaseClient = await getSupabase()
+        const { data: roles, error } = await supabaseClient
           .from('users')
           .select('role')
           .eq('id', user.id)

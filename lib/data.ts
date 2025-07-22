@@ -1,5 +1,17 @@
 import type { ContractWithRelations } from "@/hooks/use-contracts"
-import { supabase } from "@/lib/supabase"
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/supabase'
+
+// Lazy import to avoid build-time issues
+let supabase: SupabaseClient<Database> | null = null
+
+async function getSupabase(): Promise<SupabaseClient<Database>> {
+  if (!supabase) {
+    const { supabase: supabaseClient } = await import('@/lib/supabase')
+    supabase = supabaseClient
+  }
+  return supabase
+}
 
 export const getContract = async (contractId: string): Promise<ContractWithRelations | null> => {
   if (!contractId) {
@@ -7,29 +19,35 @@ export const getContract = async (contractId: string): Promise<ContractWithRelat
     return null
   }
 
-  const { data, error } = await supabase
-    .from("contracts")
-    .select(
-      `
-      *,
-      first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
-      second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
-      promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
-    `,
-    )
-    .eq("id", contractId)
-    .single()
+  try {
+    const supabaseClient = await getSupabase()
+    const { data, error } = await supabaseClient
+      .from("contracts")
+      .select(
+        `
+        *,
+        first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
+        second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
+        promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
+      `,
+      )
+      .eq("id", contractId)
+      .single()
 
-  if (error) {
-    console.error("Error fetching contract:", error.message)
-    // Consider how to handle errors. Throwing might be appropriate for React Query's error state.
-    // If the error is because the contract doesn't exist (e.g., RLS or actual missing row),
-    // Supabase often returns a specific error code or null data.
-    if (error.code === "PGRST116") {
-      // PGRST116: "The result contains 0 rows"
-      return null // Contract not found
+    if (error) {
+      console.error("Error fetching contract:", error.message)
+      // Consider how to handle errors. Throwing might be appropriate for React Query's error state.
+      // If the error is because the contract doesn't exist (e.g., RLS or actual missing row),
+      // Supabase often returns a specific error code or null data.
+      if (error.code === "PGRST116") {
+        // PGRST116: "The result contains 0 rows"
+        return null // Contract not found
+      }
+      throw error
     }
-    throw error
+    return data as ContractWithRelations | null
+  } catch (error) {
+    console.error("Error in getContract:", error)
+    return null
   }
-  return data as ContractWithRelations | null
 }
