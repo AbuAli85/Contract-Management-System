@@ -29,6 +29,8 @@ interface ImageUploadFieldProps {
   id?: string // To connect with FormLabel from parent
 }
 
+export { ImageUploadField };
+
 export default function ImageUploadField({
   field,
   initialImageUrl,

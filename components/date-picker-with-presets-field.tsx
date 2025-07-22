@@ -34,7 +34,7 @@ const defaultPresets = [
   { label: "+5Y", date: addYears(startOfToday(), 5) },
 ]
 
-export default function DatePickerWithPresetsField({
+function DatePickerWithPresetsField({
   field,
   placeholder,
   disabled,
@@ -91,3 +91,6 @@ export default function DatePickerWithPresetsField({
     </Popover>
   )
 }
+
+export { DatePickerWithPresetsField };
+export default DatePickerWithPresetsField;
