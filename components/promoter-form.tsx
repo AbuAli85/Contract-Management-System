@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react"
 import type React from "react"
 
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
 import { supabase } from "@/lib/supabase"
@@ -72,16 +72,21 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       name_en: "",
       name_ar: "",
       id_card_number: "",
+      employer_id: null,
+      outsourced_to_id: null,
+      job_title: null,
+      work_location: null,
+      status: "active",
+      contract_valid_until: null,
       id_card_image: null,
       passport_image: null,
       existing_id_card_url: null,
       existing_passport_url: null,
       id_card_expiry_date: null,
       passport_expiry_date: null,
-      status: "active",
       notify_days_before_id_expiry: 30,
       notify_days_before_passport_expiry: 90,
-      notes: "",
+      notes: null,
     },
   })
 
@@ -307,7 +312,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="status"
-                render={({ field }: { field: React.ComponentProps<typeof Select> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>Status / الحالة</ShadcnFormLabel>
                     <Select onValueChange={field.onChange} value={field.value} disabled={formActuallyDisabled}>
@@ -338,16 +343,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="id_card_image"
-                render={({ field }: { field: React.ComponentProps<typeof ImageUploadField> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel htmlFor={field.name}>ID Card Image / صورة البطاقة</ShadcnFormLabel>
                     <FormControl>
                       <ImageUploadField
-                        id={field.name}
-                        value={field.value as File | null | undefined}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        ref={field.ref}
+                        field={field}
                         initialImageUrl={form.watch("existing_id_card_url")}
                         disabled={formActuallyDisabled}
                         onImageRemove={() => form.setValue("existing_id_card_url", null)}
@@ -360,7 +361,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="id_card_expiry_date"
-                render={({ field }: { field: React.ComponentProps<typeof DatePickerWithPresetsField> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>ID Card Expiry Date / تاريخ انتهاء البطاقة</ShadcnFormLabel>
                     <FormControl>
@@ -382,16 +383,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="passport_image"
-                render={({ field }: { field: React.ComponentProps<typeof ImageUploadField> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel htmlFor={field.name}>Passport Image / صورة الجواز</ShadcnFormLabel>
                     <FormControl>
                       <ImageUploadField
-                        id={field.name}
-                        value={field.value as File | null | undefined}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        ref={field.ref}
+                        field={field}
                         initialImageUrl={form.watch("existing_passport_url")}
                         disabled={formActuallyDisabled}
                         onImageRemove={() => form.setValue("existing_passport_url", null)}
@@ -404,7 +401,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="passport_expiry_date"
-                render={({ field }: { field: React.ComponentProps<typeof DatePickerWithPresetsField> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>Passport Expiry Date / تاريخ انتهاء الجواز</ShadcnFormLabel>
                     <FormControl>
@@ -433,7 +430,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="notify_days_before_id_expiry"
-                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>ID Expiry Alert (Days) / تنبيه انتهاء البطاقة (أيام)</ShadcnFormLabel>
                     <FormControl>
@@ -455,7 +452,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
               <FormField
                 control={form.control}
                 name="notify_days_before_passport_expiry"
-                render={({ field }: { field: React.ComponentProps<typeof Input> }) => (
+                render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>Passport Expiry Alert (Days) / تنبيه انتهاء الجواز (أيام)</ShadcnFormLabel>
                     <FormControl>
@@ -483,7 +480,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
             <FormField
               control={form.control}
               name="notes"
-              render={({ field }: { field: React.ComponentProps<typeof Textarea> }) => (
+              render={({ field }) => (
                 <FormItem>
                   <ShadcnFormLabel>Internal Notes / ملاحظات داخلية</ShadcnFormLabel>
                   <FormControl>

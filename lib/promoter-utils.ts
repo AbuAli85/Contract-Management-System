@@ -181,7 +181,7 @@ export const sortPromoters = (
   sortOrder: "asc" | "desc"
 ): EnhancedPromoter[] => {
   return [...promoters].sort((a, b) => {
-    let aValue: number | undefined, bValue: number | undefined
+    let aValue: string | number, bValue: string | number
     
     switch (sortBy) {
       case "name":

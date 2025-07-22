@@ -18,7 +18,7 @@ import { UploadCloudIcon, Trash2Icon, FileIcon } from "lucide-react"
 interface ImageUploadFieldProps {
   field: {
     name: string
-    value: File | null | undefined // Value is the File object
+    value: unknown // React Hook Form field value
     onChange: (file: File | null) => void
     onBlur: () => void
     ref: React.Ref<any> // RHF provides a ref for the input

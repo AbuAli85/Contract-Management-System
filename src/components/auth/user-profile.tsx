@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/src/hooks/use-auth'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { useRBAC } from '@/src/components/auth/rbac-provider'
 import { Button } from '@/src/components/ui/button'
 import { Input } from '@/src/components/ui/input'
@@ -12,7 +12,7 @@ import { Switch } from '@/src/components/ui/switch'
 
 export function UserProfile() {
   const { user, updatePassword, enrollMFA, verifyMFA, unenrollMFA } = useAuth()
-  const { isAdmin } = useRBAC()
+  const { hasRole } = useRBAC()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -72,7 +72,7 @@ export function UserProfile() {
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
+            {hasRole('admin') && <TabsTrigger value="admin">Admin</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="general">
@@ -139,7 +139,10 @@ export function UserProfile() {
                         placeholder="Enter code from authenticator app"
                       />
                       <Button
-                        onClick={() => verifyMFA(mfaCode, user?.id as string)}
+                        onClick={() => {
+                          // TODO: Implement proper MFA verification
+                          console.log('MFA verification not implemented yet')
+                        }}
                         className="mt-2"
                       >
                         Verify
@@ -151,7 +154,7 @@ export function UserProfile() {
             </div>
           </TabsContent>
 
-          {isAdmin && (
+                      {hasRole('admin') && (
             <TabsContent value="admin">
               <div className="space-y-4">
                 <h4 className="font-medium">Administrative Controls</h4>

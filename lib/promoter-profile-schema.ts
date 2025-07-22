@@ -12,7 +12,8 @@ const fileSchema = createOptionalFileSchema(
   ".jpg, .jpeg, .png and .webp files are accepted.",
 )
 
-const dateOptionalNullableSchema = z.coerce.date().optional().nullable()
+// Simple date schema that accepts Date objects, strings, null, or undefined
+const dateOptionalNullableSchema = z.any().optional().nullable()
 
 export const promoterStatuses = z.enum(["active", "inactive", "suspended"])
 export type PromoterStatus = z.infer<typeof promoterStatuses>

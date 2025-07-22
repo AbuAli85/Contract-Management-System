@@ -46,7 +46,7 @@ import {
   ArrowUpDown,
   Search,
   RefreshCw,
-  Grid3x3,
+  Grid,
   List,
   Calendar,
   Users,
@@ -582,7 +582,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
             size="sm"
             onClick={() => setViewMode(viewMode === 'table' ? 'grid' : 'table')}
           >
-            {viewMode === 'table' ? <Grid3x3 className="h-4 w-4" /> : <List className="h-4 w-4" />}
+            {viewMode === 'table' ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
           </Button>
           <Button variant="outline" size="sm" onClick={fetchContracts}>
             <RefreshCw className="h-4 w-4" />

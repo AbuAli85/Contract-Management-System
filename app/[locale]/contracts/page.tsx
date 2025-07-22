@@ -54,7 +54,7 @@ import {
   ArrowUpDown,
   Search,
   RefreshCw,
-  Grid3x3,
+  Grid,
   List,
   Calendar,
   Users,
@@ -641,7 +641,7 @@ export default function ContractsDashboardPage() {
                         size="icon"
                         onClick={() => setCurrentView(currentView === "table" ? "grid" : "table")}
                       >
-                        {currentView === "table" ? <Grid3x3 className="h-4 w-4" /> : <List className="h-4 w-4" />}
+                        {currentView === "table" ? <Grid className="h-4 w-4" /> : <List className="h-4 w-4" />}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Toggle view</TooltipContent>

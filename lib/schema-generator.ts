@@ -24,13 +24,11 @@ export const contractGeneratorSchema = z
     promoter_passport_url: z.string().optional(),
     
     // Contract period with enhanced validation
-    contract_start_date: z.date({ 
-      required_error: "Contract start date is required.",
-      invalid_type_error: "Please enter a valid start date."
+    contract_start_date: z.date({
+      error: "Please enter a valid start date."
     }),
-    contract_end_date: z.date({ 
-      required_error: "Contract end date is required.",
-      invalid_type_error: "Please enter a valid end date."
+    contract_end_date: z.date({
+      error: "Please enter a valid end date."
     }),
     
     // Contact information

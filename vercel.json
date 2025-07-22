@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@next_public_supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@next_public_supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "MAKE_WEBHOOK_URL": "@make_webhook_url",
+    "NEXT_PUBLIC_MAKE_WEBHOOK_URL": "@next_public_make_webhook_url",
+    "MAKE_WEBHOOK_SECRET": "@make_webhook_secret",
+    "SLACK_WEBHOOK_URL": "@slack_webhook_url",
+    "SLACK_WEBHOOK_SECRET": "@slack_webhook_secret",
+    "NEXT_PUBLIC_SLACK_WEBHOOK_URL": "@next_public_slack_webhook_url",
+    "GOOGLE_CREDENTIALS_JSON": "@google_credentials_json",
+    "GOOGLE_DOCS_TEMPLATE_ID": "@google_docs_template_id",
+    "SMTP_HOST": "@smtp_host",
+    "SMTP_PORT": "@smtp_port",
+    "SMTP_USER": "@smtp_user",
+    "SMTP_PASS": "@smtp_pass"
+  }
+} 

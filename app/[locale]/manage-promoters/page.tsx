@@ -50,7 +50,7 @@ import {
   Trash2,
   Settings,
   RefreshCw,
-  Grid3x3,
+  Grid,
   List,
   AlertTriangle,
   CheckCircle,
@@ -631,7 +631,7 @@ export default function ManagePromotersPage() {
                 >
                   {currentView === "table" ? (
                     <>
-                      <Grid3x3 className="mr-2 h-4 w-4" />
+                      <Grid className="mr-2 h-4 w-4" />
                       Grid View
                     </>
                   ) : (

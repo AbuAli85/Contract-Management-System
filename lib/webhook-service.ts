@@ -29,7 +29,7 @@ export class WebhookService {
           'User-Agent': 'ContractGen-App/1.0',
         },
         body: JSON.stringify({
-          ...contractData,
+          ...(typeof contractData === 'object' && contractData !== null ? contractData : {}),
           timestamp: new Date().toISOString(),
           source: 'contract-app'
         })
@@ -124,11 +124,11 @@ export class WebhookService {
       // Step 2: If main processing succeeds and we have a PDF URL, notify Slack
       if (mainResult?.pdf_url) {
         await this.sendToSlackWebhook({
-          contract_number: (contractData as unknown as { contract_number?: string; id?: string }).contract_number || (contractData as unknown as { id?: string }).id,
+          contract_number: (contractData as unknown as { contract_number?: string; id?: string }).contract_number || (contractData as unknown as { id?: string }).id || 'unknown',
           pdf_url: mainResult.pdf_url,
           status: mainResult.status || 'ready',
-          client_name: (contractData as unknown as { client_name?: string; second_party_name?: string }).client_name || (contractData as unknown as { second_party_name?: string }).second_party_name,
-          employer_name: (contractData as unknown as { employer_name?: string; first_party_name?: string }).employer_name || (contractData as unknown as { first_party_name?: string }).first_party_name
+          client_name: (contractData as unknown as { client_name?: string; second_party_name?: string }).client_name || (contractData as unknown as { second_party_name?: string }).second_party_name || 'unknown',
+          employer_name: (contractData as unknown as { employer_name?: string; first_party_name?: string }).employer_name || (contractData as unknown as { first_party_name?: string }).first_party_name || 'unknown'
         })
       }
 

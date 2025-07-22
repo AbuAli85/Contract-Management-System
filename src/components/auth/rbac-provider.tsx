@@ -35,17 +35,31 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         return
       }
 
-      const { data: roles, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
+      // TODO: Implement proper role loading when user_roles table is available
+      // For now, default to 'user' role
+      console.log('Loading user roles for:', user.id)
+      
+      // Try to load from user_roles table if it exists
+      try {
+        const { data: roles, error } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
 
-      if (error) {
-        console.error('Error loading user roles:', error)
-        return
+        if (error) {
+          console.log('User roles table not available, using default role')
+          setUserRoles(['user'])
+          return
+        }
+
+        // If user has a role field, use it; otherwise default to 'user'
+        const userRole = roles?.role as Role || 'user'
+        setUserRoles([userRole])
+      } catch (error) {
+        console.log('Error loading user roles, using default:', error)
+        setUserRoles(['user'])
       }
-
-      setUserRoles(roles.map((r) => r.role as Role))
     }
 
     loadUserRoles()

@@ -1,10 +1,10 @@
 import { supabase } from './client'
-import type { ToastAPI } from '@/hooks/use-toast'
+import type { Toast } from '@/hooks/use-toast'
 
 export async function signIn(
   email: string, 
   password: string, 
-  toast: ToastAPI
+  toast: (props: Toast) => void
 ) {
   try {
     const { error } = await supabase.auth.signInWithPassword({ 
@@ -26,15 +26,15 @@ export async function signIn(
 export async function signUp(
   email: string, 
   password: string, 
-  metadata?: unknown,
-  toast?: ToastAPI
+  metadata?: Record<string, any>,
+  toast?: (props: Toast) => void
 ) {
   try {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: metadata,
+        data: metadata ?? {},
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     })
@@ -50,7 +50,7 @@ export async function signUp(
   }
 }
 
-export async function signOut(toast?: ToastAPI) {
+export async function signOut(toast?: (props: Toast) => void) {
   try {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
@@ -68,7 +68,7 @@ export async function signOut(toast?: ToastAPI) {
 export async function resetPassword(
   email: string, 
   redirectTo?: string,
-  toast?: ToastAPI
+  toast?: (props: Toast) => void
 ) {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -88,7 +88,7 @@ export async function resetPassword(
 
 export async function updatePassword(
   newPassword: string,
-  toast?: ToastAPI
+  toast?: (props: Toast) => void
 ) {
   try {
     const { error } = await supabase.auth.updateUser({
@@ -109,7 +109,7 @@ export async function updatePassword(
 export async function signInWithOAuth(
   provider: 'google' | 'github',
   redirectTo?: string,
-  toast?: ToastAPI
+  toast?: (props: Toast) => void
 ) {
   try {
     const { error } = await supabase.auth.signInWithOAuth({

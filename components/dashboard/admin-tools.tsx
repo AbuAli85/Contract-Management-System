@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Users, Settings, DatabaseZap, Mail, FileSpreadsheet } from "lucide-react"
+import { Users, Settings, Database, Mail, FileSpreadsheet } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input" // For file input
 import type React from "react"
@@ -46,7 +46,7 @@ export default function AdminTools() {
     {
       label: "Database Backup",
       labelAr: "نسخ احتياطي لقاعدة البيانات",
-      icon: DatabaseZap,
+      icon: Database,
       action: () =>
         toast({
           title: "Database Backup",

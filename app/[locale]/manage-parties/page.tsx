@@ -46,7 +46,7 @@ import {
   Download,
   Trash2,
   RefreshCw,
-  Grid3x3,
+  Grid,
   List,
   AlertTriangle,
   CheckCircle,
@@ -724,7 +724,7 @@ export default function ManagePartiesPage() {
                 >
                   {currentView === "table" ? (
                     <>
-                      <Grid3x3 className="mr-2 h-4 w-4" />
+                      <Grid className="mr-2 h-4 w-4" />
                       Grid View
                     </>
                   ) : (

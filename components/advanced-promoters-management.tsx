@@ -37,7 +37,7 @@ import {
   Plus, Minus, ChevronDown, ExternalLink, Copy, Share2, Star,
   MessageSquare, History, Download as DownloadIcon, Upload as UploadIcon,
   Zap, Target, Bell, BookOpen, Briefcase, Camera,
-  QrCode, Send, UserCheck, UserX, Layers, Grid3x3, List,
+  QrCode, Send, UserCheck, UserX, Layers, Grid, List,
   Filter as FilterIcon, SortAsc as SortIcon, MonitorPlay, Smartphone,
   Tablet, Layout, Save, Printer, Bookmark, Tag, Workflow, Gauge
 } from "lucide-react"
@@ -1044,7 +1044,7 @@ export default function AdvancedPromotersManagement() {
                   size="sm"
                   onClick={() => setCurrentView("grid")}
                 >
-                  <Grid3x3 className="mr-1 h-3 w-3" />
+                  <Grid className="mr-1 h-3 w-3" />
                   Grid
                 </Button>
                 <Button

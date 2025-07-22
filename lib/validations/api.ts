@@ -21,23 +21,26 @@ export function validateCreateContractRequest(body: unknown): ValidationResult {
   }
   
   // Validate email format if provided
-  if ((body as unknown as { email?: string }).email && !isValidEmail((body as unknown as { email?: string }).email)) {
+  const email = (body as unknown as { email?: string }).email;
+  if (typeof email === "string" && email && !isValidEmail(email)) {
     errors.push({ field: "email", message: "Invalid email format" })
   }
   
   // Validate date formats if provided
-  if ((body as unknown as { contract_start_date?: string }).contract_start_date && !isValidDate((body as unknown as { contract_start_date?: string }).contract_start_date)) {
+  const contractStartDate = (body as unknown as { contract_start_date?: string }).contract_start_date;
+  if (typeof contractStartDate === "string" && contractStartDate && !isValidDate(contractStartDate)) {
     errors.push({ field: "contract_start_date", message: "Invalid start date format" })
   }
   
-  if ((body as unknown as { contract_end_date?: string }).contract_end_date && !isValidDate((body as unknown as { contract_end_date?: string }).contract_end_date)) {
+  const contractEndDate = (body as unknown as { contract_end_date?: string }).contract_end_date;
+  if (typeof contractEndDate === "string" && contractEndDate && !isValidDate(contractEndDate)) {
     errors.push({ field: "contract_end_date", message: "Invalid end date format" })
   }
   
   // Validate that end date is after start date if both are provided
-  if ((body as unknown as { contract_start_date?: string; contract_end_date?: string }).contract_start_date && (body as unknown as { contract_start_date?: string; contract_end_date?: string }).contract_end_date) {
-    const startDate = new Date((body as unknown as { contract_start_date?: string }).contract_start_date)
-    const endDate = new Date((body as unknown as { contract_end_date?: string }).contract_end_date)
+  if (typeof contractStartDate === "string" && contractStartDate && typeof contractEndDate === "string" && contractEndDate) {
+    const startDate = new Date(contractStartDate)
+    const endDate = new Date(contractEndDate)
     
     if (endDate <= startDate) {
       errors.push({ 
@@ -62,23 +65,26 @@ export function validateUpdateContractRequest(body: unknown): ValidationResult {
   }
   
   // Validate email format if provided
-  if ((body as unknown as { email?: string }).email && !isValidEmail((body as unknown as { email?: string }).email)) {
+  const updateEmail = (body as unknown as { email?: string }).email;
+  if (typeof updateEmail === "string" && updateEmail && !isValidEmail(updateEmail)) {
     errors.push({ field: "email", message: "Invalid email format" })
   }
   
   // Validate date formats if provided
-  if ((body as unknown as { contract_start_date?: string }).contract_start_date && !isValidDate((body as unknown as { contract_start_date?: string }).contract_start_date)) {
+  const updateContractStartDate = (body as unknown as { contract_start_date?: string }).contract_start_date;
+  if (typeof updateContractStartDate === "string" && updateContractStartDate && !isValidDate(updateContractStartDate)) {
     errors.push({ field: "contract_start_date", message: "Invalid start date format" })
   }
   
-  if ((body as unknown as { contract_end_date?: string }).contract_end_date && !isValidDate((body as unknown as { contract_end_date?: string }).contract_end_date)) {
+  const updateContractEndDate = (body as unknown as { contract_end_date?: string }).contract_end_date;
+  if (typeof updateContractEndDate === "string" && updateContractEndDate && !isValidDate(updateContractEndDate)) {
     errors.push({ field: "contract_end_date", message: "Invalid end date format" })
   }
   
   // Validate that end date is after start date if both are provided
-  if ((body as unknown as { contract_start_date?: string; contract_end_date?: string }).contract_start_date && (body as unknown as { contract_start_date?: string; contract_end_date?: string }).contract_end_date) {
-    const startDate = new Date((body as unknown as { contract_start_date?: string }).contract_start_date)
-    const endDate = new Date((body as unknown as { contract_end_date?: string }).contract_end_date)
+  if (typeof updateContractStartDate === "string" && updateContractStartDate && typeof updateContractEndDate === "string" && updateContractEndDate) {
+    const startDate = new Date(updateContractStartDate)
+    const endDate = new Date(updateContractEndDate)
     
     if (endDate <= startDate) {
       errors.push({ 
@@ -112,8 +118,8 @@ export function extractIds(body: unknown): {
   promoterId: string | undefined
 } {
   return {
-    clientId: (body as unknown as { first_party?: { id?: string; first_party_id?: string } }).first_party?.id || (body as unknown as { first_party?: { id?: string; first_party_id?: string } }).first_party_id,
-    employerId: (body as unknown as { second_party?: { id?: string; second_party_id?: string } }).second_party?.id || (body as unknown as { second_party?: { id?: string; second_party_id?: string } }).second_party_id,
-    promoterId: (body as unknown as { promoter?: { id?: string; promoter_id?: string } }).promoter?.id || (body as unknown as { promoter?: { id?: string; promoter_id?: string } }).promoter_id,
+    clientId: (body as any)?.first_party?.id || (body as any)?.first_party?.first_party_id,
+    employerId: (body as any)?.second_party?.id || (body as any)?.second_party?.second_party_id,
+    promoterId: (body as any)?.promoter?.id || (body as any)?.promoter?.promoter_id,
   }
 } 
