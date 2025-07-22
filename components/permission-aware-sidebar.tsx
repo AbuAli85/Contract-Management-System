@@ -129,6 +129,13 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "الإشعارات",
           icon: Bell,
           permission: "system:notifications"
+        },
+        {
+          href: `/${locale}/dashboard/reports`,
+          label: "Reports",
+          labelAr: "التقارير",
+          icon: FileSpreadsheet,
+          permission: "system:analytics"
         }
       ]
     },
@@ -141,7 +148,9 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Generate Contract",
           labelAr: "إنشاء عقد",
           icon: FilePlus,
-          permission: "contract:create"
+          permission: "contract:create",
+          badge: "New",
+          badgeVariant: "default"
         },
         {
           href: `/${locale}/contracts`,
@@ -163,6 +172,29 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "إدارة العقود",
           icon: FileEdit,
           permission: "contract:update"
+        },
+        {
+          href: `/${locale}/contracts/pending`,
+          label: "Pending Contracts",
+          labelAr: "العقود المعلقة",
+          icon: Clock,
+          permission: "contract:read",
+          badge: "3",
+          badgeVariant: "secondary"
+        },
+        {
+          href: `/${locale}/contracts/approved`,
+          label: "Approved Contracts",
+          labelAr: "العقود المعتمدة",
+          icon: CheckCircle,
+          permission: "contract:read"
+        },
+        {
+          href: `/${locale}/contracts/rejected`,
+          label: "Rejected Contracts",
+          labelAr: "العقود المرفوضة",
+          icon: XCircle,
+          permission: "contract:read"
         }
       ]
     },
@@ -183,6 +215,20 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "تحليل المروجين",
           icon: UserCheck,
           permission: "promoter:read"
+        },
+        {
+          href: `/${locale}/promoters/performance`,
+          label: "Performance Metrics",
+          labelAr: "مقاييس الأداء",
+          icon: TrendingUp,
+          permission: "promoter:read"
+        },
+        {
+          href: `/${locale}/promoters/commission`,
+          label: "Commission Tracking",
+          labelAr: "تتبع العمولات",
+          icon: Star,
+          permission: "promoter:read"
         }
       ]
     },
@@ -195,6 +241,20 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Manage Parties",
           labelAr: "إدارة الأطراف",
           icon: Building2,
+          permission: "party:read"
+        },
+        {
+          href: `/${locale}/parties/contacts`,
+          label: "Contact Directory",
+          labelAr: "دليل الاتصال",
+          icon: Mail,
+          permission: "party:read"
+        },
+        {
+          href: `/${locale}/parties/communications`,
+          label: "Communications",
+          labelAr: "الاتصالات",
+          icon: MessageSquare,
           permission: "party:read"
         }
       ]
@@ -216,6 +276,47 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "إدارة المستخدمين",
           icon: UserCog,
           permission: "user:create"
+        },
+        {
+          href: `/${locale}/users/roles`,
+          label: "Roles & Permissions",
+          labelAr: "الأدوار والصلاحيات",
+          icon: Shield,
+          permission: "user:create"
+        },
+        {
+          href: `/${locale}/users/activity`,
+          label: "User Activity",
+          labelAr: "نشاط المستخدم",
+          icon: Activity,
+          permission: "user:read"
+        }
+      ]
+    },
+    {
+      title: "Data Management",
+      titleAr: "إدارة البيانات",
+      items: [
+        {
+          href: `/${locale}/data/import`,
+          label: "Import Data",
+          labelAr: "استيراد البيانات",
+          icon: Upload,
+          permission: "system:settings"
+        },
+        {
+          href: `/${locale}/data/export`,
+          label: "Export Data",
+          labelAr: "تصدير البيانات",
+          icon: Download,
+          permission: "system:settings"
+        },
+        {
+          href: `/${locale}/data/backup`,
+          label: "Backup & Restore",
+          labelAr: "النسخ الاحتياطي والاستعادة",
+          icon: Database,
+          permission: "system:settings"
         }
       ]
     },
@@ -243,6 +344,20 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "أدوات الإدارة",
           icon: Package2,
           permission: "system:settings"
+        },
+        {
+          href: `/${locale}/system/security`,
+          label: "Security",
+          labelAr: "الأمان",
+          icon: AlertTriangle,
+          permission: "system:settings"
+        },
+        {
+          href: `/${locale}/system/logs`,
+          label: "System Logs",
+          labelAr: "سجلات النظام",
+          icon: ClipboardList,
+          permission: "system:settings"
         }
       ]
     },
@@ -255,6 +370,20 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Profile",
           labelAr: "الملف الشخصي",
           icon: User,
+          permission: "contract:read"
+        },
+        {
+          href: `/${locale}/profile/settings`,
+          label: "Account Settings",
+          labelAr: "إعدادات الحساب",
+          icon: Settings,
+          permission: "contract:read"
+        },
+        {
+          href: `/${locale}/profile/security`,
+          label: "Security Settings",
+          labelAr: "إعدادات الأمان",
+          icon: Shield,
           permission: "contract:read"
         },
         {

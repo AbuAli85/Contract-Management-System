@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { i18n } from '@/src/i18n/i18n-config'
+import { createClient } from '@/lib/supabase/middleware'
 
 export async function middleware(req: NextRequest) {
   // Skip static assets and API routes for performance
@@ -26,10 +27,50 @@ export async function middleware(req: NextRequest) {
   const hasLocale = i18n.locales.includes(maybeLocale)
   const locale = hasLocale ? maybeLocale : i18n.defaultLocale
 
-  // Handle root path - redirect to locale dashboard
-  if (req.nextUrl.pathname === '/') {
+  // Create Supabase client for auth check
+  const supabase = createClient(req)
+
+  // Check authentication status
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // Define public routes that don't require authentication
+  const publicRoutes = [
+    '/login',
+    '/signup',
+    '/forgot-password',
+    '/reset-password',
+    '/auth/callback'
+  ]
+
+  // Check if current path is a public route
+  const isPublicRoute = publicRoutes.some(route => 
+    req.nextUrl.pathname.includes(route) || 
+    req.nextUrl.pathname.endsWith(route)
+  )
+
+  // If not authenticated and trying to access protected route, redirect to login
+  if (!session && !isPublicRoute) {
+    const url = req.nextUrl.clone()
+    url.pathname = `/${locale}/login`
+    url.searchParams.set('redirect', req.nextUrl.pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // If authenticated and trying to access login/signup, redirect to dashboard
+  if (session && isPublicRoute) {
     const url = req.nextUrl.clone()
     url.pathname = `/${locale}/dashboard`
+    return NextResponse.redirect(url)
+  }
+
+  // Handle root path - redirect to locale dashboard (if authenticated) or login
+  if (req.nextUrl.pathname === '/') {
+    const url = req.nextUrl.clone()
+    if (session) {
+      url.pathname = `/${locale}/dashboard`
+    } else {
+      url.pathname = `/${locale}/login`
+    }
     return NextResponse.redirect(url)
   }
 
@@ -47,10 +88,14 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Handle locale-only path (e.g., /en) - redirect to dashboard
+  // Handle locale-only path (e.g., /en) - redirect to dashboard (if authenticated) or login
   if (hasLocale && pathParts.length === 2) {
     const url = req.nextUrl.clone()
-    url.pathname = `/${locale}/dashboard`
+    if (session) {
+      url.pathname = `/${locale}/dashboard`
+    } else {
+      url.pathname = `/${locale}/login`
+    }
     return NextResponse.redirect(url)
   }
 
