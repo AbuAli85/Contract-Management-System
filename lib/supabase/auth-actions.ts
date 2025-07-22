@@ -1,4 +1,4 @@
-import { supabase } from './client'
+import { createClient } from './client'
 import type { Toast } from '@/hooks/use-toast'
 
 export async function signIn(
@@ -7,6 +7,7 @@ export async function signIn(
   toast: (props: Toast) => void
 ) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithPassword({ 
       email, 
       password 
@@ -26,10 +27,11 @@ export async function signIn(
 export async function signUp(
   email: string, 
   password: string, 
-  metadata?: Record<string, any>,
+  metadata?: Record<string, unknown>,
   toast?: (props: Toast) => void
 ) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -52,6 +54,7 @@ export async function signUp(
 
 export async function signOut(toast?: (props: Toast) => void) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   } catch (error: unknown) {
@@ -71,6 +74,7 @@ export async function resetPassword(
   toast?: (props: Toast) => void
 ) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectTo || `${window.location.origin}/auth/reset-password`
     })
@@ -91,6 +95,7 @@ export async function updatePassword(
   toast?: (props: Toast) => void
 ) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.updateUser({
       password: newPassword
     })
@@ -112,6 +117,7 @@ export async function signInWithOAuth(
   toast?: (props: Toast) => void
 ) {
   try {
+    const supabase = createClient()
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
