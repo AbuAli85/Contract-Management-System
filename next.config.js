@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Disable static generation to avoid build-time Supabase issues
+  output: 'standalone',
+  
   // Enable experimental features for better performance
   experimental: {
     optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
@@ -13,6 +16,8 @@ const nextConfig = {
       optimizePackageImports: false,
     }),
   },
+
+
 
   // Image optimization - disable in development
   images: {
