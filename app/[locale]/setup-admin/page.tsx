@@ -177,6 +177,48 @@ export default function SetupAdminPage() {
               </Button>
               
               <Button
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/setup-admin-simple', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ email: user?.email || '' }),
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Simple setup admin response:', data)
+                    
+                    if (data.success) {
+                      alert('Admin setup completed successfully!')
+                      window.location.reload()
+                    } else {
+                      alert(`Setup failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Simple setup admin error:', error)
+                    alert('Setup failed - check console for details')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                variant="outline"
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up admin...
+                  </>
+                ) : (
+                  "Setup Admin (SIMPLE)"
+                )}
+              </Button>
+              
+              <Button
                 onClick={setupAdminBypass}
                 disabled={loading}
                 variant="outline"
@@ -244,6 +286,24 @@ export default function SetupAdminPage() {
                 className="w-full"
               >
                 Simple Test
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/test-supabase')
+                    const data = await response.json()
+                    console.log('Supabase test result:', data)
+                    alert('Check console for Supabase test results')
+                  } catch (error) {
+                    console.error('Supabase test error:', error)
+                    alert('Supabase test failed - check console')
+                  }
+                }}
+                className="w-full"
+              >
+                Test Supabase Connection
               </Button>
             </div>
 

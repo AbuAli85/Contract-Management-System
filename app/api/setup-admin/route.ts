@@ -3,19 +3,29 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== SETUP ADMIN START ===')
+    
     const supabase = await createClient()
+    console.log('Supabase client created successfully')
     
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (authError) {
+      console.error('Auth error:', authError)
+      return NextResponse.json({ error: 'Authentication error' }, { status: 401 })
+    }
+    
+    if (!user) {
+      console.error('No user found')
+      return NextResponse.json({ error: 'No authenticated user' }, { status: 401 })
     }
 
     const body = await request.json()
     const { email } = body
 
     if (!email) {
+      console.error('No email provided in request body')
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
@@ -72,35 +82,48 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Only return error if it's not a "not found" error
-    // Check for various "not found" error codes
-    const isNotFoundError = fetchError && (
-      fetchError.code === 'PGRST116' || 
-      fetchError.message?.includes('not found') ||
-      fetchError.message?.includes('No rows returned') ||
-      fetchError.details?.includes('not found')
-    )
-    
-    if (fetchError && !isNotFoundError) {
-      console.error('Error fetching user:', fetchError)
+    // Handle database errors more gracefully
+    if (fetchError) {
+      console.log('Fetch error details:', {
+        code: fetchError.code,
+        message: fetchError.message,
+        details: fetchError.details,
+        hint: fetchError.hint
+      })
       
-      // If database is not accessible, use fallback admin setup
-      if (!databaseAccessible) {
-        console.log('Database not accessible, using fallback admin setup')
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Admin setup completed (database fallback)',
-          user: {
-            id: user.id,
-            email: user.email,
-            role: 'admin',
-            created_at: new Date().toISOString()
-          },
-          warning: 'Database not accessible, using in-memory admin role'
-        })
+      // Check for various "not found" error codes
+      const isNotFoundError = (
+        fetchError.code === 'PGRST116' || 
+        fetchError.message?.includes('not found') ||
+        fetchError.message?.includes('No rows returned') ||
+        fetchError.details?.includes('not found')
+      )
+      
+      // If it's a "not found" error, continue with user creation
+      if (isNotFoundError) {
+        console.log('User not found, will create new admin user')
+        existingUser = null
+      } else {
+        // If database is not accessible, use fallback admin setup
+        if (!databaseAccessible) {
+          console.log('Database not accessible, using fallback admin setup')
+          return NextResponse.json({ 
+            success: true, 
+            message: 'Admin setup completed (database fallback)',
+            user: {
+              id: user.id,
+              email: user.email,
+              role: 'admin',
+              created_at: new Date().toISOString()
+            },
+            warning: 'Database not accessible, using in-memory admin role'
+          })
+        }
+        
+        // For other database errors, return error
+        console.error('Error fetching user:', fetchError)
+        return NextResponse.json({ error: 'Failed to check user' }, { status: 500 })
       }
-      
-      return NextResponse.json({ error: 'Failed to check user' }, { status: 500 })
     }
 
     if (existingUser) {
@@ -135,6 +158,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update user role' }, { status: 500 })
       }
 
+      console.log('=== SETUP ADMIN SUCCESS - USER UPDATED ===')
       return NextResponse.json({ 
         success: true, 
         message: 'User role updated to admin',
@@ -211,6 +235,7 @@ export async function POST(request: NextRequest) {
         })
       }
 
+      console.log('=== SETUP ADMIN SUCCESS - USER CREATED ===')
       return NextResponse.json({ 
         success: true, 
         message: 'Admin user created successfully',
@@ -219,7 +244,16 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
+    console.error('=== SETUP ADMIN ERROR ===')
     console.error('Error in setup-admin:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 } 
