@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { PermissionAwareLayout } from "@/components/permission-aware-layout"
+import { usePathname } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -291,28 +291,27 @@ export default function DashboardPage() {
   const roleDisplay = getRoleDisplayName(permissions.role)
 
   return (
-    <PermissionAwareLayout>
-      <div className="space-y-6">
-        {/* Welcome Section */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">
-            {locale === 'ar' ? 'مرحباً بك في نظام إدارة العقود' : 'Welcome to Contract Management System'}
-          </h1>
-          <p className="text-muted-foreground">
-            {locale === 'ar' 
-              ? `مرحباً بك، ${roleDisplay.ar}. اختر من الميزات المتاحة أدناه للبدء.`
-              : `Welcome, ${roleDisplay.en}. Choose from the available features below to get started.`
-            }
-          </p>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">
-              {locale === 'ar' ? roleDisplay.ar : roleDisplay.en}
-            </Badge>
-            <Badge variant="secondary">
-              {permissions.roles.length} {locale === 'ar' ? 'أدوار' : 'roles'}
-            </Badge>
-          </div>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {locale === 'ar' ? 'مرحباً بك في نظام إدارة العقود' : 'Welcome to Contract Management System'}
+        </h1>
+        <p className="text-muted-foreground">
+          {locale === 'ar' 
+            ? `مرحباً بك، ${roleDisplay.ar}. اختر من الميزات المتاحة أدناه للبدء.`
+            : `Welcome, ${roleDisplay.en}. Choose from the available features below to get started.`
+          }
+        </p>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline">
+            {locale === 'ar' ? roleDisplay.ar : roleDisplay.en}
+          </Badge>
+          <Badge variant="secondary">
+            {permissions.roles.length} {locale === 'ar' ? 'أدوار' : 'roles'}
+          </Badge>
         </div>
+      </div>
 
         <Separator />
 
@@ -463,9 +462,5 @@ export default function DashboardPage() {
           </div>
         </PermissionGuard>
       </div>
-    </PermissionAwareLayout>
   )
-}
-
-// Import usePathname for locale detection
-import { usePathname } from "next/navigation" 
+} 
