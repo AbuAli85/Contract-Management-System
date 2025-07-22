@@ -26,12 +26,15 @@ import {
   MoreHorizontal,
   Download,
   Upload,
-  Shield
+  Shield,
+  Lock
 } from "lucide-react";
 import { debounce } from "lodash";
 
-// Lazy load the PermissionsManager component
+// Lazy load components
 const PermissionsManager = lazy(() => import("@/components/user-management/PermissionsManager"));
+const CreateUserForm = lazy(() => import("@/components/user-management/create-user-form").then(module => ({ default: module.CreateUserForm })));
+const ChangePasswordForm = lazy(() => import("@/components/user-management/change-password-form").then(module => ({ default: module.ChangePasswordForm })));
 
 // TypeScript interfaces for better type safety
 interface User {
@@ -112,6 +115,7 @@ export default function NewUsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
@@ -877,18 +881,29 @@ export default function NewUsersPage() {
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end space-x-2">
                               {currentUserRole === "admin" && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedUser(user);
-                                    setShowPermissionsModal(true);
-                                  }}
-                                  title="Manage Permissions"
-                                >
-                                  <Shield className="h-4 w-4" />
-                                </Button>
+                                                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowPermissionsModal(true);
+                                }}
+                                title="Manage Permissions"
+                              >
+                                <Shield className="h-4 w-4" />
+                              </Button>
                               )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setShowChangePasswordModal(true);
+                                }}
+                                title="Change Password"
+                              >
+                                <Lock className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -979,136 +994,41 @@ export default function NewUsersPage() {
         </div>
       </div>
 
-      {/* Add User Modal */}
-      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
-                <Input
-                  type="email"
-                  placeholder="user@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Full Name</label>
-                <Input
-                  placeholder="John Doe"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                />
-              </div>
+      {/* Create User Modal */}
+      <Suspense fallback={
+        <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+          <DialogContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin mr-2" />
+              Loading create user form...
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Role *</label>
-                <Select value={formData.role} onValueChange={(value) => setFormData({...formData, role: value as UserRole})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Status *</label>
-                <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value as UserStatus})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          </DialogContent>
+        </Dialog>
+      }>
+        <CreateUserForm
+          open={showAddModal}
+          onOpenChange={setShowAddModal}
+          onUserCreated={fetchUsers}
+        />
+      </Suspense>
+
+      {/* Change Password Modal */}
+      <Suspense fallback={
+        <Dialog open={showChangePasswordModal} onOpenChange={setShowChangePasswordModal}>
+          <DialogContent>
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin mr-2" />
+              Loading change password form...
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Department</label>
-                <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Position</label>
-                <Select value={formData.position} onValueChange={(value) => setFormData({...formData, position: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {POSITIONS.map((pos) => (
-                      <SelectItem key={pos} value={pos}>
-                        {pos}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Phone</label>
-                <Input
-                  placeholder="+1 (555) 123-4567"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Avatar URL</label>
-                <Input
-                  type="url"
-                  placeholder="https://example.com/avatar.jpg"
-                  value={formData.avatar_url}
-                  onChange={(e) => setFormData({...formData, avatar_url: e.target.value})}
-                />
-              </div>
-            </div>
-            {formError && (
-              <div className="text-red-600 text-sm">{formError}</div>
-            )}
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setShowAddModal(false)}>
-                Cancel
-              </Button>
-              <Button disabled={addLoading} onClick={() => handleSubmit(false)}>
-                {addLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Adding...
-                  </>
-                ) : (
-                  "Add User"
-                )}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      }>
+        <ChangePasswordForm
+          open={showChangePasswordModal}
+          onOpenChange={setShowChangePasswordModal}
+          userId={selectedUser?.id}
+        />
+      </Suspense>
 
       {/* Edit User Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
