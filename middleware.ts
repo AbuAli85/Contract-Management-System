@@ -13,11 +13,18 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
+  // Handle old logout routes - redirect to proper logout
+  if (req.nextUrl.pathname.includes('/logout')) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/api/auth/logout'
+    return NextResponse.redirect(url)
+  }
+
   // Handle page routes with locale - optimized to reduce redirects
-    const pathParts = req.nextUrl.pathname.split('/')
-    const maybeLocale = pathParts[1]
-    const hasLocale = i18n.locales.includes(maybeLocale)
-    const locale = hasLocale ? maybeLocale : i18n.defaultLocale
+  const pathParts = req.nextUrl.pathname.split('/')
+  const maybeLocale = pathParts[1]
+  const hasLocale = i18n.locales.includes(maybeLocale)
+  const locale = hasLocale ? maybeLocale : i18n.defaultLocale
 
   // Handle root path - redirect to locale dashboard
   if (req.nextUrl.pathname === '/') {
@@ -35,19 +42,19 @@ export async function middleware(req: NextRequest) {
 
   // Add locale prefix if missing (except for root and login paths)
   if (!hasLocale && req.nextUrl.pathname !== '/' && req.nextUrl.pathname !== '/login') {
-      const url = req.nextUrl.clone()
-      url.pathname = `/${locale}${req.nextUrl.pathname}`
-      return NextResponse.redirect(url)
-    }
+    const url = req.nextUrl.clone()
+    url.pathname = `/${locale}${req.nextUrl.pathname}`
+    return NextResponse.redirect(url)
+  }
 
   // Handle locale-only path (e.g., /en) - redirect to dashboard
   if (hasLocale && pathParts.length === 2) {
-      const url = req.nextUrl.clone()
-      url.pathname = `/${locale}/dashboard`
-      return NextResponse.redirect(url)
-    }
+    const url = req.nextUrl.clone()
+    url.pathname = `/${locale}/dashboard`
+    return NextResponse.redirect(url)
+  }
 
-    return NextResponse.next()
+  return NextResponse.next()
 }
 
 // Configure middleware matching - exclude API routes

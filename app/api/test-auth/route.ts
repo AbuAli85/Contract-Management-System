@@ -1,22 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// Helper function to create Supabase client
-function createSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  
-  return createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    }
-  });
-}
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 
 // Helper function to get user from request headers
 async function getUserFromRequest(request: NextRequest) {
-  const supabase = createSupabaseClient();
+  const supabase = await createClient();
   
   // Get the authorization header
   const authHeader = request.headers.get('authorization');
@@ -31,27 +18,26 @@ async function getUserFromRequest(request: NextRequest) {
     }
   }
   
-  // Fallback: try to get from cookie header
-  const cookieHeader = request.headers.get('cookie');
-  if (cookieHeader) {
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
+  // Try to get session from cookies
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession()
     
-    const authToken = cookies['sb-ekdjxzhujettocosgzql-auth-token'];
-    if (authToken) {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser(authToken);
-        return { user, error };
-      } catch (error) {
-        return { user: null, error: 'Invalid cookie token' };
-      }
+    if (error) {
+      console.log('🔍 Session error:', error)
+      return { user: null, error: error.message }
     }
+    
+    if (session?.user) {
+      console.log('🔍 Found user in session:', session.user.email)
+      return { user: session.user, error: null }
+    }
+    
+    console.log('🔍 No session found')
+    return { user: null, error: 'No session found' }
+  } catch (error) {
+    console.log('🔍 Error getting session:', error)
+    return { user: null, error: 'Session error' }
   }
-  
-  return { user: null, error: 'No auth token found' };
 }
 
 export async function GET(request: NextRequest) {
@@ -77,7 +63,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Unauthorized',
         authError: authError,
-        hasUser: !!user
+        hasUser: !!user,
+        message: 'No active session found. Please log in first.'
       }, { status: 401 });
     }
     
@@ -86,7 +73,8 @@ export async function GET(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email
-      }
+      },
+      message: 'Authentication successful'
     });
     
   } catch (error) {

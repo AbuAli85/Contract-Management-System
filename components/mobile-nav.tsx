@@ -1,22 +1,39 @@
 "use client"
 
-import * as React from "react"
+import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet"
+import { Menu, X } from "lucide-react"
 import { useAuth } from "@/src/components/auth/auth-provider"
+import { useRouter } from "next/navigation"
+
+interface NavItem {
+  title: string
+  href: string
+}
 
 interface MobileNavProps {
-  navItems: { title: string; href: string }[];
-  locale: string;
+  navItems: NavItem[]
+  locale: string
 }
 
 export function MobileNav({ navItems, locale }: MobileNavProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
   const { user, signOut } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.push('/login')
+      setIsOpen(false)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -66,10 +83,7 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
               <Button
                 variant="ghost"
                 className="w-full justify-start p-2 text-lg font-medium text-foreground/80 transition-colors hover:text-primary"
-                onClick={() => {
-                  signOut()
-                  setIsOpen(false)
-                }}
+                onClick={handleLogout}
               >
                 Sign Out
               </Button>
