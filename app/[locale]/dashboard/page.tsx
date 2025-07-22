@@ -17,6 +17,7 @@ import {
   UserPlus,
   UserCheck,
   UserCog,
+  User,
   Bell,
   Shield,
   Settings,
@@ -131,7 +132,7 @@ export default function DashboardPage() {
       descriptionAr: "إنشاء عقود جديدة بنظام القوالب المتقدم",
       icon: FilePlus,
       href: `/${locale}/generate-contract`,
-      permission: "contract:generate",
+      permission: "contract:create",
       badge: "New",
       badgeVariant: "default",
       color: "text-blue-600"
@@ -245,6 +246,28 @@ export default function DashboardPage() {
       href: `/${locale}/dashboard/notifications`,
       permission: "system:notifications",
       color: "text-cyan-600"
+    },
+    
+    // User Profile & Help
+    {
+      title: "Profile",
+      titleAr: "الملف الشخصي",
+      description: "Manage your account settings and preferences",
+      descriptionAr: "إدارة إعدادات حسابك والتفضيلات",
+      icon: User,
+      href: `/${locale}/profile`,
+      permission: "contract:read", // All authenticated users can access profile
+      color: "text-emerald-600"
+    },
+    {
+      title: "Help & Support",
+      titleAr: "المساعدة والدعم",
+      description: "Get help and support for using the system",
+      descriptionAr: "احصل على المساعدة والدعم لاستخدام النظام",
+      icon: HelpCircle,
+      href: "/help",
+      permission: "contract:read", // All authenticated users can access help
+      color: "text-slate-600"
     }
   ]
 

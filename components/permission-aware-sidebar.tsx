@@ -18,6 +18,7 @@ import {
   Users,
   UserPlus,
   UserCheck,
+  User,
   Bell,
   Shield,
   Settings,
@@ -58,6 +59,7 @@ import {
   FileX,
   FileSearch,
   FileEdit,
+  HelpCircle,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 
@@ -139,7 +141,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Generate Contract",
           labelAr: "إنشاء عقد",
           icon: FilePlus,
-          permission: "contract:generate"
+          permission: "contract:create"
         },
         {
           href: `/${locale}/contracts`,
@@ -241,6 +243,26 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "أدوات الإدارة",
           icon: Package2,
           permission: "system:settings"
+        }
+      ]
+    },
+    {
+      title: "User",
+      titleAr: "المستخدم",
+      items: [
+        {
+          href: `/${locale}/profile`,
+          label: "Profile",
+          labelAr: "الملف الشخصي",
+          icon: User,
+          permission: "contract:read"
+        },
+        {
+          href: "/help",
+          label: "Help & Support",
+          labelAr: "المساعدة والدعم",
+          icon: HelpCircle,
+          permission: "contract:read"
         }
       ]
     }
