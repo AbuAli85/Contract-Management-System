@@ -745,6 +745,49 @@ export default function SetupAdminPage() {
                   "📥 LOAD ROLE FROM API"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/test-role-system', {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Test role system response:', data)
+                    
+                    if (data.success) {
+                      const testResults = data.tests
+                      const summary = data.summary
+                      
+                      alert(`Role System Test Results:\n\nFinal Role: ${summary.finalRole} (from ${summary.roleSource})\n\nTests Passed: ${summary.testsPassed}\nTests Failed: ${summary.testsFailed}\n\nUsers Table: ${testResults.users.found ? '✅ PASS' : '❌ FAIL'}\nProfiles Table: ${testResults.profiles.found ? '✅ PASS' : '❌ FAIL'}\nApp_Users Table: ${testResults.app_users.found ? '✅ PASS' : '❌ FAIL'}\n\nCheck console for detailed results.`)
+                    } else {
+                      alert(`Test role system failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Test role system error:', error)
+                    alert('Test role system failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Testing role system...
+                  </>
+                ) : (
+                  "🔍 TEST ROLE SYSTEM"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

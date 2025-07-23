@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
@@ -47,9 +47,13 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const hasLoadedRef = useRef(false)
 
   // Load cached role from localStorage on mount and when user changes
   useEffect(() => {
+    if (hasLoadedRef.current || !user) return
+    hasLoadedRef.current = true
+
     if (typeof window !== 'undefined' && user) {
       const cachedRole = localStorage.getItem(`user_role_${user.id}`)
       if (cachedRole) {
@@ -165,7 +169,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   // Force reload roles when user changes (for re-authentication)
   useEffect(() => {
-    if (user && isInitialized) {
+    if (user && isInitialized && hasLoadedRef.current) {
       console.log('🔄 User changed, reloading roles...')
       loadUserRoles()
     }

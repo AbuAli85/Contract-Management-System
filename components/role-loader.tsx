@@ -1,14 +1,17 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/src/components/auth/auth-provider'
 
 export function RoleLoader() {
   const { user } = useAuth()
   const [hasLoaded, setHasLoaded] = useState(false)
+  const hasRunRef = useRef(false)
 
   useEffect(() => {
-    if (!user || hasLoaded) return
+    // Prevent running multiple times
+    if (hasRunRef.current || !user) return
+    hasRunRef.current = true
 
     const loadRoleOnPageLoad = async () => {
       try {
@@ -30,6 +33,10 @@ export function RoleLoader() {
           },
         })
         
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
         const data = await response.json()
         
         if (data.success) {
@@ -39,11 +46,14 @@ export function RoleLoader() {
           localStorage.setItem(`user_role_${user.id}`, data.role.value)
           console.log('📦 RoleLoader: Role cached in localStorage:', data.role.value)
           
-          // Force a page reload to ensure the role is properly loaded
-          console.log('🔄 RoleLoader: Forcing page reload to apply role...')
-          setTimeout(() => {
-            window.location.reload()
-          }, 500)
+          // Only reload if the role is different from current
+          const currentRole = localStorage.getItem(`user_role_${user.id}`)
+          if (currentRole !== data.role.value) {
+            console.log('🔄 RoleLoader: Forcing page reload to apply role...')
+            setTimeout(() => {
+              window.location.reload()
+            }, 500)
+          }
           
         } else {
           console.error('❌ RoleLoader: Failed to load role from API:', data.error)
@@ -56,7 +66,7 @@ export function RoleLoader() {
     }
 
     loadRoleOnPageLoad()
-  }, [user?.id, hasLoaded])
+  }, [user?.id])
 
   // This component doesn't render anything
   return null

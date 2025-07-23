@@ -35,6 +35,10 @@ export function usePermissions() {
         },
       })
       
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       console.log('Immediate role refresh API response:', data)
       
