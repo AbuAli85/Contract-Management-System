@@ -645,6 +645,55 @@ export default function SetupAdminPage() {
                   "🧪 TEST ROLE REFRESH"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/clear-role-cache', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Clear role cache response:', data)
+                    
+                    if (data.success) {
+                      alert(`Role cache cleared!\n\nRole: ${data.role.value} (from ${data.role.source})\n\n${data.cacheClear.instructions}\n\nPlease refresh the page to see the updated role.`)
+                      // Clear localStorage cache
+                      if (typeof window !== 'undefined') {
+                        localStorage.removeItem(`user_role_${data.user.id}`)
+                        console.log('🗑️ Cleared localStorage cache')
+                      }
+                      // Force page refresh after 2 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 2000)
+                    } else {
+                      alert(`Clear role cache failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Clear role cache error:', error)
+                    alert('Clear role cache failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-red-300 text-red-700 hover:bg-red-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Clearing role cache...
+                  </>
+                ) : (
+                  "🗑️ CLEAR ROLE CACHE"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

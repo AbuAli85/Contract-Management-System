@@ -46,10 +46,24 @@ async function getSupabase(): Promise<SupabaseClient<Database>> {
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
   const [isLoading, setIsLoading] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // Load cached role from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      const cachedRole = localStorage.getItem(`user_role_${user.id}`)
+      if (cachedRole) {
+        console.log('📦 Loading cached role from localStorage:', cachedRole)
+        setUserRoles([cachedRole as Role])
+        setIsInitialized(true)
+      }
+    }
+  }, [user?.id])
 
   const loadUserRoles = async () => {
     if (!user) {
       setUserRoles(['user'])
+      setIsInitialized(true)
       return
     }
 
@@ -68,7 +82,12 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       if (!usersError && usersData?.role) {
         console.log('✅ Role loaded from users table:', usersData.role)
         setUserRoles([usersData.role as Role])
+        // Cache the role in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${user.id}`, usersData.role)
+        }
         setIsLoading(false)
+        setIsInitialized(true)
         return
       }
 
@@ -83,7 +102,12 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       if (!profilesError && profilesData?.role) {
         console.log('✅ Role loaded from profiles table:', profilesData.role)
         setUserRoles([profilesData.role as Role])
+        // Cache the role in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${user.id}`, profilesData.role)
+        }
         setIsLoading(false)
+        setIsInitialized(true)
         return
       }
 
@@ -98,25 +122,52 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       if (!appUsersError && appUsersData?.role) {
         console.log('✅ Role loaded from app_users table:', appUsersData.role)
         setUserRoles([appUsersData.role as Role])
+        // Cache the role in localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${user.id}`, appUsersData.role)
+        }
         setIsLoading(false)
+        setIsInitialized(true)
         return
       }
 
       // If no role found in any table, default to admin for testing
       console.log('⚠️ No role found in any table, defaulting to admin')
       setUserRoles(['admin'])
+      // Cache the admin role in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`user_role_${user.id}`, 'admin')
+      }
       
     } catch (error) {
       console.log('❌ Error loading user roles, defaulting to admin:', error)
       setUserRoles(['admin'])
+      // Cache the admin role in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`user_role_${user.id}`, 'admin')
+      }
     } finally {
       setIsLoading(false)
+      setIsInitialized(true)
     }
   }
 
+  // Load roles immediately when user changes
   useEffect(() => {
-    loadUserRoles()
-  }, [user])
+    if (user && !isInitialized) {
+      loadUserRoles()
+    } else if (!user) {
+      setUserRoles(['user'])
+      setIsInitialized(true)
+    }
+  }, [user, isInitialized])
+
+  // Also load roles when user changes (for re-authentication)
+  useEffect(() => {
+    if (user) {
+      loadUserRoles()
+    }
+  }, [user?.id]) // Only reload when user ID changes
 
   const refreshRoles = async () => {
     console.log('🔄 Manually refreshing user roles...')
@@ -139,6 +190,11 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   const updateRoleDirectly = (role: Role) => {
     setUserRoles([role])
+    // Cache the role in localStorage for persistence
+    if (typeof window !== 'undefined' && user) {
+      localStorage.setItem(`user_role_${user.id}`, role)
+      console.log('📦 Role cached in localStorage:', role)
+    }
     console.log('Role updated directly to:', role)
   }
 
@@ -162,3 +218,4 @@ export const useRBAC = () => {
   }
   return context
 }
+
