@@ -694,6 +694,57 @@ export default function SetupAdminPage() {
                   "🗑️ CLEAR ROLE CACHE"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/get-user-role', {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Get user role response:', data)
+                    
+                    if (data.success) {
+                      alert(`Current role from API: ${data.role.value} (from ${data.role.source})\n\nThis role will be cached and the page will reload to apply it.\n\nPlease wait for the page to refresh...`)
+                      
+                      // Cache the role in localStorage
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem(`user_role_${data.user.id}`, data.role.value)
+                        console.log('📦 Role cached in localStorage:', data.role.value)
+                      }
+                      
+                      // Force page refresh after 2 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 2000)
+                    } else {
+                      alert(`Get user role failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Get user role error:', error)
+                    alert('Get user role failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-green-300 text-green-700 hover:bg-green-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading role from API...
+                  </>
+                ) : (
+                  "📥 LOAD ROLE FROM API"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

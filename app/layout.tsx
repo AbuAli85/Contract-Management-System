@@ -4,6 +4,7 @@ import "./globals.css"
 import { AuthProvider } from "@/src/components/auth/auth-provider"
 import { Providers } from "./providers"
 import { GlobalPerformanceOptimizer } from "@/components/global-performance-optimizer"
+import { RoleLoader } from "@/components/role-loader"
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -56,6 +57,7 @@ export default function RootLayout({
         <GlobalPerformanceOptimizer />
         <Providers>
           <AuthProvider>
+            <RoleLoader />
             {children}
           </AuthProvider>
         </Providers>

@@ -48,7 +48,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
 
-  // Load cached role from localStorage on mount
+  // Load cached role from localStorage on mount and when user changes
   useEffect(() => {
     if (typeof window !== 'undefined' && user) {
       const cachedRole = localStorage.getItem(`user_role_${user.id}`)
@@ -56,7 +56,13 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         console.log('📦 Loading cached role from localStorage:', cachedRole)
         setUserRoles([cachedRole as Role])
         setIsInitialized(true)
+      } else {
+        console.log('📦 No cached role found, loading from database...')
+        loadUserRoles()
       }
+    } else if (!user) {
+      setUserRoles(['user'])
+      setIsInitialized(true)
     }
   }, [user?.id])
 
@@ -68,7 +74,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
 
     setIsLoading(true)
-    console.log('Loading user roles for:', user.id)
+    console.log('🔄 Loading user roles for:', user.id)
     
     // Try to load from users table first
     try {
@@ -85,6 +91,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         // Cache the role in localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem(`user_role_${user.id}`, usersData.role)
+          console.log('📦 Role cached in localStorage:', usersData.role)
         }
         setIsLoading(false)
         setIsInitialized(true)
@@ -105,6 +112,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         // Cache the role in localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem(`user_role_${user.id}`, profilesData.role)
+          console.log('📦 Role cached in localStorage:', profilesData.role)
         }
         setIsLoading(false)
         setIsInitialized(true)
@@ -125,6 +133,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         // Cache the role in localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem(`user_role_${user.id}`, appUsersData.role)
+          console.log('📦 Role cached in localStorage:', appUsersData.role)
         }
         setIsLoading(false)
         setIsInitialized(true)
@@ -137,6 +146,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       // Cache the admin role in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem(`user_role_${user.id}`, 'admin')
+        console.log('📦 Admin role cached in localStorage')
       }
       
     } catch (error) {
@@ -145,6 +155,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       // Cache the admin role in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem(`user_role_${user.id}`, 'admin')
+        console.log('📦 Admin role cached in localStorage (error fallback)')
       }
     } finally {
       setIsLoading(false)
@@ -152,22 +163,13 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
   }
 
-  // Load roles immediately when user changes
+  // Force reload roles when user changes (for re-authentication)
   useEffect(() => {
-    if (user && !isInitialized) {
-      loadUserRoles()
-    } else if (!user) {
-      setUserRoles(['user'])
-      setIsInitialized(true)
-    }
-  }, [user, isInitialized])
-
-  // Also load roles when user changes (for re-authentication)
-  useEffect(() => {
-    if (user) {
+    if (user && isInitialized) {
+      console.log('🔄 User changed, reloading roles...')
       loadUserRoles()
     }
-  }, [user?.id]) // Only reload when user ID changes
+  }, [user?.id])
 
   const refreshRoles = async () => {
     console.log('🔄 Manually refreshing user roles...')
