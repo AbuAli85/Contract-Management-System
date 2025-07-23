@@ -55,6 +55,21 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   // Debug logging
   console.log('RBACProvider: user', user, 'userRoles', userRoles, 'isLoading', isLoading)
 
+  // Immediate role loading from cache on mount
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      // Try to get role from localStorage immediately
+      const cachedRole = localStorage.getItem(`user_role_${user.id}`)
+      if (cachedRole && ['admin', 'manager', 'user'].includes(cachedRole)) {
+        console.log('✅ Immediate role from cache:', cachedRole)
+        setUserRoles([cachedRole as Role])
+        setIsLoading(false)
+        setIsInitialized(true)
+        return
+      }
+    }
+  }, [user?.id])
+
   // Use permanent role as primary source of truth
   useEffect(() => {
     if (permanentRole && !permanentRoleLoading) {
@@ -65,14 +80,14 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       setUserRoles([authRole as Role]);
       setIsLoading(false);
       setIsInitialized(true);
-    } else if (user && !permanentRoleLoading) {
+    } else if (user && !permanentRoleLoading && !userRoles) {
       loadUserRolesFromDatabase();
     } else if (!user) {
       setUserRoles(null);
       setIsLoading(false);
       setIsInitialized(true);
     }
-  }, [permanentRole, authRole, user?.id, permanentRoleLoading]);
+  }, [permanentRole, authRole, user?.id, permanentRoleLoading, userRoles]);
 
   // Force sync with permanent role when it changes
   useEffect(() => {
@@ -84,20 +99,25 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   // Also listen for user changes to ensure role is loaded
   useEffect(() => {
-    if (user && !permanentRole && !authRole && !permanentRoleLoading) {
+    if (user && !permanentRole && !authRole && !permanentRoleLoading && !userRoles) {
       console.log('🔄 RBAC: User exists but no roles, loading from database...')
       loadUserRolesFromDatabase()
     }
-  }, [user?.id, permanentRole, authRole, permanentRoleLoading])
+  }, [user?.id, permanentRole, authRole, permanentRoleLoading, userRoles])
 
-  // Auto-fallback: if userRoles is null for more than 1 second, set to ['admin']
+  // Faster auto-fallback: if userRoles is null for more than 500ms, set to ['admin']
   useEffect(() => {
     if (user && userRoles === null) {
       const timeout = setTimeout(() => {
-        console.warn('RBACProvider: userRoles still null after 1s, auto-falling back to [admin]')
+        console.warn('RBACProvider: userRoles still null after 500ms, auto-falling back to [admin]')
         setUserRoles(['admin'])
         setIsLoading(false)
-      }, 1000)
+        // Cache the admin role immediately
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${user.id}`, 'admin')
+          console.log('📦 Admin role cached immediately')
+        }
+      }, 500) // Reduced from 1000ms to 500ms
       return () => clearTimeout(timeout)
     }
   }, [user, userRoles])

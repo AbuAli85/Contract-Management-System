@@ -63,6 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!usersError && usersData?.role) {
         console.log('✅ Role loaded from users table:', usersData.role)
+        // Cache the role immediately
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${userId}`, usersData.role)
+          console.log('📦 Role cached in auth provider:', usersData.role)
+        }
         return usersData.role
       }
 
@@ -76,6 +81,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!profilesError && profilesData?.role) {
         console.log('✅ Role loaded from profiles table:', profilesData.role)
+        // Cache the role immediately
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${userId}`, profilesData.role)
+          console.log('📦 Role cached in auth provider:', profilesData.role)
+        }
         return profilesData.role
       }
 
@@ -89,6 +99,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!appUsersError && appUsersData?.role) {
         console.log('✅ Role loaded from app_users table:', appUsersData.role)
+        // Cache the role immediately
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`user_role_${userId}`, appUsersData.role)
+          console.log('📦 Role cached in auth provider:', appUsersData.role)
+        }
         return appUsersData.role
       }
 
@@ -110,6 +125,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!createError && createData) {
           console.log('✅ User record created with admin role:', createData.role)
+          // Cache the admin role immediately
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(`user_role_${userId}`, 'admin')
+            console.log('📦 Admin role cached in auth provider')
+          }
           return createData.role
         } else {
           console.log('❌ Failed to create user record:', createError)
@@ -127,6 +147,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Final fallback to admin
       console.log('⚠️ All attempts failed, defaulting to admin')
+      // Cache the admin role immediately
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`user_role_${userId}`, 'admin')
+        console.log('📦 Admin role cached in auth provider (final fallback)')
+      }
       return 'admin'
       
     } catch (error) {
@@ -139,6 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return loadUserRole(userId, retryCount + 1)
       }
       
+      // Cache the admin role on error
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`user_role_${userId}`, 'admin')
+        console.log('📦 Admin role cached in auth provider (error fallback)')
+      }
       return 'admin'
     }
   }
