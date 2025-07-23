@@ -9,6 +9,7 @@ export type Action =
   | 'promoter:delete'
   | 'promoter:bulk_delete'
   | 'promoter:export'
+  | 'promoter:archive' // <-- new action
   
   // Party actions
   | 'party:create'
@@ -17,6 +18,7 @@ export type Action =
   | 'party:delete'
   | 'party:bulk_delete'
   | 'party:export'
+  | 'party:archive' // <-- new action
   
   // Contract actions
   | 'contract:create'
@@ -26,7 +28,7 @@ export type Action =
   | 'contract:generate'
   | 'contract:approve'
   | 'contract:export'
-  | 'contract:archive'
+  | 'contract:archive' // <-- new action
   
   // User management actions
   | 'user:create'
@@ -56,6 +58,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'promoter:delete': true,
     'promoter:bulk_delete': true,
     'promoter:export': true,
+    'promoter:archive': true,
     
     // Party permissions - Full access
     'party:create': true,
@@ -64,6 +67,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'party:delete': true,
     'party:bulk_delete': true,
     'party:export': true,
+    'party:archive': true,
     
     // Contract permissions - Full access
     'contract:create': true,
@@ -99,6 +103,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'promoter:delete': false,
     'promoter:bulk_delete': false,
     'promoter:export': true,
+    'promoter:archive': true,
     
     // Party permissions - Read, Create, Update
     'party:create': true,
@@ -107,6 +112,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'party:delete': false,
     'party:bulk_delete': false,
     'party:export': true,
+    'party:archive': true,
     
     // Contract permissions - Read, Create, Update, Generate
     'contract:create': true,
@@ -142,6 +148,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'promoter:delete': false,
     'promoter:bulk_delete': false,
     'promoter:export': false,
+    'promoter:archive': false,
     
     // Party permissions - Read only
     'party:create': false,
@@ -150,6 +157,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'party:delete': false,
     'party:bulk_delete': false,
     'party:export': false,
+    'party:archive': false,
     
     // Contract permissions - Read, Create (own contracts)
     'contract:create': true,
