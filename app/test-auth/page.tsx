@@ -1,159 +1,143 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/src/components/auth/auth-provider'
-import { usePermissions } from '@/hooks/use-permissions'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from "react"
+import { useAuth } from "@/src/components/auth/auth-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function TestAuthPage() {
-  const { user, session, loading, signIn, signOut } = useAuth()
-  const permissions = usePermissions()
-  const [testResult, setTestResult] = useState<string>('')
-  const [domCheck, setDomCheck] = useState<string>('')
+  const [email, setEmail] = useState("test@example.com")
+  const [password, setPassword] = useState("TestPassword123")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const { signIn, user, loading: authLoading } = useAuth()
 
-  const testAuth = async () => {
+  const handleTestSignIn = async () => {
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
     try {
-      const response = await fetch('/api/test-auth')
+      await signIn(email, password)
+      setSuccess("Sign in successful!")
+    } catch (err: any) {
+      setError(err?.message || "An unexpected error occurred.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCreateTestUser = async () => {
+    setLoading(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch('/api/create-test-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
       const data = await response.json()
-      setTestResult(JSON.stringify(data, null, 2))
-    } catch (error) {
-      setTestResult(`Error: ${error}`)
-    }
-  }
-
-  const handleTestLogin = async () => {
-    try {
-      await signIn('test@example.com', 'password123')
-    } catch (error) {
-      console.error('Login error:', error)
-    }
-  }
-
-  const checkForLogoutLinks = () => {
-    if (typeof window !== 'undefined') {
-      const logoutLinks = document.querySelectorAll('a[href*="logout"]')
-      const logoutButtons = document.querySelectorAll('button[onclick*="logout"]')
-      const logoutElements = document.querySelectorAll('[href*="logout"]')
       
-      const results = {
-        logoutLinks: Array.from(logoutLinks).map(el => ({
-          href: el.getAttribute('href'),
-          text: el.textContent,
-          tagName: el.tagName
-        })),
-        logoutButtons: Array.from(logoutButtons).map(el => ({
-          onclick: el.getAttribute('onclick'),
-          text: el.textContent,
-          tagName: el.tagName
-        })),
-        allLogoutElements: Array.from(logoutElements).map(el => ({
-          href: el.getAttribute('href'),
-          text: el.textContent,
-          tagName: el.tagName
-        }))
+      if (data.success) {
+        setSuccess(`Test user created! Email: ${data.credentials.email}, Password: ${data.credentials.password}`)
+        setEmail(data.credentials.email)
+        setPassword(data.credentials.password)
+      } else {
+        setError(data.error || "Failed to create test user")
       }
-      
-      setDomCheck(JSON.stringify(results, null, 2))
+    } catch (err: any) {
+      setError(err?.message || "An unexpected error occurred.")
+    } finally {
+      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    // Check for logout links after component mounts
-    setTimeout(checkForLogoutLinks, 1000)
-  }, [])
 
   return (
-    <div className="container mx-auto p-8 space-y-6">
-      <h1 className="text-3xl font-bold">Authentication Test Page</h1>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Auth State</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <strong>Loading:</strong> {loading ? 'Yes' : 'No'}
-          </div>
-          <div>
-            <strong>User:</strong> {user ? user.email : 'None'}
-          </div>
-          <div>
-            <strong>Session:</strong> {session ? 'Active' : 'None'}
-          </div>
-          <div>
-            <strong>User ID:</strong> {user?.id || 'None'}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Permissions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <strong>Role:</strong> {permissions.role}
-          </div>
-          <div>
-            <strong>Roles:</strong> {permissions.roles.join(', ')}
-          </div>
-          <div>
-            <strong>Can create contract:</strong> {permissions.canCreateContract() ? 'Yes' : 'No'}
-          </div>
-          <div>
-            <strong>Can manage users:</strong> {permissions.canManageUsers() ? 'Yes' : 'No'}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Button onClick={testAuth}>
-              Test API Auth
-            </Button>
-            <Button onClick={handleTestLogin} variant="outline">
-              Test Login
-            </Button>
-            <Button onClick={signOut} variant="destructive">
-              Sign Out
-            </Button>
-            <Button onClick={checkForLogoutLinks} variant="secondary">
-              Check DOM for Logout Links
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {testResult && (
-        <Card>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
           <CardHeader>
-            <CardTitle>API Test Result</CardTitle>
+            <CardTitle>Authentication Test</CardTitle>
+            <CardDescription>Test the authentication system</CardDescription>
           </CardHeader>
-          <CardContent>
-            <pre className="bg-muted p-4 rounded text-sm overflow-auto">
-              {testResult}
-            </pre>
+          <CardContent className="space-y-4">
+            {authLoading && (
+              <Alert>
+                <AlertDescription>Loading authentication...</AlertDescription>
+              </Alert>
+            )}
+
+            {user && (
+              <Alert>
+                <AlertDescription>
+                  ✅ Authenticated as: {user.email}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+              />
+            </div>
+
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleCreateTestUser}
+                disabled={loading}
+                variant="outline"
+                className="flex-1"
+              >
+                {loading ? "Creating..." : "Create Test User"}
+              </Button>
+
+              <Button
+                onClick={handleTestSignIn}
+                disabled={loading}
+                className="flex-1"
+              >
+                {loading ? "Signing in..." : "Test Sign In"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
-      )}
-
-      {domCheck && (
-        <Card>
-          <CardHeader>
-            <CardTitle>DOM Logout Links Check</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-muted p-4 rounded text-sm overflow-auto">
-              {domCheck}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
+      </div>
     </div>
   )
 } 
