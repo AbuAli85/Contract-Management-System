@@ -43,6 +43,7 @@ import {
 import { useUserManagement, type User, type UserFilters } from '@/hooks/use-user-management'
 import { UserProfileModal } from './user-profile-modal'
 import { useToast } from '@/hooks/use-toast'
+import { usePermissions } from '@/hooks/use-permissions'
 
 const ROLES = [
   { value: '', label: 'All Roles' },
@@ -86,6 +87,7 @@ export function UserManagementDashboard() {
   } = useUserManagement()
   
   const { toast } = useToast()
+  const permissions = usePermissions();
 
   // Memoized filter changes to prevent unnecessary API calls
   const memoizedFilters = useMemo(() => filters, [filters.page, filters.limit, filters.sortBy, filters.sortOrder, filters.role, filters.status])
@@ -174,6 +176,22 @@ export function UserManagementDashboard() {
     setProfileMode(mode)
     setShowProfileModal(true)
   }, [])
+
+  // Add handler for role change
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    try {
+      const res = await fetch('/api/users/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, newRole })
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      toast({ title: 'Role updated', description: 'User role updated successfully.' });
+      fetchUsers(filters);
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update user role', variant: 'destructive' });
+    }
+  };
 
   // Memoized utility functions
   const getInitials = useCallback((name: string) => {
@@ -504,7 +522,23 @@ export function UserManagementDashboard() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{getRoleBadge(user.role)}</TableCell>
+                      <TableCell>
+                        {permissions.role === 'admin' ? (
+                          <Select value={user.role} onValueChange={value => handleRoleChange(user.id, value)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="admin">Administrator</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="viewer">Viewer</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          getRoleBadge(user.role)
+                        )}
+                      </TableCell>
                       <TableCell>{getStatusBadge(user.status)}</TableCell>
                       <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell>
