@@ -423,20 +423,28 @@ export default function SetupAdminPage() {
                     console.log('Force admin role response:', data)
                     
                     if (data.success) {
-                      alert('Admin role forced successfully! Please refresh the page.')
-                      window.location.reload()
+                      const results = data.results
+                      const summary = data.summary
+                      const immediate = data.immediate
+                      
+                      alert(`Admin Role FORCED!\n\nRole: ${immediate.role} (from ${immediate.source})\n\nTables Updated: ${summary.tablesUpdated}\nTables Failed: ${summary.tablesFailed}\n\nUsers Table: ${results.users.success ? '✅ FORCED' : '❌ FAILED'}\nProfiles Table: ${results.profiles.success ? '✅ FORCED' : '❌ FAILED'}\nApp_Users Table: ${results.app_users.success ? '✅ FORCED' : '❌ FAILED'}\n\n${immediate.instructions}`)
+                      
+                      // Force page refresh after 2 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 2000)
                     } else {
-                      alert(`Force admin failed: ${data.error}`)
+                      alert(`Force admin role failed: ${data.error}`)
                     }
                   } catch (error) {
-                    console.error('Force admin error:', error)
-                    alert('Force admin failed - check console')
+                    console.error('Force admin role error:', error)
+                    alert('Force admin role failed - check console')
                   } finally {
                     setLoading(false)
                   }
                 }}
                 disabled={loading}
-                className="w-full border-green-300 text-green-700 hover:bg-green-100 bg-green-50"
+                className="w-full border-red-300 text-red-700 hover:bg-red-100"
               >
                 {loading ? (
                   <>
@@ -444,7 +452,7 @@ export default function SetupAdminPage() {
                     Forcing admin role...
                   </>
                 ) : (
-                  "🔧 FORCE ADMIN ROLE"
+                  "⚡ FORCE ADMIN ROLE"
                 )}
               </Button>
               

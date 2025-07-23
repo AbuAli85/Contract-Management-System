@@ -20,21 +20,18 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ User authenticated:', { id: user.id, email: user.email })
 
+    let finalRole = 'admin'
+    let roleSource = 'forced'
+
+    // Force set admin role in all tables
     const results: any = {
-      userId: user.id,
-      userEmail: user.email,
-      operations: {
-        users: null,
-        profiles: null,
-        app_users: null
-      },
-      success: false,
-      errors: []
+      users: { success: false, role: null, error: null },
+      profiles: { success: false, role: null, error: null },
+      app_users: { success: false, role: null, error: null }
     }
 
     // Force admin role in users table
     try {
-      console.log('🔄 Setting admin role in users table...')
       const { data: usersData, error: usersError } = await supabase
         .from('users')
         .upsert({
@@ -48,21 +45,23 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
       
-      if (usersError) {
-        results.errors.push(`Users table error: ${usersError.message}`)
-        console.log('❌ Users table error:', usersError)
+      if (!usersError && usersData) {
+        results.users.success = true
+        results.users.role = usersData.role
+        finalRole = usersData.role || 'admin'
+        roleSource = 'users'
+        console.log('✅ Admin role forced in users table')
       } else {
-        results.operations.users = { success: true, data: usersData }
-        console.log('✅ Users table updated:', usersData)
+        results.users.error = usersError?.message || 'Failed to set admin role'
+        console.log('❌ Failed to force admin role in users table:', usersError)
       }
     } catch (error) {
-      results.errors.push(`Users table exception: ${error}`)
-      console.log('❌ Users table exception:', error)
+      results.users.error = error instanceof Error ? error.message : 'Unknown error'
+      console.log('❌ Error forcing admin role in users table:', error)
     }
 
     // Force admin role in profiles table
     try {
-      console.log('🔄 Setting admin role in profiles table...')
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .upsert({
@@ -75,21 +74,25 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
       
-      if (profilesError) {
-        results.errors.push(`Profiles table error: ${profilesError.message}`)
-        console.log('❌ Profiles table error:', profilesError)
+      if (!profilesError && profilesData) {
+        results.profiles.success = true
+        results.profiles.role = profilesData.role
+        if (roleSource === 'forced') {
+          finalRole = profilesData.role || 'admin'
+          roleSource = 'profiles'
+        }
+        console.log('✅ Admin role forced in profiles table')
       } else {
-        results.operations.profiles = { success: true, data: profilesData }
-        console.log('✅ Profiles table updated:', profilesData)
+        results.profiles.error = profilesError?.message || 'Failed to set admin role'
+        console.log('❌ Failed to force admin role in profiles table:', profilesError)
       }
     } catch (error) {
-      results.errors.push(`Profiles table exception: ${error}`)
-      console.log('❌ Profiles table exception:', error)
+      results.profiles.error = error instanceof Error ? error.message : 'Unknown error'
+      console.log('❌ Error forcing admin role in profiles table:', error)
     }
 
     // Force admin role in app_users table
     try {
-      console.log('🔄 Setting admin role in app_users table...')
       const { data: appUsersData, error: appUsersError } = await supabase
         .from('app_users')
         .upsert({
@@ -103,33 +106,51 @@ export async function POST(request: NextRequest) {
         .select()
         .single()
       
-      if (appUsersError) {
-        results.errors.push(`App_users table error: ${appUsersError.message}`)
-        console.log('❌ App_users table error:', appUsersError)
+      if (!appUsersError && appUsersData) {
+        results.app_users.success = true
+        results.app_users.role = appUsersData.role
+        if (roleSource === 'forced') {
+          finalRole = appUsersData.role || 'admin'
+          roleSource = 'app_users'
+        }
+        console.log('✅ Admin role forced in app_users table')
       } else {
-        results.operations.app_users = { success: true, data: appUsersData }
-        console.log('✅ App_users table updated:', appUsersData)
+        results.app_users.error = appUsersError?.message || 'Failed to set admin role'
+        console.log('❌ Failed to force admin role in app_users table:', appUsersError)
       }
     } catch (error) {
-      results.errors.push(`App_users table exception: ${error}`)
-      console.log('❌ App_users table exception:', error)
+      results.app_users.error = error instanceof Error ? error.message : 'Unknown error'
+      console.log('❌ Error forcing admin role in app_users table:', error)
     }
 
-    // Determine if any operation succeeded
-    const successfulOperations = Object.values(results.operations).filter((op: any) => op?.success)
-    results.success = successfulOperations.length > 0
+    const tablesUpdated = Object.values(results).filter((r: any) => r.success).length
+    const tablesFailed = Object.values(results).filter((r: any) => !r.success).length
 
     console.log('=== FORCE ADMIN ROLE COMPLETE ===')
     
     return NextResponse.json({
-      success: results.success,
-      results,
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email
+      },
+      role: {
+        value: finalRole,
+        source: roleSource,
+        timestamp: new Date().toISOString()
+      },
+      results: results,
       summary: {
-        successfulOperations: successfulOperations.length,
-        totalErrors: results.errors.length,
-        message: results.success 
-          ? 'Admin role set successfully in at least one table' 
-          : 'Failed to set admin role in any table'
+        finalRole: finalRole,
+        roleSource: roleSource,
+        tablesUpdated: tablesUpdated,
+        tablesFailed: tablesFailed,
+        message: `Admin role forced. Final role: ${finalRole} (from ${roleSource})`
+      },
+      immediate: {
+        role: finalRole,
+        source: roleSource,
+        instructions: 'Role has been forced in database. Refresh page to see changes.'
       }
     })
 

@@ -43,16 +43,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<Session['user'] | null>(null)
+  const [roleLoaded, setRoleLoaded] = useState(false)
 
-  // Load user role from database
-  const loadUserRole = async (userId: string) => {
-    if (!userId) return
+  // Load user role from database with retry mechanism
+  const loadUserRole = async (userId: string, retryCount = 0): Promise<string | null> => {
+    if (!userId) return null
 
     try {
-      console.log('🔄 Loading user role for:', userId)
+      console.log(`🔄 Loading user role for: ${userId} (attempt ${retryCount + 1})`)
+      
+      const supabase = createClient()
       
       // Try to load from users table first
-      const supabase = createClient()
       const { data: usersData, error: usersError } = await supabase
         .from('users')
         .select('role')
@@ -61,8 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!usersError && usersData?.role) {
         console.log('✅ Role loaded from users table:', usersData.role)
-        setRole(usersData.role)
-        return
+        return usersData.role
       }
 
       // Try profiles table as fallback
@@ -75,8 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!profilesError && profilesData?.role) {
         console.log('✅ Role loaded from profiles table:', profilesData.role)
-        setRole(profilesData.role)
-        return
+        return profilesData.role
       }
 
       // Try app_users table as fallback
@@ -89,12 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!appUsersError && appUsersData?.role) {
         console.log('✅ Role loaded from app_users table:', appUsersData.role)
-        setRole(appUsersData.role)
-        return
+        return appUsersData.role
       }
 
-      // If no role found, try to create user record with admin role
-      console.log('⚠️ No role found in any table, attempting to create user record...')
+      // If no role found, create user record with admin role
+      console.log('⚠️ No role found in any table, creating user record...')
       try {
         const { data: createData, error: createError } = await supabase
           .from('users')
@@ -111,8 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (!createError && createData) {
           console.log('✅ User record created with admin role:', createData.role)
-          setRole(createData.role)
-          return
+          return createData.role
         } else {
           console.log('❌ Failed to create user record:', createError)
         }
@@ -120,14 +118,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('❌ Error creating user record:', createError)
       }
 
+      // If still no role and we haven't retried too many times, retry
+      if (retryCount < 2) {
+        console.log(`🔄 Retrying role loading (attempt ${retryCount + 2})...`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        return loadUserRole(userId, retryCount + 1)
+      }
+
       // Final fallback to admin
       console.log('⚠️ All attempts failed, defaulting to admin')
-      setRole('admin')
+      return 'admin'
       
     } catch (error) {
-      console.log('❌ Error loading user role, defaulting to admin:', error)
-      setRole('admin')
+      console.log('❌ Error loading user role:', error)
+      
+      // Retry on error if we haven't retried too many times
+      if (retryCount < 2) {
+        console.log(`🔄 Retrying after error (attempt ${retryCount + 2})...`)
+        await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second
+        return loadUserRole(userId, retryCount + 1)
+      }
+      
+      return 'admin'
     }
+  }
+
+  // Synchronous role loading that waits for completion
+  const loadRoleSynchronously = async (userId: string) => {
+    console.log('🔄 Starting synchronous role loading for:', userId)
+    setLoading(true)
+    
+    const userRole = await loadUserRole(userId)
+    
+    console.log('✅ Synchronous role loading complete:', userRole)
+    setRole(userRole)
+    setRoleLoaded(true)
+    setLoading(false)
+    
+    return userRole
   }
 
   useEffect(() => {
@@ -155,13 +183,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession)
           setUser(initialSession?.user ?? null)
           
-          // Load role immediately if user exists
+          // Load role synchronously if user exists
           if (initialSession?.user?.id) {
-            console.log("🔄 Loading role immediately for existing session...")
-            await loadUserRole(initialSession.user.id)
+            console.log("🔄 Loading role synchronously for existing session...")
+            await loadRoleSynchronously(initialSession.user.id)
+          } else {
+            setLoading(false)
+            setRoleLoaded(true)
           }
-          
-          setLoading(false)
         }
 
         // Set up auth state change listener
@@ -177,15 +206,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session)
             setUser(session?.user ?? null)
             
-            // Load role immediately when auth state changes
+            // Load role synchronously when auth state changes
             if (session?.user?.id) {
-              console.log("🔄 Loading role for auth state change...")
-              await loadUserRole(session.user.id)
+              console.log("🔄 Loading role synchronously for auth state change...")
+              await loadRoleSynchronously(session.user.id)
             } else {
               setRole(null)
+              setRoleLoaded(true)
+              setLoading(false)
             }
-            
-            setLoading(false)
           }
         })
 
@@ -197,6 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("❌ Auth initialization error:", error)
         if (mounted) {
           setLoading(false)
+          setRoleLoaded(true)
         }
       }
     }
@@ -206,13 +236,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Ensure role is loaded whenever user changes
   useEffect(() => {
-    if (user?.id) {
-      console.log("🔄 User changed, loading role for:", user.id)
-      loadUserRole(user.id)
-    } else {
+    if (user?.id && !roleLoaded) {
+      console.log("🔄 User changed, loading role synchronously for:", user.id)
+      loadRoleSynchronously(user.id)
+    } else if (!user) {
       setRole(null)
+      setRoleLoaded(true)
     }
-  }, [user?.id])
+  }, [user?.id, roleLoaded])
 
   const value = {
     session,
@@ -337,7 +368,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     forceRefreshRole: async () => {
       console.log("🔄 Forcing role refresh")
       if (user?.id) {
-        await loadUserRole(user.id)
+        await loadRoleSynchronously(user.id)
       } else {
         setRole(null)
       }
