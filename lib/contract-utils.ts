@@ -221,10 +221,13 @@ export function validateContractData(data: Partial<ContractGeneratorFormData>): 
 /**
  * Format contract number
  */
-export function generateContractNumber(prefix: string = "CT"): string {
-  const year = new Date().getFullYear()
-  const timestamp = Date.now().toString().slice(-6)
-  return `${prefix}-${year}-${timestamp}`
+export function generateContractNumber(prefix: string = "PAC"): string {
+  const now = new Date()
+  const day = now.getDate().toString().padStart(2, '0')
+  const month = (now.getMonth() + 1).toString().padStart(2, '0')
+  const year = now.getFullYear()
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+  return `${prefix}-${day}${month}${year}-${random}`
 }
 
 /**

@@ -257,8 +257,10 @@ export async function POST(request: NextRequest) {
 
 // Utility function to generate contract numbers
 function generateContractNumber(): string {
-  const prefix = 'OMN'
-  const year = new Date().getFullYear()
+  const now = new Date()
+  const day = now.getDate().toString().padStart(2, '0')
+  const month = (now.getMonth() + 1).toString().padStart(2, '0')
+  const year = now.getFullYear()
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-  return `${prefix}-${year}-${random}`
+  return `PAC-${day}${month}${year}-${random}`
 }

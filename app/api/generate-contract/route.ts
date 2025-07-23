@@ -8,8 +8,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const supabase = await createClient()
 
-    // Generate unique contract number
-    const contractNumber = `CNT-${nanoid(8).toUpperCase()}`
+    // Generate unique contract number with new format
+    const now = new Date()
+    const day = now.getDate().toString().padStart(2, '0')
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const year = now.getFullYear()
+    const random = nanoid(4).toUpperCase()
+    const contractNumber = `PAC-${day}${month}${year}-${random}`
 
     // Insert contract into database
     const { data: contract, error } = await supabase

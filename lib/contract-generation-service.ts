@@ -58,9 +58,12 @@ class ContractGenerationService {
    * Generate a unique contract number
    */
   private generateContractNumber(): string {
-    const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-    const random = nanoid(6).toUpperCase()
-    return `CNT-${timestamp}-${random}`
+    const now = new Date()
+    const day = now.getDate().toString().padStart(2, '0')
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const year = now.getFullYear()
+    const random = nanoid(4).toUpperCase()
+    return `PAC-${day}${month}${year}-${random}`
   }
 
   /**

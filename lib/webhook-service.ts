@@ -144,7 +144,7 @@ export class WebhookService {
    */
   static async testWebhooks() {
     const testData = {
-      contract_number: 'TEST-001',
+      contract_number: 'PAC-23072024-0001',
       client_name: 'Test Client',
       employer_name: 'Test Employer',
       test_mode: true
@@ -160,7 +160,7 @@ export class WebhookService {
       // Test Slack webhook
       console.log('Testing Slack webhook...')
       await this.sendToSlackWebhook({
-        contract_number: 'TEST-001',
+        contract_number: 'PAC-23072024-0001',
         pdf_url: 'https://example.com/test.pdf',
         status: 'test',
         client_name: 'Test Client',
