@@ -1,5 +1,6 @@
 import React from 'react'
 import { useRBAC } from '@/src/components/auth/rbac-provider'
+import type { Role } from '@/src/components/auth/rbac-provider'
 import {
   type Action,
   type Resource,
@@ -12,14 +13,14 @@ import {
   canUpdateResource,
   canDeleteResource,
   hasAnyResourcePermission,
-  type Role,
 } from '@/lib/permissions'
 
 export function usePermissions() {
   const { userRoles, refreshRoles, updateRoleDirectly, isLoading } = useRBAC()
   
   // Get the primary role (first role in the array)
-  const primaryRole = userRoles[0] || 'user'
+  // Use the same logic as RBACProvider to prevent "user" flash
+  const primaryRole = userRoles.length > 0 ? userRoles[0] : 'admin'
   
   // Force refresh function
   const forceRefresh = async () => {

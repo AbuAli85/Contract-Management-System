@@ -1,9 +1,17 @@
-import { createContext, useContext, useEffect, useState, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
 import { useAuth } from './auth-provider'
 import { usePermanentRole } from './permanent-role-provider'
+import { createClient } from '@/lib/supabase/client'
+import type { Database } from '@/types/supabase'
+
+// Extend Window interface for preloaded role
+declare global {
+  interface Window {
+    __PRECACHED_ROLE__?: string
+  }
+}
 
 export type Role = 'admin' | 'manager' | 'user'
 
@@ -58,6 +66,18 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   // Immediate role loading from cache on mount
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
+      // First check for preloaded role from inline script
+      if (window.__PRECACHED_ROLE__ && ['admin', 'manager', 'user'].includes(window.__PRECACHED_ROLE__)) {
+        console.log('✅ Immediate role from preload script:', window.__PRECACHED_ROLE__)
+        setUserRoles([window.__PRECACHED_ROLE__ as Role])
+        setIsLoading(false)
+        setIsInitialized(true)
+        // Cache it in localStorage for future use
+        localStorage.setItem(`user_role_${user.id}`, window.__PRECACHED_ROLE__)
+        console.log('📦 Preloaded role cached in localStorage')
+        return
+      }
+      
       // Try to get role from localStorage immediately
       const cachedRole = localStorage.getItem(`user_role_${user.id}`)
       if (cachedRole && ['admin', 'manager', 'user'].includes(cachedRole)) {

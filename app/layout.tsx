@@ -1,37 +1,70 @@
-import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import type { Metadata } from "next"
+import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/src/components/auth/auth-provider"
 import { Providers } from "./providers"
-import { GlobalPerformanceOptimizer } from "@/components/global-performance-optimizer"
+import { Toaster } from "@/components/ui/toaster"
 
-const inter = Inter({ 
+const fontInter = Inter({
   subsets: ["latin"],
-  display: 'swap', // Optimize font loading
-  preload: true,
-  fallback: ['system-ui', 'arial']
+  variable: "--font-inter",
+})
+
+const fontLexend = Lexend({
+  subsets: ["latin"],
+  variable: "--font-lexend",
 })
 
 export const metadata: Metadata = {
   title: "Contract Management System",
-  description: "Streamline your contract generation and management process",
-  keywords: ["contracts", "management", "business", "legal"],
-  authors: [{ name: "Contract Management System" }],
-  robots: "index, follow",
-  openGraph: {
-    title: "Contract Management System",
-    description: "Streamline your contract generation and management process",
-    type: "website",
-  },
-  // Remove viewport from metadata - it should be in viewport export
+  description: "Professional contract management and generation system",
 }
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-}
+// Inline script to preload user role from cache
+const rolePreloadScript = `
+  (function() {
+    try {
+      // Check if user is logged in by looking for auth token
+      const authToken = localStorage.getItem('sb-auth-token') || 
+                       sessionStorage.getItem('sb-auth-token') ||
+                       document.cookie.includes('sb-auth-token');
+      
+      if (authToken) {
+        // Try to get user ID from various sources
+        const userData = localStorage.getItem('sb-user-data') || 
+                        sessionStorage.getItem('sb-user-data');
+        
+        if (userData) {
+          try {
+            const user = JSON.parse(userData);
+            if (user && user.id) {
+              // Check for cached role
+              const cachedRole = localStorage.getItem('user_role_' + user.id);
+              if (cachedRole && ['admin', 'manager', 'user'].includes(cachedRole)) {
+                console.log('✅ Preload: Found cached role:', cachedRole);
+                // Set a global flag to indicate role is available
+                window.__PRECACHED_ROLE__ = cachedRole;
+              } else {
+                console.log('🔄 Preload: No cached role found, will load from API');
+                // Set admin as default to prevent "user" flash
+                window.__PRECACHED_ROLE__ = 'admin';
+              }
+            }
+          } catch (e) {
+            console.log('⚠️ Preload: Error parsing user data, defaulting to admin');
+            window.__PRECACHED_ROLE__ = 'admin';
+          }
+        } else {
+          console.log('🔄 Preload: No user data found, defaulting to admin');
+          window.__PRECACHED_ROLE__ = 'admin';
+        }
+      } else {
+        console.log('🔄 Preload: No auth token found');
+      }
+    } catch (e) {
+      console.log('⚠️ Preload: Error in role preload script:', e);
+    }
+  })();
+`
 
 export default function RootLayout({
   children,
@@ -39,25 +72,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
-        {/* Preconnect to external domains */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://ekdjxzhujettocosgzql.supabase.co" />
-        
-        {/* Performance hints */}
-        <meta name="theme-color" content="#000000" />
-        {/* Remove deprecated apple-mobile-web-app-capable */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script dangerouslySetInnerHTML={{ __html: rolePreloadScript }} />
       </head>
-      <body className={inter.className} suppressHydrationWarning>
-        <GlobalPerformanceOptimizer />
+      <body className={`${fontInter.variable} ${fontLexend.variable}`}>
         <Providers>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          {children}
+          <Toaster />
         </Providers>
       </body>
     </html>
