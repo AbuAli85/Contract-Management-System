@@ -1,23 +1,19 @@
 import { type Metadata } from "next"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
+import { RBACProvider } from "@/src/components/auth/rbac-provider";
+import { useAuth } from "@/src/components/auth/auth-provider";
 
 export const metadata: Metadata = {
   title: "Dashboard - Contract Management System",
   description: "Streamline your contract generation and management process",
 }
 
-export default async function DashboardLayoutWrapper({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = await params
-
+export default function DashboardLayout({ children }) {
+  const { user } = useAuth();
   return (
-    <DashboardLayout>
+    <RBACProvider user={user}>
+      {/* ...dashboard layout... */}
       {children}
-    </DashboardLayout>
-  )
+    </RBACProvider>
+  );
 }
