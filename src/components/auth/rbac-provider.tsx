@@ -63,10 +63,17 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   // Debug logging - Ensure userRoles is logged as an array
   console.log('RBACProvider: user', user ? user.id : 'null', 'userRoles', userRoles, 'isLoading', isLoading)
 
-  // Debug: Track userRoles changes
+  // Debug: Track userRoles changes and ensure it's always an array
   useEffect(() => {
     if (userRoles !== null) {
       console.log('🔍 userRoles state changed to:', userRoles, 'Type:', typeof userRoles, 'Is Array:', Array.isArray(userRoles))
+      
+      // Safety check: ensure userRoles is always an array
+      if (!Array.isArray(userRoles)) {
+        console.error('❌ CRITICAL: userRoles is not an array! Value:', userRoles)
+        // Force reset to admin role
+        setUserRoles(['admin'])
+      }
     }
   }, [userRoles])
 
@@ -147,7 +154,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       }, 500) // Reduced from 1000ms to 500ms
       return () => clearTimeout(timeout)
     }
-  }, [user, userRoles])
+  }, [user?.id]); // Removed userRoles from dependencies to prevent infinite loops
 
   const loadUserRolesFromDatabase = async () => {
     if (!user) return;
