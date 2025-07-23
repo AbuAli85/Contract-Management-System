@@ -71,42 +71,13 @@ export default function ContractGeneratorForm({
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  // State for lazy loaded data
-  const [clientParties, setClientParties] = useState<Database["public"]["Tables"]["parties"]["Row"][]>([])
-  const [employerParties, setEmployerParties] = useState<Database["public"]["Tables"]["parties"]["Row"][]>([])
-  const [promoters, setPromoters] = useState<Promoter[]>([])
-  const [isLoadingClientParties, setIsLoadingClientParties] = useState(true)
-  const [isLoadingEmployerParties, setIsLoadingEmployerParties] = useState(true)
-  const [isLoadingPromoters, setIsLoadingPromoters] = useState(true)
+  // Use the proper hooks to fetch data
+  const { data: allParties, isLoading: isLoadingParties } = useParties()
+  const { data: promoters, isLoading: isLoadingPromoters } = usePromoters()
 
-  // Load data on component mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // Load parties and promoters data
-        const [partiesModule, promotersModule] = await Promise.all([
-          import("@/hooks/use-parties"),
-          import("@/hooks/use-promoters")
-        ])
-        
-        // Initialize the hooks (this is a simplified approach)
-        // In a real implementation, you'd need to handle the hook logic differently
-        setClientParties([])
-        setEmployerParties([])
-        setPromoters([])
-        setIsLoadingClientParties(false)
-        setIsLoadingEmployerParties(false)
-        setIsLoadingPromoters(false)
-      } catch (error) {
-        console.error('Error loading data:', error)
-        setIsLoadingClientParties(false)
-        setIsLoadingEmployerParties(false)
-        setIsLoadingPromoters(false)
-      }
-    }
-
-    loadData()
-  }, [])
+  // Filter parties by type
+  const clientParties = allParties?.filter(party => party.type === 'Client') || []
+  const employerParties = allParties?.filter(party => party.type === 'Employer') || []
 
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null)
   const [promoterOptions, setPromoterOptions] = useState<
@@ -374,7 +345,7 @@ export default function ContractGeneratorForm({
   }
 
   const isLoadingInitialData =
-    isLoadingEmployerParties || isLoadingClientParties || isLoadingPromoters
+    isLoadingParties || isLoadingPromoters
 
   // show spinner until selects are loaded
   if (
@@ -431,7 +402,7 @@ export default function ContractGeneratorForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value ?? ""}
-                    disabled={isSubmitting || isLoadingClientParties}
+                    disabled={isSubmitting || isLoadingParties}
                   >
                     <FormControl>
                       <SelectTrigger
@@ -439,7 +410,7 @@ export default function ContractGeneratorForm({
                       >
                         <SelectValue
                           placeholder={
-                            isLoadingClientParties
+                            isLoadingParties
                               ? "Loading Clients..."
                               : "Select Client"
                           }
@@ -447,18 +418,18 @@ export default function ContractGeneratorForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {isLoadingClientParties && (
+                      {isLoadingParties && (
                         <SelectItem value="loading" disabled>
                           Loading...
                         </SelectItem>
                       )}
-                      {!isLoadingClientParties &&
+                      {!isLoadingParties &&
                         clientParties?.length === 0 && (
                           <SelectItem value="no-data" disabled>
                             No clients found
                           </SelectItem>
                         )}
-                                              {!isLoadingClientParties &&
+                                              {!isLoadingParties &&
                          clientParties?.map((party: Database["public"]["Tables"]["parties"]["Row"]) => (
                           <SelectItem key={party.id} value={party.id}>
                             {party.name_en} / {party.name_ar}{" "}
@@ -481,7 +452,7 @@ export default function ContractGeneratorForm({
                   <Select
                     onValueChange={field.onChange}
                     value={field.value ?? ""}
-                    disabled={isSubmitting || isLoadingEmployerParties}
+                    disabled={isSubmitting || isLoadingParties}
                   >
                     <FormControl>
                       <SelectTrigger
@@ -489,7 +460,7 @@ export default function ContractGeneratorForm({
                       >
                         <SelectValue
                           placeholder={
-                            isLoadingEmployerParties
+                            isLoadingParties
                               ? "Loading Employers..."
                               : "Select Employer"
                           }
@@ -497,18 +468,18 @@ export default function ContractGeneratorForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {isLoadingEmployerParties && (
+                      {isLoadingParties && (
                         <SelectItem value="loading" disabled>
                           Loading...
                         </SelectItem>
                       )}
-                      {!isLoadingEmployerParties &&
+                      {!isLoadingParties &&
                         employerParties?.length === 0 && (
                           <SelectItem value="no-data" disabled>
                             No employers found
                           </SelectItem>
                         )}
-                                              {!isLoadingEmployerParties &&
+                                              {!isLoadingParties &&
                          employerParties?.map((party: Database["public"]["Tables"]["parties"]["Row"]) => (
                           <SelectItem key={party.id} value={party.id}>
                             {party.name_en} / {party.name_ar}{" "}

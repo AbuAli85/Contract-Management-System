@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import GenerateContractForm from "@/components/generate-contract-form"
+import { DebugDataLoading } from "@/components/debug-data-loading"
 
 // Enhanced utilities for contract insights
 import { 
@@ -418,6 +419,16 @@ export default function GenerateContractPage() {
           <ContractTypesOverview />
         </motion.div>
       )}
+
+      {/* Debug Component */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="mb-6"
+      >
+        <DebugDataLoading />
+      </motion.div>
 
       {/* Form Container */}
       <motion.div
