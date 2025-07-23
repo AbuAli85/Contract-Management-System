@@ -542,15 +542,13 @@ export default function ManagePromotersPage() {
                 <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
               </Link>
             </Button>
-            <PermissionGuard action="promoter:create">
-              <Button
-                onClick={handleAddNew}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <PlusCircleIcon className="mr-2 h-5 w-5" />
-                Add New Promoter
-              </Button>
-            </PermissionGuard>
+            <Button
+              onClick={handleAddNew}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              <PlusCircleIcon className="mr-2 h-5 w-5" />
+              Add New Promoter
+            </Button>
           </div>
         </div>
 
