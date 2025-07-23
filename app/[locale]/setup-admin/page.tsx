@@ -435,6 +435,48 @@ export default function SetupAdminPage() {
                   "🔧 FORCE ADMIN ROLE"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/refresh-user-role', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Refresh role response:', data)
+                    
+                    if (data.success) {
+                      alert(`Role refreshed: ${data.role.value} (from ${data.role.source})\n\nPlease refresh the page to see changes.`)
+                      // Force a page refresh to update the UI
+                      window.location.reload()
+                    } else {
+                      alert(`Refresh failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Refresh error:', error)
+                    alert('Refresh failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing role...
+                  </>
+                ) : (
+                  "🔄 REFRESH ROLE"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

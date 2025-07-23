@@ -3,6 +3,7 @@
 import React from "react"
 import { usePathname } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { useAuth } from "@/src/components/auth/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -97,6 +98,7 @@ import {
   VideoOff,
   Camera,
   CameraOff,
+  Loader2,
   Image,
   ImageOff,
   File,
@@ -122,6 +124,7 @@ interface HeaderProps {
 
 export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: HeaderProps) {
   const permissions = usePermissions()
+  const { refreshRoles, isLoading } = useRBAC()
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
@@ -295,6 +298,11 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
                   <Badge variant={getRoleBadgeVariant(permissions.role)} className="text-xs">
                     {permissions.role.charAt(0).toUpperCase() + permissions.role.slice(1)}
                   </Badge>
+                  {isLoading && (
+                    <div className="ml-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    </div>
+                  )}
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -341,6 +349,13 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Help & Support
               </a>
+            </DropdownMenuItem>
+            
+            <DropdownMenuSeparator />
+            
+            <DropdownMenuItem onClick={refreshRoles} disabled={isLoading}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              {isLoading ? 'Refreshing...' : 'Refresh Role'}
             </DropdownMenuItem>
             
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
