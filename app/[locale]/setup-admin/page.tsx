@@ -461,6 +461,97 @@ export default function SetupAdminPage() {
                 onClick={async () => {
                   setLoading(true)
                   try {
+                    const response = await fetch('/api/comprehensive-role-fix', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Comprehensive role fix response:', data)
+                    
+                    if (data.success) {
+                      const results = data.results
+                      const test = data.test
+                      const summary = data.summary
+                      const role = data.role
+                      
+                      let fixMessage = `COMPREHENSIVE ROLE FIX COMPLETED!\n\n`
+                      fixMessage += `Final Role: ${role.value} (from ${role.source})\n\n`
+                      fixMessage += `POLICIES:\n`
+                      fixMessage += `Users Table Policies: ${results.policies.fixed ? '✅ FIXED' : '❌ FAILED'}\n\n`
+                      
+                      fixMessage += `DATABASE UPDATES:\n`
+                      fixMessage += `Tables Updated: ${summary.tablesUpdated}\n`
+                      fixMessage += `Tables Failed: ${summary.tablesFailed}\n`
+                      fixMessage += `Tables Accessible: ${summary.tablesAccessible}\n\n`
+                      
+                      fixMessage += `USERS TABLE:\n`
+                      fixMessage += `Action: ${results.users.action}\n`
+                      fixMessage += `Success: ${results.users.success ? '✅ YES' : '❌ NO'}\n`
+                      fixMessage += `Role: ${results.users.role || 'NULL'}\n`
+                      if (results.users.error) {
+                        fixMessage += `Error: ${results.users.error}\n`
+                      }
+                      fixMessage += `Test Access: ${test.users.accessible ? '✅ YES' : '❌ NO'}\n\n`
+                      
+                      fixMessage += `PROFILES TABLE:\n`
+                      fixMessage += `Action: ${results.profiles.action}\n`
+                      fixMessage += `Success: ${results.profiles.success ? '✅ YES' : '❌ NO'}\n`
+                      fixMessage += `Role: ${results.profiles.role || 'NULL'}\n`
+                      if (results.profiles.error) {
+                        fixMessage += `Error: ${results.profiles.error}\n`
+                      }
+                      fixMessage += `Test Access: ${test.profiles.accessible ? '✅ YES' : '❌ NO'}\n\n`
+                      
+                      fixMessage += `APP_USERS TABLE:\n`
+                      fixMessage += `Action: ${results.app_users.action}\n`
+                      fixMessage += `Success: ${results.app_users.success ? '✅ YES' : '❌ NO'}\n`
+                      fixMessage += `Role: ${results.app_users.role || 'NULL'}\n`
+                      if (results.app_users.error) {
+                        fixMessage += `Error: ${results.app_users.error}\n`
+                      }
+                      fixMessage += `Test Access: ${test.app_users.accessible ? '✅ YES' : '❌ NO'}\n\n`
+                      
+                      fixMessage += `SUMMARY:\n`
+                      fixMessage += `${summary.message}\n\n`
+                      fixMessage += `The role system has been comprehensively fixed. Please refresh the page to see the changes.`
+                      
+                      alert(fixMessage)
+                      
+                      // Force page refresh after 3 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 3000)
+                    } else {
+                      alert(`Comprehensive role fix failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Comprehensive role fix error:', error)
+                    alert('Comprehensive role fix failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Comprehensive role fix...
+                  </>
+                ) : (
+                  "🔧 COMPREHENSIVE ROLE FIX"
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
                     const response = await fetch('/api/refresh-user-role', {
                       method: 'POST',
                       headers: {
@@ -1032,6 +1123,54 @@ export default function SetupAdminPage() {
                   </>
                 ) : (
                   "👤 CREATE USER RECORDS"
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/fix-users-table-policy', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Fix users table policy response:', data)
+                    
+                    if (data.success) {
+                      const results = data.results
+                      const test = data.test
+                      const summary = data.summary
+                      
+                      alert(`Users Table Policy Fix Completed!\n\nPolicies Dropped: ${summary.policiesDropped}\nPolicies Created: ${summary.policiesCreated}\nErrors: ${summary.errors}\nTest Success: ${summary.testSuccess ? '✅ YES' : '❌ NO'}\n\n${summary.message}\n\nThis should fix the 500 error when accessing the users table.`)
+                      
+                      // Force page refresh after 2 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 2000)
+                    } else {
+                      alert(`Fix users table policy failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Fix users table policy error:', error)
+                    alert('Fix users table policy failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Fixing users table policy...
+                  </>
+                ) : (
+                  "🔧 FIX USERS TABLE POLICY"
                 )}
               </Button>
             </div>

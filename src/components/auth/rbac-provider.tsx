@@ -71,6 +71,20 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
   }, [authRole, user?.id])
 
+  // Force sync with AuthProvider role when it changes
+  useEffect(() => {
+    if (authRole && user) {
+      console.log('🔄 RBAC: AuthProvider role changed, syncing:', authRole)
+      setUserRoles([authRole as Role])
+      
+      // Update localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`user_role_${user.id}`, authRole)
+        console.log('📦 RBAC: Role updated in localStorage:', authRole)
+      }
+    }
+  }, [authRole])
+
   // Also listen for user changes to ensure role is loaded
   useEffect(() => {
     if (user && !authRole) {
