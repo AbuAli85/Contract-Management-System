@@ -7,10 +7,6 @@ const nextConfig = {
     ...(process.env.NODE_ENV === 'development' && {
       // Disable some heavy optimizations in development
       optimizeCss: false,
-      // Reduce bundle analysis
-      bundlePagesRouterDependencies: false,
-      // Disable heavy features
-      optimizePackageImports: false,
     }),
   },
 
@@ -193,8 +189,6 @@ const nextConfig = {
       maxInactiveAge: 25 * 1000,
       pagesBufferLength: 2,
     },
-    // Disable telemetry
-    telemetry: false,
   }),
 }
 

@@ -4,9 +4,9 @@ import { z } from "zod"
 export const contractGeneratorSchema = z
   .object({
     // Required party IDs
-    first_party_id: z.string().uuid("Please select Party A (Client)."),
-    second_party_id: z.string().uuid("Please select Party B (Employer)."),
-    promoter_id: z.string().uuid("Please select the promoter."),
+    first_party_id: z.string().uuid("Please select Party A (Client).").optional(),
+    second_party_id: z.string().uuid("Please select Party B (Employer).").optional(),
+    promoter_id: z.string().uuid("Please select the promoter.").optional(),
     
     // Auto-filled party data (hidden fields)
     first_party_name_en: z.string().optional(),
@@ -26,10 +26,10 @@ export const contractGeneratorSchema = z
     // Contract period with enhanced validation
     contract_start_date: z.date({
       error: "Please enter a valid start date."
-    }),
+    }).optional(),
     contract_end_date: z.date({
       error: "Please enter a valid end date."
-    }),
+    }).optional(),
     
     // Contact information
     email: z
@@ -122,6 +122,7 @@ export const contractGeneratorSchema = z
   })
   .refine((data) => {
     // Contract dates validation - allow same day contracts
+    if (!data.contract_start_date || !data.contract_end_date) return true
     return data.contract_end_date >= data.contract_start_date
   }, {
     message: "Contract end date must be on or after the start date.",
@@ -129,6 +130,7 @@ export const contractGeneratorSchema = z
   })
   .refine((data) => {
     // Different parties validation
+    if (!data.first_party_id || !data.second_party_id) return true
     return data.first_party_id !== data.second_party_id
   }, {
     message: "Party A (Client) and Party B (Employer) must be different organizations.",
@@ -136,6 +138,7 @@ export const contractGeneratorSchema = z
   })
   .refine((data) => {
     // Contract duration validation - warn about very short or very long contracts
+    if (!data.contract_start_date || !data.contract_end_date) return true
     const startDate = data.contract_start_date
     const endDate = data.contract_end_date
     const diffInDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
@@ -148,6 +151,7 @@ export const contractGeneratorSchema = z
   })
   .refine((data) => {
     // Future start date validation (allow today or future)
+    if (!data.contract_start_date) return true
     const today = new Date()
     today.setHours(0, 0, 0, 0) // Start of today
     return data.contract_start_date >= today

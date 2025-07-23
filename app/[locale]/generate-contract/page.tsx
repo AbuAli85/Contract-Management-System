@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import GenerateContractForm from "@/components/generate-contract-form"
 import { DebugDataLoading } from "@/components/debug-data-loading"
+import { SimpleContractForm } from "@/components/simple-contract-form"
 
 // Enhanced utilities for contract insights
 import { 
@@ -451,7 +452,7 @@ export default function GenerateContractPage() {
           </div>
         ) : (
           <div className="p-6 md:p-8">
-            <GenerateContractForm />
+            <SimpleContractForm />
           </div>
         )}
       </motion.div>
