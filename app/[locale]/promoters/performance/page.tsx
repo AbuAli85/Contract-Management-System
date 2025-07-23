@@ -1,5 +1,6 @@
 "use client"
 
+import React from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -112,7 +113,7 @@ export default function PromotersPerformancePage() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="font-medium">{9.9 - (i * 0.1).toFixed(1)}/10</p>
+                    <p className="font-medium">{(9.9 - (i * 0.1)).toFixed(1)}/10</p>
                     <p className="text-sm text-muted-foreground">
                       {i === 1 ? 'Gold' : i === 2 ? 'Silver' : i === 3 ? 'Bronze' : 'Standard'} Level
                     </p>
@@ -167,7 +168,7 @@ export default function PromotersPerformancePage() {
                 <Badge className="bg-yellow-100 text-yellow-800">67 promoters</Badge>
               </div>
               <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-                <span className="font-medium">Needs Improvement (<7.0)</span>
+                <span className="font-medium">Needs Improvement (&lt;7.0)</span>
                 <Badge className="bg-red-100 text-red-800">33 promoters</Badge>
               </div>
             </div>
