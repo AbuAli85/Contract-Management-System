@@ -129,9 +129,29 @@ export interface DashboardAnalytics {
   expired_contracts: number
   total_parties: number
   total_promoters: number
+  active_promoters: number
+  active_parties: number
   revenue_this_month: number
   revenue_last_month: number
+  total_revenue: number
   growth_percentage: number
+  upcoming_expirations: number
+  monthly_trends: Array<{
+    month: string
+    contracts: number
+    revenue: number
+  }>
+  status_distribution: Array<{
+    name: string
+    value: number
+  }>
+  recent_activity: Array<{
+    id: string
+    action: string
+    resource: string
+    timestamp: string
+    status: string
+  }>
 }
 
 export interface PendingReview {

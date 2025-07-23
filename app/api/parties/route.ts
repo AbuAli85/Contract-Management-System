@@ -3,22 +3,23 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
-// Validation schema for promoter data
-const promoterSchema = z.object({
+// Validation schema for party data
+const partySchema = z.object({
   name_en: z.string().min(1, 'English name is required'),
   name_ar: z.string().min(1, 'Arabic name is required'),
-  id_card_number: z.string().min(1, 'ID card number is required'),
-  id_card_url: z.string().optional(),
-  passport_url: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'suspended']).default('active'),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  nationality: z.string().optional(),
-  date_of_birth: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
-  address: z.string().optional(),
-  emergency_contact: z.string().optional(),
-  emergency_phone: z.string().optional(),
+  crn: z.string().min(1, 'CRN is required'),
+  type: z.enum(['Employer', 'Client', 'Generic']).default('Generic'),
+  role: z.string().optional(),
+  cr_expiry_date: z.string().optional(),
+  contact_person: z.string().optional(),
+  contact_email: z.string().email().optional(),
+  contact_phone: z.string().optional(),
+  address_en: z.string().optional(),
+  address_ar: z.string().optional(),
+  tax_number: z.string().optional(),
+  license_number: z.string().optional(),
+  license_expiry_date: z.string().optional(),
+  status: z.enum(['Active', 'Inactive', 'Suspended']).default('Active'),
   notes: z.string().optional(),
 })
 
@@ -49,59 +50,53 @@ export async function GET() {
       }
     )
 
-    // Try to get session first
+    // Get user session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
-    if (sessionError) {
-      console.error('Session error:', sessionError)
-    }
-    
-    // If no session, try to get user directly
-    let user = session?.user
-    if (!user) {
-      const { data: { user: userData }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError) {
-        console.error('Auth error:', userError)
-        return NextResponse.json({ error: 'Authentication error' }, { status: 401 })
-      }
-      
-      user = userData || undefined
-    }
-    
-    if (!user) {
-      console.log('No user found in session or auth')
-      return NextResponse.json({ error: 'Unauthorized - No user session' }, { status: 401 })
+    if (sessionError || !session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log('User authenticated for promoters:', user.email)
-
-    // Fetch promoters from the database with related data
-    const { data: promoters, error } = await supabase
-      .from('promoters')
+    // Fetch parties from the database with related data
+    const { data: parties, error } = await supabase
+      .from('parties')
       .select(`
         *,
-        contracts:contracts!contracts_promoter_id_fkey(
+        contracts_as_first_party:contracts!contracts_first_party_id_fkey(
           id,
           contract_number,
           status,
           contract_start_date,
-          contract_end_date,
-          job_title,
-          work_location
+          contract_end_date
+        ),
+        contracts_as_second_party:contracts!contracts_second_party_id_fkey(
+          id,
+          contract_number,
+          status,
+          contract_start_date,
+          contract_end_date
         )
       `)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching promoters:', error)
-      return NextResponse.json({ error: 'Failed to fetch promoters' }, { status: 500 })
+      console.error('Error fetching parties:', error)
+      return NextResponse.json({ error: 'Failed to fetch parties' }, { status: 500 })
     }
 
-    console.log(`Fetched ${promoters?.length || 0} promoters`)
+    // Transform data to include contract counts
+    const partiesWithCounts = parties?.map(party => ({
+      ...party,
+      total_contracts: (party.contracts_as_first_party?.length || 0) + (party.contracts_as_second_party?.length || 0),
+      active_contracts: [
+        ...(party.contracts_as_first_party?.filter((c: any) => c.status === 'active') || []),
+        ...(party.contracts_as_second_party?.filter((c: any) => c.status === 'active') || [])
+      ].length
+    }))
+
     return NextResponse.json({ 
       success: true,
-      promoters: promoters || [] 
+      parties: partiesWithCounts || [] 
     })
   } catch (error) {
     console.error('API error:', error)
@@ -145,38 +140,38 @@ export async function POST(request: Request) {
 
     // Parse and validate request body
     const body = await request.json()
-    const validatedData = promoterSchema.parse(body)
+    const validatedData = partySchema.parse(body)
 
-    // Add created_by field
-    const promoterData = {
+    // Add owner_id field
+    const partyData = {
       ...validatedData,
-      created_by: session.user.id
+      owner_id: session.user.id
     }
 
-    // Insert promoter into database
-    const { data: promoter, error } = await supabase
-      .from('promoters')
-      .insert([promoterData])
+    // Insert party into database
+    const { data: party, error } = await supabase
+      .from('parties')
+      .insert([partyData])
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating promoter:', error)
+      console.error('Error creating party:', error)
       return NextResponse.json({ 
-        error: 'Failed to create promoter',
+        error: 'Failed to create party',
         details: error.message 
       }, { status: 500 })
     }
 
     return NextResponse.json({ 
       success: true,
-      promoter 
+      party 
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ 
         error: 'Validation error',
-        details: error.errors 
+        details: error.issues 
       }, { status: 400 })
     }
     

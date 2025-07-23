@@ -1,20 +1,28 @@
 "use client"
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { ThumbsUp, ThumbsDown, MessageSquare, Loader2 } from "lucide-react"
-import { supabase } from "@/lib/supabase"
-// Use a static path rather than importing the file. Importing triggered
-// filesystem lookups on `/public/placeholder.svg` which fail in some
-// environments.
-const placeholderAvatar = "/placeholder.svg"
-import { devLog } from "@/lib/dev-log"
-import type { ReviewItem } from "@/lib/dashboard-types" // Ensure this type is defined
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
-import { formatDistanceToNow } from "date-fns"
+import { CheckCircle, XCircle, MessageCircle, Clock, User } from "lucide-react"
+import { devLog } from "@/lib/dev-log"
+
+interface ReviewItem {
+  id: string
+  title: string
+  promoter: string
+  parties: string
+  period: string
+  contractLink: string
+  submitter?: string
+  avatar?: string
+  status: string
+  contract_number?: string
+  job_title?: string
+  work_location?: string
+}
 
 export default function ReviewPanel() {
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([])
@@ -24,49 +32,46 @@ export default function ReviewPanel() {
   const fetchReviewItems = async () => {
     setLoading(true)
     try {
-      // Temporarily disable database query and use mock data to fix UI
-      console.log("Using mock data for review panel")
+      // Fetch contracts that need review (draft or pending status)
+      const response = await fetch('/api/contracts?status=draft')
       
-      // Create mock data to keep the UI working
-      const mockItems: ReviewItem[] = [
-        {
-          id: "demo-1",
-          title: "Employment Contract #001",
-          promoter: "John Smith",
-          parties: "Tech Corp / Alice Johnson",
-          period: "Created 2 hours ago",
-          contractLink: "/contracts/demo-1",
-          submitter: "HR Manager",
-          avatar: placeholderAvatar,
-        },
-        {
-          id: "demo-2", 
-          title: "Service Agreement #002",
-          promoter: "Sarah Wilson",
-          parties: "Global Services / Bob Chen",
-          period: "Created 1 day ago",
-          contractLink: "/contracts/demo-2",
-          submitter: "Legal Team",
-          avatar: placeholderAvatar,
-        },
-        {
-          id: "demo-3",
-          title: "Consulting Contract #003", 
-          promoter: "Mike Davis",
-          parties: "Consulting Inc / Emma Brown",
-          period: "Created 3 days ago",
-          contractLink: "/contracts/demo-3",
-          submitter: "Project Manager",
-          avatar: placeholderAvatar,
-        }
-      ]
+      if (!response.ok) {
+        throw new Error('Failed to fetch contracts')
+      }
       
-      setReviewItems(mockItems)
-      devLog("Review items loaded successfully (mock data):", mockItems.length)
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch contracts')
+      }
+
+      // Transform contracts into review items
+      const items: ReviewItem[] = (data.contracts || []).map((contract: any) => ({
+        id: contract.id,
+        title: contract.contract_number || `Contract ${contract.id.slice(0, 8)}`,
+        promoter: contract.promoter?.name_en || 'Unknown Promoter',
+        parties: `${contract.first_party?.name_en || 'Unknown'} / ${contract.second_party?.name_en || 'Unknown'}`,
+        period: `Created ${new Date(contract.created_at).toLocaleDateString()}`,
+        contractLink: `/contracts/${contract.id}`,
+        submitter: contract.user_id ? 'System User' : 'Unknown',
+        avatar: '/placeholder.svg',
+        status: contract.status || 'draft',
+        contract_number: contract.contract_number,
+        job_title: contract.job_title,
+        work_location: contract.work_location
+      }))
+      
+      setReviewItems(items)
+      devLog("Review items loaded successfully:", items.length)
       
     } catch (error: any) {
       console.error("Error in review panel:", error)
       setReviewItems([])
+      toast({
+        title: "Error",
+        description: "Failed to load review items",
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }
@@ -74,109 +79,154 @@ export default function ReviewPanel() {
 
   useEffect(() => {
     fetchReviewItems()
-    
-    // Temporarily disable real-time subscription to prevent errors
-    // const channel = supabase
-    //   .channel("public:contracts:review")
-    //   .on(
-    //     "postgres_changes",
-    //     { event: "*", schema: "public", table: "contracts" },
-    //     (payload) => {
-    //       devLog("Review items change:", payload)
-    //       toast({
-    //         title: "New Item for Review",
-    //         description: "An item has been submitted for review.",
-    //       })
-    //       fetchReviewItems()
-    //     },
-    //   )
-    //   .subscribe()
-    // return () => {
-    //   supabase.removeChannel(channel)
-    // }
   }, [])
 
   const handleAction = async (itemId: string, action: "approve" | "reject" | "comment") => {
-    toast({ title: `Action: ${action}`, description: `Processing item ${itemId}...` })
-    // Placeholder for actual Supabase update logic
-    // Example: await supabase.from('contracts').update({ status: 'Approved' }).eq('id', itemId)
-    // After action, refetch or update local state
-    fetchReviewItems()
+    try {
+      const endpoint = action === 'approve' ? '/api/contracts/approval/approve' : 
+                      action === 'reject' ? '/api/contracts/approval/reject' : 
+                      '/api/contracts/approval/comment'
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contract_id: itemId,
+          action: action,
+          comments: action === 'comment' ? 'Review comment' : undefined
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to process action')
+      }
+
+      toast({ 
+        title: `Action: ${action}`, 
+        description: `Successfully processed contract ${itemId}` 
+      })
+      
+      // Refresh the list
+      fetchReviewItems()
+    } catch (error) {
+      console.error('Error processing action:', error)
+      toast({
+        title: "Error",
+        description: `Failed to ${action} contract`,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'draft':
+        return <Badge variant="secondary">Draft</Badge>
+      case 'pending':
+        return <Badge variant="outline">Pending Review</Badge>
+      case 'active':
+        return <Badge variant="default">Active</Badge>
+      case 'rejected':
+        return <Badge variant="destructive">Rejected</Badge>
+      default:
+        return <Badge variant="secondary">{status}</Badge>
+    }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Pending Reviews</CardTitle>
+          <CardDescription>Loading review items...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-center space-x-4 animate-pulse">
+                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Items for Review / عناصر للمراجعة</CardTitle>
+        <CardTitle>Pending Reviews</CardTitle>
         <CardDescription>
-          Contracts and documents awaiting your approval or feedback. / العقود والمستندات التي تنتظر
-          موافقتك أو ملاحظاتك.
+          {reviewItems.length} contract{reviewItems.length !== 1 ? 's' : ''} awaiting review
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[350px]">
-          {loading && (
-            <div className="flex h-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="space-y-4">
+          {reviewItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Clock className="mx-auto h-12 w-12 mb-4 opacity-50" />
+              <p>No contracts pending review</p>
+              <p className="text-sm">All contracts are up to date</p>
             </div>
-          )}
-          {!loading && reviewItems.length === 0 && (
-            <p className="py-8 text-center text-muted-foreground">
-              No items currently need review. / لا توجد عناصر تحتاج إلى مراجعة حاليًا.
-            </p>
-          )}
-          {!loading && reviewItems.length > 0 && (
-            <div className="space-y-4">
-              {reviewItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-md border p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="mb-1 flex items-center gap-2">
-                        <Badge variant="secondary">For Review</Badge>
-                        <h4 className="font-semibold">{item.title}</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">Parties: {item.parties}</p>
-                      <p className="text-sm text-muted-foreground">Promoter: {item.promoter}</p>
-                      <p className="text-xs text-muted-foreground">{item.period}</p>
-                    </div>
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={item.avatar || placeholderAvatar} alt={item.submitter} />
-                      <AvatarFallback>
-                        {item.submitter?.substring(0, 1).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAction(item.id, "approve")}
-                    >
-                      <ThumbsUp className="mr-1 h-4 w-4" /> Approve
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleAction(item.id, "reject")}
-                    >
-                      <ThumbsDown className="mr-1 h-4 w-4" /> Reject
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleAction(item.id, "comment")}
-                    >
-                      <MessageSquare className="mr-1 h-4 w-4" /> Comment
-                    </Button>
+          ) : (
+            reviewItems.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                <div className="flex items-center space-x-4">
+                  <Avatar>
+                    <AvatarImage src={item.avatar} alt={item.promoter} />
+                    <AvatarFallback>
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="font-semibold">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {item.promoter} • {item.parties}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.job_title && `${item.job_title} • `}
+                      {item.work_location && `${item.work_location} • `}
+                      {item.period}
+                    </p>
+                    {getStatusBadge(item.status)}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAction(item.id, "comment")}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1" />
+                    Comment
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleAction(item.id, "reject")}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleAction(item.id, "approve")}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                </div>
+              </div>
+            ))
           )}
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   )
