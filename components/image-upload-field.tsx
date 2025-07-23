@@ -124,15 +124,19 @@ export default function ImageUploadField({
             <p className="text-xs">PNG, JPG, WEBP up to 5MB</p>
           </div>
         )}
-        {/* Hidden file input, RHF ref is passed here */}
+        {/* Hidden file input, RHF ref is passed here, but also attach fileInputRef for click */}
         <Input
-          ref={field.ref} // Pass RHF's ref to the actual input element
-          id={id || field.name} // Use provided id or field.name for label association
-          name={field.name} // field.name is important for RHF
+          ref={el => {
+            fileInputRef.current = el;
+            if (typeof field.ref === 'function') field.ref(el);
+            else if (field.ref) (field.ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
+          }}
+          id={id || field.name}
+          name={field.name}
           type="file"
           accept="image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
-          onBlur={field.onBlur} // Pass onBlur
+          onBlur={field.onBlur}
           className="sr-only"
           disabled={disabled}
         />
