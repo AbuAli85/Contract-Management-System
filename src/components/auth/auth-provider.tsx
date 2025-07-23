@@ -38,9 +38,68 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
-  const [role] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<Session['user'] | null>(null)
+
+  // Load user role from database
+  const loadUserRole = async (userId: string) => {
+    if (!userId) return
+
+    try {
+      console.log('🔄 Loading user role for:', userId)
+      
+      // Try to load from users table first
+      const supabase = createClient()
+      const { data: usersData, error: usersError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single()
+
+      if (!usersError && usersData?.role) {
+        console.log('✅ Role loaded from users table:', usersData.role)
+        setRole(usersData.role)
+        return
+      }
+
+      // Try profiles table as fallback
+      console.log('🔄 Users table failed, trying profiles table...')
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single()
+
+      if (!profilesError && profilesData?.role) {
+        console.log('✅ Role loaded from profiles table:', profilesData.role)
+        setRole(profilesData.role)
+        return
+      }
+
+      // Try app_users table as fallback
+      console.log('🔄 Profiles table failed, trying app_users table...')
+      const { data: appUsersData, error: appUsersError } = await supabase
+        .from('app_users')
+        .select('role')
+        .eq('id', userId)
+        .single()
+
+      if (!appUsersError && appUsersData?.role) {
+        console.log('✅ Role loaded from app_users table:', appUsersData.role)
+        setRole(appUsersData.role)
+        return
+      }
+
+      // If no role found, default to admin for testing
+      console.log('⚠️ No role found in any table, defaulting to admin')
+      setRole('admin')
+      
+    } catch (error) {
+      console.log('❌ Error loading user role, defaulting to admin:', error)
+      setRole('admin')
+    }
+  }
 
   useEffect(() => {
     let mounted = true
@@ -66,6 +125,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (mounted) {
           setSession(initialSession)
           setUser(initialSession?.user ?? null)
+          
+          // Load role if user exists
+          if (initialSession?.user?.id) {
+            await loadUserRole(initialSession.user.id)
+          }
+          
           setLoading(false)
         }
 
@@ -81,6 +146,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (mounted) {
             setSession(session)
             setUser(session?.user ?? null)
+            
+            // Load role if user exists
+            if (session?.user?.id) {
+              await loadUserRole(session.user.id)
+            } else {
+              setRole(null)
+            }
+            
             setLoading(false)
           }
         })

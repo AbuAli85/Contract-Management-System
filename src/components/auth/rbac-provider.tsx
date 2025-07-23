@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+import { useAuth } from './auth-provider'
 
 export type Role = 'admin' | 'manager' | 'user'
 
@@ -47,63 +48,33 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
+  const { role: authRole } = useAuth()
 
-  // Permanent role loading - runs on every mount and user change
+  // Use role from AuthProvider
   useEffect(() => {
-    if (!user) {
+    if (authRole) {
+      console.log('✅ RBAC: Using role from AuthProvider:', authRole)
+      setUserRoles([authRole as Role])
+      setIsInitialized(true)
+      
+      // Cache the role in localStorage for persistence
+      if (typeof window !== 'undefined' && user) {
+        localStorage.setItem(`user_role_${user.id}`, authRole)
+        console.log('📦 RBAC: Role cached in localStorage:', authRole)
+      }
+    } else if (user) {
+      console.log('🔄 RBAC: No role from AuthProvider, loading from database...')
+      loadUserRolesFromDatabase()
+    } else {
       setUserRoles(['user'])
       setIsInitialized(true)
-      return
     }
-
-    const loadRolePermanently = async () => {
-      setIsLoading(true)
-      console.log('🔄 Loading role permanently for user:', user.id)
-      
-      try {
-        // First, try to get role from API to ensure we have the latest
-        const response = await fetch('/api/get-user-role', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            console.log('✅ Role loaded from API:', data.role.value)
-            setUserRoles([data.role.value as Role])
-            
-            // Always cache the role for persistence
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(`user_role_${user.id}`, data.role.value)
-              console.log('📦 Role permanently cached:', data.role.value)
-            }
-            
-            setIsLoading(false)
-            setIsInitialized(true)
-            return
-          }
-        }
-        
-        // Fallback to database loading if API fails
-        console.log('🔄 API failed, falling back to database loading...')
-        await loadUserRolesFromDatabase()
-        
-      } catch (error) {
-        console.error('❌ Error loading role permanently:', error)
-        // Fallback to database loading
-        await loadUserRolesFromDatabase()
-      }
-    }
-
-    loadRolePermanently()
-  }, [user?.id])
+  }, [authRole, user?.id])
 
   const loadUserRolesFromDatabase = async () => {
     if (!user) return
 
+    setIsLoading(true)
     console.log('🔄 Loading user roles from database for:', user.id)
     
     // Try to load from users table first

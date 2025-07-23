@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Shield, CheckCircle, AlertTriangle } from "lucide-react"
+import { AuthRoleStatus } from "@/components/auth-role-status"
 
 export default function SetupAdminPage() {
   const [loading, setLoading] = useState(false)
@@ -124,17 +125,22 @@ export default function SetupAdminPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0">
-          <CardHeader className="space-y-1">
-            <div className="flex items-center justify-center mb-4">
-              <Shield className="h-12 w-12 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl text-center">Setup Admin Access</CardTitle>
-            <CardDescription className="text-center">
-              Upgrade your account to admin privileges for full system access
-            </CardDescription>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Setup Admin</h1>
+        <p className="text-gray-600">Admin role management and testing tools</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Role Status */}
+        <div>
+          <AuthRoleStatus />
+        </div>
+
+        {/* Admin Tools */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Admin Role Tools</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {error && (
@@ -834,6 +840,51 @@ export default function SetupAdminPage() {
                   </>
                 ) : (
                   "🔒 ENSURE PERMANENT ADMIN ROLE"
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/refresh-auth-role', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Refresh auth role response:', data)
+                    
+                    if (data.success) {
+                      alert(`Auth Role Refreshed!\n\nRole: ${data.role.value} (from ${data.role.source})\n\n${data.authRefresh.instructions}\n\nPlease refresh the page to see the updated role.`)
+                      
+                      // Force page refresh after 2 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 2000)
+                    } else {
+                      alert(`Refresh auth role failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Refresh auth role error:', error)
+                    alert('Refresh auth role failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-indigo-300 text-indigo-700 hover:bg-indigo-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing auth role...
+                  </>
+                ) : (
+                  "🔄 REFRESH AUTH ROLE"
                 )}
               </Button>
             </div>
