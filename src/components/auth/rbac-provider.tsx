@@ -250,6 +250,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     isLoading,
   }
 
+  if (!user) return <RBACContext.Provider value={{
+    userRoles: [],
+    hasRole: () => false,
+    hasAnyRole: () => false,
+    hasAllRoles: () => false,
+    refreshRoles: async () => {},
+    updateRoleDirectly: () => {},
+    isLoading: false,
+  }}>{children}</RBACContext.Provider>;
   if (userRoles === null) return <div>Loading role...</div>;
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>
 }
