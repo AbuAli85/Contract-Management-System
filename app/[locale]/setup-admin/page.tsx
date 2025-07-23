@@ -788,6 +788,54 @@ export default function SetupAdminPage() {
                   "🔍 TEST ROLE SYSTEM"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/ensure-admin-role', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Ensure admin role response:', data)
+                    
+                    if (data.success) {
+                      const results = data.results
+                      const summary = data.summary
+                      
+                      alert(`Admin Role Permanently Ensured!\n\nFinal Role: ${summary.finalRole} (from ${summary.roleSource})\n\nTables Updated: ${summary.tablesUpdated}\nTables Failed: ${summary.tablesFailed}\n\nUsers Table: ${results.users.success ? '✅ SUCCESS' : '❌ FAILED'}\nProfiles Table: ${results.profiles.success ? '✅ SUCCESS' : '❌ FAILED'}\nApp_Users Table: ${results.app_users.success ? '✅ SUCCESS' : '❌ FAILED'}\n\nThe admin role is now permanently set in the database and will persist across all page refreshes.`)
+                      
+                      // Force page refresh after 3 seconds to apply the permanent role
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 3000)
+                    } else {
+                      alert(`Ensure admin role failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Ensure admin role error:', error)
+                    alert('Ensure admin role failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Ensuring permanent admin role...
+                  </>
+                ) : (
+                  "🔒 ENSURE PERMANENT ADMIN ROLE"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

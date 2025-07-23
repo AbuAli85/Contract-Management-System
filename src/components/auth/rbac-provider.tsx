@@ -47,38 +47,64 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const [userRoles, setUserRoles] = useState<Role[]>(['user'])
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
-  const hasLoadedRef = useRef(false)
 
-  // Load cached role from localStorage on mount and when user changes
+  // Permanent role loading - runs on every mount and user change
   useEffect(() => {
-    if (hasLoadedRef.current || !user) return
-    hasLoadedRef.current = true
-
-    if (typeof window !== 'undefined' && user) {
-      const cachedRole = localStorage.getItem(`user_role_${user.id}`)
-      if (cachedRole) {
-        console.log('📦 Loading cached role from localStorage:', cachedRole)
-        setUserRoles([cachedRole as Role])
-        setIsInitialized(true)
-      } else {
-        console.log('📦 No cached role found, loading from database...')
-        loadUserRoles()
-      }
-    } else if (!user) {
-      setUserRoles(['user'])
-      setIsInitialized(true)
-    }
-  }, [user?.id])
-
-  const loadUserRoles = async () => {
     if (!user) {
       setUserRoles(['user'])
       setIsInitialized(true)
       return
     }
 
-    setIsLoading(true)
-    console.log('🔄 Loading user roles for:', user.id)
+    const loadRolePermanently = async () => {
+      setIsLoading(true)
+      console.log('🔄 Loading role permanently for user:', user.id)
+      
+      try {
+        // First, try to get role from API to ensure we have the latest
+        const response = await fetch('/api/get-user-role', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            console.log('✅ Role loaded from API:', data.role.value)
+            setUserRoles([data.role.value as Role])
+            
+            // Always cache the role for persistence
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(`user_role_${user.id}`, data.role.value)
+              console.log('📦 Role permanently cached:', data.role.value)
+            }
+            
+            setIsLoading(false)
+            setIsInitialized(true)
+            return
+          }
+        }
+        
+        // Fallback to database loading if API fails
+        console.log('🔄 API failed, falling back to database loading...')
+        await loadUserRolesFromDatabase()
+        
+      } catch (error) {
+        console.error('❌ Error loading role permanently:', error)
+        // Fallback to database loading
+        await loadUserRolesFromDatabase()
+      }
+    }
+
+    loadRolePermanently()
+  }, [user?.id])
+
+  const loadUserRolesFromDatabase = async () => {
+    if (!user) return
+
+    console.log('🔄 Loading user roles from database for:', user.id)
     
     // Try to load from users table first
     try {
@@ -167,14 +193,6 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
   }
 
-  // Force reload roles when user changes (for re-authentication)
-  useEffect(() => {
-    if (user && isInitialized && hasLoadedRef.current) {
-      console.log('🔄 User changed, reloading roles...')
-      loadUserRoles()
-    }
-  }, [user?.id])
-
   const refreshRoles = async () => {
     console.log('🔄 Manually refreshing user roles...')
     console.log('Current roles before refresh:', userRoles)
@@ -188,8 +206,39 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     // Wait a moment for state to clear
     await new Promise(resolve => setTimeout(resolve, 100))
     
-    // Load fresh roles
-    await loadUserRoles()
+    // Load fresh roles from API first, then database
+    try {
+      const response = await fetch('/api/get-user-role', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          console.log('✅ Role refreshed from API:', data.role.value)
+          setUserRoles([data.role.value as Role])
+          
+          // Always cache the role
+          if (typeof window !== 'undefined' && user) {
+            localStorage.setItem(`user_role_${user.id}`, data.role.value)
+            console.log('📦 Role refreshed and cached:', data.role.value)
+          }
+          
+          setIsLoading(false)
+          return
+        }
+      }
+      
+      // Fallback to database loading
+      await loadUserRolesFromDatabase()
+      
+    } catch (error) {
+      console.error('❌ Error refreshing roles:', error)
+      await loadUserRolesFromDatabase()
+    }
     
     console.log('✅ Roles refreshed, new roles:', userRoles)
   }
@@ -199,7 +248,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     // Cache the role in localStorage for persistence
     if (typeof window !== 'undefined' && user) {
       localStorage.setItem(`user_role_${user.id}`, role)
-      console.log('📦 Role cached in localStorage:', role)
+      console.log('📦 Role updated and permanently cached:', role)
     }
     console.log('Role updated directly to:', role)
   }
