@@ -88,9 +88,9 @@ export default function ContractGeneratorForm({
     resolver: zodResolver(contractGeneratorSchema),
     mode: "onTouched",
     defaultValues: {
-      first_party_id: undefined,
-      second_party_id: undefined,
-      promoter_id: undefined,
+      first_party_id: "",
+      second_party_id: "",
+      promoter_id: "",
       contract_start_date: undefined,
       contract_end_date: undefined,
       email: "",

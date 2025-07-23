@@ -4,9 +4,9 @@ import { z } from "zod"
 export const contractGeneratorSchema = z
   .object({
     // Required party IDs
-    first_party_id: z.string().uuid("Please select Party A (Client).").optional(),
-    second_party_id: z.string().uuid("Please select Party B (Employer).").optional(),
-    promoter_id: z.string().uuid("Please select the promoter.").optional(),
+    first_party_id: z.string().uuid("Please select Party A (Client).").optional().or(z.literal("")),
+    second_party_id: z.string().uuid("Please select Party B (Employer).").optional().or(z.literal("")),
+    promoter_id: z.string().uuid("Please select the promoter.").optional().or(z.literal("")),
     
     // Auto-filled party data (hidden fields)
     first_party_name_en: z.string().optional(),
@@ -130,7 +130,7 @@ export const contractGeneratorSchema = z
   })
   .refine((data) => {
     // Different parties validation
-    if (!data.first_party_id || !data.second_party_id) return true
+    if (!data.first_party_id || !data.second_party_id || data.first_party_id === "" || data.second_party_id === "") return true
     return data.first_party_id !== data.second_party_id
   }, {
     message: "Party A (Client) and Party B (Employer) must be different organizations.",

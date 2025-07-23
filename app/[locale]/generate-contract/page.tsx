@@ -13,6 +13,7 @@ import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "
 import GenerateContractForm from "@/components/generate-contract-form"
 import { DebugDataLoading } from "@/components/debug-data-loading"
 import { SimpleContractForm } from "@/components/simple-contract-form"
+import { TestFormValidation } from "@/components/test-form-validation"
 
 // Enhanced utilities for contract insights
 import { 
@@ -421,14 +422,15 @@ export default function GenerateContractPage() {
         </motion.div>
       )}
 
-      {/* Debug Component */}
+      {/* Debug Components */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="mb-6"
+        className="mb-6 space-y-6"
       >
         <DebugDataLoading />
+        <TestFormValidation />
       </motion.div>
 
       {/* Form Container */}

@@ -90,14 +90,14 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
   }, [user?.id, permanentRole, authRole, permanentRoleLoading])
 
-  // Auto-fallback: if userRoles is null for more than 3 seconds, set to ['admin']
+  // Auto-fallback: if userRoles is null for more than 1 second, set to ['admin']
   useEffect(() => {
     if (user && userRoles === null) {
       const timeout = setTimeout(() => {
-        console.warn('RBACProvider: userRoles still null after 3s, auto-falling back to [admin]')
+        console.warn('RBACProvider: userRoles still null after 1s, auto-falling back to [admin]')
         setUserRoles(['admin'])
         setIsLoading(false)
-      }, 3000)
+      }, 1000)
       return () => clearTimeout(timeout)
     }
   }, [user, userRoles])
