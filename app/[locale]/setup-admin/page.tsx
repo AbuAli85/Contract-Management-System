@@ -538,7 +538,9 @@ export default function SetupAdminPage() {
                     if (data.success) {
                       alert(`Force UI refresh completed!\n\nRole: ${data.role.value} (from ${data.role.source})\n\nUI refresh required: ${data.uiRefresh.reason}\n\n${data.uiRefresh.instructions}`)
                       // Force a hard page refresh to clear all cached state
-                      window.location.href = window.location.href
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 1000) // Give user 1 second to see the message
                     } else {
                       alert(`Force UI refresh failed: ${data.error}`)
                     }
@@ -559,6 +561,47 @@ export default function SetupAdminPage() {
                   </>
                 ) : (
                   "🔄 FORCE UI REFRESH"
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/immediate-role-refresh', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Immediate role refresh response:', data)
+                    
+                    if (data.success) {
+                      alert(`Immediate role refresh completed!\n\nRole: ${data.role.value} (from ${data.role.source})\n\nClient update: ${data.clientUpdate.instructions}\n\nPlease check if the UI has updated.`)
+                      // Don't reload the page, let the user see if the UI updated
+                    } else {
+                      alert(`Immediate role refresh failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Immediate role refresh error:', error)
+                    alert('Immediate role refresh failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-teal-300 text-teal-700 hover:bg-teal-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Immediate refreshing role...
+                  </>
+                ) : (
+                  "⚡ IMMEDIATE ROLE REFRESH"
                 )}
               </Button>
             </div>
