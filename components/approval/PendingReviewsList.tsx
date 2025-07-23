@@ -114,6 +114,19 @@ export function PendingReviewsList({ reviews, onReviewComplete }: PendingReviews
     })
   }
 
+  // Handle empty reviews
+  if (!reviews || reviews.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center h-32">
+          <CheckCircle className="h-8 w-8 text-green-500 mb-2" />
+          <p className="text-muted-foreground">No pending reviews</p>
+          <p className="text-sm text-muted-foreground">All caught up!</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {reviews.map((review) => (

@@ -1,3 +1,5 @@
+"use client"
+
 import { Suspense } from 'react'
 import { ApprovalDashboard } from '@/components/approval/ApprovalDashboard'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
