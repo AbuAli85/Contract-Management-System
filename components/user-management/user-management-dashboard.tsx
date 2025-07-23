@@ -44,6 +44,8 @@ import { useUserManagement, type User, type UserFilters } from '@/hooks/use-user
 import { UserProfileModal } from './user-profile-modal'
 import { useToast } from '@/hooks/use-toast'
 import { usePermissions } from '@/hooks/use-permissions'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { ACTIONS } from '@/lib/permissions' // We'll define this as an array of all Action strings
 
 const ROLES = [
   { value: '', label: 'All Roles' },
@@ -88,6 +90,42 @@ export function UserManagementDashboard() {
   
   const { toast } = useToast()
   const permissions = usePermissions();
+  // Permissions modal state
+  const [showPermModal, setShowPermModal] = useState(false);
+  const [permUser, setPermUser] = useState<User | null>(null);
+  const [permLoading, setPermLoading] = useState(false);
+  const [permState, setPermState] = useState<Record<string, boolean>>({});
+
+  // Open permissions modal and load current custom permissions
+  const openPermissionsModal = async (user: User) => {
+    setPermUser(user);
+    setShowPermModal(true);
+    setPermLoading(true);
+    // Fetch custom permissions
+    const res = await fetch(`/api/users/${user.id}/permissions`);
+    const data = await res.json();
+    const custom: Record<string, boolean> = {};
+    if (data.permissions) {
+      for (const p of data.permissions) custom[p.permission] = !!p.granted;
+    }
+    setPermState(custom);
+    setPermLoading(false);
+  };
+
+  // Save permissions
+  const savePermissions = async () => {
+    if (!permUser) return;
+    setPermLoading(true);
+    const permsArr = Object.entries(permState).map(([permission, granted]) => ({ permission, granted }));
+    await fetch(`/api/users/${permUser.id}/permissions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ permissions: permsArr })
+    });
+    setPermLoading(false);
+    setShowPermModal(false);
+    toast({ title: 'Permissions updated', description: 'User permissions updated successfully.' });
+  };
 
   // Memoized filter changes to prevent unnecessary API calls
   const memoizedFilters = useMemo(() => filters, [filters.page, filters.limit, filters.sortBy, filters.sortOrder, filters.role, filters.status])
@@ -571,6 +609,15 @@ export function UserManagementDashboard() {
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          {permissions.role === 'admin' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openPermissionsModal(user)}
+                            >
+                              Permissions
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -629,6 +676,40 @@ export function UserManagementDashboard() {
           mode={profileMode}
         />
       )}
+
+      {/* Permissions Modal */}
+      <Dialog open={showPermModal} onOpenChange={setShowPermModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Manage Permissions for {permUser?.email}</DialogTitle>
+          </DialogHeader>
+          {permLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="animate-spin mr-2" /> Loading permissions...
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {ACTIONS.map(action => (
+                <div key={action} className="flex items-center gap-2">
+                  <Checkbox
+                    checked={!!permState[action]}
+                    onCheckedChange={checked => setPermState(s => ({ ...s, [action]: !!checked }))}
+                    id={`perm-${action}`}
+                  />
+                  <label htmlFor={`perm-${action}`} className="text-sm">
+                    {action}
+                  </label>
+                </div>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={savePermissions} disabled={permLoading}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

@@ -246,3 +246,44 @@ export function hasAnyResourcePermission(role: Role, resource: Resource): boolea
   
   return canPerformAnyAction(role, resourceActions)
 } 
+
+export const ACTIONS: Action[] = [
+  // Promoter actions
+  'promoter:create',
+  'promoter:read',
+  'promoter:update',
+  'promoter:delete',
+  'promoter:bulk_delete',
+  'promoter:export',
+  'promoter:archive',
+  // Party actions
+  'party:create',
+  'party:read',
+  'party:update',
+  'party:delete',
+  'party:bulk_delete',
+  'party:export',
+  'party:archive',
+  // Contract actions
+  'contract:create',
+  'contract:read',
+  'contract:update',
+  'contract:delete',
+  'contract:generate',
+  'contract:approve',
+  'contract:export',
+  'contract:archive',
+  // User management actions
+  'user:create',
+  'user:read',
+  'user:update',
+  'user:delete',
+  'user:assign_role',
+  // System actions
+  'system:settings',
+  'system:analytics',
+  'system:audit_logs',
+  'system:notifications',
+  'system:backup',
+  'system:restore',
+]; 
