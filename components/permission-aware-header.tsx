@@ -124,7 +124,6 @@ interface HeaderProps {
 
 export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: HeaderProps) {
   const permissions = usePermissions()
-  const { refreshRoles, isLoading } = useRBAC()
   const { user, signOut } = useAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
@@ -189,11 +188,11 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
   const handleRefreshRole = async () => {
     try {
       console.log('🔄 Refreshing role from header...')
-      await refreshRoles()
+      await permissions.forceRefresh()
       
       // Force a small delay to ensure state updates
       setTimeout(() => {
-        console.log('✅ Role refresh completed')
+        console.log('✅ Role refresh completed from header')
       }, 500)
     } catch (error) {
       console.error('❌ Role refresh failed:', error)
@@ -312,7 +311,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
                   <Badge variant={getRoleBadgeVariant(permissions.role)} className="text-xs">
                     {permissions.role.charAt(0).toUpperCase() + permissions.role.slice(1)}
                   </Badge>
-                  {isLoading && (
+                  {permissions.isLoading && (
                     <div className="ml-1">
                       <Loader2 className="h-3 w-3 animate-spin" />
                     </div>
@@ -367,9 +366,9 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={handleRefreshRole} disabled={isLoading}>
+            <DropdownMenuItem onClick={handleRefreshRole} disabled={permissions.isLoading}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              {isLoading ? 'Refreshing...' : 'Refresh Role'}
+              {permissions.isLoading ? 'Refreshing...' : 'Refresh Role'}
             </DropdownMenuItem>
             
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">

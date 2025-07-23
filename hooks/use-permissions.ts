@@ -15,15 +15,28 @@ import {
 } from '@/lib/permissions'
 
 export function usePermissions() {
-  const { userRoles } = useRBAC()
+  const { userRoles, refreshRoles, isLoading } = useRBAC()
   
   // Get the primary role (first role in the array)
   const primaryRole = userRoles[0] || 'user'
+  
+  // Force refresh function
+  const forceRefresh = async () => {
+    console.log('🔄 Force refreshing permissions...')
+    await refreshRoles()
+    
+    // Force a small delay to ensure state updates
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    console.log('✅ Permissions refreshed, current role:', primaryRole)
+  }
   
   return {
     // Current user's role
     role: primaryRole,
     roles: userRoles,
+    isLoading,
+    forceRefresh,
     
     // Action-based permissions
     can: (action: Action): boolean => {

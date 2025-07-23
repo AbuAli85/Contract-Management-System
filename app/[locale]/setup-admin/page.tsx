@@ -519,6 +519,48 @@ export default function SetupAdminPage() {
                   "⚡ FORCE ROLE REFRESH"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/force-ui-refresh', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Force UI refresh response:', data)
+                    
+                    if (data.success) {
+                      alert(`Force UI refresh completed!\n\nRole: ${data.role.value} (from ${data.role.source})\n\nUI refresh required: ${data.uiRefresh.reason}\n\n${data.uiRefresh.instructions}`)
+                      // Force a hard page refresh to clear all cached state
+                      window.location.href = window.location.href
+                    } else {
+                      alert(`Force UI refresh failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Force UI refresh error:', error)
+                    alert('Force UI refresh failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Force refreshing UI...
+                  </>
+                ) : (
+                  "🔄 FORCE UI REFRESH"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
