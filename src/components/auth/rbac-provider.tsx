@@ -250,17 +250,28 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     isLoading,
   }
 
-  if (!user) return <RBACContext.Provider value={{
-    userRoles: [],
-    hasRole: () => false,
-    hasAnyRole: () => false,
-    hasAllRoles: () => false,
-    refreshRoles: async () => {},
-    updateRoleDirectly: () => {},
-    isLoading: false,
-  }}>{children}</RBACContext.Provider>;
-  if (userRoles === null) return <div>Loading role...</div>;
-  return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>
+  if (!user) {
+    // Not logged in: provide empty roles context, render children
+    return (
+      <RBACContext.Provider value={{
+        userRoles: [],
+        hasRole: () => false,
+        hasAnyRole: () => false,
+        hasAllRoles: () => false,
+        refreshRoles: async () => {},
+        updateRoleDirectly: () => {},
+        isLoading: false,
+      }}>
+        {children}
+      </RBACContext.Provider>
+    );
+  }
+  if (user && userRoles === null) {
+    // Logged in, but roles not loaded yet
+    return <div>Loading role...</div>;
+  }
+  // Logged in and roles loaded
+  return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;
 }
 
 export const useRBAC = () => {
