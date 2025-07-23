@@ -10,10 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
-import GenerateContractForm from "@/components/generate-contract-form"
+import EnhancedContractForm from "@/components/enhanced-contract-form"
 import { DebugDataLoading } from "@/components/debug-data-loading"
-import { SimpleContractForm } from "@/components/simple-contract-form"
-import { TestFormValidation } from "@/components/test-form-validation"
 
 // Enhanced utilities for contract insights
 import { 
@@ -422,41 +420,33 @@ export default function GenerateContractPage() {
         </motion.div>
       )}
 
-      {/* Debug Components */}
+      {/* Debug Component */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="mb-6 space-y-6"
+        className="mb-6"
       >
         <DebugDataLoading />
-        <TestFormValidation />
       </motion.div>
 
-      {/* Form Container */}
+      {/* Enhanced Contract Generation Form */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
         className="rounded-lg bg-card shadow-xl"
       >
-        {useEnhancedForm ? (
-          <div className="p-6 md:p-8">
-            <Alert className="mb-6">
-              <Sparkles className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Enhanced Form Coming Soon!</strong> This advanced interface with sectioned workflow, 
-                real-time insights, and smart validations is currently in development. 
-                Use the standard form below for contract generation.
-              </AlertDescription>
-            </Alert>
-            <GenerateContractForm />
-          </div>
-        ) : (
-          <div className="p-6 md:p-8">
-            <SimpleContractForm />
-          </div>
-        )}
+        <div className="p-6 md:p-8">
+          <EnhancedContractForm 
+            onSuccess={(contractId) => {
+              console.log('Contract generated successfully:', contractId)
+            }}
+            onError={(error) => {
+              console.error('Contract generation failed:', error)
+            }}
+          />
+        </div>
       </motion.div>
 
       {/* Help Section */}
