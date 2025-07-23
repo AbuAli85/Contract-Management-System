@@ -47,45 +47,58 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
         return
       }
 
-      // TODO: Implement proper role loading when user_roles table is available
-      // For now, default to 'user' role
       console.log('Loading user roles for:', user.id)
       
-      // Try to load from users table if it exists
+      // Try to load from users table first
       try {
         const supabaseClient = await getSupabase()
-        const { data: roles, error } = await supabaseClient
+        const { data: usersData, error: usersError } = await supabaseClient
           .from('users')
           .select('role')
           .eq('id', user.id)
           .single()
 
-        if (error) {
-          console.log('User roles table not available, trying app_users table')
-          // Try app_users table as fallback
-          const { data: appUserRoles, error: appError } = await supabaseClient
-            .from('app_users')
-            .select('role')
-            .eq('id', user.id)
-            .single()
-
-          if (appError) {
-            console.log('No user roles found, using default admin role for testing')
-            setUserRoles(['admin']) // Default to admin for testing
-            return
-          }
-
-          const userRole = appUserRoles?.role as Role || 'admin'
-          setUserRoles([userRole])
+        if (!usersError && usersData?.role) {
+          console.log('✅ Role loaded from users table:', usersData.role)
+          setUserRoles([usersData.role as Role])
           return
         }
 
-        // If user has a role field, use it; otherwise default to 'admin' for testing
-        const userRole = roles?.role as Role || 'admin'
-        setUserRoles([userRole])
+        // Try profiles table as fallback
+        console.log('🔄 Users table failed, trying profiles table...')
+        const { data: profilesData, error: profilesError } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (!profilesError && profilesData?.role) {
+          console.log('✅ Role loaded from profiles table:', profilesData.role)
+          setUserRoles([profilesData.role as Role])
+          return
+        }
+
+        // Try app_users table as fallback
+        console.log('🔄 Profiles table failed, trying app_users table...')
+        const { data: appUsersData, error: appUsersError } = await supabaseClient
+          .from('app_users')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (!appUsersError && appUsersData?.role) {
+          console.log('✅ Role loaded from app_users table:', appUsersData.role)
+          setUserRoles([appUsersData.role as Role])
+          return
+        }
+
+        // If no role found in any table, default to admin for testing
+        console.log('⚠️ No role found in any table, defaulting to admin')
+        setUserRoles(['admin'])
+        
       } catch (error) {
-        console.log('Error loading user roles, using default admin for testing:', error)
-        setUserRoles(['admin']) // Default to admin for testing
+        console.log('❌ Error loading user roles, defaulting to admin:', error)
+        setUserRoles(['admin'])
       }
     }
 

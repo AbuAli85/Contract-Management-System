@@ -372,6 +372,69 @@ export default function SetupAdminPage() {
               >
                 🔍 Comprehensive Debug
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/check-user-role')
+                    const data = await response.json()
+                    console.log('=== USER ROLE CHECK RESULTS ===')
+                    console.log('Role check result:', data)
+                    console.log('Current role:', data.roleInfo?.finalRole)
+                    console.log('Sources:', data.roleInfo?.sources)
+                    console.log('Summary:', data.summary)
+                    console.log('=== END ROLE CHECK RESULTS ===')
+                    alert(`Current role: ${data.roleInfo?.finalRole || 'Unknown'}\nCheck console for details`)
+                  } catch (error) {
+                    console.error('Role check error:', error)
+                    alert('Role check failed - check console')
+                  }
+                }}
+                className="w-full border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+              >
+                👤 Check Current Role
+              </Button>
+              
+              <Button
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/force-admin-role', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Force admin role response:', data)
+                    
+                    if (data.success) {
+                      alert('Admin role forced successfully! Please refresh the page.')
+                      window.location.reload()
+                    } else {
+                      alert(`Force admin failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Force admin error:', error)
+                    alert('Force admin failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-green-300 text-green-700 hover:bg-green-100 bg-green-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Forcing admin role...
+                  </>
+                ) : (
+                  "🔧 FORCE ADMIN ROLE"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
