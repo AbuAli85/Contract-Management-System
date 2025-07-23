@@ -126,6 +126,30 @@ function RolesPageContent() {
               </div>
             </div>
             <div className="space-y-2">
+              <h4 className="font-medium">Promoter Management</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>• View promoters</div>
+                <div>• Add promoters</div>
+                <div>• Edit promoters</div>
+                <div>• Delete promoters</div>
+                <div>• Bulk delete promoters</div>
+                <div>• Export promoters</div>
+                <div>• Archive promoters</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">Party Management</h4>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <div>• View parties</div>
+                <div>• Add parties</div>
+                <div>• Edit parties</div>
+                <div>• Delete parties</div>
+                <div>• Bulk delete parties</div>
+                <div>• Export parties</div>
+                <div>• Archive parties</div>
+              </div>
+            </div>
+            <div className="space-y-2">
               <h4 className="font-medium">Contract Management</h4>
               <div className="text-sm text-muted-foreground space-y-1">
                 <div>• View contracts</div>
@@ -133,6 +157,8 @@ function RolesPageContent() {
                 <div>• Edit contracts</div>
                 <div>• Delete contracts</div>
                 <div>• Approve contracts</div>
+                <div>• Export contracts</div>
+                <div>• Archive contracts</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -150,6 +176,7 @@ function RolesPageContent() {
                 <div>• Edit settings</div>
                 <div>• View logs</div>
                 <div>• Create backups</div>
+                <div>• Restore system</div>
               </div>
             </div>
           </div>
