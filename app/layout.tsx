@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/src/components/auth/auth-provider"
-import { PermanentRoleWrapper } from "@/components/permanent-role-wrapper"
 import { Providers } from "./providers"
 import { GlobalPerformanceOptimizer } from "@/components/global-performance-optimizer"
 
@@ -57,9 +56,7 @@ export default function RootLayout({
         <GlobalPerformanceOptimizer />
         <Providers>
           <AuthProvider>
-            <PermanentRoleWrapper>
-              {children}
-            </PermanentRoleWrapper>
+            {children}
           </AuthProvider>
         </Providers>
       </body>
