@@ -186,6 +186,20 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
     }
   ].filter(action => permissions.can(action.permission as any))
 
+  const handleRefreshRole = async () => {
+    try {
+      console.log('🔄 Refreshing role from header...')
+      await refreshRoles()
+      
+      // Force a small delay to ensure state updates
+      setTimeout(() => {
+        console.log('✅ Role refresh completed')
+      }, 500)
+    } catch (error) {
+      console.error('❌ Role refresh failed:', error)
+    }
+  }
+
   const handleLogout = async () => {
     try {
       await signOut()
@@ -353,7 +367,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
             
             <DropdownMenuSeparator />
             
-            <DropdownMenuItem onClick={refreshRoles} disabled={isLoading}>
+            <DropdownMenuItem onClick={handleRefreshRole} disabled={isLoading}>
               <RefreshCw className="h-4 w-4 mr-2" />
               {isLoading ? 'Refreshing...' : 'Refresh Role'}
             </DropdownMenuItem>
