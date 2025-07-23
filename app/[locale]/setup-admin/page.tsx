@@ -887,6 +887,139 @@ export default function SetupAdminPage() {
                   "🔄 REFRESH AUTH ROLE"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/diagnose-role-issue', {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Role diagnostic response:', data)
+                    
+                    if (data.success) {
+                      const diagnostic = data.diagnostic
+                      const summary = data.summary
+                      
+                      let diagnosticMessage = `ROLE DIAGNOSTIC RESULTS:\n\n`
+                      diagnosticMessage += `User: ${diagnostic.userEmail}\n`
+                      diagnosticMessage += `User ID: ${diagnostic.userId}\n\n`
+                      
+                      diagnosticMessage += `DATABASE CHECKS:\n`
+                      diagnosticMessage += `Users Table: ${diagnostic.databaseChecks.users.exists ? '✅ EXISTS' : '❌ NOT FOUND'}\n`
+                      if (diagnostic.databaseChecks.users.exists) {
+                        diagnosticMessage += `  - Has Role: ${diagnostic.databaseChecks.users.hasRole ? '✅ YES' : '❌ NO'}\n`
+                        diagnosticMessage += `  - Role: ${diagnostic.databaseChecks.users.role || 'NULL'}\n`
+                      }
+                      if (diagnostic.databaseChecks.users.error) {
+                        diagnosticMessage += `  - Error: ${diagnostic.databaseChecks.users.error}\n`
+                      }
+                      
+                      diagnosticMessage += `Profiles Table: ${diagnostic.databaseChecks.profiles.exists ? '✅ EXISTS' : '❌ NOT FOUND'}\n`
+                      if (diagnostic.databaseChecks.profiles.exists) {
+                        diagnosticMessage += `  - Has Role: ${diagnostic.databaseChecks.profiles.hasRole ? '✅ YES' : '❌ NO'}\n`
+                        diagnosticMessage += `  - Role: ${diagnostic.databaseChecks.profiles.role || 'NULL'}\n`
+                      }
+                      if (diagnostic.databaseChecks.profiles.error) {
+                        diagnosticMessage += `  - Error: ${diagnostic.databaseChecks.profiles.error}\n`
+                      }
+                      
+                      diagnosticMessage += `App_Users Table: ${diagnostic.databaseChecks.app_users.exists ? '✅ EXISTS' : '❌ NOT FOUND'}\n`
+                      if (diagnostic.databaseChecks.app_users.exists) {
+                        diagnosticMessage += `  - Has Role: ${diagnostic.databaseChecks.app_users.hasRole ? '✅ YES' : '❌ NO'}\n`
+                        diagnosticMessage += `  - Role: ${diagnostic.databaseChecks.app_users.role || 'NULL'}\n`
+                      }
+                      if (diagnostic.databaseChecks.app_users.error) {
+                        diagnosticMessage += `  - Error: ${diagnostic.databaseChecks.app_users.error}\n`
+                      }
+                      
+                      diagnosticMessage += `\nSUMMARY:\n`
+                      diagnosticMessage += `Has Any Role: ${summary.hasRole ? '✅ YES' : '❌ NO'}\n`
+                      diagnosticMessage += `Has Admin Role: ${summary.hasAdminRole ? '✅ YES' : '❌ NO'}\n`
+                      diagnosticMessage += `User Exists: ${summary.userExists ? '✅ YES' : '❌ NO'}\n`
+                      
+                      diagnosticMessage += `\nRECOMMENDATIONS:\n`
+                      summary.recommendations.forEach((rec: string, index: number) => {
+                        diagnosticMessage += `${index + 1}. ${rec}\n`
+                      })
+                      
+                      alert(diagnosticMessage)
+                    } else {
+                      alert(`Role diagnostic failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Role diagnostic error:', error)
+                    alert('Role diagnostic failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-red-300 text-red-700 hover:bg-red-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Diagnosing role issue...
+                  </>
+                ) : (
+                  "🔍 DIAGNOSE ROLE ISSUE"
+                )}
+              </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/create-user-record', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Create user record response:', data)
+                    
+                    if (data.success) {
+                      const results = data.results
+                      const summary = data.summary
+                      
+                      alert(`User Records Created!\n\nTables Created: ${summary.tablesCreated}\nTables Failed: ${summary.tablesFailed}\n\nUsers Table: ${results.users.created ? '✅ CREATED' : '❌ FAILED'}\nProfiles Table: ${results.profiles.created ? '✅ CREATED' : '❌ FAILED'}\nApp_Users Table: ${results.app_users.created ? '✅ CREATED' : '❌ FAILED'}\n\nUser records with admin role have been created in the database.`)
+                      
+                      // Force page refresh after 3 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 3000)
+                    } else {
+                      alert(`Create user record failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Create user record error:', error)
+                    alert('Create user record failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-orange-300 text-orange-700 hover:bg-orange-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating user records...
+                  </>
+                ) : (
+                  "👤 CREATE USER RECORDS"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">
