@@ -30,17 +30,17 @@ export function PermanentRoleProvider({
   children: React.ReactNode
   user: User | null 
 }) {
-  const [role, setRoleState] = useState<Role>('user')
+  const [role, setRoleState] = useState<Role | null>(null); // null means not loaded yet
   const [isLoading, setIsLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
 
   // Load permanent role from localStorage
   useEffect(() => {
     if (!user) {
-      setRoleState('user')
-      setIsLoading(false)
-      setIsInitialized(true)
-      return
+      setRoleState(null);
+      setIsLoading(false);
+      setIsInitialized(true);
+      return;
     }
 
     console.log('🔄 Loading permanent role for user:', user.id)
@@ -154,6 +154,8 @@ export function PermanentRoleProvider({
     forceAdmin,
     clearRole,
   }
+
+  if (role === null) return <div>Loading role...</div>;
 
   return (
     <PermanentRoleContext.Provider value={value}>

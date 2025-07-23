@@ -46,8 +46,8 @@ async function getSupabase(): Promise<SupabaseClient<Database>> {
 }
 
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
-  const [userRoles, setUserRoles] = useState<Role[]>(['user'])
-  const [isLoading, setIsLoading] = useState(false)
+  const [userRoles, setUserRoles] = useState<Role[] | null>(null); // null means not loaded yet
+  const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false)
   const { role: authRole } = useAuth()
   const { role: permanentRole, isLoading: permanentRoleLoading } = usePermanentRole()
@@ -55,21 +55,21 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   // Use permanent role as primary source of truth
   useEffect(() => {
     if (permanentRole && !permanentRoleLoading) {
-      console.log('✅ RBAC: Using permanent role:', permanentRole)
-      setUserRoles([permanentRole])
-      setIsInitialized(true)
+      setUserRoles([permanentRole]);
+      setIsLoading(false);
+      setIsInitialized(true);
     } else if (authRole && !permanentRoleLoading) {
-      console.log('✅ RBAC: Using auth role as fallback:', authRole)
-      setUserRoles([authRole as Role])
-      setIsInitialized(true)
+      setUserRoles([authRole as Role]);
+      setIsLoading(false);
+      setIsInitialized(true);
     } else if (user && !permanentRoleLoading) {
-      console.log('🔄 RBAC: No permanent role, loading from database...')
-      loadUserRolesFromDatabase()
+      loadUserRolesFromDatabase();
     } else if (!user) {
-      setUserRoles(['user'])
-      setIsInitialized(true)
+      setUserRoles(null);
+      setIsLoading(false);
+      setIsInitialized(true);
     }
-  }, [permanentRole, authRole, user?.id, permanentRoleLoading])
+  }, [permanentRole, authRole, user?.id, permanentRoleLoading]);
 
   // Force sync with permanent role when it changes
   useEffect(() => {
@@ -88,9 +88,9 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   }, [user?.id, permanentRole, authRole, permanentRoleLoading])
 
   const loadUserRolesFromDatabase = async () => {
-    if (!user) return
-
-    setIsLoading(true)
+    if (!user) return;
+    setIsLoading(true);
+    setUserRoles(null);
     console.log('🔄 Loading user roles from database for:', user.id)
     
     // Try to load from users table first
@@ -188,7 +188,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     setIsLoading(true)
     
     // Clear current roles temporarily to force re-render
-    setUserRoles([])
+    setUserRoles(null)
     
     // Wait a moment for state to clear
     await new Promise(resolve => setTimeout(resolve, 100))
@@ -242,14 +242,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   const value = {
     userRoles,
-    hasRole: (role: Role) => userRoles.includes(role),
-    hasAnyRole: (roles: Role[]) => roles.some(role => userRoles.includes(role)),
-    hasAllRoles: (roles: Role[]) => roles.every(role => userRoles.includes(role)),
+    hasRole: (role: Role) => userRoles?.includes(role),
+    hasAnyRole: (roles: Role[]) => userRoles?.some(role => roles.includes(role)),
+    hasAllRoles: (roles: Role[]) => userRoles?.every(role => roles.includes(role)),
     refreshRoles,
     updateRoleDirectly,
     isLoading,
   }
 
+  if (userRoles === null) return <div>Loading role...</div>;
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>
 }
 
