@@ -107,7 +107,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
     }
 
-    return NextResponse.json({ users: users || [] })
+    // After fetching users (users = usersData or profilesData)
+    const total = Array.isArray(users) ? users.length : 0;
+    const page = 1; // Default, or parse from query if you add pagination
+    const limit = total; // Default, or parse from query if you add pagination
+    const totalPages = 1; // Default, or calculate if you add pagination
+
+    return NextResponse.json({
+      users: users || [],
+      pagination: { total, page, limit, totalPages }
+    });
   } catch (error) {
     console.error('Error in GET /api/users:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
