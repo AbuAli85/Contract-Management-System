@@ -492,6 +492,34 @@ export interface Database {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          id: number
+          user_id: string
+          permission: string
+          granted: boolean
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          permission: string
+          granted?: boolean
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          permission?: string
+          granted?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       // ... other tables
     }
     Views: {
