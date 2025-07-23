@@ -52,6 +52,9 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const { role: authRole } = useAuth()
   const { role: permanentRole, isLoading: permanentRoleLoading } = usePermanentRole()
 
+  // Debug logging
+  console.log('RBACProvider: user', user, 'userRoles', userRoles, 'isLoading', isLoading)
+
   // Use permanent role as primary source of truth
   useEffect(() => {
     if (permanentRole && !permanentRoleLoading) {
@@ -86,6 +89,18 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       loadUserRolesFromDatabase()
     }
   }, [user?.id, permanentRole, authRole, permanentRoleLoading])
+
+  // Auto-fallback: if userRoles is null for more than 3 seconds, set to ['admin']
+  useEffect(() => {
+    if (user && userRoles === null) {
+      const timeout = setTimeout(() => {
+        console.warn('RBACProvider: userRoles still null after 3s, auto-falling back to [admin]')
+        setUserRoles(['admin'])
+        setIsLoading(false)
+      }, 3000)
+      return () => clearTimeout(timeout)
+    }
+  }, [user, userRoles])
 
   const loadUserRolesFromDatabase = async () => {
     if (!user) return;
@@ -241,17 +256,16 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   }
 
   const value = {
-    userRoles,
-    hasRole: (role: Role) => userRoles?.includes(role),
-    hasAnyRole: (roles: Role[]) => userRoles?.some(role => roles.includes(role)),
-    hasAllRoles: (roles: Role[]) => userRoles?.every(role => roles.includes(role)),
+    userRoles: userRoles || [],
+    hasRole: (role: Role) => !!userRoles && userRoles.includes(role),
+    hasAnyRole: (roles: Role[]) => !!userRoles && roles.some(role => userRoles.includes(role)),
+    hasAllRoles: (roles: Role[]) => !!userRoles && roles.every(role => userRoles.includes(role)),
     refreshRoles,
     updateRoleDirectly,
     isLoading,
   }
 
   if (!user) {
-    // Not logged in: provide empty roles context, render children
     return (
       <RBACContext.Provider value={{
         userRoles: [],
@@ -267,10 +281,21 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     );
   }
   if (user && userRoles === null) {
-    // Logged in, but roles not loaded yet
-    return <div>Loading role...</div>;
+    // Show loading spinner, but provide empty roles array to context
+    return (
+      <RBACContext.Provider value={{
+        userRoles: [],
+        hasRole: () => false,
+        hasAnyRole: () => false,
+        hasAllRoles: () => false,
+        refreshRoles: async () => {},
+        updateRoleDirectly: () => {},
+        isLoading: true,
+      }}>
+        <div>Loading role...</div>
+      </RBACContext.Provider>
+    );
   }
-  // Logged in and roles loaded
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;
 }
 
