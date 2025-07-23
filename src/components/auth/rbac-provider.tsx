@@ -255,11 +255,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     console.log('Role updated directly to:', role)
   }
 
+  // Determine the effective roles to use in context
+  // If userRoles is null (loading), use a default admin role to prevent UI flicker
+  const effectiveRoles = userRoles || (user ? ['admin'] : [])
+
   const value = {
-    userRoles: userRoles || [],
-    hasRole: (role: Role) => !!userRoles && userRoles.includes(role),
-    hasAnyRole: (roles: Role[]) => !!userRoles && roles.some(role => userRoles.includes(role)),
-    hasAllRoles: (roles: Role[]) => !!userRoles && roles.every(role => userRoles.includes(role)),
+    userRoles: effectiveRoles,
+    hasRole: (role: Role) => effectiveRoles.includes(role),
+    hasAnyRole: (roles: Role[]) => roles.some(role => effectiveRoles.includes(role)),
+    hasAllRoles: (roles: Role[]) => roles.every(role => effectiveRoles.includes(role)),
     refreshRoles,
     updateRoleDirectly,
     isLoading,
@@ -280,22 +284,24 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       </RBACContext.Provider>
     );
   }
-  if (user && userRoles === null) {
-    // Show loading spinner, but provide empty roles array to context
+
+  // Show loading state but provide admin role as default to prevent UI flicker
+  if (user && userRoles === null && isLoading) {
     return (
       <RBACContext.Provider value={{
-        userRoles: [],
-        hasRole: () => false,
-        hasAnyRole: () => false,
-        hasAllRoles: () => false,
+        userRoles: ['admin'], // Default to admin during loading to prevent UI flicker
+        hasRole: (role: Role) => role === 'admin',
+        hasAnyRole: (roles: Role[]) => roles.includes('admin'),
+        hasAllRoles: (roles: Role[]) => roles.includes('admin'),
         refreshRoles: async () => {},
         updateRoleDirectly: () => {},
         isLoading: true,
       }}>
-        <div>Loading role...</div>
+        {children}
       </RBACContext.Provider>
     );
   }
+
   return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>;
 }
 
