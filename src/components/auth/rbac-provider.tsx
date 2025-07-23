@@ -60,8 +60,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const { role: authRole } = useAuth()
   const { role: permanentRole, isLoading: permanentRoleLoading } = usePermanentRole()
 
-  // Debug logging
-  console.log('RBACProvider: user', user, 'userRoles', userRoles, 'isLoading', isLoading)
+  // Debug logging - Ensure userRoles is logged as an array
+  console.log('RBACProvider: user', user ? user.id : 'null', 'userRoles', userRoles, 'isLoading', isLoading)
+
+  // Debug: Track userRoles changes
+  useEffect(() => {
+    if (userRoles !== null) {
+      console.log('🔍 userRoles state changed to:', userRoles, 'Type:', typeof userRoles, 'Is Array:', Array.isArray(userRoles))
+    }
+  }, [userRoles])
 
   // Immediate role loading from cache on mount
   useEffect(() => {
@@ -107,7 +114,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       setIsLoading(false);
       setIsInitialized(true);
     }
-  }, [permanentRole, authRole, user?.id, permanentRoleLoading, userRoles]);
+  }, [permanentRole, authRole, user?.id, permanentRoleLoading]); // Removed userRoles from dependencies
 
   // Force sync with permanent role when it changes
   useEffect(() => {
@@ -123,7 +130,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       console.log('🔄 RBAC: User exists but no roles, loading from database...')
       loadUserRolesFromDatabase()
     }
-  }, [user?.id, permanentRole, authRole, permanentRoleLoading, userRoles])
+  }, [user?.id, permanentRole, authRole, permanentRoleLoading]); // Removed userRoles from dependencies
 
   // Faster auto-fallback: if userRoles is null for more than 500ms, set to ['admin']
   useEffect(() => {
