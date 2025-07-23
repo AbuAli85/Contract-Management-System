@@ -5,12 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     const { searchParams } = new URL(request.url)
-    
-    // Get query parameters
-    const role = searchParams.get('role')
     const status = searchParams.get('status') || 'active'
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -19,33 +14,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's reviewer roles
-    const { data: userRoles, error: rolesError } = await supabase
+    const { data: userRoles } = await supabase
       .from('reviewer_roles')
       .select('role_type')
       .eq('user_id', user.id)
       .eq('is_active', true)
 
-    if (rolesError) {
-      console.error('Error fetching user roles:', rolesError)
-      return NextResponse.json({ error: 'Failed to fetch user roles' }, { status: 500 })
-    }
-
     const userRoleTypes = userRoles?.map(role => role.role_type) || []
 
-    // If no reviewer roles, return empty results
-    if (userRoleTypes.length === 0) {
-      return NextResponse.json({
-        reviews: [],
-        total: 0,
-        pagination: {
-          limit,
-          offset,
-          total: 0
-        }
-      })
-    }
-
-    // Build query for pending reviews
+    // Build query based on status
     let query = supabase
       .from('contracts')
       .select(`
@@ -60,111 +37,89 @@ export async function GET(request: NextRequest) {
         updated_at,
         first_party:parties!contracts_first_party_id_fkey(name_en, name_ar),
         second_party:parties!contracts_second_party_id_fkey(name_en, name_ar),
-        promoter:promoters(name_en, name_ar)
-      `, { count: 'exact' })
+        promoter:promoters!contracts_promoter_id_fkey(name_en, name_ar)
+      `)
 
-    // Filter by current reviewer
-    query = query.eq('current_reviewer_id', user.id)
-
-    // Filter by approval status based on user roles
-    const statusFilter = []
-    if (userRoleTypes.includes('legal_reviewer')) {
-      statusFilter.push('legal_review')
-    }
-    if (userRoleTypes.includes('hr_reviewer')) {
-      statusFilter.push('hr_review')
-    }
-    if (userRoleTypes.includes('final_approver')) {
-      statusFilter.push('final_approval')
-    }
-    if (userRoleTypes.includes('signatory')) {
-      statusFilter.push('signature')
-    }
-
-    if (statusFilter.length > 0) {
-      query = query.in('approval_status', statusFilter)
-    }
-
-    // Filter by specific role if provided
-    if (role && userRoleTypes.includes(role)) {
-      const roleStatusMap: { [key: string]: string } = {
-        'legal_reviewer': 'legal_review',
-        'hr_reviewer': 'hr_review',
-        'final_approver': 'final_approval',
-        'signatory': 'signature'
-      }
-      query = query.eq('approval_status', roleStatusMap[role])
-    }
-
-    // Filter by status
     if (status === 'active') {
-      query = query.not('approval_status', 'in', ['draft', 'rejected', 'active'])
-    } else if (status === 'overdue') {
-      // Get overdue contracts (submitted more than X days ago)
-      const overdueDate = new Date()
-      overdueDate.setDate(overdueDate.getDate() - 3) // 3 days overdue
-      query = query.lt('submitted_for_review_at', overdueDate.toISOString())
+      // Get contracts that need review by current user
+      query = query
+        .eq('current_reviewer_id', user.id)
+        .in('approval_status', ['legal_review', 'hr_review', 'final_approval', 'signature'])
+    } else if (status === 'completed') {
+      // Get contracts that have been reviewed by current user
+      query = query
+        .in('approval_status', ['active', 'draft'])
+        .not('current_reviewer_id', 'is', null)
+    } else {
+      // Get all contracts for admin users
+      if (!await hasAdminRole(user.id, supabase)) {
+        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      }
     }
 
-    // Add pagination
-    query = query.range(offset, offset + limit - 1)
+    const { data: contracts, error: contractsError } = await query
 
-    // Order by priority (overdue first, then by submission date)
-    query = query.order('submitted_for_review_at', { ascending: true })
-
-    const { data: reviews, error: reviewsError, count } = await query
-
-    if (reviewsError) {
-      console.error('Error fetching pending reviews:', reviewsError)
-      return NextResponse.json({ error: 'Failed to fetch pending reviews' }, { status: 500 })
+    if (contractsError) {
+      console.error('Error fetching contracts:', contractsError)
+      return NextResponse.json({ error: 'Failed to fetch contracts' }, { status: 500 })
     }
 
-    // Calculate days pending and priority for each review
-    const enrichedReviews = reviews?.map(review => {
-      const submittedDate = new Date(review.submitted_for_review_at || review.created_at)
+    // Process contracts to add calculated fields
+    const processedContracts = contracts?.map(contract => {
+      const submittedDate = new Date(contract.submitted_for_review_at || contract.created_at)
       const now = new Date()
       const daysPending = Math.floor((now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60 * 24))
       
-      let priority = 'normal'
-      if (daysPending > 5) priority = 'high'
+      // Determine priority based on days pending and contract type
+      let priority: 'high' | 'medium' | 'normal' = 'normal'
+      if (daysPending > 7) priority = 'high'
       else if (daysPending > 3) priority = 'medium'
 
+      // Check if overdue (more than 5 days)
+      const isOverdue = daysPending > 5
+
       return {
-        ...review,
+        ...contract,
         days_pending: daysPending,
         priority,
-        is_overdue: daysPending > 3
+        is_overdue: isOverdue
       }
     }) || []
 
-    // Sort by priority (high first, then medium, then normal)
-    enrichedReviews.sort((a, b) => {
+    // Sort by priority and days pending
+    processedContracts.sort((a, b) => {
       const priorityOrder = { high: 3, medium: 2, normal: 1 }
-      return priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder]
+      const aPriority = priorityOrder[a.priority] || 1
+      const bPriority = priorityOrder[b.priority] || 1
+      
+      if (aPriority !== bPriority) {
+        return bPriority - aPriority
+      }
+      
+      return b.days_pending - a.days_pending
     })
 
     return NextResponse.json({
-      reviews: enrichedReviews,
-      total: count || 0,
-      pagination: {
-        limit,
-        offset,
-        total: count || 0,
-        has_more: (count || 0) > offset + limit
-      },
-      user_roles: userRoleTypes,
-      filters: {
-        role,
-        status,
-        applied_roles: userRoleTypes
-      }
+      success: true,
+      reviews: processedContracts,
+      count: processedContracts.length
     })
 
   } catch (error) {
-    console.error('Error in pending reviews API:', error)
+    console.error('Error fetching pending reviews:', error)
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
+}
+
+async function hasAdminRole(userId: string, supabase: any): Promise<boolean> {
+  const { data: user } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  
+  return user?.role === 'admin'
 } 

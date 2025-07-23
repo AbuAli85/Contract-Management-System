@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { contractId: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    const { contractId } = params
     const body = await request.json()
+    const { contractId, notes } = body
+
+    if (!contractId) {
+      return NextResponse.json({ error: 'Contract ID is required' }, { status: 400 })
+    }
 
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -95,26 +96,36 @@ export async function POST(
         reviewer_id: legalReviewer.user_id,
         review_stage: 'legal_review',
         action: 'submitted_for_review',
-        comments: body.notes || 'Contract submitted for legal review'
+        comments: notes || 'Contract submitted for legal review'
       })
 
     if (approvalError) {
       console.error('Error creating approval record:', approvalError)
-      // Don't fail the request if approval record creation fails
+      return NextResponse.json({ error: 'Failed to create approval record' }, { status: 500 })
     }
 
-    // Send notification to legal reviewer
+    // Send notification to reviewer
     await sendReviewNotification(legalReviewer.user_id, contractId, 'legal_review', supabase)
+
+    // Create audit log
+    await createAuditLog(user.id, 'contract_submitted_for_review', 'contracts', contractId, {
+      previous_status: 'draft',
+      new_status: 'legal_review',
+      reviewer_id: legalReviewer.user_id
+    }, supabase)
 
     return NextResponse.json({
       success: true,
-      contract: updatedContract,
-      message: 'Contract submitted for legal review successfully',
-      next_reviewer_id: legalReviewer.user_id
+      message: 'Contract submitted for review successfully',
+      data: {
+        contract_id: contractId,
+        new_status: 'legal_review',
+        reviewer_id: legalReviewer.user_id
+      }
     })
 
   } catch (error) {
-    console.error('Error submitting contract for approval:', error)
+    console.error('Error submitting contract for review:', error)
     return NextResponse.json({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -122,7 +133,6 @@ export async function POST(
   }
 }
 
-// Helper function to check if user has admin role
 async function hasAdminRole(userId: string, supabase: any): Promise<boolean> {
   const { data: user } = await supabase
     .from('users')
@@ -133,7 +143,6 @@ async function hasAdminRole(userId: string, supabase: any): Promise<boolean> {
   return user?.role === 'admin'
 }
 
-// Helper function to send review notifications
 async function sendReviewNotification(
   reviewerId: string, 
   contractId: string, 
@@ -141,40 +150,39 @@ async function sendReviewNotification(
   supabase: any
 ) {
   try {
-    // Get reviewer details
-    const { data: reviewer } = await supabase
-      .from('users')
-      .select('email, full_name')
-      .eq('id', reviewerId)
-      .single()
-
-    // Get contract details
-    const { data: contract } = await supabase
-      .from('contracts')
-      .select('contract_number, job_title')
-      .eq('id', contractId)
-      .single()
-
-    if (reviewer && contract) {
-      // Send email notification (implement your email service here)
-      console.log(`Sending notification to ${reviewer.email} for contract ${contract.contract_number}`)
-      
-      // Send Slack notification if configured
-      if (process.env.SLACK_WEBHOOK_URL) {
-        await fetch(process.env.SLACK_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: `🔍 New contract review required: ${contract.contract_number} (${contract.job_title})`,
-            reviewer: reviewer.full_name || reviewer.email,
-            stage: reviewStage,
-            contract_id: contractId
-          })
-        })
-      }
-    }
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: reviewerId,
+        type: 'contract_review_required',
+        title: 'New Contract Review Required',
+        message: `A contract has been submitted for ${reviewStage.replace('_', ' ')} review`,
+        data: { contract_id: contractId, review_stage: reviewStage }
+      })
   } catch (error) {
     console.error('Error sending notification:', error)
-    // Don't fail the main request if notification fails
+  }
+}
+
+async function createAuditLog(
+  userId: string,
+  action: string,
+  tableName: string,
+  recordId: string,
+  details: any,
+  supabase: any
+) {
+  try {
+    await supabase
+      .from('audit_logs')
+      .insert({
+        user_id: userId,
+        action,
+        table_name: tableName,
+        record_id: recordId,
+        new_values: details
+      })
+  } catch (error) {
+    console.error('Error creating audit log:', error)
   }
 } 
