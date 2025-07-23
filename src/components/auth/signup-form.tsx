@@ -29,6 +29,8 @@ export function SignUpForm() {
 
     try {
       await signUp(email, password)
+      // After signup, set role to manager
+      await fetch('/api/force-admin-role', { method: 'POST' }); // You can create a similar endpoint for manager
       router.push('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
