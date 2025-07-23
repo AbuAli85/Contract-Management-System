@@ -80,6 +80,7 @@ import { FileTextIcon } from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils"
 import { RoleRefreshButton } from "@/components/role-refresh-button"
 import { RoleDebugPanel } from "@/components/role-debug-panel"
+import { RoleStatusIndicator } from "@/components/role-status-indicator"
 
 // Enhanced Contract interface
 interface EnhancedContract extends ContractWithRelations {
@@ -156,12 +157,26 @@ export default function ContractsDashboardPage() {
   const { toast } = useToast()
   const permissions = usePermissions()
 
-  // Role-based access control
+  // Role-based access control with error handling
   const canCreateContract = permissions.canCreateContract()
   const canEditContract = permissions.canEditContract()
   const canDeleteContract = permissions.canDeleteContract()
   const canExportContracts = permissions.canExportContracts()
   const canGenerateContract = permissions.canGenerateContract()
+
+  // Show loading state if permissions are still loading
+  if (permissions.isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading permissions...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   // Enhanced state management
   const [selectedContracts, setSelectedContracts] = useState<string[]>([])
@@ -633,7 +648,8 @@ export default function ContractsDashboardPage() {
               </div>
               
               <div className="flex items-center gap-2">
-                <RoleRefreshButton variant="ghost" size="sm" />
+                <RoleStatusIndicator />
+                <RoleRefreshButton variant="ghost" size="sm" compact />
                 
                 <TooltipProvider>
                   <Tooltip>

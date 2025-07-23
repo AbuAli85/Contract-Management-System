@@ -5,22 +5,27 @@ import { Button } from '@/components/ui/button'
 import { RefreshCw, Shield } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
 import { useToast } from '@/hooks/use-toast'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface RoleRefreshButtonProps {
   variant?: 'default' | 'outline' | 'ghost'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   showIcon?: boolean
+  showText?: boolean
   className?: string
+  compact?: boolean
 }
 
 export function RoleRefreshButton({ 
   variant = 'outline', 
   size = 'sm', 
   showIcon = true,
-  className = ''
+  showText = true,
+  className = '',
+  compact = false
 }: RoleRefreshButtonProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const { forceRefresh } = usePermissions()
+  const { forceRefresh, role } = usePermissions()
   const { toast } = useToast()
 
   const handleRefreshRole = async () => {
@@ -42,6 +47,37 @@ export function RoleRefreshButton({
     }
   }
 
+  // If compact mode, show only icon
+  if (compact) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={variant}
+              size="icon"
+              onClick={handleRefreshRole}
+              disabled={isRefreshing}
+              className={className}
+            >
+              {isRefreshing ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Shield className="h-4 w-4" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="text-center">
+              <div className="font-medium">Refresh Role</div>
+              <div className="text-xs text-muted-foreground">Current: {role}</div>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
   return (
     <Button
       variant={variant}
@@ -57,7 +93,7 @@ export function RoleRefreshButton({
           <Shield className="mr-2 h-4 w-4" />
         )
       )}
-      {isRefreshing ? 'Refreshing...' : 'Refresh Role'}
+      {showText && (isRefreshing ? 'Refreshing...' : 'Refresh Role')}
     </Button>
   )
 } 
