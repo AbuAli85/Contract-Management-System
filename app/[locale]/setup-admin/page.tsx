@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Shield, CheckCircle, AlertTriangle } from "lucide-react"
 import { AuthRoleStatus } from "@/components/auth-role-status"
+import { LoginStatus } from "@/components/login-status"
 
 export default function SetupAdminPage() {
   const [loading, setLoading] = useState(false)
@@ -131,7 +132,12 @@ export default function SetupAdminPage() {
         <p className="text-gray-600">Admin role management and testing tools</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Login Status */}
+        <div>
+          <LoginStatus />
+        </div>
+
         {/* Role Status */}
         <div>
           <AuthRoleStatus />

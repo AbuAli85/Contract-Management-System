@@ -18,6 +18,7 @@ interface AuthContextType {
   enrollMFA: () => Promise<{ secret: string; qr_code: string; uri: string }>
   verifyMFA: (challengeId: string, code: string, factorId: string) => Promise<void>
   unenrollMFA: (factorId: string) => Promise<void>
+  forceRefreshRole: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   enrollMFA: async () => ({ secret: '', qr_code: '', uri: '' }),
   verifyMFA: async () => {},
   unenrollMFA: async () => {},
+  forceRefreshRole: async () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -91,8 +93,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      // If no role found, default to admin for testing
-      console.log('⚠️ No role found in any table, defaulting to admin')
+      // If no role found, try to create user record with admin role
+      console.log('⚠️ No role found in any table, attempting to create user record...')
+      try {
+        const { data: createData, error: createError } = await supabase
+          .from('users')
+          .upsert({
+            id: userId,
+            email: user?.email || '',
+            role: 'admin',
+            created_at: new Date().toISOString()
+          }, {
+            onConflict: 'id'
+          })
+          .select()
+          .single()
+
+        if (!createError && createData) {
+          console.log('✅ User record created with admin role:', createData.role)
+          setRole(createData.role)
+          return
+        } else {
+          console.log('❌ Failed to create user record:', createError)
+        }
+      } catch (createError) {
+        console.log('❌ Error creating user record:', createError)
+      }
+
+      // Final fallback to admin
+      console.log('⚠️ All attempts failed, defaulting to admin')
       setRole('admin')
       
     } catch (error) {
@@ -126,8 +155,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(initialSession)
           setUser(initialSession?.user ?? null)
           
-          // Load role if user exists
+          // Load role immediately if user exists
           if (initialSession?.user?.id) {
+            console.log("🔄 Loading role immediately for existing session...")
             await loadUserRole(initialSession.user.id)
           }
           
@@ -147,8 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(session)
             setUser(session?.user ?? null)
             
-            // Load role if user exists
+            // Load role immediately when auth state changes
             if (session?.user?.id) {
+              console.log("🔄 Loading role for auth state change...")
               await loadUserRole(session.user.id)
             } else {
               setRole(null)
@@ -172,6 +203,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initializeAuth()
   }, [])
+
+  // Ensure role is loaded whenever user changes
+  useEffect(() => {
+    if (user?.id) {
+      console.log("🔄 User changed, loading role for:", user.id)
+      loadUserRole(user.id)
+    } else {
+      setRole(null)
+    }
+  }, [user?.id])
 
   const value = {
     session,
@@ -292,6 +333,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw error
       }
       console.log("✅ MFA unenrollment successful")
+    },
+    forceRefreshRole: async () => {
+      console.log("🔄 Forcing role refresh")
+      if (user?.id) {
+        await loadUserRole(user.id)
+      } else {
+        setRole(null)
+      }
     }
   }
 

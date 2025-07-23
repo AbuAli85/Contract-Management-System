@@ -71,6 +71,14 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
   }, [authRole, user?.id])
 
+  // Also listen for user changes to ensure role is loaded
+  useEffect(() => {
+    if (user && !authRole) {
+      console.log('🔄 RBAC: User exists but no auth role, loading from database...')
+      loadUserRolesFromDatabase()
+    }
+  }, [user?.id, authRole])
+
   const loadUserRolesFromDatabase = async () => {
     if (!user) return
 
