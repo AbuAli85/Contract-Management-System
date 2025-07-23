@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import type { User } from '@supabase/supabase-js'
 import { format } from 'date-fns'
+import { canPerformAction } from '@/lib/permissions'
 
 export async function GET() {
   try {

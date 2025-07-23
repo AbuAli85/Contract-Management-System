@@ -26,6 +26,7 @@ export type Action =
   | 'contract:generate'
   | 'contract:approve'
   | 'contract:export'
+  | 'contract:archive'
   
   // User management actions
   | 'user:create'
@@ -72,6 +73,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'contract:generate': true,
     'contract:approve': true,
     'contract:export': true,
+    'contract:archive': true,
     
     // User management - Full access
     'user:create': true,
@@ -114,6 +116,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'contract:generate': true,
     'contract:approve': true,
     'contract:export': true,
+    'contract:archive': false,
     
     // User management - Read only
     'user:create': false,
@@ -156,6 +159,7 @@ export const PERMISSIONS: Record<Role, Record<Action, boolean>> = {
     'contract:generate': false,
     'contract:approve': false,
     'contract:export': false,
+    'contract:archive': false,
     
     // User management - No access
     'user:create': false,
