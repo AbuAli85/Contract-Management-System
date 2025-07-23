@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Shield, CheckCircle, AlertTriangle } from "lucide-react"
 import { AuthRoleStatus } from "@/components/auth-role-status"
 import { LoginStatus } from "@/components/login-status"
+import { PermanentRoleStatus } from '@/components/permanent-role-status'
 
 export default function SetupAdminPage() {
   const [loading, setLoading] = useState(false)
@@ -130,6 +131,12 @@ export default function SetupAdminPage() {
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Setup Admin</h1>
         <p className="text-gray-600">Admin role management and testing tools</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <LoginStatus />
+        <AuthRoleStatus />
+        <PermanentRoleStatus />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1171,6 +1178,96 @@ export default function SetupAdminPage() {
                   </>
                 ) : (
                   "🔧 FIX USERS TABLE POLICY"
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    const response = await fetch('/api/permanent-role-solution', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Permanent role solution response:', data)
+                    
+                    if (data.success) {
+                      const results = data.results
+                      const summary = data.summary
+                      const permanentRole = data.permanentRole
+                      const localStorage = data.localStorage
+                      
+                      let solutionMessage = `PERMANENT ROLE SOLUTION COMPLETED!\n\n`
+                      solutionMessage += `Final Role: ${permanentRole.value} (from ${permanentRole.source})\n\n`
+                      
+                      solutionMessage += `DATABASE RECORDS:\n`
+                      solutionMessage += `Records Created: ${summary.recordsCreated}\n`
+                      solutionMessage += `Records Failed: ${summary.recordsFailed}\n`
+                      solutionMessage += `Bypass Success: ${summary.bypassSuccess ? '✅ YES' : '❌ NO'}\n\n`
+                      
+                      solutionMessage += `USERS TABLE:\n`
+                      solutionMessage += `Created: ${results.userRecord.created ? '✅ YES' : '❌ NO'}\n`
+                      solutionMessage += `Role: ${results.userRecord.role || 'NULL'}\n`
+                      if (results.userRecord.error) {
+                        solutionMessage += `Error: ${results.userRecord.error}\n`
+                      }
+                      solutionMessage += `\n`
+                      
+                      solutionMessage += `PROFILES TABLE:\n`
+                      solutionMessage += `Created: ${results.profileRecord.created ? '✅ YES' : '❌ NO'}\n`
+                      solutionMessage += `Role: ${results.profileRecord.role || 'NULL'}\n`
+                      if (results.profileRecord.error) {
+                        solutionMessage += `Error: ${results.profileRecord.error}\n`
+                      }
+                      solutionMessage += `\n`
+                      
+                      solutionMessage += `APP_USERS TABLE:\n`
+                      solutionMessage += `Created: ${results.appUserRecord.created ? '✅ YES' : '❌ NO'}\n`
+                      solutionMessage += `Role: ${results.appUserRecord.role || 'NULL'}\n`
+                      if (results.appUserRecord.error) {
+                        solutionMessage += `Error: ${results.appUserRecord.error}\n`
+                      }
+                      solutionMessage += `\n`
+                      
+                      solutionMessage += `PERMANENT STORAGE:\n`
+                      solutionMessage += `Key: ${localStorage.key}\n`
+                      solutionMessage += `Value: ${localStorage.value}\n`
+                      solutionMessage += `Instructions: ${localStorage.instructions}\n\n`
+                      
+                      solutionMessage += `SUMMARY:\n`
+                      solutionMessage += `${summary.message}\n\n`
+                      solutionMessage += `This is a PERMANENT solution that bypasses all database policy issues and stores the role in localStorage for persistence across all sessions.`
+                      
+                      alert(solutionMessage)
+                      
+                      // Force page refresh after 3 seconds
+                      setTimeout(() => {
+                        window.location.reload()
+                      }, 3000)
+                    } else {
+                      alert(`Permanent role solution failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Permanent role solution error:', error)
+                    alert('Permanent role solution failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-green-300 text-green-700 hover:bg-green-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Permanent role solution...
+                  </>
+                ) : (
+                  "🎯 PERMANENT ROLE SOLUTION"
                 )}
               </Button>
             </div>

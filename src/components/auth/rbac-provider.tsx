@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 import { useAuth } from './auth-provider'
+import { usePermanentRole } from './permanent-role-provider'
 
 export type Role = 'admin' | 'manager' | 'user'
 
@@ -49,49 +50,42 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
   const [isLoading, setIsLoading] = useState(false)
   const [isInitialized, setIsInitialized] = useState(false)
   const { role: authRole } = useAuth()
+  const { role: permanentRole, isLoading: permanentRoleLoading } = usePermanentRole()
 
-  // Use role from AuthProvider
+  // Use permanent role as primary source of truth
   useEffect(() => {
-    if (authRole) {
-      console.log('✅ RBAC: Using role from AuthProvider:', authRole)
+    if (permanentRole && !permanentRoleLoading) {
+      console.log('✅ RBAC: Using permanent role:', permanentRole)
+      setUserRoles([permanentRole])
+      setIsInitialized(true)
+    } else if (authRole && !permanentRoleLoading) {
+      console.log('✅ RBAC: Using auth role as fallback:', authRole)
       setUserRoles([authRole as Role])
       setIsInitialized(true)
-      
-      // Cache the role in localStorage for persistence
-      if (typeof window !== 'undefined' && user) {
-        localStorage.setItem(`user_role_${user.id}`, authRole)
-        console.log('📦 RBAC: Role cached in localStorage:', authRole)
-      }
-    } else if (user) {
-      console.log('🔄 RBAC: No role from AuthProvider, loading from database...')
+    } else if (user && !permanentRoleLoading) {
+      console.log('🔄 RBAC: No permanent role, loading from database...')
       loadUserRolesFromDatabase()
-    } else {
+    } else if (!user) {
       setUserRoles(['user'])
       setIsInitialized(true)
     }
-  }, [authRole, user?.id])
+  }, [permanentRole, authRole, user?.id, permanentRoleLoading])
 
-  // Force sync with AuthProvider role when it changes
+  // Force sync with permanent role when it changes
   useEffect(() => {
-    if (authRole && user) {
-      console.log('🔄 RBAC: AuthProvider role changed, syncing:', authRole)
-      setUserRoles([authRole as Role])
-      
-      // Update localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`user_role_${user.id}`, authRole)
-        console.log('📦 RBAC: Role updated in localStorage:', authRole)
-      }
+    if (permanentRole && !permanentRoleLoading) {
+      console.log('🔄 RBAC: Permanent role changed, syncing:', permanentRole)
+      setUserRoles([permanentRole])
     }
-  }, [authRole])
+  }, [permanentRole, permanentRoleLoading])
 
   // Also listen for user changes to ensure role is loaded
   useEffect(() => {
-    if (user && !authRole) {
-      console.log('🔄 RBAC: User exists but no auth role, loading from database...')
+    if (user && !permanentRole && !authRole && !permanentRoleLoading) {
+      console.log('🔄 RBAC: User exists but no roles, loading from database...')
       loadUserRolesFromDatabase()
     }
-  }, [user?.id, authRole])
+  }, [user?.id, permanentRole, authRole, permanentRoleLoading])
 
   const loadUserRolesFromDatabase = async () => {
     if (!user) return

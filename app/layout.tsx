@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { AuthProvider } from "@/src/components/auth/auth-provider"
+import { AuthProvider, useAuth } from "@/src/components/auth/auth-provider"
+import { PermanentRoleProvider } from "@/src/components/auth/permanent-role-provider"
 import { Providers } from "./providers"
 import { GlobalPerformanceOptimizer } from "@/components/global-performance-optimizer"
+
+function PermanentRoleWrapper({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
+  return <PermanentRoleProvider user={user}>{children}</PermanentRoleProvider>
+}
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -56,7 +62,9 @@ export default function RootLayout({
         <GlobalPerformanceOptimizer />
         <Providers>
           <AuthProvider>
-            {children}
+            <PermanentRoleWrapper>
+              {children}
+            </PermanentRoleWrapper>
           </AuthProvider>
         </Providers>
       </body>
