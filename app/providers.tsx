@@ -23,13 +23,13 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
       }),
   )
 
-  // REMOVE RBACProvider from here!
-  // const { user } = useAuth()
-  // <RBACProvider user={user}>{children}</RBACProvider>
+  const { user } = useAuth()
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <RBACProvider user={user}>
+        {children}
+      </RBACProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   )

@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { useContracts, useDeleteContractMutation, type ContractWithRelations } from "@/hooks/use-contracts"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -77,6 +78,8 @@ import { useToast } from "@/hooks/use-toast"
 import DashboardLayout from "@/components/dashboard/dashboard-layout"
 import { FileTextIcon } from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils"
+import { RoleRefreshButton } from "@/components/role-refresh-button"
+import { RoleDebugPanel } from "@/components/role-debug-panel"
 
 // Enhanced Contract interface
 interface EnhancedContract extends ContractWithRelations {
@@ -151,6 +154,14 @@ export default function ContractsDashboardPage() {
   const { data: contracts, isLoading, error } = useContracts()
   const deleteContractMutation = useDeleteContractMutation()
   const { toast } = useToast()
+  const permissions = usePermissions()
+
+  // Role-based access control
+  const canCreateContract = permissions.canCreateContract()
+  const canEditContract = permissions.canEditContract()
+  const canDeleteContract = permissions.canDeleteContract()
+  const canExportContracts = permissions.canExportContracts()
+  const canGenerateContract = permissions.canGenerateContract()
 
   // Enhanced state management
   const [selectedContracts, setSelectedContracts] = useState<string[]>([])
@@ -586,6 +597,11 @@ export default function ContractsDashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-4 md:p-6">
+        {/* Role Debug Panel - Only show in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <RoleDebugPanel />
+        )}
+
         {/* Statistics Cards */}
         {showStats && (
           <div className="mb-6">
@@ -617,6 +633,8 @@ export default function ContractsDashboardPage() {
               </div>
               
               <div className="flex items-center gap-2">
+                <RoleRefreshButton variant="ghost" size="sm" />
+                
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -648,24 +666,28 @@ export default function ContractsDashboardPage() {
                   </Tooltip>
                 </TooltipProvider>
 
-                <Button
-                  variant="outline"
-                  onClick={handleExportCSV}
-                  disabled={isExporting}
-                >
-                  {isExporting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="mr-2 h-4 w-4" />
-                  )}
-                  Export CSV
-                </Button>
+                {canExportContracts && (
+                  <Button
+                    variant="outline"
+                    onClick={handleExportCSV}
+                    disabled={isExporting}
+                  >
+                    {isExporting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="mr-2 h-4 w-4" />
+                    )}
+                    Export CSV
+                  </Button>
+                )}
 
-                <Button asChild>
-                  <Link href={`/${locale}/dashboard/generate-contract`}>
-                    Create New Contract
-                  </Link>
-                </Button>
+                {canCreateContract && (
+                  <Button asChild>
+                    <Link href={`/${locale}/dashboard/generate-contract`}>
+                      Create New Contract
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </CardHeader>
@@ -704,7 +726,7 @@ export default function ContractsDashboardPage() {
             </div>
 
             {/* Bulk Actions */}
-            {selectedContracts.length > 0 && (
+            {selectedContracts.length > 0 && canDeleteContract && (
               <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                 <span className="text-sm font-medium">
                   {selectedContracts.length} contract(s) selected
@@ -737,7 +759,7 @@ export default function ContractsDashboardPage() {
                     ? "Try adjusting your search or filters."
                     : "Get started by creating a new contract."}
                 </p>
-                {!(searchTerm || statusFilter !== "all") && (
+                {!(searchTerm || statusFilter !== "all") && canCreateContract && (
                   <Button asChild className="mt-6">
                     <Link href={`/${locale}/dashboard/generate-contract`}>
                       Create New Contract
@@ -751,10 +773,12 @@ export default function ContractsDashboardPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-12">
-                        <Checkbox
-                          checked={selectedContracts.length === filteredAndSortedContracts.length}
-                          onCheckedChange={handleSelectAll}
-                        />
+                        {canDeleteContract && (
+                          <Checkbox
+                            checked={selectedContracts.length === filteredAndSortedContracts.length}
+                            onCheckedChange={handleSelectAll}
+                          />
+                        )}
                       </TableHead>
                       <TableHead className="cursor-pointer" onClick={() => handleSort("id")}>
                         Contract ID {renderSortIcon("id")}
@@ -793,10 +817,12 @@ export default function ContractsDashboardPage() {
                       return (
                         <TableRow key={contract.id} className="group">
                           <TableCell>
-                            <Checkbox
-                              checked={selectedContracts.includes(contract.id)}
-                              onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
-                            />
+                            {canDeleteContract && (
+                              <Checkbox
+                                checked={selectedContracts.includes(contract.id)}
+                                onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                              />
+                            )}
                           </TableCell>
                           <TableCell className="font-mono text-xs">
                             <TooltipProvider>
@@ -900,22 +926,32 @@ export default function ContractsDashboardPage() {
                                     <Eye className="mr-2 h-4 w-4" /> View Details
                                   </DropdownMenuItem>
                                 </Link>
-                                <DropdownMenuItem>
-                                  <Edit className="mr-2 h-4 w-4" /> Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Copy className="mr-2 h-4 w-4" /> Duplicate
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Archive className="mr-2 h-4 w-4" /> Archive
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteClick(contract)}
-                                  className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
+                                {canEditContract && (
+                                  <DropdownMenuItem>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                  </DropdownMenuItem>
+                                )}
+                                {canCreateContract && (
+                                  <DropdownMenuItem>
+                                    <Copy className="mr-2 h-4 w-4" /> Duplicate
+                                  </DropdownMenuItem>
+                                )}
+                                {canEditContract && (
+                                  <DropdownMenuItem>
+                                    <Archive className="mr-2 h-4 w-4" /> Archive
+                                  </DropdownMenuItem>
+                                )}
+                                {canDeleteContract && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => handleDeleteClick(contract)}
+                                      className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
@@ -942,10 +978,12 @@ export default function ContractsDashboardPage() {
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={selectedContracts.includes(contract.id)}
-                              onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
-                            />
+                            {canDeleteContract && (
+                              <Checkbox
+                                checked={selectedContracts.includes(contract.id)}
+                                onCheckedChange={(checked) => handleSelectContract(contract.id, checked as boolean)}
+                              />
+                            )}
                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                               <FileText className="h-5 w-5 text-white" />
                             </div>
@@ -964,15 +1002,19 @@ export default function ContractsDashboardPage() {
                                   <Eye className="mr-2 h-4 w-4" /> View Details
                                 </DropdownMenuItem>
                               </Link>
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteClick(contract)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
+                              {canEditContract && (
+                                <DropdownMenuItem>
+                                  <Edit className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                              )}
+                              {canDeleteContract && (
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteClick(contract)}
+                                  className="text-red-600"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
