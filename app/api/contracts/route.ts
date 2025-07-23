@@ -5,8 +5,11 @@ import type { User } from '@supabase/supabase-js'
 import { format } from 'date-fns'
 import { canPerformAction } from '@/lib/permissions'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url)
+    const status = searchParams.get('status')
+    
     const headersList = await headers()
     
     // Debug: Check cookies being sent
@@ -68,22 +71,56 @@ export async function GET() {
 
     console.log('🔍 API Debug - User authenticated:', user.email)
 
-    // Fetch contracts from the database
-    const { data: contracts, error } = await supabase
+    // Build query based on status filter
+    let query = supabase
       .from('contracts')
-      .select('*')
+      .select(`
+        *,
+        first_party:parties!contracts_first_party_id_fkey(name_en),
+        second_party:parties!contracts_second_party_id_fkey(name_en),
+        promoter:promoters(name_en)
+      `)
       .order('created_at', { ascending: false })
+
+    // Apply status filter if provided
+    if (status) {
+      console.log('🔍 API Debug - Filtering by status:', status)
+      
+      // Map status values to database values
+      let dbStatus = status
+      if (status === 'active') {
+        dbStatus = 'active'
+      } else if (status === 'pending') {
+        dbStatus = 'draft'
+      } else if (status === 'rejected') {
+        dbStatus = 'rejected'
+      }
+      
+      query = query.eq('status', dbStatus)
+    }
+
+    const { data: contracts, error } = await query
 
     if (error) {
       console.error('🔍 API Debug - Error fetching contracts:', error)
-      return NextResponse.json({ error: 'Failed to fetch contracts' }, { status: 500 })
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to fetch contracts',
+        details: error.message 
+      }, { status: 500 })
     }
 
     console.log(`🔍 API Debug - Fetched ${contracts?.length || 0} contracts`)
-    return NextResponse.json(contracts || [])
+    return NextResponse.json({ 
+      success: true,
+      contracts: contracts || [] 
+    })
   } catch (error) {
     console.error('🔍 API Debug - API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      success: false,
+      error: 'Internal server error' 
+    }, { status: 500 })
   }
 }
 
