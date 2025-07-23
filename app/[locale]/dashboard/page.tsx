@@ -153,7 +153,7 @@ export default function DashboardPage() {
       description: "Advanced contract editing and management tools",
       descriptionAr: "أدوات متقدمة لتحرير وإدارة العقود",
       icon: FileEdit,
-      href: `/${locale}/dashboard/contracts`,
+                      href: `/${locale}/contracts`,
       permission: "contract:update",
       color: "text-purple-600"
     },

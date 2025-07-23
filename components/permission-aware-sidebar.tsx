@@ -167,7 +167,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           permission: "contract:create"
         },
         {
-          href: `/${locale}/dashboard/contracts`,
+          href: `/${locale}/contracts`,
           label: "Contract Management",
           labelAr: "إدارة العقود",
           icon: FileEdit,
