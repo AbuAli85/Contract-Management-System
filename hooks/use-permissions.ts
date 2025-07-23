@@ -12,10 +12,11 @@ import {
   canUpdateResource,
   canDeleteResource,
   hasAnyResourcePermission,
+  type Role,
 } from '@/lib/permissions'
 
 export function usePermissions() {
-  const { userRoles, refreshRoles, isLoading } = useRBAC()
+  const { userRoles, refreshRoles, updateRoleDirectly, isLoading } = useRBAC()
   
   // Get the primary role (first role in the array)
   const primaryRole = userRoles[0] || 'user'
@@ -23,12 +24,40 @@ export function usePermissions() {
   // Force refresh function
   const forceRefresh = async () => {
     console.log('🔄 Force refreshing permissions...')
-    await refreshRoles()
+    console.log('Current role before refresh:', primaryRole)
     
-    // Force a small delay to ensure state updates
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    console.log('✅ Permissions refreshed, current role:', primaryRole)
+    try {
+      // Call the immediate role refresh API directly
+      const response = await fetch('/api/immediate-role-refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      const data = await response.json()
+      console.log('Immediate role refresh API response:', data)
+      
+      if (data.success) {
+        console.log('✅ API returned role:', data.role.value)
+        
+        // Update the role directly in the RBAC provider
+        updateRoleDirectly(data.role.value as Role)
+        
+        // Force a small delay to ensure state updates propagate
+        await new Promise(resolve => setTimeout(resolve, 200))
+        
+        console.log('✅ Role updated directly to:', data.role.value)
+        
+        return data.role.value // Return the role from API response
+      } else {
+        console.error('❌ API refresh failed:', data.error)
+        throw new Error(data.error)
+      }
+    } catch (error) {
+      console.error('❌ Force refresh failed:', error)
+      throw error
+    }
   }
   
   return {

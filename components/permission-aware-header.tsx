@@ -188,14 +188,18 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
   const handleRefreshRole = async () => {
     try {
       console.log('🔄 Refreshing role from header...')
-      await permissions.forceRefresh()
+      console.log('Current role in header:', permissions.role)
       
-      // Force a small delay to ensure state updates
-      setTimeout(() => {
-        console.log('✅ Role refresh completed from header')
-      }, 500)
+      const updatedRole = await permissions.forceRefresh()
+      
+      console.log('✅ Role refresh completed from header, new role:', updatedRole)
+      
+      // Show success message
+      alert(`Role refreshed successfully!\n\nNew role: ${updatedRole}\n\nPlease check if the UI has updated.`)
+      
     } catch (error) {
       console.error('❌ Role refresh failed:', error)
+      alert('Role refresh failed - check console for details')
     }
   }
 

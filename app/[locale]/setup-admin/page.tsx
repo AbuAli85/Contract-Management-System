@@ -604,6 +604,47 @@ export default function SetupAdminPage() {
                   "⚡ IMMEDIATE ROLE REFRESH"
                 )}
               </Button>
+              
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    // Test the header refresh mechanism directly
+                    const response = await fetch('/api/immediate-role-refresh', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    })
+                    
+                    const data = await response.json()
+                    console.log('Test role refresh response:', data)
+                    
+                    if (data.success) {
+                      alert(`Test role refresh completed!\n\nRole: ${data.role.value} (from ${data.role.source})\n\nNow try clicking "Refresh Role" in the header dropdown to see if it updates the UI immediately.`)
+                    } else {
+                      alert(`Test role refresh failed: ${data.error}`)
+                    }
+                  } catch (error) {
+                    console.error('Test role refresh error:', error)
+                    alert('Test role refresh failed - check console')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={loading}
+                className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Testing role refresh...
+                  </>
+                ) : (
+                  "🧪 TEST ROLE REFRESH"
+                )}
+              </Button>
             </div>
 
             <div className="text-center text-xs text-gray-500 dark:text-gray-400">

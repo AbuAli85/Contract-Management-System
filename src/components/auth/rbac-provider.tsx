@@ -18,6 +18,7 @@ interface RBACContextType {
   hasAnyRole: (roles: Role[]) => boolean
   hasAllRoles: (roles: Role[]) => boolean
   refreshRoles: () => Promise<void>
+  updateRoleDirectly: (role: Role) => void
   isLoading: boolean
 }
 
@@ -27,6 +28,7 @@ const RBACContext = createContext<RBACContextType>({
   hasAnyRole: () => false,
   hasAllRoles: () => false,
   refreshRoles: async () => {},
+  updateRoleDirectly: () => {},
   isLoading: false,
 })
 
@@ -118,7 +120,26 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   const refreshRoles = async () => {
     console.log('🔄 Manually refreshing user roles...')
+    console.log('Current roles before refresh:', userRoles)
+    
+    // Force loading state to show refresh is happening
+    setIsLoading(true)
+    
+    // Clear current roles temporarily to force re-render
+    setUserRoles([])
+    
+    // Wait a moment for state to clear
+    await new Promise(resolve => setTimeout(resolve, 100))
+    
+    // Load fresh roles
     await loadUserRoles()
+    
+    console.log('✅ Roles refreshed, new roles:', userRoles)
+  }
+
+  const updateRoleDirectly = (role: Role) => {
+    setUserRoles([role])
+    console.log('Role updated directly to:', role)
   }
 
   const value = {
@@ -127,6 +148,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     hasAnyRole: (roles: Role[]) => roles.some(role => userRoles.includes(role)),
     hasAllRoles: (roles: Role[]) => roles.every(role => userRoles.includes(role)),
     refreshRoles,
+    updateRoleDirectly,
     isLoading,
   }
 
