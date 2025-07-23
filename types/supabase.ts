@@ -3,7 +3,13 @@
 // Or for local dev: npx supabase gen types typescript --local > types/supabase.ts
 
 // Example of what it might contain (will be much more extensive):
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export interface Database {
   public: {
@@ -15,29 +21,35 @@ export interface Database {
           updated_at?: string | null
           contract_number?: string | null
           is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string | null
-          first_party_id: string
-          second_party_id: string
-          promoter_id: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
+          first_party_id?: string | null
+          second_party_id?: string | null
+          promoter_id?: string | null
+          contract_name?: string | null
+          contract_type?: string | null
           job_title?: string | null
           status?: string | null
+          pdf_url?: string | null
+          google_drive_url?: string | null
+          error_message?: string | null
+          generated_at?: string | null
+          created_by?: string | null
           work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
           department?: string | null
           currency?: string | null
-          end_date?: string | null
-          duration?: string | null
+          basic_salary?: number | null
+          allowances?: number | null
+          special_terms?: string | null
+          contract_start_date?: string | null
+          contract_end_date?: string | null
+          email?: string | null
+          // Approval workflow fields
+          approval_status?: string | null
+          current_reviewer_id?: string | null
+          submitted_for_review_at?: string | null
+          approved_at?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          workflow_version?: number | null
         }
         Insert: {
           id?: string
@@ -45,29 +57,35 @@ export interface Database {
           updated_at?: string | null
           contract_number?: string | null
           is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string
-          first_party_id: string
-          second_party_id: string
-          promoter_id: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
+          first_party_id?: string | null
+          second_party_id?: string | null
+          promoter_id?: string | null
+          contract_name?: string | null
+          contract_type?: string | null
           job_title?: string | null
           status?: string | null
+          pdf_url?: string | null
+          google_drive_url?: string | null
+          error_message?: string | null
+          generated_at?: string | null
+          created_by?: string | null
           work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
           department?: string | null
           currency?: string | null
-          end_date?: string | null
-          duration?: string | null
+          basic_salary?: number | null
+          allowances?: number | null
+          special_terms?: string | null
+          contract_start_date?: string | null
+          contract_end_date?: string | null
+          email?: string | null
+          // Approval workflow fields
+          approval_status?: string | null
+          current_reviewer_id?: string | null
+          submitted_for_review_at?: string | null
+          approved_at?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          workflow_version?: number | null
         }
         Update: {
           id?: string
@@ -75,31 +93,43 @@ export interface Database {
           updated_at?: string | null
           contract_number?: string | null
           is_current?: boolean | null
-          pdf_url?: string | null
-          user_id?: string
-          first_party_id?: string
-          second_party_id?: string
-          promoter_id?: string
-          contract_valid_from?: string | null
-          contract_valid_until?: string | null
-          contract_start_date?: string | null
-          contract_end_date?: string | null
-          contract_value?: number | null
+          first_party_id?: string | null
+          second_party_id?: string | null
+          promoter_id?: string | null
+          contract_name?: string | null
+          contract_type?: string | null
           job_title?: string | null
           status?: string | null
+          pdf_url?: string | null
+          google_drive_url?: string | null
+          error_message?: string | null
+          generated_at?: string | null
+          created_by?: string | null
           work_location?: string | null
-          email?: string | null
-          contract_name?: string | null
-          party_a?: string | null
-          party_b?: string | null
-          contract_type?: string | null
-          terms?: string | null
           department?: string | null
           currency?: string | null
-          end_date?: string | null
-          duration?: string | null
+          basic_salary?: number | null
+          allowances?: number | null
+          special_terms?: string | null
+          contract_start_date?: string | null
+          contract_end_date?: string | null
+          email?: string | null
+          // Approval workflow fields
+          approval_status?: string | null
+          current_reviewer_id?: string | null
+          submitted_for_review_at?: string | null
+          approved_at?: string | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
+          workflow_version?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "contracts_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contracts_first_party_id_fkey"
             columns: ["first_party_id"]
@@ -119,397 +149,682 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "contracts_user_id_fkey"
+            foreignKeyName: "contracts_current_reviewer_id_fkey"
+            columns: ["current_reviewer_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      // Approval workflow tables
+      contract_approvals: {
+        Row: {
+          id: string
+          contract_id: string
+          reviewer_id: string
+          review_stage: string
+          action: string
+          comments?: string | null
+          reviewed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          contract_id: string
+          reviewer_id: string
+          review_stage: string
+          action: string
+          comments?: string | null
+          reviewed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          contract_id?: string
+          reviewer_id?: string
+          review_stage?: string
+          action?: string
+          comments?: string | null
+          reviewed_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_approvals_contract_id_fkey"
+            columns: ["contract_id"]
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_approvals_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      reviewer_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role_type: string
+          is_active: boolean
+          assigned_by?: string | null
+          assigned_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role_type: string
+          is_active?: boolean
+          assigned_by?: string | null
+          assigned_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role_type?: string
+          is_active?: boolean
+          assigned_by?: string | null
+          assigned_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviewer_roles_user_id_fkey"
             columns: ["user_id"]
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reviewer_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      workflow_config: {
+        Row: {
+          id: string
+          config_name: string
+          config_type: string
+          config_data: Json
+          is_active: boolean
+          created_by?: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          config_name: string
+          config_type: string
+          config_data: Json
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          config_name?: string
+          config_type?: string
+          config_data?: Json
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_config_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
         ]
       }
       parties: {
         Row: {
           id: string
-          name_en: string
-          name_ar: string
-          crn: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
+          created_at: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          crn?: string | null
+          type?: string | null
           status?: string | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          address?: string | null
+          contact_person?: string | null
           notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
         }
         Insert: {
           id?: string
-          name_en: string
-          name_ar: string
-          crn: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
+          created_at?: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          crn?: string | null
+          type?: string | null
           status?: string | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          address?: string | null
+          contact_person?: string | null
           notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
         }
         Update: {
           id?: string
-          name_en?: string
-          name_ar?: string
-          crn?: string
-          type?: "Employer" | "Client" | "Generic" | null
-          role?: string | null
-          cr_expiry_date?: string | null
-          contact_person?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          address_en?: string | null
-          address_ar?: string | null
-          tax_number?: string | null
-          license_number?: string | null
-          license_expiry_date?: string | null
+          created_at?: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          crn?: string | null
+          type?: string | null
           status?: string | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          address?: string | null
+          contact_person?: string | null
           notes?: string | null
-          created_at?: string | null
-          owner_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "parties_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       promoters: {
         Row: {
           id: string
-          name_en: string
-          name_ar: string
-          id_card_number: string
+          created_at: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          id_card_number?: string | null
           id_card_url?: string | null
           passport_url?: string | null
           status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          nationality?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          address?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
         }
         Insert: {
           id?: string
-          name_en: string
-          name_ar: string
-          id_card_number: string
+          created_at?: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          id_card_number?: string | null
           id_card_url?: string | null
           passport_url?: string | null
           status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          nationality?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          address?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
         }
         Update: {
           id?: string
-          name_en?: string
-          name_ar?: string
-          id_card_number?: string
+          created_at?: string
+          updated_at?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          id_card_number?: string | null
           id_card_url?: string | null
           passport_url?: string | null
           status?: string | null
-          id_card_expiry_date?: string | null
-          passport_expiry_date?: string | null
-          notify_days_before_id_expiry?: number | null
-          notify_days_before_passport_expiry?: number | null
+          created_by?: string | null
+          phone?: string | null
+          email?: string | null
+          nationality?: string | null
+          date_of_birth?: string | null
+          gender?: string | null
+          address?: string | null
+          emergency_contact?: string | null
+          emergency_phone?: string | null
           notes?: string | null
-          created_at?: string | null
-          employer_id?: string | null
-          outsourced_to_id?: string | null
-          job_title?: string | null
-          work_location?: string | null
-          contract_valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoters_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      users: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Relationships: []
       }
       audit_logs: {
         Row: {
           id: string
-          action: string
-          entity_type: string
-          entity_id: string
-          details?: Json | null
-          user_id?: string | null
           created_at: string
+          user_id?: string | null
+          action?: string | null
           table_name?: string | null
           record_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
         }
         Insert: {
           id?: string
-          action: string
-          entity_type: string
-          entity_id: string
-          details?: Json | null
-          user_id?: string | null
           created_at?: string
+          user_id?: string | null
+          action?: string | null
           table_name?: string | null
           record_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
         }
         Update: {
           id?: string
-          action?: string
-          entity_type?: string
-          entity_id?: string
-          details?: Json | null
-          user_id?: string | null
           created_at?: string
+          user_id?: string | null
+          action?: string | null
           table_name?: string | null
           record_id?: string | null
+          old_values?: Json | null
+          new_values?: Json | null
+          ip_address?: string | null
+          user_agent?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       notifications: {
         Row: {
           id: string
-          type: string
-          message: string
           created_at: string
-          is_read: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
           user_id?: string | null
-          read?: boolean | null
+          type?: string | null
+          title?: string | null
+          message?: string | null
+          is_read?: boolean | null
+          data?: Json | null
         }
         Insert: {
           id?: string
-          type: string
-          message: string
           created_at?: string
-          is_read?: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
           user_id?: string | null
-          read?: boolean | null
+          type?: string | null
+          title?: string | null
+          message?: string | null
+          is_read?: boolean | null
+          data?: Json | null
         }
         Update: {
           id?: string
-          type?: string
-          message?: string
           created_at?: string
-          is_read?: boolean
-          user_email?: string | null
-          related_contract_id?: string | null
           user_id?: string | null
-          read?: boolean | null
+          type?: string | null
+          title?: string | null
+          message?: string | null
+          is_read?: boolean | null
+          data?: Json | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       profiles: {
         Row: {
           id: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Insert: {
-          id?: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Update: {
-          id?: string
-          full_name?: string | null
-          role?: string | null
-          created_at?: string | null
-        }
-        Relationships: []
-      }
-      users: {
-        Row: {
-          id: string
-          email: string
-          role: string
           created_at: string
-          profile_data?: Json | null
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Insert: {
           id?: string
-          email: string
-          role: string
           created_at?: string
-          profile_data?: Json | null
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Update: {
           id?: string
-          email?: string
-          role?: string
           created_at?: string
-          profile_data?: Json | null
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Relationships: []
       }
       app_users: {
         Row: {
           id: string
-          email: string
-          role: string
           created_at: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Insert: {
           id?: string
-          email: string
-          role: string
           created_at?: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Update: {
           id?: string
-          email?: string
-          role?: string
           created_at?: string
+          updated_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          role?: string | null
+          status?: string | null
+          department?: string | null
+          position?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          last_login?: string | null
         }
         Relationships: []
       }
       party_files: {
         Row: {
           id: string
-          party_id: string
-          file_name: string
-          file_url: string
-          user_id: string
           created_at: string
+          party_id?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          file_type?: string | null
+          file_size?: number | null
+          uploaded_by?: string | null
         }
         Insert: {
           id?: string
-          party_id: string
-          file_name: string
-          file_url: string
-          user_id: string
           created_at?: string
+          party_id?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          file_type?: string | null
+          file_size?: number | null
+          uploaded_by?: string | null
         }
         Update: {
           id?: string
-          party_id?: string
-          file_name?: string
-          file_url?: string
-          user_id?: string
           created_at?: string
+          party_id?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          file_type?: string | null
+          file_size?: number | null
+          uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "party_files_party_id_fkey"
+            columns: ["party_id"]
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_files_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       party_notes: {
         Row: {
           id: string
-          party_id: string
-          user_id: string
-          note: string
           created_at: string
+          party_id?: string | null
+          note_text?: string | null
+          created_by?: string | null
         }
         Insert: {
           id?: string
-          party_id: string
-          user_id: string
-          note: string
           created_at?: string
+          party_id?: string | null
+          note_text?: string | null
+          created_by?: string | null
         }
         Update: {
           id?: string
-          party_id?: string
-          user_id?: string
-          note?: string
           created_at?: string
+          party_id?: string | null
+          note_text?: string | null
+          created_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "party_notes_party_id_fkey"
+            columns: ["party_id"]
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_notes_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       party_tags: {
         Row: {
           id: string
-          party_id: string
-          tag: string
           created_at: string
+          party_id?: string | null
+          tag_name?: string | null
+          created_by?: string | null
         }
         Insert: {
           id?: string
-          party_id: string
-          tag: string
           created_at?: string
+          party_id?: string | null
+          tag_name?: string | null
+          created_by?: string | null
         }
         Update: {
           id?: string
-          party_id?: string
-          tag?: string
           created_at?: string
+          party_id?: string | null
+          tag_name?: string | null
+          created_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "party_tags_party_id_fkey"
+            columns: ["party_id"]
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_tags_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       party_activities: {
         Row: {
           id: string
-          party_id: string
-          activity_type: string
-          details: string
           created_at: string
-          user_id?: string | null
+          party_id?: string | null
+          activity_type?: string | null
+          activity_data?: Json | null
+          created_by?: string | null
         }
         Insert: {
           id?: string
-          party_id: string
-          activity_type: string
-          details: string
           created_at?: string
-          user_id?: string | null
+          party_id?: string | null
+          activity_type?: string | null
+          activity_data?: Json | null
+          created_by?: string | null
         }
         Update: {
           id?: string
-          party_id?: string
-          activity_type?: string
-          details?: string
           created_at?: string
-          user_id?: string | null
+          party_id?: string | null
+          activity_type?: string | null
+          activity_data?: Json | null
+          created_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "party_activities_party_id_fkey"
+            columns: ["party_id"]
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_activities_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       user_permissions: {
         Row: {
-          id: number
-          user_id: string
-          permission: string
-          granted: boolean
+          id: string
+          created_at: string
+          user_id?: string | null
+          permission_name?: string | null
+          is_granted?: boolean | null
+          granted_by?: string | null
+          granted_at?: string | null
         }
         Insert: {
-          id?: number
-          user_id: string
-          permission: string
-          granted?: boolean
+          id?: string
+          created_at?: string
+          user_id?: string | null
+          permission_name?: string | null
+          is_granted?: boolean | null
+          granted_by?: string | null
+          granted_at?: string | null
         }
         Update: {
-          id?: number
-          user_id?: string
-          permission?: string
-          granted?: boolean
+          id?: string
+          created_at?: string
+          user_id?: string | null
+          permission_name?: string | null
+          is_granted?: boolean | null
+          granted_by?: string | null
+          granted_at?: string | null
         }
         Relationships: [
           {
@@ -517,30 +832,27 @@ export interface Database {
             columns: ["user_id"]
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           }
         ]
       }
-      // ... other tables
     }
     Views: {
-      // ... views
+      [_ in never]: never
     }
     Functions: {
-      get_dashboard_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      files_per_month: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      // ... other functions
+      [_ in never]: never
     }
     Enums: {
-      // ... enums
+      [_ in never]: never
     }
     CompositeTypes: {
-      // ... composite types
+      [_ in never]: never
     }
   }
 }

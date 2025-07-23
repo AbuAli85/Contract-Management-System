@@ -117,6 +117,11 @@ export function MainNav() {
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>{t("managePromoters")}</NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
+          <NavigationMenuItem>
+            <Link href="/dashboard/approvals" legacyBehavior passHref>
+              <NavigationMenuLink className={navigationMenuTriggerStyle()}>Approvals</NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
       <div className="flex flex-1 items-center justify-end space-x-4">

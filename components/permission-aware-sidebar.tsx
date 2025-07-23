@@ -199,6 +199,35 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       ]
     },
     {
+      title: "Approval Workflow",
+      titleAr: "سير عمل الموافقة",
+      items: [
+        {
+          href: `/${locale}/dashboard/approvals`,
+          label: "Approval Dashboard",
+          labelAr: "لوحة الموافقات",
+          icon: FileCheck,
+          permission: "contract:approve",
+          badge: "New",
+          badgeVariant: "default"
+        },
+        {
+          href: `/${locale}/dashboard/approvals/pending`,
+          label: "Pending Reviews",
+          labelAr: "المراجعات المعلقة",
+          icon: Clock,
+          permission: "contract:approve"
+        },
+        {
+          href: `/${locale}/dashboard/approvals/completed`,
+          label: "Completed Reviews",
+          labelAr: "المراجعات المكتملة",
+          icon: CheckCircle,
+          permission: "contract:approve"
+        }
+      ]
+    },
+    {
       title: "Promoter Management",
       titleAr: "إدارة المروجين",
       items: [
