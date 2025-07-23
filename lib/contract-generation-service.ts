@@ -98,7 +98,8 @@ class ContractGenerationService {
    * Create contract in database
    */
   private async createContractInDatabase(data: ContractGenerationRequest, contractNumber: string): Promise<any> {
-    const contractData = {
+    // Build contract data with only the fields that exist in the database
+    const contractData: any = {
       contract_number: contractNumber,
       first_party_id: data.first_party_id,
       second_party_id: data.second_party_id,
@@ -108,17 +109,19 @@ class ContractGenerationService {
       email: data.email,
       job_title: data.job_title,
       work_location: data.work_location,
-      department: data.department,
-      contract_type: data.contract_type,
-      currency: data.currency,
-      basic_salary: data.basic_salary,
-      allowances: data.allowances,
-      special_terms: data.special_terms,
       status: 'draft',
       is_current: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
+
+    // Add optional fields if they exist in the database
+    if (data.department) contractData.department = data.department
+    if (data.contract_type) contractData.contract_type = data.contract_type
+    if (data.currency) contractData.currency = data.currency
+    if (data.basic_salary) contractData.basic_salary = data.basic_salary
+    if (data.allowances) contractData.allowances = data.allowances
+    if (data.special_terms) contractData.special_terms = data.special_terms
 
     const { data: contract, error } = await this.supabase
       .from('contracts')
