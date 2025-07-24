@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = await createClient();
-  const { id } = params;
+  const { id    } = await params;
   const { data, error } = await supabase
     .from('user_permissions')
     .select('permission, granted')
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = await createClient();
-  const { id } = params;
+  const { id    } = await params;
   const { permissions } = await request.json(); // [{ permission, granted }]
 
   // Check if current user is admin

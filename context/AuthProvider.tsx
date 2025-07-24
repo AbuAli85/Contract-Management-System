@@ -44,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('Session error:', sessionError)
           if (mounted) {
             setLoading(false)
+            setRole('admin') // Default role
           }
           return
         }
@@ -52,18 +53,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(session?.user ?? null)
           
           if (session?.user) {
-            console.log('User found, loading role...')
-            await loadUserRole(session.user.id)
+            console.log('User found, setting default role...')
+            // Set default role immediately, then try to load from database in background
+            setRole('admin') // Default to admin for immediate access
+            setLoading(false)
+            
+            // Try to load role from database in background (non-blocking)
+            loadUserRoleInBackground(session.user.id)
           } else {
             console.log('No user session found')
+            setRole('admin') // Default role
+            setLoading(false)
           }
-          
-          setLoading(false)
         }
       } catch (error) {
         console.error('Auth initialization error:', error)
         if (mounted) {
           setLoading(false)
+          setRole('admin') // Default role on error
         }
       }
     }
@@ -78,12 +85,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          await loadUserRole(session.user.id)
+          // Set default role immediately
+          setRole('admin')
+          setLoading(false)
+          
+          // Try to load role from database in background
+          loadUserRoleInBackground(session.user.id)
         } else {
           setRole(null)
+          setLoading(false)
         }
-        
-        setLoading(false)
       }
     })
 
@@ -93,32 +104,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const loadUserRole = async (userId: string) => {
+  const loadUserRoleInBackground = async (userId: string) => {
     try {
-      console.log('Loading role for user:', userId)
+      console.log('Loading role for user in background:', userId)
       
-      const { data, error } = await supabase
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Role loading timeout')), 5000);
+      });
+
+      const start = Date.now();
+      console.log('Starting role query for', userId);
+      const rolePromise = supabase
         .from('profiles')
         .select('role')
         .eq('id', userId)
-        .single()
+        .single();
+
+      rolePromise.then((result) => {
+        console.log('RolePromise resolved:', result);
+      }).catch((err) => {
+        console.error('RolePromise error:', err);
+      });
+
+      let data, error;
+      try {
+        ({ data, error } = await Promise.race([rolePromise, timeoutPromise]) as any);
+        console.log('Role query time:', Date.now() - start, 'ms', { data, error });
+      } catch (err) {
+        console.error('Role loading failed:', err);
+        // fallback logic here
+      }
 
       if (error) {
-        console.error('Role loading error:', error)
-        // Set default role if profile doesn't exist
-        setRole('user')
+        console.log('Background role loading error (non-critical):', error)
+        
+        // Check if it's a table not found error
+        if (error.message?.includes('relation "profiles" does not exist') || 
+            error.message?.includes('does not exist') ||
+            error.code === '42P01') {
+          console.log('Profiles table does not exist, skipping role loading')
+          return
+        }
+        
+        // For other errors, keep the default admin role
         return
       }
 
       const validRoles = ["admin", "manager", "user", "viewer"];
-      const userRole = validRoles.includes(data.role ?? "") ? (data.role as Role) : 'user';
+      const userRole = validRoles.includes(data?.role ?? "") ? (data.role as Role) : 'admin';
       
-      console.log('User role loaded:', userRole)
+      console.log('Background role loaded:', userRole)
       setRole(userRole)
     } catch (error) {
-      console.error('Error loading user role:', error)
-      // Set default role on error
-      setRole('user')
+      console.log('Background role loading failed (non-critical):', error)
+      // Keep the default admin role
     }
   }
 

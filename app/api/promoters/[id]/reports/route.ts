@@ -9,8 +9,8 @@ const reportGenerationSchema = z.object({
   parameters: z.record(z.any()).optional(),
 })
 
-export async function GET(req, { params }) {
-  const { id: promoter_id } = params
+export async function GET(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id    } = await params;
   const { searchParams } = new URL(req.url)
   const template_id = searchParams.get('template_id')
   
@@ -31,9 +31,8 @@ export async function GET(req, { params }) {
   return NextResponse.json(data)
 }
 
-export async function POST(req, { params }) {
-  const { id: promoter_id } = params
-  const body = await req.json()
+export async function POST(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id  } = await params;const body = await req.json()
   const parsed = reportGenerationSchema.safeParse(body)
   
   if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
@@ -78,8 +77,8 @@ export async function POST(req, { params }) {
   return NextResponse.json(data)
 }
 
-export async function DELETE(req, { params }) {
-  const { id: promoter_id } = params
+export async function DELETE(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id    } = await params;
   const { id } = await req.json()
   
   if (!id) return NextResponse.json({ error: 'Report ID required' }, { status: 400 })
@@ -222,4 +221,4 @@ async function generateContractReport(promoter_id: string, parameters: any) {
       completed_contracts: contracts?.filter(c => c.status === 'completed').length || 0
     }
   }
-} 
+}

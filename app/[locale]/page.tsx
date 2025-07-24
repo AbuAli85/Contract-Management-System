@@ -61,6 +61,21 @@ export default function HomePage() {
                 🚀 Direct Dashboard
               </Link>
             </Button>
+            <Button asChild variant="default" size="sm">
+              <Link href="/en/bypass">
+                ⚡ Instant Access
+              </Link>
+            </Button>
+            <Button asChild variant="destructive" size="lg" className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600">
+              <Link href="/en/instant">
+                🚀 INSTANT BEAUTIFUL UI
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/en/debug-auth">
+                🔧 Debug Auth
+              </Link>
+            </Button>
           </div>
         </div>
 

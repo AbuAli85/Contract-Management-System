@@ -11,8 +11,8 @@ const scoreSchema = z.object({
   period_end: z.string(),
 })
 
-export async function GET(req, { params }) {
-  const { id: promoter_id } = params
+export async function GET(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id    } = await params;
   const { searchParams } = new URL(req.url)
   const score_type = searchParams.get('score_type')
   const period_start = searchParams.get('period_start')
@@ -41,9 +41,8 @@ export async function GET(req, { params }) {
   return NextResponse.json(data)
 }
 
-export async function POST(req, { params }) {
-  const { id: promoter_id } = params
-  const body = await req.json()
+export async function POST(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id  } = await params;const body = await req.json()
   const parsed = scoreSchema.safeParse(body)
   
   if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status: 400 })
@@ -68,8 +67,8 @@ export async function POST(req, { params }) {
   return NextResponse.json(data)
 }
 
-export async function PUT(req, { params }) {
-  const { id: promoter_id } = params
+export async function PUT(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id    } = await params;
   const body = await req.json()
   const { id, ...updateData } = body
   
@@ -88,9 +87,8 @@ export async function PUT(req, { params }) {
   return NextResponse.json(data)
 }
 
-export async function DELETE(req, { params }) {
-  const { id: promoter_id } = params
-  const { id } = await req.json()
+export async function DELETE(req, { params }: { params: Promise<{ id: string }> }) {
+  const { id: promoter_id  } = await params;const { id } = await req.json()
   
   if (!id) return NextResponse.json({ error: 'Score ID required' }, { status: 400 })
   
