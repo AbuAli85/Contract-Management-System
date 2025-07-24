@@ -13,7 +13,7 @@ const promoterUpdateSchema = z.object({
   passport_number: z.string().optional(),
   mobile_number: z.string().optional(),
   profile_picture_url: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'suspended']).optional(),
+  status: z.enum(['active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated', 'pending_approval', 'retired', 'probation', 'resigned', 'contractor', 'temporary', 'training', 'other']).optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   nationality: z.string().optional(),

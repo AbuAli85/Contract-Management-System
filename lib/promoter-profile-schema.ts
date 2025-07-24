@@ -15,7 +15,22 @@ const fileSchema = createOptionalFileSchema(
 // Simple date schema that accepts Date objects, strings, null, or undefined
 const dateOptionalNullableSchema = z.any().optional().nullable()
 
-export const promoterStatuses = z.enum(["active", "inactive", "suspended"])
+export const promoterStatuses = z.enum([
+  "active",
+  "inactive",
+  "suspended",
+  "holiday",
+  "on_leave",
+  "terminated",
+  "pending_approval",
+  "retired",
+  "probation",
+  "resigned",
+  "contractor",
+  "temporary",
+  "training",
+  "other"
+])
 export type PromoterStatus = z.infer<typeof promoterStatuses>
 
 export const promoterProfileSchema = z.object({
