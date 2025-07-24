@@ -10,15 +10,45 @@ import type React from "react"
 export default function AdminTools() {
   const { toast } = useToast()
 
-  const handleBulkImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBulkImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
+    if (!file) return
+
+    if (!file.name.endsWith('.csv')) {
       toast({
-        title: "File Selected",
-        description: `Selected file: ${file.name}. Upload logic not implemented.`,
+        title: "Invalid File",
+        description: "Please select a CSV file",
+        variant: "destructive"
       })
-      // Placeholder for actual CSV upload and processing logic
-      // e.g., using Supabase Edge Functions or a server-side API route
+      return
+    }
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/admin/bulk-import', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload file')
+      }
+
+      const data = await response.json()
+      
+      toast({
+        title: "Upload Successful",
+        description: `Processed ${data.processed} records from ${file.name}`,
+      })
+    } catch (error) {
+      console.error("Bulk import error:", error)
+      toast({
+        title: "Upload Failed",
+        description: "Failed to process the CSV file",
+        variant: "destructive"
+      })
     }
   }
 
@@ -27,41 +57,58 @@ export default function AdminTools() {
       label: "Manage Users",
       labelAr: "إدارة المستخدمين",
       icon: Users,
-      action: () =>
-        toast({
-          title: "Manage Users",
-          description: "Navigate to user management page (not implemented).",
-        }),
+      action: () => {
+        // Navigate to user management page
+        window.location.href = '/dashboard/users'
+      },
     },
     {
       label: "System Settings",
       labelAr: "إعدادات النظام",
       icon: Settings,
-      action: () =>
-        toast({
-          title: "System Settings",
-          description: "Navigate to settings page (not implemented).",
-        }),
+      action: () => {
+        // Navigate to settings page
+        window.location.href = '/dashboard/settings'
+      },
     },
     {
       label: "Database Backup",
       labelAr: "نسخ احتياطي لقاعدة البيانات",
       icon: Database,
-      action: () =>
-        toast({
-          title: "Database Backup",
-          description: "Trigger database backup (not implemented).",
-        }),
+      action: async () => {
+        try {
+          const response = await fetch('/api/admin/backup', {
+            method: 'POST'
+          })
+
+          if (!response.ok) {
+            throw new Error('Backup failed')
+          }
+
+          const data = await response.json()
+          
+          toast({
+            title: "Backup Started",
+            description: "Database backup has been initiated",
+          })
+        } catch (error) {
+          console.error("Backup error:", error)
+          toast({
+            title: "Backup Failed",
+            description: "Failed to initiate database backup",
+            variant: "destructive"
+          })
+        }
+      },
     },
     {
       label: "Email Templates",
       labelAr: "قوالب البريد الإلكتروني",
       icon: Mail,
-      action: () =>
-        toast({
-          title: "Email Templates",
-          description: "Navigate to email template editor (not implemented).",
-        }),
+      action: () => {
+        // Navigate to email templates page
+        window.location.href = '/dashboard/email-templates'
+      },
     },
   ]
 

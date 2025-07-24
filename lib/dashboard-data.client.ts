@@ -84,9 +84,19 @@ export async function getPendingReviews(): Promise<any[]> {
 
 export async function getAdminActions(): Promise<any[]> {
   try {
-    // For now, return empty array since admin actions table needs to be properly set up
-    // TODO: Implement proper admin actions when user_activity_log table is available
-    return []
+    const response = await fetch('/api/admin/actions')
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch admin actions')
+    }
+    
+    const data = await response.json()
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch admin actions')
+    }
+
+    return data.data || []
   } catch (error) {
     console.error("Error fetching admin actions:", error)
     return []
@@ -95,9 +105,19 @@ export async function getAdminActions(): Promise<any[]> {
 
 export async function getAuditLogs(): Promise<any[]> {
   try {
-    // For now, return empty array since audit logs table needs to be properly set up
-    // TODO: Implement proper audit logging when user_activity_log table is available
-    return []
+    const response = await fetch('/api/audit-logs')
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch audit logs')
+    }
+    
+    const data = await response.json()
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to fetch audit logs')
+    }
+
+    return data.data || []
   } catch (error) {
     console.error("Error fetching audit logs:", error)
     return []

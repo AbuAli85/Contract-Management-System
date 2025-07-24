@@ -22,9 +22,26 @@ export function ContractsList() {
 
   const handleDownload = async (contractId: string, contractName: string) => {
     try {
-      // In a real app, this would download the actual PDF
-      toast.success(`Downloading ${contractName}`)
+      const response = await fetch(`/api/contracts/${contractId}/download`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to download contract')
+      }
+      
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${contractName || 'contract'}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      
+      toast.success(`Downloaded ${contractName}`)
     } catch (error) {
+      console.error("Download error:", error)
       toast.error("Failed to download contract")
     }
   }

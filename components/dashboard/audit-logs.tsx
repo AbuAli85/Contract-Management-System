@@ -38,36 +38,31 @@ export default function AuditLogs() {
   const fetchAuditLogs = async () => {
     setLoading(true)
     try {
-      // Mock data for demonstration - replace with actual API call when audit_logs table exists
-      const mockData = [
-        {
-          id: "1",
-          user: "admin@example.com",
-          action: "contract_created",
-          ipAddress: "192.168.1.100",
-          timestamp: new Date().toISOString(),
-          details: { contract_id: "CT-2024-001", contract_number: "2024-001" }
-        },
-        {
-          id: "2",
-          user: "user@example.com",
-          action: "contract_updated",
-          ipAddress: "192.168.1.101",
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          details: { contract_id: "CT-2024-002", field: "status", old_value: "draft", new_value: "active" }
-        },
-        {
-          id: "3",
-          user: "System",
-          action: "contract_expired",
-          ipAddress: "127.0.0.1",
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          details: { contract_id: "CT-2024-003", expiry_date: "2024-01-01" }
-        }
-      ]
+      const response = await fetch('/api/audit-logs')
       
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
-      setLogs(mockData)
+      if (!response.ok) {
+        throw new Error('Failed to fetch audit logs')
+      }
+      
+      const data = await response.json()
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch audit logs')
+      }
+
+      // Transform API data to component format
+      const transformedLogs: AuditLogItem[] = (data.data || []).map((log: any) => ({
+        id: log.id.toString(),
+        user: log.user?.full_name || log.user_id || 'Unknown User',
+        action: log.action,
+        ipAddress: log.ip_address || 'Unknown',
+        timestamp: log.created_at,
+        details: log.details ? JSON.parse(log.details) : {}
+      }))
+      
+      setLogs(transformedLogs)
+      devLog("Audit logs loaded successfully:", transformedLogs.length)
+      
     } catch (error: any) {
       console.error("Error fetching audit logs:", error)
       toast({
