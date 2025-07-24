@@ -100,6 +100,7 @@ import {
 } from "lucide-react"
 import { PermissionGuard } from "@/hooks/use-permissions"
 import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
+import type { DashboardAnalytics } from "@/lib/dashboard-types"
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = 'force-dynamic'
@@ -295,7 +296,7 @@ export default function DashboardOverviewPage() {
 
   const roleDisplay = getRoleDisplayName(permissions.role)
 
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   useEffect(() => {
     getDashboardAnalytics().then(setAnalytics)
   }, [])
@@ -354,7 +355,7 @@ export default function DashboardOverviewPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.promoters}</div>
+            <div className="text-2xl font-bold">{analytics.total_promoters}</div>
             <p className="text-xs text-muted-foreground">
               {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
             </p>
@@ -368,7 +369,7 @@ export default function DashboardOverviewPage() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.parties}</div>
+            <div className="text-2xl font-bold">{analytics.total_parties}</div>
             <p className="text-xs text-muted-foreground">
               {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
             </p>
@@ -436,7 +437,7 @@ export default function DashboardOverviewPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {analytics.recent_activity.map((activity, index) => (
+                {analytics.recent_activity.map((activity: any, index: number) => (
                   <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
                     <div className={cn("p-2 rounded-full bg-muted", activity.color)}>
                       <activity.icon className="h-4 w-4" />

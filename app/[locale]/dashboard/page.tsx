@@ -100,6 +100,7 @@ import {
 } from "lucide-react"
 import { PermissionGuard } from "@/hooks/use-permissions"
 import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
+import type { DashboardAnalytics } from "@/lib/dashboard-types"
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = 'force-dynamic'
@@ -295,7 +296,7 @@ export default function DashboardPage() {
 
   const roleDisplay = getRoleDisplayName(permissions.role)
 
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   useEffect(() => {
     getDashboardAnalytics().then(setAnalytics)
   }, [])
@@ -351,7 +352,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.promoters || 0}</div>
+              <div className="text-2xl font-bold">{analytics.total_promoters || 0}</div>
               <p className="text-xs text-muted-foreground">
                 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
@@ -366,7 +367,7 @@ export default function DashboardPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.parties || 0}</div>
+              <div className="text-2xl font-bold">{analytics.total_parties || 0}</div>
               <p className="text-xs text-muted-foreground">
                 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
@@ -381,7 +382,7 @@ export default function DashboardPage() {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analytics.users || 0}</div>
+              <div className="text-2xl font-bold">{analytics.total_users || 0}</div>
               <p className="text-xs text-muted-foreground">
                 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
@@ -449,7 +450,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {analytics.recent_activity?.map((activity, index) => (
+                  {analytics.recent_activity?.map((activity: any, index: number) => (
                     <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
                       <div className={cn("p-2 rounded-full bg-muted", activity.color)}>
                         <activity.icon className="h-4 w-4" />

@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react"
 import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
+import type { DashboardAnalytics } from "@/lib/dashboard-types"
 
 interface DashboardStats {
   totalContracts: number
@@ -49,7 +50,7 @@ interface Promoter {
 export default function DashboardContent({ locale }: { locale: string }) {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
 
   // Fetch dashboard data
   useEffect(() => {
@@ -109,9 +110,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalContracts}</div>
+            <div className="text-2xl font-bold">{analytics.total_contracts}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(analytics.totalContracts * 0.1)} from last month
+              +{Math.floor(analytics.total_contracts * 0.1)} from last month
             </p>
           </CardContent>
         </Card>
@@ -121,9 +122,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.activePromoters}</div>
+            <div className="text-2xl font-bold">{analytics.active_contracts}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(analytics.activePromoters * 0.05)} from last month
+              +{Math.floor(analytics.active_contracts * 0.05)} from last month
             </p>
           </CardContent>
         </Card>
@@ -133,9 +134,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${analytics.revenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${analytics.revenue_this_month.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(analytics.revenue * 0.08)} from last month
+              +{Math.floor(analytics.revenue_this_month * 0.08)} from last month
             </p>
           </CardContent>
         </Card>
@@ -145,9 +146,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.pendingReviews}</div>
+            <div className="text-2xl font-bold">{analytics.pending_contracts}</div>
             <p className="text-xs text-muted-foreground">
-              {analytics.pendingReviews > 0 ? 'Requires attention' : 'All caught up'}
+              {analytics.pending_contracts > 0 ? 'Requires attention' : 'All caught up'}
             </p>
           </CardContent>
         </Card>
@@ -203,8 +204,8 @@ export default function DashboardContent({ locale }: { locale: string }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {analytics.recentActivity.length > 0 ? (
-              analytics.recentActivity.map((activity) => (
+            {analytics.recent_activity.length > 0 ? (
+              analytics.recent_activity.map((activity: any, index: number) => (
                 <div key={activity.id} className="flex items-center gap-3">
                   {getActivityIcon(activity.type)}
                   <div className="flex-1">
@@ -216,29 +217,6 @@ export default function DashboardContent({ locale }: { locale: string }) {
             ) : (
               <p className="text-sm text-muted-foreground">No recent activity</p>
             )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* System Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Status</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.database === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">Database: {analytics.systemStatus.database}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.apiServices === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">API Services: {analytics.systemStatus.apiServices}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.fileStorage === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">File Storage: {analytics.systemStatus.fileStorage}</span>
-            </div>
           </div>
         </CardContent>
       </Card>
