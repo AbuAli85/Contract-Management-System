@@ -238,6 +238,23 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
   const sectionClasses = "space-y-6 p-5 border rounded-lg shadow-sm bg-card-foreground/5 dark:bg-card-foreground/5"
   const sectionHeaderClasses = "text-xl font-semibold text-foreground border-b border-border pb-3 mb-6"
 
+  const PROMOTER_STATUS_OPTIONS = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'suspended', label: 'Suspended' },
+    { value: 'holiday', label: 'Holiday' },
+    { value: 'on_leave', label: 'On Leave' },
+    { value: 'terminated', label: 'Terminated' },
+    { value: 'pending_approval', label: 'Pending Approval' },
+    { value: 'retired', label: 'Retired' },
+    { value: 'probation', label: 'Probation' },
+    { value: 'resigned', label: 'Resigned' },
+    { value: 'contractor', label: 'Contractor' },
+    { value: 'temporary', label: 'Temporary' },
+    { value: 'training', label: 'Training' },
+    { value: 'other', label: 'Other' },
+  ]
+
   return (
     <div className="mx-auto max-w-3xl rounded-lg bg-card p-4 text-card-foreground shadow-xl sm:p-6 lg:p-8">
       <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
@@ -384,7 +401,7 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {promoterStatusesList.map((status) => (
+                        {PROMOTER_STATUS_OPTIONS.map((status) => (
                           <SelectItem key={status.value} value={status.value}>
                             {status.label}
                           </SelectItem>
