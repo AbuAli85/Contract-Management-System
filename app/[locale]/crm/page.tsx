@@ -11,9 +11,11 @@ const promoters = [
 ];
 
 export default function CRMPage() {
-  const { role } = useAuth();
+  const { role, loading } = useAuth();
   const isAdmin = role === "admin";
   const [selectedPromoter, setSelectedPromoter] = useState(promoters[0].id);
+
+  if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
     <div className="container mx-auto py-8">
