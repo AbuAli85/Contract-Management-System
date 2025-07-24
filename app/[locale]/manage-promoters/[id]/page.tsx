@@ -39,6 +39,7 @@ import { Badge } from '@/components/ui/badge'
 import { PromoterCVResume } from '@/components/promoter-cv-resume'
 import { PromoterAttendance } from '@/components/promoter-attendance'
 import { PromoterReports } from '@/components/promoter-reports'
+import { PromoterRanking } from '@/components/promoter-ranking'
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -232,11 +233,12 @@ export default function PromoterDetailPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="cv-resume">CV/Resume</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="ranking">Ranking</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
@@ -315,6 +317,13 @@ export default function PromoterDetailPage() {
 
         <TabsContent value="reports" className="space-y-6">
           <PromoterReports 
+            promoterId={promoterId}
+            isAdmin={role === 'admin'}
+          />
+        </TabsContent>
+
+        <TabsContent value="ranking" className="space-y-6">
+          <PromoterRanking 
             promoterId={promoterId}
             isAdmin={role === 'admin'}
           />

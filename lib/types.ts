@@ -331,3 +331,75 @@ export interface ReportSchedule {
   created_at?: string
   updated_at?: string
 }
+
+export interface PromoterScore {
+  id: string
+  promoter_id: string
+  score_type: string
+  score_value: number
+  max_score?: number
+  period_start: string
+  period_end: string
+  calculated_at?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterBadge {
+  id: string
+  promoter_id: string
+  badge_type: string
+  badge_name: string
+  badge_description?: string | null
+  badge_icon?: string | null
+  earned_at?: string
+  is_active?: boolean
+  created_at?: string
+}
+
+export interface PromoterFeedback {
+  id: string
+  promoter_id: string
+  reviewer_id?: string | null
+  feedback_type: string
+  rating?: number | null
+  feedback_text?: string | null
+  strengths?: string[] | null
+  areas_for_improvement?: string[] | null
+  is_anonymous?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterLeaderboard {
+  id: string
+  leaderboard_type: string
+  period_start: string
+  period_end: string
+  leaderboard_data?: any
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface AchievementRule {
+  id: string
+  rule_name: string
+  rule_description?: string | null
+  badge_type: string
+  criteria?: any
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterScoreHistory {
+  id: string
+  promoter_id: string
+  score_type: string
+  old_score?: number | null
+  new_score?: number | null
+  change_reason?: string | null
+  changed_at?: string
+  created_at?: string
+}
