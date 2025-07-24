@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { CheckCircle, XCircle, MessageCircle, Clock, User } from "lucide-react"
-import { devLog } from "@/lib/dev-log"
 
 interface ReviewItem {
   id: string
@@ -62,7 +61,6 @@ export default function ReviewPanel() {
       }))
       
       setReviewItems(items)
-      devLog("Review items loaded successfully:", items.length)
       
     } catch (error: any) {
       console.error("Error in review panel:", error)

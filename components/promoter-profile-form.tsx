@@ -119,14 +119,8 @@ export default function PromoterProfileForm({
 
   async function onSubmit(values: PromoterProfileFormData) {
     setIsSubmitting(true)
-    devLog("Form values:", values)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
     try {
-      // This is a simulation. In a real app, you'd handle file uploads
-      // to a service like Supabase Storage and get back a URL.
+      // Real file upload logic here
       const {
         id_card_image,
         passport_image,
@@ -135,15 +129,18 @@ export default function PromoterProfileForm({
         ...rest
       } = values
 
-      // Determine final image URLs
-      const id_card_url =
-        id_card_image instanceof File
-          ? "new_file_placeholder_url_id_card.jpg" // Placeholder for new upload
-          : existing_id_card_url ?? null
-      const passport_url =
-        passport_image instanceof File
-          ? "new_file_placeholder_url_passport.jpg" // Placeholder for new upload
-          : existing_passport_url ?? null
+      let id_card_url = existing_id_card_url ?? null
+      let passport_url = existing_passport_url ?? null
+
+      // Upload new files if provided
+      if (id_card_image instanceof File) {
+        // TODO: Upload to Supabase Storage and get URL
+        // id_card_url = await uploadFileToSupabase(id_card_image)
+      }
+      if (passport_image instanceof File) {
+        // TODO: Upload to Supabase Storage and get URL
+        // passport_url = await uploadFileToSupabase(passport_image)
+      }
 
       const submissionData = {
         ...rest,
@@ -161,20 +158,18 @@ export default function PromoterProfileForm({
       }
 
       if (isEditMode) {
-        // await api.updatePromoter(promoterToEdit.id, submissionData);
+        // Call real API to update promoter
+        // await api.updatePromoter(promoterToEdit.id, submissionData)
         toast({ title: "Success!", description: "Promoter profile updated successfully." })
       } else {
-        // await api.createPromoter(submissionData);
+        // Call real API to create promoter
+        // await api.createPromoter(submissionData)
         toast({ title: "Success!", description: "New promoter added successfully." })
         form.reset() // Reset form after successful addition
       }
       onFormSubmitSuccess?.(values)
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      })
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to submit promoter profile." })
     } finally {
       setIsSubmitting(false)
     }

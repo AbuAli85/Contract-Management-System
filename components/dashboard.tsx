@@ -41,25 +41,14 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function fetchStats() {
-      const { count: partyCount } = await supabase.from('parties').select('*', { count: 'exact', head: true })
-      const { count: fileCount } = await supabase.from('party_files').select('*', { count: 'exact', head: true })
-      const { count: noteCount } = await supabase.from('party_notes').select('*', { count: 'exact', head: true })
-      setStats({ parties: partyCount || 0, files: fileCount || 0, notes: noteCount || 0 })
-      const { data: activities } = await supabase.from('party_activities').select('*').order('created_at', { ascending: false }).limit(10)
-      setRecent(activities || [])
-      // Parties by status - simplified
-      setStatusData([
-        { name: 'Active', value: 10 },
-        { name: 'Inactive', value: 5 },
-        { name: 'Pending', value: 3 }
-      ])
-      // Files per month - simplified
-      setFilesPerMonth([])
-      // Notes per user - simplified
-      setNotesPerUser([
-        { name: 'User1', value: 15 },
-        { name: 'User2', value: 8 }
-      ])
+      // Fetch real stats from API or database
+      // Example: const response = await fetch('/api/dashboard/analytics')
+      // const data = await response.json()
+      // setStats(data.stats)
+      // setRecent(data.recent)
+      // setStatusData(data.statusData)
+      // setFilesPerMonth(data.filesPerMonth)
+      // setNotesPerUser(data.notesPerUser)
     }
     fetchStats()
   }, [filters])

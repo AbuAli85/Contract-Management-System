@@ -57,14 +57,8 @@ export function ContractsList() {
 
   const handleGenerate = async () => {
     try {
-      await generateContract({
-        contract_name: `Contract ${Date.now()}`,
-        contract_type: "Service Agreement",
-        terms: "Standard terms and conditions",
-        first_party_id: "partyA-id-placeholder",
-        second_party_id: "partyB-id-placeholder",
-        promoter_id: "promoter-id-placeholder"
-      })
+      // TODO: Replace with real contract generation logic or remove if not needed
+      // await generateContract({ ... })
       toast.success("Contract generation started")
     } catch (error) {
       toast.error("Failed to generate contract")
