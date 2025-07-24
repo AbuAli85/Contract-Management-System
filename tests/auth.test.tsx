@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { useAuth } from '@/context/AuthProvider'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
 // Mock the Supabase client
@@ -8,7 +8,7 @@ jest.mock('@supabase/supabase-js', () => ({
 }))
 
 // Mock the useAuth hook
-jest.mock('@/context/AuthProvider', () => ({
+jest.mock('@/src/components/auth/auth-provider', () => ({
   useAuth: jest.fn()
 }))
 

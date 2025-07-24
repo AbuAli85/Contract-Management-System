@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthProvider";
+import { useAuth } from "@/src/components/auth/auth-provider";
 import { createClient } from "@/lib/supabase/client";
 import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import PromoterDashboard from "@/components/dashboard/PromoterDashboard";

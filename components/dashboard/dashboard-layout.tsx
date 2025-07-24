@@ -7,7 +7,6 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { PermissionAwareSidebar } from "@/components/permission-aware-sidebar"
 import { PermissionAwareHeader } from "@/components/permission-aware-header"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
-import { RoleLoader } from "@/components/role-loader"
 import { useAuth } from "@/src/components/auth/auth-provider"
 
 interface DashboardLayoutProps {
@@ -34,7 +33,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <RBACProvider user={user}>
-        <RoleLoader />
         <div className="flex h-screen bg-background">
           {/* Sidebar */}
           <PermissionAwareSidebar 

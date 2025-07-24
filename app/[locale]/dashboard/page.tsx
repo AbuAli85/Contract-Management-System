@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/context/AuthProvider'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import SimpleAdminDashboard from '@/components/dashboard/SimpleAdminDashboard'
 import SimplePromoterDashboard from '@/components/dashboard/SimplePromoterDashboard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
