@@ -127,9 +127,9 @@ export default function UnifiedContractGeneratorForm({
     resolver: zodResolver(contractGeneratorSchema),
     mode: "onTouched",
     defaultValues: {
-      first_party_id: contract?.first_party_id || undefined,
-      second_party_id: contract?.second_party_id || undefined,
-      promoter_id: contract?.promoter_id || undefined,
+      first_party_id: contract?.first_party_id || "",
+      second_party_id: contract?.second_party_id || "",
+      promoter_id: contract?.promoter_id || "",
       contract_start_date: contract?.contract_start_date ? new Date(contract.contract_start_date) : undefined,
       contract_end_date: contract?.contract_end_date ? new Date(contract.contract_end_date) : undefined,
       email: contract?.email || "",
@@ -138,8 +138,8 @@ export default function UnifiedContractGeneratorForm({
       department: "",
       contract_type: "",
       currency: "OMR", // Default to OMR for Oman market
-      basic_salary: contract?.contract_value || undefined,
-      allowances: undefined,
+      basic_salary: contract?.contract_value || 0,
+      allowances: 0,
       probation_period_months: 3, // Default 3 months probation
       notice_period_days: 30, // Default 30 days notice
       working_hours_per_week: 40, // Standard 40 hours
@@ -636,7 +636,7 @@ export default function UnifiedContractGeneratorForm({
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select job title" />
                             </SelectTrigger>
@@ -661,7 +661,7 @@ export default function UnifiedContractGeneratorForm({
                       <FormItem>
                         <FormLabel>Work Location</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select work location" />
                             </SelectTrigger>
@@ -726,7 +726,7 @@ export default function UnifiedContractGeneratorForm({
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>

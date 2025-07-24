@@ -98,7 +98,7 @@ export default function ContractGeneratorForm({
       work_location: "",
       department: "",
       contract_type: "",
-      currency: "",
+      currency: "OMR",
     },
   })
 

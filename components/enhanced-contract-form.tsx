@@ -82,8 +82,8 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
       department: "",
       contract_type: "",
       currency: "OMR",
-      basic_salary: undefined,
-      allowances: undefined,
+      basic_salary: 0,
+      allowances: 0,
       special_terms: ""
     }
   })
@@ -285,7 +285,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span className="text-sm">Generating PDF...</span>
                 </div>
-                <Progress value={undefined} className="w-full" />
+                <Progress value={0} className="w-full" />
               </div>
             )}
 
@@ -344,7 +344,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Client (Party A)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger disabled={isLoading}>
                             <SelectValue placeholder={isLoading ? "Loading..." : "Select Client"} />
@@ -369,7 +369,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Employer (Party B)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger disabled={isLoading}>
                             <SelectValue placeholder={isLoading ? "Loading..." : "Select Employer"} />
@@ -396,7 +396,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Promoter</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <FormControl>
                         <SelectTrigger disabled={isLoading}>
                           <SelectValue placeholder={isLoading ? "Loading..." : "Select Promoter"} />
@@ -521,7 +521,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contract Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger disabled={isLoading}>
                             <SelectValue placeholder="Select Type" />
@@ -545,7 +545,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger disabled={isLoading}>
                             <SelectValue placeholder="Select Currency" />
