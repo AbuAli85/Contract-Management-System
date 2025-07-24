@@ -1,21 +1,28 @@
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PromoterCRM } from "@/components/promoter-crm";
 import { useAuth } from "@/context/AuthProvider";
-
-// Dummy promoter list for demonstration; replace with real data fetching
-const promoters = [
-  { id: "promoter-uuid-1", name: "John Doe" },
-  { id: "promoter-uuid-2", name: "Jane Smith" },
-];
 
 export default function CRMPage() {
   const { role, loading } = useAuth();
   const isAdmin = role === "admin";
-  const [selectedPromoter, setSelectedPromoter] = useState(promoters[0].id);
+  const [promoters, setPromoters] = useState([]);
+  const [selectedPromoter, setSelectedPromoter] = useState("");
+
+  useEffect(() => {
+    // Fetch real promoters from Supabase
+    fetch("/api/promoters") // Adjust this endpoint to match your API
+      .then(res => res.json())
+      .then(data => {
+        setPromoters(data);
+        if (data.length > 0) setSelectedPromoter(data[0].id);
+      });
+  }, []);
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (!isAdmin) return <div className="p-8 text-center">CRM features are restricted to administrators.</div>;
+  if (!promoters.length) return <div className="p-8 text-center">No promoters found.</div>;
 
   return (
     <div className="container mx-auto py-8">
