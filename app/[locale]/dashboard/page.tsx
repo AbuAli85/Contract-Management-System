@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -99,6 +99,7 @@ import {
   FolderEdit,
 } from "lucide-react"
 import { PermissionGuard } from "@/hooks/use-permissions"
+import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = 'force-dynamic'
@@ -294,6 +295,12 @@ export default function DashboardPage() {
 
   const roleDisplay = getRoleDisplayName(permissions.role)
 
+  const [analytics, setAnalytics] = useState(null)
+  useEffect(() => {
+    getDashboardAnalytics().then(setAnalytics)
+  }, [])
+  if (!analytics) return <div>Loading...</div>
+
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -329,9 +336,9 @@ export default function DashboardPage() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
+              <div className="text-2xl font-bold">{analytics.active_contracts || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +2 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
             </CardContent>
           </Card>
@@ -344,9 +351,9 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
+              <div className="text-2xl font-bold">{analytics.promoters || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +12 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
             </CardContent>
           </Card>
@@ -359,9 +366,9 @@ export default function DashboardPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">89</div>
+              <div className="text-2xl font-bold">{analytics.parties || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +5 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
             </CardContent>
           </Card>
@@ -374,9 +381,9 @@ export default function DashboardPage() {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{analytics.users || 0}</div>
               <p className="text-xs text-muted-foreground">
-                +1 {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
               </p>
             </CardContent>
           </Card>
@@ -428,50 +435,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Admin Setup Link (Temporary) */}
-        <div className="space-y-4">
-          <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/20">
-            <CardHeader>
-              <CardTitle className="text-lg text-orange-800 dark:text-orange-200">
-                🚀 Quick Setup
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-orange-700 dark:text-orange-300 mb-4">
-                Need admin access to see all features? Click below to setup admin privileges.
-              </p>
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => window.location.href = '/setup-admin'}
-                  className="border-orange-300 text-orange-700 hover:bg-orange-100"
-                >
-                  Setup Admin Access
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/test-users')
-                      const data = await response.json()
-                      console.log('User Management Test:', data)
-                      alert('Check console for user management test results')
-                    } catch (error) {
-                      console.error('User management test error:', error)
-                      alert('User management test failed - check console')
-                    }
-                  }}
-                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                >
-                  Test User Management
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Recent Activity */}
         <PermissionGuard action="system:analytics">
           <div className="space-y-4">
@@ -486,12 +449,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { action: 'Contract Generated', user: 'John Doe', time: '2 minutes ago', icon: FilePlus, color: 'text-green-600' },
-                    { action: 'Promoter Added', user: 'Jane Smith', time: '5 minutes ago', icon: UserPlus, color: 'text-blue-600' },
-                    { action: 'Party Updated', user: 'Mike Johnson', time: '10 minutes ago', icon: Building2, color: 'text-orange-600' },
-                    { action: 'Contract Approved', user: 'Sarah Wilson', time: '15 minutes ago', icon: CheckCircle, color: 'text-purple-600' },
-                  ].map((activity, index) => (
+                  {analytics.recent_activity?.map((activity, index) => (
                     <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
                       <div className={cn("p-2 rounded-full bg-muted", activity.color)}>
                         <activity.icon className="h-4 w-4" />

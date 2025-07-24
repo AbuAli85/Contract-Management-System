@@ -17,6 +17,7 @@ import {
   AlertCircle,
   Clock
 } from "lucide-react"
+import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
 
 interface DashboardStats {
   totalContracts: number
@@ -48,114 +49,14 @@ interface Promoter {
 export default function DashboardContent({ locale }: { locale: string }) {
   const router = useRouter()
   const { user, loading } = useAuth()
-  const [stats, setStats] = useState<DashboardStats>({
-    totalContracts: 0,
-    activePromoters: 0,
-    revenue: 0,
-    pendingReviews: 0
-  })
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
-  const [systemStatus, setSystemStatus] = useState({
-    database: 'Online',
-    apiServices: 'Online',
-    fileStorage: 'Online'
-  })
+  const [analytics, setAnalytics] = useState(null)
 
   // Fetch dashboard data
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Fetch contracts data
-        const contractsResponse = await fetch('/api/contracts', {
-          credentials: 'include', // Include cookies for authentication
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!contractsResponse.ok) {
-          console.log('Contracts API returned:', contractsResponse.status, contractsResponse.statusText)
-          if (contractsResponse.status === 401) {
-            console.log('User not authenticated, redirecting to login...')
-            // Redirect to locale-specific login page
-            window.location.href = `/${locale}/login`
-            return
-          }
-          // Use fallback data if API fails
-          setStats(prev => ({ ...prev, totalContracts: 0, revenue: 0, pendingReviews: 0 }))
-          setRecentActivity([])
-          return
-        }
-        
-        const contractsData: Contract[] = await contractsResponse.json()
-        
-        // Fetch promoters data
-        const promotersResponse = await fetch('/api/promoters', {
-          credentials: 'include', // Include cookies for authentication
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        })
-        
-        if (!promotersResponse.ok) {
-          console.log('Promoters API returned:', promotersResponse.status, promotersResponse.statusText)
-          if (promotersResponse.status === 401) {
-            console.log('User not authenticated, redirecting to login...')
-            // Redirect to locale-specific login page
-            window.location.href = `/${locale}/login`
-            return
-          }
-          // Use fallback data if API fails
-          setStats(prev => ({ ...prev, activePromoters: 0 }))
-          return
-        }
-        
-        const promotersData: Promoter[] = await promotersResponse.json()
-        
-        // Calculate stats
-        const totalContracts = contractsData.length || 0
-        const activePromoters = promotersData.filter((p: Promoter) => p.status === 'active').length || 0
-        const revenue = contractsData.reduce((sum: number, contract: Contract) => 
-          sum + (contract.contract_value || 0), 0)
-        const pendingReviews = contractsData.filter((c: Contract) => c.status === 'pending').length || 0
+    getDashboardAnalytics().then(setAnalytics)
+  }, [locale])
 
-        setStats({
-          totalContracts,
-          activePromoters,
-          revenue,
-          pendingReviews
-        })
-
-        // Generate recent activity from contracts
-        const activity: RecentActivity[] = contractsData.slice(0, 5).map((contract: Contract) => ({
-          id: contract.id,
-          type: contract.status === 'completed' ? 'contract_approved' : 
-                contract.status === 'pending' ? 'contract_pending' : 'promoter_registered',
-          message: contract.status === 'completed' ? `Contract ${contract.contract_number} approved` :
-                   contract.status === 'pending' ? `Contract ${contract.contract_number} pending review` :
-                   `New contract ${contract.contract_number} created`,
-          timestamp: new Date(contract.created_at).toLocaleDateString()
-        }))
-
-        setRecentActivity(activity)
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-        // Set fallback data
-        setStats({
-          totalContracts: 0,
-          activePromoters: 0,
-          revenue: 0,
-          pendingReviews: 0
-        })
-        setRecentActivity([])
-      }
-    }
-
-    if (!loading) {
-      fetchDashboardData()
-    }
-  }, [loading, locale])
+  if (!analytics) return <div>Loading...</div>
 
   const handleNewContract = () => {
     router.push(`/${locale}/generate-contract`)
@@ -180,14 +81,6 @@ export default function DashboardContent({ locale }: { locale: string }) {
       default:
         return <AlertCircle className="h-2 w-2 text-gray-500" />
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading dashboard...</div>
-      </div>
-    )
   }
 
   return (
@@ -216,9 +109,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalContracts}</div>
+            <div className="text-2xl font-bold">{analytics.totalContracts}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(stats.totalContracts * 0.1)} from last month
+              +{Math.floor(analytics.totalContracts * 0.1)} from last month
             </p>
           </CardContent>
         </Card>
@@ -228,9 +121,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activePromoters}</div>
+            <div className="text-2xl font-bold">{analytics.activePromoters}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(stats.activePromoters * 0.05)} from last month
+              +{Math.floor(analytics.activePromoters * 0.05)} from last month
             </p>
           </CardContent>
         </Card>
@@ -240,9 +133,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.revenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold">${analytics.revenue.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              +{Math.floor(stats.revenue * 0.08)} from last month
+              +{Math.floor(analytics.revenue * 0.08)} from last month
             </p>
           </CardContent>
         </Card>
@@ -252,9 +145,9 @@ export default function DashboardContent({ locale }: { locale: string }) {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingReviews}</div>
+            <div className="text-2xl font-bold">{analytics.pendingReviews}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.pendingReviews > 0 ? 'Requires attention' : 'All caught up'}
+              {analytics.pendingReviews > 0 ? 'Requires attention' : 'All caught up'}
             </p>
           </CardContent>
         </Card>
@@ -310,8 +203,8 @@ export default function DashboardContent({ locale }: { locale: string }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity) => (
+            {analytics.recentActivity.length > 0 ? (
+              analytics.recentActivity.map((activity) => (
                 <div key={activity.id} className="flex items-center gap-3">
                   {getActivityIcon(activity.type)}
                   <div className="flex-1">
@@ -335,16 +228,16 @@ export default function DashboardContent({ locale }: { locale: string }) {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${systemStatus.database === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">Database: {systemStatus.database}</span>
+              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.database === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm">Database: {analytics.systemStatus.database}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${systemStatus.apiServices === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">API Services: {systemStatus.apiServices}</span>
+              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.apiServices === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm">API Services: {analytics.systemStatus.apiServices}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`h-2 w-2 rounded-full ${systemStatus.fileStorage === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
-              <span className="text-sm">File Storage: {systemStatus.fileStorage}</span>
+              <div className={`h-2 w-2 rounded-full ${analytics.systemStatus.fileStorage === 'Online' ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm">File Storage: {analytics.systemStatus.fileStorage}</span>
             </div>
           </div>
         </CardContent>
