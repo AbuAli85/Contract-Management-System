@@ -77,7 +77,9 @@ export default function DashboardPage() {
               onClick={() => {
                 setShowDemo(false)
                 setAuthTimeout(false)
-                window.location.reload()
+                if (typeof window !== 'undefined') {
+                  window.location.reload()
+                }
               }}
             >
               Exit Demo

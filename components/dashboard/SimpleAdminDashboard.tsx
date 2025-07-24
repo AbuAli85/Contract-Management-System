@@ -140,7 +140,11 @@ export default function SimpleAdminDashboard() {
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-lg text-red-600">{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
+          <Button onClick={() => {
+            if (typeof window !== 'undefined') {
+              window.location.reload()
+            }
+          }} className="mt-4">
             Retry
           </Button>
         </div>

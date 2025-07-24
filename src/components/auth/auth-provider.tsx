@@ -301,7 +301,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await createClient().auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined
         }
       })
       if (error) {
@@ -315,7 +315,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined
         }
       })
       if (error) {
@@ -336,7 +336,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword: async (email: string) => {
       console.log("🔑 Attempting password reset for:", email)
       const { error } = await createClient().auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/reset-password` : undefined
       })
       if (error) {
         console.error("❌ Password reset error:", error)
