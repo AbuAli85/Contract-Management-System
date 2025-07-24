@@ -177,7 +177,7 @@ export default function DashboardPage() {
       description: "Track communications, tasks, and notes for promoters",
       descriptionAr: "تتبع الاتصالات والمهام والملاحظات للمروجين",
       icon: MessageSquare,
-      href: `/${locale}/manage-promoters`,
+      href: `/${locale}/crm`, // <-- Updated to point to a dedicated CRM page
       permission: "promoter:read",
       badge: "New",
       badgeVariant: "default",
