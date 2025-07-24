@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DocumentStatusBadge } from "@/components/unified-status-badge"
+import { useUserRole } from '@/hooks/useUserRole'
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -75,6 +76,8 @@ export default function PromoterDetailPage() {
   const [promoterDetails, setPromoterDetails] = useState<PromoterDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const role = useUserRole()
 
   useEffect(() => {
     if (!promoterId) return
@@ -112,12 +115,27 @@ export default function PromoterDetailPage() {
       setPromoterDetails({
         ...promoterData,
         contracts: (contractsData as any) || [],
+        name_en: promoterData.name_en || "",
+        name_ar: promoterData.name_ar || "",
+        id_card_number: promoterData.id_card_number || "",
       })
       setIsLoading(false)
     }
 
+    async function fetchAuditLogs() {
+      if (role !== 'admin') return
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('table_name', 'promoters')
+        .eq('record_id', promoterId)
+        .order('created_at', { ascending: false })
+      if (!error && data) setAuditLogs(data)
+    }
+
     fetchPromoterDetails()
-  }, [promoterId])
+    fetchAuditLogs()
+  }, [promoterId, role])
 
   if (isLoading) {
     return (
@@ -276,6 +294,34 @@ export default function PromoterDetailPage() {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Activity Timeline</CardTitle>
+          <CardDescription>History of changes and actions for this promoter</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {role !== 'admin' ? (
+            <div className="text-muted-foreground text-sm">Only admins can view the activity timeline.</div>
+          ) : auditLogs.length === 0 ? (
+            <div className="text-muted-foreground text-sm">No activity found for this promoter.</div>
+          ) : (
+            <ul className="space-y-4">
+              {auditLogs.map(log => (
+                <li key={log.id} className="border-l-2 border-primary pl-4 relative">
+                  <div className="absolute -left-2 top-1.5 w-3 h-3 bg-primary rounded-full" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">{format(parseISO(log.created_at), 'yyyy-MM-dd HH:mm')}</span>
+                    <span className="font-semibold">{log.action}</span>
+                    <span className="text-xs">By: {log.user_id}</span>
+                    <span className="text-xs text-muted-foreground break-all">{typeof log.new_values === 'string' ? log.new_values : JSON.stringify(log.new_values)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </CardContent>
       </Card>
     </div>

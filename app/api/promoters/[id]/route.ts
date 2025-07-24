@@ -10,6 +10,9 @@ const promoterUpdateSchema = z.object({
   id_card_number: z.string().min(1, 'ID card number is required').optional(),
   id_card_url: z.string().optional(),
   passport_url: z.string().optional(),
+  passport_number: z.string().optional(),
+  mobile_number: z.string().optional(),
+  profile_picture_url: z.string().optional(),
   status: z.enum(['active', 'inactive', 'suspended']).optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -136,6 +139,16 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if user is admin
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+    if (!userProfile || userProfile.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
+    }
+
     // Parse and validate request body
     const body = await request.json()
     const validatedData = promoterUpdateSchema.parse(body)
@@ -161,6 +174,16 @@ export async function PUT(
         details: error.message 
       }, { status: 500 })
     }
+
+    // After successful update, create audit log
+    await supabase.from('audit_logs').insert({
+      user_id: session.user.id,
+      action: 'update',
+      table_name: 'promoters',
+      record_id: id,
+      new_values: validatedData,
+      created_at: new Date().toISOString()
+    })
 
     return NextResponse.json({ 
       success: true,
@@ -217,6 +240,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Check if user is admin
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single()
+    if (!userProfile || userProfile.role !== 'admin') {
+      return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
+    }
+
     // Check if promoter has active contracts
     const { data: activeContracts, error: contractsError } = await supabase
       .from('contracts')
@@ -252,6 +285,15 @@ export async function DELETE(
         details: error.message 
       }, { status: 500 })
     }
+
+    // After successful delete, create audit log
+    await supabase.from('audit_logs').insert({
+      user_id: session.user.id,
+      action: 'delete',
+      table_name: 'promoters',
+      record_id: id,
+      created_at: new Date().toISOString()
+    })
 
     return NextResponse.json({ 
       success: true,

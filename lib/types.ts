@@ -58,6 +58,8 @@ export interface Promoter {
   state?: string
   zip_code?: string
   bio?: string
+  passport_number?: string | null
+  mobile_number?: string | null
 }
 
 export interface Contract {

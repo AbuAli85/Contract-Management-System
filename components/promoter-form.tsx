@@ -87,6 +87,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       notify_days_before_id_expiry: 30,
       notify_days_before_passport_expiry: 90,
       notes: null,
+      passport_number: "",
+      mobile_number: "",
+      profile_picture_url: "",
     },
   })
 
@@ -120,6 +123,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         notify_days_before_id_expiry: promoterToEdit.notify_days_before_id_expiry ?? 30,
         notify_days_before_passport_expiry: promoterToEdit.notify_days_before_passport_expiry ?? 90,
         notes: promoterToEdit.notes || "",
+        passport_number: promoterToEdit?.passport_number || "",
+        mobile_number: promoterToEdit?.mobile_number || "",
+        profile_picture_url: promoterToEdit?.profile_picture_url || "",
       })
     } else {
       form.reset({
@@ -136,6 +142,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         notify_days_before_id_expiry: 30,
         notify_days_before_passport_expiry: 90,
         notes: "",
+        passport_number: "",
+        mobile_number: "",
+        profile_picture_url: "",
       })
     }
   }, [promoterToEdit, form.reset])
@@ -202,6 +211,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         notify_days_before_id_expiry: values.notify_days_before_id_expiry,
         notify_days_before_passport_expiry: values.notify_days_before_passport_expiry,
         notes: values.notes,
+        passport_number: values.passport_number,
+        mobile_number: values.mobile_number,
+        profile_picture_url: values.profile_picture_url,
       }
 
       if (promoterToEdit?.id) {
@@ -287,6 +299,56 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                     </FormControl>
                     <FormMessage />
                   </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="passport_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Passport Number</ShadcnFormLabel>
+                    <FormControl>
+                      <Input placeholder="Passport Number" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="mobile_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Mobile Number</ShadcnFormLabel>
+                    <FormControl>
+                      <Input placeholder="Mobile Number" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="profile_picture_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Photograph (URL or Upload)</ShadcnFormLabel>
+                    <FormControl>
+                      <Input placeholder="Photo URL or upload below" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="profile_picture_url"
+                render={({ field }) => (
+                  <ImageUploadField
+                    field={field}
+                    initialImageUrl={field.value ?? undefined}
+                    disabled={formActuallyDisabled}
+                  />
                 )}
               />
             </div>

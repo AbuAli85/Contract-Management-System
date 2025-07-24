@@ -37,6 +37,9 @@ export const promoterProfileSchema = z.object({
   notify_days_before_id_expiry: z.number().min(1).max(365).optional().nullable(),
   notify_days_before_passport_expiry: z.number().min(1).max(365).optional().nullable(),
   notes: z.string().optional().nullable(),
+  passport_number: z.string().min(1, "Passport number is required.").optional().nullable(),
+  mobile_number: z.string().min(5, "Mobile number is required.").optional().nullable(),
+  profile_picture_url: z.string().url("Invalid photo URL").optional().nullable(),
 })
 
 export type PromoterProfileFormData = z.infer<typeof promoterProfileSchema>

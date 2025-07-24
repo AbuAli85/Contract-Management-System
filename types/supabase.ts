@@ -365,6 +365,9 @@ export interface Database {
           emergency_contact?: string | null
           emergency_phone?: string | null
           notes?: string | null
+          passport_number?: string | null
+          mobile_number?: string | null
+          profile_picture_url?: string | null
         }
         Insert: {
           id?: string
@@ -386,6 +389,9 @@ export interface Database {
           emergency_contact?: string | null
           emergency_phone?: string | null
           notes?: string | null
+          passport_number?: string | null
+          mobile_number?: string | null
+          profile_picture_url?: string | null
         }
         Update: {
           id?: string
@@ -407,6 +413,9 @@ export interface Database {
           emergency_contact?: string | null
           emergency_phone?: string | null
           notes?: string | null
+          passport_number?: string | null
+          mobile_number?: string | null
+          profile_picture_url?: string | null
         }
         Relationships: [
           {

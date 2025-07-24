@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation"
 import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import * as XLSX from "xlsx"
 import Papa from "papaparse"
+import dynamic from 'next/dynamic'
+import QRCode from 'qrcode.react'
 
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -146,6 +148,10 @@ export default function AdvancedPromotersManagement() {
     system_notifications: true
   })
   
+  // Add state for QR code modal
+  const [qrCodePromoter, setQrCodePromoter] = useState<EnhancedPromoter | null>(null)
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false)
+
   // Hooks
   const router = useRouter()
   const { toast } = useToast()
@@ -450,6 +456,9 @@ export default function AdvancedPromotersManagement() {
             notify_days_before_id_expiry: parseInt(row.notify_days_before_id_expiry || '30'),
             notify_days_before_passport_expiry: parseInt(row.notify_days_before_passport_expiry || '30'),
             notes: row.notes || row['Notes'] || null,
+            passport_number: row.passport_number || row['Passport Number'] || '',
+            mobile_number: row.mobile_number || row['Mobile Number'] || '',
+            profile_picture_url: row.profile_picture_url || row['Photograph'] || '',
             created_at: new Date().toISOString()
           }))
 
@@ -704,6 +713,10 @@ export default function AdvancedPromotersManagement() {
             <DropdownMenuItem className="text-red-600">
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Promoter
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => { setQrCodePromoter(row.original); setIsQrModalOpen(true) }}>
+              <QrCode className="mr-2 h-4 w-4" />
+              Show QR Code
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -1362,6 +1375,10 @@ export default function AdvancedPromotersManagement() {
                               <Share2 className="mr-2 h-3 w-3" />
                               Share
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setQrCodePromoter(promoter); setIsQrModalOpen(true) }}>
+                              <QrCode className="mr-2 h-3 w-3" />
+                              Show QR Code
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -1572,6 +1589,9 @@ export default function AdvancedPromotersManagement() {
                 <div>• status (optional)</div>
                 <div>• id_card_expiry_date (optional)</div>
                 <div>• passport_expiry_date (optional)</div>
+                <div>• passport_number (Passport Number, optional)</div>
+                <div>• mobile_number (Mobile Number, optional)</div>
+                <div>• profile_picture_url (Photograph URL, optional)</div>
               </div>
             </div>
           </div>
@@ -1932,6 +1952,29 @@ export default function AdvancedPromotersManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {qrCodePromoter && (
+        <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Promoter QR Code</DialogTitle>
+              <DialogDescription>
+                Scan to view promoter profile
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center justify-center py-6">
+              <QRCode value={`${window.location.origin}/manage-promoters/${qrCodePromoter.id}`} size={200} />
+              <div className="mt-4 text-center">
+                <div className="font-semibold">{qrCodePromoter.name_en}</div>
+                <div className="text-xs text-muted-foreground">ID: {qrCodePromoter.id_card_number}</div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsQrModalOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

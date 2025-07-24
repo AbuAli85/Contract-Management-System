@@ -79,6 +79,30 @@ BEGIN
 
 END $$;
 
+-- Add passport_number if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='promoters' AND column_name='passport_number') THEN
+        ALTER TABLE promoters ADD COLUMN passport_number TEXT;
+    END IF;
+END $$;
+
+-- Add mobile_number if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='promoters' AND column_name='mobile_number') THEN
+        ALTER TABLE promoters ADD COLUMN mobile_number TEXT;
+    END IF;
+END $$;
+
+-- Add profile_picture_url if not exists
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='promoters' AND column_name='profile_picture_url') THEN
+        ALTER TABLE promoters ADD COLUMN profile_picture_url TEXT;
+    END IF;
+END $$;
+
 COMMENT ON COLUMN promoters.notify_days_before_id_expiry IS 'Number of days before ID card expiry to notify. Default 30.';
 COMMENT ON COLUMN promoters.notify_days_before_passport_expiry IS 'Number of days before passport expiry to notify. Default 30.';
 COMMENT ON COLUMN promoters.status IS 'Status of the promoter: active, inactive, suspended. Default active.';

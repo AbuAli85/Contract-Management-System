@@ -420,6 +420,9 @@ export default function ManagePromotersPage() {
         'Name (EN)': promoter.name_en,
         'Name (AR)': promoter.name_ar,
         'ID Card Number': promoter.id_card_number,
+        'Passport Number': promoter.passport_number || '',
+        'Mobile Number': promoter.mobile_number || '',
+        'Photograph': promoter.profile_picture_url || '',
         'ID Card Status': promoter.id_card_status,
         'ID Card Expiry': promoter.id_card_expiry_date || 'N/A',
         'Passport Status': promoter.passport_status,
@@ -826,6 +829,15 @@ export default function ManagePromotersPage() {
                         Promoter Info
                       </TableHead>
                       <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                        Photograph
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                        Passport Number
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
+                        Mobile Number
+                      </TableHead>
+                      <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
                         ID Card Status
                       </TableHead>
                       <TableHead className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">
@@ -887,6 +899,27 @@ export default function ManagePromotersPage() {
                                 )}
                               </div>
                             </div>
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-center">
+                            {promoter.profile_picture_url ? (
+                              <SafeImage
+                                src={promoter.profile_picture_url}
+                                alt={promoter.name_en + " photo"}
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full object-cover mx-auto"
+                              />
+                            ) : (
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mx-auto text-gray-400">
+                                <UserIcon className="h-6 w-6" />
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-center font-mono text-xs">
+                            {promoter.passport_number || <span className="text-gray-400">—</span>}
+                          </TableCell>
+                          <TableCell className="px-4 py-3 text-center font-mono text-xs">
+                            {promoter.mobile_number || <span className="text-gray-400">—</span>}
                           </TableCell>
                           <TableCell className="px-4 py-3 text-center">
                             <TooltipProvider delayDuration={100}>

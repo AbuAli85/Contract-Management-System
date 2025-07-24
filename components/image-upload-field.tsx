@@ -91,63 +91,58 @@ export default function ImageUploadField({
         }}
         tabIndex={disabled ? -1 : 0}
         role="button"
-        aria-label={`Upload image`} // Generic, specific label will be outside
+        aria-label={`Upload file`} // Generic, specific label will be outside
       >
         {displayPreviewUrl ? (
-          <>
+          // If the file is a PDF, show PDF icon and link
+          (typeof displayPreviewUrl === 'string' && displayPreviewUrl.endsWith('.pdf')) ? (
+            <a href={displayPreviewUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center">
+              <FileIcon className="h-12 w-12 text-gray-400 mb-2" />
+              <span className="text-xs text-blue-600 underline">View PDF</span>
+            </a>
+          ) : (
             <SafeImage
               src={displayPreviewUrl || placeholderSrc}
               alt={`Preview`}
-              className="h-full w-full rounded-md object-contain p-1"
-              key={displayPreviewUrl}
+              className="h-32 w-32 object-contain rounded"
             />
-            {!disabled && (
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleRemoveImage()
-                }}
-                aria-label={`Remove image`}
-              >
-                <Trash2Icon className="h-4 w-4" />
-              </Button>
-            )}
-          </>
+          )
         ) : (
-          <div className="text-center text-muted-foreground">
-            <UploadCloudIcon className="mx-auto mb-2 h-10 w-10" />
-            <p className="text-sm">Click or drag file to upload</p>
-            <p className="text-xs">PNG, JPG, WEBP up to 5MB</p>
-          </div>
+          <>
+            <UploadCloudIcon className="h-10 w-10 text-muted-foreground mb-2" />
+            <span className="text-xs text-muted-foreground">Click or drag file to upload<br/>(PNG, JPG, WEBP, PDF up to 5MB)</span>
+          </>
         )}
-        {/* Hidden file input, RHF ref is passed here, but also attach fileInputRef for click */}
-        <Input
-          ref={el => {
-            fileInputRef.current = el;
-            if (typeof field.ref === 'function') field.ref(el);
-            else if (field.ref) (field.ref as React.MutableRefObject<HTMLInputElement | null>).current = el;
-          }}
-          id={id || field.name}
+        <input
+          ref={fileInputRef}
+          id={id}
           name={field.name}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
-          onChange={handleFileChange}
-          onBlur={field.onBlur}
-          className="sr-only"
+          accept="image/*,application/pdf"
+          className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
           disabled={disabled}
+          onChange={handleFileChange}
+          tabIndex={-1}
         />
+        {field.value && !disabled && (
+          <Button
+            type="button"
+            size="icon"
+            variant="ghost"
+            className="absolute top-2 right-2 z-10"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleRemoveImage()
+            }}
+            tabIndex={-1}
+          >
+            <Trash2Icon className="h-4 w-4 text-red-500" />
+          </Button>
+        )}
       </div>
-      {fileName && field.value instanceof File && (
-        <div className="flex items-center text-xs text-muted-foreground">
-          <FileIcon className="mr-1 h-3 w-3 flex-shrink-0" />
-          <span>{fileName}</span>
-        </div>
+      {fileName && (
+        <div className="text-xs text-muted-foreground text-center mt-1">{fileName}</div>
       )}
-      {/* FormMessage will be rendered by FormField in the parent */}
     </div>
   )
 }
