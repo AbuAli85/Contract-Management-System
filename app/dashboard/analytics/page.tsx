@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 
@@ -99,17 +99,14 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="ml-4 text-lg">Loading analytics...</p>
-        </div>
-      </DashboardLayout>
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg">Loading analytics...</p>
+      </div>
     )
   }
 
   return (
-    <DashboardLayout>
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3 mb-8">
         <StatCard label="Total Contracts" value={stats.totalContracts} />
         <StatCard label="Active Contracts" value={stats.activeContracts} />
@@ -172,7 +169,7 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }
 

@@ -1,5 +1,5 @@
 "use client"
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
+
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = 'force-dynamic'
@@ -11,8 +11,7 @@ import { Button } from "@/components/ui/button"
 
 export default function SettingsPage() {
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <CardHeader className="p-0">
           <CardTitle>System Settings / إعدادات النظام</CardTitle>
           <CardDescription>
@@ -72,6 +71,6 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

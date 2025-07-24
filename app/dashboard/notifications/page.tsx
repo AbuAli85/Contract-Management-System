@@ -1,5 +1,5 @@
 "use client"
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
+
 import { useEffect, useState, useMemo } from "react"
 import { supabase } from "@/lib/supabase"
 import {
@@ -304,8 +304,7 @@ export default function NotificationsPage() {
   }, [totalPages, page])
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6 p-4 md:p-8">
+    <div className="space-y-6 p-4 md:p-8">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -653,7 +652,7 @@ export default function NotificationsPage() {
             </Dialog>
           </CardContent>
         </Card>
+              </div>
       </div>
-    </DashboardLayout>
-  )
-}
+    )
+  }

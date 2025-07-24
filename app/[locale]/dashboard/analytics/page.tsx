@@ -1,6 +1,6 @@
 "use client"
 import { useParams } from "next/navigation"
-import DashboardLayout from "@/components/dashboard/dashboard-layout"
+
 // ...other imports...
 
 export default function LocaleAnalyticsPage() {
