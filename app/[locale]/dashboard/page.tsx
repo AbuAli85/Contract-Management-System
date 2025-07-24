@@ -373,21 +373,6 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {locale === 'ar' ? 'المستخدمين' : 'Users'}
-              </CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.total_users || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
-              </p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Features Grid */}
