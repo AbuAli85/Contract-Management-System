@@ -3,24 +3,33 @@
 import { useState, useEffect } from "react";
 import { PromoterCRM } from "@/components/promoter-crm";
 import { useAuth } from "@/context/AuthProvider";
+import { createClient } from "@/lib/supabase/client";
 
 export default function CRMPage() {
   const { role, loading } = useAuth();
   const isAdmin = role === "admin";
-  const [promoters, setPromoters] = useState([]);
+  const [promoters, setPromoters] = useState<{ id: string }[]>([]);
   const [selectedPromoter, setSelectedPromoter] = useState("");
+  const [promotersLoading, setPromotersLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch real promoters from Supabase
-    fetch("/api/promoters") // Adjust this endpoint to match your API
-      .then(res => res.json())
-      .then(data => {
+    const fetchPromoters = async () => {
+      setPromotersLoading(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("promoters")
+        .select("id")
+        .order("created_at", { ascending: false });
+      if (!error && data) {
         setPromoters(data);
         if (data.length > 0) setSelectedPromoter(data[0].id);
-      });
+      }
+      setPromotersLoading(false);
+    };
+    fetchPromoters();
   }, []);
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
+  if (loading || promotersLoading) return <div className="p-8 text-center">Loading...</div>;
   if (!isAdmin) return <div className="p-8 text-center">CRM features are restricted to administrators.</div>;
   if (!promoters.length) return <div className="p-8 text-center">No promoters found.</div>;
 
@@ -35,8 +44,8 @@ export default function CRMPage() {
           onChange={e => setSelectedPromoter(e.target.value)}
           className="border rounded px-3 py-2"
         >
-          {promoters.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+          {promoters.map((p) => (
+            <option key={p.id} value={p.id}>{p.id}</option>
           ))}
         </select>
       </div>
