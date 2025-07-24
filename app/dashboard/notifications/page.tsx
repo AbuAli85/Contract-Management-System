@@ -652,7 +652,6 @@ export default function NotificationsPage() {
             </Dialog>
           </CardContent>
         </Card>
-              </div>
       </div>
     )
   }
