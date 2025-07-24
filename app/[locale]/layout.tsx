@@ -1,6 +1,7 @@
 import { i18n } from '@/src/i18n/i18n-config'
 import { ClientLayout } from '@/src/components/client-layout'
 import { cookies } from 'next/headers'
+import { AuthProvider } from '@/context/AuthProvider'
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
@@ -22,8 +23,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const { locale } = await params
   const resolvedLocale = await getLocale(locale)
   return (
-    <ClientLayout locale={resolvedLocale}>
-      {children}
-    </ClientLayout>
+    <AuthProvider>
+      <ClientLayout locale={resolvedLocale}>
+        {children}
+      </ClientLayout>
+    </AuthProvider>
   )
 }
