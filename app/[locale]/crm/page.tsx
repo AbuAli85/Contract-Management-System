@@ -1,5 +1,5 @@
 import React from "react";
-import PromoterCRM from "@/components/promoter-crm";
+import { PromoterCRM } from "@/components/promoter-crm";
 
 export default function CRMPage() {
   return (
