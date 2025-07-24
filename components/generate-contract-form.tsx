@@ -100,6 +100,8 @@ export default function ContractGeneratorForm({
       contract_type: "",
       currency: "OMR",
     },
+    // Add error handling for validation errors
+    shouldFocusError: false,
   })
 
   const [selectedClient, setSelectedClient] = useState<Database["public"]["Tables"]["parties"]["Row"] | null>(null) // Party A
@@ -336,11 +338,21 @@ export default function ContractGeneratorForm({
       })
     } catch (error) {
       console.error("Error in form submission:", error)
-      toast({
-        title: "Submission Error",
-        description: "An unexpected error occurred while submitting the form.",
-        variant: "destructive",
-      })
+      
+      // Handle ZodError specifically
+      if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+        toast({
+          title: "Validation Error",
+          description: "Please check all required fields and ensure data is valid.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Submission Error",
+          description: "An unexpected error occurred while submitting the form.",
+          variant: "destructive",
+        })
+      }
     }
   }
 

@@ -129,7 +129,7 @@ export const contractGeneratorSchema = z
     path: ["contract_end_date"],
   })
   .refine((data) => {
-    // Different parties validation
+    // Different parties validation - only validate if both parties are selected
     if (!data.first_party_id || !data.second_party_id || data.first_party_id === "" || data.second_party_id === "") return true
     return data.first_party_id !== data.second_party_id
   }, {
@@ -137,7 +137,7 @@ export const contractGeneratorSchema = z
     path: ["second_party_id"],
   })
   .refine((data) => {
-    // Contract duration validation - warn about very short or very long contracts
+    // Contract duration validation - only validate if both dates are provided
     if (!data.contract_start_date || !data.contract_end_date) return true
     const startDate = data.contract_start_date
     const endDate = data.contract_end_date
@@ -150,7 +150,7 @@ export const contractGeneratorSchema = z
     path: ["contract_end_date"],
   })
   .refine((data) => {
-    // Future start date validation (allow today or future)
+    // Future start date validation - only validate if start date is provided
     if (!data.contract_start_date) return true
     const today = new Date()
     today.setHours(0, 0, 0, 0) // Start of today
