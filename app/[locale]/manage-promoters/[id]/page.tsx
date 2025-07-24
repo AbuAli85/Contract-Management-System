@@ -90,7 +90,7 @@ export default function PromoterDetailPage() {
 
       const { data: promoterData, error: promoterError } = await supabase
         .from("promoters")
-        .select("*")
+        .select("*, promoter_tags:promoter_tags(tag:tags(name))")
         .eq("id", promoterId)
         .single()
 
@@ -99,6 +99,9 @@ export default function PromoterDetailPage() {
         setIsLoading(false)
         return
       }
+
+      // Extract tags as array of strings
+      const tags = promoterData.promoter_tags?.map((pt: any) => pt.tag?.name).filter(Boolean) || []
 
       const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")
@@ -120,6 +123,7 @@ export default function PromoterDetailPage() {
         name_en: promoterData.name_en || "",
         name_ar: promoterData.name_ar || "",
         id_card_number: promoterData.id_card_number || "",
+        tags,
       })
       setIsLoading(false)
     }
