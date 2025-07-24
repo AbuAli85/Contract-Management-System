@@ -1,467 +1,157 @@
-"use client"
+'use client'
 
-import React, { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
-import { usePermissions } from "@/hooks/use-permissions"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
-import {
-  Home,
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/context/AuthProvider'
+import AdminDashboard from '@/components/dashboard/AdminDashboard'
+import PromoterDashboard from '@/components/dashboard/PromoterDashboard'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Users, 
+  FileText, 
   BarChart3,
-  FileText,
-  FilePlus,
-  Users,
-  UserPlus,
-  UserCheck,
-  UserCog,
-  User,
-  Bell,
-  Shield,
-  Settings,
-  Package2,
-  Building2,
-  Activity,
-  TrendingUp,
-  TrendingDown,
+  Plus,
+  ArrowRight,
   CheckCircle,
-  XCircle,
-  AlertTriangle,
   Clock,
-  Star,
-  Mail,
-  MessageSquare,
-  ArrowUpDown,
-  Filter,
-  Calendar,
-  Download,
-  Upload,
-  RefreshCw,
-  HelpCircle,
-  Info,
-  Zap,
-  Target,
-  Award,
-  Trophy,
-  Medal,
-  Gem,
-  Diamond,
-  Sparkles,
-  Rocket,
-  Plane,
-  Car,
-  Bike,
-  Heart,
-  Smile,
-  Frown,
-  Meh,
-  ThumbsUp,
-  ThumbsDown,
-  Hand,
+  TrendingUp,
   Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Key,
-  Wifi,
-  WifiOff,
-  Signal,
-  SignalHigh,
-  SignalMedium,
-  SignalLow,
-  Battery,
-  BatteryFull,
-  BatteryCharging,
-  Power,
-  PowerOff,
-  Volume2,
-  Volume1,
-  VolumeX,
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Camera,
-  CameraOff,
-  Image,
-  ImageOff,
-  File,
-  FileEdit,
-  Folder,
-  FolderOpen,
-  FolderPlus,
-  FolderMinus,
-  FolderX,
-  FolderCheck,
-  FolderSearch,
-  FolderEdit,
-} from "lucide-react"
-import { PermissionGuard } from "@/hooks/use-permissions"
-import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
-import type { DashboardAnalytics } from "@/lib/dashboard-types"
-
-// Force dynamic rendering to avoid build-time Supabase issues
-export const dynamic = 'force-dynamic'
-
-interface FeatureCard {
-  title: string
-  titleAr: string
-  description: string
-  descriptionAr: string
-  icon: React.ElementType
-  href: string
-  permission: string
-  badge?: string
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline"
-  color?: string
-}
+  Star
+} from 'lucide-react'
 
 export default function DashboardPage() {
-  const permissions = usePermissions()
-  const pathname = usePathname()
-  
-  // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  const { user, role, loading } = useAuth()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [showDemo, setShowDemo] = useState(false)
 
-  const featureCards: FeatureCard[] = [
-    // Contract Management
-    {
-      title: "Generate Contract",
-      titleAr: "إنشاء عقد",
-      description: "Create new contracts with our advanced template system",
-      descriptionAr: "إنشاء عقود جديدة بنظام القوالب المتقدم",
-      icon: FilePlus,
-      href: `/${locale}/generate-contract`,
-      permission: "contract:create",
-      badge: "New",
-      badgeVariant: "default",
-      color: "text-blue-600"
-    },
-    {
-      title: "View Contracts",
-      titleAr: "عرض العقود",
-      description: "Browse and manage all your contracts",
-      descriptionAr: "تصفح وإدارة جميع عقودك",
-      icon: FileText,
-      href: `/${locale}/contracts`,
-      permission: "contract:read",
-      color: "text-green-600"
-    },
-    {
-      title: "Contract Management",
-      titleAr: "إدارة العقود",
-      description: "Advanced contract editing and management tools",
-      descriptionAr: "أدوات متقدمة لتحرير وإدارة العقود",
-      icon: FileEdit,
-                      href: `/${locale}/contracts`,
-      permission: "contract:update",
-      color: "text-purple-600"
-    },
-    
-    // Promoter Management
-    {
-      title: "Manage Promoters",
-      titleAr: "إدارة المروجين",
-      description: "Add, edit, and manage promoter information",
-      descriptionAr: "إضافة وتحرير وإدارة معلومات المروجين",
-      icon: Users,
-      href: `/${locale}/manage-promoters`,
-      permission: "promoter:read",
-      color: "text-orange-600"
-    },
-    {
-      title: "CRM (Promoter CRM)",
-      titleAr: "إدارة علاقات العملاء للمروجين",
-      description: "Track communications, tasks, and notes for promoters",
-      descriptionAr: "تتبع الاتصالات والمهام والملاحظات للمروجين",
-      icon: MessageSquare,
-      href: `/${locale}/crm`, // <-- Updated to point to a dedicated CRM page
-      permission: "promoter:read",
-      badge: "New",
-      badgeVariant: "default",
-      color: "text-cyan-600"
-    },
-    {
-      title: "Promoter Analysis",
-      titleAr: "تحليل المروجين",
-      description: "Analytics and insights for promoter performance",
-      descriptionAr: "التحليلات والرؤى لأداء المروجين",
-      icon: UserCheck,
-      href: `/${locale}/promoter-analysis`,
-      permission: "promoter:read",
-      color: "text-indigo-600"
-    },
-    
-    // Party Management
-    {
-      title: "Manage Parties",
-      titleAr: "إدارة الأطراف",
-      description: "Manage contract parties and organizations",
-      descriptionAr: "إدارة أطراف العقود والمنظمات",
-      icon: Building2,
-      href: `/${locale}/manage-parties`,
-      permission: "party:read",
-      color: "text-red-600"
-    },
-    
-    // Analytics & Reports
-    {
-      title: "Analytics",
-      titleAr: "التحليلات",
-      description: "Comprehensive analytics and reporting",
-      descriptionAr: "التحليلات والتقارير الشاملة",
-      icon: BarChart3,
-      href: `/${locale}/dashboard/analytics`,
-      permission: "system:analytics",
-      color: "text-teal-600"
-    },
-    
-    // User Management
-    {
-      title: "User Management",
-      titleAr: "إدارة المستخدمين",
-      description: "Manage system users and permissions",
-      descriptionAr: "إدارة مستخدمي النظام والأذونات",
-      icon: UserCog,
-      href: `/${locale}/dashboard/users`,
-      permission: "user:read",
-      color: "text-pink-600"
-    },
-    
-    // System Administration
-    {
-      title: "Audit Logs",
-      titleAr: "سجلات التدقيق",
-      description: "View system audit logs and activity",
-      descriptionAr: "عرض سجلات تدقيق النظام والنشاط",
-      icon: Shield,
-      href: `/${locale}/dashboard/audit`,
-      permission: "system:audit_logs",
-      color: "text-gray-600"
-    },
-    {
-      title: "Settings",
-      titleAr: "الإعدادات",
-      description: "Configure system settings and preferences",
-      descriptionAr: "تكوين إعدادات النظام والتفضيلات",
-      icon: Settings,
-      href: `/${locale}/dashboard/settings`,
-      permission: "system:settings",
-      color: "text-yellow-600"
-    },
-    {
-      title: "Notifications",
-      titleAr: "الإشعارات",
-      description: "Manage system notifications and alerts",
-      descriptionAr: "إدارة إشعارات النظام والتنبيهات",
-      icon: Bell,
-      href: `/${locale}/dashboard/notifications`,
-      permission: "system:notifications",
-      color: "text-cyan-600"
-    },
-    
-    // User Profile & Help
-    {
-      title: "Profile",
-      titleAr: "الملف الشخصي",
-      description: "Manage your account settings and preferences",
-      descriptionAr: "إدارة إعدادات حسابك والتفضيلات",
-      icon: User,
-      href: `/${locale}/profile`,
-      permission: "contract:read", // All authenticated users can access profile
-      color: "text-emerald-600"
-    },
-    {
-      title: "Help & Support",
-      titleAr: "المساعدة والدعم",
-      description: "Get help and support for using the system",
-      descriptionAr: "احصل على المساعدة والدعم لاستخدام النظام",
-      icon: HelpCircle,
-      href: "/help",
-      permission: "contract:read", // All authenticated users can access help
-      color: "text-slate-600"
+  useEffect(() => {
+    // Simple authentication check
+    if (user && role) {
+      setIsAuthenticated(true)
+    } else if (!loading) {
+      setIsAuthenticated(false)
     }
-  ]
+  }, [user, role, loading])
 
-  const filteredFeatures = featureCards.filter(feature => 
-    permissions.can(feature.permission as any)
-  )
-
-  // TEMPORARY: Show all features for testing (remove this in production)
-  const showAllFeatures = true // Set to false in production
-  const displayFeatures = showAllFeatures ? featureCards : filteredFeatures
-
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case 'admin':
-        return { en: 'Administrator', ar: 'مدير النظام' }
-      case 'manager':
-        return { en: 'Manager', ar: 'مدير' }
-      case 'user':
-        return { en: 'User', ar: 'مستخدم' }
-      default:
-        return { en: 'User', ar: 'مستخدم' }
-    }
+  // Show loading state
+  if (loading && !showDemo) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg">Loading dashboard...</p>
+          <p className="text-sm text-gray-500">This may take a few moments</p>
+          
+          {/* Bypass option for testing */}
+          <div className="pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDemo(true)}
+              className="text-sm"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Show Demo UI (Skip Auth)
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
-  const roleDisplay = getRoleDisplayName(permissions.role)
-
-  const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
-  useEffect(() => {
-    getDashboardAnalytics().then(setAnalytics)
-  }, [])
-  if (!analytics) return <div>Loading...</div>
-
-  return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {locale === 'ar' ? 'مرحباً بك في نظام إدارة العقود' : 'Welcome to Contract Management System'}
-        </h1>
-        <p className="text-muted-foreground">
-          {locale === 'ar' 
-            ? `مرحباً بك، ${roleDisplay.ar}. اختر من الميزات المتاحة أدناه للبدء.`
-            : `Welcome, ${roleDisplay.en}. Choose from the available features below to get started.`
-          }
-        </p>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">
-            {locale === 'ar' ? roleDisplay.ar : roleDisplay.en}
-          </Badge>
-          <Badge variant="secondary">
-            {permissions.roles.length} {locale === 'ar' ? 'أدوار' : 'roles'}
-          </Badge>
+  // Show demo UI if bypass is enabled
+  if (showDemo) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="p-4 bg-blue-50 border-b border-blue-200">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-blue-600" />
+              <span className="font-medium text-blue-800">Demo Mode - Beautiful New UI</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowDemo(false)}
+            >
+              Exit Demo
+            </Button>
+          </div>
         </div>
+        <AdminDashboard />
       </div>
+    )
+  }
 
-        <Separator />
-
-        {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {locale === 'ar' ? 'العقود النشطة' : 'Active Contracts'}
-              </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.active_contracts || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Welcome to Contract Management System</CardTitle>
+            <CardDescription>
+              Please log in to access your dashboard
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                You need to be logged in to view the dashboard
               </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {locale === 'ar' ? 'المروجين' : 'Promoters'}
-              </CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.total_promoters || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+              <Button asChild className="w-full">
+                <a href="/en/login">
+                  Go to Login
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+            
+            {/* Demo option */}
+            <div className="pt-4 border-t">
+              <p className="text-sm text-center text-gray-600 mb-3">
+                Want to see the beautiful new UI?
               </p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {locale === 'ar' ? 'الأطراف' : 'Parties'}
-              </CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics.total_parties || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Features Grid */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">
-              {locale === 'ar' ? 'الميزات المتاحة' : 'Available Features'}
-            </h2>
-            <Badge variant="outline">
-              {displayFeatures.length} {locale === 'ar' ? 'ميزة' : 'features'}
-            </Badge>
-          </div>
-          
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {displayFeatures.map((feature, index) => (
-              <PermissionGuard key={index} action={feature.permission as any}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className={cn("p-2 rounded-lg", feature.color?.replace('text-', 'bg-').replace('-600', '-100'))}>
-                        <feature.icon className={cn("h-6 w-6", feature.color)} />
-                      </div>
-                      {feature.badge && (
-                        <Badge variant={feature.badgeVariant || "secondary"}>
-                          {feature.badge}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-lg">
-                      {locale === 'ar' ? feature.titleAr : feature.title}
-                    </CardTitle>
-                    <CardDescription>
-                      {locale === 'ar' ? feature.descriptionAr : feature.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Button asChild className="w-full">
-                      <a href={feature.href}>
-                        {locale === 'ar' ? 'فتح' : 'Open'}
-                      </a>
-                    </Button>
-                  </CardContent>
-                </Card>
-              </PermissionGuard>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <PermissionGuard action="system:analytics">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold tracking-tight">
-              {locale === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
-            </h2>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">
-                  {locale === 'ar' ? 'آخر العمليات' : 'Latest Operations'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {analytics.recent_activity?.map((activity: any, index: number) => (
-                    <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
-                      <div className="flex-1">
-                        <p className="font-medium">{activity.action} - {activity.resource}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(activity.timestamp).toLocaleString()} • Status: {activity.status}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setShowDemo(true)}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                View Demo Interface
+              </Button>
+            </div>
+            
+            {/* Quick Stats Preview */}
+            <div className="pt-6 border-t">
+              <h3 className="text-sm font-medium mb-3">System Overview</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <Users className="h-6 w-6 text-blue-600 mx-auto mb-1" />
+                  <p className="text-sm font-medium">Promoters</p>
+                  <p className="text-xs text-muted-foreground">Manage team</p>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </PermissionGuard>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <FileText className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                  <p className="text-sm font-medium">Contracts</p>
+                  <p className="text-xs text-muted-foreground">Track agreements</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    )
+  }
+
+  // Show appropriate dashboard based on role
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {role === 'admin' ? (
+        <AdminDashboard />
+      ) : (
+        <PromoterDashboard />
+      )}
+    </div>
   )
 } 
