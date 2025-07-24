@@ -206,3 +206,128 @@ export interface PartyFile {
 }
 
 export type ContractStatus = "draft" | "pending" | "active" | "completed" | "cancelled" | "expired" | "failed" | "generating";
+
+export interface PromoterSkill {
+  id: string
+  promoter_id: string
+  skill: string
+  level?: string | null
+  created_at?: string
+}
+
+export interface PromoterExperience {
+  id: string
+  promoter_id: string
+  company: string
+  role: string
+  start_date?: string | null
+  end_date?: string | null
+  description?: string | null
+  created_at?: string
+}
+
+export interface PromoterEducation {
+  id: string
+  promoter_id: string
+  degree: string
+  institution: string
+  year?: number | null
+  created_at?: string
+}
+
+export interface PromoterDocument {
+  id: string
+  promoter_id: string
+  type: string
+  url: string
+  description?: string | null
+  uploaded_on?: string
+  version?: number
+}
+
+export interface PromoterAttendanceLog {
+  id: string
+  promoter_id: string
+  date: string
+  check_in_time?: string | null
+  check_out_time?: string | null
+  status: string
+  notes?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterLeaveRequest {
+  id: string
+  promoter_id: string
+  leave_type: string
+  start_date: string
+  end_date: string
+  reason?: string | null
+  status: string
+  approved_by?: string | null
+  approved_at?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterAttendanceSettings {
+  id: string
+  promoter_id: string
+  work_schedule?: any // JSONB object
+  timezone?: string
+  auto_checkout_hours?: number
+  late_threshold_minutes?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterPerformanceMetric {
+  id: string
+  promoter_id: string
+  metric_type: string
+  value: number
+  period_start: string
+  period_end: string
+  target_value?: number | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface ReportTemplate {
+  id: string
+  name: string
+  description?: string | null
+  template_type: string
+  query_template?: string | null
+  parameters?: any
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface GeneratedReport {
+  id: string
+  template_id?: string | null
+  promoter_id?: string | null
+  report_name: string
+  report_data?: any
+  file_url?: string | null
+  generated_by?: string | null
+  generated_at?: string
+  parameters?: any
+}
+
+export interface ReportSchedule {
+  id: string
+  template_id?: string | null
+  promoter_id?: string | null
+  schedule_type: string
+  schedule_config?: any
+  is_active?: boolean
+  last_run?: string | null
+  next_run?: string | null
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
