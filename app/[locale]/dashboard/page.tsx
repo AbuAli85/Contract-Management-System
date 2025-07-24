@@ -172,6 +172,18 @@ export default function DashboardPage() {
       color: "text-orange-600"
     },
     {
+      title: "CRM (Promoter CRM)",
+      titleAr: "إدارة علاقات العملاء للمروجين",
+      description: "Track communications, tasks, and notes for promoters",
+      descriptionAr: "تتبع الاتصالات والمهام والملاحظات للمروجين",
+      icon: MessageSquare,
+      href: `/${locale}/manage-promoters`,
+      permission: "promoter:read",
+      badge: "New",
+      badgeVariant: "default",
+      color: "text-cyan-600"
+    },
+    {
       title: "Promoter Analysis",
       titleAr: "تحليل المروجين",
       description: "Analytics and insights for promoter performance",
