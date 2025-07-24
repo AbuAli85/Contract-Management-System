@@ -110,17 +110,24 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       titleAr: "لوحة التحكم",
       items: [
         {
+          href: `/${locale}/dashboard`,
+          label: "Main Dashboard",
+          labelAr: "لوحة التحكم الرئيسية",
+          icon: Home,
+          permission: "system:analytics"
+        },
+        {
           href: `/${locale}/dashboard/overview`,
           label: "Overview",
           labelAr: "نظرة عامة",
-          icon: Home,
+          icon: BarChart3,
           permission: "system:analytics"
         },
         {
           href: `/${locale}/dashboard/analytics`,
           label: "Analytics",
           labelAr: "التحليلات",
-          icon: BarChart3,
+          icon: TrendingUp,
           permission: "system:analytics"
         },
         {
@@ -158,20 +165,6 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "عرض العقود",
           icon: FileText,
           permission: "contract:read"
-        },
-        {
-          href: `/${locale}/dashboard/generate-contract`,
-          label: "Contract Templates",
-          labelAr: "قوالب العقود",
-          icon: FileCheck,
-          permission: "contract:create"
-        },
-        {
-          href: `/${locale}/contracts`,
-          label: "Contract Management",
-          labelAr: "إدارة العقود",
-          icon: FileEdit,
-          permission: "contract:update"
         },
         {
           href: `/${locale}/contracts/pending`,
@@ -285,6 +278,19 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "الاتصالات",
           icon: MessageSquare,
           permission: "party:read"
+        }
+      ]
+    },
+    {
+      title: "CRM",
+      titleAr: "إدارة علاقات العملاء",
+      items: [
+        {
+          href: `/${locale}/crm`,
+          label: "CRM Dashboard",
+          labelAr: "لوحة إدارة علاقات العملاء",
+          icon: Briefcase,
+          permission: "promoter:read"
         }
       ]
     },
