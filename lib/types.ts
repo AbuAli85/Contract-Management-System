@@ -403,3 +403,47 @@ export interface PromoterScoreHistory {
   changed_at?: string
   created_at?: string
 }
+
+export interface PromoterCommunication {
+  id: string
+  promoter_id: string
+  type: string
+  subject?: string | null
+  description?: string | null
+  communication_time: string
+  participants?: any[]
+  outcome?: string | null
+  status?: string
+  attachments?: { file_url: string; file_name: string }[]
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterTask {
+  id: string
+  promoter_id: string
+  title: string
+  description?: string | null
+  due_date?: string | null
+  status?: string
+  priority?: string
+  assigned_to?: string | null
+  related_communication?: string | null
+  created_by?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface PromoterNote {
+  id: string
+  promoter_id: string
+  content: string
+  note_time?: string
+  author?: string | null
+  related_communication?: string | null
+  related_task?: string | null
+  visibility?: string
+  created_at?: string
+  updated_at?: string
+}
