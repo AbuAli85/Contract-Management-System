@@ -31,6 +31,8 @@ import {
 } from "@/components/ui/table"
 import { DocumentStatusBadge } from "@/components/unified-status-badge"
 import { useUserRole } from '@/hooks/useUserRole'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -139,50 +141,60 @@ export default function PromoterDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading promoter...</span>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !promoterDetails) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <p className="mb-4 text-red-500">{error}</p>
-        <Button onClick={() => router.back()}>
-          <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Go Back
-        </Button>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error || "Promoter not found"}</p>
+          <Button onClick={() => router.push("/manage-promoters")}>Back to Promoters</Button>
+        </div>
       </div>
     )
   }
 
-  if (!promoterDetails) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center">
-        <p className="mb-4">Promoter not found.</p>
-        <Button onClick={() => router.back()}>
-          <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Go Back
-        </Button>
-      </div>
-    )
-  }
-
+  // --- Profile Overview Section ---
   return (
-    <div className="container mx-auto max-w-6xl p-4 md:p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <Button variant="outline" onClick={() => router.back()}>
-          <ArrowLeftIcon className="mr-2 h-4 w-4" />
-          Back to Promoters
-        </Button>
-        <Link href={`/manage-promoters/${promoterId}/edit`} passHref>
-          <Button>
-            <EditIcon className="mr-2 h-4 w-4" />
-            Edit Promoter
-          </Button>
-        </Link>
-      </div>
+    <div className="container mx-auto py-8">
+      <Card className="mb-8">
+        <CardContent className="flex flex-col md:flex-row items-center gap-6 p-6">
+          <Avatar className="h-24 w-24">
+            <AvatarImage src={promoterDetails.profile_picture_url || undefined} alt={promoterDetails.name_en} />
+            <AvatarFallback>{promoterDetails.name_en?.charAt(0) || '?'}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h2 className="text-2xl font-bold truncate">{promoterDetails.name_en}</h2>
+              <Badge variant="outline" className="text-base px-3 py-1">
+                {promoterDetails.status}
+              </Badge>
+              {promoterDetails.tags && promoterDetails.tags.length > 0 && (
+                <div className="flex gap-1 flex-wrap">
+                  {promoterDetails.tags.map((tag: string) => (
+                    <Badge key={tag} variant="secondary" className="text-xs px-2 py-0.5">{tag}</Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="mt-2 flex flex-col md:flex-row gap-4 text-muted-foreground">
+              <span>Email: {promoterDetails.email || <span className="text-gray-400">N/A</span>}</span>
+              <span>Phone: {promoterDetails.phone || <span className="text-gray-400">N/A</span>}</span>
+              <span>Address: {promoterDetails.address || <span className="text-gray-400">N/A</span>}</span>
+            </div>
+          </div>
+          {role === 'admin' && (
+            <Button variant="outline" onClick={() => router.push(`/manage-promoters/${promoterDetails.id}/edit`)}>
+              <EditIcon className="mr-2 h-4 w-4" /> Edit
+            </Button>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="overflow-hidden">
         <CardHeader className="bg-muted/40 flex flex-col items-start gap-4 p-6 md:flex-row md:items-center">
