@@ -169,11 +169,16 @@ export default function MakecomContractTemplates() {
   }
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied!",
-      description: "Content copied to clipboard"
-    })
+    // Check if we're in a browser environment and clipboard API is available
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text)
+      toast({
+        title: "Copied!",
+        description: "Content copied to clipboard"
+      })
+    } else {
+      console.warn('Copy to clipboard is not supported in this browser/environment')
+    }
   }
 
   const downloadBlueprint = () => {

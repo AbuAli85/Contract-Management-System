@@ -127,7 +127,11 @@ export default function PromoterDataAnalyzer() {
             <div className="flex flex-col gap-2">
               <Button
                 variant="outline"
-                onClick={() => document.getElementById('csv-upload')?.click()}
+                onClick={() => {
+                  if (typeof document !== 'undefined') {
+                    document.getElementById('csv-upload')?.click()
+                  }
+                }}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload CSV
@@ -138,6 +142,7 @@ export default function PromoterDataAnalyzer() {
                 accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
+                aria-label="Upload CSV file"
               />
             </div>
           </div>

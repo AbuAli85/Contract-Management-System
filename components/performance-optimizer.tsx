@@ -6,6 +6,9 @@ import dynamic from 'next/dynamic'
 // Performance optimization component
 export function PerformanceOptimizer() {
   useEffect(() => {
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') return
+
     // Load fonts as stylesheets instead of preload
     const loadFonts = () => {
       const fontLinks = [

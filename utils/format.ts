@@ -34,7 +34,13 @@ export const calculateDuration = (startDate?: string | null, endDate?: string | 
 
 export const copyToClipboard = async (text: string): Promise<void> => {
   try {
-    await navigator.clipboard.writeText(text)
+    // Check if we're in a browser environment and clipboard API is available
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      // Fallback for environments where clipboard API is not available
+      console.warn('Copy to clipboard is not supported in this browser/environment')
+    }
   } catch (err) {
     console.error('Failed to copy text: ', err)
   }

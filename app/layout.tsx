@@ -76,7 +76,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: rolePreloadScript }} />
       </head>
-      <body className={`${fontInter.variable} ${fontLexend.variable}`}>
+      <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster />
