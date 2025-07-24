@@ -36,7 +36,9 @@ export function useRoleLoader() {
         // Force a page reload to ensure the role is properly loaded
         console.log('🔄 Forcing page reload to apply role...')
         setTimeout(() => {
-          window.location.reload()
+          if (typeof window !== 'undefined') {
+            window.location.reload()
+          }
         }, 1000)
         
       } else {

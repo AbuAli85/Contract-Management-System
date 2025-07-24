@@ -22,8 +22,10 @@ export function ProtectedRoute({
   useEffect(() => {
     if (role === null) {
       // No user, redirect to login
-      const currentPath = window.location.pathname
-      router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`)
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname
+        router.push(`/login?redirectTo=${encodeURIComponent(currentPath)}`)
+      }
       return
     }
 

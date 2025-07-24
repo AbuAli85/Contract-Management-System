@@ -177,7 +177,11 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                 <label className="text-sm font-medium text-gray-500">Contract ID</label>
                 <div className="mt-1 flex items-center gap-2">
                   <code className="bg-gray-100 px-3 py-2 rounded-lg text-sm font-mono flex-1">{contract?.id}</code>
-                  <Button size="sm" variant="outline" onClick={() => copyToClipboard(contract?.id || '')}>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      copyToClipboard(contract?.id || '')
+                    }
+                  }}>
                     <CopyIcon className="h-4 w-4" />
                   </Button>
                 </div>

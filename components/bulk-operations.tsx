@@ -176,13 +176,15 @@ export function BulkOperations({
       ].join('\n')
 
       // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv' })
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `contracts_export_${new Date().toISOString().split('T')[0]}.csv`
-      link.click()
-      window.URL.revokeObjectURL(url)
+      if (typeof window !== 'undefined') {
+        const blob = new Blob([csvContent], { type: 'text/csv' })
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `contracts_export_${new Date().toISOString().split('T')[0]}.csv`
+        link.click()
+        window.URL.revokeObjectURL(url)
+      }
 
       toast({
         title: "Export Successful",

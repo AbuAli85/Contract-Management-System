@@ -29,15 +29,17 @@ export function ContractsList() {
       }
       
       // Create blob and download
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${contractName || 'contract'}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      if (typeof window !== 'undefined') {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${contractName || 'contract'}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
       
       toast.success(`Downloaded ${contractName}`)
     } catch (error) {

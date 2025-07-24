@@ -98,7 +98,11 @@ export default function ContractDetailPage() {
                     <label className="font-medium text-gray-500">Contract ID</label>
                     <div className="flex items-center gap-2 mt-1">
                       <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">{contractId}</code>
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contractId)}>
+                      <Button size="sm" variant="ghost" onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          copyToClipboard(contractId)
+                        }
+                      }}>
                         <CopyIcon className="h-3 w-3" />
                       </Button>
                     </div>
@@ -247,9 +251,13 @@ export default function ContractDetailPage() {
                         <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono flex-1">
                           {contract.first_party_id}
                         </code>
-                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contract.first_party_id || '')}>
-                          <CopyIcon className="h-3 w-3" />
-                        </Button>
+                                              <Button size="sm" variant="ghost" onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          copyToClipboard(contract.first_party_id || '')
+                        }
+                      }}>
+                        <CopyIcon className="h-3 w-3" />
+                      </Button>
                       </div>
                     </div>
                   )}
@@ -324,9 +332,13 @@ export default function ContractDetailPage() {
                         <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono flex-1">
                           {contract.second_party_id}
                         </code>
-                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contract.second_party_id || '')}>
-                          <CopyIcon className="h-3 w-3" />
-                        </Button>
+                                              <Button size="sm" variant="ghost" onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          copyToClipboard(contract.second_party_id || '')
+                        }
+                      }}>
+                        <CopyIcon className="h-3 w-3" />
+                      </Button>
                       </div>
                     </div>
                   )}
@@ -402,9 +414,13 @@ export default function ContractDetailPage() {
                         <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono flex-1">
                           {contract.promoter_id}
                         </code>
-                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contract.promoter_id || '')}>
-                          <CopyIcon className="h-3 w-3" />
-                        </Button>
+                                              <Button size="sm" variant="ghost" onClick={() => {
+                        if (typeof window !== 'undefined') {
+                          copyToClipboard(contract.promoter_id || '')
+                        }
+                      }}>
+                        <CopyIcon className="h-3 w-3" />
+                      </Button>
                       </div>
                     </div>
                   )}
@@ -443,7 +459,11 @@ export default function ContractDetailPage() {
                             View
                           </Link>
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contract.google_doc_url || '')}>
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            copyToClipboard(contract.google_doc_url || '')
+                          }
+                        }}>
                           <CopyIcon className="h-4 w-4" />
                         </Button>
                       </div>
@@ -469,7 +489,11 @@ export default function ContractDetailPage() {
                             Download
                           </Link>
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(contract.pdf_url || '')}>
+                        <Button size="sm" variant="ghost" onClick={() => {
+                          if (typeof window !== 'undefined') {
+                            copyToClipboard(contract.pdf_url || '')
+                          }
+                        }}>
                           <CopyIcon className="h-4 w-4" />
                         </Button>
                       </div>
