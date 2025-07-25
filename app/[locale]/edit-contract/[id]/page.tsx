@@ -49,6 +49,8 @@ export default function EditContractPage() {
     
     // Financial
     salary: "",
+    basic_salary: "",
+    allowances: "",
     currency: "USD",
     
     // Party Information
@@ -73,13 +75,16 @@ export default function EditContractPage() {
     pdf_url: "",
     
     // Error details
-    error_details: ""
+    error_details: "",
+    // Special Terms
+    special_terms: ""
   })
   
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Load contract data into form when contract is fetched
   useEffect(() => {
@@ -88,12 +93,14 @@ export default function EditContractPage() {
         status: contract.status || "draft",
         contract_start_date: contract.contract_start_date || "",
         contract_end_date: contract.contract_end_date || "",
-        salary: contract.salary?.toString() || "",
+        salary: contract.basic_salary?.toString() || "",
+        basic_salary: contract.basic_salary?.toString() || "",
+        allowances: contract.allowances?.toString() || "",
         currency: contract.currency || "USD",
-        first_party_name_en: contract.first_party_name_en || "",
-        first_party_name_ar: contract.first_party_name_ar || "",
-        second_party_name_en: contract.second_party_name_en || "",
-        second_party_name_ar: contract.second_party_name_ar || "",
+        first_party_name_en: contract.first_party_name_en || contract.first_party?.name_en || "",
+        first_party_name_ar: contract.first_party_name_ar || contract.first_party?.name_ar || "",
+        second_party_name_en: contract.second_party_name_en || contract.second_party?.name_en || "",
+        second_party_name_ar: contract.second_party_name_ar || contract.second_party?.name_ar || "",
         job_title: contract.job_title || "",
         department: contract.department || "",
         work_location: contract.work_location || "",
@@ -101,9 +108,10 @@ export default function EditContractPage() {
         contract_type: contract.contract_type || "",
         contract_number: contract.contract_number || "",
         id_card_number: contract.id_card_number || "",
-        google_doc_url: contract.google_doc_url || "",
         pdf_url: contract.pdf_url || "",
-        error_details: contract.error_details || ""
+        special_terms: contract.special_terms || "",
+        google_doc_url: "",
+        error_details: ""
       })
     }
   }, [contract])
@@ -132,10 +140,27 @@ export default function EditContractPage() {
     setHasUnsavedChanges(true)
   }
 
+  const validateForm = () => {
+    const errors: string[] = [];
+    if (!formData.contract_number) errors.push('Contract Number is required.');
+    if (!formData.first_party_name_en) errors.push('First Party (Employer) name is required.');
+    if (!formData.second_party_name_en) errors.push('Second Party (Employee) name is required.');
+    if (!formData.contract_start_date) errors.push('Start Date is required.');
+    if (!formData.contract_end_date) errors.push('End Date is required.');
+    if (formData.salary && parseFloat(formData.salary) < 0) errors.push('Salary cannot be negative.');
+    return errors;
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setSaveError(null)
     setSaveSuccess(false)
+    const errors = validateForm();
+    setValidationErrors(errors);
+    if (errors.length > 0) {
+      setSaving(false);
+      return;
+    }
 
     try {
       // Basic validation
@@ -154,7 +179,12 @@ export default function EditContractPage() {
       const updateData = {
         ...formData,
         salary: formData.salary ? parseFloat(formData.salary) : null,
-        updated_at: new Date().toISOString()
+        basic_salary: formData.basic_salary ? parseFloat(formData.basic_salary) : null,
+        allowances: formData.allowances ? parseFloat(formData.allowances) : null,
+        updated_at: new Date().toISOString(),
+        // Remove fields not in DB
+        google_doc_url: undefined,
+        error_details: undefined
       }
 
       const { error } = await supabase
@@ -168,7 +198,6 @@ export default function EditContractPage() {
       // Refresh contract data
       await refetch()
       setHasUnsavedChanges(false)
-      
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000)
     } catch (err) {
@@ -286,7 +315,7 @@ export default function EditContractPage() {
         </div>
 
         {/* Form Tabs */}
-        <Tabs defaultValue="basic" className="space-y-6">
+        <Tabs defaultValue="basic" className="space-y-6 transition-all duration-300">
           <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200 rounded-lg p-1">
             <TabsTrigger value="basic" className="flex items-center gap-2">
               <FileTextIcon className="h-4 w-4" />
@@ -312,7 +341,7 @@ export default function EditContractPage() {
 
           {/* Basic Information Tab */}
           <TabsContent value="basic">
-            <Card className="shadow-lg">
+            <Card className="shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
                 <CardDescription>
@@ -389,7 +418,7 @@ export default function EditContractPage() {
 
           {/* Parties Tab */}
           <TabsContent value="parties">
-            <Card className="shadow-lg">
+            <Card className="shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Contract Parties</CardTitle>
                 <CardDescription>
@@ -458,7 +487,7 @@ export default function EditContractPage() {
 
           {/* Employment Tab */}
           <TabsContent value="employment">
-            <Card className="shadow-lg">
+            <Card className="shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Employment Details</CardTitle>
                 <CardDescription>
@@ -476,7 +505,6 @@ export default function EditContractPage() {
                       placeholder="Software Developer"
                     />
                   </div>
-                  
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
                     <Input
@@ -487,19 +515,45 @@ export default function EditContractPage() {
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="salary">Salary</Label>
+                    <Label htmlFor="basic_salary">Basic Salary
+                      <span className="ml-1 text-gray-400 cursor-pointer" title="The base salary before allowances.">?</span>
+                    </Label>
+                    <Input
+                      id="basic_salary"
+                      type="number"
+                      value={formData.basic_salary}
+                      onChange={(e) => handleInputChange('basic_salary', e.target.value)}
+                      placeholder="50000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="allowances">Allowances
+                      <span className="ml-1 text-gray-400 cursor-pointer" title="Additional allowances (e.g., housing, transport).">?</span>
+                    </Label>
+                    <Input
+                      id="allowances"
+                      type="number"
+                      value={formData.allowances}
+                      onChange={(e) => handleInputChange('allowances', e.target.value)}
+                      placeholder="10000"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="salary">Total Salary
+                      <span className="ml-1 text-gray-400 cursor-pointer" title="Total salary including all components.">?</span>
+                    </Label>
                     <Input
                       id="salary"
                       type="number"
                       value={formData.salary}
                       onChange={(e) => handleInputChange('salary', e.target.value)}
-                      placeholder="50000"
+                      placeholder="60000"
                     />
                   </div>
-                  
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="currency">Currency</Label>
                     <Select value={formData.currency} onValueChange={(value) => handleInputChange('currency', value)}>
@@ -515,16 +569,17 @@ export default function EditContractPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="work_location">Work Location</Label>
-                  <Input
-                    id="work_location"
-                    value={formData.work_location}
-                    onChange={(e) => handleInputChange('work_location', e.target.value)}
-                    placeholder="Remote / Office Address"
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="work_location">Work Location
+                      <span className="ml-1 text-gray-400 cursor-pointer" title="Where the employee will work.">?</span>
+                    </Label>
+                    <Input
+                      id="work_location"
+                      value={formData.work_location}
+                      onChange={(e) => handleInputChange('work_location', e.target.value)}
+                      placeholder="Remote / Office Address"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -532,7 +587,7 @@ export default function EditContractPage() {
 
           {/* Dates & Terms Tab */}
           <TabsContent value="dates">
-            <Card className="shadow-lg">
+            <Card className="shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Contract Dates & Terms</CardTitle>
                 <CardDescription>
@@ -577,13 +632,25 @@ export default function EditContractPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="special_terms">Special Terms
+                    <span className="ml-1 text-gray-400 cursor-pointer" title="Any special terms or conditions for this contract.">?</span>
+                  </Label>
+                  <Textarea
+                    id="special_terms"
+                    value={formData.special_terms}
+                    onChange={(e) => handleInputChange('special_terms', e.target.value)}
+                    placeholder="Any special terms or conditions..."
+                    rows={3}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Documents Tab */}
           <TabsContent value="documents">
-            <Card className="shadow-lg">
+            <Card className="shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Contract Documents</CardTitle>
                 <CardDescription>

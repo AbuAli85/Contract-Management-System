@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { WebhookService } from '@/lib/webhook-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -77,6 +78,38 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Error updating contract status:', updateError)
       return NextResponse.json({ error: 'Failed to update contract status' }, { status: 500 })
+    }
+
+    // If contract is now active (fully approved), trigger PDF generation and email sending
+    if (action === 'approved' && nextStatus === 'active') {
+      try {
+        // Fetch full contract details for webhook
+        const { data: fullContract } = await supabase
+          .from('contracts')
+          .select('*')
+          .eq('id', contractId)
+          .single()
+        // Trigger PDF generation and email via webhook
+        await WebhookService.processContract(fullContract)
+        // Log notification for follow-up
+        await supabase.from('notifications').insert({
+          user_id: contract.created_by,
+          type: 'contract_pdf_processing',
+          title: 'Contract PDF and Email Processing',
+          message: 'PDF generation and email sending to client and employer has started.',
+          data: { contract_id: contractId }
+        })
+      } catch (err) {
+        console.error('Error triggering PDF/email webhook:', err)
+        // Optionally, log a notification for failure
+        await supabase.from('notifications').insert({
+          user_id: contract.created_by,
+          type: 'contract_pdf_error',
+          title: 'Contract PDF/Email Error',
+          message: 'There was an error starting PDF generation or email sending.',
+          data: { contract_id: contractId, error: err instanceof Error ? err.message : String(err) }
+        })
+      }
     }
 
     // Create approval record

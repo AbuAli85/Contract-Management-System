@@ -1,9 +1,12 @@
 "use client"
 
 import { useParams } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { 
   ArrowLeftIcon, 
@@ -19,7 +22,12 @@ import {
   CopyIcon,
   MailIcon,
   MapPinIcon,
-  CalendarIcon
+  CalendarIcon,
+  CheckCircleIcon,
+  AlertCircleIcon,
+  RefreshCwIcon,
+  ExternalLinkIcon,
+  BellIcon
 } from "lucide-react"
 
 // Import our refactored components
@@ -30,10 +38,96 @@ import { ErrorCard } from "@/components/ErrorCard"
 import { OverviewTab } from "@/components/contract-tabs/OverviewTab"
 import { formatDate, calculateDuration, copyToClipboard, formatDateTime } from "@/utils/format"
 
+interface PDFStatus {
+  can_download: boolean
+  has_pdf: boolean
+  pdf_url?: string
+  is_processing: boolean
+  last_notification?: string
+  notifications: any[]
+}
+
 export default function ContractDetailPage() {
   const params = useParams()
   const contractId = (params?.id as string) || ''
   const { contract, loading, error, refetch } = useContract(contractId)
+  
+  const [pdfStatus, setPdfStatus] = useState<PDFStatus>({
+    can_download: false,
+    has_pdf: false,
+    is_processing: false,
+    notifications: []
+  })
+  const [downloading, setDownloading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+
+  // Fetch PDF status when contract loads
+  useEffect(() => {
+    if (contract && contract.approval_status === 'active') {
+      fetchPDFStatus()
+    }
+  }, [contract])
+
+  const fetchPDFStatus = async () => {
+    try {
+      const response = await fetch(`/api/contracts/download-pdf?contractId=${contractId}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setPdfStatus({
+          can_download: data.can_download,
+          has_pdf: data.has_pdf,
+          pdf_url: data.contract.pdf_url,
+          is_processing: false,
+          notifications: data.notifications
+        })
+      }
+    } catch (error) {
+      console.error('Error fetching PDF status:', error)
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    if (!contract || contract.approval_status !== 'active') {
+      setStatusMessage('Contract must be approved before PDF can be generated')
+      return
+    }
+
+    setDownloading(true)
+    setStatusMessage('Initiating PDF generation and email sending...')
+
+    try {
+      const response = await fetch('/api/contracts/download-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractId })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setStatusMessage('PDF generation and email sending initiated successfully!')
+        setPdfStatus(prev => ({ ...prev, is_processing: true }))
+        
+        // Refresh status after a delay
+        setTimeout(() => {
+          fetchPDFStatus()
+        }, 3000)
+      } else {
+        setStatusMessage(data.error || 'Failed to initiate PDF generation')
+      }
+    } catch (error) {
+      setStatusMessage('Error initiating PDF generation')
+      console.error('Download error:', error)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
+  const handleRefreshStatus = () => {
+    fetchPDFStatus()
+    setStatusMessage('Status refreshed')
+  }
 
   if (loading) {
     return <LoadingSpinner />
@@ -65,6 +159,9 @@ export default function ContractDetailPage() {
     )
   }
 
+  const isApproved = contract.approval_status === 'active'
+  const hasPDF = !!contract.pdf_url
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="mx-auto max-w-8xl px-4 py-8">
@@ -91,6 +188,12 @@ export default function ContractDetailPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <h1 className="text-3xl font-bold text-gray-900">Contract Details</h1>
                   <StatusBadge status={contract?.status} />
+                  {isApproved && (
+                    <Badge className="bg-green-100 text-green-800">
+                      <CheckCircleIcon className="h-3 w-3 mr-1" />
+                      Approved
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -120,13 +223,63 @@ export default function ContractDetailPage() {
                     <p className="text-gray-900 mt-1">{calculateDuration(contract?.contract_start_date, contract?.contract_end_date)}</p>
                   </div>
                 </div>
+
+                {/* PDF Status Section */}
+                {isApproved && (
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <FileTextIcon className="h-5 w-5 text-blue-600" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">PDF & Email Status</h4>
+                          <p className="text-sm text-blue-700">
+                            {hasPDF ? 'PDF generated and emails sent' : 'PDF generation and email sending available'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                                                 {hasPDF && contract.pdf_url ? (
+                           <Button size="sm" variant="outline" asChild>
+                             <a href={contract.pdf_url} target="_blank" rel="noopener noreferrer">
+                               <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                               View PDF
+                             </a>
+                           </Button>
+                         ) : (
+                          <Button 
+                            size="sm" 
+                            onClick={handleDownloadPDF}
+                            disabled={downloading || pdfStatus.is_processing}
+                          >
+                            {downloading ? (
+                              <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <DownloadIcon className="mr-2 h-4 w-4" />
+                            )}
+                            {downloading ? 'Processing...' : 'Generate PDF & Send Email'}
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={handleRefreshStatus}
+                        >
+                          <RefreshCwIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {statusMessage && (
+                      <Alert className="mt-3">
+                        <AlertCircleIcon className="h-4 w-4" />
+                        <AlertDescription>{statusMessage}</AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center gap-2 ml-6">
-                <Button variant="outline" size="sm">
-                  <DownloadIcon className="mr-2 h-4 w-4" />
-                  Download
-                </Button>
                 <Button variant="outline" size="sm">
                   <EyeIcon className="mr-2 h-4 w-4" />
                   Preview
@@ -148,7 +301,7 @@ export default function ContractDetailPage() {
 
         {/* Tabs Section */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-white border border-gray-200 rounded-lg p-1">
+          <TabsList className="grid w-full grid-cols-7 bg-white border border-gray-200 rounded-lg p-1">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <EyeIcon className="h-4 w-4" />
               Overview
@@ -168,6 +321,10 @@ export default function ContractDetailPage() {
             <TabsTrigger value="history" className="flex items-center gap-2">
               <HistoryIcon className="h-4 w-4" />
               History
+            </TabsTrigger>
+            <TabsTrigger value="followup" className="flex items-center gap-2">
+              <BellIcon className="h-4 w-4" />
+              Follow-up
             </TabsTrigger>
             <TabsTrigger value="actions" className="flex items-center gap-2">
               <MoreHorizontalIcon className="h-4 w-4" />
@@ -440,35 +597,7 @@ export default function ContractDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contract?.google_doc_url && (
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <FileTextIcon className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">Google Document</h4>
-                          <p className="text-sm text-gray-500">Editable contract document</p>
-                          <p className="text-xs text-gray-400 mt-1 break-all">{contract.google_doc_url}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={contract.google_doc_url} target="_blank">
-                            <EyeIcon className="mr-2 h-4 w-4" />
-                            View
-                          </Link>
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => {
-                          if (typeof window !== 'undefined') {
-                            copyToClipboard(contract.google_doc_url || '')
-                          }
-                        }}>
-                          <CopyIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+
                   
                   {contract?.pdf_url && (
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -500,7 +629,7 @@ export default function ContractDetailPage() {
                     </div>
                   )}
                   
-                  {!contract?.google_doc_url && !contract?.pdf_url && (
+                  {!contract?.pdf_url && (
                     <div className="text-center py-12 text-gray-500">
                       <FileTextIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Available</h3>
@@ -517,7 +646,7 @@ export default function ContractDetailPage() {
                   )}
                 </div>
                 
-                {(contract?.google_doc_url || contract?.pdf_url) && (
+                {contract?.pdf_url && (
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                       <div className="flex items-start gap-3">
@@ -689,6 +818,116 @@ export default function ContractDetailPage() {
                   <p>No history data available</p>
                   <p className="text-sm">History tracking will be implemented in future updates</p>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Follow-up Tab - New tab for tracking PDF/email status */}
+          <TabsContent value="followup" className="space-y-6">
+            <Card className="shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BellIcon className="h-5 w-5" />
+                  Follow-up & Notifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* PDF Status Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileTextIcon className="h-5 w-5 text-blue-600" />
+                      <h4 className="font-medium text-blue-900">PDF Status</h4>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      {hasPDF ? 'Generated' : 'Not generated'}
+                    </p>
+                                         {hasPDF && contract.pdf_url && (
+                       <Button size="sm" variant="outline" className="mt-2" asChild>
+                         <a href={contract.pdf_url} target="_blank" rel="noopener noreferrer">
+                           <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                           View PDF
+                         </a>
+                       </Button>
+                     )}
+                  </div>
+                  
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MailIcon className="h-5 w-5 text-green-600" />
+                      <h4 className="font-medium text-green-900">Email Status</h4>
+                    </div>
+                    <p className="text-sm text-green-700">
+                      {hasPDF ? 'Sent to client & employer' : 'Pending PDF generation'}
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircleIcon className="h-5 w-5 text-purple-600" />
+                      <h4 className="font-medium text-purple-900">Approval Status</h4>
+                    </div>
+                    <p className="text-sm text-purple-700">
+                      {isApproved ? 'Fully approved' : contract.approval_status || 'Not submitted'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Recent Notifications */}
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Recent Activity</h4>
+                  <div className="space-y-2">
+                    {pdfStatus.notifications.length > 0 ? (
+                      pdfStatus.notifications.map((notification, index) => (
+                        <div key={index} className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-medium text-gray-900">{notification.title}</p>
+                              <p className="text-sm text-gray-600">{notification.message}</p>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {formatDateTime(notification.created_at)}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <BellIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                        <p>No recent activity</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Manual Actions */}
+                {isApproved && !hasPDF && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h4 className="font-medium text-yellow-900 mb-2">Manual Actions</h4>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        size="sm" 
+                        onClick={handleDownloadPDF}
+                        disabled={downloading}
+                      >
+                        {downloading ? (
+                          <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <DownloadIcon className="mr-2 h-4 w-4" />
+                        )}
+                        {downloading ? 'Processing...' : 'Generate PDF & Send Email'}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={handleRefreshStatus}
+                      >
+                        <RefreshCwIcon className="mr-2 h-4 w-4" />
+                        Refresh Status
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

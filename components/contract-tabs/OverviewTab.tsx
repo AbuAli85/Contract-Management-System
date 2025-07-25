@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { KeyMetricCard } from '@/components/KeyMetricCard'
-import { ContractDetail } from '@/lib/types'
+import { Contract } from '@/lib/types'
 import { formatCurrency, calculateDuration, formatDate, formatDateTime, copyToClipboard } from '@/utils/format'
 import { 
   CalendarIcon, 
@@ -22,7 +22,7 @@ import {
 } from '@/constants/contract-options'
 
 interface OverviewTabProps {
-  contract: ContractDetail | null
+  contract: Contract | null
 }
 
 export function OverviewTab({ contract }: OverviewTabProps) {
@@ -57,7 +57,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
 
         <KeyMetricCard
           title="Documents"
-          value={(contract?.google_doc_url ? 1 : 0) + (contract?.pdf_url ? 1 : 0)}
+          value={contract?.pdf_url ? 1 : 0}
           icon={FileTextIcon}
           colorClass="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200"
         />
