@@ -53,10 +53,10 @@ export async function GET() {
     }
 
     // Get current date and calculate date ranges
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0)
+    const currentDate = new Date()
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const startOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
+    const endOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0)
 
     // Use optimized queries with specific column selection and limits
     console.log('📊 Fetching analytics data...')
@@ -168,7 +168,7 @@ export async function GET() {
 
     // Prepare monthly trends data (simplified for performance)
     const monthlyTrends = Array.from({ length: 6 }, (_, i) => { // Reduced from 12 to 6 months
-      const month = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const month = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
       const monthContracts = contracts.filter(c => {
         const contractDate = new Date(c.created_at)
         return contractDate.getMonth() === month.getMonth() && contractDate.getFullYear() === month.getFullYear()
@@ -201,17 +201,17 @@ export async function GET() {
       .map(c => ({
         id: c.id,
         action: 'Contract Created',
-        resource: c.contract_number || `Contract ${c.id.slice(0, 8)}`,
+        resource: `Contract ${c.id.slice(0, 8)}`,
         timestamp: c.created_at,
         status: c.status
       }))
 
     // Calculate upcoming expirations (contracts expiring in next 30 days)
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+    const thirtyDaysFromNow = new Date(currentDate.getTime() + 30 * 24 * 60 * 60 * 1000)
     const upcomingExpirations = contracts.filter(c => {
       if (!c.contract_end_date) return false
       const endDate = new Date(c.contract_end_date)
-      return endDate <= thirtyDaysFromNow && endDate >= now && c.status === 'active'
+      return endDate <= thirtyDaysFromNow && endDate >= currentDate && c.status === 'active'
     }).length
 
     const analytics = {
