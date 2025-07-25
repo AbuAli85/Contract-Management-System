@@ -47,18 +47,6 @@ const nextConfig = {
   images: {
     formats: ['image/webp', 'image/avif'],
   },
-  // Reduce bundle size
-  swcMinify: true,
-  // Optimize CSS
-  css: {
-    postcss: {
-      plugins: [
-        'tailwindcss',
-        'autoprefixer',
-        'cssnano', // Minify CSS
-      ],
-    },
-  },
 }
 
 module.exports = nextConfig
