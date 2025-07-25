@@ -174,14 +174,14 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       badgeVariant: "default"
     },
     {
-      href: `/${locale}/promoters`,
+      href: `/${locale}/manage-promoters`,
       label: "Promoters",
       labelAr: "الوسطاء",
       icon: Users,
       permission: "promoter:read"
     },
     {
-      href: `/${locale}/parties`,
+      href: `/${locale}/manage-parties`,
       label: "Parties",
       labelAr: "الأطراف",
       icon: Building2,

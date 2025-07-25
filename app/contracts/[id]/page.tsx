@@ -764,7 +764,7 @@ export default function ContractDetailPage() {
                     
                     <div className="pt-4 border-t">
                       <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link href={`/promoters`}>
+                        <Link href={`/manage-promoters`}>
                           {contract?.promoter ? 'View Details' : 'Assign Promoter'}
                         </Link>
                       </Button>

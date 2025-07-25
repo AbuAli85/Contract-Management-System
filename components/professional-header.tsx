@@ -85,13 +85,13 @@ export function ProfessionalHeader({
     {
       label: "Add Promoter",
       icon: Users,
-      href: "/promoters/new",
+              href: "/manage-promoters/new",
       permission: "promoter:create" as const
     },
     {
       label: "Add Party",
       icon: Building2,
-      href: "/parties/new",
+              href: "/manage-parties/new",
       permission: "party:create" as const
     },
     {
