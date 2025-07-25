@@ -64,6 +64,9 @@ export default function ContractDetailPage() {
   const [downloading, setDownloading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
+  // Validate contract ID format
+  const isValidContractId = contractId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(contractId)
+
   // Fetch PDF status when contract loads
   useEffect(() => {
     if (contract && contract.approval_status === 'active') {
@@ -72,6 +75,8 @@ export default function ContractDetailPage() {
   }, [contract])
 
   const fetchPDFStatus = async () => {
+    if (!contractId) return
+    
     try {
       const response = await fetch(`/api/contracts/download-pdf?contractId=${contractId}`)
       const data = await response.json()
@@ -110,18 +115,13 @@ export default function ContractDetailPage() {
 
       if (data.success) {
         setStatusMessage('PDF generation and email sending initiated successfully!')
-        setPdfStatus(prev => ({ ...prev, is_processing: true }))
-        
-        // Refresh status after a delay
-        setTimeout(() => {
-          fetchPDFStatus()
-        }, 3000)
+        fetchPDFStatus()
       } else {
-        setStatusMessage(data.error || 'Failed to initiate PDF generation')
+        setStatusMessage(`Error: ${data.error}`)
       }
     } catch (error) {
-      setStatusMessage('Error initiating PDF generation')
-      console.error('Download error:', error)
+      console.error('Error downloading PDF:', error)
+      setStatusMessage('Failed to initiate PDF generation')
     } finally {
       setDownloading(false)
     }
@@ -129,25 +129,84 @@ export default function ContractDetailPage() {
 
   const handleRefreshStatus = () => {
     fetchPDFStatus()
-    setStatusMessage('Status refreshed')
   }
 
+  // Show invalid contract ID state
+  if (!isValidContractId) {
+    return (
+      <AuthenticatedLayout locale={locale}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+          <div className="mx-auto max-w-4xl">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Invalid Contract ID</h3>
+                <p className="text-gray-600 mb-6">The contract ID format is invalid. Please check the URL and try again.</p>
+                <Button asChild>
+                  <Link href={`/${locale}/contracts`}>
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Back to Contracts
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </AuthenticatedLayout>
+    )
+  }
+
+  // Show loading state
   if (loading) {
     return (
       <AuthenticatedLayout locale={locale}>
-        <LoadingSpinner />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+          <div className="mx-auto max-w-4xl">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <LoadingSpinner />
+                <h3 className="text-lg font-semibold text-gray-900 mt-4">Loading Contract...</h3>
+                <p className="text-gray-600">Please wait while we fetch the contract details.</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </AuthenticatedLayout>
     )
   }
 
+  // Show error state
   if (error) {
     return (
       <AuthenticatedLayout locale={locale}>
-        <ErrorCard message={error} onRetry={refetch} />
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+          <div className="mx-auto max-w-4xl">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Contract</h3>
+                <p className="text-gray-600 mb-6">{error}</p>
+                <div className="flex items-center justify-center gap-4">
+                  <Button onClick={() => refetch()} variant="outline">
+                    <RefreshCwIcon className="mr-2 h-4 w-4" />
+                    Try Again
+                  </Button>
+                  <Button asChild>
+                    <Link href={`/${locale}/contracts`}>
+                      <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                      Back to Contracts
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </AuthenticatedLayout>
     )
   }
 
+  // Show contract not found state
   if (!contract) {
     return (
       <AuthenticatedLayout locale={locale}>
@@ -158,12 +217,18 @@ export default function ContractDetailPage() {
                 <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
                 <p className="text-gray-600 mb-6">The contract you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-                <Button asChild>
-                  <Link href={`/${params?.locale}/contracts`}>
-                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                    Back to Contracts
-                  </Link>
-                </Button>
+                <div className="flex items-center justify-center gap-4">
+                  <Button asChild>
+                    <Link href={`/${locale}/contracts`}>
+                      <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                      Back to Contracts
+                    </Link>
+                  </Button>
+                  <Button onClick={() => refetch()} variant="outline">
+                    <RefreshCwIcon className="mr-2 h-4 w-4" />
+                    Refresh
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -215,11 +280,19 @@ export default function ContractDetailPage() {
                     <label className="font-medium text-gray-500">Contract ID</label>
                     <div className="flex items-center gap-2 mt-1">
                       <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">{contractId}</code>
-                      <Button size="sm" variant="ghost" onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          copyToClipboard(contractId)
-                        }
-                      }}>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        onClick={async () => {
+                          try {
+                            if (typeof window !== 'undefined' && contractId) {
+                              await copyToClipboard(contractId)
+                            }
+                          } catch (error) {
+                            console.error('Failed to copy contract ID:', error)
+                          }
+                        }}
+                      >
                         <CopyIcon className="h-3 w-3" />
                       </Button>
                     </div>
