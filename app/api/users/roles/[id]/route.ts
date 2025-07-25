@@ -4,9 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 // GET - Fetch specific role
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Get current user to check permissions
@@ -31,7 +32,7 @@ export async function GET(
     const { data: role, error: roleError } = await supabase
       .from('roles')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (roleError) {
@@ -49,7 +50,7 @@ export async function GET(
       success: true,
       role: {
         id: role.id,
-        name: role.display_name,
+        name: role.name,
         description: role.description,
         permissions: role.permissions || [],
         userCount: userCount || 0,
@@ -68,9 +69,10 @@ export async function GET(
 // PUT - Update role
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Get current user to check permissions
@@ -102,7 +104,7 @@ export async function PUT(
     const { data: existingRole, error: fetchError } = await supabase
       .from('roles')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !existingRole) {
@@ -119,7 +121,7 @@ export async function PUT(
         .from('roles')
         .select('id')
         .eq('name', name.toLowerCase())
-        .neq('id', params.id)
+        .neq('id', id)
         .single()
 
       if (nameConflict) {
@@ -132,12 +134,11 @@ export async function PUT(
       .from('roles')
       .update({
         name: name.toLowerCase(),
-        display_name: name,
         description,
         permissions: permissions || [],
         updated_by: user.id
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -153,7 +154,7 @@ export async function PUT(
         user_id: user.id,
         action: 'role_update',
         resource_type: 'role',
-        resource_id: params.id,
+        resource_id: id,
         details: {
           role_name: name,
           role_description: description,
@@ -166,7 +167,7 @@ export async function PUT(
       message: 'Role updated successfully',
       role: {
         id: updatedRole.id,
-        name: updatedRole.display_name,
+        name: updatedRole.name,
         description: updatedRole.description,
         permissions: updatedRole.permissions || [],
         userCount: 0, // Will be calculated separately
@@ -185,9 +186,10 @@ export async function PUT(
 // DELETE - Delete role
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Get current user to check permissions
@@ -212,7 +214,7 @@ export async function DELETE(
     const { data: existingRole, error: fetchError } = await supabase
       .from('roles')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !existingRole) {
@@ -239,7 +241,7 @@ export async function DELETE(
     const { error: deleteError } = await supabase
       .from('roles')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (deleteError) {
       console.error('Error deleting role:', deleteError)
@@ -253,9 +255,9 @@ export async function DELETE(
         user_id: user.id,
         action: 'role_delete',
         resource_type: 'role',
-        resource_id: params.id,
+        resource_id: id,
         details: {
-          role_name: existingRole.display_name,
+          role_name: existingRole.name,
           role_description: existingRole.description
         }
       })
