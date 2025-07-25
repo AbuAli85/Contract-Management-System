@@ -10,13 +10,15 @@ interface AuthenticatedLayoutProps {
   requiredRoles?: string[]
   requiredPermissions?: string[]
   fallback?: React.ReactNode
+  locale?: string
 }
 
 export function AuthenticatedLayout({
   children,
   requiredRoles = [],
   requiredPermissions = [],
-  fallback
+  fallback,
+  locale
 }: AuthenticatedLayoutProps) {
   const { user, profile, roles, loading, mounted } = useAuth()
   const router = useRouter()

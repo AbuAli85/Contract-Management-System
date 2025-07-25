@@ -40,7 +40,9 @@ export async function middleware(req: NextRequest) {
     '/forgot-password',
     '/reset-password',
     '/auth/callback',
-    '/auth/reset-password'
+    '/auth/reset-password',
+    '/auth/login',
+    '/auth/signup'
   ]
 
   // Check if current path is a public route
@@ -78,7 +80,20 @@ export async function middleware(req: NextRequest) {
   // Handle login path without locale - redirect to locale-specific login
   if (req.nextUrl.pathname === '/login') {
     const url = req.nextUrl.clone()
-    url.pathname = `/${locale}/login`
+    url.pathname = `/${locale}/auth/login`
+    return NextResponse.redirect(url)
+  }
+
+  // Handle auth paths without locale - redirect to locale-specific auth
+  if (req.nextUrl.pathname === '/auth/login') {
+    const url = req.nextUrl.clone()
+    url.pathname = `/${locale}/auth/login`
+    return NextResponse.redirect(url)
+  }
+
+  if (req.nextUrl.pathname === '/auth/signup') {
+    const url = req.nextUrl.clone()
+    url.pathname = `/${locale}/auth/signup`
     return NextResponse.redirect(url)
   }
 

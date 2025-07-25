@@ -18,7 +18,7 @@ export function LoginForm() {
   
   const router = useRouter()
   const { signIn } = useAuth()
-  const redirectTo = '/en/dashboard'
+  const redirectTo = '/dashboard'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
