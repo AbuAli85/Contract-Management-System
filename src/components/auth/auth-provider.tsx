@@ -33,6 +33,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, profile?: Partial<UserProfile>) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error?: string }>
+  updatePassword: (password: string) => Promise<{ error?: string }>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error?: string }>
   refreshSession: () => Promise<void>
   hasRole: (role: string) => boolean
@@ -52,6 +53,7 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => ({ error: 'Not implemented' }),
   signOut: async () => {},
   resetPassword: async () => ({ error: 'Not implemented' }),
+  updatePassword: async () => ({ error: 'Not implemented' }),
   updateProfile: async () => ({ error: 'Not implemented' }),
   refreshSession: async () => {},
   hasRole: () => false,
@@ -274,6 +276,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const updatePassword = async (password: string) => {
+    if (!user?.id) return { error: 'No user logged in' }
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password
+      })
+      if (error) {
+        console.error('❌ Update password error:', error)
+        return { error: error.message }
+      }
+      return {}
+    } catch (error) {
+      console.error('❌ Update password error:', error)
+      return { error: 'An unexpected error occurred' }
+    }
+  }
+
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user?.id) return { error: 'No user logged in' }
 
@@ -348,6 +368,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    updatePassword,
     updateProfile,
     refreshSession,
     hasRole,
