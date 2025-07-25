@@ -18,6 +18,8 @@ export default function AuditLogs() {
           if (data) {
             const typedData = data.map(log => ({
               ...log,
+              id: log.id.toString(), // Convert number to string
+              entity_id: log.entity_id?.toString() || '', // Convert number to string
               details: typeof log.details === 'string' ? log.details : JSON.stringify(log.details || {})
             })) as AuditLog[]
             setLogs(typedData)
