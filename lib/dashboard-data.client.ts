@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { createClient } from './supabase/client'
 import type { DashboardAnalytics } from './dashboard-types'
 
 export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
@@ -57,6 +57,7 @@ export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
 
 export async function getPendingReviews(): Promise<any[]> {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from('contracts')
       .select('id, contract_name, status, updated_at, created_at')
@@ -67,7 +68,7 @@ export async function getPendingReviews(): Promise<any[]> {
     if (error) throw error
     if (!data) return []
 
-    return data.map(contract => ({
+    return data.map((contract: any) => ({
       id: contract.id,
       title: contract.contract_name || 'Untitled Contract',
       type: 'contract',
@@ -126,6 +127,7 @@ export async function getAuditLogs(): Promise<any[]> {
 
 export async function getNotifications(): Promise<any[]> {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -135,7 +137,7 @@ export async function getNotifications(): Promise<any[]> {
     if (error) throw error
     if (!data) return []
 
-    return data.map(notification => ({
+    return data.map((notification: any) => ({
       id: notification.id,
       message: notification.message || '',
       created_at: notification.created_at,
@@ -152,6 +154,7 @@ export async function getNotifications(): Promise<any[]> {
 
 export async function getUsers(): Promise<any[]> {
   try {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from('users')
       .select('id, email, role, created_at')
@@ -160,7 +163,7 @@ export async function getUsers(): Promise<any[]> {
     if (error) throw error
     if (!data) return []
 
-    return data.map(user => ({
+    return data.map((user: any) => ({
       id: user.id,
       email: user.email || '',
       role: user.role || 'User',
