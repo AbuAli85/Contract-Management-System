@@ -98,9 +98,9 @@ export function SystemStatus() {
     },
     {
       name: 'PDF Generation',
-      status: 'error',
-      responseTime: 1500,
-      uptime: 95.2,
+      status: 'healthy',
+      responseTime: 120,
+      uptime: 99.5,
       lastCheck: new Date(),
       description: 'Contract PDF generation service',
       icon: FileText
@@ -142,26 +142,58 @@ export function SystemStatus() {
 
   const refreshStatus = async () => {
     setIsRefreshing(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Update services with random status changes
-    setServices(prev => prev.map(service => ({
-      ...service,
-      responseTime: Math.floor(Math.random() * 200) + 20,
-      lastCheck: new Date()
-    })))
+    try {
+      // Check PDF generation service health
+      const pdfHealthResponse = await fetch('/api/pdf-generation', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      let pdfStatus = 'healthy'
+      let pdfResponseTime = 120
+      
+      if (pdfHealthResponse.ok) {
+        const pdfHealth = await pdfHealthResponse.json()
+        pdfStatus = pdfHealth.status
+        pdfResponseTime = pdfHealth.response_time || 120
+      } else {
+        pdfStatus = 'error'
+        pdfResponseTime = 1500
+      }
 
-    // Update metrics
-    setMetrics(prev => ({
-      ...prev,
-      cpu: Math.floor(Math.random() * 30) + 15,
-      memory: Math.floor(Math.random() * 20) + 60,
-      activeUsers: Math.floor(Math.random() * 5) + 10
-    }))
+      // Update services with real health checks
+      setServices(prev => prev.map(service => {
+        if (service.name === 'PDF Generation') {
+          return {
+            ...service,
+            status: pdfStatus as 'healthy' | 'warning' | 'error' | 'offline',
+            responseTime: pdfResponseTime,
+            lastCheck: new Date()
+          }
+        }
+        // For other services, simulate realistic variations
+        return {
+          ...service,
+          responseTime: Math.floor(Math.random() * 200) + 20,
+          lastCheck: new Date()
+        }
+      }))
 
-    setLastUpdate(new Date())
-    setIsRefreshing(false)
+      // Update metrics
+      setMetrics(prev => ({
+        ...prev,
+        cpu: Math.floor(Math.random() * 30) + 15,
+        memory: Math.floor(Math.random() * 20) + 60,
+        activeUsers: Math.floor(Math.random() * 5) + 10
+      }))
+
+      setLastUpdate(new Date())
+    } catch (error) {
+      console.error('Error refreshing system status:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   useEffect(() => {
