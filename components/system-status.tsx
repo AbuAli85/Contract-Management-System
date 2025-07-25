@@ -1,247 +1,347 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import React, { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Clock, 
-  RefreshCw, 
-  Database, 
-  Server, 
-  Shield, 
+import { Progress } from '@/components/ui/progress'
+import {
+  Server,
+  Database,
+  Globe,
+  Shield,
+  Activity,
+  CheckCircle,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
+  Clock,
+  Users,
+  FileText,
+  TrendingUp,
+  TrendingDown,
   Wifi,
-  Activity
+  WifiOff,
+  HardDrive,
+  Cpu,
+  Zap,
+  AlertCircle,
+  Info,
 } from 'lucide-react'
-import { useToastHelpers } from '@/components/toast-notifications'
-
-interface SystemStatus {
-  database: 'online' | 'offline' | 'degraded'
-  authentication: 'online' | 'offline' | 'degraded'
-  api: 'online' | 'offline' | 'degraded'
-  storage: 'online' | 'offline' | 'degraded'
-  lastChecked: string
-}
 
 interface ServiceStatus {
   name: string
-  status: 'online' | 'offline' | 'degraded'
-  responseTime?: number
-  lastError?: string
-  icon: React.ComponentType<{ className?: string }>
+  status: 'healthy' | 'warning' | 'error' | 'offline'
+  responseTime: number
+  uptime: number
+  lastCheck: Date
+  description: string
+  icon: React.ElementType
+}
+
+interface SystemMetrics {
+  cpu: number
+  memory: number
+  disk: number
+  network: number
+  activeUsers: number
+  totalContracts: number
+  pendingApprovals: number
 }
 
 export function SystemStatus() {
-  const [status, setStatus] = useState<SystemStatus>({
-    database: 'online',
-    authentication: 'online',
-    api: 'online',
-    storage: 'online',
-    lastChecked: new Date().toISOString()
-  })
-  const [isChecking, setIsChecking] = useState(false)
-  const { success, error, warning } = useToastHelpers()
-
-  const services: ServiceStatus[] = [
+  const [services, setServices] = useState<ServiceStatus[]>([
     {
       name: 'Database',
-      status: status.database,
+      status: 'healthy',
       responseTime: 45,
+      uptime: 99.9,
+      lastCheck: new Date(),
+      description: 'PostgreSQL database connection',
       icon: Database
     },
     {
       name: 'Authentication',
-      status: status.authentication,
+      status: 'healthy',
       responseTime: 23,
+      uptime: 99.8,
+      lastCheck: new Date(),
+      description: 'Supabase Auth service',
       icon: Shield
     },
     {
-      name: 'API Services',
-      status: status.api,
+      name: 'API Gateway',
+      status: 'healthy',
       responseTime: 67,
+      uptime: 99.7,
+      lastCheck: new Date(),
+      description: 'REST API endpoints',
       icon: Server
     },
     {
       name: 'File Storage',
-      status: status.storage,
+      status: 'warning',
+      responseTime: 234,
+      uptime: 98.5,
+      lastCheck: new Date(),
+      description: 'Document and file storage',
+      icon: HardDrive
+    },
+    {
+      name: 'Email Service',
+      status: 'healthy',
       responseTime: 89,
-      icon: Activity
+      uptime: 99.6,
+      lastCheck: new Date(),
+      description: 'SMTP email delivery',
+      icon: Globe
+    },
+    {
+      name: 'PDF Generation',
+      status: 'error',
+      responseTime: 1500,
+      uptime: 95.2,
+      lastCheck: new Date(),
+      description: 'Contract PDF generation service',
+      icon: FileText
     }
-  ]
+  ])
 
-  const checkSystemStatus = async () => {
-    setIsChecking(true)
-    
-    try {
-      // Simulate API calls to check system status
-      const checks = await Promise.allSettled([
-        checkDatabase(),
-        checkAuthentication(),
-        checkAPI(),
-        checkStorage()
-      ])
+  const [metrics, setMetrics] = useState<SystemMetrics>({
+    cpu: 23,
+    memory: 67,
+    disk: 45,
+    network: 89,
+    activeUsers: 12,
+    totalContracts: 156,
+    pendingApprovals: 3
+  })
 
-      const newStatus: SystemStatus = {
-        database: checks[0].status === 'fulfilled' ? 'online' : 'offline',
-        authentication: checks[1].status === 'fulfilled' ? 'online' : 'offline',
-        api: checks[2].status === 'fulfilled' ? 'online' : 'offline',
-        storage: checks[3].status === 'fulfilled' ? 'online' : 'offline',
-        lastChecked: new Date().toISOString()
-      }
+  const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-      setStatus(newStatus)
-
-      // Show appropriate toast based on overall status
-      const allOnline = Object.values(newStatus).every(s => s === 'online')
-      const anyOffline = Object.values(newStatus).some(s => s === 'offline')
-
-      if (allOnline) {
-        success('System Status', 'All systems are operational')
-      } else if (anyOffline) {
-        error('System Status', 'Some services are experiencing issues')
-      } else {
-        warning('System Status', 'Some services are degraded')
-      }
-
-    } catch (err) {
-      error('System Check Failed', 'Unable to verify system status')
-    } finally {
-      setIsChecking(false)
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'healthy': return 'bg-green-100 text-green-800 border-green-200'
+      case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'error': return 'bg-red-100 text-red-800 border-red-200'
+      case 'offline': return 'bg-gray-100 text-gray-800 border-gray-200'
+      default: return 'bg-gray-100 text-gray-800 border-gray-200'
     }
   }
-
-  // Simulated health checks
-  const checkDatabase = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    return { status: 'ok' }
-  }
-
-  const checkAuthentication = async () => {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    return { status: 'ok' }
-  }
-
-  const checkAPI = async () => {
-    await new Promise(resolve => setTimeout(resolve, 400))
-    return { status: 'ok' }
-  }
-
-  const checkStorage = async () => {
-    await new Promise(resolve => setTimeout(resolve, 600))
-    return { status: 'ok' }
-  }
-
-  useEffect(() => {
-    checkSystemStatus()
-    
-    // Check status every 5 minutes
-    const interval = setInterval(checkSystemStatus, 5 * 60 * 1000)
-    return () => clearInterval(interval)
-  }, [])
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'online':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case 'offline':
-        return <XCircle className="h-4 w-4 text-red-600" />
-      case 'degraded':
-        return <AlertTriangle className="h-4 w-4 text-yellow-600" />
-      default:
-        return <Clock className="h-4 w-4 text-gray-600" />
+      case 'healthy': return CheckCircle
+      case 'warning': return AlertTriangle
+      case 'error': return XCircle
+      case 'offline': return WifiOff
+      default: return Info
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'online':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Online</Badge>
-      case 'offline':
-        return <Badge variant="destructive">Offline</Badge>
-      case 'degraded':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Degraded</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+  const refreshStatus = async () => {
+    setIsRefreshing(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Update services with random status changes
+    setServices(prev => prev.map(service => ({
+      ...service,
+      responseTime: Math.floor(Math.random() * 200) + 20,
+      lastCheck: new Date()
+    })))
+
+    // Update metrics
+    setMetrics(prev => ({
+      ...prev,
+      cpu: Math.floor(Math.random() * 30) + 15,
+      memory: Math.floor(Math.random() * 20) + 60,
+      activeUsers: Math.floor(Math.random() * 5) + 10
+    }))
+
+    setLastUpdate(new Date())
+    setIsRefreshing(false)
   }
 
-  const overallStatus = Object.values(status).every(s => s === 'online') 
-    ? 'All Systems Operational' 
-    : 'System Issues Detected'
+  useEffect(() => {
+    const interval = setInterval(refreshStatus, 30000) // Refresh every 30 seconds
+    return () => clearInterval(interval)
+  }, [])
 
-  const hasIssues = Object.values(status).some(s => s !== 'online')
+  const overallHealth = services.filter(s => s.status === 'healthy').length / services.length * 100
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Wifi className="h-5 w-5" />
-              System Status
-            </CardTitle>
-            <CardDescription>
-              {overallStatus} • Last checked: {new Date(status.lastChecked).toLocaleTimeString()}
-            </CardDescription>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">System Status</h2>
+          <p className="text-muted-foreground">
+            Real-time monitoring of all system services and performance metrics
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <div className="text-sm text-muted-foreground">Last Updated</div>
+            <div className="text-sm font-medium">
+              {lastUpdate.toLocaleTimeString()}
+            </div>
           </div>
-          <Button 
-            onClick={checkSystemStatus} 
-            disabled={isChecking}
-            size="sm"
-            variant="outline"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-            {isChecking ? 'Checking...' : 'Refresh'}
+          <Button onClick={refreshStatus} disabled={isRefreshing} variant="outline" size="sm">
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {hasIssues && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Some system services are experiencing issues. Please check the status below.
-            </AlertDescription>
-          </Alert>
-        )}
+      </div>
 
-        <div className="grid gap-3">
-          {services.map((service) => (
-            <div key={service.name} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center gap-3">
-                <service.icon className="h-5 w-5 text-gray-600" />
-                <div>
-                  <p className="font-medium text-sm">{service.name}</p>
-                  {service.responseTime && (
-                    <p className="text-xs text-gray-500">
-                      Response time: {service.responseTime}ms
-                    </p>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {getStatusIcon(service.status)}
-                {getStatusBadge(service.status)}
-              </div>
+      {/* Overall Health */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Overall System Health
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{overallHealth.toFixed(1)}%</div>
+              <div className="text-sm text-muted-foreground">System Health</div>
             </div>
-          ))}
-        </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600">{metrics.activeUsers}</div>
+              <div className="text-sm text-muted-foreground">Active Users</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600">{metrics.totalContracts}</div>
+              <div className="text-sm text-muted-foreground">Total Contracts</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-orange-600">{metrics.pendingApprovals}</div>
+              <div className="text-sm text-muted-foreground">Pending Approvals</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="pt-4 border-t">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Uptime</span>
-            <span className="font-medium">99.9%</span>
+      {/* Performance Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Cpu className="h-5 w-5" />
+              System Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>CPU Usage</span>
+                <span>{metrics.cpu}%</span>
+              </div>
+              <Progress value={metrics.cpu} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Memory Usage</span>
+                <span>{metrics.memory}%</span>
+              </div>
+              <Progress value={metrics.memory} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Disk Usage</span>
+                <span>{metrics.disk}%</span>
+              </div>
+              <Progress value={metrics.disk} className="h-2" />
+            </div>
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Network</span>
+                <span>{metrics.network}%</span>
+              </div>
+              <Progress value={metrics.network} className="h-2" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Service Response Times
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {services.slice(0, 4).map((service) => {
+                const Icon = service.icon
+                const StatusIcon = getStatusIcon(service.status)
+                return (
+                  <div key={service.name} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium text-sm">{service.name}</div>
+                        <div className="text-xs text-muted-foreground">{service.responseTime}ms</div>
+                      </div>
+                    </div>
+                    <StatusIcon className="h-4 w-4 text-green-500" />
+                  </div>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Service Status Grid */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Server className="h-5 w-5" />
+            Service Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map((service) => {
+              const Icon = service.icon
+              const StatusIcon = getStatusIcon(service.status)
+              return (
+                <div key={service.name} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon className="h-5 w-5 text-muted-foreground" />
+                      <h3 className="font-medium">{service.name}</h3>
+                    </div>
+                    <Badge className={getStatusColor(service.status)}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {service.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-3">{service.description}</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span>Response Time:</span>
+                      <span className="font-mono">{service.responseTime}ms</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Uptime:</span>
+                      <span className="font-mono">{service.uptime}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Last Check:</span>
+                      <span className="font-mono">{service.lastCheck.toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Average Response</span>
-            <span className="font-medium">56ms</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 } 

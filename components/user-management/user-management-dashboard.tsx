@@ -679,33 +679,44 @@ export function UserManagementDashboard() {
 
       {/* Permissions Modal */}
       <Dialog open={showPermModal} onOpenChange={setShowPermModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" aria-describedby="permissions-description">
           <DialogHeader>
-            <DialogTitle>Manage Permissions for {permUser?.email}</DialogTitle>
+            <DialogTitle>Manage User Permissions</DialogTitle>
           </DialogHeader>
-          {permLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin mr-2" /> Loading permissions...
+          <div id="permissions-description" className="sr-only">
+            Manage permissions for user {permUser?.email}
+          </div>
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Customize permissions for <strong>{permUser?.email}</strong>
             </div>
-          ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {ACTIONS.map(action => (
-                <div key={action} className="flex items-center gap-2">
-                  <Checkbox
-                    checked={!!permState[action]}
-                    onCheckedChange={checked => setPermState(s => ({ ...s, [action]: !!checked }))}
-                    id={`perm-${action}`}
-                  />
-                  <label htmlFor={`perm-${action}`} className="text-sm">
-                    {action}
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
+            {permLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span className="ml-2">Loading permissions...</span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {Object.entries(permState).map(([permission, granted]) => (
+                  <div key={permission} className="flex items-center justify-between p-2 border rounded">
+                    <span className="text-sm">{permission}</span>
+                    <Checkbox
+                      checked={granted}
+                      onCheckedChange={(checked) => 
+                        setPermState(prev => ({ ...prev, [permission]: !!checked }))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPermModal(false)}>
+              Cancel
+            </Button>
             <Button onClick={savePermissions} disabled={permLoading}>
-              Save
+              Save Permissions
             </Button>
           </DialogFooter>
         </DialogContent>
