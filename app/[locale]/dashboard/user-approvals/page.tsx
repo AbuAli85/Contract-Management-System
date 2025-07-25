@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { AuthenticatedLayout } from '@/components/authenticated-layout'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -62,16 +62,14 @@ export default function UserApprovalsPage() {
   // Check permissions
   if (!canManageUsers()) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="container mx-auto p-6">
-          <Alert>
-            <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              You don't have permission to access user approvals. Please contact an administrator.
-            </AlertDescription>
-          </Alert>
-        </div>
-      </AuthenticatedLayout>
+      <div className="container mx-auto p-6">
+        <Alert>
+          <XCircle className="h-4 w-4" />
+          <AlertDescription>
+            You don't have permission to access user approvals. Please contact an administrator.
+          </AlertDescription>
+        </Alert>
+      </div>
     )
   }
 
@@ -173,8 +171,7 @@ export default function UserApprovalsPage() {
   }
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -455,6 +452,5 @@ export default function UserApprovalsPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AuthenticatedLayout>
   )
 } 
