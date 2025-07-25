@@ -100,25 +100,6 @@ export default function RolesAndPermissionsPage() {
     permissions: [] as string[]
   })
 
-  // Check permissions
-  if (!canManageUsers() || !canAssignRoles()) {
-    return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="container mx-auto p-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center">
-                <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
-                <p className="text-gray-600">You don't have permission to manage roles and permissions.</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </AuthenticatedLayout>
-    )
-  }
-
   // Fetch data
   const fetchData = async () => {
     try {
@@ -295,6 +276,25 @@ export default function RolesAndPermissionsPage() {
     a.download = `roles-${new Date().toISOString().split('T')[0]}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
+  }
+
+  // Check permissions - moved after all hooks
+  if (!canManageUsers() || !canAssignRoles()) {
+    return (
+      <AuthenticatedLayout locale={locale}>
+        <div className="container mx-auto p-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
+                <p className="text-gray-600">You don't have permission to manage roles and permissions.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </AuthenticatedLayout>
+    )
   }
 
   if (loading) {
