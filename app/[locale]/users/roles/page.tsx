@@ -118,11 +118,26 @@ export default function RolesAndPermissionsPage() {
         usersRes.json()
       ])
 
+      // Debug logging
+      console.log('Roles API response:', rolesData)
+      console.log('Permissions API response:', permissionsData)
+      console.log('Users API response:', usersData)
+
       if (rolesData.success) setRoles(rolesData.roles)
       if (permissionsData.success) setPermissions(permissionsData.permissions)
-      if (usersData.success) setUsers(usersData.users)
+      
+      // Fix: Handle users data properly - check for both possible response formats
+      if (usersData.users) {
+        setUsers(usersData.users)
+      } else if (Array.isArray(usersData)) {
+        setUsers(usersData)
+      } else {
+        console.warn('Unexpected users data format:', usersData)
+        setUsers([])
+      }
 
     } catch (err) {
+      console.error('Error fetching data:', err)
       error('Failed to fetch data', 'An error occurred while loading roles and permissions')
     } finally {
       setLoading(false)
