@@ -49,7 +49,7 @@ export function SignupForm() {
       const profile = {
         full_name: fullName,
         role: 'user', // Default role for new users
-        status: 'pending'
+        status: 'pending' // All new users start as pending
       }
       
       const { error } = await signUp(email, password, profile)
@@ -62,7 +62,7 @@ export function SignupForm() {
       }
 
       console.log("📝 Signup Debug - Signup successful")
-      setSuccess('Account created successfully! Please check your email to verify your account.')
+      setSuccess('Account created successfully! Your account is pending approval. You will be notified once an administrator approves your account.')
       
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)

@@ -32,6 +32,7 @@ import { PermissionGuard } from "@/hooks/use-permissions"
 import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
 import type { DashboardAnalytics } from "@/lib/dashboard-types"
 import { useEffect, useState } from "react"
+import { PendingApprovalsNotification } from "@/components/dashboard/pending-approvals-notification"
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = 'force-dynamic'
@@ -215,6 +216,9 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Approvals Notification */}
+        <PendingApprovalsNotification />
 
         {/* Quick Actions */}
         <div className="space-y-4">

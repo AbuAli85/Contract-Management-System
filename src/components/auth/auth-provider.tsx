@@ -182,11 +182,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Authentication methods
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         console.error('❌ Sign in error:', error)
         return { error: error.message }
       }
+
+      // Check if user is pending approval
+      if (data.user) {
+        const userProfile = await loadUserProfile(data.user.id)
+        if (userProfile?.status === 'pending') {
+          // Sign out the user immediately
+          await supabase.auth.signOut()
+          return { error: 'Your account is pending approval. Please wait for an administrator to approve your account.' }
+        }
+        
+        if (userProfile?.status === 'inactive') {
+          // Sign out the user immediately
+          await supabase.auth.signOut()
+          return { error: 'Your account has been deactivated. Please contact an administrator.' }
+        }
+      }
+
       return {}
     } catch (error) {
       console.error('❌ Sign in error:', error)

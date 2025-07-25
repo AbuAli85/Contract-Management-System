@@ -299,6 +299,15 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       titleAr: "إدارة المستخدمين",
       items: [
         {
+          href: `/${locale}/dashboard/user-approvals`,
+          label: "User Approvals",
+          labelAr: "موافقات المستخدمين",
+          icon: UserCheck,
+          permission: "user:create",
+          badge: "New",
+          badgeVariant: "secondary"
+        },
+        {
           href: `/${locale}/dashboard/users`,
           label: "Users",
           labelAr: "المستخدمون",
