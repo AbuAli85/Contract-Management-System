@@ -1,6 +1,7 @@
 // Contract Generation Service - Professional End-to-End Solution
 import { createClient } from '@supabase/supabase-js'
 import { nanoid } from 'nanoid'
+import { getSupabaseConfig } from './supabase/env-check'
 
 // Types for contract generation
 export interface ContractGenerationRequest {
@@ -46,12 +47,15 @@ class ContractGenerationService {
   private googleDriveFolderId: string
 
   constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-    this.makecomWebhookUrl = process.env.MAKE_WEBHOOK_URL || ''
-    this.googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || ''
+    try {
+      const config = getSupabaseConfig()
+      this.supabase = createClient(config.url, config.serviceRoleKey || config.anonKey)
+      this.makecomWebhookUrl = process.env.MAKE_WEBHOOK_URL || ''
+      this.googleDriveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID || ''
+    } catch (error) {
+      console.error('❌ Failed to initialize ContractGenerationService:', error)
+      throw error
+    }
   }
 
   /**
