@@ -118,8 +118,7 @@ export async function GET(request: NextRequest) {
         status: contract.status,
         approval_status: contract.approval_status,
         pdf_url: contract.pdf_url,
-        created_at: contract.created_at,
-        approved_at: contract.approved_at
+        created_at: contract.created_at
       },
       notifications: notifications || [],
       can_download: contract.approval_status === 'active',

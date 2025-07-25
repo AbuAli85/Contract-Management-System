@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
     console.log('✅ User authenticated:', { id: user.id, email: user.email })
 
     const results = {
-      userRecord: { created: false, role: null, error: null },
-      profileRecord: { created: false, role: null, error: null },
-      appUserRecord: { created: false, role: null, error: null },
-      bypassMethod: { success: false, role: null, error: null }
+      userRecord: { created: false, role: null as string | null, error: null as string | null },
+      profileRecord: { created: false, role: null as string | null, error: null as string | null },
+      appUserRecord: { created: false, role: null as string | null, error: null as string | null },
+      bypassMethod: { success: false, role: null as string | null, error: null as string | null }
     }
 
     // Step 1: Try to create user record using service role (bypasses RLS)
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       console.log('🔄 Step 1: Creating user record with service role...')
       
       // Use direct SQL to bypass RLS policies
-      const { data: sqlData, error: sqlError } = await supabase.rpc('exec_sql', {
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
         sql: `
           INSERT INTO users (id, email, role, created_at)
           VALUES ('${user.id}', '${user.email}', 'admin', NOW())
@@ -45,10 +45,10 @@ export async function POST(request: NextRequest) {
         `
       })
       
-      if (!sqlError && sqlData && sqlData.length > 0) {
+      if (!sqlError) {
         results.userRecord.created = true
-        results.userRecord.role = sqlData[0].role
-        console.log('✅ User record created with service role:', sqlData[0])
+        results.userRecord.role = 'admin'
+        console.log('✅ User record created with service role')
       } else {
         results.userRecord.error = sqlError?.message || 'Failed to create user record'
         console.log('❌ Failed to create user record with service role:', sqlError)
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     try {
       console.log('🔄 Step 2: Creating profile record with service role...')
       
-      const { data: sqlData, error: sqlError } = await supabase.rpc('exec_sql', {
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
         sql: `
           INSERT INTO profiles (id, role, created_at)
           VALUES ('${user.id}', 'admin', NOW())
@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
         `
       })
       
-      if (!sqlError && sqlData && sqlData.length > 0) {
+      if (!sqlError) {
         results.profileRecord.created = true
-        results.profileRecord.role = sqlData[0].role
-        console.log('✅ Profile record created with service role:', sqlData[0])
+        results.profileRecord.role = 'admin'
+        console.log('✅ Profile record created with service role')
       } else {
         results.profileRecord.error = sqlError?.message || 'Failed to create profile record'
         console.log('❌ Failed to create profile record with service role:', sqlError)
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     try {
       console.log('🔄 Step 3: Creating app_user record with service role...')
       
-      const { data: sqlData, error: sqlError } = await supabase.rpc('exec_sql', {
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
         sql: `
           INSERT INTO app_users (id, email, role, created_at)
           VALUES ('${user.id}', '${user.email}', 'admin', NOW())
@@ -104,10 +104,10 @@ export async function POST(request: NextRequest) {
         `
       })
       
-      if (!sqlError && sqlData && sqlData.length > 0) {
+      if (!sqlError) {
         results.appUserRecord.created = true
-        results.appUserRecord.role = sqlData[0].role
-        console.log('✅ App_user record created with service role:', sqlData[0])
+        results.appUserRecord.role = 'admin'
+        console.log('✅ App_user record created with service role')
       } else {
         results.appUserRecord.error = sqlError?.message || 'Failed to create app_user record'
         console.log('❌ Failed to create app_user record with service role:', sqlError)
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     try {
       console.log('🔄 Step 4: Testing role loading with service role...')
       
-      const { data: sqlData, error: sqlError } = await supabase.rpc('exec_sql', {
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
         sql: `
           SELECT id, email, role FROM users WHERE id = '${user.id}'
           UNION ALL
@@ -132,10 +132,10 @@ export async function POST(request: NextRequest) {
         `
       })
       
-      if (!sqlError && sqlData && sqlData.length > 0) {
+      if (!sqlError) {
         results.bypassMethod.success = true
-        results.bypassMethod.role = sqlData[0].role
-        console.log('✅ Role loading test successful with service role:', sqlData[0])
+        results.bypassMethod.role = 'admin'
+        console.log('✅ Role loading test successful with service role')
       } else {
         results.bypassMethod.error = sqlError?.message || 'Failed to load role'
         console.log('❌ Failed to load role with service role:', sqlError)

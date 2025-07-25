@@ -20,10 +20,10 @@ export async function POST(request: NextRequest) {
     let currentRole = 'user'
     let roleSource = 'default'
     let roleDetails = {
-      users: null,
-      profiles: null,
-      app_users: null,
-      errors: []
+      users: null as any,
+      profiles: null as any,
+      app_users: null as any,
+      errors: [] as string[]
     }
 
     // Check users table
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
           .from('users')
           .upsert({
             id: user.id,
-            email: user.email,
+            email: user.email || '',
             role: 'admin',
             created_at: new Date().toISOString()
           }, {

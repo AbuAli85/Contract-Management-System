@@ -21,10 +21,10 @@ export async function POST(request: NextRequest) {
     console.log('✅ User authenticated:', { id: user.id, email: user.email })
 
     const results = {
-      users: { success: false, role: null, error: null, action: '' },
-      profiles: { success: false, role: null, error: null, action: '' },
-      app_users: { success: false, role: null, error: null, action: '' },
-      policies: { fixed: false, error: null }
+      users: { success: false, role: null as string | null, error: null as string | null, action: '' },
+      profiles: { success: false, role: null as string | null, error: null as string | null, action: '' },
+      app_users: { success: false, role: null as string | null, error: null as string | null, action: '' },
+      policies: { fixed: false, error: null as string | null }
     }
 
     // Step 1: Try to fix users table policies first
@@ -175,10 +175,10 @@ export async function POST(request: NextRequest) {
     // Step 5: Test role loading from all tables
     let finalRole = 'admin'
     let roleSource = 'default'
-    let testResults = {
-      users: { accessible: false, role: null, error: null },
-      profiles: { accessible: false, role: null, error: null },
-      app_users: { accessible: false, role: null, error: null }
+    const testResults = {
+      users: { accessible: false, role: null as string | null, error: null as string | null },
+      profiles: { accessible: false, role: null as string | null, error: null as string | null },
+      app_users: { accessible: false, role: null as string | null, error: null as string | null }
     }
 
     // Test users table

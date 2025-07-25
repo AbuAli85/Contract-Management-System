@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine next status based on current status and action
-    const nextStatus = determineNextStatus(contract.approval_status, action)
+    const nextStatus = determineNextStatus(contract.approval_status || 'draft', action)
     
     // Get next reviewer if needed
     let nextReviewerId = null
@@ -118,10 +118,9 @@ export async function POST(request: NextRequest) {
       .insert({
         contract_id: contractId,
         reviewer_id: user.id,
-        review_stage: contract.approval_status || 'unknown',
-        action,
+        status: contract.approval_status || 'unknown',
         comments: comments || null,
-        reviewed_at: new Date().toISOString()
+        created_at: new Date().toISOString()
       })
 
     if (approvalError) {

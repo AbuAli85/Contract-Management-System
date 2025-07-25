@@ -160,7 +160,7 @@ export async function PATCH(request: NextRequest) {
     const { data: notification, error } = await supabase
       .from('notifications')
       .update({ is_read: read })
-      .eq('id', notification_id)
+      .eq('id', parseInt(notification_id))
       .eq('user_id', session.user.id)
       .select()
       .single()

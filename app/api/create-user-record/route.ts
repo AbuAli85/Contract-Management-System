@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
     console.log('✅ User authenticated:', { id: user.id, email: user.email })
 
     const results = {
-      users: { created: false, exists: false, error: null },
-      profiles: { created: false, exists: false, error: null },
-      app_users: { created: false, exists: false, error: null }
+      users: { created: false, exists: false, error: null as string | null },
+      profiles: { created: false, exists: false, error: null as string | null },
+      app_users: { created: false, exists: false, error: null as string | null }
     }
 
     // Create user record in users table

@@ -43,25 +43,8 @@ export async function POST(request: NextRequest) {
       
       profileError = insertError
     } catch (tableError) {
-      console.log('Users table not found, trying profiles table')
-      
-      try {
-        const { error: profileInsertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: signupData.user?.id,
-            email: testEmail,
-            full_name: 'Test User',
-            role: 'admin',
-            status: 'active',
-            created_at: new Date().toISOString()
-          })
-        
-        profileError = profileInsertError
-      } catch (profileTableError) {
-        console.log('Profiles table also not found')
-        profileError = null // Ignore profile creation error for now
-      }
+      console.log('Users table not found, skipping profile creation')
+      profileError = null // Ignore profile creation error for now
     }
 
     return NextResponse.json({

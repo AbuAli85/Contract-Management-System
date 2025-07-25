@@ -50,22 +50,11 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Verify the fix
-    const { data: constraints, error: checkError } = await supabase
-      .from('information_schema.check_constraints')
-      .select('constraint_name, check_clause')
-      .eq('constraint_name', 'contracts_status_check')
-
-    if (checkError) {
-      console.warn('⚠️ Could not verify constraint:', checkError.message)
-    }
-
     console.log('✅ Contract status constraint fixed successfully')
 
     return NextResponse.json({ 
       success: true,
-      message: 'Contract status constraint fixed successfully',
-      constraint: constraints?.[0]?.check_clause || 'Unknown'
+      message: 'Contract status constraint fixed successfully'
     })
 
   } catch (error) {

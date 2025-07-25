@@ -26,35 +26,24 @@ export async function POST(request: NextRequest) {
     try {
       console.log('🔄 Dropping existing policies...')
       
-      // Drop all existing policies on users table
-      const { error: dropError } = await supabase.rpc('drop_all_policies', {
-        table_name: 'users'
+      // Try direct SQL approach
+      const { error: sqlError } = await supabase.rpc('exec_sql', {
+        sql: `
+          DROP POLICY IF EXISTS "Users can view own profile" ON users;
+          DROP POLICY IF EXISTS "Users can update own profile" ON users;
+          DROP POLICY IF EXISTS "Enable read access for all users" ON users;
+          DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON users;
+          DROP POLICY IF EXISTS "Enable update for users based on user_id" ON users;
+          DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON users;
+        `
       })
       
-      if (dropError) {
-        console.log('⚠️ Could not drop policies via RPC, trying direct SQL...')
-        // Try direct SQL approach
-        const { error: sqlError } = await supabase.rpc('exec_sql', {
-          sql: `
-            DROP POLICY IF EXISTS "Users can view own profile" ON users;
-            DROP POLICY IF EXISTS "Users can update own profile" ON users;
-            DROP POLICY IF EXISTS "Enable read access for all users" ON users;
-            DROP POLICY IF EXISTS "Enable insert for authenticated users only" ON users;
-            DROP POLICY IF EXISTS "Enable update for users based on user_id" ON users;
-            DROP POLICY IF EXISTS "Enable delete for users based on user_id" ON users;
-          `
-        })
-        
-        if (sqlError) {
-          results.errors.push(`Failed to drop policies: ${sqlError.message}`)
-          console.log('❌ Failed to drop policies:', sqlError)
-        } else {
-          results.policiesDropped = 5 // Approximate count
-          console.log('✅ Policies dropped successfully')
-        }
+      if (sqlError) {
+        results.errors.push(`Failed to drop policies: ${sqlError.message}`)
+        console.log('❌ Failed to drop policies:', sqlError)
       } else {
         results.policiesDropped = 5 // Approximate count
-        console.log('✅ Policies dropped successfully via RPC')
+        console.log('✅ Policies dropped successfully')
       }
     } catch (error) {
       results.errors.push(`Error dropping policies: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -119,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Test the fix by trying to access the users table
-    let testResult = { success: false, error: null }
+    let testResult = { success: false, error: null as string | null }
     try {
       console.log('🔄 Testing users table access...')
       const { data: testData, error: testError } = await supabase

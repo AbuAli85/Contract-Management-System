@@ -160,6 +160,7 @@ export async function POST(request: Request) {
 
     // Prepare contract data
     const contractData = {
+      contract_number: body.contract_number || `CON-${Date.now()}`,
       first_party_id: body.first_party_id,
       second_party_id: body.second_party_id,
       promoter_id: body.promoter_id,
