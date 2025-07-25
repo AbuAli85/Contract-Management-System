@@ -114,15 +114,6 @@ export default function ContractDetailPage() {
               
               {/* Quick Actions */}
               <div className="flex items-center gap-2 ml-8">
-                {contract?.google_doc_url && (
-                  <Button asChild size="sm" variant="outline" className="gap-2">
-                    <a href={contract.google_doc_url} target="_blank" rel="noopener noreferrer">
-                      <EyeIcon className="h-4 w-4" />
-                      View
-                    </a>
-                  </Button>
-                )}
-                
                 <Button asChild size="sm" variant="outline" className="gap-2">
                   <Link href={`/edit-contract/${contractId}`}>
                     <EditIcon className="h-4 w-4" />
