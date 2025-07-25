@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             contractId: contract.id,
             contractNumber,
+            update_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-contract`,
             ...body,
           }),
         })

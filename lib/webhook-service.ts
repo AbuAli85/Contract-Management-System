@@ -6,6 +6,11 @@ export class WebhookService {
       ? process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL 
       : (process.env.MAKE_WEBHOOK_URL || process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL)
       
+  private static readonly PDF_READY_WEBHOOK_URL = 
+    typeof window !== 'undefined' 
+      ? process.env.NEXT_PUBLIC_PDF_READY_WEBHOOK_URL 
+      : (process.env.PDF_READY_WEBHOOK_URL || process.env.NEXT_PUBLIC_PDF_READY_WEBHOOK_URL)
+      
   private static readonly SLACK_WEBHOOK_URL = 
     typeof window !== 'undefined' 
       ? process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL 
@@ -121,15 +126,28 @@ export class WebhookService {
       // Step 1: Send to main webhook for processing
       const mainResult = await this.sendToMainWebhook(contractData)
 
-      // Step 2: If main processing succeeds and we have a PDF URL, notify Slack
-      if (mainResult?.pdf_url) {
-        await this.sendToSlackWebhook({
-          contract_number: (contractData as unknown as { contract_number?: string; id?: string }).contract_number || (contractData as unknown as { id?: string }).id || 'unknown',
-          pdf_url: mainResult.pdf_url,
-          status: mainResult.status || 'ready',
-          client_name: (contractData as unknown as { client_name?: string; second_party_name?: string }).client_name || (contractData as unknown as { second_party_name?: string }).second_party_name || 'unknown',
-          employer_name: (contractData as unknown as { employer_name?: string; first_party_name?: string }).employer_name || (contractData as unknown as { first_party_name?: string }).first_party_name || 'unknown'
-        })
+      // Step 2: If main processing succeeds and we have a PDF URL, notify PDF Ready webhook
+      if (mainResult?.pdf_url && this.PDF_READY_WEBHOOK_URL) {
+        try {
+          await fetch(this.PDF_READY_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'User-Agent': 'ContractGen-App/1.0',
+            },
+            body: JSON.stringify({
+              contract_number: (contractData as unknown as { contract_number?: string; id?: string }).contract_number || (contractData as unknown as { id?: string }).id || 'unknown',
+              pdf_url: mainResult.pdf_url,
+              status: 'ready',
+              timestamp: new Date().toISOString(),
+              source: 'contract-app-pdf-ready'
+            })
+          })
+          console.log('✅ PDF Ready webhook notified')
+        } catch (pdfReadyError) {
+          console.error('❌ PDF Ready webhook error:', pdfReadyError)
+          // Don't fail the main process if PDF Ready webhook fails
+        }
       }
 
       return mainResult
