@@ -337,7 +337,11 @@ export default function PromoterDashboard() {
                     <span>Task Completion</span>
                     <span>{metrics?.completedTasks || 0}/{metrics?.totalTasks || 0}</span>
                   </div>
-                  <Progress value={metrics?.completedTasks / metrics?.totalTasks * 100 || 0} />
+                  <Progress value={
+                    metrics?.completedTasks && metrics?.totalTasks && metrics.totalTasks > 0
+                      ? (metrics.completedTasks / metrics.totalTasks) * 100
+                      : 0
+                  } />
                 </div>
                 <div>
                   <div className="flex items-center justify-between text-sm mb-2">

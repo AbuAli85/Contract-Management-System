@@ -80,7 +80,7 @@ export function ContractsAnalyticsDashboard() {
 
       const rangeStart = getTimeRangeDate()
       const recentContracts = contracts.filter(contract => 
-        new Date(contract.created_at) >= rangeStart
+        contract.created_at && new Date(contract.created_at) >= rangeStart
       )
 
       // Calculate status distribution
@@ -105,8 +105,8 @@ export function ContractsAnalyticsDashboard() {
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30)
       
       const upcomingExpirations = contracts.filter(contract => {
-        if (!contract.end_date) return false
-        const endDate = new Date(contract.end_date)
+        if (!contract.contract_end_date) return false
+        const endDate = new Date(contract.contract_end_date)
         return endDate <= thirtyDaysFromNow && endDate >= now
       }).length
 

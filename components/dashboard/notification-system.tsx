@@ -44,15 +44,15 @@ export default function NotificationSystem() {
       if (error) throw error
       if (Array.isArray(data) && data.every(n => n && typeof n === 'object' && 'id' in n && 'type' in n && 'message' in n && 'created_at' in n && 'is_read' in n)) {
         setNotifications(
-          data.map((n: NotificationRow) => ({
-            id: n.id,
+          data.map((n: any) => ({
+            id: n.id.toString(), // Convert number to string
             type: n.type as NotificationItem["type"],
             message: n.message,
             created_at: n.created_at,
             timestamp: n.created_at, // For compatibility
             user_email: n.user_email ?? undefined,
-            related_contract_id: n.related_contract_id ?? undefined,
-            related_entity_id: n.related_entity_id ?? undefined,
+            related_contract_id: n.related_contract_id?.toString() ?? undefined,
+            related_entity_id: n.related_entity_id?.toString() ?? undefined,
             related_entity_type: n.related_entity_type ?? undefined,
             isRead: n.is_read,
             is_read: n.is_read, // For compatibility
@@ -89,20 +89,20 @@ export default function NotificationSystem() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
         (payload) => {
-          const newNotif = payload.new as NotificationRow
+          const newNotif = payload.new as any
           devLog("New notification received:", newNotif)
           toast({ title: "New Notification", description: newNotif.message })
           setNotifications((prev) =>
             [
               {
-                id: newNotif.id,
+                id: newNotif.id.toString(), // Convert number to string
                 type: newNotif.type as NotificationItem["type"],
                 message: newNotif.message,
                 created_at: newNotif.created_at,
                 timestamp: newNotif.created_at,
                 user_email: newNotif.user_email ?? undefined,
-                related_contract_id: newNotif.related_contract_id ?? undefined,
-                related_entity_id: newNotif.related_entity_id ?? undefined,
+                related_contract_id: newNotif.related_contract_id?.toString() ?? undefined,
+                related_entity_id: newNotif.related_entity_id?.toString() ?? undefined,
                 related_entity_type: newNotif.related_entity_type ?? undefined,
                 isRead: newNotif.is_read,
                 is_read: newNotif.is_read,
