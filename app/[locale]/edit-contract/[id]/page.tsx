@@ -74,10 +74,10 @@ export default function EditContractPage() {
     google_doc_url: "",
     pdf_url: "",
     
-    // Error details
-    error_details: "",
     // Special Terms
-    special_terms: ""
+    special_terms: "",
+    // Promoter ID
+    promoter_id: ""
   })
   
   const [saving, setSaving] = useState(false)
@@ -111,7 +111,7 @@ export default function EditContractPage() {
         pdf_url: contract.pdf_url || "",
         special_terms: contract.special_terms || "",
         google_doc_url: "",
-        error_details: ""
+        promoter_id: contract.promoter_id || ""
       })
     }
   }, [contract])
@@ -148,6 +148,13 @@ export default function EditContractPage() {
     if (!formData.contract_start_date) errors.push('Start Date is required.');
     if (!formData.contract_end_date) errors.push('End Date is required.');
     if (formData.salary && parseFloat(formData.salary) < 0) errors.push('Salary cannot be negative.');
+    if (formData.contract_start_date && formData.contract_end_date) {
+      const startDate = new Date(formData.contract_start_date);
+      const endDate = new Date(formData.contract_end_date);
+      if (startDate > endDate) {
+        errors.push('Contract start date cannot be after end date.');
+      }
+    }
     return errors;
   }
 
@@ -177,14 +184,28 @@ export default function EditContractPage() {
       }
 
       const updateData = {
-        ...formData,
+        status: formData.status,
+        contract_start_date: formData.contract_start_date || null,
+        contract_end_date: formData.contract_end_date || null,
         salary: formData.salary ? parseFloat(formData.salary) : null,
         basic_salary: formData.basic_salary ? parseFloat(formData.basic_salary) : null,
         allowances: formData.allowances ? parseFloat(formData.allowances) : null,
-        updated_at: new Date().toISOString(),
-        // Remove fields not in DB
-        google_doc_url: undefined,
-        error_details: undefined
+        currency: formData.currency,
+        first_party_name_en: formData.first_party_name_en,
+        first_party_name_ar: formData.first_party_name_ar,
+        second_party_name_en: formData.second_party_name_en,
+        second_party_name_ar: formData.second_party_name_ar,
+        job_title: formData.job_title,
+        department: formData.department,
+        work_location: formData.work_location,
+        email: formData.email,
+        contract_type: formData.contract_type,
+        contract_number: formData.contract_number,
+        id_card_number: formData.id_card_number,
+        pdf_url: formData.pdf_url,
+        special_terms: formData.special_terms,
+        promoter_id: formData.promoter_id,
+        updated_at: new Date().toISOString()
       }
 
       const { error } = await supabase
@@ -311,6 +332,22 @@ export default function EditContractPage() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {validationErrors.length > 0 && (
+              <Alert className="mb-6 border-red-200 bg-red-50">
+                <AlertCircleIcon className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <div className="space-y-1">
+                    <p className="font-medium">Please fix the following errors:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {validationErrors.map((error, index) => (
+                        <li key={index} className="text-sm">{error}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </div>
 
@@ -402,16 +439,7 @@ export default function EditContractPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="error_details">Error Details</Label>
-                  <Textarea
-                    id="error_details"
-                    value={formData.error_details}
-                    onChange={(e) => handleInputChange('error_details', e.target.value)}
-                    placeholder="Any error details or issues with the contract..."
-                    rows={4}
-                  />
-                </div>
+
               </CardContent>
             </Card>
           </TabsContent>
@@ -480,6 +508,65 @@ export default function EditContractPage() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Promoter Information */}
+                <div className="mt-8">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Promoter</h3>
+                  {contract?.promoters && contract.promoters.length > 0 ? (
+                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">Name (English)</label>
+                          <p className="font-semibold text-gray-900 mt-1">
+                            {contract.promoters[0].name_en || "Unnamed Promoter"}
+                          </p>
+                        </div>
+                        
+                        {contract.promoters[0].name_ar && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Name (Arabic)</label>
+                            <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoters[0].name_ar}</p>
+                          </div>
+                        )}
+                        
+                        {contract.promoters[0].id_card_number && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">ID Number</label>
+                            <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoters[0].id_card_number}</p>
+                          </div>
+                        )}
+                        
+                        {contract.promoters[0].status && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">Status</label>
+                            <div className="text-gray-700 mt-1">
+                              <StatusBadge status={contract.promoters[0].status} />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="mt-4 pt-3 border-t border-gray-200">
+                        <label className="text-sm font-medium text-gray-500">Promoter ID</label>
+                        <div className="mt-1 flex items-center gap-2">
+                          <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono flex-1">
+                            {contract.promoter_id}
+                          </code>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <AlertCircleIcon className="h-5 w-5 text-yellow-600" />
+                        <div>
+                          <p className="text-sm font-medium text-yellow-800">No promoter assigned</p>
+                          <p className="text-sm text-yellow-700">This contract doesn't have an assigned promoter.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
