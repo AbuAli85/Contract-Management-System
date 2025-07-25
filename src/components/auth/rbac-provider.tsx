@@ -55,7 +55,7 @@ async function getSupabase(): Promise<SupabaseClient<Database>> {
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { role: authRole } = useAuth()
+  const { roles: authRoles } = useAuth()
 
   // Debug logging
   console.log('RBACProvider: user', user ? user.id : 'null', 'userRoles', userRoles, 'isLoading', isLoading)
@@ -66,6 +66,18 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       setUserRoles(null)
       setIsLoading(false)
       return
+    }
+
+    // Prioritize auth provider roles if available
+    if (authRoles.length > 0) {
+      const primaryAuthRole = authRoles[0]
+      if (['admin', 'manager', 'user'].includes(primaryAuthRole)) {
+        console.log('✅ Using auth provider role:', primaryAuthRole)
+        setUserRoles([primaryAuthRole as Role])
+        localStorage.setItem(`user_role_${user.id}`, primaryAuthRole)
+        setIsLoading(false)
+        return
+      }
     }
 
     // Function to load role from database
@@ -156,18 +168,21 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     }
 
     // Use auth role if available
-    if (authRole && ['admin', 'manager', 'user'].includes(authRole)) {
-      console.log('✅ Using auth role:', authRole)
-      setUserRoles([authRole as Role])
-      localStorage.setItem(`user_role_${user.id}`, authRole)
-      setIsLoading(false)
-      return
+    if (authRoles.length > 0) {
+      const primaryAuthRole = authRoles[0]
+      if (['admin', 'manager', 'user'].includes(primaryAuthRole)) {
+        console.log('✅ Using auth role:', primaryAuthRole)
+        setUserRoles([primaryAuthRole as Role])
+        localStorage.setItem(`user_role_${user.id}`, primaryAuthRole)
+        setIsLoading(false)
+        return
+      }
     }
 
     // Load from database
     loadRoleFromDatabase()
 
-  }, [user?.id, authRole])
+  }, [user?.id, authRoles])
 
   // Fallback timeout - only trigger if still loading after 1 second
   useEffect(() => {

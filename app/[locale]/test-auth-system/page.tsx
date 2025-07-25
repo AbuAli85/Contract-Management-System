@@ -39,6 +39,9 @@ export default function TestAuthSystemPage() {
     forceRefresh 
   } = usePermissions()
 
+  // Get auth provider roles for comparison
+  const { roles: authRoles } = useAuth()
+
   const [testResults, setTestResults] = useState<{
     authProvider: boolean
     rbacProvider: boolean
@@ -425,7 +428,18 @@ export default function TestAuthSystemPage() {
             <div>
               <h4 className="font-medium mb-2">Roles Data:</h4>
               <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-                {JSON.stringify({ authRoles: roles, rbacRoles: userRoles, permissionRoles }, null, 2)}
+                {JSON.stringify({ 
+                  authRoles: authRoles, 
+                  rbacRoles: userRoles, 
+                  permissionRoles: permissionRoles,
+                  roleSync: {
+                    authProvider: authRoles,
+                    rbacProvider: userRoles,
+                    permissionsHook: permissionRoles,
+                    allSynced: authRoles.length > 0 && userRoles.length > 0 && permissionRoles.length > 0 && 
+                               authRoles[0] === userRoles[0] && userRoles[0] === permissionRoles[0]
+                  }
+                }, null, 2)}
               </pre>
             </div>
           </div>
