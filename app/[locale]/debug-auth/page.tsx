@@ -1,279 +1,261 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/src/components/auth/auth-provider'
-import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { 
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  RefreshCw,
-  Database,
-  User,
-  Shield,
-  Home
-} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { RefreshCw, User, Shield, Key } from 'lucide-react'
 
 export default function DebugAuthPage() {
-  const { user, role, loading } = useAuth()
-  const [dbStatus, setDbStatus] = useState<any>(null)
-  const [profilesStatus, setProfilesStatus] = useState<any>(null)
-  const [testing, setTesting] = useState(false)
+  const { 
+    user, 
+    profile, 
+    roles, 
+    session, 
+    loading, 
+    mounted,
+    hasRole,
+    hasPermission,
+    forceRefreshRole,
+    refreshSession
+  } = useAuth()
 
-  const testDatabase = async () => {
-    setTesting(true)
-    try {
-      const supabase = createClient()
-      
-      // Test basic connection
-      const { data, error } = await supabase
-        .from('contracts')
-        .select('count')
-        .limit(1)
-      
-      setDbStatus({ success: !error, data, error })
-      
-      // Test profiles table
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .limit(1)
-      
-      setProfilesStatus({ success: !profilesError, data: profilesData, error: profilesError })
-      
-    } catch (error) {
-      setDbStatus({ success: false, error })
-    } finally {
-      setTesting(false)
-    }
+  const handleRefreshRole = async () => {
+    await forceRefreshRole()
   }
 
-  useEffect(() => {
-    testDatabase()
-  }, [])
+  const handleRefreshSession = async () => {
+    await refreshSession()
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-gray-900">🔧 Authentication Debug</h1>
-          <p className="text-gray-600">Debug authentication and database connection issues</p>
-          <Button asChild variant="outline">
-            <a href="/en/">
-              <Home className="mr-2 h-4 w-4" />
-              Back to Home
-            </a>
-          </Button>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Authentication Debug</h1>
+          <p className="text-muted-foreground mt-2">
+            Development tool to inspect authentication state
+          </p>
         </div>
 
-        {/* Authentication Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Authentication Status
-            </CardTitle>
-            <CardDescription>
-              Current authentication state and user information
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  {loading ? (
-                    <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-                  ) : (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  )}
-                  <span className="font-medium">Loading State</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {loading ? 'Loading...' : 'Complete'}
-                </p>
-              </div>
-              
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  {user ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <XCircle className="h-4 w-4 text-red-600" />
-                  )}
-                  <span className="font-medium">User Status</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {user ? 'Authenticated' : 'Not authenticated'}
-                </p>
-              </div>
-              
-              <div className="p-4 bg-purple-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  {role ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                  )}
-                  <span className="font-medium">User Role</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  {role || 'Not loaded'}
-                </p>
-              </div>
-            </div>
-            
-            {user && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium mb-2">User Details:</h3>
-                <pre className="text-sm text-gray-600 overflow-auto">
-                  {JSON.stringify({
-                    id: user.id,
-                    email: user.email,
-                    role: role,
-                    created_at: user.created_at
-                  }, null, 2)}
-                </pre>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Database Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Database Connection
-            </CardTitle>
-            <CardDescription>
-              Test database connectivity and table access
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Button 
-                onClick={testDatabase} 
-                disabled={testing}
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`h-4 w-4 ${testing ? 'animate-spin' : ''}`} />
-                Test Database
-              </Button>
-              <Badge variant={dbStatus?.success ? 'default' : 'destructive'}>
-                {dbStatus?.success ? 'Connected' : 'Error'}
-              </Badge>
-            </div>
-            
-            {dbStatus && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium mb-2">Database Test Result:</h3>
-                <pre className="text-sm text-gray-600 overflow-auto">
-                  {JSON.stringify(dbStatus, null, 2)}
-                </pre>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Profiles Table Status */}
+        {/* Status Overview */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Profiles Table
+              Authentication Status
             </CardTitle>
-            <CardDescription>
-              Check if the profiles table exists and is accessible
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
-              <Badge variant={profilesStatus?.success ? 'default' : 'destructive'}>
-                {profilesStatus?.success ? 'Available' : 'Missing/Error'}
-              </Badge>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <p className="text-sm font-medium">Loading</p>
+                <Badge variant={loading ? "default" : "secondary"}>
+                  {loading ? "Yes" : "No"}
+                </Badge>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">Mounted</p>
+                <Badge variant={mounted ? "default" : "secondary"}>
+                  {mounted ? "Yes" : "No"}
+                </Badge>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">Authenticated</p>
+                <Badge variant={user ? "default" : "secondary"}>
+                  {user ? "Yes" : "No"}
+                </Badge>
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-medium">Profile Loaded</p>
+                <Badge variant={profile ? "default" : "secondary"}>
+                  {profile ? "Yes" : "No"}
+                </Badge>
+              </div>
             </div>
-            
-            {profilesStatus && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium mb-2">Profiles Table Test Result:</h3>
-                <pre className="text-sm text-gray-600 overflow-auto">
-                  {JSON.stringify(profilesStatus, null, 2)}
-                </pre>
-              </div>
-            )}
-            
-            {profilesStatus?.error && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h3 className="font-medium text-yellow-800 mb-2">⚠️ Profiles Table Issue</h3>
-                <p className="text-sm text-yellow-700 mb-3">
-                  The profiles table is missing or not accessible. This is likely causing the authentication loading issue.
-                </p>
-                <div className="space-y-2">
-                  <p className="text-sm text-yellow-700">
-                    <strong>Solution:</strong> Run the SQL script to create the profiles table:
-                  </p>
-                  <code className="block text-xs bg-yellow-100 p-2 rounded">
-                    scripts/010_create_profiles_table.sql
-                  </code>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* User Information */}
+        {user && (
+          <Card>
+            <CardHeader>
+              <CardTitle>User Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-medium">ID:</span> {user.id}
+                </div>
+                <div>
+                  <span className="font-medium">Email:</span> {user.email}
+                </div>
+                <div>
+                  <span className="font-medium">Email Verified:</span> {user.email_confirmed_at ? "Yes" : "No"}
+                </div>
+                <div>
+                  <span className="font-medium">Created At:</span> {user.created_at}
+                </div>
+                <div>
+                  <span className="font-medium">Last Sign In:</span> {user.last_sign_in_at || "Never"}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Profile Information */}
+        {profile && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-medium">Full Name:</span> {profile.full_name || "Not set"}
+                </div>
+                <div>
+                  <span className="font-medium">Role:</span> 
+                  <Badge className="ml-2">{profile.role}</Badge>
+                </div>
+                <div>
+                  <span className="font-medium">Status:</span> 
+                  <Badge variant="outline" className="ml-2">{profile.status}</Badge>
+                </div>
+                <div>
+                  <span className="font-medium">Phone:</span> {profile.phone || "Not set"}
+                </div>
+                <div>
+                  <span className="font-medium">Department:</span> {profile.department || "Not set"}
+                </div>
+                <div>
+                  <span className="font-medium">Position:</span> {profile.position || "Not set"}
+                </div>
+                {profile.permissions && profile.permissions.length > 0 && (
+                  <div>
+                    <span className="font-medium">Permissions:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {profile.permissions.map((permission, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {permission}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Roles and Permissions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Roles & Permissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2">Current Roles:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {roles.length > 0 ? (
+                    roles.map((role, index) => (
+                      <Badge key={index} variant="default">
+                        {role}
+                      </Badge>
+                    ))
+                  ) : (
+                    <span className="text-muted-foreground">No roles assigned</span>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Role Tests:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {['admin', 'manager', 'user', 'viewer'].map((role) => (
+                    <div key={role} className="text-center">
+                      <p className="text-sm">{role}</p>
+                      <Badge variant={hasRole(role) ? "default" : "secondary"}>
+                        {hasRole(role) ? "Yes" : "No"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Permission Tests:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {['users.view', 'contracts.create', 'dashboard.view', 'settings.edit'].map((permission) => (
+                    <div key={permission} className="text-center">
+                      <p className="text-sm">{permission}</p>
+                      <Badge variant={hasPermission(permission) ? "default" : "secondary"}>
+                        {hasPermission(permission) ? "Yes" : "No"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Session Information */}
+        {session && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Session Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-medium">Access Token:</span> 
+                  <div className="text-xs bg-gray-100 p-2 rounded mt-1 break-all">
+                    {session.access_token.substring(0, 50)}...
+                  </div>
+                </div>
+                <div>
+                  <span className="font-medium">Refresh Token:</span> 
+                  <div className="text-xs bg-gray-100 p-2 rounded mt-1 break-all">
+                    {session.refresh_token.substring(0, 50)}...
+                  </div>
+                </div>
+                <div>
+                  <span className="font-medium">Expires At:</span> {session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : 'Not set'}
+                </div>
+                <div>
+                  <span className="font-medium">Token Type:</span> {session.token_type}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions</CardTitle>
             <CardDescription>
-              Test different parts of the system
+              Debug actions to test authentication functionality
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild variant="outline">
-                <a href="/en/instant">
-                  🚀 Instant Beautiful UI
-                </a>
+            <div className="flex gap-2">
+              <Button onClick={handleRefreshRole} variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Role
               </Button>
-              <Button asChild variant="outline">
-                <a href="/en/dashboard">
-                  📊 Dashboard (with auth)
-                </a>
-              </Button>
-              <Button asChild variant="outline">
-                <a href="/en/bypass">
-                  ⚡ Bypass Mode
-                </a>
-              </Button>
-              <Button asChild variant="outline">
-                <a href="/api/test-profiles-table">
-                  🔍 Test Profiles API
-                </a>
-              </Button>
-              <Button 
-                variant="default" 
-                className="bg-green-600 hover:bg-green-700"
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/create-profiles-table', { method: 'POST' });
-                    const result = await response.json();
-                    if (result.success) {
-                      alert('Profiles table created successfully! Please refresh the page.');
-                      window.location.reload();
-                    } else {
-                      alert('Error creating profiles table: ' + result.error);
-                    }
-                  } catch (error) {
-                    alert('Error: ' + error);
-                  }
-                }}
-              >
-                🛠️ Create Profiles Table
+              <Button onClick={handleRefreshSession} variant="outline">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Session
               </Button>
             </div>
           </CardContent>
