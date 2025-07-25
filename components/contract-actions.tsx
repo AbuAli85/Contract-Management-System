@@ -122,7 +122,7 @@ export function ContractActions({
         ...contractData,
         user_id: user_id ?? undefined, // Ensure user_id is not null
         status: 'draft',
-        contract_name: `${contractData.contract_name || 'Contract'} (Copy)`,
+        contract_number: `${contractData.contract_number || 'Contract'} (Copy)`,
       }
 
       const { error: insertError } = await supabase

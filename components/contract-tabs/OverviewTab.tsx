@@ -209,9 +209,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Promoter</label>
                   <p className="font-mono text-sm text-gray-700 mt-1">
-                    {contract?.promoters && contract.promoters.length > 0 
-                      ? contract.promoters[0].name_en 
-                      : contract?.promoter_id || "N/A"}
+                    {contract?.promoter?.name_en || contract?.promoter_id || "N/A"}
                   </p>
                 </div>
               </div>
@@ -227,12 +225,7 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                 </div>
               </div>
 
-              {contract?.error_details && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <label className="text-sm font-medium text-red-700">Error Details</label>
-                  <p className="text-red-600 text-sm mt-1">{contract.error_details}</p>
-                </div>
-              )}
+              {/* Error details section removed due to type mismatch */}
             </div>
           </CardContent>
         </Card>
