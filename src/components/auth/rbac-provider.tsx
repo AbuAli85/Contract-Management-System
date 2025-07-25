@@ -55,7 +55,7 @@ async function getSupabase(): Promise<SupabaseClient<Database>> {
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const { roles: authRoles } = useAuth()
+  const { roles: authRoles, loading: authLoading } = useAuth()
 
   // Debug logging
   console.log('RBACProvider: user', user ? user.id : 'null', 'userRoles', userRoles, 'isLoading', isLoading)
@@ -65,6 +65,11 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     if (!user) {
       setUserRoles(null)
       setIsLoading(false)
+      return
+    }
+
+    // Wait for auth provider to finish loading
+    if (authLoading) {
       return
     }
 
@@ -182,7 +187,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     // Load from database
     loadRoleFromDatabase()
 
-  }, [user?.id, authRoles])
+  }, [user?.id, authRoles, authLoading])
 
   // Fallback timeout - only trigger if still loading after 1 second
   useEffect(() => {
