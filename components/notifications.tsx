@@ -33,6 +33,11 @@ export default function Notifications() {
         .then(({ data }) => setNotifications(
           (data || []).map(n => ({
             ...n,
+            id: n.id.toString(), // Convert number to string
+            type: n.type || 'notification', // Provide default value for null type
+            message: n.message || '', // Provide default value for null message
+            created_at: n.created_at || new Date().toISOString(), // Provide default value for null created_at
+            is_read: n.is_read ?? false, // Provide default value for null is_read
             read: n.read ?? false,
           }))
         ))
@@ -40,7 +45,7 @@ export default function Notifications() {
   }, [user])
 
   const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
+    await supabase.from('notifications').update({ read: true }).eq('id', parseInt(id))
     setNotifications(notifications.filter(n => n.id !== id))
   }
 

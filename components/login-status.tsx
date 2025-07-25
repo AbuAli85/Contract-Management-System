@@ -9,7 +9,7 @@ import { Loader2, User, Shield, Crown, AlertCircle, CheckCircle } from 'lucide-r
 import { useState } from 'react'
 
 export function LoginStatus() {
-  const { user, role: authRole, loading: authLoading, forceRefreshRole } = useAuth()
+  const { user, roles: authRoles, loading: authLoading, forceRefreshRole } = useAuth()
   const { roles: userRoles, isLoading: rbacLoading } = usePermissions()
   const [refreshing, setRefreshing] = useState(false)
 
@@ -119,11 +119,11 @@ export function LoginStatus() {
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700">Auth Provider Role</div>
           <div className="flex items-center gap-2">
-            {authRole ? (
+            {authRoles[0] ? (
               <>
-                {getRoleIcon(authRole)}
-                <Badge className={getRoleColor(authRole)}>
-                  {authRole}
+                {getRoleIcon(authRoles[0])}
+                <Badge className={getRoleColor(authRoles[0])}>
+                  {authRoles[0]}
                 </Badge>
               </>
             ) : (
@@ -171,9 +171,9 @@ export function LoginStatus() {
           <div className="text-xs text-gray-600 space-y-1">
             <div>Auth Loading: {authLoading ? 'Yes' : 'No'}</div>
             <div>RBAC Loading: {rbacLoading ? 'Yes' : 'No'}</div>
-            <div>Roles Match: {authRole === userRoles[0] ? '✅ Yes' : '❌ No'}</div>
+            <div>Roles Match: {authRoles[0] === userRoles[0] ? '✅ Yes' : '❌ No'}</div>
             <div>Has Admin: {userRoles.includes('admin') ? '✅ Yes' : '❌ No'}</div>
-            <div>Role Loaded: {authRole ? '✅ Yes' : '❌ No'}</div>
+            <div>Role Loaded: {authRoles[0] ? '✅ Yes' : '❌ No'}</div>
           </div>
         </div>
       </CardContent>

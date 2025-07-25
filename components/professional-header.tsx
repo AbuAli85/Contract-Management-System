@@ -38,7 +38,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { usePermissions } from "@/hooks/use-permissions"
 
 interface HeaderProps {
@@ -80,25 +80,25 @@ export function ProfessionalHeader({
       label: "New Contract",
       icon: FileText,
       href: "/contracts/new",
-      permission: "contracts:create"
+      permission: "contract:create" as const
     },
     {
       label: "Add Promoter",
       icon: Users,
       href: "/promoters/new",
-      permission: "promoters:create"
+      permission: "promoter:create" as const
     },
     {
       label: "Add Party",
       icon: Building2,
       href: "/parties/new",
-      permission: "parties:create"
+      permission: "party:create" as const
     },
     {
       label: "Generate Report",
       icon: BarChart3,
       href: "/dashboard/analytics",
-      permission: "analytics:view"
+      permission: "system:analytics" as const
     }
   ].filter(action => permissions.can(action.permission))
 

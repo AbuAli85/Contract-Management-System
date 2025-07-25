@@ -93,7 +93,7 @@ export default function PartyDetail({ partyId }: { partyId: number }) {
       const filePath = file.file_url.split('/party-files/')[1]
       await supabase.storage.from('party-files').remove([filePath])
       // Remove from DB
-      await supabase.from('party_files').delete().eq('id', file.id)
+      await supabase.from('party_files').delete().eq('id', parseInt(file.id))
       supabase.from('party_files').select('*').eq('party_id', partyId.toString()).then(({ data }) => setFiles(data as unknown as PartyFile[] || []))
     } else {
       alert('You do not have permission to delete this file.')
@@ -104,8 +104,13 @@ export default function PartyDetail({ partyId }: { partyId: number }) {
     <div>
       <h2>Party Details</h2>
       <div>
-        <label>Owner:</label>
-        <select value={ownerId || ''} onChange={e => changeOwner(e.target.value)}>
+        <label htmlFor="owner-select">Owner:</label>
+        <select 
+          id="owner-select"
+          value={ownerId || ''} 
+          onChange={e => changeOwner(e.target.value)}
+          aria-label="Select party owner"
+        >
           <option value="">Unassigned</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
         </select>
@@ -134,7 +139,12 @@ export default function PartyDetail({ partyId }: { partyId: number }) {
       </div>
       <div>
         <h3>Files</h3>
-        <input type="file" ref={fileInputRef} onChange={uploadFile} />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={uploadFile}
+          aria-label="Upload party file"
+        />
         <ul>
           {files.map(f => (
             <li key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

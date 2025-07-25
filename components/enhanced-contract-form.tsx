@@ -76,6 +76,8 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
       first_party_id: "",
       second_party_id: "",
       promoter_id: "",
+      contract_start_date: undefined,
+      contract_end_date: undefined,
       email: "",
       job_title: "",
       work_location: "",

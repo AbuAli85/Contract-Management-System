@@ -123,8 +123,9 @@ export default function ImageUploadField({
           disabled={disabled}
           onChange={handleFileChange}
           tabIndex={-1}
+          aria-label="Upload file"
         />
-        {field.value && !disabled && (
+        {field.value instanceof File && !disabled && (
           <Button
             type="button"
             size="icon"

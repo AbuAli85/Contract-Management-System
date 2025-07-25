@@ -89,13 +89,14 @@ import {
   Hash as HashIcon2,
 } from "lucide-react"
 import { useTheme } from "next-themes"
+import type { Action } from "@/lib/permissions"
 
 interface NavItem {
   href: string
   label: string
   labelAr: string
   icon: React.ElementType
-  permission?: string
+  permission?: Action
   badge?: string
   badgeVariant?: "default" | "secondary" | "destructive" | "outline"
   children?: Omit<NavItem, 'children'>[]
@@ -136,14 +137,14 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Dashboard",
       labelAr: "لوحة التحكم",
       icon: Home,
-      permission: "dashboard:view"
+      permission: "system:analytics"
     },
     {
       href: `/${locale}/dashboard/analytics`,
       label: "Analytics",
       labelAr: "التحليلات",
       icon: BarChart3,
-      permission: "analytics:view",
+      permission: "system:analytics",
       badge: "New",
       badgeVariant: "secondary"
     },
@@ -152,14 +153,14 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Contracts",
       labelAr: "العقود",
       icon: FileText,
-      permission: "contracts:view"
+      permission: "contract:read"
     },
     {
       href: `/${locale}/generate-contract`,
       label: "Generate Contract",
       labelAr: "إنشاء عقد",
       icon: FilePlus,
-      permission: "contracts:create",
+      permission: "contract:create",
       badge: "AI",
       badgeVariant: "default"
     },
@@ -168,7 +169,7 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Contract Approvals",
       labelAr: "موافقات العقود",
       icon: FileCheck,
-      permission: "contracts:approve",
+      permission: "contract:approve",
       badge: "New",
       badgeVariant: "default"
     },
@@ -177,28 +178,28 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Promoters",
       labelAr: "الوسطاء",
       icon: Users,
-      permission: "promoters:view"
+      permission: "promoter:read"
     },
     {
       href: `/${locale}/parties`,
       label: "Parties",
       labelAr: "الأطراف",
       icon: Building2,
-      permission: "parties:view"
+      permission: "party:read"
     },
     {
       href: `/${locale}/dashboard/user-management`,
       label: "User Management",
       labelAr: "إدارة المستخدمين",
       icon: UserCog,
-      permission: "users:view"
+      permission: "user:read"
     },
     {
       href: `/${locale}/dashboard/user-approvals`,
       label: "User Approvals",
       labelAr: "موافقات المستخدمين",
       icon: UserCheck,
-      permission: "users:create",
+      permission: "user:create",
       badge: "New",
       badgeVariant: "secondary"
     },
@@ -207,36 +208,36 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Roles & Permissions",
       labelAr: "الأدوار والصلاحيات",
       icon: Shield,
-      permission: "users:view"
+      permission: "user:read"
     },
     {
       href: `/${locale}/dashboard/audit`,
       label: "Audit Logs",
       labelAr: "سجلات التدقيق",
       icon: Activity,
-      permission: "logs:view"
+      permission: "system:audit_logs"
     },
     {
       href: `/${locale}/dashboard/notifications`,
       label: "Notifications",
       labelAr: "الإشعارات",
       icon: Bell,
-      permission: "notifications:view"
+      permission: "system:notifications"
     },
     {
       href: `/${locale}/dashboard/settings`,
       label: "Settings",
       labelAr: "الإعدادات",
       icon: Settings,
-      permission: "settings:view"
+      permission: "system:settings"
     }
   ]
 
   const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + '/')
+    return pathname === href || (pathname && pathname.startsWith(href + '/'))
   }
 
-  const hasPermission = (permission?: string) => {
+  const hasPermission = (permission?: Action) => {
     if (!permission) return true
     return permissions.can(permission)
   }

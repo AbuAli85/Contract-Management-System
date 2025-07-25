@@ -32,7 +32,7 @@ import {
   contractGeneratorSchema,
   type ContractGeneratorFormData,
 } from "@/lib/schema-generator"
-import type { Promoter } from "@/types/custom"
+import type { Promoter } from "@/lib/types"
 import { 
   JOB_TITLES, 
   DEPARTMENTS, 

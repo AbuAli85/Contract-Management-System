@@ -461,11 +461,12 @@ export default function PromoterOnboardingForm() {
                 </div>
               )}
               <input
-                ref={(el) => fileInputRefs.current[key] = el}
+                ref={(el) => { fileInputRefs.current[key] = el }}
                 type="file"
                 id={key}
                 className="hidden"
                 accept=".pdf,.jpg,.jpeg,.png"
+                aria-label={`Upload ${key}`}
                 onChange={(e) => {
                   const file = e.target.files?.[0]
                   if (file) {
