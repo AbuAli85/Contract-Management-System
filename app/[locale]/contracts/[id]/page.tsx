@@ -1,6 +1,6 @@
 "use client"
 
-import { useParams } from "next/navigation"
+import { useParams, usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { 
   ArrowLeftIcon, 
   DownloadIcon, 
@@ -49,6 +50,8 @@ interface PDFStatus {
 
 export default function ContractDetailPage() {
   const params = useParams()
+  const pathname = usePathname()
+  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
   const contractId = (params?.id as string) || ''
   const { contract, loading, error, refetch } = useContract(contractId)
   
@@ -130,32 +133,42 @@ export default function ContractDetailPage() {
   }
 
   if (loading) {
-    return <LoadingSpinner />
+    return (
+      <AuthenticatedLayout locale={locale}>
+        <LoadingSpinner />
+      </AuthenticatedLayout>
+    )
   }
 
   if (error) {
-    return <ErrorCard message={error} onRetry={refetch} />
+    return (
+      <AuthenticatedLayout locale={locale}>
+        <ErrorCard message={error} onRetry={refetch} />
+      </AuthenticatedLayout>
+    )
   }
 
   if (!contract) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-        <div className="mx-auto max-w-4xl">
-          <Card className="shadow-lg">
-            <CardContent className="p-12 text-center">
-              <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
-              <p className="text-gray-600 mb-6">The contract you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-              <Button asChild>
-                <Link href={`/${params?.locale}/contracts`}>
-                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                  Back to Contracts
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+      <AuthenticatedLayout locale={locale}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+          <div className="mx-auto max-w-4xl">
+            <Card className="shadow-lg">
+              <CardContent className="p-12 text-center">
+                <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
+                <p className="text-gray-600 mb-6">The contract you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+                <Button asChild>
+                  <Link href={`/${params?.locale}/contracts`}>
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Back to Contracts
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
+      </AuthenticatedLayout>
     )
   }
 
@@ -163,7 +176,8 @@ export default function ContractDetailPage() {
   const hasPDF = !!contract.pdf_url
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <AuthenticatedLayout locale={locale}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="mx-auto max-w-8xl px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -967,6 +981,7 @@ export default function ContractDetailPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+      </div>
+    </AuthenticatedLayout>
   )
 }

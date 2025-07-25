@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, Suspense, lazy, useMemo } from "react"
+import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -11,6 +12,7 @@ import {
   Sparkles, FileText, CheckCircle, TrendingUp, Users, Shield, 
   Zap, Globe, Star, Award, Info, AlertTriangle, Settings 
 } from "lucide-react"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Lazy load the heavy form component with a more aggressive loading strategy
 const GenerateContractForm = lazy(() => 
@@ -32,6 +34,8 @@ const preloadForm = () => {
 }
 
 export default function DashboardGenerateContractPage() {
+  const pathname = usePathname()
+  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
   const [progress, setProgress] = useState(65)
   const [activeFeature, setActiveFeature] = useState(0)
   const [showForm, setShowForm] = useState(false)
@@ -75,7 +79,7 @@ export default function DashboardGenerateContractPage() {
 
   if (showForm) {
     return (
-      <DashboardLayout>
+      <AuthenticatedLayout locale={locale}>
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -128,14 +132,14 @@ export default function DashboardGenerateContractPage() {
                 </Suspense>
               </CardContent>
             </Card>
-          </motion.div>
-        </div>
-      </DashboardLayout>
-    )
+                  </motion.div>
+      </div>
+    </AuthenticatedLayout>
+  )
   }
 
   return (
-    <DashboardLayout>
+    <AuthenticatedLayout locale={locale}>
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
@@ -448,6 +452,6 @@ export default function DashboardGenerateContractPage() {
           </motion.div>
         </div>
       </div>
-    </DashboardLayout>
+    </AuthenticatedLayout>
   )
 }

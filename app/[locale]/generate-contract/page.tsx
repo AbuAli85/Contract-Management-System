@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import EnhancedContractForm from "@/components/enhanced-contract-form"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Enhanced utilities for contract insights
 import { 
@@ -298,14 +300,17 @@ function ContractTypesOverview() {
 export default function GenerateContractPage() {
   const [useEnhancedForm, setUseEnhancedForm] = useState(false) // Default to standard form
   const [showInsights, setShowInsights] = useState(true)
+  const pathname = usePathname()
+  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mx-auto max-w-6xl space-y-6"
-    >
+    <AuthenticatedLayout locale={locale}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="mx-auto max-w-6xl space-y-6"
+      >
       {/* Header */}
       <div className="text-center space-y-4">
         <motion.div
@@ -477,6 +482,7 @@ export default function GenerateContractPage() {
           </CardContent>
         </Card>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </AuthenticatedLayout>
   )
 }
