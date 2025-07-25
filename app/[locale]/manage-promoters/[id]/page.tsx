@@ -5,7 +5,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import type { Promoter, Contract, Party } from "@/lib/types"
+import type { Promoter, Contract, Party, PromoterSkill, PromoterExperience, PromoterEducation, PromoterDocument } from "@/lib/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -253,7 +253,7 @@ export default function PromoterDetailPage() {
             <CardContent>
               <div className="flex items-start space-x-6">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={promoterDetails?.profile_picture_url} alt={promoterDetails?.name_en} />
+                  <AvatarImage src={promoterDetails?.profile_picture_url || undefined} alt={promoterDetails?.name_en} />
                   <AvatarFallback>{promoterDetails?.name_en?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-4">
