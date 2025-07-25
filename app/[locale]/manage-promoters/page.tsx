@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { usePermissions, PermissionGuard } from "@/hooks/use-permissions"
@@ -148,6 +148,8 @@ export default function ManagePromotersPage() {
     }
     
     try {
+      const supabase = createClient()
+      
       // Fetch promoters with contract count from the contracts table
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
@@ -198,10 +200,10 @@ export default function ManagePromotersPage() {
         setPromoters(enhancedData)
       }
     } catch (error) {
-      console.error("Unexpected error:", error)
+      console.error("Error fetching promoters:", error)
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "Failed to load promoters",
         variant: "destructive",
       })
     } finally {
@@ -372,6 +374,7 @@ export default function ManagePromotersPage() {
 
     setBulkActionLoading(true)
     try {
+      const supabase = createClient()
       const { error } = await supabase
         .from("promoters")
         .delete()
