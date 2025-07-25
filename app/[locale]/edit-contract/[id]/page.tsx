@@ -173,6 +173,11 @@ export default function EditContractPage() {
       return;
     }
 
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Save operation timed out')), 10000)
+    })
+
     try {
       // Basic validation
       if (formData.contract_start_date && formData.contract_end_date) {
@@ -187,18 +192,14 @@ export default function EditContractPage() {
         throw new Error('Salary cannot be negative')
       }
 
+      // Only update fields that actually exist in the contracts table
       const updateData = {
         status: formData.status,
         contract_start_date: formData.contract_start_date || null,
         contract_end_date: formData.contract_end_date || null,
-        salary: formData.salary ? parseFloat(formData.salary) : null,
         basic_salary: formData.basic_salary ? parseFloat(formData.basic_salary) : null,
         allowances: formData.allowances ? parseFloat(formData.allowances) : null,
         currency: formData.currency,
-        first_party_name_en: formData.first_party_name_en,
-        first_party_name_ar: formData.first_party_name_ar,
-        second_party_name_en: formData.second_party_name_en,
-        second_party_name_ar: formData.second_party_name_ar,
         job_title: formData.job_title,
         department: formData.department,
         work_location: formData.work_location,
@@ -206,19 +207,29 @@ export default function EditContractPage() {
         contract_type: formData.contract_type,
         contract_number: formData.contract_number,
         id_card_number: formData.id_card_number,
-        pdf_url: formData.pdf_url,
         special_terms: formData.special_terms,
-        promoter_id: formData.promoter_id,
         updated_at: new Date().toISOString()
       }
 
       const supabase = createClient()
-      const { error } = await supabase
+      console.log('🔄 Saving contract with data:', updateData)
+      
+      // Wrap the save operation with timeout
+      const savePromise = supabase
         .from('contracts')
         .update(updateData)
         .eq('id', contractId)
+        .select()
 
-      if (error) throw error
+      const result = await Promise.race([savePromise, timeoutPromise]) as any
+      const { data, error } = result
+
+      if (error) {
+        console.error('❌ Save error:', error)
+        throw new Error(`Database error: ${error.message}`)
+      }
+
+      console.log('✅ Contract saved successfully:', data)
 
       setSaveSuccess(true)
       // Refresh contract data
@@ -227,6 +238,7 @@ export default function EditContractPage() {
       // Auto-hide success message after 5 seconds
       setTimeout(() => setSaveSuccess(false), 5000)
     } catch (err) {
+      console.error('❌ Save operation failed:', err)
       setSaveError(err instanceof Error ? err.message : 'Failed to save contract')
     } finally {
       setSaving(false)
@@ -519,35 +531,35 @@ export default function EditContractPage() {
                 {/* Promoter Information */}
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Promoter</h3>
-                  {contract?.promoters && contract.promoters.length > 0 ? (
+                  {contract?.promoter ? (
                     <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-gray-500">Name (English)</label>
                           <p className="font-semibold text-gray-900 mt-1">
-                            {contract.promoters[0].name_en || "Unnamed Promoter"}
+                            {contract.promoter.name_en || "Unnamed Promoter"}
                           </p>
                         </div>
                         
-                        {contract.promoters[0].name_ar && (
+                        {contract.promoter.name_ar && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">Name (Arabic)</label>
-                            <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoters[0].name_ar}</p>
+                            <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoter.name_ar}</p>
                           </div>
                         )}
                         
-                        {contract.promoters[0].id_card_number && (
+                        {contract.promoter.id_card_number && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">ID Number</label>
-                            <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoters[0].id_card_number}</p>
+                            <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoter.id_card_number}</p>
                           </div>
                         )}
                         
-                        {contract.promoters[0].status && (
+                        {contract.promoter.status && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">Status</label>
                             <div className="text-gray-700 mt-1">
-                              <StatusBadge status={contract.promoters[0].status} />
+                              <StatusBadge status={contract.promoter.status} />
                             </div>
                           </div>
                         )}
