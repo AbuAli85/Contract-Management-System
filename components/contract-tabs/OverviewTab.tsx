@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { KeyMetricCard } from '@/components/KeyMetricCard'
-import { Contract } from '@/lib/types'
 import { formatCurrency, calculateDuration, formatDate, formatDateTime, copyToClipboard } from '@/utils/format'
 import { 
   CalendarIcon, 
@@ -20,9 +19,16 @@ import {
   WORK_LOCATIONS,
   getOptionLabel 
 } from '@/constants/contract-options'
+import type { Database } from '@/types/supabase'
+
+export type ContractWithRelations = Database["public"]["Tables"]["contracts"]["Row"] & {
+  first_party?: any;
+  second_party?: any;
+  promoter?: any;
+};
 
 interface OverviewTabProps {
-  contract: Contract | null
+  contract: ContractWithRelations | null
 }
 
 export function OverviewTab({ contract }: OverviewTabProps) {

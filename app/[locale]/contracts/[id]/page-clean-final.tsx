@@ -170,7 +170,7 @@ export default function ContractDetailPage() {
 
           {/* Overview Tab - Using our refactored component */}
           <TabsContent value="overview">
-            <OverviewTab contract={contract as any} />
+            <OverviewTab contract={contract} />
           </TabsContent>
 
           {/* Parties Tab - Placeholder for future modularization */}
