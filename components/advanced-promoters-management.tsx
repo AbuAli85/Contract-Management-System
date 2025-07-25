@@ -6,7 +6,7 @@ import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import * as XLSX from "xlsx"
 import Papa from "papaparse"
 import dynamic from 'next/dynamic'
-import QRCode from 'qrcode.react'
+import { QRCodeSVG } from 'qrcode.react'
 
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -1963,7 +1963,7 @@ export default function AdvancedPromotersManagement() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col items-center justify-center py-6">
-              <QRCode value={typeof window !== 'undefined' ? `${window.location.origin}/manage-promoters/${qrCodePromoter.id}` : `/manage-promoters/${qrCodePromoter.id}`} size={200} />
+              <QRCodeSVG value={typeof window !== 'undefined' ? `${window.location.origin}/manage-promoters/${qrCodePromoter.id}` : `/manage-promoters/${qrCodePromoter.id}`} size={200} />
               <div className="mt-4 text-center">
                 <div className="font-semibold">{qrCodePromoter.name_en}</div>
                 <div className="text-xs text-muted-foreground">ID: {qrCodePromoter.id_card_number}</div>

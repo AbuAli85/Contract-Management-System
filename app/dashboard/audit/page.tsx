@@ -30,14 +30,14 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 interface AuditLogItem {
   id: string;
   user_id?: string | null;
-  action: string;
-  entity_type: string;
+  action: string | null;
+  entity_type: string | null;
   entity_id: string;
   details?: any;
-  created_at: string;
+  created_at: string | null;
   user_email?: string | null;
   ip_address?: string | null;
-  timestamp: string;
+  timestamp: string | null;
 }
 
 // Define a type for the payload from Supabase
@@ -45,11 +45,11 @@ interface AuditLogPayload {
   new: {
     id: number;
     user_id?: string | null;
-    action: string;
-    entity_type: string;
+    action: string | null;
+    entity_type: string | null;
     entity_id: number;
     details?: any;
-    created_at: string;
+    created_at: string | null;
   };
 }
 
@@ -131,7 +131,7 @@ export default function AuditLogsPage() {
       filtered = filtered.filter(
         (log) =>
           (log.user_email || "System").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (log.action && log.action.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.entity_type && log.entity_type.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.entity_id && log.entity_id.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.details &&
@@ -183,9 +183,9 @@ export default function AuditLogsPage() {
   const exportCSV = () => {
     const headers = ["Timestamp", "User", "Action", "Entity Type", "Entity ID", "Details"];
     const rows = filteredLogs.map((log) => [
-      log.timestamp,
+      log.timestamp || "",
       log.user_email || "System",
-      log.action,
+      log.action || "",
       log.entity_type || "",
       log.entity_id || "",
       typeof log.details === "object" ? JSON.stringify(log.details) : log.details || "",

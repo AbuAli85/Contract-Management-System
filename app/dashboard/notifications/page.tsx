@@ -90,7 +90,17 @@ export default function NotificationsPage() {
           )
           .order("created_at", { ascending: false })
         if (error) throw error
-        if (!ignore) setNotifications((data || []) as NotificationItem[])
+        if (!ignore) {
+          // Transform the data to match NotificationItem interface
+          const transformedData = (data || []).map(notification => ({
+            ...notification,
+            id: notification.id.toString(), // Convert number to string
+            related_contract_id: notification.related_contract_id?.toString() || undefined,
+            isRead: notification.is_read || false, // Add compatibility field
+            timestamp: notification.created_at // Add compatibility field
+          })) as NotificationItem[]
+          setNotifications(transformedData)
+        }
       } catch (err: any) {
         if (!ignore) {
           setError(err.message)
@@ -114,11 +124,35 @@ export default function NotificationsPage() {
         (payload) => {
           setNotifications((prev) => {
             if (payload.eventType === "INSERT") {
-              return [payload.new as NotificationItem, ...prev]
+              // Transform the new notification to match NotificationItem interface
+              const newNotification: NotificationItem = {
+                id: payload.new.id.toString(), // Convert number to string
+                type: payload.new.type,
+                message: payload.new.message,
+                created_at: payload.new.created_at,
+                related_contract_id: payload.new.related_contract_id?.toString() || undefined,
+                isRead: payload.new.is_read || false, // Add compatibility field
+                timestamp: payload.new.created_at, // Add compatibility field
+                user_email: payload.new.user_email
+              }
+              return [newNotification, ...prev]
             } else if (payload.eventType === "UPDATE") {
-              return prev.map((n) => (n.id === payload.new.id ? payload.new as NotificationItem : n))
+              // Transform the updated notification
+              const updatedNotification: NotificationItem = {
+                id: payload.new.id.toString(), // Convert number to string
+                type: payload.new.type,
+                message: payload.new.message,
+                created_at: payload.new.created_at,
+                related_contract_id: payload.new.related_contract_id?.toString() || undefined,
+                isRead: payload.new.is_read || false, // Add compatibility field
+                timestamp: payload.new.created_at, // Add compatibility field
+                user_email: payload.new.user_email
+              }
+              return prev.map((n) => (n.id === updatedNotification.id ? updatedNotification : n))
             } else if (payload.eventType === "DELETE") {
-              return prev.filter((n) => n.id !== payload.old.id)
+              // Convert the deleted notification ID to string for comparison
+              const deletedId = payload.old.id.toString()
+              return prev.filter((n) => n.id !== deletedId)
             }
             return prev
           })
@@ -186,7 +220,7 @@ export default function NotificationsPage() {
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: !notif.is_read })
-        .eq("id", notif.id)
+        .eq("id", parseInt(notif.id))
       if (error) throw error
       toast({
         title: "Success",
@@ -245,7 +279,7 @@ export default function NotificationsPage() {
     const count = notifications.length
     setNotifications([])
     try {
-      const { error } = await supabase.from("notifications").delete().neq("id", "")
+      const { error } = await supabase.from("notifications").delete().neq("id", 0)
       if (error) throw error
       toast({
         title: "Success",
