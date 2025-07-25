@@ -196,9 +196,18 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       titleAr: "سير عمل الموافقة",
       items: [
         {
+          href: `/${locale}/dashboard/user-approvals`,
+          label: "User Approvals",
+          labelAr: "موافقات المستخدمين",
+          icon: UserCheck,
+          permission: "user:create",
+          badge: "New",
+          badgeVariant: "secondary"
+        },
+        {
           href: `/${locale}/dashboard/approvals`,
-          label: "Approval Dashboard",
-          labelAr: "لوحة الموافقات",
+          label: "Contract Approvals",
+          labelAr: "موافقات العقود",
           icon: FileCheck,
           permission: "contract:approve",
           badge: "New",

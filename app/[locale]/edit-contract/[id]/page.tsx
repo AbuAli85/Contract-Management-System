@@ -423,12 +423,13 @@ export default function EditContractPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="draft">Draft</SelectItem>
-                        <SelectItem value="pending_review">Pending Review</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="signed">Signed</SelectItem>
                         <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="terminated">Terminated</SelectItem>
+                        <SelectItem value="generated">Generated</SelectItem>
                         <SelectItem value="expired">Expired</SelectItem>
+                        <SelectItem value="soon-to-expire">Soon to Expire</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
