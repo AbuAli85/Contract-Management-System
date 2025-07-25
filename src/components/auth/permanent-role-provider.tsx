@@ -6,7 +6,7 @@ import { User } from '@supabase/supabase-js'
 export type Role = 'admin' | 'manager' | 'user'
 
 interface PermanentRoleContextType {
-  role: Role
+  role: Role | null
   setRole: (role: Role) => void
   isLoading: boolean
   isInitialized: boolean
@@ -15,7 +15,7 @@ interface PermanentRoleContextType {
 }
 
 const PermanentRoleContext = createContext<PermanentRoleContextType>({
-  role: 'user',
+  role: null,
   setRole: () => {},
   isLoading: true,
   isInitialized: false,

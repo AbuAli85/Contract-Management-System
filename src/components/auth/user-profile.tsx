@@ -11,16 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/src/components/ui/ta
 import { Switch } from '@/src/components/ui/switch'
 
 export function UserProfile() {
-  const { user, updatePassword, enrollMFA, verifyMFA, unenrollMFA } = useAuth()
+  const { user, updatePassword } = useAuth()
   const { hasRole } = useRBAC()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [mfaEnabled, setMfaEnabled] = useState(false)
-  const [mfaCode, setMfaCode] = useState('')
-  const [mfaSecret, setMfaSecret] = useState<string | null>(null)
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,26 +37,7 @@ export function UserProfile() {
     }
   }
 
-  const handleMFAToggle = async () => {
-    if (!mfaEnabled) {
-      try {
-        const { secret, qr_code } = await enrollMFA()
-        setMfaSecret(secret)
-        // Show QR code to user
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to enable MFA')
-      }
-    } else {
-      // Handle MFA disable
-      try {
-        await unenrollMFA(user?.id as string)
-        setMfaEnabled(false)
-        setMfaSecret(null)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to disable MFA')
-      }
-    }
-  }
+
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -112,45 +90,7 @@ export function UserProfile() {
                 </Button>
               </form>
 
-              {/* MFA Settings */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Two-Factor Authentication</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Add an extra layer of security to your account
-                    </p>
-                  </div>
-                  <Switch
-                    checked={mfaEnabled}
-                    onCheckedChange={handleMFAToggle}
-                  />
-                </div>
-                {mfaSecret && (
-                  <div className="space-y-4">
-                    <p>Scan this QR code with your authenticator app:</p>
-                    {/* Add QR code component here */}
-                    <div>
-                      <Label htmlFor="mfaCode">Verification Code</Label>
-                      <Input
-                        id="mfaCode"
-                        value={mfaCode}
-                        onChange={(e) => setMfaCode(e.target.value)}
-                        placeholder="Enter code from authenticator app"
-                      />
-                      <Button
-                        onClick={() => {
-                          // TODO: Implement proper MFA verification
-                          console.log('MFA verification not implemented yet')
-                        }}
-                        className="mt-2"
-                      >
-                        Verify
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+
             </div>
           </TabsContent>
 

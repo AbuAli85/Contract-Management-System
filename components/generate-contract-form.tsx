@@ -32,7 +32,7 @@ import {
   contractGeneratorSchema,
   type ContractGeneratorFormData,
 } from "@/lib/schema-generator"
-import type { Promoter } from "@/lib/types"
+import type { Promoter, Party } from "@/lib/types"
 import { 
   JOB_TITLES, 
   DEPARTMENTS, 
@@ -104,8 +104,8 @@ export default function ContractGeneratorForm({
     shouldFocusError: false,
   })
 
-  const [selectedClient, setSelectedClient] = useState<Database["public"]["Tables"]["parties"]["Row"] | null>(null) // Party A
-  const [selectedEmployer, setSelectedEmployer] = useState<Database["public"]["Tables"]["parties"]["Row"] | null>(null) // Party B
+  const [selectedClient, setSelectedClient] = useState<Party | null>(null) // Party A
+  const [selectedEmployer, setSelectedEmployer] = useState<Party | null>(null) // Party B
 
   // Build combobox options
   useEffect(() => {
@@ -442,7 +442,7 @@ export default function ContractGeneratorForm({
                           </SelectItem>
                         )}
                                               {!isLoadingParties &&
-                         clientParties?.map((party: Database["public"]["Tables"]["parties"]["Row"]) => (
+                         clientParties?.map((party: Party) => (
                           <SelectItem key={party.id} value={party.id}>
                             {party.name_en} / {party.name_ar}{" "}
                             {party.crn && `(CRN: ${party.crn})`}
@@ -492,7 +492,7 @@ export default function ContractGeneratorForm({
                           </SelectItem>
                         )}
                                               {!isLoadingParties &&
-                         employerParties?.map((party: Database["public"]["Tables"]["parties"]["Row"]) => (
+                         employerParties?.map((party: Party) => (
                           <SelectItem key={party.id} value={party.id}>
                             {party.name_en} / {party.name_ar}{" "}
                             {party.crn && `(CRN: ${party.crn})`}

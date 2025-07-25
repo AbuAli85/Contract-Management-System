@@ -41,7 +41,17 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
 
       if (error) throw error
 
-      set({ contracts: data || [], isLoading: false })
+      // Transform data to handle nullable fields
+      const transformedContracts = (data || []).map(contract => ({
+        ...contract,
+        created_at: contract.created_at || new Date().toISOString(),
+        updated_at: contract.updated_at || null,
+        first_party_id: contract.first_party_id || '',
+        second_party_id: contract.second_party_id || '',
+        promoter_id: contract.promoter_id || '',
+      }))
+      
+      set({ contracts: transformedContracts, isLoading: false })
       get().updateStats()
     } catch (error) {
       console.error("Error fetching contracts:", error)

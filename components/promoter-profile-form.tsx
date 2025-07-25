@@ -8,7 +8,8 @@ import { promoterProfileSchema, type PromoterProfileFormData } from "@/lib/promo
 import { promoterStatuses } from "@/lib/fixtures/promoter-profile"
 import type { PromoterProfile } from "@/lib/types" // Assuming PromoterProfile is defined in lib/types.ts
 import { useToast } from "@/hooks/use-toast"
-import { useParties, type Party } from "@/hooks/use-parties" // Import useParties hook
+import { useParties } from "@/hooks/use-parties" // Import useParties hook
+import type { Party } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

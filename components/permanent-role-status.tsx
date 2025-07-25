@@ -74,10 +74,15 @@ export function PermanentRoleStatus() {
               <Loader2 className="h-3 w-3 animate-spin" />
               <span className="text-sm text-muted-foreground">Loading...</span>
             </div>
-          ) : (
+          ) : permanentRole ? (
             <Badge className={`flex items-center gap-1 ${getRoleColor(permanentRole)}`}>
               {getRoleIcon(permanentRole)}
               {permanentRole}
+            </Badge>
+          ) : (
+            <Badge className="flex items-center gap-1 bg-gray-100 text-gray-800 border-gray-300">
+              <User className="h-3 w-3" />
+              No Role
             </Badge>
           )}
         </div>
