@@ -203,7 +203,9 @@ export function OverviewTab({ contract }: OverviewTabProps) {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Promoter</label>
                   <p className="font-mono text-sm text-gray-700 mt-1">
-                    {contract?.promoter?.name_en || contract?.promoter_id || "N/A"}
+                    {contract?.promoters && contract.promoters.length > 0 
+                      ? contract.promoters[0].name_en 
+                      : contract?.promoter_id || "N/A"}
                   </p>
                 </div>
               </div>

@@ -48,7 +48,9 @@ export default function ReviewPanel() {
       const items: ReviewItem[] = (data.contracts || []).map((contract: any) => ({
         id: contract.id,
         title: contract.contract_number || `Contract ${contract.id.slice(0, 8)}`,
-        promoter: contract.promoter?.name_en || 'Unknown Promoter',
+        promoter: contract.promoters && contract.promoters.length > 0 
+          ? contract.promoters[0].name_en 
+          : 'Unknown Promoter',
         parties: `${contract.first_party?.name_en || 'Unknown'} / ${contract.second_party?.name_en || 'Unknown'}`,
         period: `Created ${new Date(contract.created_at).toLocaleDateString()}`,
         contractLink: `/contracts/${contract.id}`,

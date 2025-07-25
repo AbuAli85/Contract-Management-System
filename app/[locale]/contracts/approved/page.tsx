@@ -149,7 +149,9 @@ export default function ApprovedContractsPage() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>Client: {contract.first_party?.name_en || 'N/A'}</span>
                         <span>Employer: {contract.second_party?.name_en || 'N/A'}</span>
-                        <span>Employee: {contract.promoter?.name_en || 'N/A'}</span>
+                        <span>Employee: {contract.promoters && contract.promoters.length > 0 
+                          ? contract.promoters[0].name_en 
+                          : 'N/A'}</span>
                         <span>Approved: {formatDate(contract.approved_at || contract.created_at)}</span>
                       </div>
                     </div>

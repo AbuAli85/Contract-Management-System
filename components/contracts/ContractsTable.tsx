@@ -393,7 +393,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           second_party_name_en: contract.second_party?.name_en || "",
           second_party_name_ar: contract.second_party?.name_ar || "",
           second_party_crn: contract.second_party?.crn || "",
-          promoter_name_en: contract.promoter?.name_en || "",
+          promoter_name_en: contract.promoters && contract.promoters.length > 0 
+          ? contract.promoters[0].name_en 
+          : "",
           promoter_name_ar: contract.promoter?.name_ar || "",
           email: contract.email || "",
           job_title: contract.job_title || "",

@@ -158,7 +158,9 @@ export function ContractReviewForm({ contract, onClose, onComplete }: ContractRe
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Employee</p>
-              <p className="text-sm">{contract.promoter?.name_en || 'N/A'}</p>
+              <p className="text-sm">{contract.promoters && contract.promoters.length > 0 
+                  ? contract.promoters[0].name_en 
+                  : 'N/A'}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">Days Pending</p>

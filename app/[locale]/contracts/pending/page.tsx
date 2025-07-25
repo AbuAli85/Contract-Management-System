@@ -20,6 +20,7 @@ interface Contract {
   first_party: { name_en: string } | null
   second_party: { name_en: string } | null
   promoter: { name_en: string } | null
+  promoters: { name_en: string }[] | null
 }
 
 export default function PendingContractsPage() {
@@ -180,7 +181,9 @@ export default function PendingContractsPage() {
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
                         <span>Client: {contract.first_party?.name_en || 'N/A'}</span>
                         <span>Employer: {contract.second_party?.name_en || 'N/A'}</span>
-                        <span>Employee: {contract.promoter?.name_en || 'N/A'}</span>
+                        <span>Employee: {contract.promoters && contract.promoters.length > 0 
+                          ? contract.promoters[0].name_en 
+                          : 'N/A'}</span>
                         <span>Submitted: {formatDate(contract.submitted_for_review_at || contract.created_at)}</span>
                       </div>
                     </div>

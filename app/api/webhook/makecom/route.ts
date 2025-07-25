@@ -67,7 +67,9 @@ export async function POST(request: Request) {
       second_party_crn: contract.employer_company?.crn || '',
       
       // 👤 PROMOTER DETAILS (Unchanged)
-      promoter_name_en: contract.promoter?.name_en || '',
+      promoter_name_en: contract.promoters && contract.promoters.length > 0 
+        ? contract.promoters[0].name_en 
+        : '',
       promoter_name_ar: contract.promoter?.name_ar || '',
       job_title: contract.job_title || '',
       work_location: contract.work_location || '',
