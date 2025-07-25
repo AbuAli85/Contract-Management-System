@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Only admins can view roles' }, { status: 403 })
     }
 
-    // Fetch roles with user counts using the role_statistics view
+    // Fetch roles with user counts using the roles table
     const { data: roles, error: rolesError } = await supabase
-      .from('role_statistics')
+      .from('roles')
       .select('*')
       .order('name')
 
@@ -38,13 +38,10 @@ export async function GET(request: NextRequest) {
     // Transform the data to match the expected format
     const transformedRoles = roles?.map(role => ({
       id: role.id,
-      name: role.display_name,
+      name: role.name,
       description: role.description,
-      permissions: role.permissions || [],
-      userCount: role.user_count || 0,
-      isSystem: role.is_system || false,
-      createdAt: role.created_at,
-      updatedAt: role.updated_at
+      permissions: [],
+      userCount: 0
     })) || []
 
     return NextResponse.json({ 
@@ -140,13 +137,10 @@ export async function POST(request: NextRequest) {
       message: 'Role created successfully',
       role: {
         id: newRole.id,
-        name: newRole.display_name,
+        name: newRole.name,
         description: newRole.description,
-        permissions: newRole.permissions || [],
-        userCount: 0,
-        isSystem: false,
-        createdAt: newRole.created_at,
-        updatedAt: newRole.updated_at
+        permissions: [],
+        userCount: 0
       }
     })
 

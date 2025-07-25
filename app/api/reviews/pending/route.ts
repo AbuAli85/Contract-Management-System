@@ -70,7 +70,9 @@ export async function GET(request: NextRequest) {
 
     // Process contracts to add calculated fields
     const processedContracts = contracts?.map(contract => {
-      const submittedDate = new Date(contract.submitted_for_review_at || contract.created_at)
+      const submittedDate = new Date(
+        contract.submitted_for_review_at || contract.created_at || new Date().toISOString()
+      )
       const now = new Date()
       const daysPending = Math.floor((now.getTime() - submittedDate.getTime()) / (1000 * 60 * 60 * 24))
       

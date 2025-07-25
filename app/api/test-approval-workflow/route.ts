@@ -6,12 +6,18 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     
     // Test database connection and tables
-    const results = {
-      contracts: { count: 0, sample: [], error: null as string | null },
-      approvals: { count: 0, sample: [], error: null as string | null },
-      reviewerRoles: { count: 0, sample: [], error: null as string | null },
-      workflowConfig: { count: 0, sample: [], error: null as string | null },
-      users: { count: 0, sample: [], error: null as string | null }
+    const results: {
+      contracts: { count: number; sample: any[]; error: string | null };
+      approvals: { count: number; sample: any[]; error: string | null };
+      reviewerRoles: { count: number; sample: any[]; error: string | null };
+      workflowConfig: { count: number; sample: any[]; error: string | null };
+      users: { count: number; sample: any[]; error: string | null };
+    } = {
+      contracts: { count: 0, sample: [], error: null },
+      approvals: { count: 0, sample: [], error: null },
+      reviewerRoles: { count: 0, sample: [], error: null },
+      workflowConfig: { count: 0, sample: [], error: null },
+      users: { count: 0, sample: [], error: null }
     }
 
     // Test contracts table

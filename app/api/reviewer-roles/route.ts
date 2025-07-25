@@ -129,9 +129,6 @@ export async function POST(request: NextRequest) {
       const { data: updatedRole, error: updateError } = await supabase
         .from('reviewer_roles')
         .update({
-          is_active: true,
-          assigned_by: user.id,
-          assigned_at: new Date().toISOString()
         })
         .eq('id', existingRole.id)
         .select()
@@ -153,9 +150,9 @@ export async function POST(request: NextRequest) {
     const { data: newRole, error: createError } = await supabase
       .from('reviewer_roles')
       .insert({
-        user_id,
-        role_type,
-        assigned_by: user.id
+        id_user: user_id,
+        role_name: role_type,
+        approval_order: 1
       })
       .select()
       .single()
@@ -215,9 +212,6 @@ export async function PUT(request: NextRequest) {
     const { data: updatedRole, error: updateError } = await supabase
       .from('reviewer_roles')
       .update({
-        is_active,
-        assigned_by: user.id,
-        assigned_at: new Date().toISOString()
       })
       .eq('id', role_id)
       .select()
@@ -278,7 +272,8 @@ export async function DELETE(request: NextRequest) {
     // Soft delete by setting is_active to false
     const { error: deleteError } = await supabase
       .from('reviewer_roles')
-      .update({ is_active: false })
+      .update({
+      })
       .eq('id', roleId)
 
     if (deleteError) {

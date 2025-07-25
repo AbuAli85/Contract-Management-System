@@ -51,12 +51,7 @@ export async function GET(
       role: {
         id: role.id,
         name: role.name,
-        description: role.description,
-        permissions: role.permissions || [],
-        userCount: userCount || 0,
-        isSystem: role.is_system || false,
-        createdAt: role.created_at,
-        updatedAt: role.updated_at
+        description: role.description
       }
     })
 
@@ -94,7 +89,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { name, description, permissions } = body
+    const { name, description } = body
 
     if (!name || !description) {
       return NextResponse.json({ error: 'Name and description are required' }, { status: 400 })
@@ -109,10 +104,6 @@ export async function PUT(
 
     if (fetchError || !existingRole) {
       return NextResponse.json({ error: 'Role not found' }, { status: 404 })
-    }
-
-    if (existingRole.is_system) {
-      return NextResponse.json({ error: 'System roles cannot be modified' }, { status: 400 })
     }
 
     // Check if new name conflicts with existing role
@@ -135,7 +126,6 @@ export async function PUT(
       .update({
         name: name.toLowerCase(),
         description,
-        permissions: permissions || [],
         updated_by: user.id
       })
       .eq('id', id)
@@ -157,8 +147,7 @@ export async function PUT(
         resource_id: id,
         details: {
           role_name: name,
-          role_description: description,
-          permissions_count: permissions?.length || 0
+          role_description: description
         }
       })
 
@@ -168,12 +157,7 @@ export async function PUT(
       role: {
         id: updatedRole.id,
         name: updatedRole.name,
-        description: updatedRole.description,
-        permissions: updatedRole.permissions || [],
-        userCount: 0, // Will be calculated separately
-        isSystem: updatedRole.is_system || false,
-        createdAt: updatedRole.created_at,
-        updatedAt: updatedRole.updated_at
+        description: updatedRole.description
       }
     })
 
@@ -219,10 +203,6 @@ export async function DELETE(
 
     if (fetchError || !existingRole) {
       return NextResponse.json({ error: 'Role not found' }, { status: 404 })
-    }
-
-    if (existingRole.is_system) {
-      return NextResponse.json({ error: 'System roles cannot be deleted' }, { status: 400 })
     }
 
     // Check if any users are assigned to this role

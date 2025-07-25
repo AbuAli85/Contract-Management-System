@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     const { data: newConfig, error: createError } = await supabase
       .from('workflow_config')
       .insert({
-        config_name,
+        workflow_name: config_name,
         config_type,
         config_data,
         created_by: user.id
@@ -171,10 +171,10 @@ export async function PUT(request: NextRequest) {
     const { data: updatedConfig, error: updateError } = await supabase
       .from('workflow_config')
       .update({
-        config_data,
+        description: config_data,
         updated_at: new Date().toISOString()
       })
-      .eq('config_name', config_name)
+      .eq('workflow_name', config_name)
       .eq('is_active', true)
       .select()
       .single()

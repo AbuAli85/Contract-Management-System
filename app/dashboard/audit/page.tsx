@@ -43,11 +43,11 @@ interface AuditLogItem {
 // Define a type for the payload from Supabase
 interface AuditLogPayload {
   new: {
-    id: string;
+    id: number;
     user_id?: string | null;
     action: string;
     entity_type: string;
-    entity_id: string;
+    entity_id: number;
     details?: any;
     created_at: string;
   };
@@ -77,6 +77,8 @@ export default function AuditLogsPage() {
       // Transform the data to add compatibility fields
       const transformedData = (data || []).map(log => ({
         ...log,
+        id: log.id.toString(), // Convert number to string
+        entity_id: log.entity_id?.toString() || '', // Convert number to string
         user_email: log.user_id || null, // For compatibility
         ip_address: null, // Column doesn't exist in schema
         timestamp: log.created_at // Map created_at to timestamp
@@ -107,6 +109,8 @@ export default function AuditLogsPage() {
           // Transform the new log data to match our expected format
           const newLog: AuditLogItem = {
             ...payload.new,
+            id: payload.new.id.toString(), // Convert number to string
+            entity_id: payload.new.entity_id.toString(), // Convert number to string
             user_email: payload.new.user_id || null,
             ip_address: null, // Column doesn't exist in schema
             timestamp: payload.new.created_at, // Map created_at to timestamp
