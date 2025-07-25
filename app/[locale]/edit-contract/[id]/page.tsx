@@ -146,12 +146,23 @@ export default function EditContractPage() {
 
   const validateForm = () => {
     const errors: string[] = [];
+    
+    // Only validate fields that are actually part of the contracts table
     if (!formData.contract_number) errors.push('Contract Number is required.');
-    if (!formData.first_party_name_en) errors.push('First Party (Employer) name is required.');
-    if (!formData.second_party_name_en) errors.push('Second Party (Employee) name is required.');
+    if (!formData.status) errors.push('Status is required.');
     if (!formData.contract_start_date) errors.push('Start Date is required.');
     if (!formData.contract_end_date) errors.push('End Date is required.');
-    if (formData.salary && parseFloat(formData.salary) < 0) errors.push('Salary cannot be negative.');
+    
+    // Validate salary if provided
+    if (formData.basic_salary && parseFloat(formData.basic_salary) < 0) {
+      errors.push('Basic salary cannot be negative.');
+    }
+    
+    if (formData.allowances && parseFloat(formData.allowances) < 0) {
+      errors.push('Allowances cannot be negative.');
+    }
+    
+    // Validate date range
     if (formData.contract_start_date && formData.contract_end_date) {
       const startDate = new Date(formData.contract_start_date);
       const endDate = new Date(formData.contract_end_date);
@@ -159,6 +170,7 @@ export default function EditContractPage() {
         errors.push('Contract start date cannot be after end date.');
       }
     }
+    
     return errors;
   }
 
@@ -173,25 +185,7 @@ export default function EditContractPage() {
       return;
     }
 
-    // Add timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Save operation timed out')), 10000)
-    })
-
     try {
-      // Basic validation
-      if (formData.contract_start_date && formData.contract_end_date) {
-        const startDate = new Date(formData.contract_start_date)
-        const endDate = new Date(formData.contract_end_date)
-        if (startDate > endDate) {
-          throw new Error('Contract start date cannot be after end date')
-        }
-      }
-
-      if (formData.salary && parseFloat(formData.salary) < 0) {
-        throw new Error('Salary cannot be negative')
-      }
-
       // Only update fields that actually exist in the contracts table
       const updateData = {
         status: formData.status,
@@ -211,25 +205,24 @@ export default function EditContractPage() {
         updated_at: new Date().toISOString()
       }
 
-      const supabase = createClient()
       console.log('🔄 Saving contract with data:', updateData)
       
-      // Wrap the save operation with timeout
-      const savePromise = supabase
-        .from('contracts')
-        .update(updateData)
-        .eq('id', contractId)
-        .select()
+      // Use the API route instead of direct Supabase client
+      const response = await fetch(`/api/contracts/${contractId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
 
-      const result = await Promise.race([savePromise, timeoutPromise]) as any
-      const { data, error } = result
-
-      if (error) {
-        console.error('❌ Save error:', error)
-        throw new Error(`Database error: ${error.message}`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
       }
 
-      console.log('✅ Contract saved successfully:', data)
+      const result = await response.json()
+      console.log('✅ Contract saved successfully:', result)
 
       setSaveSuccess(true)
       // Refresh contract data
