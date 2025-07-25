@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
-import { AuthenticatedLayout } from "@/auth/components/authenticated-layout"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -304,7 +304,7 @@ export default function DashboardOverviewPage() {
   if (!analytics) return <div>Loading...</div>
 
   return (
-    <AuthenticatedLayout>
+    <AuthenticatedLayout locale={locale}>
       <div className="space-y-6">
       {/* Welcome Section */}
       <div className="space-y-2">

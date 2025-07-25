@@ -1,11 +1,15 @@
 'use client'
 
-import { AuthenticatedLayout } from '@/auth/components/authenticated-layout'
+import { usePathname } from 'next/navigation'
+import { AuthenticatedLayout } from '@/components/authenticated-layout'
 import { UserProfile } from '@/auth/components/user-profile'
 
 export default function DashboardPage() {
+  const pathname = usePathname()
+  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  
   return (
-    <AuthenticatedLayout>
+    <AuthenticatedLayout locale={locale}>
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white shadow rounded-lg">
