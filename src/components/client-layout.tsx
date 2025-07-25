@@ -10,6 +10,7 @@ import { ProfessionalHeader } from '@/components/professional-header';
 import { useAuth } from '@/src/components/auth/auth-provider';
 import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { PerformanceMonitor } from '@/components/performance-monitor';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -95,6 +96,7 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
             <AuthenticatedAppLayout locale={locale}>
               {children}
             </AuthenticatedAppLayout>
+            <PerformanceMonitor />
           </ToastProvider>
         </AuthProvider>
       </ErrorBoundary>
