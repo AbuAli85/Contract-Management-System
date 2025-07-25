@@ -717,39 +717,39 @@ export default function ContractDetailPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    {contract?.promoters && contract.promoters.length > 0 ? (
+                    {contract?.promoter ? (
                       <>
                         <div>
                           <label className="text-sm font-medium text-gray-500">Name (English)</label>
-                          <p className="font-semibold text-gray-900 mt-1">{contract.promoters[0].name_en}</p>
+                          <p className="font-semibold text-gray-900 mt-1">{contract.promoter.name_en}</p>
                         </div>
-                        {contract.promoters[0].name_ar && (
+                        {contract.promoter.name_ar && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">Name (Arabic)</label>
-                            <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoters[0].name_ar}</p>
+                            <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoter.name_ar}</p>
                           </div>
                         )}
-                        {contract.promoters[0].id_card_number && (
+                        {contract.promoter.id_card_number && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">ID Card Number</label>
-                            <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoters[0].id_card_number}</p>
+                            <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoter.id_card_number}</p>
                           </div>
                         )}
-                        {contract.promoters[0].email && (
+                        {contract.promoter.email && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">Email</label>
                             <p className="text-sm text-gray-700 mt-1 flex items-center gap-2">
                               <MailIcon className="h-4 w-4 text-gray-500" />
-                              {contract.promoters[0].email}
+                              {contract.promoter.email}
                             </p>
                           </div>
                         )}
-                        {contract.promoters[0].phone && (
+                        {contract.promoter.phone && (
                           <div>
                             <label className="text-sm font-medium text-gray-500">Phone</label>
                             <p className="text-sm text-gray-700 mt-1 flex items-center gap-2">
                               <PhoneIcon className="h-4 w-4 text-gray-500" />
-                              {contract.promoters[0].phone}
+                              {contract.promoter.phone}
                             </p>
                           </div>
                         )}
@@ -765,7 +765,7 @@ export default function ContractDetailPage() {
                     <div className="pt-4 border-t">
                       <Button asChild variant="outline" size="sm" className="w-full">
                         <Link href={`/promoters`}>
-                          {contract?.promoters && contract.promoters.length > 0 ? 'View Details' : 'Assign Promoter'}
+                          {contract?.promoter ? 'View Details' : 'Assign Promoter'}
                         </Link>
                       </Button>
                     </div>
