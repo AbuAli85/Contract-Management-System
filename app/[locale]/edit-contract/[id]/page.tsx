@@ -28,13 +28,17 @@ import { useContract } from "@/hooks/useContract"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
 import { StatusBadge } from "@/components/StatusBadge"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 export default function EditContractPage() {
   const params = useParams()
   const router = useRouter()
   const contractId = params?.id as string
-  const locale = params?.locale as string
+  
+  // Extract locale from pathname
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
   
   const { contract, loading, error, refetch } = useContract(contractId)
   
@@ -208,6 +212,7 @@ export default function EditContractPage() {
         updated_at: new Date().toISOString()
       }
 
+      const supabase = createClient()
       const { error } = await supabase
         .from('contracts')
         .update(updateData)
@@ -259,7 +264,8 @@ export default function EditContractPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <AuthenticatedLayout locale={locale}>
+      <div className="bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -838,6 +844,7 @@ export default function EditContractPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </AuthenticatedLayout>
   )
 }
