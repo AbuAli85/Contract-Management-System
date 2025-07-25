@@ -81,6 +81,7 @@ import { cn } from "@/lib/utils"
 import { RoleRefreshButton } from "@/components/role-refresh-button"
 import { RoleDebugPanel } from "@/components/role-debug-panel"
 import { RoleStatusIndicator } from "@/components/role-status-indicator"
+import DashboardLayout from "../dashboard/layout";
 
 // Enhanced Contract interface
 interface EnhancedContract extends ContractWithRelations {
