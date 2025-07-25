@@ -17,7 +17,7 @@ const fetchContract = async (contractId: string): Promise<ContractWithRelations 
       `*,
       first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
       second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
-      promoter:promoters!contracts_promoter_id_fkey(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status,email,phone)`
+      promoter:promoters!contracts_promoter_id_fkey(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)`
     )
     .eq("id", contractId)
     .single();

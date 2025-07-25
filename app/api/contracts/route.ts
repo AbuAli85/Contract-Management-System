@@ -78,7 +78,7 @@ export async function GET(request: Request) {
         *,
         first_party:parties!contracts_first_party_id_fkey(name_en),
         second_party:parties!contracts_second_party_id_fkey(name_en),
-        promoter:promoters(name_en)
+        promoter:promoters!contracts_promoter_id_fkey(name_en)
       `)
       .order('created_at', { ascending: false })
 

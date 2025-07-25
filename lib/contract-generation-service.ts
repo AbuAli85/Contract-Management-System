@@ -392,5 +392,21 @@ class ContractGenerationService {
   }
 }
 
-// Export singleton instance
-export const contractGenerationService = new ContractGenerationService() 
+// Lazy singleton instance - only created when first accessed
+let _contractGenerationService: ContractGenerationService | null = null
+
+export function getContractGenerationService(): ContractGenerationService {
+  if (!_contractGenerationService) {
+    _contractGenerationService = new ContractGenerationService()
+  }
+  return _contractGenerationService
+}
+
+// For backward compatibility, export the getter as the main export
+export const contractGenerationService = {
+  generateContract: (data: ContractGenerationRequest) => getContractGenerationService().generateContract(data),
+  getContractStatus: (contractId: string) => getContractGenerationService().getContractStatus(contractId),
+  downloadContractPDF: (contractId: string) => getContractGenerationService().downloadContractPDF(contractId),
+  updateContractWithPDF: (contractId: string, pdfUrl: string, googleDriveUrl?: string) => getContractGenerationService().updateContractWithPDF(contractId, pdfUrl, googleDriveUrl),
+  retryContractGeneration: (contractId: string) => getContractGenerationService().retryContractGeneration(contractId),
+} 
