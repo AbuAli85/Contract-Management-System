@@ -7,8 +7,8 @@ import AdminDashboard from "@/components/dashboard/AdminDashboard";
 import PromoterDashboard from "@/components/dashboard/PromoterDashboard";
 
 export default function CRMPage() {
-  const { role, loading } = useAuth();
-  const isAdmin = role === "admin";
+  const { roles, loading } = useAuth();
+  const isAdmin = roles.includes("admin");
   const [promoters, setPromoters] = useState<{ id: string }[]>([]);
   const [promotersLoading, setPromotersLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export default function CRMPage() {
     fetchPromoters();
   }, []);
 
-  console.log("CRM Page state:", { role, loading, isAdmin, promotersLoading, promoters, error });
+  console.log("CRM Page state:", { roles, loading, isAdmin, promotersLoading, promoters, error });
 
   if (loading) return <div className="p-8 text-center">Loading authentication...</div>;
   if (promotersLoading) return <div className="p-8 text-center">Loading promoters...</div>;
