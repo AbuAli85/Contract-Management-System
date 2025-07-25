@@ -28,7 +28,8 @@ import {
   AlertCircleIcon,
   RefreshCwIcon,
   ExternalLinkIcon,
-  BellIcon
+  BellIcon,
+  UserIcon
 } from "lucide-react"
 
 // Import our refactored components
@@ -591,83 +592,19 @@ export default function ContractDetailPage() {
             </div>
 
             {/* Promoters Section */}
-            {contract?.promoters && contract.promoters.length > 0 && (
+            {contract?.promoter && (
               <Card className="shadow-lg">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <UsersIcon className="h-5 w-5" />
-                    Contract Promoter
+                    <UserIcon className="h-5 w-5" />
+                    Promoter
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="p-4 border border-gray-200 rounded-lg">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Name (English)</label>
-                        <h4 className="font-semibold text-gray-900 mt-1">
-                          {contract.promoters[0].name_en || "Unnamed Promoter"}
-                        </h4>
-                      </div>
-                      
-                      {contract.promoters[0].name_ar && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Name (Arabic)</label>
-                          <p className="font-semibold text-gray-900 mt-1" dir="rtl">{contract.promoters[0].name_ar}</p>
-                        </div>
-                      )}
-                      
-                      {contract.promoters[0].id_card_number && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">ID Number</label>
-                          <p className="font-mono text-sm text-gray-700 mt-1">{contract.promoters[0].id_card_number}</p>
-                        </div>
-                      )}
-                      
-                      {contract.promoters[0].email && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Email</label>
-                          <p className="text-gray-700 mt-1 flex items-center gap-2">
-                            <MailIcon className="h-4 w-4 text-gray-500" />
-                            {contract.promoters[0].email}
-                          </p>
-                        </div>
-                      )}
-                      
-                      {contract.promoters[0].phone && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Phone</label>
-                          <p className="text-gray-700 mt-1">{contract.promoters[0].phone}</p>
-                        </div>
-                      )}
-                      
-                      {contract.promoters[0].status && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-500">Status</label>
-                          <div className="text-gray-700 mt-1">
-                            <StatusBadge status={contract.promoters[0].status} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="space-y-2">
+                    <div className="font-semibold text-gray-900">{contract.promoter.name_en}</div>
+                    <div className="text-sm text-gray-500">{contract.promoter.email}</div>
                   </div>
-                  
-                  {contract?.promoter_id && (
-                    <div className="mt-4 pt-3 border-t border-gray-200">
-                      <label className="text-sm font-medium text-gray-500">Promoter ID</label>
-                      <div className="mt-1 flex items-center gap-2">
-                        <code className="bg-gray-100 px-2 py-1 rounded text-xs font-mono flex-1">
-                          {contract.promoter_id}
-                        </code>
-                                              <Button size="sm" variant="ghost" onClick={() => {
-                        if (typeof window !== 'undefined') {
-                          copyToClipboard(contract.promoter_id || '')
-                        }
-                      }}>
-                        <CopyIcon className="h-3 w-3" />
-                      </Button>
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             )}

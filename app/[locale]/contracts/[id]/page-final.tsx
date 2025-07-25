@@ -188,25 +188,28 @@ export default function ContractDetailPage() {
                 <div className="space-y-4">
                   <div className="p-4 border border-gray-200 rounded-lg">
                     <h4 className="font-semibold text-gray-900">Employee</h4>
-                    <p className="text-gray-600">{contract?.promoters?.[0]?.name_en || contract?.promoter_name_en || "Not specified"}</p>
-                    <p className="text-sm text-gray-500">{contract?.promoters?.[0]?.email || contract?.email || "No email provided"}</p>
+                    <p className="text-gray-600">{contract?.promoter?.name_en || "Not specified"}</p>
+                    <p className="text-sm text-gray-500">{contract?.promoter?.email || contract?.email || "No email provided"}</p>
                   </div>
                   <div className="p-4 border border-gray-200 rounded-lg">
                     <h4 className="font-semibold text-gray-900">Employer</h4>
-                    <p className="text-gray-600">{contract?.employer?.name_en || contract?.first_party_name_en || "Not specified"}</p>
+                    <p className="text-gray-600">{contract?.first_party?.name_en || "Not specified"}</p>
                     <p className="text-sm text-gray-500">Company representative</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Promoters</p>
+                      <p className="text-sm font-medium text-gray-500">Promoter</p>
                       <p className="text-sm text-gray-900">
-                        {contract.promoters?.map((p: Promoter) => p.name_en).join(', ')}
+                        {contract.promoter?.name_en || "Not specified"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-500">Parties</p>
                       <p className="text-sm text-gray-900">
-                        {contract.parties?.map((p: Party) => p.name_en).join(', ')}
+                        {contract.first_party?.name_en && contract.second_party?.name_en 
+                          ? `${contract.first_party.name_en}, ${contract.second_party.name_en}`
+                          : "Not specified"
+                        }
                       </p>
                     </div>
                   </div>
@@ -226,20 +229,6 @@ export default function ContractDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contract?.google_doc_url && (
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">Google Document</h4>
-                        <p className="text-sm text-gray-500">Original contract document</p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <Link href={contract.google_doc_url} target="_blank">
-                          <EyeIcon className="mr-2 h-4 w-4" />
-                          View
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
                   {contract?.pdf_url && (
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                       <div>
@@ -254,7 +243,7 @@ export default function ContractDetailPage() {
                       </Button>
                     </div>
                   )}
-                  {!contract?.google_doc_url && !contract?.pdf_url && (
+                  {!contract?.pdf_url && (
                     <div className="text-center py-8 text-gray-500">
                       <FileTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                       <p>No documents available for this contract</p>
