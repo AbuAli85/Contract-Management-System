@@ -54,9 +54,21 @@ export async function POST(
 
     if (uploadError) {
       console.error("Storage upload error:", uploadError)
+      
+      // Check if it's a bucket not found error
+      if (uploadError.message?.includes('Bucket not found') || uploadError.message?.includes('404')) {
+        return NextResponse.json({
+          success: false,
+          error: 'Storage bucket "contracts" not found',
+          details: 'Please run the storage setup script or create the bucket manually in Supabase Dashboard',
+          solution: 'Run: npm run setup-storage'
+        }, { status: 500 })
+      }
+      
       return NextResponse.json({
         success: false,
-        error: 'Failed to upload PDF'
+        error: 'Failed to upload PDF',
+        details: uploadError.message
       }, { status: 500 })
     }
 
