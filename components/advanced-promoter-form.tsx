@@ -377,8 +377,11 @@ export default function AdvancedPromoterForm({
 
   // Form submission
   const onSubmit = async (values: AdvancedPromoterFormData) => {
-    console.log('Form submission started with values:', values)
-    console.log('Form errors:', form.formState.errors)
+    console.log('🚀 Form submission started with values:', values)
+    console.log('📋 Form errors:', form.formState.errors)
+    console.log('✅ Form is valid:', form.formState.isValid)
+    console.log('🔄 Form is submitting:', form.formState.isSubmitting)
+    
     setIsSubmitting(true)
     
     try {
@@ -389,7 +392,7 @@ export default function AdvancedPromoterForm({
         throw new Error('Database connection not available')
       }
       
-      console.log('Supabase client created successfully')
+      console.log('✅ Supabase client created successfully')
       
       const promoterData = {
         name_en: values.name_en,
@@ -413,26 +416,31 @@ export default function AdvancedPromoterForm({
         updated_at: new Date().toISOString()
       }
 
-      console.log('Preparing promoter data:', promoterData)
+      console.log('📊 Preparing promoter data:', promoterData)
       
       let result
       if (isEditMode && promoterToEdit?.id) {
-        console.log('Updating existing promoter with ID:', promoterToEdit.id)
+        console.log('🔄 Updating existing promoter with ID:', promoterToEdit.id)
         result = await supabase
           .from('promoters')
           .update(promoterData)
           .eq('id', promoterToEdit.id)
           .select()
       } else {
-        console.log('Creating new promoter')
+        console.log('➕ Creating new promoter')
         result = await supabase
           .from('promoters')
           .insert([{ ...promoterData, created_at: new Date().toISOString() }])
           .select()
       }
 
-      console.log('Database operation result:', result)
-      if (result.error) throw result.error
+      console.log('📊 Database operation result:', result)
+      if (result.error) {
+        console.error('❌ Database error:', result.error)
+        throw result.error
+      }
+
+      console.log('✅ Database operation successful:', result.data)
 
       toast({
         title: isEditMode ? "Promoter updated" : "Promoter created",
@@ -442,15 +450,17 @@ export default function AdvancedPromoterForm({
         variant: "default"
       })
 
+      console.log('🎉 Form submission completed successfully')
       onFormSubmit()
     } catch (error) {
-      console.error('Form submission error:', error)
+      console.error('❌ Form submission error:', error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to save promoter information. Please try again.",
         variant: "destructive"
       })
     } finally {
+      console.log('🏁 Form submission finished, setting isSubmitting to false')
       setIsSubmitting(false)
     }
   }
@@ -1281,6 +1291,24 @@ export default function AdvancedPromoterForm({
               </TabsContent>
             </Tabs>
 
+            {/* Debug Form Errors */}
+            {Object.keys(form.formState.errors).length > 0 && (
+              <Card className="border-red-200 bg-red-50">
+                <CardHeader>
+                  <CardTitle className="text-red-800">Form Validation Errors</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {Object.entries(form.formState.errors).map(([field, error]) => (
+                      <div key={field} className="text-sm text-red-700">
+                        <strong>{field}:</strong> {typeof error?.message === 'string' ? error.message : 'Unknown error'}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t">
               <div className="flex items-center gap-2">
@@ -1324,6 +1352,16 @@ export default function AdvancedPromoterForm({
                   type="submit"
                   disabled={isSubmitting || isUploading}
                   className="min-w-[120px]"
+                  onClick={() => {
+                    console.log('🔘 Create Promoter button clicked')
+                    console.log('📋 Form state:', {
+                      isSubmitting,
+                      isUploading,
+                      isValid: form.formState.isValid,
+                      errors: form.formState.errors,
+                      isDirty: form.formState.isDirty
+                    })
+                  }}
                 >
                   {isSubmitting ? (
                     <>
