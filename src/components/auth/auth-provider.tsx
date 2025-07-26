@@ -90,15 +90,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return null
     
     try {
-      // Increase timeout for slow database connections
+      // Use very aggressive timeout for slow databases
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile loading timeout')), 10000) // Increased to 10 seconds
+        setTimeout(() => reject(new Error('Profile loading timeout')), 3000) // Reduced to 3 seconds
       )
       
-      // Try to load from users table first
+      // Try to load from users table first with minimal fields
       const usersPromise = supabase
         .from('users')
-        .select('*')
+        .select('id, email, role, status, created_at')
         .eq('id', userId)
         .single()
       
@@ -112,10 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return userData as UserProfile
       }
 
-      // Fallback to profiles table
+      // Fallback to profiles table with minimal fields
       const profilesPromise = supabase
         .from('profiles')
-        .select('*')
+        .select('id, email, role, created_at')
         .eq('id', userId)
         .single()
       
@@ -142,9 +142,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return []
     
     try {
-      // Increase timeout for slow database connections
+      // Use very aggressive timeout for slow databases
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Roles loading timeout')), 10000) // Increased to 10 seconds
+        setTimeout(() => reject(new Error('Roles loading timeout')), 3000) // Reduced to 3 seconds
       )
       
       const { data: userData } = await Promise.race([
@@ -174,50 +174,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setProfileNotFound(false)
       
-      // Increase timeout for slow database connections
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth initialization timeout')), 15000) // Increased to 15 seconds
-      )
-      
-      // Get current session with timeout
-      const sessionPromise = supabase.auth.getSession()
-      const { data: { session: currentSession } } = await Promise.race([
-        sessionPromise,
-        timeoutPromise
-      ]) as any
+      // Get current session first (this should be fast)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
 
       if (currentSession?.user) {
-        // Load profile and roles with increased timeout
-        const profilePromise = loadUserProfile(currentSession.user.id)
-        const rolesPromise = loadUserRoles(currentSession.user.id)
+        // Set loading to false immediately after session is loaded
+        // This allows the UI to render while we load profile data in background
+        setLoading(false)
         
-        try {
-          const [userProfile, userRoles] = await Promise.race([
-            Promise.all([profilePromise, rolesPromise]),
-            timeoutPromise
-          ]) as [UserProfile | null, string[]]
-          
-          setProfile(userProfile)
-          setRoles(userRoles)
-          if (!userProfile) {
-            setProfileNotFound(true)
-            console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
+        // Load profile and roles in background with aggressive timeout
+        const loadProfileData = async () => {
+          try {
+            const profilePromise = loadUserProfile(currentSession.user.id)
+            const rolesPromise = loadUserRoles(currentSession.user.id)
+            
+            // Use a shorter timeout for better UX
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Profile loading timeout')), 5000) // Reduced to 5 seconds
+            )
+            
+            const [userProfile, userRoles] = await Promise.race([
+              Promise.all([profilePromise, rolesPromise]),
+              timeoutPromise
+            ]) as [UserProfile | null, string[]]
+            
+            setProfile(userProfile)
+            setRoles(userRoles)
+            if (!userProfile) {
+              setProfileNotFound(true)
+              console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
+            }
+          } catch (profileError) {
+            console.warn('⚠️ Profile loading failed, using basic auth:', profileError)
+            // Continue with basic authentication
+            setProfile(null)
+            setRoles([])
           }
-        } catch (profileError) {
-          console.warn('⚠️ Profile loading failed, continuing with basic auth:', profileError)
-          // Continue with basic authentication even if profile loading fails
-          setProfile(null)
-          setRoles([])
         }
+        
+        // Load profile data in background without blocking UI
+        loadProfileData()
       } else {
         setProfile(null)
         setRoles([])
+        setLoading(false)
       }
-
-      setLoading(false)
       
     } catch (error) {
       console.error('❌ Error initializing auth:', error)

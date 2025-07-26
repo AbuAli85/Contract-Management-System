@@ -7,12 +7,12 @@ export async function middleware(req: NextRequest) {
   const supabase = createMiddlewareClient({ req, res })
 
   try {
-    // Get session with increased timeout for slow database connections
+    // Get session with reasonable timeout for slow database connections
     const sessionPromise = supabase.auth.getSession()
     const { data: { session } } = await Promise.race([
       sessionPromise,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 10000) // Increased to 10 seconds
+        setTimeout(() => reject(new Error('Auth timeout')), 5000) // Reduced to 5 seconds
       )
     ]) as any
 
@@ -71,6 +71,7 @@ export async function middleware(req: NextRequest) {
   } catch (error) {
     console.error('Middleware error:', error)
     // On error, allow the request to continue but log the issue
+    // This prevents the app from being completely broken due to slow database
     return res
   }
 }

@@ -276,32 +276,17 @@ export default function DashboardPage() {
       try {
         console.log('🔄 Fetching dashboard data...')
         
-        // Increase timeout for slow database connections
-        const timeoutId = setTimeout(() => {
-          console.log('⏰ Dashboard API timeout, using default stats')
-          setStats({
-            totalContracts: 0,
-            activeContracts: 0,
-            pendingContracts: 0,
-            totalPromoters: 0,
-            totalParties: 0,
-            pendingApprovals: 0,
-            systemHealth: 98,
-            recentActivity: 0
-          })
-          setLoading(false)
-        }, 10000) // Increased to 10 seconds
-
-        // Fetch dashboard analytics with increased timeout
+        // Set loading to false immediately to show the dashboard structure
+        setLoading(false)
+        
+        // Fetch dashboard analytics in background with aggressive timeout
         const fetchPromise = fetch('/api/dashboard/analytics')
         const response = await Promise.race([
           fetchPromise,
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Dashboard API timeout')), 10000) // Increased to 10 seconds
+            setTimeout(() => reject(new Error('Dashboard API timeout')), 5000) // Reduced to 5 seconds
           )
         ]) as Response
-        
-        clearTimeout(timeoutId) // Clear timeout if API responds
         
         console.log('📊 Dashboard API response status:', response.status)
         
@@ -313,47 +298,15 @@ export default function DashboardPage() {
             setStats(data.stats)
           } else {
             console.error('❌ Dashboard API error:', data.error)
-            // Use default stats on error
-            setStats({
-              totalContracts: 0,
-              activeContracts: 0,
-              pendingContracts: 0,
-              totalPromoters: 0,
-              totalParties: 0,
-              pendingApprovals: 0,
-              systemHealth: 98,
-              recentActivity: 0
-            })
+            // Keep default stats on error
           }
         } else {
           console.error('❌ Dashboard API failed:', response.status)
-          // Use default stats on failure
-          setStats({
-            totalContracts: 0,
-            activeContracts: 0,
-            pendingContracts: 0,
-            totalPromoters: 0,
-            totalParties: 0,
-            pendingApprovals: 0,
-            systemHealth: 98,
-            recentActivity: 0
-          })
+          // Keep default stats on failure
         }
       } catch (error) {
         console.error('❌ Error fetching dashboard data:', error)
-        // Use default stats on error
-        setStats({
-          totalContracts: 0,
-          activeContracts: 0,
-          pendingContracts: 0,
-          totalPromoters: 0,
-          totalParties: 0,
-          pendingApprovals: 0,
-          systemHealth: 98,
-          recentActivity: 0
-        })
-      } finally {
-        setLoading(false)
+        // Keep default stats on error
       }
     }
 
