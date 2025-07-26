@@ -182,7 +182,7 @@ export default function NotificationsPage() {
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: !notif.is_read })
-        .eq("id", notif.id)
+        .eq("id", parseInt(notif.id))
 
       if (error) throw error
 

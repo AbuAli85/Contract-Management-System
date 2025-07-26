@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useUserRole } from '../hooks/useUserRole'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import { AuditLog } from '@/lib/dashboard-types'
 
 export default function AuditLogs() {
@@ -9,6 +9,7 @@ export default function AuditLogs() {
 
   useEffect(() => {
     if (role === 'admin') {
+      const supabase = getSupabaseClient()
       supabase
         .from('audit_logs')
         .select('*')

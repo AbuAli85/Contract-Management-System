@@ -100,7 +100,6 @@ export default function ChartsSection() {
       setStatusData(statusData)
 
       // Query contracts for monthly data
-      const supabase = getSupabaseClient()
       const { data: monthlyContractsData, error: monthlyError } = await supabase
         .from('contracts')
         .select('contract_start_date, contract_value')
@@ -145,8 +144,8 @@ export default function ChartsSection() {
   useEffect(() => {
     fetchChartData()
 
-    const supabase = getSupabaseClient()
-    const contractsChartChannel = supabase
+    const supabaseRealtime = getSupabaseClient()
+    const contractsChartChannel = supabaseRealtime
       .channel("public:contracts:charts")
       .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () => {
         toast({
@@ -158,7 +157,7 @@ export default function ChartsSection() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(contractsChartChannel)
+      supabaseRealtime.removeChannel(contractsChartChannel)
     }
   }, [])
 

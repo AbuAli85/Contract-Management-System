@@ -113,7 +113,6 @@ export default function ManagePromotersPage() {
 
     // Fetch active contract counts for each promoter
     const promoterIds = promotersData.map((p) => p.id)
-    const supabase = getSupabaseClient()
     const { data: contractsData, error: contractsError } = await supabase
       .from("contracts")
       .select("promoter_id, contract_end_date")
