@@ -54,7 +54,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, profile } = useAuth()
   const permissions = usePermissions()
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
@@ -68,9 +68,36 @@ export default function DashboardPage() {
   })
   const [loading, setLoading] = useState(true)
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Dashboard Debug:', { 
+      user: user?.id, 
+      authLoading, 
+      profile: profile?.id,
+      loading 
+    })
+  }, [user, authLoading, profile, loading])
+
   // Show loading if auth is still loading
   if (authLoading) {
+    console.log('🔄 Dashboard: Auth still loading, showing loading component')
     return <DashboardLoading />
+  }
+
+  // Show error if no user
+  if (!user) {
+    console.log('❌ Dashboard: No user found, redirecting to login')
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+          <p className="text-gray-600 mb-4">Please log in to access the dashboard.</p>
+          <Link href="/auth/login">
+            <Button>Go to Login</Button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   useEffect(() => {

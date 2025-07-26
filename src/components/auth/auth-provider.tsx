@@ -151,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       setProfileNotFound(false)
+      
       // Get current session
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       setSession(currentSession)
@@ -170,44 +171,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRoles([])
       }
 
-      // Set up auth state change listener
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event: string, newSession: Session | null) => {
-          console.log('🔄 Auth state changed:', event, newSession?.user?.id)
-          setSession(newSession)
-          setUser(newSession?.user ?? null)
-          setProfileNotFound(false)
-          if (newSession?.user) {
-            const userProfile = await loadUserProfile(newSession.user.id)
-            const userRoles = await loadUserRoles(newSession.user.id)
-            setProfile(userProfile)
-            setRoles(userRoles)
-            if (!userProfile) {
-              setProfileNotFound(true)
-              console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
-            }
-          } else {
-            setProfile(null)
-            setRoles([])
-          }
-          setLoading(false)
-        }
-      )
       setLoading(false)
-      // Return cleanup function
-      return () => {
-        subscription.unsubscribe()
-      }
     } catch (error) {
       console.error('❌ Error initializing auth:', error)
       setLoading(false)
     }
   }
 
+  // Handle auth state changes
+  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    console.log('🔄 Auth state changed:', event, newSession?.user?.id)
+    
+    setSession(newSession)
+    setUser(newSession?.user ?? null)
+    setProfileNotFound(false)
+    
+    if (newSession?.user) {
+      const userProfile = await loadUserProfile(newSession.user.id)
+      const userRoles = await loadUserRoles(newSession.user.id)
+      setProfile(userProfile)
+      setRoles(userRoles)
+      if (!userProfile) {
+        setProfileNotFound(true)
+        console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
+      }
+    } else {
+      setProfile(null)
+      setRoles([])
+    }
+    
+    setLoading(false)
+  }
+
   useEffect(() => {
     console.log('🔧 AuthProvider: Initializing...')
     setMounted(true)
+    
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
+    // Initialize auth state
     initializeAuth()
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
+
+    // Cleanup function
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   // Authentication methods

@@ -59,12 +59,17 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // TEMPORARY FIX: Disable redirect for authenticated users to prevent redirect loops
+  // while dashboard loading issue is being resolved
+  // TODO: Re-enable this after fixing the dashboard loading issue
+  /*
   // If authenticated and trying to access login/signup, redirect to dashboard
   if (session && isPublicRoute) {
     const url = req.nextUrl.clone()
     url.pathname = `/${locale}/dashboard`
     return NextResponse.redirect(url)
   }
+  */
 
   // Handle root path - redirect to locale dashboard (if authenticated) or login
   if (req.nextUrl.pathname === '/') {
