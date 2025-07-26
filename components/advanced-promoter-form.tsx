@@ -187,7 +187,6 @@ const advancedPromoterSchema = z.object({
   
   // Status and Contracts
   status: z.enum(["active", "inactive", "pending", "suspended"]),
-  contract_valid_until: z.string().optional().nullable(),
   
   // Document Expiry Dates
   id_card_expiry_date: z.string().optional().nullable(),
@@ -270,7 +269,10 @@ const CustomDateInput = ({
     try {
       const date = new Date(dateString)
       if (isNaN(date.getTime())) return ""
-      return date.toLocaleDateString('en-GB') // This gives dd/mm/yyyy format
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear()
+      return `${day}/${month}/${year}`
     } catch {
       return ""
     }
@@ -279,14 +281,20 @@ const CustomDateInput = ({
   const parseDateFromInput = (inputValue: string) => {
     if (!inputValue) return ""
     
+    // Remove any non-digit characters except /
+    const cleaned = inputValue.replace(/[^\d/]/g, '')
+    
     // Handle dd/mm/yyyy format
-    const parts = inputValue.split('/')
+    const parts = cleaned.split('/')
     if (parts.length === 3) {
       const day = parseInt(parts[0])
       const month = parseInt(parts[1]) - 1 // Month is 0-indexed
       const year = parseInt(parts[2])
       
-      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year) && 
+          day >= 1 && day <= 31 && 
+          month >= 0 && month <= 11 && 
+          year >= 1900 && year <= 2100) {
         const date = new Date(year, month, day)
         if (!isNaN(date.getTime())) {
           return date.toISOString().split('T')[0] // Return YYYY-MM-DD for database
@@ -297,16 +305,38 @@ const CustomDateInput = ({
     return ""
   }
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value
+    
+    // Allow typing and formatting
+    if (inputValue.length <= 10) {
+      // Format as user types (dd/mm/yyyy)
+      let formatted = inputValue.replace(/[^\d]/g, '')
+      if (formatted.length >= 2) {
+        formatted = formatted.slice(0, 2) + '/' + formatted.slice(2)
+      }
+      if (formatted.length >= 5) {
+        formatted = formatted.slice(0, 5) + '/' + formatted.slice(5)
+      }
+      formatted = formatted.slice(0, 10)
+      
+      // Update the input value for display
+      e.target.value = formatted
+      
+      // Parse and update the form value
+      const parsedDate = parseDateFromInput(formatted)
+      onChange(parsedDate)
+    }
+  }
+
   return (
     <Input
       {...props}
       type="text"
-      value={formatDateForDisplay(value)}
-      onChange={(e) => {
-        const formattedDate = parseDateFromInput(e.target.value)
-        onChange(formattedDate)
-      }}
+      defaultValue={formatDateForDisplay(value)}
+      onChange={handleInputChange}
       placeholder={placeholder}
+      maxLength={10}
     />
   )
 }
@@ -347,7 +377,6 @@ export default function AdvancedPromoterForm({
       employer_id: promoterToEdit?.employer_id || null,
       outsourced_to_id: promoterToEdit?.outsourced_to_id || null,
       status: (promoterToEdit?.status as any) || "active",
-      contract_valid_until: promoterToEdit?.contract_valid_until || null,
       id_card_expiry_date: promoterToEdit?.id_card_expiry_date || null,
       passport_expiry_date: promoterToEdit?.passport_expiry_date || null,
       notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry ?? 30,
@@ -444,6 +473,17 @@ export default function AdvancedPromoterForm({
     
     setIsSubmitting(true)
     
+    // Add timeout to prevent stuck submission
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Form submission timeout - forcing reset')
+      setIsSubmitting(false)
+      toast({
+        title: "Timeout Error",
+        description: "Form submission took too long. Please try again.",
+        variant: "destructive"
+      })
+    }, 30000) // 30 second timeout
+    
     try {
       const supabase = createClient()
       
@@ -468,7 +508,6 @@ export default function AdvancedPromoterForm({
         employer_id: values.employer_id,
         outsourced_to_id: values.outsourced_to_id,
         status: values.status,
-        contract_valid_until: values.contract_valid_until,
         id_card_expiry_date: values.id_card_expiry_date,
         passport_expiry_date: values.passport_expiry_date,
         profile_picture_url: values.profile_picture_url,
@@ -495,12 +534,21 @@ export default function AdvancedPromoterForm({
       }
 
       console.log('📊 Database operation result:', result)
+      
       if (result.error) {
         console.error('❌ Database error:', result.error)
-        throw result.error
+        throw new Error(`Database error: ${result.error.message}`)
+      }
+
+      if (!result.data || result.data.length === 0) {
+        console.error('❌ No data returned from database operation')
+        throw new Error('No data returned from database operation')
       }
 
       console.log('✅ Database operation successful:', result.data)
+
+      // Clear timeout since operation completed successfully
+      clearTimeout(timeoutId)
 
       toast({
         title: isEditMode ? "Promoter updated" : "Promoter created",
@@ -514,9 +562,14 @@ export default function AdvancedPromoterForm({
       onFormSubmit()
     } catch (error) {
       console.error('❌ Form submission error:', error)
+      const errorMessage = error instanceof Error ? error.message : "Failed to save promoter information. Please try again."
+      
+      // Clear timeout since operation failed
+      clearTimeout(timeoutId)
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save promoter information. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {
@@ -1154,42 +1207,28 @@ export default function AdvancedPromoterForm({
                       
                       <FormField
                         control={form.control}
-                        name="contract_valid_until"
+                        name="status"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Contract Valid Until</FormLabel>
-                            <FormControl>
-                              <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
-                            </FormControl>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="inactive">Inactive</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="suspended">Suspended</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="active">Active</SelectItem>
-                              <SelectItem value="inactive">Inactive</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="suspended">Suspended</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
                     <FormField
                       control={form.control}
