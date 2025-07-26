@@ -478,7 +478,7 @@ export default function AdvancedPromoterForm({
     
     setIsSubmitting(true)
     
-    // Add timeout to prevent stuck submission
+    // Increase timeout for slow database connections
     const timeoutId = setTimeout(() => {
       console.log('⏰ Form submission timeout - forcing reset')
       setIsSubmitting(false)
@@ -487,7 +487,7 @@ export default function AdvancedPromoterForm({
         description: "Form submission took too long. Please try again.",
         variant: "destructive"
       })
-    }, 10000) // Reduced to 10 seconds
+    }, 20000) // Increased to 20 seconds
     
     try {
       const supabase = createClient()
@@ -522,9 +522,9 @@ export default function AdvancedPromoterForm({
 
       console.log('📊 Preparing promoter data:', promoterData)
       
-      // Add timeout to database operation
+      // Increase timeout for database operations
       const dbTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Database operation timeout')), 8000)
+        setTimeout(() => reject(new Error('Database operation timeout')), 15000) // Increased to 15 seconds
       )
       
       let result

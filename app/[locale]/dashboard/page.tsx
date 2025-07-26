@@ -32,6 +32,8 @@ import { SystemStatus } from '@/components/system-status'
 import { useAuth } from '@/src/components/auth/auth-provider'
 import { usePermissions } from '@/hooks/use-permissions'
 import Link from 'next/link'
+import { toast } from '@/components/ui/use-toast'
+import { CardDescription } from '@/components/ui/card'
 
 // Loading fallback
 function DashboardLoading() {
@@ -203,30 +205,68 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {quickActions.map((action, index) => (
-                <Link key={index} href={action.href}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <action.icon className="h-8 w-8 text-blue-600" />
-                        <div>
-                          <h3 className="font-semibold">{action.title}</h3>
-                          <p className="text-sm text-gray-600">{action.description}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {quickActions.map((action) => (
+            <Card key={action.title} className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{action.title}</CardTitle>
+                <action.icon className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">{action.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Database Connection Test */}
+        <div className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Database Performance Test</CardTitle>
+              <CardDescription>
+                Test database connection speed to diagnose performance issues
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={async () => {
+                  try {
+                    console.log('🧪 Testing database connection...')
+                    const response = await fetch('/api/test-db-connection')
+                    const data = await response.json()
+                    console.log('📊 Database test results:', data)
+                    
+                    if (data.success) {
+                      toast({
+                        title: "Database Test Complete",
+                        description: `Connection: ${data.results.connectionTime}, Overall: ${data.performance.overall}`,
+                        variant: "default"
+                      })
+                    } else {
+                      toast({
+                        title: "Database Test Failed",
+                        description: data.error,
+                        variant: "destructive"
+                      })
+                    }
+                  } catch (error) {
+                    console.error('❌ Database test error:', error)
+                    toast({
+                      title: "Database Test Error",
+                      description: "Failed to test database connection",
+                      variant: "destructive"
+                    })
+                  }
+                }}
+                variant="outline"
+                className="w-full"
+              >
+                🧪 Test Database Connection
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -236,7 +276,7 @@ export default function DashboardPage() {
       try {
         console.log('🔄 Fetching dashboard data...')
         
-        // Set a timeout to prevent infinite loading
+        // Increase timeout for slow database connections
         const timeoutId = setTimeout(() => {
           console.log('⏰ Dashboard API timeout, using default stats')
           setStats({
@@ -250,14 +290,14 @@ export default function DashboardPage() {
             recentActivity: 0
           })
           setLoading(false)
-        }, 3000) // Reduced to 3 seconds
+        }, 10000) // Increased to 10 seconds
 
-        // Fetch dashboard analytics with timeout
+        // Fetch dashboard analytics with increased timeout
         const fetchPromise = fetch('/api/dashboard/analytics')
         const response = await Promise.race([
           fetchPromise,
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Dashboard API timeout')), 3000)
+            setTimeout(() => reject(new Error('Dashboard API timeout')), 10000) // Increased to 10 seconds
           )
         ]) as Response
         

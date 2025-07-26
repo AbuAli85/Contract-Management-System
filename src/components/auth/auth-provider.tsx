@@ -90,9 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return null
     
     try {
-      // Add timeout to prevent hanging
+      // Increase timeout for slow database connections
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile loading timeout')), 3000)
+        setTimeout(() => reject(new Error('Profile loading timeout')), 10000) // Increased to 10 seconds
       )
       
       // Try to load from users table first
@@ -142,9 +142,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return []
     
     try {
-      // Add timeout to prevent hanging
+      // Increase timeout for slow database connections
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Roles loading timeout')), 3000)
+        setTimeout(() => reject(new Error('Roles loading timeout')), 10000) // Increased to 10 seconds
       )
       
       const { data: userData } = await Promise.race([
@@ -174,9 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setProfileNotFound(false)
       
-      // Add timeout to prevent hanging
+      // Increase timeout for slow database connections
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
+        setTimeout(() => reject(new Error('Auth initialization timeout')), 15000) // Increased to 15 seconds
       )
       
       // Get current session with timeout
@@ -190,20 +190,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null)
 
       if (currentSession?.user) {
-        // Load profile and roles with timeout
+        // Load profile and roles with increased timeout
         const profilePromise = loadUserProfile(currentSession.user.id)
         const rolesPromise = loadUserRoles(currentSession.user.id)
         
-        const [userProfile, userRoles] = await Promise.race([
-          Promise.all([profilePromise, rolesPromise]),
-          timeoutPromise
-        ]) as [UserProfile | null, string[]]
-        
-        setProfile(userProfile)
-        setRoles(userRoles)
-        if (!userProfile) {
-          setProfileNotFound(true)
-          console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
+        try {
+          const [userProfile, userRoles] = await Promise.race([
+            Promise.all([profilePromise, rolesPromise]),
+            timeoutPromise
+          ]) as [UserProfile | null, string[]]
+          
+          setProfile(userProfile)
+          setRoles(userRoles)
+          if (!userProfile) {
+            setProfileNotFound(true)
+            console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
+          }
+        } catch (profileError) {
+          console.warn('⚠️ Profile loading failed, continuing with basic auth:', profileError)
+          // Continue with basic authentication even if profile loading fails
+          setProfile(null)
+          setRoles([])
         }
       } else {
         setProfile(null)
