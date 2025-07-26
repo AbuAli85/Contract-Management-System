@@ -13,7 +13,8 @@ interface AutoRefreshIndicatorProps {
 export function AutoRefreshIndicator({ className, showIcon = true }: AutoRefreshIndicatorProps) {
   const { isFormActive, formCount } = useFormContext()
 
-  if (!isFormActive) {
+  // Don't render during SSR or when no forms are active
+  if (typeof window === 'undefined' || !isFormActive) {
     return null
   }
 
@@ -36,6 +37,11 @@ export function AutoRefreshIndicator({ className, showIcon = true }: AutoRefresh
 
 export function AutoRefreshStatus({ className }: { className?: string }) {
   const { isFormActive } = useFormContext()
+
+  // Don't render during SSR
+  if (typeof window === 'undefined') {
+    return null
+  }
 
   return (
     <div className={cn("flex items-center gap-2", className)}>

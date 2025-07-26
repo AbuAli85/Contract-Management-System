@@ -52,7 +52,14 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
 export function useFormContext() {
   const context = useContext(FormContext)
   if (context === undefined) {
-    throw new Error('useFormContext must be used within a FormProvider')
+    // Return a safe default for SSR instead of throwing an error
+    return {
+      isFormActive: false,
+      setFormActive: () => {},
+      registerForm: () => {},
+      unregisterForm: () => {},
+      formCount: 0
+    }
   }
   return context
 }
@@ -62,9 +69,12 @@ export function useFormRegistration() {
   const { registerForm, unregisterForm } = useFormContext()
 
   React.useEffect(() => {
-    registerForm()
-    return () => {
-      unregisterForm()
+    // Only register on the client side
+    if (typeof window !== 'undefined') {
+      registerForm()
+      return () => {
+        unregisterForm()
+      }
     }
   }, [registerForm, unregisterForm])
 } 
