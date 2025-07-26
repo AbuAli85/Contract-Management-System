@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -57,6 +57,7 @@ export default function ManagePromotersPage() {
     setIsLoading(true)
     
     try {
+      const supabase = getSupabaseClient()
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
         .select("*")
@@ -145,14 +146,14 @@ export default function ManagePromotersPage() {
     isMountedRef.current = true
     fetchPromotersWithContractCount()
     
-    const promotersChannel = supabase
+    const promotersChannel = getSupabaseClient()
       .channel("public:promoters:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () =>
         fetchPromotersWithContractCount(),
       )
       .subscribe()
 
-    const contractsChannel = supabase
+    const contractsChannel = getSupabaseClient()
       .channel("public:contracts:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () =>
         fetchPromotersWithContractCount(),
@@ -161,8 +162,8 @@ export default function ManagePromotersPage() {
 
     return () => {
       isMountedRef.current = false
-      supabase.removeChannel(promotersChannel)
-      supabase.removeChannel(contractsChannel)
+      getSupabaseClient().removeChannel(promotersChannel)
+      getSupabaseClient().removeChannel(contractsChannel)
     }
   }, [fetchPromotersWithContractCount])
 

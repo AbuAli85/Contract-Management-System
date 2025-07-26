@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter, Contract, Party, PromoterSkill, PromoterExperience, PromoterEducation, PromoterDocument } from "@/lib/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -101,6 +101,7 @@ export default function PromoterDetailPage() {
       setIsLoading(true)
       setError(null)
 
+      const supabase = getSupabaseClient()
       const { data: promoterData, error: promoterError } = await supabase
         .from("promoters")
         .select("*, promoter_tags:promoter_tags(tag:tags(name))")
@@ -143,6 +144,7 @@ export default function PromoterDetailPage() {
 
     async function fetchAuditLogs() {
       if (role !== 'admin') return
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
