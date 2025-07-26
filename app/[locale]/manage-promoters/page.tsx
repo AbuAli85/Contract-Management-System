@@ -173,7 +173,7 @@ export default function ManagePromotersPage() {
 
       // Fetch contract counts for each promoter
       const enhancedData = await Promise.all(
-        (promotersData || []).map(async (promoter) => {
+        (promotersData || []).map(async (promoter: Promoter) => {
           try {
             const { count: contractCount, error: contractError } = await supabase
               .from("contracts")
