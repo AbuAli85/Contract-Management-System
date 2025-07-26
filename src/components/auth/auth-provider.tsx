@@ -69,11 +69,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  const supabase = createClient()
+  // Create Supabase client safely for SSR
+  const getSupabase = () => {
+    try {
+      return createClient()
+    } catch (error) {
+      // Return null during SSR if environment variables are missing
+      if (typeof window === 'undefined') {
+        return null
+      }
+      throw error
+    }
+  }
+
+  const supabase = getSupabase()
 
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (!userId) return null
+    if (!userId || !supabase) return null
 
     try {
       console.log(`🔄 Loading user profile for: ${userId}`)
@@ -129,6 +142,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize authentication state
   const initializeAuth = async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       
@@ -147,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Set up auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, newSession) => {
+        async (event: string, newSession: Session | null) => {
           console.log('🔄 Auth state changed:', event, newSession?.user?.id)
           
           setSession(newSession)
@@ -183,6 +201,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
@@ -214,6 +235,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithProvider = async (provider: 'github' | 'google' | 'twitter') => {
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -233,6 +257,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, profile?: Partial<UserProfile>) => {
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -253,6 +280,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      return
+    }
     try {
       await supabase.auth.signOut()
     } catch (error) {
@@ -261,6 +291,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`
@@ -277,12 +310,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updatePassword = async (password: string) => {
-    if (!user?.id) return { error: 'No user logged in' }
-
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
-      const { error } = await supabase.auth.updateUser({
-        password
-      })
+      const { error } = await supabase.auth.updateUser({ password })
       if (error) {
         console.error('❌ Update password error:', error)
         return { error: error.message }
@@ -295,23 +327,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user?.id) return { error: 'No user logged in' }
-
+    if (!supabase) {
+      return { error: 'Authentication service not available' }
+    }
     try {
-      const { error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', user.id)
-
+      const { error } = await supabase.auth.updateUser({
+        data: updates
+      })
       if (error) {
         console.error('❌ Update profile error:', error)
         return { error: error.message }
       }
-
-      // Refresh profile
-      const updatedProfile = await loadUserProfile(user.id)
-      setProfile(updatedProfile)
-
       return {}
     } catch (error) {
       console.error('❌ Update profile error:', error)
@@ -320,11 +346,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshSession = async () => {
+    if (!supabase) {
+      return
+    }
     try {
-      const { data: { session: newSession } } = await supabase.auth.refreshSession()
+      const { data: { session: newSession }, error } = await supabase.auth.refreshSession()
+      if (error) {
+        console.error('❌ Refresh session error:', error)
+        return
+      }
+      
       setSession(newSession)
       setUser(newSession?.user ?? null)
-
+      
       if (newSession?.user) {
         const userProfile = await loadUserProfile(newSession.user.id)
         const userRoles = await loadUserRoles(newSession.user.id)
@@ -347,12 +381,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const forceRefreshRole = async () => {
-    if (user?.id) {
+    if (!supabase || !user) {
+      return
+    }
+    try {
       const userProfile = await loadUserProfile(user.id)
       const userRoles = await loadUserRoles(user.id)
       
       setProfile(userProfile)
       setRoles(userRoles)
+    } catch (error) {
+      console.error('❌ Force refresh role error:', error)
     }
   }
 

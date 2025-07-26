@@ -1,8 +1,26 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import SimpleAdminDashboard from '@/components/dashboard/SimpleAdminDashboard'
 import SimplePromoterDashboard from '@/components/dashboard/SimplePromoterDashboard'
-import PromoterOnboardingForm from '@/components/onboarding/PromoterOnboardingForm'
+
+// Dynamically import the form to prevent SSR issues
+const PromoterOnboardingForm = dynamic(
+  () => import('@/components/onboarding/PromoterOnboardingForm'),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="p-8 text-center">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+        </div>
+      </div>
+    )
+  }
+)
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,6 +37,45 @@ import {
 } from 'lucide-react'
 
 export default function PreviewPage() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render the form during SSR to avoid Supabase errors
+  if (!isClient) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Banner */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Star className="h-6 w-6" />
+              <div>
+                <h1 className="text-xl font-bold">🚀 Beautiful New UI Preview</h1>
+                <p className="text-blue-100 text-sm">No authentication required - Pure UI showcase</p>
+              </div>
+            </div>
+            <Badge variant="secondary" className="bg-white/20 text-white">
+              Demo Mode
+            </Badge>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Banner */}
