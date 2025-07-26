@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -29,6 +29,7 @@ export default function EditPromoterPage() {
       setIsLoading(true)
       setError(null)
 
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from("promoters")
         .select("*")
@@ -54,6 +55,7 @@ export default function EditPromoterPage() {
 
     setIsSaving(true)
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("promoters")
         .update(promoter)
