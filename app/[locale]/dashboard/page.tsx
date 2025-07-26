@@ -75,7 +75,7 @@ export default function DashboardPage() {
         if (response.ok) {
           const data = await response.json()
           
-          if (data.success) {
+          if (data.success && data.stats) {
             setStats(data.stats)
           }
         }
@@ -115,6 +115,18 @@ export default function DashboardPage() {
         </div>
       </div>
     )
+  }
+
+  // Ensure stats has default values to prevent undefined errors
+  const safeStats = {
+    totalContracts: stats?.totalContracts ?? 0,
+    activeContracts: stats?.activeContracts ?? 0,
+    pendingContracts: stats?.pendingContracts ?? 0,
+    totalPromoters: stats?.totalPromoters ?? 0,
+    totalParties: stats?.totalParties ?? 0,
+    pendingApprovals: stats?.pendingApprovals ?? 0,
+    systemHealth: stats?.systemHealth ?? 98,
+    recentActivity: stats?.recentActivity ?? 0
   }
 
   // Define quickActions
@@ -214,7 +226,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="flex items-center gap-1">
               <Activity className="h-3 w-3" />
-              System Health: {stats.systemHealth}%
+              System Health: {safeStats.systemHealth}%
             </Badge>
           </div>
         </div>
@@ -227,7 +239,7 @@ export default function DashboardPage() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalContracts}</div>
+              <div className="text-2xl font-bold">{safeStats.totalContracts}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline h-3 w-3 text-green-500" />
                 +12% from last month
@@ -241,9 +253,9 @@ export default function DashboardPage() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.activeContracts}</div>
+              <div className="text-2xl font-bold">{safeStats.activeContracts}</div>
               <p className="text-xs text-muted-foreground">
-                {stats.totalContracts > 0 ? Math.round((stats.activeContracts / stats.totalContracts) * 100) : 0}% of total
+                {safeStats.totalContracts > 0 ? Math.round((safeStats.activeContracts / safeStats.totalContracts) * 100) : 0}% of total
               </p>
             </CardContent>
           </Card>
@@ -254,7 +266,7 @@ export default function DashboardPage() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingApprovals}</div>
+              <div className="text-2xl font-bold">{safeStats.pendingApprovals}</div>
               <p className="text-xs text-muted-foreground">
                 Require attention
               </p>
@@ -267,7 +279,7 @@ export default function DashboardPage() {
               <Users className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPromoters}</div>
+              <div className="text-2xl font-bold">{safeStats.totalPromoters}</div>
               <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline h-3 w-3 text-green-500" />
                 +5% from last month
