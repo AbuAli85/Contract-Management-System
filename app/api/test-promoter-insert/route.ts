@@ -9,31 +9,22 @@ export async function POST() {
     const testData = {
       name_en: 'Test Promoter',
       name_ar: 'مروج تجريبي',
-      email: 'test@example.com',
-      mobile_number: '1234567890',
-      phone: null,
-      address: null,
       id_card_number: 'TEST123456',
-      passport_number: null,
-      nationality: null,
-      job_title: null,
-      work_location: null,
-      employer_id: null,
-      outsourced_to_id: null,
+      id_card_url: null,
+      passport_url: null,
       status: 'active',
       contract_valid_until: null,
-      id_card_image: null,
-      passport_image: null,
-      existing_id_card_url: null,
-      existing_passport_url: null,
       id_card_expiry_date: null,
       passport_expiry_date: null,
       notify_days_before_id_expiry: 30,
       notify_days_before_passport_expiry: 90,
+      notify_days_before_contract_expiry: 30,
       notes: null,
+      passport_number: null,
+      mobile_number: '1234567890',
       profile_picture_url: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      nationality: null,
+      created_at: new Date().toISOString()
     }
 
     // Attempt to insert test data
