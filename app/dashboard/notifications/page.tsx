@@ -93,10 +93,14 @@ export default function NotificationsPage() {
         if (error) throw error
         if (!ignore) {
           // Transform the data to match NotificationItem interface
-          const transformedData = (data || []).map(notification => ({
-            ...notification,
+          const transformedData: NotificationItem[] = (data || []).map(notification => ({
             id: notification.id.toString(), // Convert number to string
+            type: (notification.type as "success" | "error" | "warning" | "info" | "default") || "default", // Ensure valid type
+            message: notification.message || "", // Ensure message is not null
+            created_at: notification.created_at || new Date().toISOString(), // Ensure created_at is not null
+            user_email: notification.user_email || undefined,
             related_contract_id: notification.related_contract_id?.toString() || undefined,
+            is_read: notification.is_read || false,
             isRead: notification.is_read || false, // Add compatibility field
           }))
           setNotifications(transformedData)
