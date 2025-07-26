@@ -487,7 +487,7 @@ export default function AdvancedPromoterForm({
         description: "Form submission took too long. Please try again.",
         variant: "destructive"
       })
-    }, 30000) // 30 second timeout
+    }, 10000) // Reduced to 10 seconds
     
     try {
       const supabase = createClient()
@@ -522,20 +522,29 @@ export default function AdvancedPromoterForm({
 
       console.log('📊 Preparing promoter data:', promoterData)
       
+      // Add timeout to database operation
+      const dbTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Database operation timeout')), 8000)
+      )
+      
       let result
       if (isEditMode && promoterToEdit?.id) {
         console.log('🔄 Updating existing promoter with ID:', promoterToEdit.id)
-        result = await supabase
+        const updatePromise = supabase
           .from('promoters')
           .update(promoterData)
           .eq('id', promoterToEdit.id)
           .select()
+        
+        result = await Promise.race([updatePromise, dbTimeoutPromise]) as any
       } else {
         console.log('➕ Creating new promoter')
-        result = await supabase
+        const insertPromise = supabase
           .from('promoters')
           .insert([{ ...promoterData, created_at: new Date().toISOString() }])
           .select()
+        
+        result = await Promise.race([insertPromise, dbTimeoutPromise]) as any
       }
 
       console.log('📊 Database operation result:', result)

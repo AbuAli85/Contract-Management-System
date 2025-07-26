@@ -87,37 +87,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (!userId || !supabase) return null
-
+    if (!supabase) return null
+    
     try {
-      console.log(`🔄 Loading user profile for: ${userId}`)
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile loading timeout')), 3000)
+      )
       
       // Try to load from users table first
-      const { data: userData, error: userError } = await supabase
+      const usersPromise = supabase
         .from('users')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      const { data: userData, error: userError } = await Promise.race([
+        usersPromise,
+        timeoutPromise
+      ]) as any
 
-      if (!userError && userData) {
-        console.log('✅ Profile loaded from users table:', userData)
+      if (userData && !userError) {
+        console.log('✔ Profile loaded from users table:', userData)
         return userData as UserProfile
       }
 
-      // Try profiles table as fallback
-      console.log('🔄 Users table failed, trying profiles table...')
-      const { data: profileData, error: profileError } = await supabase
+      // Fallback to profiles table
+      const profilesPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
+      
+      const { data: profileData, error: profileError } = await Promise.race([
+        profilesPromise,
+        timeoutPromise
+      ]) as any
 
-      if (!profileError && profileData) {
-        console.log('✅ Profile loaded from profiles table:', profileData)
+      if (profileData && !profileError) {
+        console.log('✔ Profile loaded from profiles table:', profileData)
         return profileData as UserProfile
       }
 
-      console.log('❌ No profile found for user:', userId)
+      console.warn('❌ No profile found for user:', userId)
       return null
     } catch (error) {
       console.error('❌ Error loading user profile:', error)
@@ -127,13 +139,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user roles and permissions
   const loadUserRoles = async (userId: string): Promise<string[]> => {
-    if (!userId) return []
-
+    if (!supabase) return []
+    
     try {
-      const profile = await loadUserProfile(userId)
-      if (profile?.role) {
-        return [profile.role]
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Roles loading timeout')), 3000)
+      )
+      
+      const { data: userData } = await Promise.race([
+        supabase.from('users').select('role').eq('id', userId).single(),
+        timeoutPromise
+      ]) as any
+
+      if (userData?.role) {
+        return [userData.role]
       }
+
       return []
     } catch (error) {
       console.error('❌ Error loading user roles:', error)
@@ -152,14 +174,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       setProfileNotFound(false)
       
-      // Get current session
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auth initialization timeout')), 5000)
+      )
+      
+      // Get current session with timeout
+      const sessionPromise = supabase.auth.getSession()
+      const { data: { session: currentSession } } = await Promise.race([
+        sessionPromise,
+        timeoutPromise
+      ]) as any
+      
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
 
       if (currentSession?.user) {
-        const userProfile = await loadUserProfile(currentSession.user.id)
-        const userRoles = await loadUserRoles(currentSession.user.id)
+        // Load profile and roles with timeout
+        const profilePromise = loadUserProfile(currentSession.user.id)
+        const rolesPromise = loadUserRoles(currentSession.user.id)
+        
+        const [userProfile, userRoles] = await Promise.race([
+          Promise.all([profilePromise, rolesPromise]),
+          timeoutPromise
+        ]) as [UserProfile | null, string[]]
+        
         setProfile(userProfile)
         setRoles(userRoles)
         if (!userProfile) {
@@ -172,9 +211,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setLoading(false)
+      
     } catch (error) {
       console.error('❌ Error initializing auth:', error)
       setLoading(false)
+      setProfile(null)
+      setRoles([])
     }
   }
 

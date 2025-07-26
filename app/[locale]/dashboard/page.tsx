@@ -250,22 +250,30 @@ export default function DashboardPage() {
             recentActivity: 0
           })
           setLoading(false)
-        }, 5000) // 5 second timeout
+        }, 3000) // Reduced to 3 seconds
 
-        // Fetch dashboard analytics
-        const response = await fetch('/api/dashboard/analytics')
+        // Fetch dashboard analytics with timeout
+        const fetchPromise = fetch('/api/dashboard/analytics')
+        const response = await Promise.race([
+          fetchPromise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Dashboard API timeout')), 3000)
+          )
+        ]) as Response
+        
         clearTimeout(timeoutId) // Clear timeout if API responds
         
         console.log('📊 Dashboard API response status:', response.status)
         
         if (response.ok) {
           const data = await response.json()
-          console.log('📊 Dashboard API data:', data)
+          console.log('📊 Dashboard data received:', data)
+          
           if (data.success) {
-            setStats(data.data)
+            setStats(data.stats)
           } else {
-            console.error('❌ Dashboard API returned error:', data.error)
-            // Set default stats on error
+            console.error('❌ Dashboard API error:', data.error)
+            // Use default stats on error
             setStats({
               totalContracts: 0,
               activeContracts: 0,
@@ -278,8 +286,8 @@ export default function DashboardPage() {
             })
           }
         } else {
-          console.error('❌ Dashboard API failed with status:', response.status)
-          // Set default stats on error
+          console.error('❌ Dashboard API failed:', response.status)
+          // Use default stats on failure
           setStats({
             totalContracts: 0,
             activeContracts: 0,
@@ -293,7 +301,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('❌ Error fetching dashboard data:', error)
-        // Set default stats on error
+        // Use default stats on error
         setStats({
           totalContracts: 0,
           activeContracts: 0,
@@ -305,7 +313,6 @@ export default function DashboardPage() {
           recentActivity: 0
         })
       } finally {
-        console.log('✅ Dashboard data fetch completed')
         setLoading(false)
       }
     }
