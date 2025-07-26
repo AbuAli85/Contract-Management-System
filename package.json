@@ -27,8 +27,11 @@
     "deploy": "vercel --prod",
     "deploy:preview": "vercel",
     "deploy:setup": "vercel --yes",
-    "setup-storage": "tsx scripts/create-storage-bucket.ts",
-    "fix-stuck-contracts": "tsx scripts/fix-stuck-contracts.ts"
+    "setup-storage": "node scripts/create-storage-bucket.js",
+    "fix-stuck-contracts": "node scripts/fix-stuck-contracts.js",
+    "check-storage": "node scripts/check-storage-status.js",
+    "test-pdf": "node scripts/test-pdf-generation.js",
+    "make-bucket-public": "node scripts/make-bucket-public.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",
