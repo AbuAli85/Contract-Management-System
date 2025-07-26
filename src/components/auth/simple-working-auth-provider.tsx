@@ -109,16 +109,9 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
     initializeAuth()
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
-    
-    // Safety timeout - force loading to false after 1 second
-    const safetyTimeout = setTimeout(() => {
-      console.log('⚠️ Simple auth: Safety timeout - forcing loading to false')
-      setLoading(false)
-    }, 1000)
 
     return () => {
       subscription.unsubscribe()
-      clearTimeout(safetyTimeout)
     }
   }, [])
 

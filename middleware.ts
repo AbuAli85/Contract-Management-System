@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
     const { data: { session } } = await Promise.race([
       sessionPromise,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 3000) // Reduced to 3 seconds
+        setTimeout(() => reject(new Error('Auth timeout')), 2000) // Reduced to 2 seconds
       )
     ]) as any
 
@@ -50,6 +50,7 @@ export async function middleware(req: NextRequest) {
 
     // If not authenticated and trying to access protected route, redirect to login
     if (!session && !isPublicRoute) {
+      console.log('🔒 Middleware: No session, redirecting to login from:', pathname)
       const url = req.nextUrl.clone()
       url.pathname = `/${currentLocale}/auth/login`
       url.searchParams.set('redirect', pathname)
@@ -60,8 +61,10 @@ export async function middleware(req: NextRequest) {
     if (req.nextUrl.pathname === '/') {
       const url = req.nextUrl.clone()
       if (session) {
+        console.log('🔒 Middleware: Root path, authenticated user, redirecting to dashboard')
         url.pathname = `/${currentLocale}/dashboard`
       } else {
+        console.log('🔒 Middleware: Root path, unauthenticated user, redirecting to login')
         url.pathname = `/${currentLocale}/auth/login`
       }
       return NextResponse.redirect(url)
@@ -69,7 +72,7 @@ export async function middleware(req: NextRequest) {
 
     return res
   } catch (error) {
-    console.error('Middleware error:', error)
+    console.error('🔒 Middleware error:', error)
     // On error, allow the request to continue but log the issue
     // This prevents the app from being completely broken due to slow database
     return res

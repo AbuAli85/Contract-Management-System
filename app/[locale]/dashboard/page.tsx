@@ -30,9 +30,7 @@ import {
 } from 'lucide-react'
 import { SystemStatus } from '@/components/system-status'
 import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
-import { usePermissions } from '@/hooks/use-permissions'
 import Link from 'next/link'
-import { toast } from '@/components/ui/use-toast'
 import { CardDescription } from '@/components/ui/card'
 
 // Loading fallback
@@ -57,7 +55,6 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user, loading: authLoading, profile } = useSimpleWorkingAuth()
-  // const permissions = usePermissions() // Disabled to prevent loading issues
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -68,16 +65,14 @@ export default function DashboardPage() {
     systemHealth: 98,
     recentActivity: 0
   })
-  const [loading, setLoading] = useState(true)
 
-  // Show loading if auth is still loading (with timeout protection)
+  // Show loading if auth is still loading
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading authentication...</p>
-          <p className="text-sm text-gray-400 mt-2">This should only take a few seconds</p>
         </div>
       </div>
     )
@@ -98,76 +93,65 @@ export default function DashboardPage() {
     )
   }
 
-  // Define quickActions before using it
+  // Define quickActions
   const quickActions = [
     {
       title: 'Generate Contract',
       description: 'Create a new contract with AI assistance',
       icon: FileText,
-      href: '/generate-contract',
-      permission: 'contract:create',
+      href: '/en/generate-contract',
       badge: 'AI'
     },
     {
       title: 'Add Promoter',
       description: 'Register a new promoter',
       icon: Users,
-      href: '/manage-promoters',
-      permission: 'promoter:create'
+      href: '/en/manage-promoters'
     },
     {
       title: 'Add Party',
       description: 'Register a new party',
       icon: Building2,
-      href: '/manage-parties',
-      permission: 'party:create'
+      href: '/en/manage-parties'
     },
     {
       title: 'User Approvals',
       description: 'Review pending user registrations',
       icon: UserCheck,
-      href: '/dashboard/user-approvals',
-      permission: 'user:create',
+      href: '/en/dashboard/user-approvals',
       badge: 'New'
     },
     {
       title: 'Contract Approvals',
       description: 'Review pending contract approvals',
       icon: FileCheck,
-      href: '/dashboard/approvals',
-      permission: 'contract:approve',
+      href: '/en/dashboard/approvals',
       badge: 'New'
     },
     {
       title: 'Analytics',
       description: 'View detailed analytics and reports',
       icon: BarChart3,
-      href: '/dashboard/analytics',
-      permission: 'analytics:view',
+      href: '/en/dashboard/analytics',
       badge: 'New'
     },
     {
       title: 'Settings',
       description: 'Manage system settings',
       icon: Settings,
-      href: '/dashboard/settings',
-      permission: 'settings:view'
+      href: '/en/dashboard/settings'
     },
     {
       title: 'Notifications',
       description: 'View system notifications',
       icon: Bell,
-      href: '/dashboard/notifications',
-      permission: 'notifications:view'
+      href: '/en/dashboard/notifications'
     }
   ]
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // Set loading to false immediately to show the dashboard structure
-        setLoading(false)
-        
         // Fetch dashboard analytics in background
         const response = await fetch('/api/dashboard/analytics')
         
@@ -180,27 +164,14 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
-        setLoading(false)
       }
     }
 
     // Only fetch if user is authenticated
     if (user && !authLoading) {
       fetchDashboardData()
-    } else if (!authLoading) {
-      setLoading(false)
     }
-
-    // Safety timeout - force loading to false after 5 seconds
-    const safetyTimeout = setTimeout(() => {
-      if (loading) {
-        console.warn('Dashboard safety timeout: forcing loading to false')
-        setLoading(false)
-      }
-    }, 5000)
-
-    return () => clearTimeout(safetyTimeout)
-  }, [user, authLoading, loading])
+  }, [user, authLoading])
 
   const systemServices = [
     {
@@ -228,10 +199,6 @@ export default function DashboardPage() {
       description: 'REST endpoints'
     }
   ]
-
-  if (loading) {
-    return <DashboardLoading />
-  }
 
   return (
     <Suspense fallback={<DashboardLoading />}>
