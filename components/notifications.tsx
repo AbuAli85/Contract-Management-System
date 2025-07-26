@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { getSupabaseClient } from '../lib/supabase'
 import type { Notification } from '../lib/notification-types'
 
 export default function Notifications() {
@@ -9,12 +9,14 @@ export default function Notifications() {
   useEffect(() => {
     // Get current user
     const getUser = async () => {
+      const supabase = getSupabaseClient()
       const { data: { user } } = await supabase.auth.getUser()
       setUser(user)
     }
     getUser()
 
     // Listen for auth changes
+    const supabase = getSupabaseClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
     })
@@ -24,6 +26,7 @@ export default function Notifications() {
 
   useEffect(() => {
     if (user) {
+      const supabase = getSupabaseClient()
       supabase
         .from('notifications')
         .select('*')
@@ -45,6 +48,7 @@ export default function Notifications() {
   }, [user])
 
   const markAsRead = async (id: string) => {
+    const supabase = getSupabaseClient()
     await supabase.from('notifications').update({ read: true }).eq('id', parseInt(id))
     setNotifications(notifications.filter(n => n.id !== id))
   }
