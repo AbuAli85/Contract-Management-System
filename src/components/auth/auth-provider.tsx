@@ -170,143 +170,79 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    let safetyTimeout: NodeJS.Timeout | null = null
-
     try {
       setLoading(true)
       setProfileNotFound(false)
       
-      // Add a safety timeout to prevent infinite loading
-      safetyTimeout = setTimeout(() => {
-        console.warn('⚠️ Auth initialization timeout, forcing completion')
-        setLoading(false)
-        setProfile(null)
-        setRoles([])
-      }, 8000) // 8 seconds timeout
-      
-      // Get current session first (this should be fast)
+      // Get current session
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
 
       if (currentSession?.user) {
-        // Set loading to false immediately after session is loaded
-        // This allows the UI to render while we load profile data in background
-        setLoading(false)
-        
-        // Load profile and roles in background with aggressive timeout
-        const loadProfileData = async () => {
-          try {
-            const profilePromise = loadUserProfile(currentSession.user.id)
-            const rolesPromise = loadUserRoles(currentSession.user.id)
-            
-            // Use a shorter timeout for better UX
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Profile loading timeout')), 5000) // Reduced to 5 seconds
-            )
-            
-            const [userProfile, userRoles] = await Promise.race([
-              Promise.all([profilePromise, rolesPromise]),
-              timeoutPromise
-            ]) as [UserProfile | null, string[]]
-            
-            setProfile(userProfile)
-            setRoles(userRoles)
-            if (!userProfile) {
-              setProfileNotFound(true)
-              console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
-            }
-          } catch (profileError) {
-            console.warn('⚠️ Profile loading failed, using basic auth:', profileError)
-            // Continue with basic authentication
-            setProfile(null)
-            setRoles([])
-          }
-        }
-        
-        // Load profile data in background without blocking UI
-        loadProfileData()
-      } else {
-        setProfile(null)
-        setRoles([])
-        setLoading(false)
-      }
-      
-      // Clear safety timeout since initialization completed
-      if (safetyTimeout) {
-        clearTimeout(safetyTimeout)
-      }
-      
-    } catch (error) {
-      console.error('❌ Error initializing auth:', error)
-      setLoading(false)
-      setProfile(null)
-      setRoles([])
-      if (safetyTimeout) {
-        clearTimeout(safetyTimeout)
-      }
-    }
-  }
-
-  // Handle auth state changes
-  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
-    console.log('🔄 Auth state changed:', event, newSession?.user?.id)
-    
-    // Prevent infinite loops by checking if session actually changed
-    if (session?.user?.id === newSession?.user?.id) {
-      console.log('🔄 Session unchanged, skipping update')
-      return
-    }
-    
-    setSession(newSession)
-    setUser(newSession?.user ?? null)
-    setProfileNotFound(false)
-    
-    if (newSession?.user) {
-      // Load profile data in background to prevent blocking
-      setLoading(false) // Set loading to false immediately
-      
-      // Load profile and roles in background
-      const loadProfileData = async () => {
+        // Load profile and roles with timeout
         try {
-          const profilePromise = loadUserProfile(newSession.user.id)
-          const rolesPromise = loadUserRoles(newSession.user.id)
-          
-          // Use timeout to prevent hanging
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Profile loading timeout')), 5000)
-          )
-          
-          const [userProfile, userRoles] = await Promise.race([
-            Promise.all([profilePromise, rolesPromise]),
-            timeoutPromise
-          ]) as [UserProfile | null, string[]]
+          const [userProfile, userRoles] = await Promise.all([
+            loadUserProfile(currentSession.user.id),
+            loadUserRoles(currentSession.user.id)
+          ])
           
           setProfile(userProfile)
           setRoles(userRoles)
           if (!userProfile) {
             setProfileNotFound(true)
-            console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
           }
-        } catch (profileError) {
-          console.warn('⚠️ Profile loading failed in auth state change:', profileError)
+        } catch (error) {
+          console.warn('Profile loading failed, continuing with basic auth')
           setProfile(null)
           setRoles([])
         }
+      } else {
+        setProfile(null)
+        setRoles([])
       }
-      
-      // Load profile data in background
-      loadProfileData()
-    } else {
+    } catch (error) {
+      console.error('Auth initialization error:', error)
       setProfile(null)
       setRoles([])
+    } finally {
       setLoading(false)
     }
   }
 
+  // Handle auth state changes
+  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    setSession(newSession)
+    setUser(newSession?.user ?? null)
+    setProfileNotFound(false)
+    
+    if (newSession?.user) {
+      try {
+        const [userProfile, userRoles] = await Promise.all([
+          loadUserProfile(newSession.user.id),
+          loadUserRoles(newSession.user.id)
+        ])
+        
+        setProfile(userProfile)
+        setRoles(userRoles)
+        if (!userProfile) {
+          setProfileNotFound(true)
+        }
+      } catch (error) {
+        console.warn('Profile loading failed in auth state change')
+        setProfile(null)
+        setRoles([])
+      }
+    } else {
+      setProfile(null)
+      setRoles([])
+    }
+    
+    setLoading(false)
+  }
+
   useEffect(() => {
-    console.log('🔧 AuthProvider: Initializing...')
     setMounted(true)
     
     if (!supabase) {
@@ -320,18 +256,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
-    // Critical: Add a maximum loading timeout to prevent infinite loading
-    const maxLoadingTimeout = setTimeout(() => {
-      console.warn('⚠️ AuthProvider: Maximum loading timeout reached, forcing loading to false')
-      setLoading(false)
-      setProfile(null)
-      setRoles([])
-    }, 10000) // 10 seconds maximum
-
     // Cleanup function
     return () => {
       subscription.unsubscribe()
-      clearTimeout(maxLoadingTimeout)
     }
   }, [])
 
