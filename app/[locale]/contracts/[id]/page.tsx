@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
+
 import { 
   ArrowLeftIcon, 
   DownloadIcon, 
@@ -37,6 +37,7 @@ import { useContract } from "@/hooks/useContract"
 import { StatusBadge } from "@/components/StatusBadge"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { OverviewTab } from "@/components/contract-tabs/OverviewTab"
 import { formatDate, calculateDuration, copyToClipboard, formatDateTime } from "@/utils/format"
 
@@ -52,9 +53,39 @@ interface PDFStatus {
 export default function ContractDetailPage() {
   const params = useParams()
   const pathname = usePathname()
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
+  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
   const contractId = (params?.id as string) || ''
   const { contract, loading, error, refetch } = useContract(contractId)
+  
+  // Add authentication check
+  const { user, loading: authLoading } = useAuth()
+  
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">Please log in to access the contract details.</p>
+          <Button asChild>
+            <Link href="/login">Go to Login</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
   
   const [pdfStatus, setPdfStatus] = useState<PDFStatus>({
     can_download: false,
@@ -135,106 +166,98 @@ export default function ContractDetailPage() {
   // Show invalid contract ID state
   if (!isValidContractId) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-          <div className="mx-auto max-w-4xl">
-            <Card className="shadow-lg">
-              <CardContent className="p-12 text-center">
-                <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Invalid Contract ID</h3>
-                <p className="text-gray-600 mb-6">The contract ID format is invalid. Please check the URL and try again.</p>
-                <Button asChild>
-                  <Link href={`/${locale}/contracts`}>
-                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                    Back to Contracts
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="shadow-lg">
+            <CardContent className="p-12 text-center">
+              <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Invalid Contract ID</h3>
+              <p className="text-gray-600 mb-6">The contract ID format is invalid. Please check the URL and try again.</p>
+              <Button asChild>
+                <Link href={`/${locale}/contracts`}>
+                  <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                  Back to Contracts
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
   // Show loading state
   if (loading) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-          <div className="mx-auto max-w-4xl">
-            <Card className="shadow-lg">
-              <CardContent className="p-12 text-center">
-                <LoadingSpinner />
-                <h3 className="text-lg font-semibold text-gray-900 mt-4">Loading Contract...</h3>
-                <p className="text-gray-600">Please wait while we fetch the contract details.</p>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="shadow-lg">
+            <CardContent className="p-12 text-center">
+              <LoadingSpinner />
+              <h3 className="text-lg font-semibold text-gray-900 mt-4">Loading Contract...</h3>
+              <p className="text-gray-600">Please wait while we fetch the contract details.</p>
+            </CardContent>
+          </Card>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
   // Show error state
   if (error) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-          <div className="mx-auto max-w-4xl">
-            <Card className="shadow-lg">
-              <CardContent className="p-12 text-center">
-                <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Contract</h3>
-                <p className="text-gray-600 mb-6">{error}</p>
-                <div className="flex items-center justify-center gap-4">
-                  <Button onClick={() => refetch()} variant="outline">
-                    <RefreshCwIcon className="mr-2 h-4 w-4" />
-                    Try Again
-                  </Button>
-                  <Button asChild>
-                    <Link href={`/${locale}/contracts`}>
-                      <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                      Back to Contracts
-                    </Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="shadow-lg">
+            <CardContent className="p-12 text-center">
+              <AlertCircleIcon className="h-16 w-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Contract</h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <div className="flex items-center justify-center gap-4">
+                <Button onClick={() => refetch()} variant="outline">
+                  <RefreshCwIcon className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+                <Button asChild>
+                  <Link href={`/${locale}/contracts`}>
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Back to Contracts
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
   // Show contract not found state
   if (!contract) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
-          <div className="mx-auto max-w-4xl">
-            <Card className="shadow-lg">
-              <CardContent className="p-12 text-center">
-                <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
-                <p className="text-gray-600 mb-6">The contract you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-                <div className="flex items-center justify-center gap-4">
-                  <Button asChild>
-                    <Link href={`/${locale}/contracts`}>
-                      <ArrowLeftIcon className="mr-2 h-4 w-4" />
-                      Back to Contracts
-                    </Link>
-                  </Button>
-                  <Button onClick={() => refetch()} variant="outline">
-                    <RefreshCwIcon className="mr-2 h-4 w-4" />
-                    Refresh
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 px-4 py-8">
+        <div className="mx-auto max-w-4xl">
+          <Card className="shadow-lg">
+            <CardContent className="p-12 text-center">
+              <FileTextIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Contract Not Found</h3>
+              <p className="text-gray-600 mb-6">The contract you&apos;re looking for doesn&apos;t exist or has been removed.</p>
+              <div className="flex items-center justify-center gap-4">
+                <Button asChild>
+                  <Link href={`/${locale}/contracts`}>
+                    <ArrowLeftIcon className="mr-2 h-4 w-4" />
+                    Back to Contracts
+                  </Link>
+                </Button>
+                <Button onClick={() => refetch()} variant="outline">
+                  <RefreshCwIcon className="mr-2 h-4 w-4" />
+                  Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
@@ -242,8 +265,7 @@ export default function ContractDetailPage() {
   const hasPDF = !!contract.pdf_url
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="mx-auto max-w-8xl px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -992,6 +1014,5 @@ export default function ContractDetailPage() {
         </Tabs>
       </div>
       </div>
-    </AuthenticatedLayout>
   )
 }
