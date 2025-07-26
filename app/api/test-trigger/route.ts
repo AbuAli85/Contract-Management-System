@@ -46,38 +46,35 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Create a test user in auth.users (this should trigger the handle_new_user function)
-    const testUserId = crypto.randomUUID()
-    const testUser = {
-      id: testUserId,
+    // Create a test user using Supabase admin API (this should trigger the handle_new_user function)
+    const testUserData = {
       email: email,
-      email_confirmed_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      raw_user_meta_data: {
+      password: 'TestPassword123!', // Temporary password for testing
+      email_confirm: true,
+      user_metadata: {
         full_name: fullName
       }
     }
 
-    console.log('📝 Inserting test user into auth.users:', testUser)
+    console.log('📝 Creating test user via admin API:', testUserData)
 
-    // Note: This is a test - in production, we'd use supabase.auth.admin.createUser
-    // But for testing the trigger, we'll simulate the insertion
-    const { data: insertedAuthUser, error: authInsertError } = await supabase
-      .from('auth.users')
-      .insert([testUser])
-      .select()
-      .single()
+    // Use the admin API to create a user (this will trigger the handle_new_user function)
+    const { data: createdAuthUser, error: authCreateError } = await supabase.auth.admin.createUser({
+      email: testUserData.email,
+      password: testUserData.password,
+      email_confirm: true,
+      user_metadata: testUserData.user_metadata
+    })
 
-    if (authInsertError) {
-      console.error('❌ Error inserting into auth.users:', authInsertError)
+    if (authCreateError) {
+      console.error('❌ Error creating auth user:', authCreateError)
       return NextResponse.json({ 
-        error: 'Failed to insert test user',
-        details: authInsertError 
+        error: 'Failed to create test user',
+        details: authCreateError 
       }, { status: 500 })
     }
 
-    console.log('✅ Test user inserted into auth.users:', insertedAuthUser)
+    console.log('✅ Test user created in auth.users:', createdAuthUser)
 
     // Wait a moment for the trigger to execute
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -86,38 +83,42 @@ export async function POST(request: NextRequest) {
     const { data: profileRecord, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', testUserId)
+      .eq('id', createdAuthUser.user.id)
       .single()
 
     const { data: userRecord, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('id', testUserId)
+      .eq('id', createdAuthUser.user.id)
       .single()
 
     console.log('📊 Profile record:', profileRecord, profileError)
     console.log('📊 User record:', userRecord, userError)
 
     // Clean up - delete the test user
-    await supabase.from('auth.users').delete().eq('id', testUserId)
-    if (profileRecord) {
-      await supabase.from('profiles').delete().eq('id', testUserId)
-    }
-    if (userRecord) {
-      await supabase.from('users').delete().eq('id', testUserId)
+    try {
+      await supabase.auth.admin.deleteUser(createdAuthUser.user.id)
+      console.log('🧹 Test user deleted from auth.users')
+    } catch (deleteError) {
+      console.warn('⚠️ Failed to delete test user:', deleteError)
     }
 
     return NextResponse.json({ 
       success: true,
       message: 'Trigger test completed',
       results: {
-        authUserInserted: !!insertedAuthUser,
+        authUserCreated: !!createdAuthUser,
         profileCreated: !!profileRecord,
         userCreated: !!userRecord,
         profileError: profileError?.message,
         userError: userError?.message,
         profileRecord,
-        userRecord
+        userRecord,
+        authUser: {
+          id: createdAuthUser.user.id,
+          email: createdAuthUser.user.email,
+          created_at: createdAuthUser.user.created_at
+        }
       }
     })
 

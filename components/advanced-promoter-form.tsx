@@ -166,7 +166,7 @@ const advancedPromoterSchema = z.object({
   name_en: z.string().min(2, "English name must be at least 2 characters"),
   name_ar: z.string().min(2, "Arabic name must be at least 2 characters"),
   email: z.string().email("Invalid email address").optional().nullable(),
-  mobile_number: z.string().min(10, "Mobile number must be at least 10 digits"),
+  mobile_number: z.string().min(8, "Mobile number must be at least 8 digits"),
   phone_number: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   city: z.string().optional().nullable(),
@@ -251,6 +251,64 @@ const getFormProgress = (formData: Partial<AdvancedPromoterFormData>) => {
   )
   
   return Math.round((completedFields.length / requiredFields.length) * 100)
+}
+
+// Custom Date Input Component with dd/mm/yyyy format
+const CustomDateInput = ({ 
+  value, 
+  onChange, 
+  placeholder = "dd/mm/yyyy",
+  ...props 
+}: {
+  value?: string | null
+  onChange: (value: string) => void
+  placeholder?: string
+  [key: string]: any
+}) => {
+  const formatDateForDisplay = (dateString: string | null | undefined) => {
+    if (!dateString) return ""
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return ""
+      return date.toLocaleDateString('en-GB') // This gives dd/mm/yyyy format
+    } catch {
+      return ""
+    }
+  }
+
+  const parseDateFromInput = (inputValue: string) => {
+    if (!inputValue) return ""
+    
+    // Handle dd/mm/yyyy format
+    const parts = inputValue.split('/')
+    if (parts.length === 3) {
+      const day = parseInt(parts[0])
+      const month = parseInt(parts[1]) - 1 // Month is 0-indexed
+      const year = parseInt(parts[2])
+      
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        const date = new Date(year, month, day)
+        if (!isNaN(date.getTime())) {
+          return date.toISOString().split('T')[0] // Return YYYY-MM-DD for database
+        }
+      }
+    }
+    
+    return ""
+  }
+
+  return (
+    <Input
+      {...props}
+      type="text"
+      value={formatDateForDisplay(value)}
+      onChange={(e) => {
+        const formattedDate = parseDateFromInput(e.target.value)
+        onChange(formattedDate)
+      }}
+      placeholder={placeholder}
+    />
+  )
 }
 
 export default function AdvancedPromoterForm({ 
@@ -698,7 +756,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Mobile Number *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+966 50 123 4567" value={field.value ?? ""} onChange={field.onChange} />
+                              <Input placeholder="12345678 (minimum 8 digits)" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -833,7 +891,11 @@ export default function AdvancedPromoterForm({
                             <FormItem>
                               <FormLabel>Expiry Date</FormLabel>
                               <FormControl>
-                                <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
+                                <CustomDateInput
+                                  value={field.value ?? ""}
+                                  onChange={field.onChange}
+                                  placeholder="dd/mm/yyyy"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -883,7 +945,11 @@ export default function AdvancedPromoterForm({
                             <FormItem>
                               <FormLabel>Expiry Date</FormLabel>
                               <FormControl>
-                                <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
+                                <CustomDateInput
+                                  value={field.value ?? ""}
+                                  onChange={field.onChange}
+                                  placeholder="dd/mm/yyyy"
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
