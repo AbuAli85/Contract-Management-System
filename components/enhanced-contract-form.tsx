@@ -497,8 +497,8 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
               {/* Contract Duration Calculator */}
               <div className="mt-4">
                 <ContractDurationCalculator
-                  startDate={form.watch("contract_start_date")}
-                  endDate={form.watch("contract_end_date")}
+                  startDate={form.watch("contract_start_date") || null}
+                  endDate={form.watch("contract_end_date") || null}
                   contractType={form.watch("contract_type")}
                 />
               </div>

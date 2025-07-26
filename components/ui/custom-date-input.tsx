@@ -47,23 +47,38 @@ export function CustomDateInput({
       return
     }
 
+    // Handle partial input (e.g., "12/", "12/05")
+    if (inputValue.length < 10) {
+      setIsValidDate(true)
+      return
+    }
+
     // Parse dd/mm/yyyy format
-    const parsedDate = parse(inputValue, 'dd/MM/yyyy', new Date())
+    let parsedDate: Date | null = null
     
-    if (isValid(parsedDate)) {
+    // Try different date formats
+    const formats = ['dd/MM/yyyy', 'dd-MM-yyyy', 'dd.MM.yyyy']
+    
+    for (const formatStr of formats) {
+      try {
+        const parsed = parse(inputValue, formatStr, new Date())
+        if (isValid(parsed)) {
+          parsedDate = parsed
+          break
+        }
+      } catch {
+        continue
+      }
+    }
+    
+    if (parsedDate) {
       onChange(parsedDate)
       setIsValidDate(true)
+      // Format the display value consistently
+      setDisplayValue(format(parsedDate, 'dd/MM/yyyy'))
     } else {
-      // Try parsing with different separators
-      const altParsedDate = parse(inputValue.replace(/[\/\-]/g, '/'), 'dd/MM/yyyy', new Date())
-      if (isValid(altParsedDate)) {
-        onChange(altParsedDate)
-        setIsValidDate(true)
-        setDisplayValue(format(altParsedDate, 'dd/MM/yyyy'))
-      } else {
-        setIsValidDate(false)
-        onChange(null)
-      }
+      setIsValidDate(false)
+      onChange(null)
     }
   }
 

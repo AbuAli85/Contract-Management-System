@@ -582,7 +582,8 @@ export default function AdvancedPromoterForm({
         passport_number: values.passport_number?.trim() || null,
         mobile_number: values.mobile_number.trim(),
         profile_picture_url: values.profile_picture_url?.trim() || null,
-        nationality: values.nationality?.trim() || null
+        nationality: values.nationality?.trim() || null,
+        employer_id: values.employer_id || null // Link to employer
       }
 
       // Remove any undefined or null values that might cause issues

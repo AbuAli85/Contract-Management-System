@@ -55,18 +55,21 @@ export function EnhancedPromoterSelector({
 
   // Get employer information for a promoter
   const getEmployerInfo = (promoter: any) => {
-    if (!parties) return null
+    if (!parties || !promoter.employer_id) return null
     
-    // For now, we'll show a placeholder since the relationship might be complex
-    // In a real implementation, you'd have employer_id in the promoter record
+    const employer = parties.find(party => party.id === promoter.employer_id)
+    if (!employer) return null
+    
     return {
-      name: "Employer Information",
-      location: "Work Location",
-      contact: "Contact Details"
+      name: employer.name_en,
+      nameAr: employer.name_ar,
+      type: employer.type,
+      contact: employer.contact_email || employer.contact_phone
     }
   }
 
   const formatPromoterDisplay = (promoter: any) => {
+    const employer = getEmployerInfo(promoter)
     return (
       <div className="flex flex-col space-y-1">
         <div className="flex items-center gap-2">
@@ -78,10 +81,17 @@ export function EnhancedPromoterSelector({
         <div className="text-sm text-muted-foreground">
           {promoter.name_ar} • ID: {promoter.id_card_number}
         </div>
-        <div className="text-xs text-blue-600 flex items-center gap-1">
-          <Building2 className="h-3 w-3" />
-          Employer Info
-        </div>
+        {employer ? (
+          <div className="text-xs text-blue-600 flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            {employer.name} ({employer.type})
+          </div>
+        ) : (
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            No employer assigned
+          </div>
+        )}
       </div>
     )
   }
@@ -146,6 +156,17 @@ export function EnhancedPromoterSelector({
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       ID Expires: {new Date(selectedPromoter.id_card_expiry_date).toLocaleDateString('en-GB')}
+                    </div>
+                  )}
+                  {getEmployerInfo(selectedPromoter) && (
+                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-green-200">
+                      <Building2 className="h-3 w-3 text-blue-600" />
+                      <span className="text-blue-600 font-medium">
+                        {getEmployerInfo(selectedPromoter)?.name}
+                      </span>
+                      <span className="text-gray-500">
+                        ({getEmployerInfo(selectedPromoter)?.type})
+                      </span>
                     </div>
                   )}
                 </div>
