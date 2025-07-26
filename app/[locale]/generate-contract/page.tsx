@@ -217,8 +217,8 @@ function ContractTypesOverview() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium text-sm">{config.name}</h4>
-                    {config.omanCompliant && (
-                      <Badge variant="outline" className="text-xs">Oman Compliant</Badge>
+                    {config.category === 'employment' && (
+                      <Badge className="text-xs border border-input bg-background">Employment</Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">{config.description}</p>
@@ -226,14 +226,14 @@ function ContractTypesOverview() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-medium">Required Fields:</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {config.requiredFields.length}
+                      <Badge className="text-xs bg-secondary text-secondary-foreground">
+                        {config.validation.requiredFields.length}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="font-medium">Template Placeholders:</span>
-                      <Badge variant="secondary" className="text-xs">
-                        {config.templatePlaceholders.length}
+                      <span className="font-medium">Total Fields:</span>
+                      <Badge className="text-xs bg-secondary text-secondary-foreground">
+                        {config.fields.length}
                       </Badge>
                     </div>
                   </div>
@@ -244,45 +244,41 @@ function ContractTypesOverview() {
               {selectedType === config.id && (
                 <div className="mt-3 pt-3 border-t space-y-2">
                   <div>
-                    <h5 className="text-xs font-medium mb-1">Business Rules:</h5>
-                    <ul className="text-xs text-muted-foreground space-y-0.5">
-                      {config.businessRules.slice(0, 3).map((rule, idx) => (
-                        <li key={idx} className="flex items-start gap-1">
-                          <span className="text-primary">•</span>
-                          <span>{rule}</span>
-                        </li>
+                    <h5 className="text-xs font-medium mb-1">Required Fields:</h5>
+                    <div className="flex flex-wrap gap-1">
+                      {config.validation.requiredFields.slice(0, 4).map((field, idx) => (
+                        <Badge key={idx} className="text-xs border border-input bg-background">
+                          {field}
+                        </Badge>
                       ))}
-                      {config.businessRules.length > 3 && (
-                        <li className="text-primary">+ {config.businessRules.length - 3} more rules</li>
+                      {config.validation.requiredFields.length > 4 && (
+                        <Badge className="text-xs border border-input bg-background">
+                          +{config.validation.requiredFields.length - 4} more
+                        </Badge>
                       )}
-                    </ul>
+                    </div>
                   </div>
                   
                   <div>
-                    <h5 className="text-xs font-medium mb-1">Template Placeholders:</h5>
+                    <h5 className="text-xs font-medium mb-1">Field Types:</h5>
                     <div className="flex flex-wrap gap-1">
-                      {config.templatePlaceholders.slice(0, 4).map((placeholder, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {placeholder}
+                      {config.fields.slice(0, 4).map((field, idx) => (
+                        <Badge key={idx} className="text-xs border border-input bg-background">
+                          {field.type}
                         </Badge>
                       ))}
-                      {config.templatePlaceholders.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{config.templatePlaceholders.length - 4} more
+                      {config.fields.length > 4 && (
+                        <Badge className="text-xs border border-input bg-background">
+                          +{config.fields.length - 4} more
                         </Badge>
                       )}
                     </div>
                   </div>
                   
                   <div className="flex flex-wrap gap-1">
-                    {config.allowsSalary && <Badge variant="outline" className="text-xs">Salary</Badge>}
-                    {config.allowsProbation && <Badge variant="outline" className="text-xs">Probation</Badge>}
-                    {config.allowsRemoteWork && <Badge variant="outline" className="text-xs">Remote</Badge>}
-                    {config.maxDuration && (
-                      <Badge variant="outline" className="text-xs">
-                        Max {config.maxDuration}mo
-                      </Badge>
-                    )}
+                    {config.category === 'employment' && <Badge className="text-xs border border-input bg-background">Employment</Badge>}
+                    {config.requiresApproval && <Badge className="text-xs border border-input bg-background">Requires Approval</Badge>}
+                    {config.isActive && <Badge className="text-xs border border-input bg-background">Active</Badge>}
                   </div>
                 </div>
               )}
