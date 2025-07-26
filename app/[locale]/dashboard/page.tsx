@@ -57,7 +57,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user, loading: authLoading, profile } = useAuth()
-  const permissions = usePermissions()
+  // const permissions = usePermissions() // Disabled to prevent loading issues
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -70,13 +70,14 @@ export default function DashboardPage() {
   })
   const [loading, setLoading] = useState(true)
 
-  // Show loading if auth is still loading
+  // Show loading if auth is still loading (with timeout protection)
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading authentication...</p>
+          <p className="text-sm text-gray-400 mt-2">This should only take a few seconds</p>
         </div>
       </div>
     )
@@ -189,7 +190,17 @@ export default function DashboardPage() {
     } else if (!authLoading) {
       setLoading(false)
     }
-  }, [user, authLoading])
+
+    // Safety timeout - force loading to false after 5 seconds
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Dashboard safety timeout: forcing loading to false')
+        setLoading(false)
+      }
+    }, 5000)
+
+    return () => clearTimeout(safetyTimeout)
+  }, [user, authLoading, loading])
 
   const systemServices = [
     {

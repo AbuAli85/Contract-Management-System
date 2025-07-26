@@ -161,31 +161,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
 
+      // Always set loading to false immediately after session check
+      setLoading(false)
+
+      // If user exists, load profile data in background (non-blocking)
       if (currentSession?.user) {
-        // Set loading to false immediately to show UI
-        setLoading(false)
-        
-        // Load profile and roles in background
-        try {
-          const [userProfile, userRoles] = await Promise.all([
-            loadUserProfile(currentSession.user.id),
-            loadUserRoles(currentSession.user.id)
-          ])
-          
-          setProfile(userProfile)
-          setRoles(userRoles)
-          if (!userProfile) {
-            setProfileNotFound(true)
+        // Use setTimeout to ensure this runs after the current render cycle
+        setTimeout(async () => {
+          try {
+            const [userProfile, userRoles] = await Promise.all([
+              loadUserProfile(currentSession.user.id),
+              loadUserRoles(currentSession.user.id)
+            ])
+            
+            setProfile(userProfile)
+            setRoles(userRoles)
+            if (!userProfile) {
+              setProfileNotFound(true)
+            }
+          } catch (error) {
+            console.warn('Profile loading failed, continuing with basic auth')
+            setProfile(null)
+            setRoles([])
           }
-        } catch (error) {
-          console.warn('Profile loading failed, continuing with basic auth')
-          setProfile(null)
-          setRoles([])
-        }
+        }, 100)
       } else {
         setProfile(null)
         setRoles([])
-        setLoading(false)
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
@@ -200,32 +202,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(newSession)
     setUser(newSession?.user ?? null)
     setProfileNotFound(false)
+    setLoading(false) // Always set loading to false immediately
     
     if (newSession?.user) {
-      // Set loading to false immediately
-      setLoading(false)
-      
-      // Load profile and roles in background
-      try {
-        const [userProfile, userRoles] = await Promise.all([
-          loadUserProfile(newSession.user.id),
-          loadUserRoles(newSession.user.id)
-        ])
-        
-        setProfile(userProfile)
-        setRoles(userRoles)
-        if (!userProfile) {
-          setProfileNotFound(true)
+      // Load profile and roles in background (non-blocking)
+      setTimeout(async () => {
+        try {
+          const [userProfile, userRoles] = await Promise.all([
+            loadUserProfile(newSession.user.id),
+            loadUserRoles(newSession.user.id)
+          ])
+          
+          setProfile(userProfile)
+          setRoles(userRoles)
+          if (!userProfile) {
+            setProfileNotFound(true)
+          }
+        } catch (error) {
+          console.warn('Profile loading failed in auth state change')
+          setProfile(null)
+          setRoles([])
         }
-      } catch (error) {
-        console.warn('Profile loading failed in auth state change')
-        setProfile(null)
-        setRoles([])
-      }
+      }, 100)
     } else {
       setProfile(null)
       setRoles([])
-      setLoading(false)
     }
   }
 
@@ -243,9 +244,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
+    // Safety timeout - force loading to false after 3 seconds
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Safety timeout: forcing loading to false')
+        setLoading(false)
+      }
+    }, 3000)
+
     // Cleanup function
     return () => {
       subscription.unsubscribe()
+      clearTimeout(safetyTimeout)
     }
   }, [])
 
