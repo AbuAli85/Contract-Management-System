@@ -69,18 +69,25 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        console.log('🔧 Dashboard: Fetching analytics data...')
         // Fetch dashboard analytics in background
         const response = await fetch('/api/dashboard/analytics')
         
         if (response.ok) {
           const data = await response.json()
+          console.log('🔧 Dashboard: API response:', data)
           
           if (data.success && data.stats) {
+            console.log('🔧 Dashboard: Setting stats:', data.stats)
             setStats(data.stats)
+          } else {
+            console.warn('🔧 Dashboard: Invalid API response structure:', data)
           }
+        } else {
+          console.error('🔧 Dashboard: API request failed:', response.status)
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error)
+        console.error('🔧 Dashboard: Error fetching dashboard data:', error)
       }
     }
 
@@ -128,6 +135,9 @@ export default function DashboardPage() {
     systemHealth: stats?.systemHealth ?? 98,
     recentActivity: stats?.recentActivity ?? 0
   }
+
+  console.log('🔧 Dashboard: Current stats:', stats)
+  console.log('🔧 Dashboard: Safe stats:', safeStats)
 
   // Define quickActions
   const quickActions = [
@@ -212,197 +222,211 @@ export default function DashboardPage() {
     }
   ]
 
-  return (
-    <Suspense fallback={<DashboardLoading />}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {user?.email}. Here's your system overview.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Activity className="h-3 w-3" />
-              System Health: {safeStats.systemHealth}%
-            </Badge>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeStats.totalContracts}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline h-3 w-3 text-green-500" />
-                +12% from last month
+  try {
+    return (
+      <Suspense fallback={<DashboardLoading />}>
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Dashboard</h1>
+              <p className="text-muted-foreground">
+                Welcome back, {user?.email}. Here's your system overview.
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeStats.activeContracts}</div>
-              <p className="text-xs text-muted-foreground">
-                {safeStats.totalContracts > 0 ? Math.round((safeStats.activeContracts / safeStats.totalContracts) * 100) : 0}% of total
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeStats.pendingApprovals}</div>
-              <p className="text-xs text-muted-foreground">
-                Require attention
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Promoters</CardTitle>
-              <Users className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{safeStats.totalPromoters}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline h-3 w-3 text-green-500" />
-                +5% from last month
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {quickActions.map((action) => (
-                <Link key={action.title} href={action.href}>
-                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <action.icon className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-medium">{action.title}</h3>
-                            {action.badge && (
-                              <Badge variant="secondary" className="text-xs">
-                                {action.badge}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {action.description}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                System Health: {safeStats.systemHealth}%
+              </Badge>
+            </div>
+          </div>
 
-        {/* System Status and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* System Status */}
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{safeStats.totalContracts}</div>
+                <p className="text-xs text-muted-foreground">
+                  <TrendingUp className="inline h-3 w-3 text-green-500" />
+                  +12% from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Contracts</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{safeStats.activeContracts}</div>
+                <p className="text-xs text-muted-foreground">
+                  {safeStats.totalContracts > 0 ? Math.round((safeStats.activeContracts / safeStats.totalContracts) * 100) : 0}% of total
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{safeStats.pendingApprovals}</div>
+                <p className="text-xs text-muted-foreground">
+                  Require attention
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Promoters</CardTitle>
+                <Users className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{safeStats.totalPromoters}</div>
+                <p className="text-xs text-muted-foreground">
+                  <TrendingUp className="inline h-3 w-3 text-green-500" />
+                  +5% from last month
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                System Status
+                <Zap className="h-5 w-5" />
+                Quick Actions
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {systemServices.map((service) => (
-                  <div key={service.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <service.icon className="h-4 w-4 text-green-500" />
-                      <div>
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-sm text-muted-foreground">{service.description}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-green-600 bg-green-50">
-                      Healthy
-                    </Badge>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {quickActions.map((action) => (
+                  <Link key={action.title} href={action.href}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <action.icon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium">{action.title}</h3>
+                              {action.badge && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {action.badge}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {action.description}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-full">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">New contract generated</p>
-                    <p className="text-sm text-muted-foreground">2 minutes ago</p>
-                  </div>
+          {/* System Status and Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* System Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  System Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {systemServices.map((service) => (
+                    <div key={service.name} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <service.icon className="h-4 w-4 text-green-500" />
+                        <div>
+                          <p className="font-medium">{service.name}</p>
+                          <p className="text-sm text-muted-foreground">{service.description}</p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-green-600 bg-green-50">
+                        Healthy
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-full">
-                    <UserCheck className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">User approved</p>
-                    <p className="text-sm text-muted-foreground">5 minutes ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-full">
-                    <Users className="h-4 w-4 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">New promoter registered</p>
-                    <p className="text-sm text-muted-foreground">10 minutes ago</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
 
-        {/* Detailed System Status */}
-        <SystemStatus />
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Recent Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">New contract generated</p>
+                      <p className="text-sm text-muted-foreground">2 minutes ago</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-full">
+                      <UserCheck className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">User approved</p>
+                      <p className="text-sm text-muted-foreground">5 minutes ago</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 rounded-full">
+                      <Users className="h-4 w-4 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">New promoter registered</p>
+                      <p className="text-sm text-muted-foreground">10 minutes ago</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Detailed System Status */}
+          <SystemStatus />
+        </div>
+      </Suspense>
+    )
+  } catch (error) {
+    console.error('🔧 Dashboard: Rendering error:', error)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Dashboard Error</h2>
+          <p className="text-gray-600 mb-4">Something went wrong while loading the dashboard.</p>
+          <p className="text-sm text-red-500 mb-4">{error instanceof Error ? error.message : 'Unknown error'}</p>
+          <Button onClick={() => window.location.reload()}>Reload Page</Button>
+        </div>
       </div>
-    </Suspense>
-  )
+    )
+  }
 } 
