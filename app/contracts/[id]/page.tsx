@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -135,6 +135,7 @@ export default function ContractDetailPage() {
         console.log("Fetching contract with ID:", contractId)
 
         // Fetch basic contract data
+        const supabase = getSupabaseClient()
         const { data, error: basicError } = await supabase
           .from("contracts")
           .select("*")
