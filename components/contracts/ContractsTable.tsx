@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -368,6 +368,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
       setError(null)
       
     try {
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from('contracts')
         .select(`
@@ -418,7 +419,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     } finally {
       setLoading(false)
     }
-  }, [supabase, toast])
+  }, [toast])
 
   // Memoized handlers
   const handleSelectContract = useCallback((contractId: string, selected: boolean) => {
@@ -469,6 +470,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         // ...any other fields that exist in the contracts table
       }
 
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('contracts')
         .insert(newContract)
@@ -490,10 +492,11 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         variant: "destructive",
       })
     }
-  }, [supabase, fetchContracts, toast])
+  }, [fetchContracts, toast])
 
   const archiveContract = useCallback(async (contractId: string) => {
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('contracts')
         .update({ is_current: false, updated_at: new Date().toISOString() })
@@ -516,10 +519,11 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         variant: "destructive",
       })
     }
-  }, [supabase, fetchContracts, toast])
+  }, [fetchContracts, toast])
 
   const deleteContract = useCallback(async (contractId: string) => {
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from('contracts')
         .delete()
@@ -542,7 +546,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         variant: "destructive",
       })
     }
-  }, [supabase, fetchContracts, toast])
+  }, [fetchContracts, toast])
 
   // Load contracts on mount
   useEffect(() => {

@@ -13,7 +13,7 @@ import {
   TrendingUp
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { getSupabaseClient } from '@/lib/supabase'
 
 interface HomePageContentProps {
   locale: string
@@ -41,22 +41,22 @@ export function HomePageContent({ locale }: HomePageContentProps) {
     async function fetchStats() {
       try {
         // Fetch contracts count
-        const { count: contractsCount } = await supabase
+        const { count: contractsCount } = await getSupabaseClient()
           .from('contracts')
           .select('*', { count: 'exact', head: true })
 
         // Fetch parties count
-        const { count: partiesCount } = await supabase
+        const { count: partiesCount } = await getSupabaseClient()
           .from('parties')
           .select('*', { count: 'exact', head: true })
 
         // Fetch promoters count
-        const { count: promotersCount } = await supabase
+        const { count: promotersCount } = await getSupabaseClient()
           .from('promoters')
           .select('*', { count: 'exact', head: true })
 
         // Fetch active contracts count
-        const { count: activeContractsCount } = await supabase
+        const { count: activeContractsCount } = await getSupabaseClient()
           .from('contracts')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'active')

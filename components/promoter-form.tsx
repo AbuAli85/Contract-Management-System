@@ -5,7 +5,7 @@ import type React from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -160,15 +160,15 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       if (currentUrl) {
         try {
           const oldFileName = currentUrl.substring(currentUrl.lastIndexOf("/") + 1)
-          await supabase.storage.from(BUCKET_NAME).remove([oldFileName])
+          await getSupabaseClient().storage.from(BUCKET_NAME).remove([oldFileName])
         } catch (e) {
           console.warn("Could not remove old file from storage:", e)
         }
       }
 
-      const { data, error } = await supabase.storage.from(BUCKET_NAME).upload(filePath, file)
+      const { data, error } = await getSupabaseClient().storage.from(BUCKET_NAME).upload(filePath, file)
       if (error) throw new Error(`Failed to upload ${file.name}: ${error.message}`)
-      const { data: urlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(data.path)
+      const { data: urlData } = getSupabaseClient().storage.from(BUCKET_NAME).getPublicUrl(data.path)
       return urlData.publicUrl
     }
     return currentUrl
@@ -217,11 +217,11 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       }
 
       if (promoterToEdit?.id) {
-        const { error } = await supabase.from("promoters").update(promoterData).eq("id", promoterToEdit.id).select()
+        const { error } = await getSupabaseClient().from("promoters").update(promoterData).eq("id", promoterToEdit.id).select()
         if (error) throw error
         toast({ title: "Success!", description: "Promoter updated successfully." })
       } else {
-        const { error } = await supabase.from("promoters").insert([promoterData]).select()
+        const { error } = await getSupabaseClient().from("promoters").insert([promoterData]).select()
         if (error) throw error
         toast({ title: "Success!", description: "Promoter added successfully." })
       }

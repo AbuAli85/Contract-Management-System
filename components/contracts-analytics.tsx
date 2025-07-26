@@ -31,7 +31,7 @@ import {
   Calendar,
   Users
 } from "lucide-react"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { CONTRACT_STATUSES } from "./unified-status-badge"
 
 interface ContractAnalytics {
@@ -60,6 +60,7 @@ export function ContractsAnalyticsDashboard() {
     setLoading(true)
     try {
       // Fetch contracts data
+      const supabase = getSupabaseClient()
       const { data: contracts, error } = await supabase
         .from('contracts')
         .select('*')

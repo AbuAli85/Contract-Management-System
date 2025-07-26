@@ -46,7 +46,7 @@ import {
 
 // Types and Utils
 import type { Promoter } from "@/lib/types"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { SafeImage } from "@/components/ui/safe-image"
@@ -161,7 +161,7 @@ export default function AdvancedPromotersManagement() {
     try {
       setIsLoading(true)
       
-      const { data: promotersData, error } = await supabase
+      const { data: promotersData, error } = await getSupabaseClient()
         .from("promoters")
         .select(`
           *,
@@ -366,14 +366,14 @@ export default function AdvancedPromotersManagement() {
       
       switch (operation.type) {
         case "status_update":
-          await supabase
+          await getSupabaseClient()
             .from("promoters")
             .update({ status: operation.data.status })
             .in("id", selectedPromoters)
           break
           
         case "delete":
-          await supabase
+          await getSupabaseClient()
             .from("promoters")
             .delete()
             .in("id", selectedPromoters)
@@ -384,7 +384,7 @@ export default function AdvancedPromotersManagement() {
           break
           
         case "notification_settings":
-          await supabase
+          await getSupabaseClient()
             .from("promoters")
             .update({
               notify_days_before_id_expiry: operation.data.id_expiry_days,
@@ -462,7 +462,7 @@ export default function AdvancedPromotersManagement() {
             created_at: new Date().toISOString()
           }))
 
-          const { error } = await supabase
+          const { error } = await getSupabaseClient()
             .from("promoters")
             .insert(formattedBatch)
 
@@ -812,7 +812,7 @@ export default function AdvancedPromotersManagement() {
 
   // Real-time updates
   useEffect(() => {
-    const channel = supabase
+    const channel = getSupabaseClient()
       .channel('promoters-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'promoters' }, () => {
         fetchPromoters()
@@ -820,7 +820,7 @@ export default function AdvancedPromotersManagement() {
       .subscribe()
 
     return () => {
-      supabase.removeChannel(channel)
+      getSupabaseClient().removeChannel(channel)
     }
   }, [fetchPromoters])
 

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { BellRing, CheckCircle, XCircle, AlertTriangle, Info, Loader2 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import type { NotificationItem, NotificationRow } from "@/lib/dashboard-types"
 import { useToast } from "@/hooks/use-toast"
@@ -33,6 +33,7 @@ export default function NotificationSystem() {
   const fetchNotifications = async () => {
     setLoading(true)
     try {
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from("notifications")
         .select(
@@ -83,6 +84,7 @@ export default function NotificationSystem() {
 
   useEffect(() => {
     fetchNotifications()
+    const supabase = getSupabaseClient()
     const channel = supabase
       .channel("public:notifications:feed") // Unique channel name
       .on(

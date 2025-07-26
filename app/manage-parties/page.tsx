@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import PartyForm from "@/components/party-form"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Party } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -26,6 +26,7 @@ export default function ManagePartiesPage() {
 
   async function fetchParties() {
     setIsLoading(true)
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase.from("parties").select("*").order("name_en")
     if (error) {
       toast({ title: "Error fetching parties", description: error.message, variant: "destructive" })

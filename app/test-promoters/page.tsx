@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 
 export default function TestPromotersPage() {
@@ -16,6 +16,7 @@ export default function TestPromotersPage() {
       setError(null)
 
       try {
+        const supabase = getSupabaseClient()
         const { data, error } = await supabase
           .from("promoters")
           .select("*")

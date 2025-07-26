@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import {
   Card,
   CardContent,
@@ -83,6 +83,7 @@ export default function NotificationsPage() {
       setLoading(true)
       setError(null)
       try {
+        const supabase = getSupabaseClient()
         const { data, error } = await supabase
           .from("notifications")
           .select(
@@ -116,6 +117,7 @@ export default function NotificationsPage() {
     }
     fetchNotifications()
     // Real-time subscription
+    const supabase = getSupabaseClient()
     const channel = supabase
       .channel("public:notifications:feed")
       .on(
@@ -217,6 +219,7 @@ export default function NotificationsPage() {
       )
     )
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: !notif.is_read })
@@ -249,6 +252,7 @@ export default function NotificationsPage() {
     if (unreadCount === 0) return
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
@@ -279,6 +283,7 @@ export default function NotificationsPage() {
     const count = notifications.length
     setNotifications([])
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase.from("notifications").delete().neq("id", 0)
       if (error) throw error
       toast({
@@ -557,135 +562,4 @@ export default function NotificationsPage() {
                             <td className="px-4 py-3 whitespace-nowrap">
                               {notif.related_contract_id ? (
                                 <a
-                                  href={`/contracts/${notif.related_contract_id}`}
-                                  className="text-blue-600 underline inline-flex items-center gap-1"
-                                  tabIndex={0}
-                                  aria-label="View related contract"
-                                  onClick={e => e.stopPropagation()}
-                                  onKeyDown={e => e.stopPropagation()}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                  Contract
-                                </a>
-                              ) : notif.related_entity_id ? (
-                                <a
-                                  href={`/${notif.related_entity_type || "entity"}/${notif.related_entity_id}`}
-                                  className="text-blue-600 underline inline-flex items-center gap-1"
-                                  tabIndex={0}
-                                  aria-label="View related entity"
-                                  onClick={e => e.stopPropagation()}
-                                  onKeyDown={e => e.stopPropagation()}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                  {notif.related_entity_type || "Entity"}
-                                </a>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">-</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={e => { e.stopPropagation(); toggleRead(notif); }}
-                                disabled={isUpdating}
-                                aria-label={
-                                  notif.is_read ? "Mark as unread" : "Mark as read"
-                                }
-                              >
-                                {notif.is_read ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="bg-gray-50 px-4 py-3 border-t">
-                    <div className="flex justify-between items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPage(page - 1)}
-                        disabled={page === 1}
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Previous
-                      </Button>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-700">
-                          Page {page} of {totalPages}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          ({filtered.length} total)
-                        </span>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setPage(page + 1)}
-                        disabled={page === totalPages}
-                        aria-label="Next page"
-                      >
-                        Next
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-                {/* Summary */}
-                <div className="bg-gray-50 px-4 py-2 border-t">
-                  <div className="text-sm text-gray-600">
-                    Showing {paginated.length} of {filtered.length} notifications
-                    {search && ` matching "${search}"`}
-                    {typeFilter && ` of type "${typeFilter}"`}
-                    {readFilter && ` that are ${readFilter}`}
-                    {userFilter && ` for user ${userFilter}`}
-                    {startDate && ` from ${format(startDate, "yyyy-MM-dd")}`}
-                    {endDate && ` to ${format(endDate, "yyyy-MM-dd")}`}
-                  </div>
-                </div>
-              </div>
-            )}
-            {/* Details Modal */}
-            <Dialog open={showModal} onOpenChange={setShowModal}>
-              <DialogContent aria-modal="true" role="dialog">
-                <DialogHeader>
-                  <DialogTitle>Notification Details</DialogTitle>
-                  <DialogDescription>
-                    Full details for this notification.
-                  </DialogDescription>
-                </DialogHeader>
-                {selectedNotif && (
-                  <div className="space-y-2">
-                    <div><b>Type:</b> {selectedNotif.type}</div>
-                    <div><b>Message:</b> {selectedNotif.message}</div>
-                    <div><b>User Email:</b> {selectedNotif.user_email || "-"}</div>
-                    <div><b>Created At:</b> {format(new Date(selectedNotif.created_at), "yyyy-MM-dd HH:mm:ss")}</div>
-                    <div><b>Status:</b> {selectedNotif.is_read ? "Read" : "Unread"}</div>
-                    {selectedNotif.related_contract_id && (
-                      <div><b>Related Contract:</b> <a href={`/contracts/${selectedNotif.related_contract_id}`} className="text-blue-600 underline">View Contract</a></div>
-                    )}
-                    {selectedNotif.related_entity_id && (
-                      <div><b>Related Entity:</b> <a href={`/${selectedNotif.related_entity_type || "entity"}/${selectedNotif.related_entity_id}`} className="text-blue-600 underline">{selectedNotif.related_entity_type || "Entity"}</a></div>
-                    )}
-                  </div>
-                )}
-                <DialogClose asChild>
-                  <Button variant="outline" aria-label="Close details modal">Close</Button>
-                </DialogClose>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+                                  href={`/contracts/${notif.related_contract_id}`

@@ -5,7 +5,7 @@ import type React from "react"
 import PromoterForm from "@/components/promoter-form"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -88,6 +88,7 @@ export default function ManagePromotersPage() {
 
   async function fetchPromotersWithContractCount() {
     setIsLoading(true)
+    const supabase = getSupabaseClient()
     const { data: promotersData, error: promotersError } = await supabase
       .from("promoters")
       .select("*")
@@ -112,6 +113,7 @@ export default function ManagePromotersPage() {
 
     // Fetch active contract counts for each promoter
     const promoterIds = promotersData.map((p) => p.id)
+    const supabase = getSupabaseClient()
     const { data: contractsData, error: contractsError } = await supabase
       .from("contracts")
       .select("promoter_id, contract_end_date")
@@ -154,6 +156,7 @@ export default function ManagePromotersPage() {
 
   useEffect(() => {
     fetchPromotersWithContractCount()
+    const supabase = getSupabaseClient()
     const promotersChannel = supabase
       .channel("public:promoters:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () =>
