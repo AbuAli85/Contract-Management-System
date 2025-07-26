@@ -168,50 +168,50 @@ const EnhancedSelect = ({
 // Enhanced validation schema
 const advancedPromoterSchema = z.object({
   // Personal Information
-  name_en: z.string().min(2, "English name must be at least 2 characters"),
-  name_ar: z.string().min(2, "Arabic name must be at least 2 characters"),
-  email: z.string().email("Invalid email address").optional().nullable(),
-  mobile_number: z.string().min(8, "Mobile number must be at least 8 digits"),
-  phone_number: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  city: z.string().optional().nullable(),
-  country: z.string().optional().nullable(),
+  name_en: z.string().min(2, "English name must be at least 2 characters").max(100, "English name must be less than 100 characters"),
+  name_ar: z.string().min(2, "Arabic name must be at least 2 characters").max(100, "Arabic name must be less than 100 characters"),
+  email: z.string().email("Invalid email address").optional().nullable().or(z.literal("")),
+  mobile_number: z.string().min(8, "Mobile number must be at least 8 digits").max(20, "Mobile number must be less than 20 digits"),
+  phone_number: z.string().optional().nullable().or(z.literal("")),
+  address: z.string().optional().nullable().or(z.literal("")),
+  city: z.string().optional().nullable().or(z.literal("")),
+  country: z.string().optional().nullable().or(z.literal("")),
   
   // Identity Documents
-  id_card_number: z.string().min(5, "ID card number must be at least 5 characters"),
-  passport_number: z.string().optional().nullable(),
-  nationality: z.string().optional().nullable(),
-  date_of_birth: z.string().optional().nullable(),
+  id_card_number: z.string().min(5, "ID card number must be at least 5 characters").max(50, "ID card number must be less than 50 characters"),
+  passport_number: z.string().optional().nullable().or(z.literal("")),
+  nationality: z.string().optional().nullable().or(z.literal("")),
+  date_of_birth: z.string().optional().nullable().or(z.literal("")),
   
   // Professional Information
-  job_title: z.string().optional().nullable(),
-  department: z.string().optional().nullable(),
-  work_location: z.string().optional().nullable(),
-  employer_id: z.string().optional().nullable(),
-  outsourced_to_id: z.string().optional().nullable(),
+  job_title: z.string().optional().nullable().or(z.literal("")),
+  department: z.string().optional().nullable().or(z.literal("")),
+  work_location: z.string().optional().nullable().or(z.literal("")),
+  employer_id: z.string().optional().nullable().or(z.literal("")),
+  outsourced_to_id: z.string().optional().nullable().or(z.literal("")),
   
   // Status and Contracts
   status: z.enum(["active", "inactive", "pending", "suspended"]),
   
   // Document Expiry Dates
-  id_card_expiry_date: z.string().optional().nullable(),
-  passport_expiry_date: z.string().optional().nullable(),
+  id_card_expiry_date: z.string().optional().nullable().or(z.literal("")),
+  passport_expiry_date: z.string().optional().nullable().or(z.literal("")),
   
   // Notification Settings
-  notify_days_before_id_expiry: z.number().min(1).max(365),
-  notify_days_before_passport_expiry: z.number().min(1).max(365),
+  notify_days_before_id_expiry: z.number().min(1, "Must be at least 1 day").max(365, "Must be at most 365 days"),
+  notify_days_before_passport_expiry: z.number().min(1, "Must be at least 1 day").max(365, "Must be at most 365 days"),
   
   // Documents
-  profile_picture_url: z.string().optional().nullable(),
+  profile_picture_url: z.string().optional().nullable().or(z.literal("")),
   id_card_image: z.any().optional().nullable(),
   passport_image: z.any().optional().nullable(),
   cv_document: z.any().optional().nullable(),
   
   // Additional Information
-  notes: z.string().optional().nullable(),
+  notes: z.string().optional().nullable().or(z.literal("")),
   skills: z.array(z.string()).optional().default([]),
-  experience_years: z.number().min(0).max(50).optional().default(0),
-  education_level: z.string().optional().nullable(),
+  experience_years: z.number().min(0, "Experience years cannot be negative").max(50, "Experience years cannot exceed 50").optional().default(0),
+  education_level: z.string().optional().nullable().or(z.literal("")),
   
   // Settings
   is_editable: z.boolean(),
@@ -233,14 +233,24 @@ const BUCKET_NAME = "promoter-documents"
 const getDocumentStatus = (expiryDate: string | null | undefined) => {
   if (!expiryDate) return { status: "missing", color: "text-gray-500", icon: XCircle, text: "Missing" }
   
-  const daysUntilExpiry = differenceInDays(parseISO(expiryDate), new Date())
-  
-  if (daysUntilExpiry < 0) {
-    return { status: "expired", color: "text-red-500", icon: XCircle, text: "Expired" }
-  } else if (daysUntilExpiry <= 30) {
-    return { status: "expiring", color: "text-yellow-500", icon: AlertTriangle, text: "Expiring Soon" }
-  } else {
-    return { status: "valid", color: "text-green-500", icon: CheckCircle, text: "Valid" }
+  try {
+    const parsedDate = parseISO(expiryDate)
+    if (isNaN(parsedDate.getTime())) {
+      return { status: "invalid", color: "text-red-500", icon: XCircle, text: "Invalid Date" }
+    }
+    
+    const daysUntilExpiry = differenceInDays(parsedDate, new Date())
+    
+    if (daysUntilExpiry < 0) {
+      return { status: "expired", color: "text-red-500", icon: XCircle, text: "Expired" }
+    } else if (daysUntilExpiry <= 30) {
+      return { status: "expiring", color: "text-yellow-500", icon: AlertTriangle, text: "Expiring Soon" }
+    } else {
+      return { status: "valid", color: "text-green-500", icon: CheckCircle, text: "Valid" }
+    }
+  } catch (error) {
+    console.error('Error parsing expiry date:', error)
+    return { status: "invalid", color: "text-red-500", icon: XCircle, text: "Invalid Date" }
   }
 }
 
@@ -356,6 +366,7 @@ export default function AdvancedPromoterForm({
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [activeTab, setActiveTab] = useState("personal")
+  const [formError, setFormError] = useState<string | null>(null)
   const isEditMode = !!promoterToEdit
   
   // Register this form to disable auto-refresh during form interactions
@@ -397,6 +408,16 @@ export default function AdvancedPromoterForm({
     }
   })
 
+  // Handle form errors
+  useEffect(() => {
+    if (form.formState.errors && Object.keys(form.formState.errors).length > 0) {
+      console.error('Form validation errors:', form.formState.errors)
+      setFormError('Please fix the validation errors in the form')
+    } else {
+      setFormError(null)
+    }
+  }, [form.formState.errors])
+
   // Watch form data for progress calculation
   const watchedData = useWatch({ control: form.control })
   const formProgress = getFormProgress(watchedData)
@@ -407,11 +428,27 @@ export default function AdvancedPromoterForm({
 
   // File upload handler
   const uploadFile = useCallback(async (file: File, path: string): Promise<string> => {
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      throw new Error('File size must be less than 10MB')
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf']
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('File type not supported. Please upload JPEG, PNG, GIF, WebP, or PDF files only.')
+    }
+
     setIsUploading(true)
     setUploadProgress(0)
     
     try {
       const supabase = createClient()
+      
+      if (!supabase) {
+        throw new Error('Database connection not available')
+      }
       
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -428,16 +465,27 @@ export default function AdvancedPromoterForm({
       clearInterval(progressInterval)
       setUploadProgress(100)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase upload error:', error)
+        throw new Error(`Upload failed: ${error.message}`)
+      }
+
+      if (!data?.path) {
+        throw new Error('Upload completed but no file path returned')
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from(BUCKET_NAME)
         .getPublicUrl(data.path)
 
+      if (!publicUrl) {
+        throw new Error('Failed to generate public URL for uploaded file')
+      }
+
       return publicUrl
     } catch (error) {
       console.error('Upload error:', error)
-      throw new Error('Failed to upload file')
+      throw error instanceof Error ? error : new Error('Failed to upload file')
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
@@ -461,9 +509,10 @@ export default function AdvancedPromoterForm({
         variant: "default"
       })
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to upload file. Please try again."
       toast({
         title: "Upload failed",
-        description: "Failed to upload file. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       })
     }
@@ -475,6 +524,22 @@ export default function AdvancedPromoterForm({
     console.log('📋 Form errors:', form.formState.errors)
     console.log('✅ Form is valid:', form.formState.isValid)
     console.log('🔄 Form is submitting:', form.formState.isSubmitting)
+    
+    // Additional validation before submission
+    if (!values.name_en?.trim() || !values.name_ar?.trim() || !values.mobile_number?.trim() || !values.id_card_number?.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields (English name, Arabic name, mobile number, and ID card number)",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    // Check if already submitting to prevent double submission
+    if (isSubmitting) {
+      console.log('⚠️ Form is already submitting, ignoring duplicate submission')
+      return
+    }
     
     setIsSubmitting(true)
     
@@ -499,24 +564,28 @@ export default function AdvancedPromoterForm({
       
       console.log('✅ Supabase client created successfully')
       
+      // Clean and validate data before sending to database
       const promoterData = {
-        name_en: values.name_en,
-        name_ar: values.name_ar,
-        email: values.email,
-        mobile_number: values.mobile_number,
-        phone: values.phone_number,
-        address: values.address,
-        id_card_number: values.id_card_number,
-        passport_number: values.passport_number,
-        job_title: values.job_title,
-        work_location: values.work_location,
-        employer_id: values.employer_id,
-        outsourced_to_id: values.outsourced_to_id,
+        name_en: values.name_en.trim(),
+        name_ar: values.name_ar.trim(),
+        email: values.email?.trim() || null,
+        mobile_number: values.mobile_number.trim(),
+        phone: values.phone_number?.trim() || null,
+        address: values.address?.trim() || null,
+        id_card_number: values.id_card_number.trim(),
+        passport_number: values.passport_number?.trim() || null,
+        nationality: values.nationality?.trim() || null,
+        job_title: values.job_title?.trim() || null,
+        work_location: values.work_location?.trim() || null,
+        employer_id: values.employer_id?.trim() || null,
+        outsourced_to_id: values.outsourced_to_id?.trim() || null,
         status: values.status,
-        id_card_expiry_date: values.id_card_expiry_date,
-        passport_expiry_date: values.passport_expiry_date,
-        profile_picture_url: values.profile_picture_url,
-        notes: values.notes,
+        id_card_expiry_date: values.id_card_expiry_date?.trim() || null,
+        passport_expiry_date: values.passport_expiry_date?.trim() || null,
+        notify_days_before_id_expiry: values.notify_days_before_id_expiry,
+        notify_days_before_passport_expiry: values.notify_days_before_passport_expiry,
+        profile_picture_url: values.profile_picture_url?.trim() || null,
+        notes: values.notes?.trim() || null,
         updated_at: new Date().toISOString()
       }
 
@@ -592,7 +661,43 @@ export default function AdvancedPromoterForm({
     }
   }
 
-  const { data: parties, isLoading: partiesLoading } = useParties("Employer")
+  const { data: parties, isLoading: partiesLoading, error: partiesError } = useParties("Employer")
+
+  // Handle parties loading error
+  useEffect(() => {
+    if (partiesError) {
+      console.error('Error loading parties:', partiesError)
+      toast({
+        title: "Error Loading Companies",
+        description: "Failed to load company/employer data. Please refresh the page.",
+        variant: "destructive"
+      })
+    }
+  }, [partiesError, toast])
+
+  // Error boundary for the entire component
+  if (formError && !isSubmitting) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
+        <div className="mx-auto max-w-6xl">
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              {formError}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="ml-2"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
@@ -636,10 +741,7 @@ export default function AdvancedPromoterForm({
         </div>
 
         <Form {...form}>
-          <form onSubmit={(e) => {
-            console.log('🎯 Form onSubmit event triggered')
-            form.handleSubmit(onSubmit)(e)
-          }} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Document Status Overview */}
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="pb-4">
@@ -660,7 +762,14 @@ export default function AdvancedPromoterForm({
                       <p className={cn("text-sm", idCardStatus.color)}>{idCardStatus.text}</p>
                       {watchedData.id_card_expiry_date && (
                         <p className="text-xs text-slate-500">
-                          Expires: {format(parseISO(watchedData.id_card_expiry_date), "dd/MM/yyyy")}
+                          Expires: {(() => {
+                            try {
+                              return format(parseISO(watchedData.id_card_expiry_date), "dd/MM/yyyy")
+                            } catch (error) {
+                              console.error('Error parsing ID card expiry date:', error)
+                              return 'Invalid date'
+                            }
+                          })()}
                         </p>
                       )}
                     </div>
@@ -673,7 +782,14 @@ export default function AdvancedPromoterForm({
                       <p className={cn("text-sm", passportStatus.color)}>{passportStatus.text}</p>
                       {watchedData.passport_expiry_date && (
                         <p className="text-xs text-slate-500">
-                          Expires: {format(parseISO(watchedData.passport_expiry_date), "dd/MM/yyyy")}
+                          Expires: {(() => {
+                            try {
+                              return format(parseISO(watchedData.passport_expiry_date), "dd/MM/yyyy")
+                            } catch (error) {
+                              console.error('Error parsing passport expiry date:', error)
+                              return 'Invalid date'
+                            }
+                          })()}
                         </p>
                       )}
                     </div>
@@ -753,10 +869,13 @@ export default function AdvancedPromoterForm({
                                       input.type = 'file'
                                       input.accept = 'image/*'
                                       input.onchange = (e) => {
-                                        const file = (e.target as HTMLInputElement).files?.[0]
+                                        const target = e.target as HTMLInputElement
+                                        const file = target.files?.[0]
                                         if (file) {
                                           handleFileChange(file, 'profile_picture_url', `profile-pictures/${Date.now()}-${file.name}`)
                                         }
+                                        // Clean up the input element
+                                        input.remove()
                                       }
                                       input.click()
                                     }}
@@ -981,10 +1100,13 @@ export default function AdvancedPromoterForm({
                               input.type = 'file'
                               input.accept = 'image/*,.pdf'
                               input.onchange = (e) => {
-                                const file = (e.target as HTMLInputElement).files?.[0]
+                                const target = e.target as HTMLInputElement
+                                const file = target.files?.[0]
                                 if (file) {
                                   handleFileChange(file, 'id_card_image', `id-cards/${Date.now()}-${file.name}`)
                                 }
+                                // Clean up the input element
+                                input.remove()
                               }
                               input.click()
                             }}
@@ -1035,10 +1157,13 @@ export default function AdvancedPromoterForm({
                               input.type = 'file'
                               input.accept = 'image/*,.pdf'
                               input.onchange = (e) => {
-                                const file = (e.target as HTMLInputElement).files?.[0]
+                                const target = e.target as HTMLInputElement
+                                const file = target.files?.[0]
                                 if (file) {
                                   handleFileChange(file, 'passport_image', `passports/${Date.now()}-${file.name}`)
                                 }
+                                // Clean up the input element
+                                input.remove()
                               }
                               input.click()
                             }}
@@ -1415,6 +1540,14 @@ export default function AdvancedPromoterForm({
               </TabsContent>
             </Tabs>
 
+            {/* Form Error Display */}
+            {formError && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+
             {/* Debug Form Errors */}
             {Object.keys(form.formState.errors).length > 0 && (
               <Card className="border-red-200 bg-red-50">
@@ -1428,6 +1561,21 @@ export default function AdvancedPromoterForm({
                         <strong>{field}:</strong> {typeof error?.message === 'string' ? error.message : 'Unknown error'}
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Upload Progress Indicator */}
+            {isUploading && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-blue-800">Uploading file...</p>
+                      <Progress value={uploadProgress} className="h-2 mt-1" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -1514,7 +1662,7 @@ export default function AdvancedPromoterForm({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isSubmitting || isUploading}
+                  disabled={isSubmitting || isUploading || !form.formState.isValid}
                   className="min-w-[120px]"
                   onClick={() => {
                     console.log('🔘 Create Promoter button clicked')
@@ -1532,11 +1680,25 @@ export default function AdvancedPromoterForm({
                       console.log('✅ Form validation result:', isValid)
                       if (!isValid) {
                         console.log('❌ Form validation errors:', form.formState.errors)
+                        // Show validation errors to user
+                        const errorMessages = Object.entries(form.formState.errors)
+                          .map(([field, error]) => `${field}: ${error?.message}`)
+                          .join(', ')
+                        toast({
+                          title: "Validation Errors",
+                          description: errorMessages,
+                          variant: "destructive"
+                        })
                       } else {
                         console.log('✅ Form is valid, proceeding with submission...')
                       }
                     }).catch((error) => {
                       console.error('❌ Form validation error:', error)
+                      toast({
+                        title: "Validation Error",
+                        description: "An error occurred during form validation",
+                        variant: "destructive"
+                      })
                     })
                   }}
                 >
