@@ -90,8 +90,17 @@ const EnhancedSelect = ({
     }
   }
 
+  const handleValueChange = (newValue: string) => {
+    // Don't call onValueChange for the add custom option
+    if (newValue === "__add_custom__") {
+      setIsAdding(true)
+      return
+    }
+    onValueChange(newValue)
+  }
+
   return (
-    <Select onValueChange={onValueChange} value={selectValue}>
+    <Select onValueChange={handleValueChange} value={selectValue}>
       <FormControl>
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />
@@ -144,10 +153,6 @@ const EnhancedSelect = ({
             ) : (
               <SelectItem
                 value="__add_custom__"
-                onSelect={(e) => {
-                  e.preventDefault()
-                  setIsAdding(true)
-                }}
                 className="text-primary cursor-pointer"
               >
                 + Add Custom Value
@@ -622,7 +627,10 @@ export default function AdvancedPromoterForm({
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={(e) => {
+            console.log('🎯 Form onSubmit event triggered')
+            form.handleSubmit(onSubmit)(e)
+          }} className="space-y-6">
             {/* Document Status Overview */}
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="pb-4">
@@ -1451,6 +1459,46 @@ export default function AdvancedPromoterForm({
                 <Button
                   type="button"
                   variant="outline"
+                  onClick={async () => {
+                    try {
+                      console.log('🧪 Testing database insert...')
+                      const response = await fetch('/api/test-promoter-insert', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        }
+                      })
+                      const data = await response.json()
+                      console.log('📊 Database test result:', data)
+                      
+                      if (data.success) {
+                        toast({
+                          title: "Database Test Success",
+                          description: "Database insert is working correctly",
+                          variant: "default"
+                        })
+                      } else {
+                        toast({
+                          title: "Database Test Failed",
+                          description: data.error || "Database insert failed",
+                          variant: "destructive"
+                        })
+                      }
+                    } catch (err) {
+                      console.error('❌ Database test error:', err)
+                      toast({
+                        title: "Database Test Error",
+                        description: "Failed to test database connection",
+                        variant: "destructive"
+                      })
+                    }
+                  }}
+                >
+                  Test DB
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={onCancel}
                 >
                   Cancel
@@ -1475,7 +1523,11 @@ export default function AdvancedPromoterForm({
                       console.log('✅ Form validation result:', isValid)
                       if (!isValid) {
                         console.log('❌ Form validation errors:', form.formState.errors)
+                      } else {
+                        console.log('✅ Form is valid, proceeding with submission...')
                       }
+                    }).catch((error) => {
+                      console.error('❌ Form validation error:', error)
                     })
                   }}
                 >
