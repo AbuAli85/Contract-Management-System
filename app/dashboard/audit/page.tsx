@@ -21,7 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Download } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { getSupabaseClient } from "@/lib/supabase";
 import { format } from "date-fns";
 import clsx from "clsx";
 
@@ -68,6 +68,7 @@ export default function AuditLogsPage() {
     setLoading(true);
     setError(null);
     try {
+      const supabase = getSupabaseClient();
       const { data, error } = await supabase
         .from("audit_logs")
         .select("id, user_id, action, entity_type, entity_id, details, created_at")
@@ -100,6 +101,7 @@ export default function AuditLogsPage() {
 
   // Real-time subscription (once)
   useEffect(() => {
+    const supabase = getSupabaseClient();
     const channel = supabase
       .channel("public:audit_logs:feed")
       .on(
