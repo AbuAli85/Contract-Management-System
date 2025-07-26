@@ -19,6 +19,9 @@ import { Progress } from "@/components/ui/progress"
 import { Loader2, Download, RefreshCw, CheckCircle, AlertCircle, FileText } from "lucide-react"
 import { format } from "date-fns"
 import type { Database } from "@/types/supabase"
+import { CustomDateInput } from "@/components/ui/custom-date-input"
+import { EnhancedPromoterSelector } from "@/components/ui/enhanced-promoter-selector"
+import { ContractDurationCalculator } from "@/components/ui/contract-duration-calculator"
 
 // Types
 interface ContractFormData {
@@ -430,33 +433,27 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                 />
               </div>
 
-              {/* Promoter */}
+              {/* Enhanced Promoter Selector */}
               <FormField
                 control={form.control}
                 name="promoter_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Promoter</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger disabled={isLoading}>
-                          <SelectValue placeholder={isLoading ? "Loading..." : "Select Promoter"} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {promoters?.map((promoter) => (
-                          <SelectItem key={promoter.id} value={promoter.id}>
-                            {promoter.name_en} / {promoter.name_ar}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <EnhancedPromoterSelector
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isLoading}
+                        placeholder="Select a promoter with employer details"
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              {/* Contract Details */}
+              {/* Contract Details with Custom Date Input */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -465,10 +462,11 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormItem>
                       <FormLabel>Start Date</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          onChange={(e) => field.onChange(new Date(e.target.value))}
+                        <CustomDateInput
+                          value={field.value}
+                          onChange={field.onChange}
                           disabled={isLoading}
+                          placeholder="dd/mm/yyyy"
                         />
                       </FormControl>
                       <FormMessage />
@@ -483,15 +481,25 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormItem>
                       <FormLabel>End Date</FormLabel>
                       <FormControl>
-                        <Input
-                          type="date"
-                          onChange={(e) => field.onChange(new Date(e.target.value))}
+                        <CustomDateInput
+                          value={field.value}
+                          onChange={field.onChange}
                           disabled={isLoading}
+                          placeholder="dd/mm/yyyy"
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
+                />
+              </div>
+
+              {/* Contract Duration Calculator */}
+              <div className="mt-4">
+                <ContractDurationCalculator
+                  startDate={form.watch("contract_start_date")}
+                  endDate={form.watch("contract_end_date")}
+                  contractType={form.watch("contract_type")}
                 />
               </div>
 
