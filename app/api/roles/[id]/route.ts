@@ -3,12 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
     const { name, description, permissions } = await request.json()
-    const roleId = params.id
+    const { id: roleId } = await params
 
     // Validate input
     if (!name || !description) {
@@ -110,11 +110,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const supabase = await createClient()
-    const roleId = params.id
+    const { id: roleId } = await params
 
     // Check if role exists
     const { data: existingUsers, error: checkError } = await supabase
