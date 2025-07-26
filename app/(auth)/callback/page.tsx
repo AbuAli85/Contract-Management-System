@@ -36,8 +36,8 @@ export default function AuthCallbackPage() {
           }, 2000)
         } else {
           // Check if this is an email confirmation
-          const code = searchParams.get('code')
-          const next = searchParams.get('next') || '/en/dashboard'
+          const code = searchParams?.get('code')
+          const next = searchParams?.get('next') || '/en/dashboard'
           
           if (code) {
             const { data: confirmData, error: confirmError } = await supabase.auth.exchangeCodeForSession(code)
