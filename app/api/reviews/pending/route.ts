@@ -42,13 +42,13 @@ export async function GET(request: NextRequest) {
       `)
 
     if (status === 'active') {
-      // Get contracts that need review
+      // Get contracts that need review - include both approval_status and status fields
       query = query
-        .in('approval_status', ['legal_review', 'hr_review', 'final_approval', 'signature'])
+        .or('approval_status.in.(legal_review,hr_review,final_approval,signature),status.in.(draft,pending,generated)')
     } else if (status === 'completed') {
       // Get contracts that have been completed
       query = query
-        .in('approval_status', ['active', 'draft'])
+        .or('approval_status.in.(active,draft),status.in.(active,completed)')
     } else {
       // Get all contracts for admin users
       query = query
