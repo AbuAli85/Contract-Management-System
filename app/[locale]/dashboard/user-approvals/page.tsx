@@ -77,15 +77,23 @@ export default function UserApprovalsPage() {
   const fetchPendingUsers = async () => {
     try {
       setLoading(true)
+      console.log('🔄 Fetching pending users...')
+      
       const response = await fetch('/api/users/approval')
+      console.log('📊 API Response status:', response.status)
+      
       const data = await response.json()
+      console.log('📋 API Response data:', data)
 
       if (data.success) {
+        console.log('✅ Successfully fetched pending users:', data.pendingUsers)
         setPendingUsers(data.pendingUsers)
       } else {
+        console.error('❌ Failed to fetch pending users:', data.error)
         error('Failed to fetch pending users', data.error)
       }
     } catch (err) {
+      console.error('❌ Error fetching pending users:', err)
       error('Error fetching pending users', 'An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -181,6 +189,22 @@ export default function UserApprovalsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  console.log('🔍 Testing user status...')
+                  const response = await fetch('/api/test-users-status')
+                  const data = await response.json()
+                  console.log('📊 User Status Test Result:', data)
+                } catch (err) {
+                  console.error('❌ Error testing user status:', err)
+                }
+              }}
+            >
+              Debug Users
+            </Button>
             <Users className="h-8 w-8 text-blue-600" />
             <Badge variant="outline" className="text-lg px-3 py-1">
               {pendingUsers.length} Pending

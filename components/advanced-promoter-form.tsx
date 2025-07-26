@@ -79,8 +79,8 @@ const EnhancedSelect = ({
   const [isAdding, setIsAdding] = useState(false)
   const [customValue, setCustomValue] = useState("")
 
-  // Always use null for unselected value
-  const selectValue = value ?? null
+  // Ensure value is always string or undefined, never null
+  const selectValue = value || undefined
 
   const handleAddCustom = () => {
     if (customValue.trim() && onAddCustom) {
@@ -91,7 +91,7 @@ const EnhancedSelect = ({
   }
 
   return (
-    <Select onValueChange={onValueChange} value={selectValue ?? undefined}>
+    <Select onValueChange={onValueChange} value={selectValue}>
       <FormControl>
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />
@@ -103,15 +103,17 @@ const EnhancedSelect = ({
             {option.label}
           </SelectItem>
         ))}
+        
         {onAddCustom && (
           <>
             <SelectSeparator />
             {isAdding ? (
-              <div className="p-2 space-y-2">
+              <div className="p-2">
                 <Input
-                  placeholder="Enter custom value..."
                   value={customValue}
                   onChange={(e) => setCustomValue(e.target.value)}
+                  placeholder="Enter custom value"
+                  className="mb-2"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
@@ -1031,7 +1033,7 @@ export default function AdvancedPromoterForm({
                             <FormControl>
                               <EnhancedSelect
                                 options={JOB_TITLES}
-                                value={field.value ?? undefined}
+                                value={field.value || undefined}
                                 onValueChange={field.onChange}
                                 placeholder="Select job title or add custom"
                                 onAddCustom={(value) => field.onChange(value)}
@@ -1051,7 +1053,7 @@ export default function AdvancedPromoterForm({
                             <FormControl>
                               <EnhancedSelect
                                 options={DEPARTMENTS}
-                                value={field.value ?? undefined}
+                                value={field.value || undefined}
                                 onValueChange={field.onChange}
                                 placeholder="Select department or add custom"
                                 onAddCustom={(value) => field.onChange(value)}
@@ -1073,7 +1075,7 @@ export default function AdvancedPromoterForm({
                             <FormControl>
                               <EnhancedSelect
                                 options={WORK_LOCATIONS}
-                                value={field.value ?? undefined}
+                                value={field.value || undefined}
                                 onValueChange={field.onChange}
                                 placeholder="Select work location or add custom"
                                 onAddCustom={(value) => field.onChange(value)}
@@ -1359,7 +1361,16 @@ export default function AdvancedPromoterForm({
                       isUploading,
                       isValid: form.formState.isValid,
                       errors: form.formState.errors,
-                      isDirty: form.formState.isDirty
+                      isDirty: form.formState.isDirty,
+                      values: form.getValues()
+                    })
+                    
+                    // Trigger form validation
+                    form.trigger().then((isValid) => {
+                      console.log('✅ Form validation result:', isValid)
+                      if (!isValid) {
+                        console.log('❌ Form validation errors:', form.formState.errors)
+                      }
                     })
                   }}
                 >
