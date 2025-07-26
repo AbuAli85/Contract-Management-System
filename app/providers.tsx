@@ -4,7 +4,7 @@ import type React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { useState } from "react"
-import { AuthProvider } from "@/src/components/auth/auth-provider"
+import { SimpleAuthProvider } from "@/src/components/auth/simple-auth-provider"
 
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
@@ -24,9 +24,9 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <SimpleAuthProvider>
         {children}
-      </AuthProvider>
+      </SimpleAuthProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   )

@@ -53,12 +53,13 @@ export function useRoleLoader() {
     }
   }
 
+  // DISABLED: This was causing infinite loops
   // Load role on mount if user exists
-  useEffect(() => {
-    if (user && !isLoading) {
-      loadRoleFromAPI()
-    }
-  }, [user?.id, isLoading])
+  // useEffect(() => {
+  //   if (user && !isLoading) {
+  //     loadRoleFromAPI()
+  //   }
+  // }, [user?.id, isLoading])
 
   return {
     isLoading,
