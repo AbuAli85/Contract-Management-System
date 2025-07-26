@@ -699,3 +699,41 @@ export function validateContractTypeData(contractTypeId: string, data: Record<st
 
 // Export the enhanced configuration
 export { enhancedContractTypes as contractTypes }
+
+// Helper function for Make.com enabled contract types
+export function getMakecomEnabledContractTypes(): ContractTypeConfig[] {
+  return enhancedContractTypes.filter(type => type.makecomTemplateId && type.isActive)
+}
+
+// Generate contract with Make.com integration
+export function generateContractWithMakecom(
+  contractTypeId: string,
+  contractData: Record<string, unknown>
+): { webhookPayload: any; templateConfig: any; validation: any } {
+  const contractConfig = getEnhancedContractTypeConfig(contractTypeId)
+  
+  if (!contractConfig) {
+    return {
+      webhookPayload: null,
+      templateConfig: null,
+      validation: { isValid: false, errors: ["Contract type not found"], warnings: [] }
+    }
+  }
+
+  // Validate data against contract type requirements
+  const validation = validateContractTypeData(contractTypeId, contractData)
+
+  // Generate webhook payload if validation passes
+  const webhookPayload = validation.isValid ? {
+    contract_type: contractTypeId,
+    template_id: contractConfig.googleDocsTemplateId,
+    makecom_template_id: contractConfig.makecomTemplateId,
+    ...contractData
+  } : null
+
+  return {
+    webhookPayload,
+    templateConfig: contractConfig,
+    validation
+  }
+}

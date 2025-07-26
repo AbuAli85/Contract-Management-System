@@ -25,7 +25,7 @@ import {
 } from "@/lib/contract-utils"
 import { CONTRACT_FORM_SECTIONS, getRequiredFields } from "@/lib/schema-generator"
 import { CONTRACT_TYPES } from "@/constants/contract-options"
-import { getContractTypesByCategory, getEnhancedContractTypeConfig, contractTypes } from "@/lib/contract-type-config"
+import { getContractTypesByCategory, getEnhancedContractTypeConfig, contractTypes, type ContractTypeConfig } from "@/lib/contract-type-config"
 
 // Contract insights component
 function ContractInsights() {
@@ -156,14 +156,11 @@ function ContractTypesOverview() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedType, setSelectedType] = useState<string | null>(null)
 
-  const categorizedTypes = getContractTypesByCategory()
-  const categories = Object.keys(categorizedTypes)
-  
   const getDisplayedTypes = () => {
     if (selectedCategory === "all") {
       return contractTypes
     }
-    return categorizedTypes[selectedCategory] || []
+    return getContractTypesByCategory(selectedCategory)
   }
 
   const displayedTypes = getDisplayedTypes()
