@@ -24,6 +24,15 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // Debug logging
+  console.log('🔍 ClientLayout Debug:', {
+    pathname,
+    user: !!user,
+    loading,
+    mounted,
+    locale
+  });
+
   // Don't show sidebar on auth pages
   const isAuthPage = pathname?.includes('/auth/') || 
                     pathname?.includes('/login') || 
@@ -38,7 +47,13 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
                       pathname === '/ar' ||
                       pathname?.includes('/demo');
 
-  const shouldShowSidebar = !isAuthPage && !isPublicPage && user;
+  const shouldShowSidebar = !isAuthPage && !isPublicPage && (user || !loading);
+
+  console.log('🔍 Sidebar Debug:', {
+    isAuthPage,
+    isPublicPage,
+    shouldShowSidebar
+  });
 
   if (loading || !mounted) {
     return (

@@ -301,14 +301,14 @@ export default function GenerateContractPage() {
   const [useEnhancedForm, setUseEnhancedForm] = useState(false) // Default to standard form
   const [showInsights, setShowInsights] = useState(true)
   const pathname = usePathname()
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
+  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
 
   return (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto max-w-6xl space-y-6"
+        className="space-y-6"
       >
       {/* Header */}
       <div className="text-center space-y-4">
