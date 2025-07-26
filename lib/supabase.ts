@@ -69,7 +69,7 @@ export const supabase = (() => {
     supabaseInstance = createSupabaseClient()
   }
   return supabaseInstance
-})()
+})() as ReturnType<typeof createBrowserClient<Database>> | null
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
@@ -140,6 +140,14 @@ export const createRealtimeChannel = (tableName: string, callback: (payload: unk
     devLog(`Error creating realtime channel for ${tableName}:`, error)
     return null
   }
+}
+
+// Utility function to safely get supabase client
+export const getSupabaseClient = () => {
+  if (!supabase) {
+    throw new Error('Database connection not available')
+  }
+  return supabase
 }
 
 // Utility function to safely subscribe to a channel

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Party } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -127,6 +127,9 @@ export default function ManagePartiesPage() {
     if (isMountedRef.current) setIsLoading(true)
     
     try {
+      // Get supabase client
+      const supabase = getSupabaseClient()
+      
       // Fetch parties
       const { data: partiesData, error: partiesError } = await supabase
         .from("parties")
@@ -147,6 +150,8 @@ export default function ManagePartiesPage() {
       const enhancedData = await Promise.all(
         (partiesData || []).map(async (party) => {
           try {
+            const supabase = getSupabaseClient()
+            
             const { count: contractCount, error: contractError } = await supabase
               .from("contracts")
               .select("*", { count: "exact", head: true })
@@ -381,6 +386,8 @@ export default function ManagePartiesPage() {
 
     setBulkActionLoading(true)
     try {
+      const supabase = getSupabaseClient()
+      
       const { error } = await supabase
         .from("parties")
         .delete()
