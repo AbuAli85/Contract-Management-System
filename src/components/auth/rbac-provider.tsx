@@ -178,15 +178,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   }, [user?.id, authRoles, authLoading])
 
-  // Fallback timeout - only trigger if still loading after 1 second
+  // Fallback timeout - only trigger if still loading after 3 seconds
   useEffect(() => {
     if (user && isLoading && userRoles === null) {
       const timeout = setTimeout(() => {
-        console.warn('RBACProvider: Still loading after 1s, falling back to admin')
+        console.warn('RBACProvider: Still loading after 3s, falling back to admin')
         setUserRoles(['admin'])
         setIsLoading(false)
         localStorage.setItem(`user_role_${user.id}`, 'admin')
-      }, 1000)
+      }, 3000) // Increased to 3 seconds
       
       return () => clearTimeout(timeout)
     }

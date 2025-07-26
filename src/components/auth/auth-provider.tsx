@@ -170,9 +170,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    let safetyTimeout: NodeJS.Timeout | null = null
+
     try {
       setLoading(true)
       setProfileNotFound(false)
+      
+      // Add a safety timeout to prevent infinite loading
+      safetyTimeout = setTimeout(() => {
+        console.warn('⚠️ Auth initialization timeout, forcing completion')
+        setLoading(false)
+        setProfile(null)
+        setRoles([])
+      }, 8000) // 8 seconds timeout
       
       // Get current session first (this should be fast)
       const { data: { session: currentSession } } = await supabase.auth.getSession()
@@ -223,11 +233,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
       }
       
+      // Clear safety timeout since initialization completed
+      if (safetyTimeout) {
+        clearTimeout(safetyTimeout)
+      }
+      
     } catch (error) {
       console.error('❌ Error initializing auth:', error)
       setLoading(false)
       setProfile(null)
       setRoles([])
+      if (safetyTimeout) {
+        clearTimeout(safetyTimeout)
+      }
     }
   }
 
@@ -235,25 +253,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     console.log('🔄 Auth state changed:', event, newSession?.user?.id)
     
+    // Prevent infinite loops by checking if session actually changed
+    if (session?.user?.id === newSession?.user?.id) {
+      console.log('🔄 Session unchanged, skipping update')
+      return
+    }
+    
     setSession(newSession)
     setUser(newSession?.user ?? null)
     setProfileNotFound(false)
     
     if (newSession?.user) {
-      const userProfile = await loadUserProfile(newSession.user.id)
-      const userRoles = await loadUserRoles(newSession.user.id)
-      setProfile(userProfile)
-      setRoles(userRoles)
-      if (!userProfile) {
-        setProfileNotFound(true)
-        console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
+      // Load profile data in background to prevent blocking
+      setLoading(false) // Set loading to false immediately
+      
+      // Load profile and roles in background
+      const loadProfileData = async () => {
+        try {
+          const profilePromise = loadUserProfile(newSession.user.id)
+          const rolesPromise = loadUserRoles(newSession.user.id)
+          
+          // Use timeout to prevent hanging
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Profile loading timeout')), 5000)
+          )
+          
+          const [userProfile, userRoles] = await Promise.race([
+            Promise.all([profilePromise, rolesPromise]),
+            timeoutPromise
+          ]) as [UserProfile | null, string[]]
+          
+          setProfile(userProfile)
+          setRoles(userRoles)
+          if (!userProfile) {
+            setProfileNotFound(true)
+            console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
+          }
+        } catch (profileError) {
+          console.warn('⚠️ Profile loading failed in auth state change:', profileError)
+          setProfile(null)
+          setRoles([])
+        }
       }
+      
+      // Load profile data in background
+      loadProfileData()
     } else {
       setProfile(null)
       setRoles([])
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -271,9 +320,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
+    // Critical: Add a maximum loading timeout to prevent infinite loading
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn('⚠️ AuthProvider: Maximum loading timeout reached, forcing loading to false')
+      setLoading(false)
+      setProfile(null)
+      setRoles([])
+    }, 10000) // 10 seconds maximum
+
     // Cleanup function
     return () => {
       subscription.unsubscribe()
+      clearTimeout(maxLoadingTimeout)
     }
   }, [])
 

@@ -55,10 +55,10 @@ export function useRoleLoader() {
 
   // Load role on mount if user exists
   useEffect(() => {
-    if (user) {
+    if (user && !isLoading) {
       loadRoleFromAPI()
     }
-  }, [user?.id])
+  }, [user?.id, isLoading])
 
   return {
     isLoading,
