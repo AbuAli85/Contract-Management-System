@@ -572,7 +572,7 @@ export default function AdvancedPromoterForm({
         id_card_url: null, // Will be set when file is uploaded
         passport_url: null, // Will be set when file is uploaded
         status: values.status,
-        contract_valid_until: null, // Not in current form
+        // contract_valid_until: null, // Removed - not in database schema
         id_card_expiry_date: values.id_card_expiry_date?.trim() || null,
         passport_expiry_date: values.passport_expiry_date?.trim() || null,
         notify_days_before_id_expiry: values.notify_days_before_id_expiry,
