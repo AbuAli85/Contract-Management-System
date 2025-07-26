@@ -21,7 +21,10 @@ export default function AuthCallbackPage() {
         
         // Get the error and next parameters from the URL
         const error = searchParams?.get('error')
-        const next = searchParams?.get('next') || '/dashboard'
+        // Get the current locale from the URL
+        const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+        const locale = pathname.split('/')[1] || 'en'
+        const next = searchParams?.get('next') || `/${locale}/dashboard`
         
         if (error) {
           setStatus('error')

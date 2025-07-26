@@ -54,7 +54,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const permissions = usePermissions()
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
@@ -67,6 +67,11 @@ export default function DashboardPage() {
     recentActivity: 0
   })
   const [loading, setLoading] = useState(true)
+
+  // Show loading if auth is still loading
+  if (authLoading) {
+    return <DashboardLoading />
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {

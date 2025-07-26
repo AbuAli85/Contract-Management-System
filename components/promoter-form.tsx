@@ -21,6 +21,7 @@ import ImageUploadField from "@/components/image-upload-field"
 import DatePickerWithPresetsField from "@/components/date-picker-with-presets-field"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useParties } from "@/hooks/use-parties"
 
 const BUCKET_NAME = "promoter-documents"
 
@@ -104,6 +105,8 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
 
   const idCardAlert = getExpiryAlert(idCardExpiryDate, notifyIdDays, "ID Card")
   const passportAlert = getExpiryAlert(passportExpiryDate, notifyPassportDays, "Passport")
+
+  const { data: parties, isLoading: partiesLoading } = useParties("Employer")
 
   useEffect(() => {
     if (promoterToEdit) {
@@ -388,6 +391,46 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
           <div className={sectionClasses}>
             <h2 className={sectionHeaderClasses}>Employment Details / تفاصيل التوظيف</h2>
             <div className="grid grid-cols-1 gap-x-6 gap-y-8 md:grid-cols-2">
+              <FormField
+                control={form.control}
+                name="employer_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Company / Employer (Second Party)</ShadcnFormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value ?? undefined}
+                      disabled={formActuallyDisabled || partiesLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={partiesLoading ? "Loading companies..." : "Select company/employer"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {parties && parties.length > 0 ? (
+                          parties.map((party) => (
+                            <SelectItem key={party.id} value={party.id}>
+                              {party.name_en} / {party.name_ar}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            {partiesLoading ? "Loading..." : "No companies found"}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    {/* Optionally, add a link/button to add a new company */}
+                    <div className="mt-2">
+                      <a href="/manage-parties" target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                        Add new company/party
+                      </a>
+                    </div>
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="status"

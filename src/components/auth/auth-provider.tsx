@@ -186,6 +186,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       )
 
+      // Cleanup subscription on unmount
+      return () => {
+        subscription.unsubscribe()
+      }
+
       setLoading(false)
       return () => subscription.unsubscribe()
     } catch (error) {
@@ -195,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    console.log('🔧 AuthProvider: Initializing...')
     setMounted(true)
     initializeAuth()
   }, [])

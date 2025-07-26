@@ -18,7 +18,10 @@ export function LoginForm() {
   
   const router = useRouter()
   const { signIn } = useAuth()
-  const redirectTo = '/dashboard'
+  // Get the current locale from the URL or default to 'en'
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const locale = pathname.split('/')[1] || 'en'
+  const redirectTo = `/${locale}/dashboard`
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,10 +42,10 @@ export function LoginForm() {
 
       console.log("🔐 Login Debug - Login successful")
       
-      // Redirect after successful login
+      // Redirect after successful login - use window.location for more reliable redirect
       setTimeout(() => {
-        router.push(redirectTo)
-      }, 1000)
+        window.location.href = redirectTo
+      }, 500)
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

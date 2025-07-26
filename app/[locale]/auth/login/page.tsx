@@ -16,7 +16,10 @@ export default function LoginPage() {
   // If user is already logged in, redirect to dashboard
   if (mounted && !loading && user) {
     console.log('🔄 User already logged in, redirecting to dashboard')
-    window.location.href = '/dashboard'
+    // Get the current locale from the URL
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+    const locale = pathname.split('/')[1] || 'en'
+    window.location.href = `/${locale}/dashboard`
     return null
   }
 
