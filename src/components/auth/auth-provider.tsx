@@ -90,49 +90,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return null
     
     try {
-      // Use very aggressive timeout for slow databases
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile loading timeout')), 3000) // Reduced to 3 seconds
-      )
-      
-      // Try to load from users table first with minimal fields
-      const usersPromise = supabase
+      // Try to load from users table first
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('id, email, role, status, created_at')
         .eq('id', userId)
         .single()
-      
-      const { data: userData, error: userError } = await Promise.race([
-        usersPromise,
-        timeoutPromise
-      ]) as any
 
       if (userData && !userError) {
-        console.log('✔ Profile loaded from users table:', userData)
+        console.log('Profile loaded from users table:', userData)
         return userData as UserProfile
       }
 
-      // Fallback to profiles table with minimal fields
-      const profilesPromise = supabase
+      // Fallback to profiles table
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, email, role, created_at')
         .eq('id', userId)
         .single()
-      
-      const { data: profileData, error: profileError } = await Promise.race([
-        profilesPromise,
-        timeoutPromise
-      ]) as any
 
       if (profileData && !profileError) {
-        console.log('✔ Profile loaded from profiles table:', profileData)
+        console.log('Profile loaded from profiles table:', profileData)
         return profileData as UserProfile
       }
 
-      console.warn('❌ No profile found for user:', userId)
+      console.warn('No profile found for user:', userId)
       return null
     } catch (error) {
-      console.error('❌ Error loading user profile:', error)
+      console.error('Error loading user profile:', error)
       return null
     }
   }
@@ -142,15 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return []
     
     try {
-      // Use very aggressive timeout for slow databases
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Roles loading timeout')), 3000) // Reduced to 3 seconds
-      )
-      
-      const { data: userData } = await Promise.race([
-        supabase.from('users').select('role').eq('id', userId).single(),
-        timeoutPromise
-      ]) as any
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', userId)
+        .single()
 
       if (userData?.role) {
         return [userData.role]
@@ -158,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return []
     } catch (error) {
-      console.error('❌ Error loading user roles:', error)
+      console.error('Error loading user roles:', error)
       return []
     }
   }
@@ -181,7 +162,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(currentSession?.user ?? null)
 
       if (currentSession?.user) {
-        // Load profile and roles with timeout
+        // Set loading to false immediately to show UI
+        setLoading(false)
+        
+        // Load profile and roles in background
         try {
           const [userProfile, userRoles] = await Promise.all([
             loadUserProfile(currentSession.user.id),
@@ -201,12 +185,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null)
         setRoles([])
+        setLoading(false)
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
       setProfile(null)
       setRoles([])
-    } finally {
       setLoading(false)
     }
   }
@@ -218,6 +202,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfileNotFound(false)
     
     if (newSession?.user) {
+      // Set loading to false immediately
+      setLoading(false)
+      
+      // Load profile and roles in background
       try {
         const [userProfile, userRoles] = await Promise.all([
           loadUserProfile(newSession.user.id),
@@ -237,9 +225,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setProfile(null)
       setRoles([])
+      setLoading(false)
     }
-    
-    setLoading(false)
   }
 
   useEffect(() => {
@@ -270,29 +257,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
-        console.error('❌ Sign in error:', error)
+        console.error('Sign in error:', error)
         return { error: error.message }
       }
 
-      // Check if user is pending approval
+      // Check if user is pending approval (with timeout protection)
       if (data.user) {
-        const userProfile = await loadUserProfile(data.user.id)
-        if (userProfile?.status === 'pending') {
-          // Sign out the user immediately
-          await supabase.auth.signOut()
-          return { error: 'Your account is pending approval. Please wait for an administrator to approve your account.' }
-        }
-        
-        if (userProfile?.status === 'inactive') {
-          // Sign out the user immediately
-          await supabase.auth.signOut()
-          return { error: 'Your account has been deactivated. Please contact an administrator.' }
+        try {
+          const userProfile = await Promise.race([
+            loadUserProfile(data.user.id),
+            new Promise<never>((_, reject) => 
+              setTimeout(() => reject(new Error('Profile check timeout')), 5000)
+            )
+          ])
+          
+          if (userProfile?.status === 'pending') {
+            await supabase.auth.signOut()
+            return { error: 'Your account is pending approval. Please wait for an administrator to approve your account.' }
+          }
+          
+          if (userProfile?.status === 'inactive') {
+            await supabase.auth.signOut()
+            return { error: 'Your account has been deactivated. Please contact an administrator.' }
+          }
+        } catch (profileError) {
+          console.warn('Profile check failed during sign in, continuing:', profileError)
+          // Continue with sign in even if profile check fails
         }
       }
 
       return {}
     } catch (error) {
-      console.error('❌ Sign in error:', error)
+      console.error('Sign in error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -309,12 +305,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })
       if (error) {
-        console.error('❌ OAuth sign in error:', error)
+        console.error('OAuth sign in error:', error)
         return { error: error.message }
       }
       return {}
     } catch (error) {
-      console.error('❌ OAuth sign in error:', error)
+      console.error('OAuth sign in error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -332,12 +328,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       })
       if (error) {
-        console.error('❌ Sign up error:', error)
+        console.error('Sign up error:', error)
         return { error: error.message }
       }
       return {}
     } catch (error) {
-      console.error('❌ Sign up error:', error)
+      console.error('Sign up error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -349,7 +345,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut()
     } catch (error) {
-      console.error('❌ Sign out error:', error)
+      console.error('Sign out error:', error)
     }
   }
 
@@ -362,12 +358,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
       if (error) {
-        console.error('❌ Reset password error:', error)
+        console.error('Reset password error:', error)
         return { error: error.message }
       }
       return {}
     } catch (error) {
-      console.error('❌ Reset password error:', error)
+      console.error('Reset password error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -379,12 +375,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
-        console.error('❌ Update password error:', error)
+        console.error('Update password error:', error)
         return { error: error.message }
       }
       return {}
     } catch (error) {
-      console.error('❌ Update password error:', error)
+      console.error('Update password error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -398,12 +394,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: updates
       })
       if (error) {
-        console.error('❌ Update profile error:', error)
+        console.error('Update profile error:', error)
         return { error: error.message }
       }
       return {}
     } catch (error) {
-      console.error('❌ Update profile error:', error)
+      console.error('Update profile error:', error)
       return { error: 'An unexpected error occurred' }
     }
   }
@@ -415,7 +411,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: { session: newSession }, error } = await supabase.auth.refreshSession()
       if (error) {
-        console.error('❌ Refresh session error:', error)
+        console.error('Refresh session error:', error)
         return
       }
       
@@ -430,7 +426,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRoles(userRoles)
       }
     } catch (error) {
-      console.error('❌ Refresh session error:', error)
+      console.error('Refresh session error:', error)
     }
   }
 
@@ -454,7 +450,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(userProfile)
       setRoles(userRoles)
     } catch (error) {
-      console.error('❌ Force refresh role error:', error)
+      console.error('Force refresh role error:', error)
     }
   }
 
