@@ -39,6 +39,7 @@ CREATE POLICY "Admins can update all profiles" ON public.profiles
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+    -- Insert into profiles table
     INSERT INTO public.profiles (id, email, role, full_name)
     VALUES (
         NEW.id,
@@ -46,6 +47,18 @@ BEGIN
         'user', -- Default role
         COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email)
     );
+    
+    -- Insert into users table with pending status
+    INSERT INTO public.users (id, email, full_name, role, status, email_verified)
+    VALUES (
+        NEW.id,
+        NEW.email,
+        COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
+        'user', -- Default role
+        'pending', -- All new users start as pending
+        NEW.email_confirmed_at IS NOT NULL -- Set email_verified based on email confirmation
+    );
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
