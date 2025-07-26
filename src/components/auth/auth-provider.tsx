@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [roles, setRoles] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [profileNotFound, setProfileNotFound] = useState(false)
 
   // Create Supabase client safely for SSR
   const getSupabase = () => {
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
-      
+      setProfileNotFound(false)
       // Get current session
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       setSession(currentSession)
@@ -158,36 +159,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentSession?.user) {
         const userProfile = await loadUserProfile(currentSession.user.id)
         const userRoles = await loadUserRoles(currentSession.user.id)
-        
         setProfile(userProfile)
         setRoles(userRoles)
+        if (!userProfile) {
+          setProfileNotFound(true)
+          console.warn('❌ No profile found for user (initializeAuth):', currentSession.user.id)
+        }
+      } else {
+        setProfile(null)
+        setRoles([])
       }
 
       // Set up auth state change listener
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event: string, newSession: Session | null) => {
           console.log('🔄 Auth state changed:', event, newSession?.user?.id)
-          
           setSession(newSession)
           setUser(newSession?.user ?? null)
-
+          setProfileNotFound(false)
           if (newSession?.user) {
             const userProfile = await loadUserProfile(newSession.user.id)
             const userRoles = await loadUserRoles(newSession.user.id)
-            
             setProfile(userProfile)
             setRoles(userRoles)
+            if (!userProfile) {
+              setProfileNotFound(true)
+              console.warn('❌ No profile found for user (onAuthStateChange):', newSession.user.id)
+            }
           } else {
             setProfile(null)
             setRoles([])
           }
-          
           setLoading(false)
         }
       )
-
       setLoading(false)
-      
       // Return cleanup function
       return () => {
         subscription.unsubscribe()
@@ -418,6 +424,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     hasRole,
     hasPermission,
     forceRefreshRole
+  }
+
+  if (profileNotFound && !loading && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded shadow">
+          <h2 className="text-2xl font-bold text-center text-red-600 mb-4">Account Not Provisioned</h2>
+          <p className="text-gray-700 text-center mb-4">
+            Your account exists in authentication but is missing in the user database.<br />
+            Please contact support or an administrator to resolve this issue.
+          </p>
+          <pre className="bg-gray-100 p-2 rounded text-xs text-gray-500 overflow-x-auto">
+            User ID: {user.id}
+          </pre>
+        </div>
+      </div>
+    )
   }
 
   return (
