@@ -29,7 +29,7 @@ import {
   Zap
 } from 'lucide-react'
 import { SystemStatus } from '@/components/system-status'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
 import { usePermissions } from '@/hooks/use-permissions'
 import Link from 'next/link'
 import { toast } from '@/components/ui/use-toast'
@@ -56,7 +56,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authLoading, profile } = useAuth()
+  const { user, loading: authLoading, profile } = useSimpleWorkingAuth()
   // const permissions = usePermissions() // Disabled to prevent loading issues
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,

@@ -144,41 +144,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Initialize authentication state
+  // Initialize authentication state - SIMPLIFIED VERSION
   const initializeAuth = async () => {
+    console.log('🔧 Initializing auth...')
+    
     if (!supabase) {
+      console.log('❌ No supabase client, setting loading to false')
       setLoading(false)
       return
     }
 
     try {
-      setLoading(true)
-      setProfileNotFound(false)
-      
-      // Get current session
+      console.log('🔧 Getting session...')
       const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      console.log('🔧 Session result:', currentSession ? 'found' : 'not found')
       
       setSession(currentSession)
       setUser(currentSession?.user ?? null)
-
-      // Always set loading to false immediately after session check
+      
+      // CRITICAL: Set loading to false immediately
+      console.log('🔧 Setting loading to false')
       setLoading(false)
 
-      // If user exists, load profile data in background (non-blocking)
+      // Load profile data in background if user exists
       if (currentSession?.user) {
-        // Use setTimeout to ensure this runs after the current render cycle
+        console.log('🔧 Loading profile data in background...')
         setTimeout(async () => {
           try {
-            const [userProfile, userRoles] = await Promise.all([
-              loadUserProfile(currentSession.user.id),
-              loadUserRoles(currentSession.user.id)
-            ])
+            const userProfile = await loadUserProfile(currentSession.user.id)
+            const userRoles = await loadUserRoles(currentSession.user.id)
             
             setProfile(userProfile)
             setRoles(userRoles)
+            
             if (!userProfile) {
               setProfileNotFound(true)
             }
+            
+            console.log('🔧 Profile data loaded:', { profile: !!userProfile, roles: userRoles })
           } catch (error) {
             console.warn('Profile loading failed, continuing with basic auth')
             setProfile(null)
@@ -197,8 +201,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Handle auth state changes
+  // Handle auth state changes - SIMPLIFIED
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    console.log('🔄 Auth state changed:', event, newSession?.user?.id)
+    
     setSession(newSession)
     setUser(newSession?.user ?? null)
     setProfileNotFound(false)
@@ -208,16 +214,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Load profile and roles in background (non-blocking)
       setTimeout(async () => {
         try {
-          const [userProfile, userRoles] = await Promise.all([
-            loadUserProfile(newSession.user.id),
-            loadUserRoles(newSession.user.id)
-          ])
+          const userProfile = await loadUserProfile(newSession.user.id)
+          const userRoles = await loadUserRoles(newSession.user.id)
           
           setProfile(userProfile)
           setRoles(userRoles)
+          
           if (!userProfile) {
             setProfileNotFound(true)
           }
+          
+          console.log('🔄 Profile data updated:', { profile: !!userProfile, roles: userRoles })
         } catch (error) {
           console.warn('Profile loading failed in auth state change')
           setProfile(null)
@@ -231,29 +238,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
+    console.log('🔧 AuthProvider useEffect started')
     setMounted(true)
     
     if (!supabase) {
+      console.log('❌ No supabase client in useEffect')
       setLoading(false)
       return
     }
 
     // Initialize auth state
+    console.log('🔧 Calling initializeAuth...')
     initializeAuth()
 
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
-    // Safety timeout - force loading to false after 3 seconds
+    // CRITICAL: Force loading to false after 2 seconds maximum
     const safetyTimeout = setTimeout(() => {
-      if (loading) {
-        console.warn('Safety timeout: forcing loading to false')
-        setLoading(false)
-      }
-    }, 3000)
+      console.log('⚠️ Safety timeout triggered - forcing loading to false')
+      setLoading(false)
+    }, 2000)
 
     // Cleanup function
     return () => {
+      console.log('🔧 AuthProvider cleanup')
       subscription.unsubscribe()
       clearTimeout(safetyTimeout)
     }
