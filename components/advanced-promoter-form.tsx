@@ -486,7 +486,7 @@ export default function AdvancedPromoterForm({
                     {/* Profile Picture */}
                     <div className="flex items-center gap-6">
                       <Avatar className="h-24 w-24">
-                        <AvatarImage src={watchedData.profile_picture_url} />
+                        <AvatarImage src={watchedData.profile_picture_url ?? undefined} />
                         <AvatarFallback>
                           {watchedData.name_en?.charAt(0) || "P"}
                         </AvatarFallback>
@@ -678,7 +678,7 @@ export default function AdvancedPromoterForm({
                             <FormLabel>Nationality</FormLabel>
                             <FormControl>
                               <NationalitySelect
-                                value={field.value}
+                                value={field.value ?? undefined}
                                 onValueChange={field.onChange}
                                 placeholder="Select nationality"
                               />
