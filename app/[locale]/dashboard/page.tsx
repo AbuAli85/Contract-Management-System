@@ -66,6 +66,30 @@ export default function DashboardPage() {
     recentActivity: 0
   })
 
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch dashboard analytics in background
+        const response = await fetch('/api/dashboard/analytics')
+        
+        if (response.ok) {
+          const data = await response.json()
+          
+          if (data.success) {
+            setStats(data.stats)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      }
+    }
+
+    // Only fetch if user is authenticated
+    if (user && !authLoading) {
+      fetchDashboardData()
+    }
+  }, [user, authLoading])
+
   // Show loading if auth is still loading
   if (authLoading) {
     return (
@@ -148,30 +172,6 @@ export default function DashboardPage() {
       href: '/en/dashboard/notifications'
     }
   ]
-
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Fetch dashboard analytics in background
-        const response = await fetch('/api/dashboard/analytics')
-        
-        if (response.ok) {
-          const data = await response.json()
-          
-          if (data.success) {
-            setStats(data.stats)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error)
-      }
-    }
-
-    // Only fetch if user is authenticated
-    if (user && !authLoading) {
-      fetchDashboardData()
-    }
-  }, [user, authLoading])
 
   const systemServices = [
     {
