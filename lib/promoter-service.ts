@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { getSupabaseClient } from "./supabase"
 import type { Promoter } from "./types"
 
 /**
@@ -6,8 +6,9 @@ import type { Promoter } from "./types"
  */
 export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
   try {
+    const supabaseClient = getSupabaseClient()
     // Fetch promoters
-    const { data: promotersData, error: promotersError } = await supabase
+    const { data: promotersData, error: promotersError } = await supabaseClient
       .from("promoters")
       .select("*")
       .order("name_en")
@@ -20,7 +21,7 @@ export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
     const enhancedData = await Promise.all(
       (promotersData || []).map(async (promoter) => {
         try {
-          const { count: contractCount, error: contractError } = await supabase
+          const { count: contractCount, error: contractError } = await supabaseClient
             .from("contracts")
             .select("*", { count: "exact", head: true })
             .eq("promoter_id", promoter.id)
@@ -55,7 +56,8 @@ export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
  * Delete multiple promoters by IDs
  */
 export async function deletePromoters(promoterIds: string[]): Promise<void> {
-  const { error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { error } = await supabaseClient
     .from("promoters")
     .delete()
     .in("id", promoterIds)
@@ -72,7 +74,8 @@ export async function updatePromoterStatus(
   promoterId: string, 
   status: string
 ): Promise<void> {
-  const { error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { error } = await supabaseClient
     .from("promoters")
     .update({ status })
     .eq("id", promoterId)
@@ -89,7 +92,8 @@ export async function bulkUpdatePromoterStatus(
   promoterIds: string[], 
   status: string
 ): Promise<void> {
-  const { error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { error } = await supabaseClient
     .from("promoters")
     .update({ status })
     .in("id", promoterIds)
@@ -105,10 +109,11 @@ export async function bulkUpdatePromoterStatus(
 export async function getPromotersWithExpiringDocuments(
   daysAhead: number = 30
 ): Promise<Promoter[]> {
+  const supabaseClient = getSupabaseClient()
   const futureDate = new Date()
   futureDate.setDate(futureDate.getDate() + daysAhead)
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("promoters")
     .select("*")
     .or(`id_card_expiry_date.lte.${futureDate.toISOString()},passport_expiry_date.lte.${futureDate.toISOString()}`)
@@ -125,7 +130,8 @@ export async function getPromotersWithExpiringDocuments(
  * Search promoters by text
  */
 export async function searchPromoters(searchTerm: string): Promise<Promoter[]> {
-  const { data, error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { data, error } = await supabaseClient
     .from("promoters")
     .select("*")
     .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`)
@@ -143,8 +149,9 @@ export async function searchPromoters(searchTerm: string): Promise<Promoter[]> {
  */
 export async function getPromoterActivitySummary(promoterId: string) {
   try {
+    const supabaseClient = getSupabaseClient()
     // Get contracts count
-    const { count: contractsCount, error: contractsError } = await supabase
+    const { count: contractsCount, error: contractsError } = await supabaseClient
       .from("contracts")
       .select("*", { count: "exact", head: true })
       .eq("promoter_id", promoterId)
@@ -154,7 +161,7 @@ export async function getPromoterActivitySummary(promoterId: string) {
     }
 
     // Get recent contracts
-    const { data: recentContracts, error: recentError } = await supabase
+    const { data: recentContracts, error: recentError } = await supabaseClient
       .from("contracts")
       .select("id, created_at, status, first_party_name_en, second_party_name_en")
       .eq("promoter_id", promoterId)

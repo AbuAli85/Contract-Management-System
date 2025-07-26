@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { useAuth } from './auth-provider'
 import { createClient } from '@/lib/supabase/client'
-import type { Database } from '@/types/supabase'
 
 // Extend Window interface for preloaded role
 declare global {
@@ -41,16 +39,7 @@ const RBACContext = createContext<RBACContextType>({
   isLoading: false,
 })
 
-// Lazy import to avoid build-time issues
-let supabase: SupabaseClient<Database> | null = null
-
-async function getSupabase(): Promise<SupabaseClient<Database>> {
-  if (!supabase) {
-    const { supabase: supabaseClient } = await import('@/lib/supabase')
-    supabase = supabaseClient
-  }
-  return supabase
-}
+import { getSupabaseClient } from '@/lib/supabase'
 
 export function RBACProvider({ children, user }: { children: React.ReactNode; user: User | null }) {
   const [userRoles, setUserRoles] = useState<Role[] | null>(null)
@@ -90,7 +79,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       try {
         console.log('🔄 Loading user role from database for:', user.id)
         
-        const supabaseClient = await getSupabase()
+        const supabaseClient = getSupabaseClient()
         
         // Try users table first
         const { data: usersData, error: usersError } = await supabaseClient
@@ -228,7 +217,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
       }
       
       // Fallback to database
-      const supabaseClient = await getSupabase()
+      const supabaseClient = getSupabaseClient()
       const { data, error } = await supabaseClient
         .from('users')
         .select('role')

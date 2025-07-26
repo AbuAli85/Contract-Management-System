@@ -1,17 +1,5 @@
 import type { ContractWithRelations } from "@/hooks/use-contracts"
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
-
-// Lazy import to avoid build-time issues
-let supabase: SupabaseClient<Database> | null = null
-
-async function getSupabase(): Promise<SupabaseClient<Database>> {
-  if (!supabase) {
-    const { supabase: supabaseClient } = await import('@/lib/supabase')
-    supabase = supabaseClient
-  }
-  return supabase
-}
+import { getSupabaseClient } from '@/lib/supabase'
 
 export const getContract = async (contractId: string): Promise<ContractWithRelations | null> => {
   if (!contractId) {
@@ -20,7 +8,7 @@ export const getContract = async (contractId: string): Promise<ContractWithRelat
   }
 
   try {
-    const supabaseClient = await getSupabase()
+    const supabaseClient = getSupabaseClient()
     const { data, error } = await supabaseClient
       .from("contracts")
       .select(

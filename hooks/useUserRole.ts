@@ -1,17 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
-
-// Lazy import to avoid build-time issues
-let supabase: SupabaseClient<Database> | null = null
-
-async function getSupabase(): Promise<SupabaseClient<Database>> {
-  if (!supabase) {
-    const { supabase: supabaseClient } = await import('../lib/supabase')
-    supabase = supabaseClient
-  }
-  return supabase
-}
+import { getSupabaseClient } from '@/lib/supabase'
 
 export function useUserRole() {
   const [user, setUser] = useState<unknown>(null)
@@ -21,7 +9,7 @@ export function useUserRole() {
     // Get current user
     const getUser = async () => {
       try {
-        const supabaseClient = await getSupabase()
+        const supabaseClient = getSupabaseClient()
         const { data: { user } } = await supabaseClient.auth.getUser()
         setUser(user)
       } catch (error) {
@@ -33,7 +21,7 @@ export function useUserRole() {
     // Listen for auth changes
     const setupAuthListener = async () => {
       try {
-        const supabaseClient = await getSupabase()
+        const supabaseClient = getSupabaseClient()
         const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((event: string, session: { user: unknown } | null) => {
           setUser(session?.user ?? null)
         })
@@ -51,7 +39,7 @@ export function useUserRole() {
     if (user) {
       const fetchRole = async () => {
         try {
-          const supabaseClient = await getSupabase()
+          const supabaseClient = getSupabaseClient()
           const { data } = await supabaseClient
             .from('profiles')
             .select('role')

@@ -151,7 +151,7 @@ export const getSupabaseClient = () => {
 }
 
 // Utility function to safely subscribe to a channel
-export const subscribeToChannel = (channel: ReturnType<typeof supabase.channel> | null, onStatusChange?: (status: string, error?: Error) => void) => {
+export const subscribeToChannel = (channel: any, onStatusChange?: (status: string, error?: Error) => void) => {
   if (!channel) return null
   
   try {

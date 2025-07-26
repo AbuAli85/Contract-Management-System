@@ -2,7 +2,7 @@
 
 // --- Supabase setup and core utilities ---
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { supabase } from "@/lib/supabase" // Initialized Supabase client
+import { getSupabaseClient } from "@/lib/supabase" // Initialized Supabase client
 import { createContract, deleteContract } from "@/app/actions/contracts"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
@@ -45,8 +45,9 @@ export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
 // --- Queries ---
 // Fetch all contracts with their related party and promoter info
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
+  const supabaseClient = getSupabaseClient()
   // Try the new schema first (first_party_id, second_party_id)
-  let { data, error } = await supabase
+  let { data, error } = await supabaseClient
     .from("contracts")
     .select(
       `
@@ -61,7 +62,7 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
   // If the new schema fails, try the old schema (employer_id, client_id)
   if (error && error.message.includes('foreign key')) {
     devLog("New schema failed, trying old schema...")
-    const { data: oldData, error: oldError } = await supabase
+    const { data: oldData, error: oldError } = await supabaseClient
       .from("contracts")
       .select(
         `
@@ -164,7 +165,8 @@ export const useContracts = () => {
 
     const setupSubscription = () => {
       try {
-        const newChannel = supabase
+        const supabaseClient = getSupabaseClient()
+        const newChannel = supabaseClient
           .channel("public-contracts-realtime")
           .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, (payload) => {
             devLog("Realtime contract change received!", payload)
@@ -192,7 +194,8 @@ export const useContracts = () => {
                 devLog(`Retrying contracts subscription (${retryCount}/${maxRetries})...`)
                 retryTimeout = setTimeout(() => {
                   if (channel) {
-                    supabase.removeChannel(channel)
+                    const supabaseClient = getSupabaseClient()
+                    supabaseClient.removeChannel(channel)
                   }
                   setupSubscription()
                 }, 2000 * retryCount) // Exponential backoff
@@ -209,7 +212,8 @@ export const useContracts = () => {
                 devLog(`Retrying contracts subscription after timeout (${retryCount}/${maxRetries})...`)
                 retryTimeout = setTimeout(() => {
                   if (channel) {
-                    supabase.removeChannel(channel)
+                    const supabaseClient = getSupabaseClient()
+                    supabaseClient.removeChannel(channel)
                   }
                   setupSubscription()
                 }, 2000 * retryCount) // Exponential backoff
@@ -233,7 +237,8 @@ export const useContracts = () => {
         clearTimeout(retryTimeout)
       }
       if (channel) {
-        supabase.removeChannel(channel)
+        const supabaseClient = getSupabaseClient()
+        supabaseClient.removeChannel(channel)
       }
     }
   }, [queryClient, queryKey, isAuthenticated, isFormActive])

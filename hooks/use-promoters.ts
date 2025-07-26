@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useRef } from "react"
-import { supabase, createRealtimeChannel, subscribeToChannel, handleRealtimeError } from "@/lib/supabase"
+import { getSupabaseClient, createRealtimeChannel, subscribeToChannel, handleRealtimeError } from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
@@ -9,7 +9,8 @@ import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
 const fetchPromoters = async (): Promise<Promoter[]> => {
-  const { data, error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { data, error } = await supabaseClient
     .from("promoters")
     .select("*")
     .order("name_en", { ascending: true })
@@ -68,7 +69,8 @@ export const usePromoters = (enableRealtime: boolean = true) => {
       try {
         // Clean up any existing channel first
         if (channelRef.current) {
-          supabase.removeChannel(channelRef.current)
+          const supabaseClient = getSupabaseClient()
+          supabaseClient.removeChannel(channelRef.current)
           channelRef.current = null
         }
 
@@ -151,7 +153,8 @@ export const usePromoters = (enableRealtime: boolean = true) => {
       // Clean up channel
       isSubscribed = false
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current)
+        const supabaseClient = getSupabaseClient()
+        supabaseClient.removeChannel(channelRef.current)
         channelRef.current = null
       }
     }

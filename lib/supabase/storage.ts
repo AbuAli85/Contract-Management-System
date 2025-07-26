@@ -1,4 +1,4 @@
-import { supabase } from "../supabase"
+import { getSupabaseClient } from "../supabase"
 
 interface UploadResult {
   success: boolean
@@ -7,11 +7,12 @@ interface UploadResult {
 }
 
 export async function uploadImage(file: File, bucket: string): Promise<UploadResult> {
+  const supabaseClient = getSupabaseClient()
   const fileExt = file.name.split(".").pop()
   const fileName = `${Date.now()}.${fileExt}`
   const filePath = `${bucket}/${fileName}`
 
-  const { data, error } = await supabase.storage.from(bucket).upload(filePath, file, {
+  const { data, error } = await supabaseClient.storage.from(bucket).upload(filePath, file, {
     cacheControl: "3600",
     upsert: false,
   })
@@ -22,7 +23,7 @@ export async function uploadImage(file: File, bucket: string): Promise<UploadRes
   }
 
   // Get public URL
-  const { data: publicUrlData } = supabase.storage.from(bucket).getPublicUrl(data.path)
+  const { data: publicUrlData } = supabaseClient.storage.from(bucket).getPublicUrl(data.path)
 
   if (!publicUrlData) {
     return { success: false, message: "Failed to get public URL for the uploaded image." }

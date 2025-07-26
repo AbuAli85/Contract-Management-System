@@ -1,4 +1,4 @@
-import { supabase } from "./supabase"
+import { getSupabaseClient } from "./supabase"
 import type { Party } from "./types"
 
 /**
@@ -6,8 +6,9 @@ import type { Party } from "./types"
  */
 export async function fetchPartiesWithContractCount(): Promise<Party[]> {
   try {
+    const supabaseClient = getSupabaseClient()
     // Fetch parties
-    const { data: partiesData, error: partiesError } = await supabase
+    const { data: partiesData, error: partiesError } = await supabaseClient
       .from("parties")
       .select("*")
       .order("name_en")
@@ -20,7 +21,7 @@ export async function fetchPartiesWithContractCount(): Promise<Party[]> {
     const enhancedData = await Promise.all(
       (partiesData || []).map(async (party) => {
         try {
-          const { count: contractCount, error: contractError } = await supabase
+          const { count: contractCount, error: contractError } = await supabaseClient
             .from("contracts")
             .select("*", { count: "exact", head: true })
             .or(`first_party_id.eq.${party.id},second_party_id.eq.${party.id}`)
@@ -55,7 +56,8 @@ export async function fetchPartiesWithContractCount(): Promise<Party[]> {
  * Delete multiple parties by IDs
  */
 export async function deleteParties(partyIds: string[]): Promise<void> {
-  const { error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { error } = await supabaseClient
     .from("parties")
     .delete()
     .in("id", partyIds)
@@ -113,10 +115,11 @@ export async function bulkUpdatePartyStatus(
 export async function getPartiesWithExpiringDocuments(
   daysAhead: number = 30
 ): Promise<Party[]> {
+  const supabaseClient = getSupabaseClient()
   const futureDate = new Date()
   futureDate.setDate(futureDate.getDate() + daysAhead)
   
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from("parties")
     .select("*")
     .or(`cr_expiry_date.lte.${futureDate.toISOString()},license_expiry_date.lte.${futureDate.toISOString()}`)
@@ -133,7 +136,8 @@ export async function getPartiesWithExpiringDocuments(
  * Search parties by text
  */
 export async function searchParties(searchTerm: string): Promise<Party[]> {
-  const { data, error } = await supabase
+  const supabaseClient = getSupabaseClient()
+  const { data, error } = await supabaseClient
     .from("parties")
     .select("*")
     .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,crn.ilike.%${searchTerm}%,contact_person.ilike.%${searchTerm}%`)
@@ -151,8 +155,9 @@ export async function searchParties(searchTerm: string): Promise<Party[]> {
  */
 export async function getPartyActivitySummary(partyId: string) {
   try {
+    const supabaseClient = getSupabaseClient()
     // Get contracts count where party is involved
-    const { count: contractsCount, error: contractsError } = await supabase
+    const { count: contractsCount, error: contractsError } = await supabaseClient
       .from("contracts")
       .select("*", { count: "exact", head: true })
       .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
@@ -162,7 +167,7 @@ export async function getPartyActivitySummary(partyId: string) {
     }
 
     // Get recent contracts
-    const { data: recentContracts, error: recentError } = await supabase
+    const { data: recentContracts, error: recentError } = await supabaseClient
       .from("contracts")
       .select("id, created_at, status, first_party_name_en, second_party_name_en, promoter_name_en")
       .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
@@ -174,7 +179,7 @@ export async function getPartyActivitySummary(partyId: string) {
     }
 
     // Get contracts by status
-    const { data: contractsByStatus, error: statusError } = await supabase
+    const { data: contractsByStatus, error: statusError } = await supabaseClient
       .from("contracts")
       .select("status")
       .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
@@ -208,7 +213,8 @@ export async function getPartyActivitySummary(partyId: string) {
  */
 export async function getPartiesByType(): Promise<Record<string, number>> {
   try {
-    const { data, error } = await supabase
+    const supabaseClient = getSupabaseClient()
+    const { data, error } = await supabaseClient
       .from("parties")
       .select("type")
 
@@ -234,10 +240,11 @@ export async function getPartiesByType(): Promise<Record<string, number>> {
  */
 export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
   try {
+    const supabaseClient = getSupabaseClient()
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + daysAhead)
     
-    const { data: crExpiring, error: crError } = await supabase
+    const { data: crExpiring, error: crError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, cr_expiry_date")
       .not("cr_expiry_date", "is", null)
@@ -248,7 +255,7 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
       console.warn("Error fetching CR expiry alerts:", crError)
     }
 
-    const { data: licenseExpiring, error: licenseError } = await supabase
+    const { data: licenseExpiring, error: licenseError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, license_expiry_date")
       .not("license_expiry_date", "is", null)
@@ -277,7 +284,8 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
  */
 export async function validateUniqueCRN(crn: string, excludeId?: string): Promise<boolean> {
   try {
-    let query = supabase
+    const supabaseClient = getSupabaseClient()
+    let query = supabaseClient
       .from("parties")
       .select("id")
       .eq("crn", crn)
