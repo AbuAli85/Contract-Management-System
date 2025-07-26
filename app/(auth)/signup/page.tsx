@@ -1,8 +1,7 @@
 'use client'
 
 import { SignUpForm } from '@/src/components/auth/signup-form'
-import { OAuthButtons } from '@/src/components/auth/oauth-buttons'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function SignUpPage() {
   return (
@@ -18,17 +17,6 @@ export default function SignUpPage() {
           <CardContent>
             <div className="space-y-4">
               <SignUpForm />
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or continue with
-                  </span>
-                </div>
-              </div>
-              <OAuthButtons />
             </div>
           </CardContent>
         </Card>

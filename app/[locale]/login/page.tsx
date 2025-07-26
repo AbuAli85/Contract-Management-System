@@ -7,8 +7,8 @@ export default function LoginRedirectPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Redirect to the new auth login page
-    router.replace('/auth/login')
+    // Redirect to the auth login page with locale
+    router.replace('/en/auth/login')
   }, [router])
 
   return (

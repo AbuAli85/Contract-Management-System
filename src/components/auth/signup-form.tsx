@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/src/components/auth/auth-provider'
-import { Button } from '@/src/components/ui/button'
-import { Input } from '@/src/components/ui/input'
-import { Label } from '@/src/components/ui/label'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Loader2 } from 'lucide-react'
 
 export function SignUpForm() {
   const [email, setEmail] = useState('')
@@ -13,25 +15,45 @@ export function SignUpForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signUp } = useAuth()
+  const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
+  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
       return
     }
 
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      return
+    }
+
     setLoading(true)
 
     try {
-      await signUp(email, password)
-      // After signup, set role to manager
-      await fetch('/api/force-admin-role', { method: 'POST' }); // You can create a similar endpoint for manager
-      router.push('/dashboard')
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/en/auth/callback`
+        }
+      })
+
+      if (error) {
+        setError(error.message)
+        return
+      }
+
+      if (data.user) {
+        setSuccess('Account created successfully! Please check your email to verify your account.')
+        // Don't redirect immediately - let user verify email first
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -41,6 +63,18 @@ export function SignUpForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
+      {success && (
+        <Alert>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -50,8 +84,10 @@ export function SignUpForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={loading}
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
@@ -61,8 +97,10 @@ export function SignUpForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          disabled={loading}
         />
       </div>
+      
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm Password</Label>
         <Input
@@ -72,11 +110,19 @@ export function SignUpForm() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
+          disabled={loading}
         />
       </div>
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Creating account...' : 'Sign Up'}
+        {loading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Creating account...
+          </>
+        ) : (
+          'Sign Up'
+        )}
       </Button>
     </form>
   )

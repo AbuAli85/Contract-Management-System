@@ -35,45 +35,15 @@ export default function HomePage() {
 
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Button asChild size="lg">
-              <Link href="/en/demo">
-                <Eye className="mr-2 h-5 w-5" />
-                View New UI Demo
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/en/login">
+              <Link href="/en/auth/login">
                 <ArrowRight className="mr-2 h-5 w-5" />
                 Get Started
               </Link>
             </Button>
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/en/test-auth">
-                🔧 Debug Auth
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/en/preview">
-                🎨 UI Preview
-              </Link>
-            </Button>
-            <Button asChild variant="secondary" size="sm">
-              <Link href="/en/dashboard-direct">
-                🚀 Direct Dashboard
-              </Link>
-            </Button>
-            <Button asChild variant="default" size="sm">
-              <Link href="/en/bypass">
-                ⚡ Instant Access
-              </Link>
-            </Button>
-            <Button asChild variant="destructive" size="lg" className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600">
-              <Link href="/en/instant">
-                🚀 INSTANT BEAUTIFUL UI
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/en/debug-auth">
-                🔧 Debug Auth
+            <Button asChild variant="outline" size="lg">
+              <Link href="/en/auth/signup">
+                <Users className="mr-2 h-5 w-5" />
+                Sign Up
               </Link>
             </Button>
           </div>
@@ -122,16 +92,16 @@ export default function HomePage() {
         <div className="mt-20 text-center">
           <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
             <CardHeader>
-              <CardTitle className="text-3xl">Ready to See the Transformation?</CardTitle>
+              <CardTitle className="text-3xl">Ready to Get Started?</CardTitle>
               <CardDescription className="text-lg">
                 Experience the beautiful new UI/UX that makes contract management engaging and professional
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button asChild size="lg" className="text-lg px-8 py-4">
-                <Link href="/en/demo">
-                  <Eye className="mr-2 h-5 w-5" />
-                  Explore New Interface
+                <Link href="/en/auth/login">
+                  <ArrowRight className="mr-2 h-5 w-5" />
+                  Start Now
                 </Link>
               </Button>
             </CardContent>
