@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
     const { data: { session } } = await Promise.race([
       sessionPromise,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 5000) // Reduced to 5 seconds
+        setTimeout(() => reject(new Error('Auth timeout')), 3000) // Reduced to 3 seconds
       )
     ]) as any
 

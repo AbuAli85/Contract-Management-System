@@ -42,6 +42,7 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
 
   const loadUserProfile = async (userId: string): Promise<SimpleUserProfile | null> => {
     try {
+      console.log('🔧 Simple auth: Loading profile for user:', userId)
       const { data, error } = await supabase
         .from('users')
         .select('id, email, role, status')
@@ -49,12 +50,13 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
         .single()
 
       if (error) {
-        console.warn('Profile not found:', error.message)
+        console.warn('🔧 Simple auth: Profile not found:', error.message)
         return null
       }
+      console.log('🔧 Simple auth: Profile loaded:', data)
       return data
     } catch (error) {
-      console.warn('Error loading profile:', error)
+      console.warn('🔧 Simple auth: Error loading profile:', error)
       return null
     }
   }
@@ -64,16 +66,20 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
       console.log('🔧 Simple auth: Initializing...')
       const { data: { session } } = await supabase.auth.getSession()
       
+      console.log('🔧 Simple auth: Session check result:', session ? 'found' : 'not found')
+      
       if (session?.user) {
+        console.log('🔧 Simple auth: Setting user:', session.user.email)
         setUser(session.user)
         const userProfile = await loadUserProfile(session.user.id)
         setProfile(userProfile)
       } else {
+        console.log('🔧 Simple auth: No session, clearing user state')
         setUser(null)
         setProfile(null)
       }
     } catch (error) {
-      console.error('Auth initialization error:', error)
+      console.error('🔧 Simple auth: Auth initialization error:', error)
       setUser(null)
       setProfile(null)
     } finally {
@@ -83,12 +89,14 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
   }
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('🔄 Simple auth: State changed:', event)
+    console.log('🔄 Simple auth: State changed:', event, session ? 'with session' : 'no session')
     if (session?.user) {
+      console.log('🔄 Simple auth: Setting user from state change:', session.user.email)
       setUser(session.user)
       const userProfile = await loadUserProfile(session.user.id)
       setProfile(userProfile)
     } else {
+      console.log('🔄 Simple auth: Clearing user state from state change')
       setUser(null)
       setProfile(null)
     }
@@ -116,19 +124,26 @@ export function SimpleWorkingAuthProvider({ children }: { children: React.ReactN
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('🔧 Simple auth: SignIn called for:', email)
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) { return { error: error.message } }
+      if (error) { 
+        console.error('🔧 Simple auth: SignIn error:', error.message)
+        return { error: error.message } 
+      }
+      console.log('🔧 Simple auth: SignIn successful for:', email)
       return {}
     } catch (error) { 
+      console.error('🔧 Simple auth: SignIn exception:', error)
       return { error: 'Sign in failed' } 
     }
   }
 
   const signOut = async () => {
     try { 
+      console.log('🔧 Simple auth: SignOut called')
       await supabase.auth.signOut() 
     } catch (error) { 
-      console.error('Sign out error:', error) 
+      console.error('🔧 Simple auth: Sign out error:', error) 
     }
   }
 

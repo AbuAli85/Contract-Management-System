@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -18,8 +18,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   
   const router = useRouter()
-  const supabase = createClient()
-  const redirectTo = '/en/dashboard'
+  const { signIn } = useSimpleWorkingAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,27 +29,23 @@ export function LoginForm() {
     try {
       console.log("🔐 Login Debug - Starting login process...")
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const { error } = await signIn(email, password)
 
       if (error) {
         console.error("🔐 Login Debug - Login error:", error)
-        setError(error.message)
+        setError(error)
         setLoading(false)
         return
       }
 
-      if (data.user) {
-        console.log("🔐 Login Debug - Login successful, user:", data.user.email)
-        setSuccess("Login successful! Redirecting...")
-        
-        // Wait a moment for the session to be properly set
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 1000)
-      }
+      console.log("🔐 Login Debug - Login successful")
+      setSuccess("Login successful! Redirecting...")
+      
+      // The auth provider will handle the session update
+      // and the login page will redirect automatically
+      setTimeout(() => {
+        router.push('/en/dashboard')
+      }, 1000)
     } catch (err) {
       console.error("🔐 Login Debug - Unexpected error:", err)
       setError("An unexpected error occurred. Please try again.")

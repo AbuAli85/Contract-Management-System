@@ -90,7 +90,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-4">Please log in to access the dashboard.</p>
-          <Link href="/auth/login">
+          <Link href="/en/auth/login">
             <Button>Go to Login</Button>
           </Link>
         </div>
