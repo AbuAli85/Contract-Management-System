@@ -44,6 +44,7 @@ import {
 import { validateContractData } from "@/lib/contract-utils"
 import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
+import { useFormRegistration } from "@/hooks/use-form-context"
 
 // Lazy load heavy components
 const DatePickerWithManualInput = lazy(() => import("./date-picker-with-manual-input"))
@@ -68,6 +69,9 @@ export default function ContractGeneratorForm({
   contract,
   onFormSubmit,
 }: ContractGeneratorFormProps) {
+  // Register this form to disable auto-refresh during form interactions
+  useFormRegistration()
+  
   const queryClient = useQueryClient()
   const { toast } = useToast()
 

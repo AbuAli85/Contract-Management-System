@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase" // Initialized Supabase client
 import { createContract, deleteContract } from "@/app/actions/contracts"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { useFormContext } from "@/hooks/use-form-context"
 import { devLog } from "@/lib/dev-log"
 import type { Database } from "@/types/supabase"
 import { useEffect } from "react"
@@ -129,6 +130,7 @@ export const useContracts = () => {
   const queryClient = useQueryClient()
   const queryKey = ["contracts"]
   const { isAuthenticated } = useAuth()
+  const { isFormActive } = useFormContext()
 
   // --- Data fetching with React Query ---
   const queryResult = useQuery<ContractWithRelations[], Error>({
@@ -146,6 +148,12 @@ export const useContracts = () => {
     // Don't set up realtime if user is not authenticated
     if (!isAuthenticated) {
       devLog("User not authenticated, skipping realtime subscription for contracts")
+      return
+    }
+
+    // Don't set up realtime if forms are active (prevents interruptions)
+    if (isFormActive) {
+      devLog("Forms are active, skipping realtime subscription for contracts")
       return
     }
 
@@ -228,7 +236,7 @@ export const useContracts = () => {
         supabase.removeChannel(channel)
       }
     }
-  }, [queryClient, queryKey, isAuthenticated])
+  }, [queryClient, queryKey, isAuthenticated, isFormActive])
 
   return queryResult
 }

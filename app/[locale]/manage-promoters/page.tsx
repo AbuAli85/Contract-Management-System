@@ -75,6 +75,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { SafeImage } from "@/components/ui/safe-image"
 import { cn } from "@/lib/utils"
+import { useFormContext } from "@/hooks/use-form-context"
+import { AutoRefreshIndicator } from "@/components/ui/auto-refresh-indicator"
 
 // Enhanced Promoter interface
 interface EnhancedPromoter extends Promoter {
@@ -96,6 +98,7 @@ interface PromoterStats {
 
 export default function ManagePromotersPage() {
   const permissions = usePermissions()
+  const { isFormActive } = useFormContext()
   const [promoters, setPromoters] = useState<Promoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
   const [selectedPromoters, setSelectedPromoters] = useState<string[]>([])
@@ -335,8 +338,13 @@ export default function ManagePromotersPage() {
     applyFiltersAndSort()
   }, [applyFiltersAndSort])
 
-  // Auto-refresh functionality
+  // Auto-refresh functionality - disabled when forms are active
   useEffect(() => {
+    if (isFormActive) {
+      // Don't auto-refresh when forms are being used
+      return
+    }
+    
     const refreshInterval = setInterval(() => {
       if (isMountedRef.current && !isLoading) {
         setIsRefreshing(true)
@@ -351,11 +359,11 @@ export default function ManagePromotersPage() {
     return () => {
       clearInterval(refreshInterval)
     }
-  }, [fetchPromotersWithContractCount, isLoading])
+  }, [fetchPromotersWithContractCount, isLoading, isFormActive])
 
   const handleAddNew = () => {
-    setSelectedPromoter(null)
-    setShowForm(true)
+    // Navigate to the new promoter page instead of showing modal
+    window.location.href = "/en/manage-promoters/new"
   }
 
   const handleEdit = (promoter: Promoter) => {
@@ -536,6 +544,7 @@ export default function ManagePromotersPage() {
             {isRefreshing && (
               <RefreshCw className="h-5 w-5 animate-spin text-primary" />
             )}
+            <AutoRefreshIndicator />
           </div>
           <div className="flex gap-2">
             <Button

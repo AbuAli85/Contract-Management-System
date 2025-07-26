@@ -15,6 +15,19 @@ export default async function PromoterDetailsPage({ params }: { params: Promise<
   // redirect("/en/manage-promoters")
 
   const { id } = await params
+  
+  // Check if the ID is "new" and redirect to the new page
+  if (id === "new") {
+    redirect("/en/manage-promoters/new")
+  }
+  
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(id)) {
+    notFound()
+    return null
+  }
+  
   const t = await getTranslations("PromoterDetailsPage")
   const promoter: Promoter | null = await getPromoterById(id)
 

@@ -62,6 +62,7 @@ import {
 } from "@/lib/schema-generator"
 import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
+import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 import { 
   JOB_TITLES, 
@@ -96,6 +97,8 @@ export default function UnifiedContractGeneratorForm({
   mode = 'advanced',
   autoRedirect = true,
 }: UnifiedContractGeneratorFormProps) {
+  // Register this form to disable auto-refresh during form interactions
+  useFormRegistration()
   const router = useRouter()
   const queryClient = useQueryClient()
   // const { toast } = useToast()

@@ -11,6 +11,7 @@ import { useAuth } from '@/src/components/auth/auth-provider';
 import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { PerformanceMonitor } from '@/components/performance-monitor';
+import { FormProvider } from '@/hooks/use-form-context';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -94,10 +95,12 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
       <ErrorBoundary>
         <AuthProvider>
           <ToastProvider>
-            <AuthenticatedAppLayout locale={locale}>
-              {children}
-            </AuthenticatedAppLayout>
-            <PerformanceMonitor />
+            <FormProvider>
+              <AuthenticatedAppLayout locale={locale}>
+                {children}
+              </AuthenticatedAppLayout>
+              <PerformanceMonitor />
+            </FormProvider>
           </ToastProvider>
         </AuthProvider>
       </ErrorBoundary>

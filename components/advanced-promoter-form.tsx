@@ -55,6 +55,9 @@ import {
 } from "lucide-react"
 import { format, parseISO, differenceInDays, isPast, isValid, addYears } from "date-fns"
 import { cn } from "@/lib/utils"
+import { SORTED_NATIONALITIES } from "@/lib/nationalities"
+import { NationalitySelect } from "@/components/ui/nationality-select"
+import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 
 // Enhanced validation schema
@@ -161,6 +164,9 @@ export default function AdvancedPromoterForm({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [activeTab, setActiveTab] = useState("personal")
   const isEditMode = !!promoterToEdit
+  
+  // Register this form to disable auto-refresh during form interactions
+  useFormRegistration()
 
   const form = useForm<AdvancedPromoterFormData>({
     resolver: zodResolver(advancedPromoterSchema),
@@ -175,7 +181,7 @@ export default function AdvancedPromoterForm({
       country: "",
       id_card_number: promoterToEdit?.id_card_number || "",
       passport_number: promoterToEdit?.passport_number || "",
-      nationality: "",
+      nationality: promoterToEdit?.nationality || "",
       date_of_birth: "",
       job_title: promoterToEdit?.job_title || "",
       department: "",
@@ -653,7 +659,11 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Nationality</FormLabel>
                             <FormControl>
-                              <Input placeholder="Saudi Arabian" {...field} />
+                              <NationalitySelect
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                placeholder="Select nationality"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

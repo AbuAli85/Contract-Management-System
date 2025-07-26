@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
   Upload, 
   FileText, 
@@ -30,6 +31,9 @@ import {
 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { SORTED_NATIONALITIES } from '@/lib/nationalities'
+import { NationalitySelect } from '@/components/ui/nationality-select'
+import { useFormRegistration } from '@/hooks/use-form-context'
 
 interface OnboardingStep {
   id: string
@@ -125,6 +129,9 @@ const REQUIREMENTS_CHECKLIST = [
 ]
 
 export default function PromoterOnboardingForm() {
+  // Register this form to disable auto-refresh during form interactions
+  useFormRegistration()
+  
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<OnboardingData>({
     personalInfo: {
@@ -367,14 +374,13 @@ export default function PromoterOnboardingForm() {
           </div>
           <div>
             <Label htmlFor="nationality">Nationality *</Label>
-            <Input
-              id="nationality"
+            <NationalitySelect
               value={formData.personalInfo.nationality}
-              onChange={(e) => setFormData(prev => ({
+              onValueChange={(value) => setFormData(prev => ({
                 ...prev,
-                personalInfo: { ...prev.personalInfo, nationality: e.target.value }
+                personalInfo: { ...prev.personalInfo, nationality: value }
               }))}
-              placeholder="Enter your nationality"
+              placeholder="Select your nationality"
             />
           </div>
         </div>

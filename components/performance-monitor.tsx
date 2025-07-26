@@ -26,6 +26,7 @@ export function PerformanceMonitor() {
   })
 
   const [isVisible, setIsVisible] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
 
   useEffect(() => {
     // Measure page load time
@@ -129,15 +130,30 @@ export function PerformanceMonitor() {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold">Performance Monitor</CardTitle>
-          <Badge variant="outline" className="text-xs">
-            {performanceStatus.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-xs">
+              {performanceStatus.status}
+            </Badge>
+            <button
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              {isMinimized ? "□" : "−"}
+            </button>
+            <button
+              onClick={() => setIsVisible(false)}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              ✕
+            </button>
+          </div>
         </div>
         <CardDescription className="text-xs">
           Real-time performance metrics
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3">
+      {!isMinimized && (
+        <CardContent className="space-y-3">
         {/* Page Load Time */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -179,6 +195,7 @@ export function PerformanceMonitor() {
           Last updated: {metrics.lastUpdate.toLocaleTimeString()}
         </div>
       </CardContent>
+      )}
     </Card>
   )
 } 

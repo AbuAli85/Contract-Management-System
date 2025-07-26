@@ -60,6 +60,7 @@ export interface Promoter {
   bio?: string
   passport_number?: string | null
   mobile_number?: string | null
+  nationality?: string | null
   tags?: string[]
 }
 

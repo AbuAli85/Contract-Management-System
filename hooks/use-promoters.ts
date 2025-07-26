@@ -4,6 +4,7 @@ import { supabase, createRealtimeChannel, subscribeToChannel, handleRealtimeErro
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/use-auth"
+import { useFormContext } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
 
@@ -27,6 +28,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryKey = useMemo(() => ["promoters"], [])
   const { toast } = useToast()
   const { isAuthenticated } = useAuth()
+  const { isFormActive } = useFormContext()
   const channelRef = useRef<RealtimeChannel | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -47,6 +49,12 @@ export const usePromoters = (enableRealtime: boolean = true) => {
     // Don't set up realtime if user is not authenticated
     if (!isAuthenticated) {
       devLog("User not authenticated, skipping realtime subscription for promoters")
+      return
+    }
+
+    // Don't set up realtime if forms are active (prevents interruptions)
+    if (isFormActive) {
+      devLog("Forms are active, skipping realtime subscription for promoters")
       return
     }
 
@@ -147,7 +155,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
         channelRef.current = null
       }
     }
-  }, [isAuthenticated, enableRealtime, queryClient, queryKey, toast])
+  }, [isAuthenticated, enableRealtime, isFormActive, queryClient, queryKey, toast])
 
   return queryResult
 }
