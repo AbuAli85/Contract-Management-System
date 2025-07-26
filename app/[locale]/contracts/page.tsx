@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { useContracts, useDeleteContractMutation, type ContractWithRelations } from "@/hooks/use-contracts"
+import { useDeleteContractMutation, type ContractWithRelations } from "@/hooks/use-contracts"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import {
@@ -153,7 +153,36 @@ export default function ContractsDashboardPage() {
   const params = useParams()
   const locale = (params?.locale as string) || "en"
 
-  const { data: contracts, isLoading, error } = useContracts()
+  const [contracts, setContracts] = useState<ContractWithRelations[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch contracts data
+  const fetchContracts = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      const response = await fetch('/api/contracts')
+      const data = await response.json()
+      
+      if (data.success) {
+        setContracts(data.contracts || [])
+      } else {
+        setError(data.error || 'Failed to fetch contracts')
+      }
+    } catch (err) {
+      setError('Failed to fetch contracts')
+      console.error('Error fetching contracts:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchContracts()
+  }, [fetchContracts])
+
   const deleteContractMutation = useDeleteContractMutation()
   const { toast } = useToast()
   const permissions = usePermissions()
@@ -312,7 +341,7 @@ export default function ContractsDashboardPage() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
-      // The useContracts hook should handle the refresh automatically
+      await fetchContracts()
       toast({
         title: "Refreshed",
         description: "Contract data has been updated",
@@ -321,7 +350,7 @@ export default function ContractsDashboardPage() {
     } finally {
       setIsRefreshing(false)
     }
-  }, [toast])
+  }, [fetchContracts, toast])
 
   const handleSort = (column: keyof ContractWithRelations | "status") => {
     if (sortColumn === column) {
@@ -600,7 +629,7 @@ export default function ContractsDashboardPage() {
             <CardTitle className="text-destructive">Error Loading Contracts</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{error.message}</p>
+            <p>{error}</p>
             <Button onClick={() => window.location.reload()} className="mt-4">
               Try Again
             </Button>
