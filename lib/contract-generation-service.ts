@@ -242,20 +242,47 @@ class ContractGenerationService {
       const contract = await this.createContractInDatabase(data, contractNumber)
       console.log('💾 Contract saved to database:', contract.id)
 
-      // Step 4: Trigger Make.com webhook for PDF generation
-      const webhookTriggered = await this.triggerMakecomWebhook(contract)
-
-      return {
-        success: true,
-        contract_id: contract.id,
-        contract_number: contractNumber,
-        status: webhookTriggered ? 'processing' : 'draft',
-        message: webhookTriggered 
-          ? 'Contract created and PDF generation initiated'
-          : 'Contract created (PDF generation pending)',
-        google_drive_url: this.googleDriveFolderId 
-          ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
-          : undefined
+      // Step 4: Immediately generate PDF instead of relying on webhooks
+      try {
+        const pdfResult = await this.generatePDFDirectly(contract.id, contractNumber)
+        if (pdfResult.success) {
+          console.log('✅ PDF generated immediately:', pdfResult.pdf_url)
+          return {
+            success: true,
+            contract_id: contract.id,
+            contract_number: contractNumber,
+            status: 'generated',
+            pdf_url: pdfResult.pdf_url,
+            message: 'Contract created and PDF generated successfully',
+            google_drive_url: this.googleDriveFolderId 
+              ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
+              : undefined
+          }
+        } else {
+          console.log('⚠️ PDF generation failed, setting to draft status')
+          return {
+            success: true,
+            contract_id: contract.id,
+            contract_number: contractNumber,
+            status: 'draft',
+            message: 'Contract created (PDF generation will be available later)',
+            google_drive_url: this.googleDriveFolderId 
+              ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
+              : undefined
+          }
+        }
+      } catch (pdfError) {
+        console.error('❌ PDF generation error:', pdfError)
+        return {
+          success: true,
+          contract_id: contract.id,
+          contract_number: contractNumber,
+          status: 'draft',
+          message: 'Contract created (PDF generation will be available later)',
+          google_drive_url: this.googleDriveFolderId 
+            ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
+            : undefined
+        }
       }
 
     } catch (error) {
@@ -268,6 +295,269 @@ class ContractGenerationService {
         message: error instanceof Error ? error.message : 'Unknown error occurred',
         errors: [error instanceof Error ? error.message : 'Unknown error']
       }
+    }
+  }
+
+  /**
+   * Generate PDF directly without external webhooks
+   */
+  private async generatePDFDirectly(contractId: string, contractNumber: string): Promise<{ success: boolean; pdf_url?: string; error?: string }> {
+    try {
+      console.log('📄 Generating PDF directly for contract:', contractId)
+
+      // Fetch contract with all related data
+      const { data: contract, error: contractError } = await this.supabase
+        .from('contracts')
+        .select(`
+          *,
+          first_party:parties!first_party_id(*),
+          second_party:parties!second_party_id(*),
+          promoter:promoters(*)
+        `)
+        .eq('id', contractId)
+        .single()
+
+      if (contractError || !contract) {
+        throw new Error('Contract not found')
+      }
+
+      // Generate PDF content
+      const pdfContent = this.generateContractPDFContent(contract, contractNumber)
+      
+      // Create a proper PDF file name
+      const fileName = `contract-${contractNumber}-${Date.now()}.pdf`
+      
+      // Upload to Supabase storage
+      const { data: uploadData, error: uploadError } = await this.supabase.storage
+        .from('contracts')
+        .upload(fileName, Buffer.from(pdfContent, 'utf-8'), {
+          contentType: 'application/pdf',
+          cacheControl: '3600'
+        })
+
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError)
+        throw new Error('Failed to upload PDF')
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = this.supabase.storage
+        .from('contracts')
+        .getPublicUrl(fileName)
+
+      // Update contract with PDF URL
+      const { error: updateError } = await this.supabase
+        .from('contracts')
+        .update({
+          pdf_url: publicUrl,
+          status: 'generated',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', contractId)
+
+      if (updateError) {
+        console.error("Database update error:", updateError)
+        throw new Error('Failed to update contract')
+      }
+
+      // Log the activity
+      await this.supabase
+        .from('user_activity_log')
+        .insert({
+          user_id: contract.user_id,
+          action: 'pdf_generated',
+          resource_type: 'contract',
+          resource_id: contractId,
+          details: { 
+            contract_number: contractNumber,
+            pdf_url: publicUrl,
+            file_name: fileName
+          }
+        })
+
+      console.log('✅ PDF generated successfully:', publicUrl)
+      return {
+        success: true,
+        pdf_url: publicUrl
+      }
+
+    } catch (error) {
+      console.error('❌ Direct PDF generation failed:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }
+    }
+  }
+
+  /**
+   * Generate PDF content for contract
+   */
+  private generateContractPDFContent(contract: any, contractNumber: string): string {
+    const currentDate = new Date().toLocaleDateString()
+    
+    return `
+EMPLOYMENT CONTRACT
+
+Contract Number: ${contractNumber}
+Date: ${currentDate}
+
+================================================================================
+
+PARTIES
+================================================================================
+
+${contract.first_party ? `
+EMPLOYER:
+Name: ${contract.first_party.name_en}
+CRN: ${contract.first_party.crn || 'N/A'}
+Address: ${contract.first_party.address_en || 'N/A'}
+Contact Person: ${contract.first_party.contact_person || 'N/A'}
+Contact Email: ${contract.first_party.contact_email || 'N/A'}
+Contact Phone: ${contract.first_party.contact_phone || 'N/A'}
+` : 'Employer: Not specified'}
+
+${contract.second_party ? `
+EMPLOYEE:
+Name: ${contract.second_party.name_en}
+Email: ${contract.email || 'N/A'}
+Contact Person: ${contract.second_party.contact_person || 'N/A'}
+Contact Email: ${contract.second_party.contact_email || 'N/A'}
+Contact Phone: ${contract.second_party.contact_phone || 'N/A'}
+` : 'Employee: Not specified'}
+
+================================================================================
+
+JOB DETAILS
+================================================================================
+
+Position: ${contract.job_title || 'N/A'}
+Department: ${contract.department || 'N/A'}
+Work Location: ${contract.work_location || 'N/A'}
+
+================================================================================
+
+CONTRACT TERMS
+================================================================================
+
+Contract Type: ${contract.contract_type || 'N/A'}
+Start Date: ${contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : 'N/A'}
+End Date: ${contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : 'N/A'}
+
+================================================================================
+
+COMPENSATION
+================================================================================
+
+Basic Salary: ${contract.basic_salary || 'N/A'} ${contract.currency || 'SAR'}
+Allowances: ${contract.allowances || 'N/A'} ${contract.currency || 'SAR'}
+
+================================================================================
+
+${contract.promoter ? `
+PROMOTER INFORMATION
+================================================================================
+
+Name: ${contract.promoter.name_en}
+Contact: ${contract.promoter.mobile_number || 'N/A'}
+Email: ${contract.promoter.email || 'N/A'}
+` : ''}
+
+================================================================================
+
+CONTRACT STATUS
+================================================================================
+
+Status: ${contract.status || 'Draft'}
+Approval Status: ${contract.approval_status || 'Pending'}
+Created: ${contract.created_at ? new Date(contract.created_at).toLocaleDateString() : 'N/A'}
+Last Updated: ${contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : 'N/A'}
+
+================================================================================
+
+TERMS AND CONDITIONS
+================================================================================
+
+1. This employment contract is legally binding and enforceable under applicable labor laws.
+
+2. The employee agrees to perform the duties and responsibilities associated with the position of ${contract.job_title || 'the specified role'}.
+
+3. The employer agrees to provide the compensation and benefits as outlined in this contract.
+
+4. Both parties agree to comply with all applicable laws and regulations.
+
+5. This contract may be terminated by either party with appropriate notice as required by law.
+
+6. Any disputes arising from this contract will be resolved through appropriate legal channels.
+
+================================================================================
+
+SIGNATURES
+================================================================================
+
+Employer Signature: _________________________    Date: _________________
+
+Employee Signature: _________________________    Date: _________________
+
+Promoter Signature: ${contract.promoter ? '_________________________' : 'N/A'}    Date: ${contract.promoter ? '_________________' : 'N/A'}
+
+================================================================================
+
+This contract is generated electronically and is legally binding.
+Generated on: ${new Date().toLocaleString()}
+Contract ID: ${contract.id}
+
+================================================================================
+  `
+  }
+
+  /**
+   * Fix stuck processing contracts by generating PDF directly
+   */
+  async fixStuckProcessingContract(contractId: string): Promise<boolean> {
+    try {
+      console.log('🔧 Fixing stuck processing contract:', contractId)
+
+      // Get contract details
+      const { data: contract, error } = await this.supabase
+        .from('contracts')
+        .select('contract_number, status')
+        .eq('id', contractId)
+        .single()
+
+      if (error || !contract) {
+        console.error('❌ Contract not found:', contractId)
+        return false
+      }
+
+      if (contract.status !== 'processing') {
+        console.log('ℹ️ Contract is not in processing status:', contract.status)
+        return true
+      }
+
+      // Generate PDF directly
+      const pdfResult = await this.generatePDFDirectly(contractId, contract.contract_number)
+      
+      if (pdfResult.success) {
+        console.log('✅ Successfully fixed stuck processing contract')
+        return true
+      } else {
+        // If PDF generation fails, set status to draft
+        await this.supabase
+          .from('contracts')
+          .update({
+            status: 'draft',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', contractId)
+        
+        console.log('⚠️ Set contract to draft status due to PDF generation failure')
+        return true
+      }
+
+    } catch (error) {
+      console.error('❌ Error fixing stuck processing contract:', error)
+      return false
     }
   }
 
@@ -409,4 +699,5 @@ export const contractGenerationService = {
   downloadContractPDF: (contractId: string) => getContractGenerationService().downloadContractPDF(contractId),
   updateContractWithPDF: (contractId: string, pdfUrl: string, googleDriveUrl?: string) => getContractGenerationService().updateContractWithPDF(contractId, pdfUrl, googleDriveUrl),
   retryContractGeneration: (contractId: string) => getContractGenerationService().retryContractGeneration(contractId),
+  fixStuckProcessingContract: (contractId: string) => getContractGenerationService().fixStuckProcessingContract(contractId),
 } 

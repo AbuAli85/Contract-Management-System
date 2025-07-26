@@ -984,6 +984,34 @@ export default function ContractDetailPage() {
                         <RefreshCwIcon className="mr-2 h-4 w-4" />
                         Refresh Status
                       </Button>
+                      {contract?.status === 'processing' && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/contracts/${contractId}/fix-processing`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' }
+                              })
+                              const data = await response.json()
+                              
+                              if (data.success) {
+                                setStatusMessage('Processing status fixed successfully!')
+                                refetch()
+                              } else {
+                                setStatusMessage(`Error: ${data.error}`)
+                              }
+                            } catch (error) {
+                              console.error('Error fixing processing status:', error)
+                              setStatusMessage('Failed to fix processing status')
+                            }
+                          }}
+                        >
+                          <RefreshCwIcon className="mr-2 h-4 w-4" />
+                          Fix Processing
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}

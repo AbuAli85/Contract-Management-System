@@ -118,10 +118,11 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
           description: data.data.message,
         })
 
-        // Start polling for status if processing
+        // Start polling for status if processing (but with shorter intervals for immediate generation)
         if (data.data.status === 'processing') {
           setIsPolling(true)
-          pollContractStatus(data.data.contract_id)
+          // Poll more frequently for immediate generation
+          setTimeout(() => pollContractStatus(data.data.contract_id), 2000)
         }
 
         onSuccess?.(data.data.contract_id)
@@ -163,8 +164,8 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
             variant: "destructive"
           })
         } else {
-          // Continue polling
-          setTimeout(() => pollContractStatus(contractId), 5000)
+          // Continue polling with shorter intervals for immediate generation
+          setTimeout(() => pollContractStatus(contractId), 3000)
         }
       }
     } catch (error) {
@@ -288,6 +289,44 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                   <span className="text-sm">Generating PDF...</span>
                 </div>
                 <Progress value={0} className="w-full" />
+                <div className="mt-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`/api/contracts/${contractStatus.contract_id}/fix-processing`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' }
+                        })
+                        const data = await response.json()
+                        
+                        if (data.success) {
+                          setContractStatus(data.data)
+                          toast({
+                            title: "Processing Fixed!",
+                            description: "Contract processing status has been resolved.",
+                          })
+                        } else {
+                          toast({
+                            title: "Fix Failed",
+                            description: data.error || "Failed to fix processing status",
+                            variant: "destructive"
+                          })
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "Fix Failed",
+                          description: "Failed to fix processing status",
+                          variant: "destructive"
+                        })
+                      }
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Fix Processing
+                  </Button>
+                </div>
               </div>
             )}
 
