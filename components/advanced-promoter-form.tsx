@@ -59,60 +59,61 @@ import { SORTED_NATIONALITIES } from "@/lib/nationalities"
 import { NationalitySelect } from "@/components/ui/nationality-select"
 import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
+import { useParties } from "@/hooks/use-parties"
 
 // Enhanced validation schema
 const advancedPromoterSchema = z.object({
   // Personal Information
   name_en: z.string().min(2, "English name must be at least 2 characters"),
   name_ar: z.string().min(2, "Arabic name must be at least 2 characters"),
-  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  email: z.string().email("Invalid email address").optional().nullable(),
   mobile_number: z.string().min(10, "Mobile number must be at least 10 digits"),
-  phone_number: z.string().optional().or(z.literal("")),
-  address: z.string().optional().or(z.literal("")),
-  city: z.string().optional().or(z.literal("")),
-  country: z.string().optional().or(z.literal("")),
+  phone_number: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  country: z.string().optional().nullable(),
   
   // Identity Documents
   id_card_number: z.string().min(5, "ID card number must be at least 5 characters"),
-  passport_number: z.string().optional().or(z.literal("")),
-  nationality: z.string().optional().or(z.literal("")),
-  date_of_birth: z.string().optional().or(z.literal("")),
+  passport_number: z.string().optional().nullable(),
+  nationality: z.string().optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
   
   // Professional Information
-  job_title: z.string().optional().or(z.literal("")),
-  department: z.string().optional().or(z.literal("")),
-  work_location: z.string().optional().or(z.literal("")),
-  employer_id: z.string().optional().or(z.literal("")),
-  outsourced_to_id: z.string().optional().or(z.literal("")),
+  job_title: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
+  work_location: z.string().optional().nullable(),
+  employer_id: z.string().optional().nullable(),
+  outsourced_to_id: z.string().optional().nullable(),
   
   // Status and Contracts
   status: z.enum(["active", "inactive", "pending", "suspended"]),
-  contract_valid_until: z.string().optional().or(z.literal("")),
+  contract_valid_until: z.string().optional().nullable(),
   
   // Document Expiry Dates
-  id_card_expiry_date: z.string().optional().or(z.literal("")),
-  passport_expiry_date: z.string().optional().or(z.literal("")),
+  id_card_expiry_date: z.string().optional().nullable(),
+  passport_expiry_date: z.string().optional().nullable(),
   
   // Notification Settings
-  notify_days_before_id_expiry: z.number().min(1).max(365).default(30),
-  notify_days_before_passport_expiry: z.number().min(1).max(365).default(90),
+  notify_days_before_id_expiry: z.number().min(1).max(365),
+  notify_days_before_passport_expiry: z.number().min(1).max(365),
   
   // Documents
-  profile_picture_url: z.string().optional().or(z.literal("")),
-  id_card_image: z.any().optional(),
-  passport_image: z.any().optional(),
-  cv_document: z.any().optional(),
+  profile_picture_url: z.string().optional().nullable(),
+  id_card_image: z.any().optional().nullable(),
+  passport_image: z.any().optional().nullable(),
+  cv_document: z.any().optional().nullable(),
   
   // Additional Information
-  notes: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().nullable(),
   skills: z.array(z.string()).optional().default([]),
   experience_years: z.number().min(0).max(50).optional().default(0),
-  education_level: z.string().optional().or(z.literal("")),
+  education_level: z.string().optional().nullable(),
   
   // Settings
-  is_editable: z.boolean().default(true),
-  auto_notifications: z.boolean().default(true),
-  require_approval: z.boolean().default(false)
+  is_editable: z.boolean(),
+  auto_notifications: z.boolean(),
+  require_approval: z.boolean()
 })
 
 type AdvancedPromoterFormData = z.infer<typeof advancedPromoterSchema>
@@ -173,32 +174,32 @@ export default function AdvancedPromoterForm({
     defaultValues: {
       name_en: promoterToEdit?.name_en || "",
       name_ar: promoterToEdit?.name_ar || "",
-      email: promoterToEdit?.email || "",
+      email: promoterToEdit?.email || null,
       mobile_number: promoterToEdit?.mobile_number || "",
-      phone_number: promoterToEdit?.phone || "",
-      address: promoterToEdit?.address || "",
-      city: "",
-      country: "",
+      phone_number: promoterToEdit?.phone || null,
+      address: promoterToEdit?.address || null,
+      city: null,
+      country: null,
       id_card_number: promoterToEdit?.id_card_number || "",
-      passport_number: promoterToEdit?.passport_number || "",
-      nationality: promoterToEdit?.nationality || "",
-      date_of_birth: "",
-      job_title: promoterToEdit?.job_title || "",
-      department: "",
-      work_location: promoterToEdit?.work_location || "",
-      employer_id: promoterToEdit?.employer_id || "",
-      outsourced_to_id: promoterToEdit?.outsourced_to_id || "",
+      passport_number: promoterToEdit?.passport_number || null,
+      nationality: promoterToEdit?.nationality || null,
+      date_of_birth: null,
+      job_title: promoterToEdit?.job_title || null,
+      department: null,
+      work_location: promoterToEdit?.work_location || null,
+      employer_id: promoterToEdit?.employer_id || null,
+      outsourced_to_id: promoterToEdit?.outsourced_to_id || null,
       status: (promoterToEdit?.status as any) || "active",
-      contract_valid_until: promoterToEdit?.contract_valid_until || "",
-      id_card_expiry_date: promoterToEdit?.id_card_expiry_date || "",
-      passport_expiry_date: promoterToEdit?.passport_expiry_date || "",
-      notify_days_before_id_expiry: 30,
-      notify_days_before_passport_expiry: 90,
-      profile_picture_url: promoterToEdit?.profile_picture_url || "",
-      notes: promoterToEdit?.notes || "",
+      contract_valid_until: promoterToEdit?.contract_valid_until || null,
+      id_card_expiry_date: promoterToEdit?.id_card_expiry_date || null,
+      passport_expiry_date: promoterToEdit?.passport_expiry_date || null,
+      notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry ?? 30,
+      notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry ?? 90,
+      profile_picture_url: promoterToEdit?.profile_picture_url || null,
+      notes: promoterToEdit?.notes || null,
       skills: [],
       experience_years: 0,
-      education_level: "",
+      education_level: null,
       is_editable: true,
       auto_notifications: true,
       require_approval: false
@@ -357,6 +358,8 @@ export default function AdvancedPromoterForm({
     }
   }
 
+  const { data: parties, isLoading: partiesLoading } = useParties("Employer")
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
       <div className="mx-auto max-w-6xl">
@@ -499,7 +502,8 @@ export default function AdvancedPromoterForm({
                                 <div className="flex items-center gap-2">
                                   <Input
                                     placeholder="Enter image URL or upload file"
-                                    {...field}
+                                    value={field.value ?? ""}
+                                    onChange={field.onChange}
                                   />
                                   <Button
                                     type="button"
@@ -538,7 +542,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Name (English) *</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter English name" {...field} />
+                              <Input placeholder="Enter English name" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -552,7 +556,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Name (Arabic) *</FormLabel>
                             <FormControl>
-                              <Input placeholder="أدخل الاسم بالعربية" {...field} dir="rtl" />
+                              <Input placeholder="أدخل الاسم بالعربية" value={field.value ?? ""} onChange={field.onChange} dir="rtl" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -569,7 +573,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Email Address</FormLabel>
                             <FormControl>
-                              <Input placeholder="email@example.com" type="email" {...field} />
+                              <Input placeholder="email@example.com" type="email" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -583,7 +587,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Mobile Number *</FormLabel>
                             <FormControl>
-                              <Input placeholder="+966 50 123 4567" {...field} />
+                              <Input placeholder="+966 50 123 4567" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -600,7 +604,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Address</FormLabel>
                             <FormControl>
-                              <Input placeholder="Street address" {...field} />
+                              <Input placeholder="Street address" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -614,7 +618,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>City</FormLabel>
                             <FormControl>
-                              <Input placeholder="City" {...field} />
+                              <Input placeholder="City" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -628,7 +632,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Country</FormLabel>
                             <FormControl>
-                              <Input placeholder="Country" {...field} />
+                              <Input placeholder="Country" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -645,7 +649,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>ID Card Number *</FormLabel>
                             <FormControl>
-                              <Input placeholder="1234567890" {...field} />
+                              <Input placeholder="1234567890" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -659,7 +663,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Passport Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="A12345678" {...field} />
+                              <Input placeholder="A12345678" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -718,7 +722,7 @@ export default function AdvancedPromoterForm({
                             <FormItem>
                               <FormLabel>Expiry Date</FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -768,7 +772,7 @@ export default function AdvancedPromoterForm({
                             <FormItem>
                               <FormLabel>Expiry Date</FormLabel>
                               <FormControl>
-                                <Input type="date" {...field} />
+                                <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -814,7 +818,7 @@ export default function AdvancedPromoterForm({
                                   type="number" 
                                   min="1" 
                                   max="365"
-                                  {...field}
+                                  value={field.value ?? ""}
                                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                                 />
                               </FormControl>
@@ -837,7 +841,7 @@ export default function AdvancedPromoterForm({
                                   type="number" 
                                   min="1" 
                                   max="365"
-                                  {...field}
+                                  value={field.value ?? ""}
                                   onChange={(e) => field.onChange(parseInt(e.target.value))}
                                 />
                               </FormControl>
@@ -867,6 +871,47 @@ export default function AdvancedPromoterForm({
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {/* Employer/Company Select */}
+                    <FormField
+                      control={form.control}
+                      name="employer_id"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company / Employer (Second Party)</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value ?? undefined}
+                            disabled={partiesLoading}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder={partiesLoading ? "Loading companies..." : "Select company/employer"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {parties && parties.length > 0 ? (
+                                parties.map((party) => (
+                                  <SelectItem key={party.id} value={party.id}>
+                                    {party.name_en} / {party.name_ar}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>
+                                  {partiesLoading ? "Loading..." : "No companies found"}
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                          {/* Optionally, add a link/button to add a new company */}
+                          <div className="mt-2">
+                            <a href="/manage-parties" target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                              Add new company/party
+                            </a>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
@@ -875,7 +920,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Job Title</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Sales Representative" {...field} />
+                              <Input placeholder="e.g., Sales Representative" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -889,7 +934,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Department</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Sales & Marketing" {...field} />
+                              <Input placeholder="e.g., Sales & Marketing" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -905,7 +950,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Work Location</FormLabel>
                             <FormControl>
-                              <Input placeholder="Office address or location" {...field} />
+                              <Input placeholder="Office address or location" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -919,7 +964,7 @@ export default function AdvancedPromoterForm({
                           <FormItem>
                             <FormLabel>Contract Valid Until</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Input type="date" value={field.value ?? ""} onChange={field.onChange} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -961,7 +1006,8 @@ export default function AdvancedPromoterForm({
                             <Textarea 
                               placeholder="Any additional information about the promoter..."
                               className="min-h-[100px]"
-                              {...field} 
+                              value={field.value ?? ""}
+                              onChange={field.onChange} 
                             />
                           </FormControl>
                           <FormMessage />
