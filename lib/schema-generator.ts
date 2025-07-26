@@ -24,8 +24,8 @@ export const contractGeneratorSchema = z
     promoter_passport_url: z.string().optional(),
     
     // Contract period with enhanced validation
-    contract_start_date: z.date("Please enter a valid start date.").optional(),
-    contract_end_date: z.date("Please enter a valid end date.").optional(),
+    contract_start_date: z.date().optional(),
+    contract_end_date: z.date().optional(),
     
     // Contact information
     email: z
