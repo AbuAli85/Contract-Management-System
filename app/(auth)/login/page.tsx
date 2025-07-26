@@ -1,14 +1,14 @@
 'use client'
 
+import { LoginForm } from '@/src/components/auth/login-form'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LoginForm } from '@/src/components/auth/login-form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
 
 export default function LoginPage() {
+  const { user, loading } = useAuth()
   const router = useRouter()
-  const { user, loading } = useSimpleWorkingAuth()
   const [redirecting, setRedirecting] = useState(false)
 
   useEffect(() => {

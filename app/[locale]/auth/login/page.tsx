@@ -2,12 +2,12 @@
 
 import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
-import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import Link from 'next/link'
 import { useEffect, useRef } from 'react'
 
 export default function LoginPage() {
-  const { user, loading, mounted } = useSimpleWorkingAuth()
+  const { user, loading, mounted } = useAuth()
   const hasRedirected = useRef(false)
 
   // If user is already logged in, redirect to dashboard

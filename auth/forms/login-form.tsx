@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,7 +17,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   
   const router = useRouter()
-  const { signIn } = useSimpleWorkingAuth()
+  const { signIn } = useAuth()
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'

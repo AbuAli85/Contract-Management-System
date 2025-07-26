@@ -29,9 +29,9 @@ import {
   Zap
 } from 'lucide-react'
 import { SystemStatus } from '@/components/system-status'
-import { useSimpleWorkingAuth } from '@/src/components/auth/simple-working-auth-provider'
 import Link from 'next/link'
 import { CardDescription } from '@/components/ui/card'
+import { useAuth } from '@/src/components/auth/auth-provider'
 
 // Loading fallback
 function DashboardLoading() {
@@ -54,7 +54,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authLoading, profile } = useSimpleWorkingAuth()
+  const { user, loading: authLoading, profile } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
