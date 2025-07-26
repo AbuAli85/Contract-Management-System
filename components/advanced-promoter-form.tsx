@@ -564,29 +564,25 @@ export default function AdvancedPromoterForm({
       
       console.log('✅ Supabase client created successfully')
       
-      // Clean and validate data before sending to database
+      // Clean and validate data before sending to database - matching actual schema
       const promoterData = {
         name_en: values.name_en.trim(),
         name_ar: values.name_ar.trim(),
-        email: values.email?.trim() || null,
-        mobile_number: values.mobile_number.trim(),
-        phone: values.phone_number?.trim() || null,
-        address: values.address?.trim() || null,
         id_card_number: values.id_card_number.trim(),
-        passport_number: values.passport_number?.trim() || null,
-        nationality: values.nationality?.trim() || null,
-        job_title: values.job_title?.trim() || null,
-        work_location: values.work_location?.trim() || null,
-        employer_id: values.employer_id?.trim() || null,
-        outsourced_to_id: values.outsourced_to_id?.trim() || null,
+        id_card_url: null, // Will be set when file is uploaded
+        passport_url: null, // Will be set when file is uploaded
         status: values.status,
+        contract_valid_until: null, // Not in current form
         id_card_expiry_date: values.id_card_expiry_date?.trim() || null,
         passport_expiry_date: values.passport_expiry_date?.trim() || null,
         notify_days_before_id_expiry: values.notify_days_before_id_expiry,
         notify_days_before_passport_expiry: values.notify_days_before_passport_expiry,
-        profile_picture_url: values.profile_picture_url?.trim() || null,
+        notify_days_before_contract_expiry: 30, // Default value
         notes: values.notes?.trim() || null,
-        updated_at: new Date().toISOString()
+        passport_number: values.passport_number?.trim() || null,
+        mobile_number: values.mobile_number.trim(),
+        profile_picture_url: values.profile_picture_url?.trim() || null,
+        nationality: values.nationality?.trim() || null
       }
 
       console.log('📊 Preparing promoter data:', promoterData)
