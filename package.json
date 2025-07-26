@@ -34,7 +34,8 @@
     "make-bucket-public": "node scripts/make-bucket-public.js",
     "check-contract-statuses": "node scripts/check-contract-statuses.js",
     "setup-approval-workflow": "node scripts/setup-approval-workflow.js",
-    "fix-approval-constraint": "node scripts/fix-approval-status-constraint.js"
+    "fix-approval-constraint": "node scripts/fix-approval-status-constraint.js",
+    "check-contract-relationships": "node scripts/check-contract-relationships.js"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",

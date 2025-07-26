@@ -8,8 +8,25 @@ export async function GET(request: NextRequest) {
     // First, let's check if the contracts table exists and has data
     const { data: contracts, error: contractsError } = await supabase
       .from('contracts')
-      .select('id, contract_number, status, created_at')
-      .limit(10)
+      .select(`
+        id,
+        contract_number,
+        status,
+        created_at,
+        updated_at,
+        contract_start_date,
+        contract_end_date,
+        job_title,
+        work_location,
+        contract_value,
+        first_party_id,
+        second_party_id,
+        promoter_id,
+        first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type),
+        second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type),
+        promoters:promoters!contracts_promoter_id_fkey(id, name_en, name_ar, id_card_number, status)
+      `)
+      .order('created_at', { ascending: false })
 
     if (contractsError) {
       console.error('Error fetching contracts:', contractsError)
@@ -59,7 +76,15 @@ export async function GET(request: NextRequest) {
             stats.expired++
             break
           case 'pending':
+          case 'legal_review':
+          case 'hr_review':
+          case 'final_approval':
+          case 'signature':
             stats.upcoming++
+            break
+          case 'draft':
+          case 'generated':
+            stats.unknown++
             break
           default:
             stats.unknown++
