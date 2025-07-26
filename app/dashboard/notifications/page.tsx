@@ -562,4 +562,59 @@ export default function NotificationsPage() {
                             <td className="px-4 py-3 whitespace-nowrap">
                               {notif.related_contract_id ? (
                                 <a
-                                  href={`/contracts/${notif.related_contract_id}`
+                                  href={`/contracts/${notif.related_contract_id}`}
+                                  className="text-blue-600 underline inline-flex items-center gap-1"
+                                  tabIndex={0}
+                                  aria-label="View related contract"
+                                  onClick={e => e.stopPropagation()}
+                                  onKeyDown={e => e.stopPropagation()}
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                  Contract
+                                </a>
+                              ) : notif.related_entity_id ? (
+                                <a
+                                  href={`/${notif.related_entity_type || "entity"}/${notif.related_entity_id}`}
+                                  className="text-blue-600 underline inline-flex items-center gap-1"
+                                  tabIndex={0}
+                                  aria-label="View related entity"
+                                  onClick={e => e.stopPropagation()}
+                                  onKeyDown={e => e.stopPropagation()}
+                                >
+                                  <LinkIcon className="h-4 w-4" />
+                                  {notif.related_entity_type || "Entity"}
+                                </a>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={e => { e.stopPropagation(); toggleRead(notif); }}
+                                disabled={isUpdating}
+                                aria-label={
+                                  notif.is_read ? "Mark as unread" : "Mark as read"
+                                }
+                              >
+                                {notif.is_read ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </td>
+                          </tr>
+                        )})}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+  )
+}
