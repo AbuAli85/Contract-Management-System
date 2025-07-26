@@ -128,32 +128,33 @@ export default function ContractDetailPage() {
   }
 
   const handleDownloadPDF = async () => {
-    if (!contract || contract.approval_status !== 'active') {
-      setStatusMessage('Contract must be approved before PDF can be generated')
-      return
-    }
-
     setDownloading(true)
-    setStatusMessage('Initiating PDF generation and email sending...')
+    setStatusMessage('Generating contract PDF...')
 
     try {
-      const response = await fetch('/api/contracts/download-pdf', {
+      const response = await fetch(`/api/contracts/${contractId}/generate-pdf`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contractId })
+        headers: { 'Content-Type': 'application/json' }
       })
 
       const data = await response.json()
 
       if (data.success) {
-        setStatusMessage('PDF generation and email sending initiated successfully!')
-        fetchPDFStatus()
+        setStatusMessage('PDF generated successfully!')
+        // Refresh the contract data to get the new PDF URL
+        refetch()
+        // Update PDF status
+        setPdfStatus(prev => ({
+          ...prev,
+          has_pdf: true,
+          pdf_url: data.pdf_url
+        }))
       } else {
         setStatusMessage(`Error: ${data.error}`)
       }
     } catch (error) {
-      console.error('Error downloading PDF:', error)
-      setStatusMessage('Failed to initiate PDF generation')
+      console.error('Error generating PDF:', error)
+      setStatusMessage('Failed to generate PDF')
     } finally {
       setDownloading(false)
     }
@@ -348,14 +349,14 @@ export default function ContractDetailPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                                                 {hasPDF && contract.pdf_url ? (
-                           <Button size="sm" variant="outline" asChild>
-                             <a href={contract.pdf_url} target="_blank" rel="noopener noreferrer">
-                               <ExternalLinkIcon className="mr-2 h-4 w-4" />
-                               View PDF
-                             </a>
-                           </Button>
-                         ) : (
+                        {hasPDF && contract.pdf_url ? (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={contract.pdf_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                              View PDF
+                            </a>
+                          </Button>
+                        ) : (
                           <Button 
                             size="sm" 
                             onClick={handleDownloadPDF}
@@ -366,7 +367,7 @@ export default function ContractDetailPage() {
                             ) : (
                               <DownloadIcon className="mr-2 h-4 w-4" />
                             )}
-                            {downloading ? 'Processing...' : 'Generate PDF & Send Email'}
+                            {downloading ? 'Generating...' : 'Generate PDF'}
                           </Button>
                         )}
                         <Button 
@@ -678,13 +679,25 @@ export default function ContractDetailPage() {
                   {!contract?.pdf_url && (
                     <div className="text-center py-12 text-gray-500">
                       <FileTextIcon className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Documents Available</h3>
-                      <p className="text-sm">No documents have been uploaded for this contract yet.</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No PDF Available</h3>
+                      <p className="text-sm">No PDF has been generated for this contract yet.</p>
                       <div className="mt-6">
-                        <Button asChild>
+                        <Button 
+                          onClick={handleDownloadPDF}
+                          disabled={downloading}
+                          className="mr-3"
+                        >
+                          {downloading ? (
+                            <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <DownloadIcon className="mr-2 h-4 w-4" />
+                          )}
+                          {downloading ? 'Generating...' : 'Generate PDF'}
+                        </Button>
+                        <Button asChild variant="outline">
                           <Link href={`/${params?.locale}/edit-contract/${contractId}`}>
                             <EditIcon className="mr-2 h-4 w-4" />
-                            Add Documents
+                            Edit Contract
                           </Link>
                         </Button>
                       </div>
@@ -947,7 +960,7 @@ export default function ContractDetailPage() {
                 </div>
 
                 {/* Manual Actions */}
-                {isApproved && !hasPDF && (
+                {!hasPDF && (
                   <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                     <h4 className="font-medium text-yellow-900 mb-2">Manual Actions</h4>
                     <div className="flex items-center gap-2">
@@ -961,7 +974,7 @@ export default function ContractDetailPage() {
                         ) : (
                           <DownloadIcon className="mr-2 h-4 w-4" />
                         )}
-                        {downloading ? 'Processing...' : 'Generate PDF & Send Email'}
+                        {downloading ? 'Generating...' : 'Generate PDF'}
                       </Button>
                       <Button 
                         size="sm" 
