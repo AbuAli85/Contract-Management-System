@@ -98,111 +98,71 @@ export default function NotificationsPage() {
             id: notification.id.toString(), // Convert number to string
             related_contract_id: notification.related_contract_id?.toString() || undefined,
             isRead: notification.is_read || false, // Add compatibility field
-            timestamp: notification.created_at // Add compatibility field
-          })) as NotificationItem[]
+          }))
           setNotifications(transformedData)
         }
       } catch (err: any) {
         if (!ignore) {
-          setError(err.message)
-          toast({
-            title: "Error",
-            description: "Failed to load notifications. Please try again.",
-            variant: "destructive",
-          })
+          setError(err.message || "Failed to fetch notifications")
         }
       } finally {
-        if (!ignore) setLoading(false)
+        if (!ignore) {
+          setLoading(false)
+        }
       }
     }
+
     fetchNotifications()
     // Real-time subscription
     const supabase = getSupabaseClient()
     const channel = supabase
       .channel("public:notifications:feed")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "notifications" },
-        (payload) => {
-          setNotifications((prev) => {
-            if (payload.eventType === "INSERT") {
-              // Transform the new notification to match NotificationItem interface
-              const newNotification: NotificationItem = {
-                id: payload.new.id.toString(), // Convert number to string
-                type: payload.new.type,
-                message: payload.new.message,
-                created_at: payload.new.created_at,
-                related_contract_id: payload.new.related_contract_id?.toString() || undefined,
-                isRead: payload.new.is_read || false, // Add compatibility field
-                timestamp: payload.new.created_at, // Add compatibility field
-                user_email: payload.new.user_email
-              }
-              return [newNotification, ...prev]
-            } else if (payload.eventType === "UPDATE") {
-              // Transform the updated notification
-              const updatedNotification: NotificationItem = {
-                id: payload.new.id.toString(), // Convert number to string
-                type: payload.new.type,
-                message: payload.new.message,
-                created_at: payload.new.created_at,
-                related_contract_id: payload.new.related_contract_id?.toString() || undefined,
-                isRead: payload.new.is_read || false, // Add compatibility field
-                timestamp: payload.new.created_at, // Add compatibility field
-                user_email: payload.new.user_email
-              }
-              return prev.map((n) => (n.id === updatedNotification.id ? updatedNotification : n))
-            } else if (payload.eventType === "DELETE") {
-              // Convert the deleted notification ID to string for comparison
-              const deletedId = payload.old.id.toString()
-              return prev.filter((n) => n.id !== deletedId)
-            }
-            return prev
-          })
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
+        if (!ignore) {
+          fetchNotifications()
         }
-      )
+      })
       .subscribe()
+
     return () => {
       ignore = true
       supabase.removeChannel(channel)
     }
   }, [])
 
-  // Get unique users for filter
+  // Get unique user emails for filter
   const userOptions = useMemo(() => {
-    const emails = notifications.map((n) => n.user_email).filter(Boolean)
-    return Array.from(new Set(emails))
+    const emails = notifications
+      .map(n => n.user_email)
+      .filter(Boolean)
+      .filter((email, index, arr) => arr.indexOf(email) === index)
+    return emails as string[]
   }, [notifications])
 
-  // Filtering, searching, and pagination
+  // Filter notifications
   const filtered = useMemo(() => {
-    let filtered = notifications
-    if (search) {
-      filtered = filtered.filter(
-        (n) =>
-          n.message.toLowerCase().includes(search.toLowerCase()) ||
-          (n.user_email && n.user_email.toLowerCase().includes(search.toLowerCase()))
-      )
-    }
-    if (typeFilter) {
-      filtered = filtered.filter((n) => n.type === typeFilter)
-    }
-    if (readFilter) {
-      filtered = filtered.filter((n) =>
-        readFilter === "read" ? n.is_read : !n.is_read
-      )
-    }
-    if (userFilter) {
-      filtered = filtered.filter((n) => n.user_email === userFilter)
-    }
-    if (startDate) {
-      filtered = filtered.filter((n) => isAfter(parseISO(n.created_at), startDate))
-    }
-    if (endDate) {
-      filtered = filtered.filter((n) => isBefore(parseISO(n.created_at), endDate))
-    }
-    return filtered
+    return notifications.filter((notif) => {
+      const matchesSearch = !search || 
+        notif.message.toLowerCase().includes(search.toLowerCase()) ||
+        (notif.user_email && notif.user_email.toLowerCase().includes(search.toLowerCase()))
+      
+      const matchesType = !typeFilter || notif.type === typeFilter
+      
+      const matchesRead = !readFilter || 
+        (readFilter === "read" && notif.is_read) ||
+        (readFilter === "unread" && !notif.is_read)
+      
+      const matchesUser = !userFilter || notif.user_email === userFilter
+      
+      const matchesDate = !startDate && !endDate || 
+        (!startDate || isAfter(parseISO(notif.created_at), startDate)) &&
+        (!endDate || isBefore(parseISO(notif.created_at), endDate))
+      
+      return matchesSearch && matchesType && matchesRead && matchesUser && matchesDate
+    })
   }, [notifications, search, typeFilter, readFilter, userFilter, startDate, endDate])
 
+  // Paginate filtered results
   const paginated = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE
     return filtered.slice(start, start + PAGE_SIZE)
@@ -210,34 +170,32 @@ export default function NotificationsPage() {
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)), [filtered.length])
 
-  // Optimistic updates for better UX
+  // Toggle read status
   const toggleRead = async (notif: NotificationItem) => {
     setIsUpdating(true)
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === notif.id ? { ...n, is_read: !notif.is_read } : n
-      )
-    )
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: !notif.is_read })
-        .eq("id", parseInt(notif.id))
+        .eq("id", notif.id)
+
       if (error) throw error
-      toast({
-        title: "Success",
-        description: `Marked as ${!notif.is_read ? 'read' : 'unread'}`,
-      })
-    } catch (err) {
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, is_read: notif.is_read } : n
+
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notif.id ? { ...n, is_read: !n.is_read } : n
         )
       )
+
+      toast({
+        title: notif.is_read ? "Marked as unread" : "Marked as read",
+        description: `Notification ${notif.is_read ? "marked as unread" : "marked as read"}`,
+      })
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to update notification status.",
+        description: err.message || "Failed to update notification",
         variant: "destructive",
       })
     } finally {
@@ -245,28 +203,27 @@ export default function NotificationsPage() {
     }
   }
 
-  // Bulk mark all as read
+  // Mark all as read
   const markAllAsRead = async () => {
     setIsUpdating(true)
-    const unreadCount = notifications.filter(n => !n.is_read).length
-    if (unreadCount === 0) return
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("is_read", false)
+        .neq("id", 0)
+
       if (error) throw error
+
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
       toast({
-        title: "Success",
-        description: `Marked ${unreadCount} notifications as read`,
+        title: "All marked as read",
+        description: "All notifications have been marked as read",
       })
-    } catch (err) {
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: false })))
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to mark notifications as read.",
+        description: err.message || "Failed to mark all as read",
         variant: "destructive",
       })
     } finally {
@@ -274,26 +231,23 @@ export default function NotificationsPage() {
     }
   }
 
-  // Bulk clear all
+  // Clear all notifications
   const clearAll = async () => {
-    if (!confirm("Are you sure you want to delete all notifications? This action cannot be undone.")) {
-      return
-    }
     setIsUpdating(true)
-    const count = notifications.length
-    setNotifications([])
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase.from("notifications").delete().neq("id", 0)
       if (error) throw error
+
+      setNotifications([])
       toast({
-        title: "Success",
-        description: `Cleared ${count} notifications`,
+        title: "All cleared",
+        description: "All notifications have been cleared",
       })
-    } catch (err) {
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to clear notifications.",
+        description: err.message || "Failed to clear notifications",
         variant: "destructive",
       })
     } finally {
@@ -344,277 +298,294 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BellRing className="h-5 w-5" />
-              All Notifications / جميع الإشعارات
-            </CardTitle>
-            <CardDescription>
-              View, search, and manage all system notifications.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Error Banner */}
-            {error && (
-              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
-                <div className="flex items-center gap-2 text-red-800">
-                  <XCircle className="h-4 w-4" />
-                  <span className="font-medium">Error loading notifications:</span>
-                  <span>{error}</span>
-                </div>
-              </div>
-            )}
-            {/* Filters and Actions */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="search"
-                    placeholder="Search notifications..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-56 pl-10"
-                    aria-label="Search notifications"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    aria-label="Filter by type"
-                  >
-                    <option value="">All Types</option>
-                    {NOTIF_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={readFilter}
-                    onChange={(e) => setReadFilter(e.target.value)}
-                    className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    aria-label="Filter by read/unread"
-                  >
-                    <option value="">All</option>
-                    <option value="unread">Unread</option>
-                    <option value="read">Read</option>
-                  </select>
-                  <select
-                    value={userFilter}
-                    onChange={(e) => setUserFilter(e.target.value)}
-                    className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    aria-label="Filter by user"
-                  >
-                    <option value="">All Users</option>
-                    {userOptions.map((email) => (
-                      <option key={email} value={email}>{email}</option>
-                    ))}
-                  </select>
-                  <DatePickerWithManualInput
-                    date={startDate}
-                    setDate={setStartDate}
-                    placeholder="Start date"
-                    aria-label="Filter by start date"
-                  />
-                  <DatePickerWithManualInput
-                    date={endDate}
-                    setDate={setEndDate}
-                    placeholder="End date"
-                    aria-label="Filter by end date"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={markAllAsRead}
-                  disabled={notifications.every((n) => n.is_read) || isUpdating}
-                  aria-label="Mark all as read"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Mark all as read
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={clearAll}
-                  disabled={notifications.length === 0 || isUpdating}
-                  aria-label="Clear all notifications"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear all
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={exportToCSV}
-                  aria-label="Export to CSV"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BellRing className="h-5 w-5" />
+            All Notifications / جميع الإشعارات
+          </CardTitle>
+          <CardDescription>
+            View, search, and manage all system notifications.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Error Banner */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg" role="alert">
+              <div className="flex items-center gap-2 text-red-800">
+                <XCircle className="h-4 w-4" />
+                <span className="font-medium">Error loading notifications:</span>
+                <span>{error}</span>
               </div>
             </div>
-            {/* Content */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="animate-spin mr-2 h-6 w-6" />
-                <span>Loading notifications...</span>
+          )}
+          
+          {/* Filters and Actions */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search notifications..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-56 pl-10"
+                  aria-label="Search notifications"
+                />
               </div>
-            ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center py-12 text-center">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <BellRing className="h-8 w-8 text-gray-400" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
-                <p className="text-gray-500 max-w-sm">
-                  {search || typeFilter || readFilter || userFilter || startDate || endDate
-                    ? "Try adjusting your filters to see more results."
-                    : "You're all caught up! New notifications will appear here."
-                  }
-                </p>
+              <div className="flex gap-2">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Filter by type"
+                >
+                  <option value="">All Types</option>
+                  {NOTIF_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={readFilter}
+                  onChange={(e) => setReadFilter(e.target.value)}
+                  className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Filter by read/unread"
+                >
+                  <option value="">All</option>
+                  <option value="unread">Unread</option>
+                  <option value="read">Read</option>
+                </select>
+                <select
+                  value={userFilter}
+                  onChange={(e) => setUserFilter(e.target.value)}
+                  className="border rounded-md px-3 py-2 bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  aria-label="Filter by user"
+                >
+                  <option value="">All Users</option>
+                  {userOptions.map((email) => (
+                    <option key={email} value={email}>{email}</option>
+                  ))}
+                </select>
+                <DatePickerWithManualInput
+                  date={startDate}
+                  setDate={setStartDate}
+                  placeholder="Start date"
+                  aria-label="Filter by start date"
+                />
+                <DatePickerWithManualInput
+                  date={endDate}
+                  setDate={setEndDate}
+                  placeholder="End date"
+                  aria-label="Filter by end date"
+                />
               </div>
-            ) : (
-              <div className="overflow-hidden border rounded-lg">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200" role="table">
-                    <thead className="sticky top-0 bg-background z-10">
-                      <tr>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Message
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Time
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Related
-                        </th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-background divide-y divide-gray-200">
-                      {paginated.map((notif) => {
-                        const IconComponent = iconMap[notif.type] || iconMap.default
-                        return (
-                          <tr
-                            key={notif.id}
-                            tabIndex={0}
-                            className={clsx(
-                              "hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary",
-                              !notif.is_read
-                                ? "bg-blue-50 dark:bg-blue-900/10"
-                                : "bg-background"
-                            )}
-                            aria-label={`Notification: ${notif.message}`}
-                            onClick={() => { setSelectedNotif(notif); setShowModal(true); }}
-                            onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { setSelectedNotif(notif); setShowModal(true); } }}
-                          >
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <IconComponent
-                                className={clsx(
-                                  "h-5 w-5",
-                                  getIconColor(notif.type)
-                                )}
-                                aria-label={`${notif.type} notification`}
-                              />
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="max-w-xs">
-                                <p className="text-sm text-gray-900 truncate" title={notif.message}>
-                                  {notif.message}
-                                </p>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span className="text-sm font-mono text-gray-600">
-                                {notif.user_email || "-"}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={markAllAsRead}
+                disabled={notifications.every((n) => n.is_read) || isUpdating}
+                aria-label="Mark all as read"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Mark all as read
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={clearAll}
+                disabled={notifications.length === 0 || isUpdating}
+                aria-label="Clear all notifications"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear all
+              </Button>
+              <Button
+                variant="outline"
+                onClick={exportToCSV}
+                aria-label="Export to CSV"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Content */}
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="animate-spin mr-2 h-6 w-6" />
+              <span>Loading notifications...</span>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center py-12 text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <BellRing className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No notifications found</h3>
+              <p className="text-gray-500 max-w-sm">
+                {search || typeFilter || readFilter || userFilter || startDate || endDate
+                  ? "Try adjusting your filters to see more results."
+                  : "You're all caught up! New notifications will appear here."
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-hidden border rounded-lg">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200" role="table">
+                  <thead className="sticky top-0 bg-background z-10">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Type
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Message
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Time
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Related
+                      </th>
+                      <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-background divide-y divide-gray-200">
+                    {paginated.map((notif) => {
+                      const IconComponent = iconMap[notif.type] || iconMap.default
+                      return (
+                        <tr
+                          key={notif.id}
+                          tabIndex={0}
+                          className={clsx(
+                            "hover:bg-gray-50 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary",
+                            !notif.is_read
+                              ? "bg-blue-50 dark:bg-blue-900/10"
+                              : "bg-background"
+                          )}
+                          aria-label={`Notification: ${notif.message}`}
+                          onClick={() => { setSelectedNotif(notif); setShowModal(true); }}
+                          onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { setSelectedNotif(notif); setShowModal(true); } }}
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <IconComponent
+                              className={clsx(
+                                "h-5 w-5",
+                                getIconColor(notif.type)
+                              )}
+                              aria-label={`${notif.type} notification`}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="max-w-xs">
+                              <p className="text-sm text-gray-900 truncate" title={notif.message}>
+                                {notif.message}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="text-sm font-mono text-gray-600">
+                              {notif.user_email || "-"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
+                            {formatDistanceToNow(new Date(notif.created_at), {
+                              addSuffix: true,
+                            })}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {notif.is_read ? (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Read
                               </span>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
-                              {formatDistanceToNow(new Date(notif.created_at), {
-                                addSuffix: true,
-                              })}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              {notif.is_read ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  Read
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 font-semibold">
-                                  Unread
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              {notif.related_contract_id ? (
-                                <a
-                                  href={`/contracts/${notif.related_contract_id}`}
-                                  className="text-blue-600 underline inline-flex items-center gap-1"
-                                  tabIndex={0}
-                                  aria-label="View related contract"
-                                  onClick={e => e.stopPropagation()}
-                                  onKeyDown={e => e.stopPropagation()}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                  Contract
-                                </a>
-                              ) : notif.related_entity_id ? (
-                                <a
-                                  href={`/${notif.related_entity_type || "entity"}/${notif.related_entity_id}`}
-                                  className="text-blue-600 underline inline-flex items-center gap-1"
-                                  tabIndex={0}
-                                  aria-label="View related entity"
-                                  onClick={e => e.stopPropagation()}
-                                  onKeyDown={e => e.stopPropagation()}
-                                >
-                                  <LinkIcon className="h-4 w-4" />
-                                  {notif.related_entity_type || "Entity"}
-                                </a>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">-</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={e => { e.stopPropagation(); toggleRead(notif); }}
-                                disabled={isUpdating}
-                                aria-label={
-                                  notif.is_read ? "Mark as unread" : "Mark as read"
-                                }
+                            ) : (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 font-semibold">
+                                Unread
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {notif.related_contract_id ? (
+                              <a
+                                href={`/contracts/${notif.related_contract_id}`}
+                                className="text-blue-600 underline inline-flex items-center gap-1"
+                                tabIndex={0}
+                                aria-label="View related contract"
+                                onClick={e => e.stopPropagation()}
+                                onKeyDown={e => e.stopPropagation()}
                               >
-                                {notif.is_read ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </Button>
-                            </td>
-                          </tr>
-                        )})}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                                <LinkIcon className="h-4 w-4" />
+                                Contract
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={e => { e.stopPropagation(); toggleRead(notif); }}
+                              disabled={isUpdating}
+                              aria-label={
+                                notif.is_read ? "Mark as unread" : "Mark as read"
+                              }
+                            >
+                              {notif.is_read ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <Eye className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Details Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent aria-modal="true" role="dialog">
+          <DialogHeader>
+            <DialogTitle>Notification Details</DialogTitle>
+            <DialogDescription>
+              Full details for this notification.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedNotif && (
+            <div className="space-y-2">
+              <div><b>Type:</b> {selectedNotif.type}</div>
+              <div><b>Message:</b> {selectedNotif.message}</div>
+              <div><b>User Email:</b> {selectedNotif.user_email || "-"}</div>
+              <div><b>Created At:</b> {format(new Date(selectedNotif.created_at), "yyyy-MM-dd HH:mm:ss")}</div>
+              <div><b>Status:</b> {selectedNotif.is_read ? "Read" : "Unread"}</div>
+              {selectedNotif.related_contract_id && (
+                <div><b>Related Contract:</b> <a href={`/contracts/${selectedNotif.related_contract_id}`} className="text-blue-600 underline">View Contract</a></div>
+              )}
+            </div>
+          )}
+          <DialogClose asChild>
+            <Button variant="outline" aria-label="Close details modal">Close</Button>
+          </DialogClose>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
