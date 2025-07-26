@@ -1,19 +1,7 @@
 import { useState, useEffect } from "react"
 import { devLog } from "@/lib/dev-log"
 import type { User } from "@supabase/supabase-js"
-import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
-
-// Lazy import to avoid build-time issues
-let supabase: SupabaseClient<Database> | null = null
-
-async function getSupabase(): Promise<SupabaseClient<Database>> {
-  if (!supabase) {
-    const { supabase: supabaseClient } = await import('@/lib/supabase')
-    supabase = supabaseClient
-  }
-  return supabase
-}
+import { getSupabaseClient } from '@/lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
@@ -26,7 +14,7 @@ export function useAuth() {
     
     const checkAuth = async () => {
       try {
-        const supabaseClient = await getSupabase()
+        const supabaseClient = getSupabaseClient()
         const { data: { session } } = await supabaseClient.auth.getSession()
         setUser(session?.user ?? null)
         setIsAuthenticated(!!session?.user)
@@ -43,7 +31,7 @@ export function useAuth() {
 
     const setupAuthListener = async () => {
       try {
-        const supabaseClient = await getSupabase()
+        const supabaseClient = getSupabaseClient()
         const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
           setUser(session?.user ?? null)
           setIsAuthenticated(!!session?.user)
