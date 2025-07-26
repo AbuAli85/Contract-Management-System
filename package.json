@@ -100,6 +100,7 @@
     "framer-motion": "latest",
     "ib": "latest",
     "input-otp": "latest",
+    "jspdf": "^3.0.1",
     "lodash": "^4.17.21",
     "lucide-react": "^0.263.1",
     "nanoid": "^5.1.5",

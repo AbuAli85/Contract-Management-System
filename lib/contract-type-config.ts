@@ -1,582 +1,701 @@
-// lib/contract-type-config.ts
-import { 
-  getMakecomTemplateConfig, 
-  generateMakecomWebhookPayload,
-  validateMakecomTemplateData,
-  type MakecomTemplateConfig 
-} from './makecom-template-config'
+// Enhanced Contract Type Configuration with Additional Contract Types
+import { enhancedTemplates } from './enhanced-google-docs-templates'
 
 export interface ContractTypeConfig {
   id: string
   name: string
+  nameAr: string
   description: string
-  category: string
+  descriptionAr: string
+  category: 'employment' | 'service' | 'freelance' | 'consulting' | 'partnership' | 'nda' | 'custom'
+  isActive: boolean
+  requiresApproval: boolean
+  makecomTemplateId?: string
+  googleDocsTemplateId?: string
+  fields: ContractField[]
+  validation: ContractValidation
+  pricing?: ContractPricing
+  metadata?: Record<string, any>
+}
+
+export interface ContractField {
+  id: string
+  name: string
+  nameAr: string
+  type: 'text' | 'email' | 'phone' | 'date' | 'number' | 'select' | 'textarea' | 'file' | 'boolean'
+  required: boolean
+  placeholder?: string
+  placeholderAr?: string
+  options?: { value: string; label: string; labelAr: string }[]
+  validation?: FieldValidation
+  defaultValue?: any
+}
+
+export interface FieldValidation {
+  minLength?: number
+  maxLength?: number
+  pattern?: string
+  min?: number
+  max?: number
+  custom?: (value: any) => boolean
+}
+
+export interface ContractValidation {
   requiredFields: string[]
   optionalFields: string[]
-  templatePlaceholders: string[]
-  validationRules: Record<string, unknown>
-  defaultValues: Record<string, unknown>
-  businessRules: string[]
-  omanCompliant: boolean
-  uaeCompliant?: boolean
-  maxDuration?: number // in months
-  minDuration?: number // in months
-  allowsSalary: boolean
-  allowsProbation: boolean
-  allowsRemoteWork: boolean
+  customValidation?: (data: any) => { isValid: boolean; errors: string[] }
 }
 
-export interface EnhancedContractTypeConfig extends ContractTypeConfig {
-  makecomTemplateId?: string
-  makecomIntegration?: boolean
+export interface ContractPricing {
+  basePrice: number
+  currency: string
+  pricingModel: 'fixed' | 'hourly' | 'monthly' | 'project-based'
+  features: string[]
 }
 
-// Base contract type configs
-export const CONTRACT_TYPE_CONFIGS: Record<string, ContractTypeConfig> = {
-  "unlimited-contract": {
-    id: "unlimited-contract",
-    name: "Unlimited Contract (Permanent)",
-    description: "Standard Oman unlimited duration employment contract with full benefits",
-    category: "Oman Labor Law",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id", 
-      "contract_start_date", "job_title", "department", 
-      "basic_salary", "currency", "work_location", "email"
+// Enhanced Contract Types Configuration
+export const enhancedContractTypes: ContractTypeConfig[] = [
+  // Employment Contracts
+  {
+    id: 'full-time-permanent',
+    name: 'Full-Time Permanent Employment',
+    nameAr: 'توظيف بدوام كامل دائم',
+    description: 'Standard full-time permanent employment contract with comprehensive benefits',
+    descriptionAr: 'عقد توظيف بدوام كامل دائم مع مزايا شاملة',
+    category: 'employment',
+    isActive: true,
+    requiresApproval: true,
+    makecomTemplateId: 'enhanced-employment',
+    googleDocsTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    fields: [
+      {
+        id: 'job_title',
+        name: 'Job Title',
+        nameAr: 'المسمى الوظيفي',
+        type: 'text',
+        required: true,
+        placeholder: 'e.g., Software Engineer',
+        placeholderAr: 'مثال: مهندس برمجيات'
+      },
+      {
+        id: 'department',
+        name: 'Department',
+        nameAr: 'القسم',
+        type: 'text',
+        required: true,
+        placeholder: 'e.g., IT Department',
+        placeholderAr: 'مثال: قسم تقنية المعلومات'
+      },
+      {
+        id: 'basic_salary',
+        name: 'Basic Salary',
+        nameAr: 'الراتب الأساسي',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      },
+      {
+        id: 'housing_allowance',
+        name: 'Housing Allowance',
+        nameAr: 'بدل السكن',
+        type: 'number',
+        required: false,
+        defaultValue: 0
+      },
+      {
+        id: 'transport_allowance',
+        name: 'Transportation Allowance',
+        nameAr: 'بدل النقل',
+        type: 'number',
+        required: false,
+        defaultValue: 0
+      },
+      {
+        id: 'probation_period',
+        name: 'Probation Period',
+        nameAr: 'فترة التجربة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '3_months', label: '3 Months', labelAr: '3 أشهر' },
+          { value: '6_months', label: '6 Months', labelAr: '6 أشهر' },
+          { value: '12_months', label: '12 Months', labelAr: '12 شهر' }
+        ]
+      },
+      {
+        id: 'notice_period',
+        name: 'Notice Period',
+        nameAr: 'فترة الإشعار',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '30_days', label: '30 Days', labelAr: '30 يوم' },
+          { value: '60_days', label: '60 Days', labelAr: '60 يوم' },
+          { value: '90_days', label: '90 Days', labelAr: '90 يوم' }
+        ]
+      }
     ],
-    optionalFields: [
-      "contract_end_date", "probation_period", "allowances", 
-      "working_hours", "notice_period", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{employee_name}}", "{{employer_name}}", "{{job_title}}", 
-      "{{salary}}", "{{start_date}}", "{{work_location}}", 
-      "{{probation_period}}", "{{benefits}}"
-    ],
-    validationRules: {
-      contract_end_date: "not_required",
-      basic_salary: "required_positive",
-      probation_period: "max_3_months"
+    validation: {
+      requiredFields: ['job_title', 'department', 'basic_salary', 'probation_period', 'notice_period'],
+      optionalFields: ['housing_allowance', 'transport_allowance']
     },
-    defaultValues: {
-      currency: "OMR",
-      working_hours: "48",
-      notice_period: "30"
-    },
-    businessRules: [
-      "Must comply with Oman Labor Law",
-      "Probation period cannot exceed 3 months",
-      "Notice period minimum 30 days",
-      "Salary must meet Oman minimum wage requirements",
-      "Subject to Ministry of Manpower regulations"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    allowsSalary: true,
-    allowsProbation: true,
-    allowsRemoteWork: true
+    pricing: {
+      basePrice: 500,
+      currency: 'OMR',
+      pricingModel: 'fixed',
+      features: ['Professional template', 'Legal compliance', 'Digital signatures', 'PDF generation']
+    }
   },
-  
-  "limited-contract": {
-    id: "limited-contract", 
-    name: "Limited Contract (Fixed-term)",
-    description: "Fixed-term employment contract with specified end date",
-    category: "Oman Labor Law",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "contract_end_date", "job_title", 
-      "department", "basic_salary", "currency", "work_location", "email"
+  {
+    id: 'part-time-contract',
+    name: 'Part-Time Contract',
+    nameAr: 'عقد بدوام جزئي',
+    description: 'Part-time employment contract for flexible work arrangements',
+    descriptionAr: 'عقد توظيف بدوام جزئي لترتيبات العمل المرنة',
+    category: 'employment',
+    isActive: true,
+    requiresApproval: false,
+    makecomTemplateId: 'enhanced-employment',
+    fields: [
+      {
+        id: 'job_title',
+        name: 'Job Title',
+        nameAr: 'المسمى الوظيفي',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'weekly_hours',
+        name: 'Weekly Hours',
+        nameAr: 'الساعات الأسبوعية',
+        type: 'number',
+        required: true,
+        validation: { min: 1, max: 40 }
+      },
+      {
+        id: 'hourly_rate',
+        name: 'Hourly Rate',
+        nameAr: 'المعدل بالساعة',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      }
     ],
-    optionalFields: [
-      "probation_period", "allowances", "working_hours", 
-      "notice_period", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{employee_name}}", "{{employer_name}}", "{{job_title}}", 
-      "{{salary}}", "{{start_date}}", "{{end_date}}", 
-      "{{work_location}}", "{{contract_duration}}"
-    ],
-    validationRules: {
-      contract_end_date: "required_future_date",
-      basic_salary: "required_positive",
-      probation_period: "max_3_months"
-    },
-    defaultValues: {
-      currency: "OMR",
-      working_hours: "48"
-    },
-    businessRules: [
-      "Must have specified end date",
-      "Maximum duration 2 years (renewable)",
-      "Probation period allowed but not exceeding 3 months",
-      "Early termination requires mutual consent or cause",
-      "Subject to Oman Labor Law provisions"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    maxDuration: 24, // 2 years
-    minDuration: 1,
-    allowsSalary: true,
-    allowsProbation: true,
-    allowsRemoteWork: true
+    validation: {
+      requiredFields: ['job_title', 'weekly_hours', 'hourly_rate'],
+      optionalFields: []
+    }
   },
-
-  "internship": {
-    id: "internship",
-    name: "Internship Contract",
-    description: "Training and learning focused internship agreement",
-    category: "Training & Development",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "contract_end_date", "job_title",
-      "department", "work_location", "email"
+  {
+    id: 'fixed-term-contract',
+    name: 'Fixed-Term Contract',
+    nameAr: 'عقد محدد المدة',
+    description: 'Fixed-term employment contract for specific projects or periods',
+    descriptionAr: 'عقد توظيف محدد المدة لمشاريع أو فترات محددة',
+    category: 'employment',
+    isActive: true,
+    requiresApproval: true,
+    makecomTemplateId: 'enhanced-employment',
+    fields: [
+      {
+        id: 'job_title',
+        name: 'Job Title',
+        nameAr: 'المسمى الوظيفي',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'contract_duration',
+        name: 'Contract Duration',
+        nameAr: 'مدة العقد',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '3_months', label: '3 Months', labelAr: '3 أشهر' },
+          { value: '6_months', label: '6 Months', labelAr: '6 أشهر' },
+          { value: '12_months', label: '12 Months', labelAr: '12 شهر' },
+          { value: '24_months', label: '24 Months', labelAr: '24 شهر' }
+        ]
+      },
+      {
+        id: 'project_description',
+        name: 'Project Description',
+        nameAr: 'وصف المشروع',
+        type: 'textarea',
+        required: true
+      }
     ],
-    optionalFields: [
-      "basic_salary", "allowances", "working_hours", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{intern_name}}", "{{company_name}}", "{{position}}", 
-      "{{start_date}}", "{{end_date}}", "{{supervisor}}", 
-      "{{learning_objectives}}", "{{stipend}}"
-    ],
-    validationRules: {
-      contract_end_date: "required_future_date",
-      basic_salary: "optional_positive_or_zero"
-    },
-    defaultValues: {
-      currency: "OMR",
-      working_hours: "40"
-    },
-    businessRules: [
-      "Maximum duration 12 months",
-      "Salary/stipend optional",
-      "Must include learning objectives",
-      "Requires supervisor assignment",
-      "Subject to Oman internship regulations"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    maxDuration: 12,
-    minDuration: 1,
-    allowsSalary: false,
-    allowsProbation: false,
-    allowsRemoteWork: true
-  },
-
-  "consulting": {
-    id: "consulting",
-    name: "Consulting Agreement",
-    description: "Professional consulting services agreement",
-    category: "Professional Services",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "work_location", "email"
-    ],
-    optionalFields: [
-      "contract_end_date", "basic_salary", "allowances", 
-      "working_hours", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{consultant_name}}", "{{client_name}}", "{{service_description}}", 
-      "{{deliverables}}", "{{timeline}}", "{{fees}}", 
-      "{{payment_terms}}", "{{intellectual_property}}"
-    ],
-    validationRules: {
-      basic_salary: "optional_positive",
-      working_hours: "flexible"
-    },
-    defaultValues: {
-      currency: "OMR",
-      work_location: "client-site"
-    },
-    businessRules: [
-      "Define clear scope of work",
-      "Specify deliverables and timeline", 
-      "Include intellectual property clauses",
-      "Payment terms must be defined",
-      "Comply with Oman commercial regulations"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    allowsSalary: true,
-    allowsProbation: false,
-    allowsRemoteWork: true
-  },
-
-  "project-based": {
-    id: "project-based",
-    name: "Project-based Contract", 
-    description: "Contract for specific project completion",
-    category: "Project Work",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "contract_end_date", "job_title",
-      "work_location", "email"
-    ],
-    optionalFields: [
-      "basic_salary", "allowances", "working_hours", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{contractor_name}}", "{{client_name}}", "{{project_name}}", 
-      "{{project_scope}}", "{{milestones}}", "{{completion_date}}", 
-      "{{payment_schedule}}", "{{success_criteria}}"
-    ],
-    validationRules: {
-      contract_end_date: "required_future_date",
-      basic_salary: "optional_positive"
-    },
-    defaultValues: {
-      currency: "OMR"
-    },
-    businessRules: [
-      "Must define project scope clearly",
-      "Include milestone payments",
-      "Specify success criteria",
-      "Define change management process",
-      "Comply with Oman project work regulations"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    maxDuration: 36, // 3 years
-    minDuration: 1,
-    allowsSalary: true,
-    allowsProbation: false,
-    allowsRemoteWork: true
+    validation: {
+      requiredFields: ['job_title', 'contract_duration', 'project_description'],
+      optionalFields: []
+    }
   },
 
-  "part-time-contract": {
-    id: "part-time-contract",
-    name: "Part-time Contract",
-    description: "Part-time employment with reduced hours",
-    category: "Employment",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "department",
-      "working_hours", "basic_salary", "currency", "work_location", "email"
+  // Service Contracts
+  {
+    id: 'business-service-contract',
+    name: 'Business Service Contract',
+    nameAr: 'عقد خدمة تجارية',
+    description: 'Professional service contract for business-to-business services',
+    descriptionAr: 'عقد خدمة احترافي للخدمات بين الشركات',
+    category: 'service',
+    isActive: true,
+    requiresApproval: true,
+    makecomTemplateId: 'service-contract',
+    fields: [
+      {
+        id: 'service_provider',
+        name: 'Service Provider',
+        nameAr: 'مقدم الخدمة',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'service_recipient',
+        name: 'Service Recipient',
+        nameAr: 'مستلم الخدمة',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'service_description',
+        name: 'Service Description',
+        nameAr: 'وصف الخدمة',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'service_duration',
+        name: 'Service Duration',
+        nameAr: 'مدة الخدمة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1_month', label: '1 Month', labelAr: 'شهر واحد' },
+          { value: '3_months', label: '3 Months', labelAr: '3 أشهر' },
+          { value: '6_months', label: '6 Months', labelAr: '6 أشهر' },
+          { value: '12_months', label: '12 Months', labelAr: '12 شهر' }
+        ]
+      },
+      {
+        id: 'service_fee',
+        name: 'Service Fee',
+        nameAr: 'رسوم الخدمة',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      },
+      {
+        id: 'payment_terms',
+        name: 'Payment Terms',
+        nameAr: 'شروط الدفع',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'monthly', label: 'Monthly', labelAr: 'شهري' },
+          { value: 'quarterly', label: 'Quarterly', labelAr: 'ربع سنوي' },
+          { value: 'annually', label: 'Annually', labelAr: 'سنوي' },
+          { value: 'upon_completion', label: 'Upon Completion', labelAr: 'عند الانتهاء' }
+        ]
+      }
     ],
-    optionalFields: [
-      "contract_end_date", "probation_period", "allowances", 
-      "notice_period", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{employee_name}}", "{{employer_name}}", "{{job_title}}", 
-      "{{part_time_hours}}", "{{salary}}", "{{schedule}}", 
-      "{{benefits_eligibility}}"
-    ],
-    validationRules: {
-      working_hours: "required_less_than_48",
-      basic_salary: "required_positive_prorated"
+    validation: {
+      requiredFields: ['service_provider', 'service_recipient', 'service_description', 'service_duration', 'service_fee', 'payment_terms'],
+      optionalFields: []
     },
-    defaultValues: {
-      currency: "OMR",
-      working_hours: "24"
-    },
-    businessRules: [
-      "Working hours must be less than full-time",
-      "Pro-rated salary and benefits",
-      "Flexible scheduling allowed",
-      "Must comply with Oman part-time regulations"
+    pricing: {
+      basePrice: 300,
+      currency: 'OMR',
+      pricingModel: 'fixed',
+      features: ['Professional template', 'Service terms', 'Payment schedules', 'Liability clauses']
+    }
+  },
+  {
+    id: 'consulting-agreement',
+    name: 'Consulting Agreement',
+    nameAr: 'اتفاقية استشارية',
+    description: 'Professional consulting services agreement',
+    descriptionAr: 'اتفاقية خدمات استشارية احترافية',
+    category: 'consulting',
+    isActive: true,
+    requiresApproval: true,
+    fields: [
+      {
+        id: 'consultant_name',
+        name: 'Consultant Name',
+        nameAr: 'اسم المستشار',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'client_name',
+        name: 'Client Name',
+        nameAr: 'اسم العميل',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'consulting_scope',
+        name: 'Consulting Scope',
+        nameAr: 'نطاق الاستشارة',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'consulting_duration',
+        name: 'Consulting Duration',
+        nameAr: 'مدة الاستشارة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1_week', label: '1 Week', labelAr: 'أسبوع واحد' },
+          { value: '1_month', label: '1 Month', labelAr: 'شهر واحد' },
+          { value: '3_months', label: '3 Months', labelAr: '3 أشهر' },
+          { value: '6_months', label: '6 Months', labelAr: '6 أشهر' }
+        ]
+      },
+      {
+        id: 'hourly_rate',
+        name: 'Hourly Rate',
+        nameAr: 'المعدل بالساعة',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      },
+      {
+        id: 'estimated_hours',
+        name: 'Estimated Hours',
+        nameAr: 'الساعات المقدرة',
+        type: 'number',
+        required: true,
+        validation: { min: 1 }
+      }
     ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    allowsSalary: true,
-    allowsProbation: true,
-    allowsRemoteWork: true
+    validation: {
+      requiredFields: ['consultant_name', 'client_name', 'consulting_scope', 'consulting_duration', 'hourly_rate', 'estimated_hours'],
+      optionalFields: []
+    }
   },
 
-  "remote-work": {
-    id: "remote-work",
-    name: "Remote Work Contract",
-    description: "Full remote work employment agreement",
-    category: "Modern Work",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "department",
-      "basic_salary", "currency", "email"
+  // Freelance Contracts
+  {
+    id: 'freelance-service-agreement',
+    name: 'Freelance Service Agreement',
+    nameAr: 'اتفاقية خدمة مستقلة',
+    description: 'Freelance service agreement for independent contractors',
+    descriptionAr: 'اتفاقية خدمة مستقلة للمقاولين المستقلين',
+    category: 'freelance',
+    isActive: true,
+    requiresApproval: false,
+    makecomTemplateId: 'freelance-contract',
+    fields: [
+      {
+        id: 'freelancer_name',
+        name: 'Freelancer Name',
+        nameAr: 'اسم المستقل',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'client_name',
+        name: 'Client Name',
+        nameAr: 'اسم العميل',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'project_description',
+        name: 'Project Description',
+        nameAr: 'وصف المشروع',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'project_duration',
+        name: 'Project Duration',
+        nameAr: 'مدة المشروع',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1_week', label: '1 Week', labelAr: 'أسبوع واحد' },
+          { value: '2_weeks', label: '2 Weeks', labelAr: 'أسبوعان' },
+          { value: '1_month', label: '1 Month', labelAr: 'شهر واحد' },
+          { value: '3_months', label: '3 Months', labelAr: '3 أشهر' }
+        ]
+      },
+      {
+        id: 'project_fee',
+        name: 'Project Fee',
+        nameAr: 'رسوم المشروع',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      },
+      {
+        id: 'payment_schedule',
+        name: 'Payment Schedule',
+        nameAr: 'جدول الدفع',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'upfront', label: 'Upfront Payment', labelAr: 'دفع مقدم' },
+          { value: 'milestone', label: 'Milestone Payments', labelAr: 'دفعات مراحل' },
+          { value: 'upon_completion', label: 'Upon Completion', labelAr: 'عند الانتهاء' }
+        ]
+      }
     ],
-    optionalFields: [
-      "contract_end_date", "probation_period", "allowances",
-      "working_hours", "notice_period", "special_terms", "work_location"
-    ],
-    templatePlaceholders: [
-      "{{employee_name}}", "{{employer_name}}", "{{job_title}}", 
-      "{{remote_work_policy}}", "{{communication_tools}}", 
-      "{{performance_metrics}}", "{{equipment_provision}}"
-    ],
-    validationRules: {
-      basic_salary: "required_positive",
-      work_location: "remote_or_home"
-    },
-    defaultValues: {
-      currency: "OMR",
-      working_hours: "40",
-      work_location: "remote-full"
-    },
-    businessRules: [
-      "Must define remote work policies",
-      "Include communication protocols",
-      "Specify equipment and technology requirements",
-      "Define performance measurement criteria",
-      "Comply with Oman remote work guidelines"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    allowsSalary: true,
-    allowsProbation: true,
-    allowsRemoteWork: true
+    validation: {
+      requiredFields: ['freelancer_name', 'client_name', 'project_description', 'project_duration', 'project_fee', 'payment_schedule'],
+      optionalFields: []
+    }
   },
 
-  "executive": {
-    id: "executive",
-    name: "Executive Contract",
-    description: "Senior executive employment agreement",
-    category: "Leadership",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "department",
-      "basic_salary", "currency", "work_location", "email"
+  // Partnership Agreements
+  {
+    id: 'business-partnership-agreement',
+    name: 'Business Partnership Agreement',
+    nameAr: 'اتفاقية شراكة تجارية',
+    description: 'Partnership agreement for business collaboration',
+    descriptionAr: 'اتفاقية شراكة للتعاون التجاري',
+    category: 'partnership',
+    isActive: true,
+    requiresApproval: true,
+    fields: [
+      {
+        id: 'partner1_name',
+        name: 'Partner 1 Name',
+        nameAr: 'اسم الشريك الأول',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'partner2_name',
+        name: 'Partner 2 Name',
+        nameAr: 'اسم الشريك الثاني',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'partnership_name',
+        name: 'Partnership Name',
+        nameAr: 'اسم الشراكة',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'business_description',
+        name: 'Business Description',
+        nameAr: 'وصف العمل',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'partnership_duration',
+        name: 'Partnership Duration',
+        nameAr: 'مدة الشراكة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1_year', label: '1 Year', labelAr: 'سنة واحدة' },
+          { value: '3_years', label: '3 Years', labelAr: '3 سنوات' },
+          { value: '5_years', label: '5 Years', labelAr: '5 سنوات' },
+          { value: 'indefinite', label: 'Indefinite', labelAr: 'غير محدد' }
+        ]
+      },
+      {
+        id: 'profit_sharing',
+        name: 'Profit Sharing',
+        nameAr: 'توزيع الأرباح',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '50_50', label: '50/50 Split', labelAr: 'تقسيم 50/50' },
+          { value: '60_40', label: '60/40 Split', labelAr: 'تقسيم 60/40' },
+          { value: '70_30', label: '70/30 Split', labelAr: 'تقسيم 70/30' },
+          { value: 'custom', label: 'Custom Split', labelAr: 'تقسيم مخصص' }
+        ]
+      }
     ],
-    optionalFields: [
-      "contract_end_date", "allowances", "working_hours",
-      "notice_period", "special_terms"
+    validation: {
+      requiredFields: ['partner1_name', 'partner2_name', 'partnership_name', 'business_description', 'partnership_duration', 'profit_sharing'],
+      optionalFields: []
+    }
+  },
+
+  // NDA Contracts
+  {
+    id: 'non-disclosure-agreement',
+    name: 'Non-Disclosure Agreement',
+    nameAr: 'اتفاقية عدم الإفصاح',
+    description: 'Confidentiality agreement for protecting sensitive information',
+    descriptionAr: 'اتفاقية سرية لحماية المعلومات الحساسة',
+    category: 'nda',
+    isActive: true,
+    requiresApproval: true,
+    fields: [
+      {
+        id: 'disclosing_party',
+        name: 'Disclosing Party',
+        nameAr: 'الطرف المكشف',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'receiving_party',
+        name: 'Receiving Party',
+        nameAr: 'الطرف المتلقي',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'confidential_information',
+        name: 'Confidential Information',
+        nameAr: 'المعلومات السرية',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'nda_duration',
+        name: 'NDA Duration',
+        nameAr: 'مدة اتفاقية عدم الإفصاح',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '1_year', label: '1 Year', labelAr: 'سنة واحدة' },
+          { value: '2_years', label: '2 Years', labelAr: 'سنتان' },
+          { value: '3_years', label: '3 Years', labelAr: '3 سنوات' },
+          { value: '5_years', label: '5 Years', labelAr: '5 سنوات' }
+        ]
+      },
+      {
+        id: 'purpose',
+        name: 'Purpose of Disclosure',
+        nameAr: 'غرض الإفصاح',
+        type: 'textarea',
+        required: true
+      }
     ],
-    templatePlaceholders: [
-      "{{executive_name}}", "{{company_name}}", "{{title}}", 
-      "{{compensation_package}}", "{{equity_options}}", 
-      "{{performance_bonuses}}", "{{termination_clauses}}", 
-      "{{confidentiality_terms}}"
+    validation: {
+      requiredFields: ['disclosing_party', 'receiving_party', 'confidential_information', 'nda_duration', 'purpose'],
+      optionalFields: []
+    }
+  },
+
+  // Custom Contract
+  {
+    id: 'custom-contract',
+    name: 'Custom Contract',
+    nameAr: 'عقد مخصص',
+    description: 'Custom contract template for specific business needs',
+    descriptionAr: 'قالب عقد مخصص للاحتياجات التجارية المحددة',
+    category: 'custom',
+    isActive: true,
+    requiresApproval: true,
+    fields: [
+      {
+        id: 'contract_title',
+        name: 'Contract Title',
+        nameAr: 'عنوان العقد',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'party1_name',
+        name: 'First Party Name',
+        nameAr: 'اسم الطرف الأول',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'party2_name',
+        name: 'Second Party Name',
+        nameAr: 'اسم الطرف الثاني',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'contract_terms',
+        name: 'Contract Terms',
+        nameAr: 'شروط العقد',
+        type: 'textarea',
+        required: true
+      },
+      {
+        id: 'contract_value',
+        name: 'Contract Value',
+        nameAr: 'قيمة العقد',
+        type: 'number',
+        required: false,
+        validation: { min: 0 }
+      },
+      {
+        id: 'special_terms',
+        name: 'Special Terms',
+        nameAr: 'شروط خاصة',
+        type: 'textarea',
+        required: false
+      }
     ],
-    validationRules: {
-      basic_salary: "required_executive_level",
-      notice_period: "minimum_90_days"
-    },
-    defaultValues: {
-      currency: "OMR",
-      notice_period: "90",
-      working_hours: "flexible"
-    },
-    businessRules: [
-      "Enhanced compensation packages",
-      "Extended notice periods",
-      "Confidentiality and non-compete clauses",
-      "Performance-based incentives",
-      "Subject to Oman executive employment regulations"
-    ],
-    uaeCompliant: false,
-    omanCompliant: true,
-    allowsSalary: true,
-    allowsProbation: false,
-    allowsRemoteWork: true
+    validation: {
+      requiredFields: ['contract_title', 'party1_name', 'party2_name', 'contract_terms'],
+      optionalFields: ['contract_value', 'special_terms']
+    }
   }
-}
-
-// Enhanced contract type configs with Make.com integration
-export const ENHANCED_CONTRACT_TYPE_CONFIGS: Record<string, EnhancedContractTypeConfig> = {
-  ...CONTRACT_TYPE_CONFIGS,
-  
-  // Add Make.com integrated contract types
-  "oman-unlimited-makecom": {
-    ...CONTRACT_TYPE_CONFIGS["unlimited-contract"],
-    id: "oman-unlimited-makecom",
-    name: "Oman Unlimited Contract (Make.com Automated)",
-    description: "Automated unlimited duration contract with Make.com PDF generation",
-    makecomTemplateId: "oman-unlimited-contract",
-    makecomIntegration: true
-  },
-  
-  "oman-fixed-term-makecom": {
-    ...CONTRACT_TYPE_CONFIGS["limited-contract"],
-    id: "oman-fixed-term-makecom", 
-    name: "Oman Fixed-Term Contract (Make.com Automated)",
-    description: "Automated fixed-term contract with Make.com PDF generation",
-    makecomTemplateId: "oman-fixed-term-contract",
-    makecomIntegration: true
-  },
-  
-  "oman-part-time-makecom": {
-    id: "oman-part-time-makecom",
-    name: "Oman Part-Time Contract (Make.com Automated)",
-    description: "Automated part-time contract with flexible hours and Make.com integration",
-    category: "Oman Labor Law",
-    requiredFields: [
-      "first_party_id", "second_party_id", "promoter_id",
-      "contract_start_date", "job_title", "working_hours_per_week",
-      "hourly_rate", "currency", "work_location", "email"
-    ],
-    optionalFields: [
-      "contract_end_date", "allowances", "overtime_rate", "special_terms"
-    ],
-    templatePlaceholders: [
-      "{{employee_name}}", "{{employer_name}}", "{{job_title}}",
-      "{{hourly_rate}}", "{{working_hours}}", "{{work_schedule}}"
-    ],
-    validationRules: {
-      working_hours_per_week: "max_25_hours",
-      hourly_rate: "required_positive"
-    },
-    defaultValues: {
-      currency: "OMR",
-      working_hours_per_week: "20"
-    },
-    businessRules: [
-      "Maximum 25 hours per week",
-      "Proportional benefits apply",
-      "Must specify exact working schedule",
-      "Subject to Oman Labor Law part-time provisions"
-    ],
-    omanCompliant: true,
-    uaeCompliant: false,
-    allowsSalary: true,
-    allowsProbation: false,
-    allowsRemoteWork: true,
-    makecomTemplateId: "oman-part-time-contract",
-    makecomIntegration: true
-  }
-}
+]
 
 // Helper functions
-export function getContractTypeConfig(contractType: string): ContractTypeConfig | null {
-  return CONTRACT_TYPE_CONFIGS[contractType] || null
+export function getEnhancedContractTypeConfig(contractTypeId: string): ContractTypeConfig | null {
+  return enhancedContractTypes.find(type => type.id === contractTypeId) || null
 }
 
-export function getRequiredFieldsForType(contractType: string): string[] {
-  const config = getContractTypeConfig(contractType)
-  return config?.requiredFields || []
+export function getAllEnhancedContractTypes(): ContractTypeConfig[] {
+  return enhancedContractTypes.filter(type => type.isActive)
 }
 
-export function getOptionalFieldsForType(contractType: string): string[] {
-  const config = getContractTypeConfig(contractType)
-  return config?.optionalFields || []
+export function getContractTypesByCategory(category: string): ContractTypeConfig[] {
+  return enhancedContractTypes.filter(type => type.category === category && type.isActive)
 }
 
-export function getTemplatePlaceholdersForType(contractType: string): string[] {
-  const config = getContractTypeConfig(contractType)
-  return config?.templatePlaceholders || []
-}
-
-export function getBusinessRulesForType(contractType: string): string[] {
-  const config = getContractTypeConfig(contractType)
-  return config?.businessRules || []
-}
-
-export function isUAECompliant(contractType: string): boolean {
-  const config = getContractTypeConfig(contractType)
-  return config?.uaeCompliant || false
-}
-
-export function isOmanCompliant(contractType: string): boolean {
-  const config = getContractTypeConfig(contractType)
-  return config?.omanCompliant || false
-}
-
-export function getContractTypesByCategory(): Record<string, ContractTypeConfig[]> {
-  const categories: Record<string, ContractTypeConfig[]> = {}
-  
-  Object.values(CONTRACT_TYPE_CONFIGS).forEach(config => {
-    if (!categories[config.category]) {
-      categories[config.category] = []
-    }
-    categories[config.category].push(config)
-  })
-  
-  return categories
-}
-
-export function validateContractTypeData(contractType: string, formData: Record<string, unknown>): { 
-  isValid: boolean; 
-  errors: string[]; 
-  warnings: string[] 
+export function validateContractTypeData(contractTypeId: string, data: Record<string, any>): {
+  isValid: boolean
+  errors: string[]
+  warnings: string[]
 } {
-  const config = getContractTypeConfig(contractType)
-  if (!config) {
-    return { isValid: false, errors: ["Invalid contract type"], warnings: [] }
+  const contractType = getEnhancedContractTypeConfig(contractTypeId)
+  if (!contractType) {
+    return {
+      isValid: false,
+      errors: [`Contract type '${contractTypeId}' not found`],
+      warnings: []
+    }
   }
 
   const errors: string[] = []
   const warnings: string[] = []
 
   // Check required fields
-  config.requiredFields.forEach(field => {
-    if (!formData[field] || formData[field] === "") {
-      errors.push(`${field} is required for ${config.name}`)
+  contractType.fields.forEach(field => {
+    if (field.required && !data[field.id]) {
+      errors.push(`Required field '${field.name}' is missing`)
+    } else if (!field.required && !data[field.id] && field.defaultValue !== undefined) {
+      warnings.push(`Optional field '${field.name}' is missing, will use default value`)
     }
   })
 
-  // Type-specific validations
-  if (config.maxDuration && formData.contract_start_date && formData.contract_end_date) {
-    const startDate = new Date(formData.contract_start_date as string)
-    const endDate = new Date(formData.contract_end_date as string)
-    const durationMonths = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-    
-    if (durationMonths > config.maxDuration) {
-      errors.push(`Contract duration cannot exceed ${config.maxDuration} months for ${config.name}`)
+  // Run custom validation if provided
+  if (contractType.validation.customValidation) {
+    const customValidation = contractType.validation.customValidation(data)
+    if (!customValidation.isValid) {
+      errors.push(...customValidation.errors)
     }
   }
-
-  // Salary validations
-  if (!config.allowsSalary && formData.basic_salary && formData.basic_salary !== "") {
-    warnings.push(`Salary is typically not applicable for ${config.name}`)
-  }
-
-  return { isValid: errors.length === 0, errors, warnings }
-}
-
-// Enhanced functions for Make.com integration
-export function getEnhancedContractTypeConfig(contractTypeId: string): EnhancedContractTypeConfig | null {
-  return ENHANCED_CONTRACT_TYPE_CONFIGS[contractTypeId] || null
-}
-
-export function getMakecomEnabledContractTypes(): EnhancedContractTypeConfig[] {
-  return Object.values(ENHANCED_CONTRACT_TYPE_CONFIGS).filter(config => config.makecomIntegration)
-}
-
-export function generateContractWithMakecom(
-  contractTypeId: string,
-  contractData: Record<string, unknown>
-): { webhookPayload: any; templateConfig: MakecomTemplateConfig | null; validation: any } {
-  const contractConfig = getEnhancedContractTypeConfig(contractTypeId)
-  const templateConfig = contractConfig?.makecomTemplateId 
-    ? getMakecomTemplateConfig(contractConfig.makecomTemplateId)
-    : null
-
-  if (!contractConfig || !templateConfig) {
-    return {
-      webhookPayload: null,
-      templateConfig: null,
-      validation: { isValid: false, errors: ["Contract type not configured for Make.com"], warnings: [] }
-    }
-  }
-
-  // Validate data against both contract config and Make.com template requirements
-  const contractValidation = validateContractTypeData(contractTypeId, contractData)
-  const templateValidation = validateMakecomTemplateData(contractConfig.makecomTemplateId!, contractData)
-
-  const combinedValidation = {
-    isValid: contractValidation.isValid && templateValidation.isValid,
-    errors: [...contractValidation.errors, ...templateValidation.errors],
-    warnings: [...contractValidation.warnings, ...templateValidation.warnings]
-  }
-
-  // Generate Make.com webhook payload
-  const webhookPayload = combinedValidation.isValid 
-    ? generateMakecomWebhookPayload(contractConfig.makecomTemplateId!, contractData)
-    : null
 
   return {
-    webhookPayload,
-    templateConfig,
-    validation: combinedValidation
+    isValid: errors.length === 0,
+    errors,
+    warnings
   }
 }
 
-export function getMakecomContractTypesByCategory(): Record<string, EnhancedContractTypeConfig[]> {
-  const categories: Record<string, EnhancedContractTypeConfig[]> = {}
-  
-  getMakecomEnabledContractTypes().forEach(config => {
-    if (!categories[config.category]) {
-      categories[config.category] = []
-    }
-    categories[config.category].push(config)
-  })
-  
-  return categories
-}
+// Export the enhanced configuration
+export { enhancedContractTypes as contractTypes }

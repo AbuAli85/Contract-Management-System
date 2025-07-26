@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { generateContractPDF } from '@/lib/pdf-generator'
 
 export async function POST(
   request: NextRequest,
@@ -38,8 +39,8 @@ export async function POST(
       }, { status: 404 })
     }
 
-    // Generate PDF content
-    const pdfContent = generateContractPDFContent(contract)
+    // Generate PDF content using the new PDF generator
+    const pdfBuffer = await generateContractPDF(contract)
     
     // Create a proper PDF file name
     const fileName = `contract-${contract.contract_number || contractId}-${Date.now()}.pdf`
@@ -47,7 +48,7 @@ export async function POST(
     // Upload to Supabase storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('contracts')
-      .upload(fileName, Buffer.from(pdfContent, 'utf-8'), {
+      .upload(fileName, pdfBuffer, {
         contentType: 'application/pdf',
         cacheControl: '3600'
       })
@@ -125,122 +126,4 @@ export async function POST(
   }
 }
 
-// Function to generate PDF content
-function generateContractPDFContent(contract: any): string {
-  const contractNumber = contract.contract_number || 'N/A'
-  const currentDate = new Date().toLocaleDateString()
-  
-  return `
-EMPLOYMENT CONTRACT
-
-Contract Number: ${contractNumber}
-Date: ${currentDate}
-
-================================================================================
-
-PARTIES
-================================================================================
-
-${contract.first_party ? `
-EMPLOYER:
-Name: ${contract.first_party.name_en}
-CRN: ${contract.first_party.crn || 'N/A'}
-Address: ${contract.first_party.address_en || 'N/A'}
-Contact Person: ${contract.first_party.contact_person || 'N/A'}
-Contact Email: ${contract.first_party.contact_email || 'N/A'}
-Contact Phone: ${contract.first_party.contact_phone || 'N/A'}
-` : 'Employer: Not specified'}
-
-${contract.second_party ? `
-EMPLOYEE:
-Name: ${contract.second_party.name_en}
-Email: ${contract.email || 'N/A'}
-Contact Person: ${contract.second_party.contact_person || 'N/A'}
-Contact Email: ${contract.second_party.contact_email || 'N/A'}
-Contact Phone: ${contract.second_party.contact_phone || 'N/A'}
-` : 'Employee: Not specified'}
-
-================================================================================
-
-JOB DETAILS
-================================================================================
-
-Position: ${contract.job_title || 'N/A'}
-Department: ${contract.department || 'N/A'}
-Work Location: ${contract.work_location || 'N/A'}
-
-================================================================================
-
-CONTRACT TERMS
-================================================================================
-
-Contract Type: ${contract.contract_type || 'N/A'}
-Start Date: ${contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : 'N/A'}
-End Date: ${contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : 'N/A'}
-
-================================================================================
-
-COMPENSATION
-================================================================================
-
-Basic Salary: ${contract.basic_salary || 'N/A'} ${contract.currency || 'SAR'}
-Allowances: ${contract.allowances || 'N/A'} ${contract.currency || 'SAR'}
-
-================================================================================
-
-${contract.promoter ? `
-PROMOTER INFORMATION
-================================================================================
-
-Name: ${contract.promoter.name_en}
-Contact: ${contract.promoter.mobile_number || 'N/A'}
-Email: ${contract.promoter.email || 'N/A'}
-` : ''}
-
-================================================================================
-
-CONTRACT STATUS
-================================================================================
-
-Status: ${contract.status || 'Draft'}
-Approval Status: ${contract.approval_status || 'Pending'}
-Created: ${contract.created_at ? new Date(contract.created_at).toLocaleDateString() : 'N/A'}
-Last Updated: ${contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : 'N/A'}
-
-================================================================================
-
-TERMS AND CONDITIONS
-================================================================================
-
-1. This employment contract is legally binding and enforceable under applicable labor laws.
-
-2. The employee agrees to perform the duties and responsibilities associated with the position of ${contract.job_title || 'the specified role'}.
-
-3. The employer agrees to provide the compensation and benefits as outlined in this contract.
-
-4. Both parties agree to comply with all applicable laws and regulations.
-
-5. This contract may be terminated by either party with appropriate notice as required by law.
-
-6. Any disputes arising from this contract will be resolved through appropriate legal channels.
-
-================================================================================
-
-SIGNATURES
-================================================================================
-
-Employer Signature: _________________________    Date: _________________
-
-Employee Signature: _________________________    Date: _________________
-
-Promoter Signature: ${contract.promoter ? '_________________________' : 'N/A'}    Date: ${contract.promoter ? '_________________' : 'N/A'}
-
-================================================================================
-
-This contract is generated electronically and is legally binding.
-Generated on: ${new Date().toLocaleString()}
-Contract ID: ${contract.id}
-
-================================================================================
-  `
-} 
+ 
