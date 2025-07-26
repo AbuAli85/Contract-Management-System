@@ -186,13 +186,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       )
 
-      // Cleanup subscription on unmount
+      setLoading(false)
+      
+      // Return cleanup function
       return () => {
         subscription.unsubscribe()
       }
-
-      setLoading(false)
-      return () => subscription.unsubscribe()
     } catch (error) {
       console.error('❌ Error initializing auth:', error)
       setLoading(false)

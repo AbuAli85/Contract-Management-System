@@ -4,23 +4,39 @@ import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/auth-provider'
 import Link from 'next/link'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
     console.log('🔍 Login Page Debug:', { user, loading, mounted })
   }, [user, loading, mounted])
 
   // If user is already logged in, redirect to dashboard
-  if (mounted && !loading && user) {
+  if (mounted && !loading && user && !hasRedirected.current) {
     console.log('🔄 User already logged in, redirecting to dashboard')
+    hasRedirected.current = true
+    
     // Get the current locale from the URL
     const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
     const locale = pathname.split('/')[1] || 'en'
-    window.location.href = `/${locale}/dashboard`
+    const redirectUrl = `/${locale}/dashboard`
+    
+    console.log('🔄 Redirecting to:', redirectUrl)
+    
+    // Use setTimeout to ensure the redirect happens after the current render
+    setTimeout(() => {
+      window.location.href = redirectUrl
+    }, 100)
+    
     return null
+  }
+
+  // Reset redirect flag if user is not logged in
+  if (!user && hasRedirected.current) {
+    hasRedirected.current = false
   }
 
   return (

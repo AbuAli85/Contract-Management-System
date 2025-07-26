@@ -76,23 +76,71 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        console.log('🔄 Fetching dashboard data...')
         // Fetch dashboard analytics
         const response = await fetch('/api/dashboard/analytics')
+        console.log('📊 Dashboard API response status:', response.status)
+        
         if (response.ok) {
           const data = await response.json()
+          console.log('📊 Dashboard API data:', data)
           if (data.success) {
             setStats(data.data)
+          } else {
+            console.error('❌ Dashboard API returned error:', data.error)
+            // Set default stats on error
+            setStats({
+              totalContracts: 0,
+              activeContracts: 0,
+              pendingContracts: 0,
+              totalPromoters: 0,
+              totalParties: 0,
+              pendingApprovals: 0,
+              systemHealth: 98,
+              recentActivity: 0
+            })
           }
+        } else {
+          console.error('❌ Dashboard API failed with status:', response.status)
+          // Set default stats on error
+          setStats({
+            totalContracts: 0,
+            activeContracts: 0,
+            pendingContracts: 0,
+            totalPromoters: 0,
+            totalParties: 0,
+            pendingApprovals: 0,
+            systemHealth: 98,
+            recentActivity: 0
+          })
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error)
+        console.error('❌ Error fetching dashboard data:', error)
+        // Set default stats on error
+        setStats({
+          totalContracts: 0,
+          activeContracts: 0,
+          pendingContracts: 0,
+          totalPromoters: 0,
+          totalParties: 0,
+          pendingApprovals: 0,
+          systemHealth: 98,
+          recentActivity: 0
+        })
       } finally {
+        console.log('✅ Dashboard data fetch completed')
         setLoading(false)
       }
     }
 
-    fetchDashboardData()
-  }, [])
+    // Only fetch if user is authenticated
+    if (user && !authLoading) {
+      fetchDashboardData()
+    } else if (!authLoading) {
+      // If no user and auth is not loading, set loading to false
+      setLoading(false)
+    }
+  }, [user, authLoading])
 
   const quickActions = [
     {

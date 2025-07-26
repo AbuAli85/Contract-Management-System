@@ -54,7 +54,7 @@ export async function middleware(req: NextRequest) {
   // If not authenticated and trying to access protected route, redirect to login
   if (!session && !isPublicRoute) {
     const url = req.nextUrl.clone()
-    url.pathname = `/${locale}/login`
+    url.pathname = `/${locale}/auth/login`
     url.searchParams.set('redirect', req.nextUrl.pathname)
     return NextResponse.redirect(url)
   }
@@ -72,7 +72,7 @@ export async function middleware(req: NextRequest) {
     if (session) {
       url.pathname = `/${locale}/dashboard`
     } else {
-      url.pathname = `/${locale}/login`
+      url.pathname = `/${locale}/auth/login`
     }
     return NextResponse.redirect(url)
   }
@@ -110,7 +110,7 @@ export async function middleware(req: NextRequest) {
     if (session) {
       url.pathname = `/${locale}/dashboard`
     } else {
-      url.pathname = `/${locale}/login`
+      url.pathname = `/${locale}/auth/login`
     }
     return NextResponse.redirect(url)
   }
