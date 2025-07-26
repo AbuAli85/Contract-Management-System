@@ -79,6 +79,9 @@ const EnhancedSelect = ({
   const [isAdding, setIsAdding] = useState(false)
   const [customValue, setCustomValue] = useState("")
 
+  // Always use null for unselected value
+  const selectValue = value ?? null
+
   const handleAddCustom = () => {
     if (customValue.trim() && onAddCustom) {
       onAddCustom(customValue.trim())
@@ -88,7 +91,7 @@ const EnhancedSelect = ({
   }
 
   return (
-    <Select onValueChange={onValueChange} value={value ?? undefined}>
+    <Select onValueChange={onValueChange} value={selectValue ?? undefined}>
       <FormControl>
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />
@@ -100,7 +103,6 @@ const EnhancedSelect = ({
             {option.label}
           </SelectItem>
         ))}
-        
         {onAddCustom && (
           <>
             <SelectSeparator />

@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormField, FormItem, FormLabel as ShadcnFormLabel, FormMessage } from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Loader2, Edit3Icon, LockIcon, FileWarningIcon as WarningIcon } from "lucide-react"
 import type { Promoter } from "@/lib/types"
@@ -22,6 +22,7 @@ import DatePickerWithPresetsField from "@/components/date-picker-with-presets-fi
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParties } from "@/hooks/use-parties"
+import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
 
 const BUCKET_NAME = "promoter-documents"
 
@@ -59,6 +60,102 @@ const getExpiryAlert = (
     }
   }
   return null
+}
+
+// Enhanced Select Component with Add Option
+const EnhancedSelect = ({ 
+  options, 
+  value, 
+  onValueChange, 
+  placeholder, 
+  onAddCustom 
+}: {
+  options: readonly { value: string; label: string }[]
+  value?: string | null
+  onValueChange: (value: string) => void
+  placeholder: string
+  onAddCustom?: (value: string) => void
+}) => {
+  const [isAdding, setIsAdding] = useState(false)
+  const [customValue, setCustomValue] = useState("")
+
+  // Always use null for unselected value
+  const selectValue = value ?? null
+
+  const handleAddCustom = () => {
+    if (customValue.trim() && onAddCustom) {
+      onAddCustom(customValue.trim())
+      setCustomValue("")
+      setIsAdding(false)
+    }
+  }
+
+  return (
+    <Select onValueChange={onValueChange} value={selectValue ?? undefined}>
+      <FormControl>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+      </FormControl>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.value} value={option.value}>
+            {option.label}
+          </SelectItem>
+        ))}
+        {onAddCustom && (
+          <>
+            <SelectSeparator />
+            {isAdding ? (
+              <div className="p-2 space-y-2">
+                <Input
+                  placeholder="Enter custom value..."
+                  value={customValue}
+                  onChange={(e) => setCustomValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleAddCustom()
+                    }
+                  }}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleAddCustom}
+                    disabled={!customValue.trim()}
+                  >
+                    Add
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAdding(false)
+                      setCustomValue("")
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <SelectItem
+                value="__add_custom__"
+                onSelect={(e) => {
+                  e.preventDefault()
+                  setIsAdding(true)
+                }}
+                className="text-primary cursor-pointer"
+              >
+                + Add Custom Value
+              </SelectItem>
+            )}
+          </>
+        )}
+      </SelectContent>
+    </Select>
+  )
 }
 
 export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterFormProps) {
@@ -451,6 +548,57 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="job_title"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Job Title</ShadcnFormLabel>
+                    <EnhancedSelect
+                      options={JOB_TITLES}
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      placeholder="Select job title or add custom"
+                      onAddCustom={(value) => field.onChange(value)}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Department</ShadcnFormLabel>
+                    <EnhancedSelect
+                      options={DEPARTMENTS}
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      placeholder="Select department or add custom"
+                      onAddCustom={(value) => field.onChange(value)}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="work_location"
+                render={({ field }) => (
+                  <FormItem>
+                    <ShadcnFormLabel>Work Location</ShadcnFormLabel>
+                    <EnhancedSelect
+                      options={WORK_LOCATIONS}
+                      value={field.value ?? undefined}
+                      onValueChange={field.onChange}
+                      placeholder="Select work location or add custom"
+                      onAddCustom={(value) => field.onChange(value)}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

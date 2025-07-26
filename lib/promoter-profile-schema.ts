@@ -40,6 +40,7 @@ export const promoterProfileSchema = z.object({
   employer_id: z.string().nullable().optional(),
   outsourced_to_id: z.string().nullable().optional(),
   job_title: z.string().optional().nullable(),
+  department: z.string().optional().nullable(),
   work_location: z.string().optional().nullable(),
   status: promoterStatuses.describe("Status is required."),
   contract_valid_until: dateOptionalNullableSchema,
