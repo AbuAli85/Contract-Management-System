@@ -67,47 +67,47 @@ const advancedPromoterSchema = z.object({
   name_ar: z.string().min(2, "Arabic name must be at least 2 characters"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   mobile_number: z.string().min(10, "Mobile number must be at least 10 digits"),
-  phone_number: z.string().optional(),
-  address: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().optional(),
+  phone_number: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
   
   // Identity Documents
   id_card_number: z.string().min(5, "ID card number must be at least 5 characters"),
-  passport_number: z.string().optional(),
-  nationality: z.string().optional(),
-  date_of_birth: z.string().optional(),
+  passport_number: z.string().optional().or(z.literal("")),
+  nationality: z.string().optional().or(z.literal("")),
+  date_of_birth: z.string().optional().or(z.literal("")),
   
   // Professional Information
-  job_title: z.string().optional(),
-  department: z.string().optional(),
-  work_location: z.string().optional(),
-  employer_id: z.string().optional(),
-  outsourced_to_id: z.string().optional(),
+  job_title: z.string().optional().or(z.literal("")),
+  department: z.string().optional().or(z.literal("")),
+  work_location: z.string().optional().or(z.literal("")),
+  employer_id: z.string().optional().or(z.literal("")),
+  outsourced_to_id: z.string().optional().or(z.literal("")),
   
   // Status and Contracts
   status: z.enum(["active", "inactive", "pending", "suspended"]),
-  contract_valid_until: z.string().optional(),
+  contract_valid_until: z.string().optional().or(z.literal("")),
   
   // Document Expiry Dates
-  id_card_expiry_date: z.string().optional(),
-  passport_expiry_date: z.string().optional(),
+  id_card_expiry_date: z.string().optional().or(z.literal("")),
+  passport_expiry_date: z.string().optional().or(z.literal("")),
   
   // Notification Settings
   notify_days_before_id_expiry: z.number().min(1).max(365).default(30),
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(90),
   
   // Documents
-  profile_picture_url: z.string().optional(),
+  profile_picture_url: z.string().optional().or(z.literal("")),
   id_card_image: z.any().optional(),
   passport_image: z.any().optional(),
   cv_document: z.any().optional(),
   
   // Additional Information
-  notes: z.string().optional(),
-  skills: z.array(z.string()).optional(),
-  experience_years: z.number().min(0).max(50).optional(),
-  education_level: z.string().optional(),
+  notes: z.string().optional().or(z.literal("")),
+  skills: z.array(z.string()).optional().default([]),
+  experience_years: z.number().min(0).max(50).optional().default(0),
+  education_level: z.string().optional().or(z.literal("")),
   
   // Settings
   is_editable: z.boolean().default(true),
@@ -279,10 +279,19 @@ export default function AdvancedPromoterForm({
 
   // Form submission
   const onSubmit = async (values: AdvancedPromoterFormData) => {
+    console.log('Form submission started with values:', values)
+    console.log('Form errors:', form.formState.errors)
     setIsSubmitting(true)
     
     try {
       const supabase = createClient()
+      
+      // Check if supabase client is available
+      if (!supabase) {
+        throw new Error('Database connection not available')
+      }
+      
+      console.log('Supabase client created successfully')
       
       const promoterData = {
         name_en: values.name_en,
@@ -306,20 +315,25 @@ export default function AdvancedPromoterForm({
         updated_at: new Date().toISOString()
       }
 
+      console.log('Preparing promoter data:', promoterData)
+      
       let result
       if (isEditMode && promoterToEdit?.id) {
+        console.log('Updating existing promoter with ID:', promoterToEdit.id)
         result = await supabase
           .from('promoters')
           .update(promoterData)
           .eq('id', promoterToEdit.id)
           .select()
       } else {
+        console.log('Creating new promoter')
         result = await supabase
           .from('promoters')
           .insert([{ ...promoterData, created_at: new Date().toISOString() }])
           .select()
       }
 
+      console.log('Database operation result:', result)
       if (result.error) throw result.error
 
       toast({
@@ -335,7 +349,7 @@ export default function AdvancedPromoterForm({
       console.error('Form submission error:', error)
       toast({
         title: "Error",
-        description: "Failed to save promoter information. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save promoter information. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -406,7 +420,7 @@ export default function AdvancedPromoterForm({
                       <p className={cn("text-sm", idCardStatus.color)}>{idCardStatus.text}</p>
                       {watchedData.id_card_expiry_date && (
                         <p className="text-xs text-slate-500">
-                          Expires: {format(parseISO(watchedData.id_card_expiry_date), "MMM d, yyyy")}
+                          Expires: {format(parseISO(watchedData.id_card_expiry_date), "dd/MM/yyyy")}
                         </p>
                       )}
                     </div>
@@ -419,7 +433,7 @@ export default function AdvancedPromoterForm({
                       <p className={cn("text-sm", passportStatus.color)}>{passportStatus.text}</p>
                       {watchedData.passport_expiry_date && (
                         <p className="text-xs text-slate-500">
-                          Expires: {format(parseISO(watchedData.passport_expiry_date), "MMM d, yyyy")}
+                          Expires: {format(parseISO(watchedData.passport_expiry_date), "dd/MM/yyyy")}
                         </p>
                       )}
                     </div>

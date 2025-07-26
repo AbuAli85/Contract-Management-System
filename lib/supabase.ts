@@ -11,6 +11,10 @@ function createSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
+    // Return null during SSR if environment variables are missing
+    if (typeof window === 'undefined') {
+      return null
+    }
     throw new Error(
       "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.",
     )
@@ -69,6 +73,9 @@ export const supabase = (() => {
 
 // Utility function to check if user is authenticated
 export const isAuthenticated = async (): Promise<boolean> => {
+  if (!supabase) {
+    return false
+  }
   try {
     const { data: { session } } = await supabase.auth.getSession()
     return !!session?.user
@@ -80,6 +87,9 @@ export const isAuthenticated = async (): Promise<boolean> => {
 
 // Utility function to get current user
 export const getCurrentUser = async () => {
+  if (!supabase) {
+    return null
+  }
   try {
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error) {
@@ -119,6 +129,9 @@ export const handleRealtimeError = (error: Error | unknown, tableName: string) =
 
 // Utility function to safely create a realtime channel
 export const createRealtimeChannel = (tableName: string, callback: (payload: unknown) => void) => {
+  if (!supabase) {
+    return null
+  }
   try {
     return supabase
       .channel(`public-${tableName}-realtime`)

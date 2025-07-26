@@ -13,6 +13,11 @@ const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#FFBB28"
 
 export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
   const [stats, setStats] = useState({
     totalContracts: 0,
     activeContracts: 0,
@@ -26,7 +31,13 @@ export default function AnalyticsPage() {
   const [promoterData, setPromoterData] = useState<{ name: string; value: number }[]>([])
 
   useEffect(() => {
+    if (!isClient) return
+    
     async function fetchAnalytics() {
+      if (!supabase) {
+        setLoading(false)
+        return
+      }
       setLoading(true)
       // Contracts stats
       const { data: contracts } = await supabase
@@ -95,9 +106,9 @@ export default function AnalyticsPage() {
       setLoading(false)
     }
     fetchAnalytics()
-  }, [])
+  }, [isClient])
 
-  if (loading) {
+  if (!isClient || loading) {
     return (
       <div className="flex h-[calc(100vh-150px)] items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
