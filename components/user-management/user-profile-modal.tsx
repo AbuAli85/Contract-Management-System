@@ -130,7 +130,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
       if (!contractsError && !partiesError) {
         setUserStats({
           totalContracts: contracts?.length || 0,
-          activeContracts: contracts?.filter(c => c.status === 'active').length || 0,
+          activeContracts: contracts?.filter((c: { id: string; status: string }) => c.status === 'active').length || 0,
           totalParties: parties?.length || 0,
           lastActivity: userActivity[0]?.created_at || null
         })
