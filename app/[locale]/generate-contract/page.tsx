@@ -156,6 +156,8 @@ function ContractTypesOverview() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [selectedType, setSelectedType] = useState<string | null>(null)
 
+  const categories = ['employment', 'service', 'freelance', 'consulting', 'partnership', 'nda', 'custom']
+  
   const getDisplayedTypes = () => {
     if (selectedCategory === "all") {
       return contractTypes
