@@ -377,21 +377,21 @@ export default function AdvancedPromoterForm({
     defaultValues: {
       name_en: promoterToEdit?.name_en || "",
       name_ar: promoterToEdit?.name_ar || "",
-      email: promoterToEdit?.email || null,
+      // email: promoterToEdit?.email || null, // Removed - not in database schema
       mobile_number: promoterToEdit?.mobile_number || "",
-      phone_number: promoterToEdit?.phone || null,
-      address: promoterToEdit?.address || null,
-      city: null,
-      country: null,
+      // phone_number: promoterToEdit?.phone || null, // Removed - not in database schema
+      // address: promoterToEdit?.address || null, // Removed - not in database schema
+      // city: null, // Removed - not in database schema
+      // country: null, // Removed - not in database schema
       id_card_number: promoterToEdit?.id_card_number || "",
       passport_number: promoterToEdit?.passport_number || null,
       nationality: promoterToEdit?.nationality || null,
-      date_of_birth: null,
-      job_title: promoterToEdit?.job_title || null,
-      department: null,
-      work_location: promoterToEdit?.work_location || null,
-      employer_id: promoterToEdit?.employer_id || null,
-      outsourced_to_id: promoterToEdit?.outsourced_to_id || null,
+      // date_of_birth: null, // Removed - not in database schema
+      // job_title: promoterToEdit?.job_title || null, // Removed - not in database schema
+      // department: null, // Removed - not in database schema
+      // work_location: promoterToEdit?.work_location || null, // Removed - not in database schema
+      // employer_id: promoterToEdit?.employer_id || null, // Removed - not in database schema
+      // outsourced_to_id: promoterToEdit?.outsourced_to_id || null, // Removed - not in database schema
       status: (promoterToEdit?.status as any) || "active",
       id_card_expiry_date: promoterToEdit?.id_card_expiry_date || null,
       passport_expiry_date: promoterToEdit?.passport_expiry_date || null,
@@ -399,12 +399,12 @@ export default function AdvancedPromoterForm({
       notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry ?? 90,
       profile_picture_url: promoterToEdit?.profile_picture_url || null,
       notes: promoterToEdit?.notes || null,
-      skills: [],
-      experience_years: 0,
-      education_level: null,
-      is_editable: true,
-      auto_notifications: true,
-      require_approval: false
+      // skills: [], // Removed - not in database schema
+      // experience_years: 0, // Removed - not in database schema
+      // education_level: null, // Removed - not in database schema
+      // is_editable: true, // Removed - not in database schema
+      // auto_notifications: true, // Removed - not in database schema
+      // require_approval: false // Removed - not in database schema
     }
   })
 
@@ -564,7 +564,7 @@ export default function AdvancedPromoterForm({
       
       console.log('✅ Supabase client created successfully')
       
-      // Clean and validate data before sending to database - matching actual schema
+      // Filter form data to only include database fields
       const promoterData = {
         name_en: values.name_en.trim(),
         name_ar: values.name_ar.trim(),
@@ -584,6 +584,13 @@ export default function AdvancedPromoterForm({
         profile_picture_url: values.profile_picture_url?.trim() || null,
         nationality: values.nationality?.trim() || null
       }
+
+      // Remove any undefined or null values that might cause issues
+      Object.keys(promoterData).forEach(key => {
+        if (promoterData[key as keyof typeof promoterData] === undefined) {
+          delete promoterData[key as keyof typeof promoterData]
+        }
+      })
 
       console.log('📊 Preparing promoter data:', promoterData)
       
