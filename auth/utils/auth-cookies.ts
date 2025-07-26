@@ -1,21 +1,31 @@
 import { createClient } from '@/lib/supabase/client'
 
+// Utility function to properly parse cookies with base64 values
+function parseCookieString(cookieString: string): Array<{ name: string; value: string }> {
+  return cookieString.split(';').map(cookie => {
+    const trimmedCookie = cookie.trim()
+    const firstEqualsIndex = trimmedCookie.indexOf('=')
+    if (firstEqualsIndex === -1) {
+      return { name: trimmedCookie, value: '' }
+    }
+    const name = trimmedCookie.substring(0, firstEqualsIndex)
+    const value = trimmedCookie.substring(firstEqualsIndex + 1)
+    return { name, value }
+  })
+}
+
 // Cookie management utilities for authentication
 export const authCookies = {
   // Get auth token from cookies
   getAuthToken: (): string | null => {
     if (typeof document === 'undefined') return null
     
-    const cookies = document.cookie.split(';')
+    const cookies = parseCookieString(document.cookie)
     const authCookie = cookies.find(cookie => 
-      cookie.trim().startsWith('sb-auth-token=')
+      cookie.name === 'sb-auth-token'
     )
     
-    if (authCookie) {
-      return authCookie.split('=')[1]
-    }
-    
-    return null
+    return authCookie?.value || null
   },
 
   // Set auth token in cookies

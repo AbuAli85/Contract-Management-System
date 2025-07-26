@@ -2,6 +2,20 @@ import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 import { devLog } from "@/lib/dev-log"
 
+// Utility function to properly parse cookies with base64 values
+function parseCookieString(cookieString: string): Array<{ name: string; value: string }> {
+  return cookieString.split(';').map(cookie => {
+    const trimmedCookie = cookie.trim()
+    const firstEqualsIndex = trimmedCookie.indexOf('=')
+    if (firstEqualsIndex === -1) {
+      return { name: trimmedCookie, value: '' }
+    }
+    const name = trimmedCookie.substring(0, firstEqualsIndex)
+    const value = trimmedCookie.substring(firstEqualsIndex + 1)
+    return { name, value }
+  })
+}
+
 // Singleton pattern to prevent multiple instances
 let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null
 
@@ -24,10 +38,7 @@ function createSupabaseClient() {
   const cookieConfig = typeof window !== 'undefined' ? {
     cookies: {
       getAll() {
-        return document.cookie.split(';').map(cookie => {
-          const [name, value] = cookie.trim().split('=')
-          return { name, value }
-        })
+        return parseCookieString(document.cookie)
       },
       setAll(cookiesToSet: Array<{ name: string; value: string }>) {
         cookiesToSet.forEach(({ name, value }) => {
