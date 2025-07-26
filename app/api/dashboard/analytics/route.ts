@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: analytics
+      stats: analytics
     })
 
   } catch (error) {
