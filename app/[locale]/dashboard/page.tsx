@@ -100,12 +100,162 @@ export default function DashboardPage() {
     )
   }
 
+  // Define quickActions before using it
+  const quickActions = [
+    {
+      title: 'Generate Contract',
+      description: 'Create a new contract with AI assistance',
+      icon: FileText,
+      href: '/generate-contract',
+      permission: 'contract:create',
+      badge: 'AI'
+    },
+    {
+      title: 'Add Promoter',
+      description: 'Register a new promoter',
+      icon: Users,
+      href: '/manage-promoters',
+      permission: 'promoter:create'
+    },
+    {
+      title: 'Add Party',
+      description: 'Register a new party',
+      icon: Building2,
+      href: '/manage-parties',
+      permission: 'party:create'
+    },
+    {
+      title: 'User Approvals',
+      description: 'Review pending user registrations',
+      icon: UserCheck,
+      href: '/dashboard/user-approvals',
+      permission: 'user:create',
+      badge: 'New'
+    },
+    {
+      title: 'Contract Approvals',
+      description: 'Review pending contract approvals',
+      icon: FileCheck,
+      href: '/dashboard/approvals',
+      permission: 'contract:approve',
+      badge: 'New'
+    },
+    {
+      title: 'Analytics',
+      description: 'View detailed analytics and reports',
+      icon: BarChart3,
+      href: '/dashboard/analytics',
+      permission: 'analytics:view',
+      badge: 'New'
+    },
+    {
+      title: 'Settings',
+      description: 'Manage system settings',
+      icon: Settings,
+      href: '/dashboard/settings',
+      permission: 'settings:view'
+    },
+    {
+      title: 'Notifications',
+      description: 'View system notifications',
+      icon: Bell,
+      href: '/dashboard/notifications',
+      permission: 'notifications:view'
+    }
+  ]
+
+  // Show dashboard with loading indicator if data is still loading
+  if (loading) {
+    console.log('📊 Dashboard: Data loading, showing dashboard with loading indicator')
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-2">
+              Welcome back! Loading your data...
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="text-sm text-gray-500">Loading data...</span>
+          </div>
+        </div>
+
+        {/* Stats Cards with loading state */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Loading...</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      <Loader2 className="h-6 w-6 animate-spin inline" />
+                    </p>
+                  </div>
+                  <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {quickActions.map((action, index) => (
+                <Link key={index} href={action.href}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <action.icon className="h-8 w-8 text-blue-600" />
+                        <div>
+                          <h3 className="font-semibold">{action.title}</h3>
+                          <p className="text-sm text-gray-600">{action.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         console.log('🔄 Fetching dashboard data...')
+        
+        // Set a timeout to prevent infinite loading
+        const timeoutId = setTimeout(() => {
+          console.log('⏰ Dashboard API timeout, using default stats')
+          setStats({
+            totalContracts: 0,
+            activeContracts: 0,
+            pendingContracts: 0,
+            totalPromoters: 0,
+            totalParties: 0,
+            pendingApprovals: 0,
+            systemHealth: 98,
+            recentActivity: 0
+          })
+          setLoading(false)
+        }, 5000) // 5 second timeout
+
         // Fetch dashboard analytics
         const response = await fetch('/api/dashboard/analytics')
+        clearTimeout(timeoutId) // Clear timeout if API responds
+        
         console.log('📊 Dashboard API response status:', response.status)
         
         if (response.ok) {
@@ -162,60 +312,14 @@ export default function DashboardPage() {
 
     // Only fetch if user is authenticated
     if (user && !authLoading) {
+      console.log('🚀 Starting dashboard data fetch for user:', user.id)
       fetchDashboardData()
     } else if (!authLoading) {
       // If no user and auth is not loading, set loading to false
+      console.log('👤 No user found, setting loading to false')
       setLoading(false)
     }
   }, [user, authLoading])
-
-  const quickActions = [
-    {
-      title: 'Generate Contract',
-      description: 'Create a new contract with AI assistance',
-      icon: FileText,
-      href: '/generate-contract',
-      permission: 'contract:create',
-      badge: 'AI'
-    },
-    {
-      title: 'Add Promoter',
-      description: 'Register a new promoter',
-      icon: Users,
-      href: '/manage-promoters',
-      permission: 'promoter:create'
-    },
-    {
-      title: 'Add Party',
-      description: 'Register a new party',
-      icon: Building2,
-      href: '/manage-parties',
-      permission: 'party:create'
-    },
-    {
-      title: 'User Approvals',
-      description: 'Review pending user registrations',
-      icon: UserCheck,
-      href: '/dashboard/user-approvals',
-      permission: 'user:create',
-      badge: 'New'
-    },
-    {
-      title: 'Contract Approvals',
-      description: 'Review pending contract approvals',
-      icon: FileCheck,
-      href: '/dashboard/approvals',
-      permission: 'contract:approve',
-      badge: 'New'
-    },
-    {
-      title: 'System Settings',
-      description: 'Configure system preferences',
-      icon: Settings,
-      href: '/dashboard/settings',
-      permission: 'system:settings'
-    }
-  ].filter(action => permissions.can(action.permission as any))
 
   const systemServices = [
     {
