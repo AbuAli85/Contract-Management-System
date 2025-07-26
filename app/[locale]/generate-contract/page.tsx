@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
 import EnhancedContractForm from "@/components/enhanced-contract-form"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
+
 
 // Enhanced utilities for contract insights
 import { 
@@ -304,8 +304,7 @@ export default function GenerateContractPage() {
   const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <motion.div
+    <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -483,6 +482,5 @@ export default function GenerateContractPage() {
         </Card>
       </motion.div>
       </motion.div>
-    </AuthenticatedLayout>
   )
 }

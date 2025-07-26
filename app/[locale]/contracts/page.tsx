@@ -81,7 +81,7 @@ import { cn } from "@/lib/utils"
 import { RoleRefreshButton } from "@/components/role-refresh-button"
 import { RoleDebugPanel } from "@/components/role-debug-panel"
 import { RoleStatusIndicator } from "@/components/role-status-indicator"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
+
 
 // Enhanced Contract interface
 interface EnhancedContract extends ContractWithRelations {
@@ -197,14 +197,12 @@ export default function ContractsDashboardPage() {
   // Show loading state if permissions are still loading
   if (permissions.isLoading) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading permissions...</p>
-          </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading permissions...</p>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
@@ -612,35 +610,31 @@ export default function ContractsDashboardPage() {
 
   if (isLoading) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="flex h-[calc(100vh-150px)] items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="ml-4 text-lg">Loading contracts...</p>
-        </div>
-      </AuthenticatedLayout>
+      <div className="flex h-[calc(100vh-150px)] items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="ml-4 text-lg">Loading contracts...</p>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <Card className="m-4">
-          <CardHeader>
-            <CardTitle className="text-destructive">Error Loading Contracts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p>{error}</p>
-            <Button onClick={() => window.location.reload()} className="mt-4">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
-      </AuthenticatedLayout>
+      <Card className="m-4">
+        <CardHeader>
+          <CardTitle className="text-destructive">Error Loading Contracts</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>{error}</p>
+          <Button onClick={() => window.location.reload()} className="mt-4">
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
     )
   }
 
-  return (
-    <AuthenticatedLayout locale={locale}>
+    return (
+    <>
       <div className="space-y-6 p-4 md:p-6">
         {/* Role Debug Panel - Only show in development */}
         {process.env.NODE_ENV === 'development' && (
@@ -1157,6 +1151,6 @@ export default function ContractsDashboardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AuthenticatedLayout>
+      </>
   )
 }
