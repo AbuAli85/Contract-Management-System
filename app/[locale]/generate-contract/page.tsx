@@ -25,7 +25,7 @@ import {
 } from "@/lib/contract-utils"
 import { CONTRACT_FORM_SECTIONS, getRequiredFields } from "@/lib/schema-generator"
 import { CONTRACT_TYPES } from "@/constants/contract-options"
-import { getContractTypesByCategory, getContractTypeConfig, CONTRACT_TYPE_CONFIGS } from "@/lib/contract-type-config"
+import { getContractTypesByCategory, getEnhancedContractTypeConfig, contractTypes } from "@/lib/contract-type-config"
 
 // Contract insights component
 function ContractInsights() {
@@ -161,7 +161,7 @@ function ContractTypesOverview() {
   
   const getDisplayedTypes = () => {
     if (selectedCategory === "all") {
-      return Object.values(CONTRACT_TYPE_CONFIGS)
+      return contractTypes
     }
     return categorizedTypes[selectedCategory] || []
   }
@@ -174,7 +174,7 @@ function ContractTypesOverview() {
         <CardTitle className="flex items-center gap-2 text-lg">
           <FileText className="h-5 w-5 text-primary" />
           Contract Types
-          <Badge variant="secondary">{Object.keys(CONTRACT_TYPE_CONFIGS).length} Types</Badge>
+          <Badge variant="secondary">{contractTypes.length} Types</Badge>
         </CardTitle>
         <CardDescription>
           Each contract type has unique templates, fields, and business rules
@@ -489,14 +489,14 @@ export default function GenerateContractPage() {
             </div>
             <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
               Our contract generation system now includes enhanced schema validation with comprehensive 
-              business rules, improved error handling, and smart field requirements. Choose from {Object.keys(CONTRACT_TYPE_CONFIGS).length} different 
+              business rules, improved error handling, and smart field requirements. Choose from {contractTypes.length} different 
               contract types, each with unique templates, placeholders, and validation rules. The form automatically 
               validates dates, party relationships, and ensures all critical information is captured correctly.
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <Badge variant="outline">Enhanced Schema</Badge>
               <Badge variant="outline">Business Rules</Badge>
-              <Badge variant="outline">{Object.keys(CONTRACT_TYPE_CONFIGS).length} Contract Types</Badge>
+              <Badge variant="outline">{contractTypes.length} Contract Types</Badge>
               <Badge variant="outline">Smart Validation</Badge>
               <Badge variant="outline">Error Prevention</Badge>
               <Badge variant="outline">Oman Compliance</Badge>
