@@ -9,10 +9,6 @@ export async function middleware(req: NextRequest) {
   // Get pathname first
   const pathname = req.nextUrl.pathname
   
-  // TEMPORARILY DISABLE MIDDLEWARE FOR TESTING
-  console.log('🔒 Middleware: Temporarily disabled for testing')
-  return res
-  
   // Skip middleware for system requests
   const systemPaths = [
     '/.well-known',
@@ -89,18 +85,20 @@ export async function middleware(req: NextRequest) {
     const { data: { session }, error: sessionError } = await Promise.race([
       sessionPromise,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 3000) // Increased to 3 seconds
+        setTimeout(() => reject(new Error('Auth timeout')), 5000) // Increased to 5 seconds
       )
     ]) as any
     
     if (sessionError) {
       console.error('🔒 Middleware: Session error:', sessionError)
+      // On session error, allow the request to continue but log it
+      console.log('🔒 Middleware: Allowing request despite session error')
+      return res
     }
     
     console.log('🔒 Middleware: Session result:', session ? `found for user ${session.user.id}` : 'not found')
 
-    // Extract locale from pathname
-    const pathname = req.nextUrl.pathname
+    // Extract locale from pathname (pathname is already declared above)
     const pathnameIsMissingLocale = ['en', 'ar'].every(
       (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
     )
@@ -169,6 +167,7 @@ export async function middleware(req: NextRequest) {
     console.error('🔒 Middleware error:', error)
     // On error, allow the request to continue but log the issue
     // This prevents the app from being completely broken due to slow database
+    console.log('🔒 Middleware: Allowing request despite error')
     return res
   }
 }
