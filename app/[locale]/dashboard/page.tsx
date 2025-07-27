@@ -220,6 +220,29 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             >
               Bypass Auth (Test)
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={async () => {
+                console.log('🔧 Dashboard: Checking session manually...')
+                try {
+                  const response = await fetch('/api/auth/check-session')
+                  const data = await response.json()
+                  console.log('🔧 Dashboard: Manual session check result:', data)
+                  
+                  if (data.success && data.hasSession) {
+                    console.log('🔧 Dashboard: Session found, reloading page...')
+                    window.location.reload()
+                  } else {
+                    console.log('🔧 Dashboard: No session found')
+                    alert('No session found. Please log in again.')
+                  }
+                } catch (error) {
+                  console.error('🔧 Dashboard: Session check failed:', error)
+                }
+              }}
+            >
+              Check Session
+            </Button>
           </div>
         </div>
       </div>

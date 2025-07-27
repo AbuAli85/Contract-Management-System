@@ -169,28 +169,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔧 Setting loading to false')
       setLoading(false)
 
-      // Load profile data in background if user exists
-      if (currentSession?.user) {
-        console.log('🔧 Loading profile data in background...')
-        setTimeout(async () => {
-          try {
-            const userProfile = await loadUserProfile(currentSession.user.id)
-            const userRoles = await loadUserRoles(currentSession.user.id)
-            
-            setProfile(userProfile)
-            setRoles(userRoles)
-            
-            if (!userProfile) {
-              setProfileNotFound(true)
-            }
-            
-            console.log('🔧 Profile data loaded:', { profile: !!userProfile, roles: userRoles })
-          } catch (error) {
-            console.warn('Profile loading failed, continuing with basic auth')
-            setProfile(null)
-            setRoles([])
+      // If no session found, try to refresh the session
+      if (!currentSession) {
+        console.log('🔧 No session found, attempting to refresh...')
+        try {
+          const { data: { session: refreshedSession }, error: refreshError } = await supabaseClient.auth.refreshSession()
+          
+          if (refreshError) {
+            console.log('🔧 Session refresh failed:', refreshError.message)
+          } else if (refreshedSession) {
+            console.log('🔧 Session refreshed successfully')
+            setSession(refreshedSession)
+            setUser(refreshedSession.user)
           }
-        }, 100)
+        } catch (refreshError) {
+          console.log('🔧 Session refresh error:', refreshError)
+        }
+      }
+
+      // Load profile data in background if user exists
+      if (currentSession?.user || (currentSession?.user && !currentSession)) {
+        const userId = currentSession?.user?.id || currentSession?.user?.id
+        if (userId) {
+          console.log('🔧 Loading profile data in background...')
+          setTimeout(async () => {
+            try {
+              const userProfile = await loadUserProfile(userId)
+              const userRoles = await loadUserRoles(userId)
+              
+              setProfile(userProfile)
+              setRoles(userRoles)
+              
+              if (!userProfile) {
+                setProfileNotFound(true)
+              }
+              
+              console.log('🔧 Profile data loaded:', { profile: !!userProfile, roles: userRoles })
+            } catch (error) {
+              console.warn('Profile loading failed, continuing with basic auth')
+              setProfile(null)
+              setRoles([])
+            }
+          }, 100)
+        }
       } else {
         setProfile(null)
         setRoles([])
