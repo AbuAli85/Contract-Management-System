@@ -4,27 +4,39 @@ import { createClient } from '@/lib/supabase/server'
 // GET - Fetch pending users for approval
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔧 User approval API called')
     const supabase = await createClient()
     
     // Get current user to check permissions
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
+    console.log('🔍 Auth check result:', { hasUser: !!user, authError: authError?.message })
+    
     if (authError || !user) {
+      console.log('❌ Authentication failed')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    console.log('✅ User authenticated:', user.id)
+
     // Check if user has admin permissions
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single()
 
+    console.log('👤 Profile check result:', { profile: userProfile, error: profileError?.message })
+
     if (!userProfile || userProfile.role !== 'admin') {
+      console.log('❌ User is not admin:', userProfile?.role)
       return NextResponse.json({ error: 'Only admins can view pending users' }, { status: 403 })
     }
 
+    console.log('✅ User is admin, proceeding to fetch pending users')
+
     // Fetch pending users
+    console.log('📋 Fetching pending users from database...')
     const { data: pendingUsers, error } = await supabase
       .from('users')
       .select(`
@@ -43,9 +55,12 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching pending users:', error)
+      console.error('❌ Error fetching pending users:', error)
       return NextResponse.json({ error: 'Failed to fetch pending users' }, { status: 500 })
     }
+
+    console.log('✅ Successfully fetched pending users:', pendingUsers?.length || 0)
+    console.log('📋 Pending users:', pendingUsers?.map(u => ({ email: u.email, role: u.role, status: u.status })))
 
     return NextResponse.json({ 
       success: true,

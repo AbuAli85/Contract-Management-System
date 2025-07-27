@@ -4,32 +4,50 @@ import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/auth-provider'
 import Link from 'next/link'
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
-  const hasRedirected = useRef(false)
+  const router = useRouter()
 
-  // If user is already logged in, redirect to dashboard
-  if (mounted && !loading && user && !hasRedirected.current) {
-    hasRedirected.current = true
-    
-    // Get the current locale from the URL
-    const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
-    const locale = pathname.split('/')[1] || 'en'
-    const redirectUrl = `/${locale}/dashboard`
-    
-    // Use setTimeout to ensure the redirect happens after the current render
-    setTimeout(() => {
-      window.location.href = redirectUrl
-    }, 100)
-    
-    return null
+  // Handle redirect when user is authenticated
+  useEffect(() => {
+    if (mounted && !loading && user) {
+      console.log('🔧 Login page: User authenticated, redirecting to dashboard')
+      
+      // Get the current locale from the URL
+      const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+      const locale = pathname.split('/')[1] || 'en'
+      const redirectUrl = `/${locale}/dashboard`
+      
+      // Use router.push for better navigation
+      router.push(redirectUrl)
+    }
+  }, [user, loading, mounted, router])
+
+  // Show loading while checking authentication
+  if (loading || !mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
-  // Reset redirect flag if user is not logged in
-  if (!user && hasRedirected.current) {
-    hasRedirected.current = false
+  // If user is already logged in, show loading while redirecting
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

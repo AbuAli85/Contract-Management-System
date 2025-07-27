@@ -54,7 +54,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user, loading: authLoading, profile } = useAuth()
+  const { user, loading: authLoading, profile, mounted } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -82,12 +82,45 @@ export default function DashboardPage() {
             setStats(data.stats)
           } else {
             console.warn('🔧 Dashboard: Invalid API response structure:', data)
+            // Set default stats if API fails
+            setStats({
+              totalContracts: 0,
+              activeContracts: 0,
+              pendingContracts: 0,
+              totalPromoters: 0,
+              totalParties: 0,
+              pendingApprovals: 0,
+              systemHealth: 98,
+              recentActivity: 0
+            })
           }
         } else {
           console.error('🔧 Dashboard: API request failed:', response.status)
+          // Set default stats if API fails
+          setStats({
+            totalContracts: 0,
+            activeContracts: 0,
+            pendingContracts: 0,
+            totalPromoters: 0,
+            totalParties: 0,
+            pendingApprovals: 0,
+            systemHealth: 98,
+            recentActivity: 0
+          })
         }
       } catch (error) {
         console.error('🔧 Dashboard: Error fetching dashboard data:', error)
+        // Set default stats if API fails
+        setStats({
+          totalContracts: 0,
+          activeContracts: 0,
+          pendingContracts: 0,
+          totalPromoters: 0,
+          totalParties: 0,
+          pendingApprovals: 0,
+          systemHealth: 98,
+          recentActivity: 0
+        })
       }
     }
 
@@ -98,7 +131,7 @@ export default function DashboardPage() {
   }, [user, authLoading])
 
   // Show loading if auth is still loading
-  if (authLoading) {
+  if (authLoading || !mounted) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

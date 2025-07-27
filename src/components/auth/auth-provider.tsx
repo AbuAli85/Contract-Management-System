@@ -356,17 +356,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.signUp({
+      console.log('📝 SignUp called with email:', email, 'profile:', profile)
+      
+      // First, create the user in Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: profile
         }
       })
+      
       if (error) {
         console.error('Sign up error:', error)
         return { error: error.message }
       }
+      
+      if (data.user) {
+        console.log('✅ Auth user created:', data.user.id)
+        
+        // Create user profile in the users table
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: email,
+            full_name: profile?.full_name || '',
+            role: profile?.role || 'user',
+            status: profile?.status || 'pending',
+            email_verified: false
+          })
+        
+        if (profileError) {
+          console.error('❌ Profile creation error:', profileError)
+          // Don't fail the signup if profile creation fails, but log it
+          // The user can still be created manually by admin
+        } else {
+          console.log('✅ User profile created in database')
+        }
+      }
+      
       return {}
     } catch (error) {
       console.error('Sign up error:', error)
