@@ -50,6 +50,9 @@ interface PDFStatus {
   notifications: any[]
 }
 
+// Force dynamic rendering to prevent SSR issues with useAuth
+export const dynamic = 'force-dynamic'
+
 export default function ContractDetailPage() {
   const params = useParams()
   const pathname = usePathname()
