@@ -87,9 +87,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (!supabase) return null
+    console.log('👤 Loading user profile for:', userId)
+    if (!supabase) {
+      console.error('❌ No supabase client for profile loading')
+      return null
+    }
     
     try {
+      console.log('👤 Querying users table...')
       // Try to load from users table first
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -254,11 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
-    // CRITICAL: Force loading to false after 2 seconds maximum
+    // CRITICAL: Force loading to false after 1 second maximum (reduced from 2 seconds)
     const safetyTimeout = setTimeout(() => {
       console.log('⚠️ Safety timeout triggered - forcing loading to false')
       setLoading(false)
-    }, 2000)
+    }, 1000)
 
     // Cleanup function
     return () => {
@@ -270,11 +275,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {
+    console.log('🔐 SignIn called with email:', email)
     if (!supabase) {
+      console.error('❌ No supabase client available')
       return { error: 'Authentication service not available' }
     }
     try {
+      console.log('🔐 Attempting sign in with Supabase...')
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      console.log('🔐 Sign in result:', { success: !error, user: data?.user?.id })
+      
       if (error) {
         console.error('Sign in error:', error)
         return { error: error.message }
