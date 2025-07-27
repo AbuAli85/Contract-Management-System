@@ -27,18 +27,27 @@ export function LoginForm() {
     setError(null)
 
     try {
-      console.log("🔐 Login Debug - Starting login process...")
+      console.log("🔐 Login Debug - Starting server-side login process...")
       
-      const { error } = await signIn(email, password)
+      // Use server-side login API instead of client-side
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      if (error) {
-        console.error("🔐 Login Debug - Login error:", error)
-        setError(error)
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("🔐 Login Debug - Server login error:", data.error)
+        setError(data.error || 'Login failed')
         setLoading(false)
         return
       }
 
-      console.log("🔐 Login Debug - Login successful")
+      console.log("🔐 Login Debug - Server login successful")
       
       // Keep loading state true during redirect to prevent form interaction
       // Redirect after successful login - use window.location for more reliable redirect

@@ -187,6 +187,7 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/test-dashboard`,
       `/${currentLocale}/debug-redirect`,
       `/${currentLocale}/test-cookie-fix`,
+      `/${currentLocale}/debug-login-flow`,
       '/test-login'
     ]
 
