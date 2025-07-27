@@ -778,7 +778,14 @@ export default function ContractGeneratorForm({
                   <SelectContent>
                     {WORK_LOCATIONS.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{option.label}</span>
+                          {option.description && (
+                            <span className="text-xs text-muted-foreground mt-0.5">
+                              {option.description}
+                            </span>
+                          )}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

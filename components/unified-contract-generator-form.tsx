@@ -670,8 +670,15 @@ export default function UnifiedContractGeneratorForm({
                             </SelectTrigger>
                             <SelectContent>
                               {WORK_LOCATIONS.map((location) => (
-                                <SelectItem key={typeof location === 'string' ? location : location.value} value={typeof location === 'string' ? location : location.value}>
-                                  {typeof location === 'string' ? location : location.label}
+                                <SelectItem key={location.value} value={location.value}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{location.label}</span>
+                                    {location.description && (
+                                      <span className="text-xs text-muted-foreground mt-0.5">
+                                        {location.description}
+                                      </span>
+                                    )}
+                                  </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>

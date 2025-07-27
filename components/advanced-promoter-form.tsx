@@ -62,7 +62,7 @@ import type { Promoter } from "@/lib/types"
 import { useParties } from "@/hooks/use-parties"
 import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
 
-// Enhanced Select Component with Add Option
+// Enhanced Select Component with Add Option and Descriptions
 const EnhancedSelect = ({ 
   options, 
   value, 
@@ -70,7 +70,7 @@ const EnhancedSelect = ({
   placeholder, 
   onAddCustom 
 }: {
-  options: readonly { value: string; label: string }[]
+  options: readonly { value: string; label: string; description?: string }[]
   value?: string | null
   onValueChange: (value: string) => void
   placeholder: string
@@ -109,7 +109,14 @@ const EnhancedSelect = ({
       <SelectContent>
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
-            {option.label}
+            <div className="flex flex-col">
+              <span className="font-medium">{option.label}</span>
+              {option.description && (
+                <span className="text-xs text-muted-foreground mt-0.5">
+                  {option.description}
+                </span>
+              )}
+            </div>
           </SelectItem>
         ))}
         
