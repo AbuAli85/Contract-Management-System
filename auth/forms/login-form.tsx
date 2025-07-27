@@ -52,27 +52,18 @@ export function LoginForm() {
 
       console.log("🔐 Login Debug - Server login successful")
 
-      // Check if the server session is now valid
-      try {
-        console.log("🔐 Login Debug - Checking server session...")
-        const sessionCheckResponse = await fetch('/api/auth/check-session')
-        const sessionCheckData = await sessionCheckResponse.json()
-        
-        if (sessionCheckData.success && sessionCheckData.hasSession) {
-          console.log("🔐 Login Debug - Server session confirmed, redirecting to dashboard")
-          // Use Next.js router for proper navigation
-          router.push(redirectTo)
-        } else {
-          console.log("🔐 Login Debug - Server session not found, reloading page")
-          window.location.reload()
-        }
-      } catch (error) {
-        console.error("🔐 Login Debug - Session check failed:", error)
-        // Fallback to redirect
-        setTimeout(() => {
-          router.push(redirectTo)
-        }, 500)
-      }
+      // After successful login, redirect directly instead of checking session
+      console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
+      
+      // Use a small delay to ensure cookies are set, then redirect
+      setTimeout(() => {
+        router.push(redirectTo)
+      }, 1000)
+      
+      // Alternative: Force page reload to ensure fresh session state
+      // setTimeout(() => {
+      //   window.location.href = redirectTo
+      // }, 1000)
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

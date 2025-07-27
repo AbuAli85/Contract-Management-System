@@ -76,6 +76,12 @@ export async function POST(request: NextRequest) {
       })
       
       console.log('🔐 Set auth cookies for middleware')
+      console.log('🔐 Cookie details:', {
+        token0Length: data.session.access_token.length,
+        token1Length: data.session.refresh_token.length,
+        token0Preview: data.session.access_token.substring(0, 20) + '...',
+        token1Preview: data.session.refresh_token.substring(0, 20) + '...'
+      })
     } else {
       console.log('🔐 No session data available')
     }
