@@ -2,6 +2,7 @@
 
 import { createServerComponentClient } from "@/lib/supabaseServer"
 import type { Database } from "@/types/supabase"
+import { getContractGenerationService } from "@/lib/contract-generation-service"
 
 export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
 
@@ -33,6 +34,53 @@ export async function createContract(newContract: ContractInsert) {
   if (error) throw new Error(error.message)
   if (!data) throw new Error("Contract creation failed, no data returned.")
   return data
+}
+
+export async function generateContractWithMakecom(contractData: {
+  first_party_id: string
+  second_party_id: string
+  promoter_id: string
+  contract_start_date: Date
+  contract_end_date?: Date
+  email: string
+  job_title: string
+  work_location: string
+  department: string
+  contract_type: string
+  currency: string
+  basic_salary?: number
+  allowances?: number
+  special_terms?: string
+}) {
+  try {
+    const contractService = getContractGenerationService()
+    
+    // Convert to the expected format, handling optional contract_end_date
+    const generationData = {
+      ...contractData,
+      contract_end_date: contractData.contract_end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Default to 1 year from now if not provided
+    }
+    
+    const result = await contractService.generateContract(generationData)
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Contract generation failed')
+    }
+    
+    // Return the contract data in the expected format
+    return {
+      id: result.contract_id,
+      contract_number: result.contract_number,
+      status: result.status,
+      pdf_url: result.pdf_url,
+      google_drive_url: result.google_drive_url,
+      message: result.message,
+      success: true
+    }
+  } catch (error) {
+    console.error('Contract generation error:', error)
+    throw new Error(error instanceof Error ? error.message : 'Contract generation failed')
+  }
 }
 
 export async function deleteContract(contractId: string) {

@@ -70,7 +70,7 @@ import {
   WORK_LOCATIONS,
   DEPARTMENTS,
 } from "@/constants/contract-options"
-import { createContract, updateContract, ContractInsert } from "@/app/actions/contracts"
+import { createContract, updateContract, ContractInsert, generateContractWithMakecom } from "@/app/actions/contracts"
 
 interface UnifiedContractGeneratorFormProps {
   /** Existing contract when editing; new contract if undefined. */
@@ -220,21 +220,53 @@ export default function UnifiedContractGeneratorForm({
   // Mutation for form submission
   const submitMutation = useMutation({
     mutationFn: async (data: ContractGeneratorFormData) => {
-      const payload: Partial<ContractInsert> = {
-        ...data,
-        contract_start_date: data.contract_start_date?.toISOString(),
-        contract_end_date: data.contract_end_date?.toISOString(),
-        contract_value: data.basic_salary,
-      }
-
       if (contract) {
+        // Update existing contract
+        const payload: Partial<ContractInsert> = {
+          ...data,
+          contract_start_date: data.contract_start_date?.toISOString(),
+          contract_end_date: data.contract_end_date?.toISOString(),
+          contract_value: data.basic_salary,
+        }
         return await updateContract(contract.id, payload)
       } else {
-        return await createContract(payload as ContractInsert)
+        // Generate new contract with Make.com integration
+        return await generateContractWithMakecom({
+          first_party_id: data.first_party_id || '',
+          second_party_id: data.second_party_id || '',
+          promoter_id: data.promoter_id || '',
+          contract_start_date: data.contract_start_date!,
+          contract_end_date: data.contract_end_date,
+          email: data.email || '',
+          job_title: data.job_title || '',
+          work_location: data.work_location || '',
+          department: data.department || '',
+          contract_type: data.contract_type || '',
+          currency: data.currency || 'OMR',
+          basic_salary: data.basic_salary,
+          allowances: data.allowances,
+          special_terms: data.special_terms,
+        })
       }
     },
-    onSuccess: () => {
-      toast.success(contract ? "Contract updated successfully!" : "Contract created successfully!")
+    onSuccess: (result) => {
+      if (contract) {
+        toast.success("Contract updated successfully!")
+      } else {
+        // Handle Make.com integration result
+        const makecomResult = result as any // Type assertion for Make.com result
+        const message = makecomResult.message || "Contract created successfully!"
+        toast.success(message)
+        
+        // Show additional info if available
+        if (makecomResult.google_drive_url) {
+          toast.info("Contract sent to Google Drive for processing")
+        }
+        if (makecomResult.status === 'processing') {
+          toast.info("Contract is being processed by Make.com")
+        }
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['contracts'] })
       onFormSubmit?.()
       if (autoRedirect) {
@@ -646,8 +678,8 @@ export default function UnifiedContractGeneratorForm({
                             </SelectTrigger>
                             <SelectContent>
                               {JOB_TITLES.map((title) => (
-                                <SelectItem key={typeof title === 'string' ? title : title.value} value={typeof title === 'string' ? title : title.value}>
-                                  {typeof title === 'string' ? title : title.label}
+                                <SelectItem key={title.value} value={title.value}>
+                                  {title.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>

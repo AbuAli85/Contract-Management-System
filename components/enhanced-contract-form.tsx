@@ -22,6 +22,8 @@ import type { Database } from "@/types/supabase"
 import { CustomDateInput } from "@/components/ui/custom-date-input"
 import { EnhancedPromoterSelector } from "@/components/ui/enhanced-promoter-selector"
 import { ContractDurationCalculator } from "@/components/ui/contract-duration-calculator"
+import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
+import { generateContractWithMakecom } from "@/app/actions/contracts"
 
 // Types
 interface ContractFormData {
@@ -93,43 +95,68 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
     }
   })
 
-  // Contract generation mutation
+  // Contract generation mutation using Make.com integration
   const generateMutation = useMutation({
     mutationFn: async (data: ContractFormData) => {
-      const response = await fetch('/api/contracts/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+      // Use the generateContractWithMakecom action for Make.com integration
+      const result = await generateContractWithMakecom({
+        first_party_id: data.first_party_id || '',
+        second_party_id: data.second_party_id || '',
+        promoter_id: data.promoter_id || '',
+        contract_start_date: data.contract_start_date!,
+        contract_end_date: data.contract_end_date,
+        email: data.email || '',
+        job_title: data.job_title || '',
+        work_location: data.work_location || '',
+        department: data.department || '',
+        contract_type: data.contract_type || '',
+        currency: data.currency || 'OMR',
+        basic_salary: data.basic_salary,
+        allowances: data.allowances,
+        special_terms: data.special_terms,
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to generate contract')
+      if (!result.success) {
+        throw new Error(result.message || 'Contract generation failed')
       }
 
-      return response.json()
+      return result
     },
-    onSuccess: (data) => {
-      if (data.success) {
-        setContractStatus({
-          contract_id: data.data.contract_id,
-          status: data.data.status
-        })
-        
+    onSuccess: (result) => {
+      // Handle Make.com integration response
+      const message = result.message || "Contract created successfully!"
+      toast({
+        title: "Contract Generated!",
+        description: message,
+      })
+      
+      if (result.google_drive_url) {
         toast({
-          title: "Contract Generated!",
-          description: data.data.message,
+          title: "Google Drive Processing",
+          description: "Contract sent to Google Drive for processing",
         })
-
-        // Start polling for status if processing (but with shorter intervals for immediate generation)
-        if (data.data.status === 'processing') {
-          setIsPolling(true)
-          // Poll more frequently for immediate generation
-          setTimeout(() => pollContractStatus(data.data.contract_id), 2000)
-        }
-
-        onSuccess?.(data.data.contract_id)
       }
+      
+      if (result.status === 'processing') {
+        toast({
+          title: "Make.com Processing",
+          description: "Contract is being processed by Make.com",
+        })
+      }
+
+      // Set contract status for UI
+      setContractStatus({
+        contract_id: result.id,
+        status: result.status === 'processing' ? 'processing' : 'generated'
+      })
+
+      // Start polling for status updates
+      if (result.status === 'processing') {
+        setIsPolling(true)
+        setTimeout(() => pollContractStatus(result.id), 2000)
+      }
+
+      onSuccess?.(result.id)
     },
     onError: (error: Error) => {
       toast({
@@ -201,14 +228,20 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
     },
     onSuccess: (data) => {
       if (data.success) {
-        setContractStatus(prev => prev ? { ...prev, status: 'processing' } : null)
-        setIsPolling(true)
-        pollContractStatus(contractStatus!.contract_id)
+        setContractStatus({
+          contract_id: data.data.contract_id,
+          status: data.data.status
+        })
         
         toast({
           title: "Retry Initiated",
-          description: "Contract generation has been restarted.",
+          description: "Contract generation has been retried.",
         })
+
+        if (data.data.status === 'processing') {
+          setIsPolling(true)
+          setTimeout(() => pollContractStatus(data.data.contract_id), 2000)
+        }
       }
     },
     onError: (error: Error) => {
@@ -224,22 +257,29 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
   const downloadPDF = async (contractId: string) => {
     try {
       const response = await fetch(`/api/contracts/generate?contract_id=${contractId}&action=download`)
-      const data = await response.json()
-
-      if (data.success && data.data.download_url) {
-        // Open PDF in new tab
-        window.open(data.data.download_url, '_blank')
-      } else {
-        toast({
-          title: "Download Failed",
-          description: data.error || "PDF not available",
-          variant: "destructive"
-        })
+      
+      if (!response.ok) {
+        throw new Error('Failed to download PDF')
       }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `contract-${contractId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      toast({
+        title: "Download Started",
+        description: "Contract PDF download has started.",
+      })
     } catch (error) {
       toast({
         title: "Download Failed",
-        description: "Failed to download PDF",
+        description: "Failed to download contract PDF.",
         variant: "destructive"
       })
     }
@@ -345,32 +385,33 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                 <Button
                   size="sm"
                   onClick={() => downloadPDF(contractStatus.contract_id)}
-                  className="flex items-center gap-2"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download className="w-4 h-4 mr-2" />
                   Download PDF
                 </Button>
-                {contractStatus.generated_at && (
-                  <span className="text-xs text-muted-foreground">
-                    Generated: {format(new Date(contractStatus.generated_at), 'PPp')}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {contractStatus.status === 'failed' && (
-              <div className="space-y-2">
-                <p className="text-sm text-red-600">
-                  {contractStatus.error_message || 'Generation failed'}
-                </p>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => retryMutation.mutate(contractStatus.contract_id)}
                   disabled={retryMutation.isPending}
-                  className="flex items-center gap-2"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry Generation
+                </Button>
+              </div>
+            )}
+
+            {contractStatus.status === 'failed' && (
+              <div className="space-y-2">
+                <div className="text-sm text-red-600">
+                  {contractStatus.error_message || "Generation failed"}
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => retryMutation.mutate(contractStatus.contract_id)}
+                  disabled={retryMutation.isPending}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
                   Retry Generation
                 </Button>
               </div>
@@ -440,7 +481,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                 />
               </div>
 
-              {/* Enhanced Promoter Selector */}
+              {/* Promoter Selection */}
               <FormField
                 control={form.control}
                 name="promoter_id"
@@ -450,9 +491,9 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormControl>
                       <EnhancedPromoterSelector
                         value={field.value}
-                        onValueChange={field.onChange}
-                        disabled={isLoading}
-                        placeholder="Select a promoter with employer details"
+                        onChange={field.onChange}
+                        promoters={promoters || []}
+                        isLoading={isLoadingPromoters}
                       />
                     </FormControl>
                     <FormMessage />
@@ -460,7 +501,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                 )}
               />
 
-              {/* Contract Details with Custom Date Input */}
+              {/* Contract Dates */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
@@ -473,7 +514,6 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isLoading}
-                          placeholder="dd/mm/yyyy"
                         />
                       </FormControl>
                       <FormMessage />
@@ -492,7 +532,6 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                           value={field.value}
                           onChange={field.onChange}
                           disabled={isLoading}
-                          placeholder="dd/mm/yyyy"
                         />
                       </FormControl>
                       <FormMessage />
@@ -511,7 +550,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
               </div>
 
               {/* Job Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <FormField
                   control={form.control}
                   name="job_title"
@@ -519,7 +558,18 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormItem>
                       <FormLabel>Job Title</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isLoading} />
+                        <Select value={field.value || ""} onValueChange={field.onChange} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select job title" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {JOB_TITLES.map((title) => (
+                              <SelectItem key={title.value} value={title.value}>
+                                {title.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -533,27 +583,56 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={isLoading} />
+                        <Select value={field.value || ""} onValueChange={field.onChange} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DEPARTMENTS.map((dept) => (
+                              <SelectItem key={dept.value} value={dept.value}>
+                                {dept.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="work_location"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Work Location</FormLabel>
+                      <FormControl>
+                        <Select value={field.value || ""} onValueChange={field.onChange} disabled={isLoading}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select work location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {WORK_LOCATIONS.map((location) => (
+                              <SelectItem key={location.value} value={location.value}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{location.label}</span>
+                                  {location.description && (
+                                    <span className="text-xs text-muted-foreground mt-0.5">
+                                      {location.description}
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="work_location"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Work Location</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled={isLoading} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               {/* Contact & Contract Type */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -608,9 +687,9 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="OMR">OMR (Omani Rial)</SelectItem>
-                          <SelectItem value="AED">AED (UAE Dirham)</SelectItem>
-                          <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                          <SelectItem value="OMR">OMR - Omani Rial</SelectItem>
+                          <SelectItem value="USD">USD - US Dollar</SelectItem>
+                          <SelectItem value="EUR">EUR - Euro</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

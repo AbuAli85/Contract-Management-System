@@ -5,6 +5,7 @@ import { useEffect, useState, lazy, Suspense } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { generateContractWithMakecom } from "@/app/actions/contracts"
 import { format, parseISO } from "date-fns"
 import { motion } from "framer-motion"
 import {
@@ -227,26 +228,24 @@ export default function ContractGeneratorForm({
   const mutation = useMutation({
     mutationFn: async (values: ContractGeneratorFormData) => {
       try {
-        const payload = {
-          first_party_id: values.first_party_id,
-          second_party_id: values.second_party_id,
-          promoter_id: values.promoter_id,
-          contract_start_date: values.contract_start_date,
-          contract_end_date: values.contract_end_date,
-          email: values.email,
-          job_title: values.job_title,
-          work_location: values.work_location,
-          department: values.department,
-          contract_type: values.contract_type,
-          currency: values.currency,
-        }
-
         // UPDATE
         if (contract?.id) {
           const res = await fetch(`/api/contracts/${contract.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+              first_party_id: values.first_party_id,
+              second_party_id: values.second_party_id,
+              promoter_id: values.promoter_id,
+              contract_start_date: values.contract_start_date,
+              contract_end_date: values.contract_end_date,
+              email: values.email,
+              job_title: values.job_title,
+              work_location: values.work_location,
+              department: values.department,
+              contract_type: values.contract_type,
+              currency: values.currency,
+            }),
           })
           if (!res.ok) {
             const err = await res.json()
@@ -256,18 +255,23 @@ export default function ContractGeneratorForm({
           return updated
         }
 
-        // CREATE
-        const res = await fetch("/api/contracts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+        // CREATE with Make.com integration
+        return await generateContractWithMakecom({
+          first_party_id: values.first_party_id || '',
+          second_party_id: values.second_party_id || '',
+          promoter_id: values.promoter_id || '',
+          contract_start_date: values.contract_start_date!,
+          contract_end_date: values.contract_end_date,
+          email: values.email || '',
+          job_title: values.job_title || '',
+          work_location: values.work_location || '',
+          department: values.department || '',
+          contract_type: values.contract_type || '',
+          currency: values.currency || 'OMR',
+          basic_salary: values.basic_salary,
+          allowances: values.allowances,
+          special_terms: values.special_terms,
         })
-        if (!res.ok) {
-          const err = await res.json()
-          throw new Error(err.error || err.message || res.statusText)
-        }
-        const { contract: created } = await res.json()
-        return created
       } catch (error) {
         console.error("Mutation error:", error)
         throw error
@@ -275,34 +279,60 @@ export default function ContractGeneratorForm({
     },
     onSuccess: async (data) => {
       try {
-        toast({
-          title: contract?.id ? "Contract Updated!" : "Contract Created!",
-          description: data.pdf_url
-            ? `PDF: ${data.pdf_url}`
-            : "PDF generation pending.",
-        })
+        if (contract?.id) {
+          // Update case
+          toast({
+            title: "Contract Updated!",
+            description: data.pdf_url
+              ? `PDF: ${data.pdf_url}`
+              : "PDF generation pending.",
+          })
+        } else {
+          // Create case with Make.com integration
+          const makecomResult = data as any
+          const message = makecomResult.message || "Contract Created!"
+          toast({
+            title: message,
+            description: makecomResult.pdf_url
+              ? `PDF: ${makecomResult.pdf_url}`
+              : makecomResult.status === 'processing'
+              ? "Contract sent to Make.com for processing"
+              : "PDF generation pending.",
+          })
+          
+          // Show additional info if available
+          if (makecomResult.google_drive_url) {
+            toast({
+              title: "Google Drive",
+              description: "Contract sent to Google Drive for processing",
+            })
+          }
+        }
+        
         reset()
         queryClient.invalidateQueries({ queryKey: ["contracts"] })
         onFormSubmit?.()
 
-        // trigger webhook processing using the new service
-        try {
-          // Import the webhook service dynamically to avoid SSR issues
-          const { WebhookService } = await import('@/lib/webhook-service')
-          
-          // Process contract through both webhooks
-          await WebhookService.processContract({
-            contract_id: data.id,
-            contract_number: data.contract_number,
-            client_name: data.client_name || 'N/A',
-            employer_name: data.employer_name || 'N/A',
-            status: 'processing'
-          })
-          
-          console.log('✅ Webhook processing initiated for contract:', data.id)
-        } catch (err) {
-          console.error('❌ Webhook processing error:', err)
-          // Don't fail the contract creation, just log the error
+        // Only trigger additional webhook processing for updates (not for new contracts with Make.com)
+        if (contract?.id) {
+          try {
+            // Import the webhook service dynamically to avoid SSR issues
+            const { WebhookService } = await import('@/lib/webhook-service')
+            
+            // Process contract through both webhooks
+            await WebhookService.processContract({
+              contract_id: data.id,
+              contract_number: data.contract_number,
+              client_name: data.client_name || 'N/A',
+              employer_name: data.employer_name || 'N/A',
+              status: 'processing'
+            })
+            
+            console.log('✅ Webhook processing initiated for contract:', data.id)
+          } catch (err) {
+            console.error('❌ Webhook processing error:', err)
+            // Don't fail the contract creation, just log the error
+          }
         }
       } catch (error) {
         console.error("Error in mutation success handler:", error)
