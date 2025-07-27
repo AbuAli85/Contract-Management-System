@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Not set',
       nodeEnv: process.env.NODE_ENV,
       nextPublicUrl: process.env.NEXT_PUBLIC_URL,
-      cookies: Object.fromEntries(request.cookies.entries())
+      cookieCount: request.cookies.getAll().length
     }
     
     console.log('🔧 Config check:', config)

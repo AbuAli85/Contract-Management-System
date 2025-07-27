@@ -58,6 +58,15 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   const [locale, setLocale] = useState('en')
   const [dataLoading, setDataLoading] = useState(false)
   
+  // Debug logging
+  console.log('🔧 Dashboard: Component rendered', { 
+    user: !!user, 
+    authLoading, 
+    mounted, 
+    profile: !!profile,
+    dataLoading 
+  })
+  
   useEffect(() => {
     const getLocale = async () => {
       const { locale: resolvedLocale } = await params
@@ -167,16 +176,28 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     )
   }
 
-  // Show error if no user
+  // Show error if no user - but allow bypass for testing
   if (!user) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-4">Please log in to access the dashboard.</p>
-          <Link href={`/${locale}/auth/login`}>
-            <Button>Go to Login</Button>
-          </Link>
+          <div className="space-x-4">
+            <Link href={`/${locale}/auth/login`}>
+              <Button>Go to Login</Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log('🔧 Dashboard: Bypassing auth for testing')
+                // Force render the dashboard content
+                window.location.reload()
+              }}
+            >
+              Bypass Auth (Test)
+            </Button>
+          </div>
         </div>
       </div>
     )

@@ -9,6 +9,10 @@ export async function middleware(req: NextRequest) {
   // Get pathname first
   const pathname = req.nextUrl.pathname
   
+  // Debug: Log all cookies
+  const allCookies = req.cookies.getAll()
+  console.log('🔒 Middleware: All cookies:', allCookies.map(c => c.name))
+  
   // Check for redirect loops by looking at referer
   const referer = req.headers.get('referer')
   if (referer && pathname.includes('/auth/login') && referer.includes('/auth/login')) {
@@ -36,13 +40,46 @@ export async function middleware(req: NextRequest) {
     throw new Error('Missing Supabase environment variables')
   }
 
+  // Create Supabase client with simplified cookie handling
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
-          return req.cookies.get(name)?.value
+          // For auth tokens, we need to be more specific about which cookie to use
+          if (name.includes('auth-token')) {
+            // Only return values for the exact cookie names we have
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
+                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
+              const authToken0 = req.cookies.get('sb-auth-token.0')
+              if (authToken0) {
+                console.log(`🔒 Middleware: Using sb-auth-token.0 for ${name}`)
+                return authToken0.value
+              }
+            }
+            
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
+              const authToken1 = req.cookies.get('sb-auth-token.1')
+              if (authToken1) {
+                console.log(`🔒 Middleware: Using sb-auth-token.1 for ${name}`)
+                return authToken1.value
+              }
+            }
+            
+            // For other auth token names, return null (don't map them)
+            console.log(`🔒 Middleware: No mapping for ${name}`)
+            return null
+          }
+          
+          // For other cookies, try exact match
+          const cookie = req.cookies.get(name)
+          if (!cookie) {
+            console.log(`🔒 Middleware: Cookie ${name}: not found`)
+          }
+          return cookie?.value
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
@@ -142,6 +179,7 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/debug-promoter`,
       `/${currentLocale}/dashboard/debug`,
       `/${currentLocale}/test-dashboard`,
+      `/${currentLocale}/debug-redirect`,
       '/test-login'
     ]
 
@@ -167,11 +205,12 @@ export async function middleware(req: NextRequest) {
     }
 
     // If user is authenticated and trying to access login page, redirect to dashboard
-    if (session && pathname === `/${currentLocale}/auth/login`) {
+    if (session && pathname.startsWith(`/${currentLocale}/auth/login`)) {
       console.log('🔒 Middleware: Authenticated user on login page, redirecting to dashboard')
       const url = req.nextUrl.clone()
       url.pathname = `/${currentLocale}/dashboard`
-      return NextResponse.redirect(url)
+      // Use 302 redirect to prevent caching issues
+      return NextResponse.redirect(url, 302)
     }
 
     // Handle root path - redirect to locale dashboard (if authenticated) or login

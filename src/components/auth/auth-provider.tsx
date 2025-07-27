@@ -259,11 +259,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
-    // CRITICAL: Force loading to false after 1 second maximum (reduced from 2 seconds)
+    // CRITICAL: Force loading to false after 3 seconds maximum (increased to allow for redirects)
     const safetyTimeout = setTimeout(() => {
       console.log('⚠️ Safety timeout triggered - forcing loading to false')
       setLoading(false)
-    }, 1000)
+    }, 3000)
 
     // Cleanup function
     return () => {

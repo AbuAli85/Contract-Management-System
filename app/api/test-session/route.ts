@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         authenticated: false, 
         error: authError?.message || 'No user found',
-        cookies: Object.fromEntries(request.cookies.entries())
+        cookieCount: request.cookies.getAll().length
       })
     }
 
@@ -37,14 +37,14 @@ export async function GET(request: NextRequest) {
       },
       profile: userProfile,
       profileError: profileError?.message,
-      cookies: Object.fromEntries(request.cookies.entries())
+      cookieCount: request.cookies.getAll().length
     })
   } catch (error) {
     console.error('❌ Test session API error:', error)
     return NextResponse.json({ 
       authenticated: false, 
       error: error instanceof Error ? error.message : 'Unknown error',
-      cookies: Object.fromEntries(request.cookies.entries())
+      cookieCount: request.cookies.getAll().length
     })
   }
 } 
