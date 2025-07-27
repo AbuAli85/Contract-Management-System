@@ -47,13 +47,28 @@ export function LoginForm() {
         return
       }
 
-      console.log("🔐 Login Debug - Server login successful")
-      
-      // Keep loading state true during redirect to prevent form interaction
-      // Redirect after successful login - use window.location for more reliable redirect
-      setTimeout(() => {
-        window.location.href = redirectTo
-      }, 500)
+                   console.log("🔐 Login Debug - Server login successful")
+
+             // Check if the server session is now valid
+             try {
+               console.log("🔐 Login Debug - Checking server session...")
+               const sessionCheckResponse = await fetch('/api/auth/check-session')
+               const sessionCheckData = await sessionCheckResponse.json()
+               
+               if (sessionCheckData.success && sessionCheckData.hasSession) {
+                 console.log("🔐 Login Debug - Server session confirmed, redirecting to dashboard")
+                 window.location.href = redirectTo
+               } else {
+                 console.log("🔐 Login Debug - Server session not found, reloading page")
+                 window.location.reload()
+               }
+             } catch (error) {
+               console.error("🔐 Login Debug - Session check failed:", error)
+               // Fallback to redirect
+               setTimeout(() => {
+                 window.location.href = redirectTo
+               }, 500)
+             }
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

@@ -47,35 +47,35 @@ export async function middleware(req: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          // For auth tokens, we need to be more specific about which cookie to use
+          // Handle project-specific cookie names directly
           if (name.includes('auth-token')) {
-            // Only return values for the exact cookie names we have
+            // For project-specific names, return the cookie directly
             if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
                 name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
                 name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
-              const authToken0 = req.cookies.get('sb-auth-token.0')
-              if (authToken0 && authToken0.value && authToken0.value.length > 10) {
-                console.log(`🔒 Middleware: Using sb-auth-token.0 for ${name} (length: ${authToken0.value.length})`)
-                return authToken0.value
+              const cookie = req.cookies.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (cookie && cookie.value && cookie.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-ekdjxzhujettocosgzql-auth-token.0 for ${name} (length: ${cookie.value.length})`)
+                return cookie.value
               } else {
-                console.log(`🔒 Middleware: sb-auth-token.0 is invalid or too short (length: ${authToken0?.value?.length || 0})`)
+                console.log(`🔒 Middleware: sb-ekdjxzhujettocosgzql-auth-token.0 is invalid or too short (length: ${cookie?.value?.length || 0})`)
                 return null
               }
             }
             
             if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
                 name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
-              const authToken1 = req.cookies.get('sb-auth-token.1')
-              if (authToken1 && authToken1.value && authToken1.value.length > 10) {
-                console.log(`🔒 Middleware: Using sb-auth-token.1 for ${name} (length: ${authToken1.value.length})`)
-                return authToken1.value
+              const cookie = req.cookies.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (cookie && cookie.value && cookie.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-ekdjxzhujettocosgzql-auth-token.1 for ${name} (length: ${cookie.value.length})`)
+                return cookie.value
               } else {
-                console.log(`🔒 Middleware: sb-auth-token.1 is invalid or too short (length: ${authToken1?.value?.length || 0})`)
+                console.log(`🔒 Middleware: sb-ekdjxzhujettocosgzql-auth-token.1 is invalid or too short (length: ${cookie?.value?.length || 0})`)
                 return null
               }
             }
             
-            // For other auth token names, return null (don't map them)
+            // For other auth token names, return null
             console.log(`🔒 Middleware: No mapping for ${name}`)
             return null
           }
@@ -89,13 +89,24 @@ export async function middleware(req: NextRequest) {
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
+            // Handle project-specific cookie names directly
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+            }
+            
             req.cookies.set({
-              name,
+              name: actualName,
               value,
               ...options,
             })
             res.cookies.set({
-              name,
+              name: actualName,
               value,
               ...options,
             })
@@ -107,13 +118,24 @@ export async function middleware(req: NextRequest) {
         },
         remove(name: string, options: CookieOptions) {
           try {
+            // Map generic cookie names to project-specific names (same as server.ts)
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+            }
+            
             req.cookies.set({
-              name,
+              name: actualName,
               value: '',
               ...options,
             })
             res.cookies.set({
-              name,
+              name: actualName,
               value: '',
               ...options,
             })
@@ -188,6 +210,7 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/debug-redirect`,
       `/${currentLocale}/test-cookie-fix`,
       `/${currentLocale}/debug-login-flow`,
+      `/${currentLocale}/test-client-session`,
       '/test-login'
     ]
 
@@ -225,10 +248,9 @@ export async function middleware(req: NextRequest) {
     const authToken0 = req.cookies.get('sb-auth-token.0')
     const authToken1 = req.cookies.get('sb-auth-token.1')
     
-    // Check for truncated cookies (ending with ...) or cookies that are too large (> 3KB)
+    // Check for truncated cookies (ending with ...) - removed size limits since we're not truncating
     const isTruncated = (cookie: any) => cookie && cookie.value && (
       cookie.value.endsWith('...') || 
-      cookie.value.length > 3000 ||
       cookie.value.length < 50
     )
     

@@ -19,18 +19,46 @@ export async function createClient() {
     {
       cookies: {
         async get(name: string) {
+          // Handle project-specific cookie names directly
+          if (name.includes('auth-token')) {
+            // For project-specific names, return the cookie directly
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
+                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
+              const cookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              return cookie?.value
+            }
+            
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
+              const cookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              return cookie?.value
+            }
+            
+            // For other auth token names, return null
+            return null
+          }
+          
+          // For other cookies, try exact match
           const cookie = await cookieStore.get(name)
           return cookie?.value
         },
         async set(name: string, value: string, options: CookieOptions) {
           try {
-            // Check if cookie value is too large (> 3KB)
-            if (value && value.length > 3000) {
-              console.warn(`🔒 Server: Cookie ${name} is too large (${value.length} chars), truncating to prevent issues`)
-              // Truncate the value to prevent cookie size issues
-              value = value.substring(0, 3000) + '...'
+            // Handle project-specific cookie names directly
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
             }
-            await cookieStore.set({ name, value, ...options })
+            
+            // Don't truncate cookies - let Supabase handle the size naturally
+            // Truncation was causing Base64-URL parsing errors
+            await cookieStore.set({ name: actualName, value, ...options })
           } catch {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
@@ -39,7 +67,18 @@ export async function createClient() {
         },
         async remove(name: string, options: CookieOptions) {
           try {
-            await cookieStore.set({ name, value: '', ...options })
+            // Map generic cookie names to project-specific names
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+            }
+            
+            await cookieStore.set({ name: actualName, value: '', ...options })
           } catch {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing

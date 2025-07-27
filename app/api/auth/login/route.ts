@@ -50,15 +50,48 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // The cookies should be automatically set by the server-side Supabase client
-    // But let's verify they exist
-    const cookies = request.cookies.getAll()
-    const authCookies = cookies.filter(cookie => 
-      cookie.name.includes('auth-token') || 
-      cookie.name.includes('sb-')
-    )
-    
-    console.log('🔐 Auth cookies after login:', authCookies.map(c => c.name))
+    // Check if we have session data
+    if (data.session) {
+      console.log('🔐 Session data available, manually setting cookies...')
+      
+      // Manually set the auth cookies based on the session
+      const session = data.session
+      
+      // Set the main auth token cookie
+      response.cookies.set({
+        name: 'sb-ekdjxzhujettocosgzql-auth-token.0',
+        value: session.access_token,
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+      
+      // Set the refresh token cookie
+      response.cookies.set({
+        name: 'sb-ekdjxzhujettocosgzql-auth-token.1',
+        value: session.refresh_token,
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      })
+      
+      console.log('🔐 Manually set auth cookies')
+      
+      // Check what cookies are now in the response
+      const responseCookies = response.cookies.getAll()
+      const authCookies = responseCookies.filter(cookie => 
+        cookie.name.includes('auth-token') || 
+        cookie.name.includes('sb-')
+      )
+      
+      console.log('🔐 Response auth cookies after manual set:', authCookies.map(c => c.name))
+    } else {
+      console.log('🔐 No session data available')
+    }
 
     return response
 

@@ -14,18 +14,7 @@ export const createClient = () => {
     throw new Error('Missing Supabase environment variables')
   }
   
-  return createBrowserClient<Database>(supabaseUrl, supabaseKey, {
-    auth: {
-      // Add cookie size limits to prevent truncation
-      cookieOptions: {
-        // Limit cookie size to prevent truncation
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: false // Must be false for client-side
-      }
-    }
-  })
+  return createBrowserClient<Database>(supabaseUrl, supabaseKey)
 }
 
 // Safe client for SSR - returns null if environment variables are missing
