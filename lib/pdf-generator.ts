@@ -43,43 +43,43 @@ interface ContractData {
 interface DatabaseContract {
   id: string
   contract_number: string
-  first_party_id?: string
-  second_party_id?: string
-  promoter_id?: string
+  first_party_id?: string | null
+  second_party_id?: string | null
+  promoter_id?: string | null
   first_party?: {
     name_en: string
-    crn?: string
-    address_en?: string
-    contact_person?: string
-    contact_email?: string
-    contact_phone?: string
+    crn?: string | null
+    address_en?: string | null
+    contact_person?: string | null
+    contact_email?: string | null
+    contact_phone?: string | null
   } | null
   second_party?: {
     name_en: string
-    contact_person?: string
-    contact_email?: string
-    contact_phone?: string
+    contact_person?: string | null
+    contact_email?: string | null
+    contact_phone?: string | null
   } | null
   promoter?: {
     name_en: string
-    mobile_number?: string
-    email?: string
+    mobile_number?: string | null
+    email?: string | null
   } | null
-  job_title?: string
-  work_location?: string
-  department?: string
-  email?: string
-  contract_start_date?: string
-  contract_end_date?: string
-  basic_salary?: number
-  allowances?: number
-  currency?: string
-  contract_type?: string
-  special_terms?: string
-  status?: string
-  approval_status?: string
-  created_at?: string
-  updated_at?: string
+  job_title?: string | null
+  work_location?: string | null
+  department?: string | null
+  email?: string | null
+  contract_start_date?: string | null
+  contract_end_date?: string | null
+  basic_salary?: number | null
+  allowances?: number | null
+  currency?: string | null
+  contract_type?: string | null
+  special_terms?: string | null
+  status?: string | null
+  approval_status?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 // Transform database contract to ContractData format
@@ -89,38 +89,38 @@ function transformContractData(dbContract: DatabaseContract): ContractData {
     contract_number: dbContract.contract_number,
     first_party: dbContract.first_party ? {
       name_en: dbContract.first_party.name_en,
-      crn: dbContract.first_party.crn,
-      address_en: dbContract.first_party.address_en,
-      contact_person: dbContract.first_party.contact_person,
-      contact_email: dbContract.first_party.contact_email,
-      contact_phone: dbContract.first_party.contact_phone
+      crn: dbContract.first_party.crn || undefined,
+      address_en: dbContract.first_party.address_en || undefined,
+      contact_person: dbContract.first_party.contact_person || undefined,
+      contact_email: dbContract.first_party.contact_email || undefined,
+      contact_phone: dbContract.first_party.contact_phone || undefined
     } : undefined,
     second_party: dbContract.second_party ? {
       name_en: dbContract.second_party.name_en,
-      contact_person: dbContract.second_party.contact_person,
-      contact_email: dbContract.second_party.contact_email,
-      contact_phone: dbContract.second_party.contact_phone
+      contact_person: dbContract.second_party.contact_person || undefined,
+      contact_email: dbContract.second_party.contact_email || undefined,
+      contact_phone: dbContract.second_party.contact_phone || undefined
     } : undefined,
     promoter: dbContract.promoter ? {
       name_en: dbContract.promoter.name_en,
-      mobile_number: dbContract.promoter.mobile_number,
-      email: dbContract.promoter.email
+      mobile_number: dbContract.promoter.mobile_number || undefined,
+      email: dbContract.promoter.email || undefined
     } : undefined,
-    job_title: dbContract.job_title,
-    work_location: dbContract.work_location,
-    department: dbContract.department,
-    email: dbContract.email,
-    contract_start_date: dbContract.contract_start_date,
-    contract_end_date: dbContract.contract_end_date,
-    basic_salary: dbContract.basic_salary,
-    allowances: dbContract.allowances,
-    currency: dbContract.currency,
-    contract_type: dbContract.contract_type,
-    special_terms: dbContract.special_terms,
-    status: dbContract.status,
-    approval_status: dbContract.approval_status,
-    created_at: dbContract.created_at,
-    updated_at: dbContract.updated_at
+    job_title: dbContract.job_title || undefined,
+    work_location: dbContract.work_location || undefined,
+    department: dbContract.department || undefined,
+    email: dbContract.email || undefined,
+    contract_start_date: dbContract.contract_start_date || undefined,
+    contract_end_date: dbContract.contract_end_date || undefined,
+    basic_salary: dbContract.basic_salary || undefined,
+    allowances: dbContract.allowances || undefined,
+    currency: dbContract.currency || undefined,
+    contract_type: dbContract.contract_type || undefined,
+    special_terms: dbContract.special_terms || undefined,
+    status: dbContract.status || undefined,
+    approval_status: dbContract.approval_status || undefined,
+    created_at: dbContract.created_at || undefined,
+    updated_at: dbContract.updated_at || undefined
   }
 }
 
