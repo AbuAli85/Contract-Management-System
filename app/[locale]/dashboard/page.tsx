@@ -53,8 +53,17 @@ interface DashboardStats {
   recentActivity: number
 }
 
-export default function DashboardPage() {
+export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { user, loading: authLoading, profile, mounted } = useAuth()
+  const [locale, setLocale] = useState('en')
+  
+  useEffect(() => {
+    const getLocale = async () => {
+      const { locale: resolvedLocale } = await params
+      setLocale(resolvedLocale)
+    }
+    getLocale()
+  }, [params])
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -149,7 +158,7 @@ export default function DashboardPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
           <p className="text-gray-600 mb-4">Please log in to access the dashboard.</p>
-          <Link href="/en/auth/login">
+          <Link href={`/${locale}/auth/login`}>
             <Button>Go to Login</Button>
           </Link>
         </div>
@@ -178,53 +187,53 @@ export default function DashboardPage() {
       title: 'Generate Contract',
       description: 'Create a new contract with AI assistance',
       icon: FileText,
-      href: '/en/generate-contract',
+      href: `/${locale}/generate-contract`,
       badge: 'AI'
     },
     {
       title: 'Add Promoter',
       description: 'Register a new promoter',
       icon: Users,
-      href: '/en/manage-promoters'
+      href: `/${locale}/manage-promoters`
     },
     {
       title: 'Add Party',
       description: 'Register a new party',
       icon: Building2,
-      href: '/en/manage-parties'
+      href: `/${locale}/manage-parties`
     },
     {
       title: 'User Approvals',
       description: 'Review pending user registrations',
       icon: UserCheck,
-      href: '/en/dashboard/user-approvals',
+      href: `/${locale}/dashboard/user-approvals`,
       badge: 'New'
     },
     {
       title: 'Contract Approvals',
       description: 'Review pending contract approvals',
       icon: FileCheck,
-      href: '/en/dashboard/approvals',
+      href: `/${locale}/dashboard/approvals`,
       badge: 'New'
     },
     {
       title: 'Analytics',
       description: 'View detailed analytics and reports',
       icon: BarChart3,
-      href: '/en/dashboard/analytics',
+      href: `/${locale}/dashboard/analytics`,
       badge: 'New'
     },
     {
       title: 'Settings',
       description: 'Manage system settings',
       icon: Settings,
-      href: '/en/dashboard/settings'
+      href: `/${locale}/dashboard/settings`
     },
     {
       title: 'Notifications',
       description: 'View system notifications',
       icon: Bell,
-      href: '/en/dashboard/notifications'
+      href: `/${locale}/dashboard/notifications`
     }
   ]
 

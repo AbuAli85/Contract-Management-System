@@ -93,7 +93,11 @@ export default function AuthCallbackPage() {
             {status === 'error' && (
               <Button
                 className="w-full"
-                onClick={() => router.push('/login')}
+                onClick={() => {
+                  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+                  const locale = pathname.split('/')[1] || 'en'
+                  router.push(`/${locale}/auth/login`)
+                }}
               >
                 Back to login
               </Button>

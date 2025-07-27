@@ -4,27 +4,15 @@ import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/auth-provider'
 import Link from 'next/link'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
-  const router = useRouter()
 
-  // Handle redirect when user is authenticated
-  useEffect(() => {
-    if (mounted && !loading && user) {
-      console.log('🔧 Login page: User authenticated, redirecting to dashboard')
-      
-      // Get the current locale from the URL
-      const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
-      const locale = pathname.split('/')[1] || 'en'
-      const redirectUrl = `/${locale}/dashboard`
-      
-      // Use router.push for better navigation
-      router.push(redirectUrl)
-    }
-  }, [user, loading, mounted, router])
+
+
+  // Get current locale for links
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const locale = pathname.split('/')[1] || 'en'
 
   // Show loading while checking authentication
   if (loading || !mounted) {
@@ -38,7 +26,7 @@ export default function LoginPage() {
     )
   }
 
-  // If user is already logged in, show loading while redirecting
+  // If user is already logged in, show loading while middleware redirects
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -60,7 +48,7 @@ export default function LoginPage() {
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
             <Link
-              href="/auth/signup"
+              href={`/${locale}/auth/signup`}
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
               create a new account

@@ -132,7 +132,8 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/test-auth-system`,
       `/${currentLocale}/test-user-signup`,
       `/${currentLocale}/debug-auth`,
-      `/${currentLocale}/debug-promoter`
+      `/${currentLocale}/debug-promoter`,
+      '/test-login'
     ]
 
     const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
@@ -146,6 +147,14 @@ export async function middleware(req: NextRequest) {
       const url = req.nextUrl.clone()
       url.pathname = `/${currentLocale}/auth/login`
       url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
+
+    // If user is authenticated and trying to access login page, redirect to dashboard
+    if (session && pathname === `/${currentLocale}/auth/login`) {
+      console.log('🔒 Middleware: Authenticated user on login page, redirecting to dashboard')
+      const url = req.nextUrl.clone()
+      url.pathname = `/${currentLocale}/dashboard`
       return NextResponse.redirect(url)
     }
 
