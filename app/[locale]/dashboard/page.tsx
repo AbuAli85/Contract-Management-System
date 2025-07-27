@@ -97,10 +97,13 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         
         // Fetch dashboard analytics in background
         const response = await fetch('/api/dashboard/analytics', {
-          signal: controller.signal
+          signal: controller.signal,
+          credentials: 'include' // Ensure cookies are sent
         })
         
         clearTimeout(timeoutId)
+        
+        console.log('🔧 Dashboard: API response status:', response.status)
         
         if (response.ok) {
           const data = await response.json()
@@ -125,6 +128,26 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           }
         } else {
           console.error('🔧 Dashboard: API request failed:', response.status)
+          
+          // Handle 401 error specifically
+          if (response.status === 401) {
+            console.log('🔧 Dashboard: Authentication required, checking session...')
+            try {
+              const sessionResponse = await fetch('/api/auth/check-session')
+              const sessionData = await sessionResponse.json()
+              console.log('🔧 Dashboard: Session check result:', sessionData)
+              
+              if (!sessionData.success || !sessionData.hasSession) {
+                console.log('🔧 Dashboard: No valid session, redirecting to login')
+                // Redirect to login if no valid session
+                window.location.href = `/${locale}/auth/login`
+                return
+              }
+            } catch (sessionError) {
+              console.error('🔧 Dashboard: Session check failed:', sessionError)
+            }
+          }
+          
           // Set default stats if API fails
           setStats({
             totalContracts: 0,

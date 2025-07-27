@@ -19,20 +19,42 @@ export async function createClient() {
     {
       cookies: {
         async get(name: string) {
-          // Handle project-specific cookie names directly
+          // Handle auth token cookies - check both generic and project-specific names
           if (name.includes('auth-token')) {
-            // For project-specific names, return the cookie directly
-            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
-                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
-                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
-              const cookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
-              return cookie?.value
+            // Check for generic cookie names first (set by login API)
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              const genericCookie = await cookieStore.get('sb-auth-token.0')
+              if (genericCookie?.value) {
+                console.log('🔧 Server: Using generic auth token cookie')
+                return genericCookie.value
+              }
+              
+              // Fallback to project-specific name
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific auth token cookie')
+                return projectCookie.value
+              }
+              return null
             }
             
-            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
-                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
-              const cookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
-              return cookie?.value
+            if (name === 'sb-auth-token.1' ||
+                name === 'sb-auth-token-user') {
+              const genericCookie = await cookieStore.get('sb-auth-token.1')
+              if (genericCookie?.value) {
+                console.log('🔧 Server: Using generic refresh token cookie')
+                return genericCookie.value
+              }
+              
+              // Fallback to project-specific name
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific refresh token cookie')
+                return projectCookie.value
+              }
+              return null
             }
             
             // For other auth token names, return null
@@ -45,20 +67,22 @@ export async function createClient() {
         },
         async set(name: string, value: string, options: CookieOptions) {
           try {
-            // Handle project-specific cookie names directly
-            let actualName = name
+            // Handle auth token cookies - set both generic and project-specific names
             if (name === 'sb-auth-token' || 
                 name === 'sb-auth-token.0' ||
                 name === 'sb-auth-token-code-verifier') {
-              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+              // Set both generic and project-specific names
+              await cookieStore.set({ name: 'sb-auth-token.0', value, ...options })
+              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.0', value, ...options })
             } else if (name === 'sb-auth-token.1' ||
                        name === 'sb-auth-token-user') {
-              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+              // Set both generic and project-specific names
+              await cookieStore.set({ name: 'sb-auth-token.1', value, ...options })
+              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.1', value, ...options })
+            } else {
+              // For other cookies, set normally
+              await cookieStore.set({ name, value, ...options })
             }
-            
-            // Don't truncate cookies - let Supabase handle the size naturally
-            // Truncation was causing Base64-URL parsing errors
-            await cookieStore.set({ name: actualName, value, ...options })
           } catch {
             // The `set` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
@@ -67,18 +91,20 @@ export async function createClient() {
         },
         async remove(name: string, options: CookieOptions) {
           try {
-            // Map generic cookie names to project-specific names
-            let actualName = name
+            // Remove both generic and project-specific auth token cookies
             if (name === 'sb-auth-token' || 
                 name === 'sb-auth-token.0' ||
                 name === 'sb-auth-token-code-verifier') {
-              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+              await cookieStore.set({ name: 'sb-auth-token.0', value: '', ...options })
+              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.0', value: '', ...options })
             } else if (name === 'sb-auth-token.1' ||
                        name === 'sb-auth-token-user') {
-              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+              await cookieStore.set({ name: 'sb-auth-token.1', value: '', ...options })
+              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.1', value: '', ...options })
+            } else {
+              // For other cookies, remove normally
+              await cookieStore.set({ name, value: '', ...options })
             }
-            
-            await cookieStore.set({ name: actualName, value: '', ...options })
           } catch {
             // The `delete` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing

@@ -7,13 +7,22 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient()
     
     // Get current user to check authentication
+    console.log('🔧 Analytics API: Checking user authentication...')
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (authError || !user) {
-      console.log('❌ Analytics API: Unauthorized')
+    if (authError) {
+      console.error('❌ Analytics API: Auth error:', authError)
       return NextResponse.json({ 
         success: false, 
-        error: 'Unauthorized' 
+        error: 'Authentication error: ' + authError.message 
+      }, { status: 401 })
+    }
+    
+    if (!user) {
+      console.log('❌ Analytics API: No user found')
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized - No user found' 
       }, { status: 401 })
     }
 
@@ -99,6 +108,8 @@ export async function GET(request: NextRequest) {
       systemHealth,
       recentActivity
     }
+
+    console.log('✅ Analytics API: Returning stats:', analytics)
 
     return NextResponse.json({
       success: true,
