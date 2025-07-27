@@ -42,6 +42,7 @@ export function LoginForm() {
 
       console.log("🔐 Login Debug - Login successful")
       
+      // Keep loading state true during redirect to prevent form interaction
       // Redirect after successful login - use window.location for more reliable redirect
       setTimeout(() => {
         window.location.href = redirectTo
@@ -50,7 +51,6 @@ export function LoginForm() {
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
       setError('An unexpected error occurred')
-    } finally {
       setLoading(false)
     }
   }
