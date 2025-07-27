@@ -24,7 +24,7 @@ export default function NotAuthorizedPage() {
             
             <div className="flex flex-col gap-2">
               <Button asChild>
-                <Link href="/dashboard">
+                <Link href="/en/dashboard">
                   <Home className="mr-2 h-4 w-4" />
                   Go to Dashboard
                 </Link>

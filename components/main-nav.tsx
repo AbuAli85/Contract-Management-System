@@ -89,7 +89,7 @@ export function MainNav() {
                 <ListItem href="/contracts" title={t("viewContracts")}>
                   {t("viewContractsDescription")}
                 </ListItem>
-                <ListItem href="/dashboard" title={t("dashboard")}>
+                <ListItem href="/en/dashboard" title={t("dashboard")}>
                   {t("dashboardDescription")}
                 </ListItem>
               </ul>

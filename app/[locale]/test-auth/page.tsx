@@ -2,8 +2,11 @@
 
 import { useAuth } from '@/src/components/auth/auth-provider'
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 
 export default function TestAuthPage() {
+  const pathname = usePathname()
+  const locale = pathname?.split('/')[1] || 'en'
   const { user, profile, roles, loading, mounted } = useAuth()
 
   useEffect(() => {
@@ -57,7 +60,7 @@ export default function TestAuthPage() {
                   Go to Login
                 </a>
                 <a 
-                  href="/dashboard" 
+                  href={`/${locale}/dashboard`} 
                   className="block w-full text-center bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
                 >
                   Go to Dashboard
