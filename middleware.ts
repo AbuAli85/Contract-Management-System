@@ -9,6 +9,13 @@ export async function middleware(req: NextRequest) {
   // Get pathname first
   const pathname = req.nextUrl.pathname
   
+  // Check for redirect loops by looking at referer
+  const referer = req.headers.get('referer')
+  if (referer && pathname.includes('/auth/login') && referer.includes('/auth/login')) {
+    console.log('🔒 Middleware: Potential redirect loop detected, allowing request')
+    return res
+  }
+  
   // Skip middleware for system requests
   const systemPaths = [
     '/.well-known',
@@ -133,6 +140,8 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/test-user-signup`,
       `/${currentLocale}/debug-auth`,
       `/${currentLocale}/debug-promoter`,
+      `/${currentLocale}/dashboard/debug`,
+      `/${currentLocale}/test-dashboard`,
       '/test-login'
     ]
 
@@ -144,6 +153,13 @@ export async function middleware(req: NextRequest) {
       if (!pathname.includes('.well-known') && !pathname.includes('robots.txt') && !pathname.includes('sitemap.xml')) {
         console.log('🔒 Middleware: No session, redirecting to login from:', pathname)
       }
+      
+      // Prevent redirect loops by checking if we're already going to login
+      if (pathname.includes('/auth/login')) {
+        console.log('🔒 Middleware: Already on login page, allowing request')
+        return res
+      }
+      
       const url = req.nextUrl.clone()
       url.pathname = `/${currentLocale}/auth/login`
       url.searchParams.set('redirect', pathname)

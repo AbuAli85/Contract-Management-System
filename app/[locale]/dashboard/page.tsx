@@ -56,6 +56,7 @@ interface DashboardStats {
 export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { user, loading: authLoading, profile, mounted } = useAuth()
   const [locale, setLocale] = useState('en')
+  const [dataLoading, setDataLoading] = useState(false)
   
   useEffect(() => {
     const getLocale = async () => {
@@ -79,8 +80,18 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     const fetchDashboardData = async () => {
       try {
         console.log('🔧 Dashboard: Fetching analytics data...')
+        setDataLoading(true)
+        
+        // Add timeout to prevent hanging
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        
         // Fetch dashboard analytics in background
-        const response = await fetch('/api/dashboard/analytics')
+        const response = await fetch('/api/dashboard/analytics', {
+          signal: controller.signal
+        })
+        
+        clearTimeout(timeoutId)
         
         if (response.ok) {
           const data = await response.json()
@@ -119,6 +130,9 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         }
       } catch (error) {
         console.error('🔧 Dashboard: Error fetching dashboard data:', error)
+        if (error instanceof Error && error.name === 'AbortError') {
+          console.log('🔧 Dashboard: Request timed out, using default stats')
+        }
         // Set default stats if API fails
         setStats({
           totalContracts: 0,
@@ -130,6 +144,8 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
           systemHealth: 98,
           recentActivity: 0
         })
+      } finally {
+        setDataLoading(false)
       }
     }
 
@@ -277,6 +293,12 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {dataLoading && (
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Loading data...
+                </Badge>
+              )}
               <Badge variant="outline" className="flex items-center gap-1">
                 <Activity className="h-3 w-3" />
                 System Health: {safeStats.systemHealth}%
