@@ -39,7 +39,97 @@ interface ContractData {
   updated_at?: string
 }
 
-export async function generateContractPDF(contract: ContractData): Promise<Buffer> {
+// Database contract interface (what we get from Supabase)
+interface DatabaseContract {
+  id: string
+  contract_number: string
+  first_party_id?: string
+  second_party_id?: string
+  promoter_id?: string
+  first_party?: {
+    name_en: string
+    crn?: string
+    address_en?: string
+    contact_person?: string
+    contact_email?: string
+    contact_phone?: string
+  } | null
+  second_party?: {
+    name_en: string
+    contact_person?: string
+    contact_email?: string
+    contact_phone?: string
+  } | null
+  promoter?: {
+    name_en: string
+    mobile_number?: string
+    email?: string
+  } | null
+  job_title?: string
+  work_location?: string
+  department?: string
+  email?: string
+  contract_start_date?: string
+  contract_end_date?: string
+  basic_salary?: number
+  allowances?: number
+  currency?: string
+  contract_type?: string
+  special_terms?: string
+  status?: string
+  approval_status?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// Transform database contract to ContractData format
+function transformContractData(dbContract: DatabaseContract): ContractData {
+  return {
+    id: dbContract.id,
+    contract_number: dbContract.contract_number,
+    first_party: dbContract.first_party ? {
+      name_en: dbContract.first_party.name_en,
+      crn: dbContract.first_party.crn,
+      address_en: dbContract.first_party.address_en,
+      contact_person: dbContract.first_party.contact_person,
+      contact_email: dbContract.first_party.contact_email,
+      contact_phone: dbContract.first_party.contact_phone
+    } : undefined,
+    second_party: dbContract.second_party ? {
+      name_en: dbContract.second_party.name_en,
+      contact_person: dbContract.second_party.contact_person,
+      contact_email: dbContract.second_party.contact_email,
+      contact_phone: dbContract.second_party.contact_phone
+    } : undefined,
+    promoter: dbContract.promoter ? {
+      name_en: dbContract.promoter.name_en,
+      mobile_number: dbContract.promoter.mobile_number,
+      email: dbContract.promoter.email
+    } : undefined,
+    job_title: dbContract.job_title,
+    work_location: dbContract.work_location,
+    department: dbContract.department,
+    email: dbContract.email,
+    contract_start_date: dbContract.contract_start_date,
+    contract_end_date: dbContract.contract_end_date,
+    basic_salary: dbContract.basic_salary,
+    allowances: dbContract.allowances,
+    currency: dbContract.currency,
+    contract_type: dbContract.contract_type,
+    special_terms: dbContract.special_terms,
+    status: dbContract.status,
+    approval_status: dbContract.approval_status,
+    created_at: dbContract.created_at,
+    updated_at: dbContract.updated_at
+  }
+}
+
+export async function generateContractPDF(contract: ContractData | DatabaseContract): Promise<Buffer> {
+  // Transform database contract to ContractData format if needed
+  const contractData: ContractData = 'first_party_id' in contract 
+    ? transformContractData(contract as DatabaseContract)
+    : contract as ContractData
+
   const doc = new jsPDF()
   
   // Set font
@@ -53,7 +143,7 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   // Contract number and date
   doc.setFontSize(12)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Contract Number: ${contract.contract_number}`, 20, 35)
+  doc.text(`Contract Number: ${contractData.contract_number}`, 20, 35)
   doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 42)
   
   let yPosition = 55
@@ -67,44 +157,44 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   
-  if (contract.first_party) {
+  if (contractData.first_party) {
     doc.setFont('helvetica', 'bold')
     doc.text('EMPLOYER:', 20, yPosition)
     yPosition += 6
     
     doc.setFont('helvetica', 'normal')
-    doc.text(`Name: ${contract.first_party.name_en}`, 25, yPosition)
+    doc.text(`Name: ${contractData.first_party.name_en}`, 25, yPosition)
     yPosition += 5
-    doc.text(`CRN: ${contract.first_party.crn || 'N/A'}`, 25, yPosition)
+    doc.text(`CRN: ${contractData.first_party.crn || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Address: ${contract.first_party.address_en || 'N/A'}`, 25, yPosition)
+    doc.text(`Address: ${contractData.first_party.address_en || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Person: ${contract.first_party.contact_person || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Person: ${contractData.first_party.contact_person || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Email: ${contract.first_party.contact_email || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Email: ${contractData.first_party.contact_email || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Phone: ${contract.first_party.contact_phone || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Phone: ${contractData.first_party.contact_phone || 'N/A'}`, 25, yPosition)
     yPosition += 8
   } else {
     doc.text('Employer: Not specified', 25, yPosition)
     yPosition += 8
   }
   
-  if (contract.second_party) {
+  if (contractData.second_party) {
     doc.setFont('helvetica', 'bold')
     doc.text('EMPLOYEE:', 20, yPosition)
     yPosition += 6
     
     doc.setFont('helvetica', 'normal')
-    doc.text(`Name: ${contract.second_party.name_en}`, 25, yPosition)
+    doc.text(`Name: ${contractData.second_party.name_en}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Email: ${contract.email || 'N/A'}`, 25, yPosition)
+    doc.text(`Email: ${contractData.email || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Person: ${contract.second_party.contact_person || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Person: ${contractData.second_party.contact_person || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Email: ${contract.second_party.contact_email || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Email: ${contractData.second_party.contact_email || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact Phone: ${contract.second_party.contact_phone || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact Phone: ${contractData.second_party.contact_phone || 'N/A'}`, 25, yPosition)
     yPosition += 8
   } else {
     doc.text('Employee: Not specified', 25, yPosition)
@@ -119,11 +209,11 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Position: ${contract.job_title || 'N/A'}`, 25, yPosition)
+  doc.text(`Position: ${contractData.job_title || 'N/A'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Department: ${contract.department || 'N/A'}`, 25, yPosition)
+  doc.text(`Department: ${contractData.department || 'N/A'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Work Location: ${contract.work_location || 'N/A'}`, 25, yPosition)
+  doc.text(`Work Location: ${contractData.work_location || 'N/A'}`, 25, yPosition)
   yPosition += 8
   
   // Contract Terms section
@@ -134,11 +224,11 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Contract Type: ${contract.contract_type || 'N/A'}`, 25, yPosition)
+  doc.text(`Contract Type: ${contractData.contract_type || 'N/A'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Start Date: ${contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : 'N/A'}`, 25, yPosition)
+  doc.text(`Start Date: ${contractData.contract_start_date ? new Date(contractData.contract_start_date).toLocaleDateString() : 'N/A'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`End Date: ${contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : 'N/A'}`, 25, yPosition)
+  doc.text(`End Date: ${contractData.contract_end_date ? new Date(contractData.contract_end_date).toLocaleDateString() : 'N/A'}`, 25, yPosition)
   yPosition += 8
   
   // Compensation section
@@ -149,13 +239,13 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Basic Salary: ${contract.basic_salary || 'N/A'} ${contract.currency || 'OMR'}`, 25, yPosition)
+  doc.text(`Basic Salary: ${contractData.basic_salary || 'N/A'} ${contractData.currency || 'OMR'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Allowances: ${contract.allowances || 'N/A'} ${contract.currency || 'OMR'}`, 25, yPosition)
+  doc.text(`Allowances: ${contractData.allowances || 'N/A'} ${contractData.currency || 'OMR'}`, 25, yPosition)
   yPosition += 8
   
   // Promoter section
-  if (contract.promoter) {
+  if (contractData.promoter) {
     doc.setFontSize(14)
     doc.setFont('helvetica', 'bold')
     doc.text('PROMOTER INFORMATION', 20, yPosition)
@@ -163,11 +253,11 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
     
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
-    doc.text(`Name: ${contract.promoter.name_en}`, 25, yPosition)
+    doc.text(`Name: ${contractData.promoter.name_en}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Contact: ${contract.promoter.mobile_number || 'N/A'}`, 25, yPosition)
+    doc.text(`Contact: ${contractData.promoter.mobile_number || 'N/A'}`, 25, yPosition)
     yPosition += 5
-    doc.text(`Email: ${contract.promoter.email || 'N/A'}`, 25, yPosition)
+    doc.text(`Email: ${contractData.promoter.email || 'N/A'}`, 25, yPosition)
     yPosition += 8
   }
   
@@ -179,13 +269,13 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Status: ${contract.status || 'Draft'}`, 25, yPosition)
+  doc.text(`Status: ${contractData.status || 'Draft'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Approval Status: ${contract.approval_status || 'Pending'}`, 25, yPosition)
+  doc.text(`Approval Status: ${contractData.approval_status || 'Pending'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Created: ${contract.created_at ? new Date(contract.created_at).toLocaleDateString() : 'N/A'}`, 25, yPosition)
+  doc.text(`Created: ${contractData.created_at ? new Date(contractData.created_at).toLocaleDateString() : 'N/A'}`, 25, yPosition)
   yPosition += 5
-  doc.text(`Last Updated: ${contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : 'N/A'}`, 25, yPosition)
+  doc.text(`Last Updated: ${contractData.updated_at ? new Date(contractData.updated_at).toLocaleDateString() : 'N/A'}`, 25, yPosition)
   yPosition += 8
   
   // Terms and Conditions section
@@ -232,13 +322,13 @@ export async function generateContractPDF(contract: ContractData): Promise<Buffe
   yPosition += 10
   doc.text('Employee Signature: _________________________    Date: _________________', 25, yPosition)
   yPosition += 10
-  doc.text(`Promoter Signature: ${contract.promoter ? '_________________________' : 'N/A'}    Date: ${contract.promoter ? '_________________' : 'N/A'}`, 25, yPosition)
+  doc.text(`Promoter Signature: ${contractData.promoter ? '_________________________' : 'N/A'}    Date: ${contractData.promoter ? '_________________' : 'N/A'}`, 25, yPosition)
   
   // Footer
   doc.setFontSize(8)
   doc.text('This contract is generated electronically and is legally binding.', 20, 280)
   doc.text(`Generated on: ${new Date().toLocaleString()}`, 20, 285)
-  doc.text(`Contract ID: ${contract.id}`, 20, 290)
+  doc.text(`Contract ID: ${contractData.id}`, 20, 290)
   
   // Convert to buffer
   const pdfBuffer = Buffer.from(doc.output('arraybuffer'))
