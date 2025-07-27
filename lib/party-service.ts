@@ -244,23 +244,31 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + daysAhead)
     
-    const { data: crExpiring, error: crError } = await supabaseClient
+    const { data: allParties, error: crError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, cr_expiry_date")
-      .neq("cr_expiry_date", null)
-      .lte("cr_expiry_date", futureDate.toISOString())
       .order("cr_expiry_date", { ascending: true })
+
+    // Filter out null expiry dates and future dates
+    const crExpiring = allParties?.filter(party => 
+      party.cr_expiry_date && 
+      new Date(party.cr_expiry_date) <= futureDate
+    ) || []
 
     if (crError) {
       console.warn("Error fetching CR expiry alerts:", crError)
     }
 
-    const { data: licenseExpiring, error: licenseError } = await supabaseClient
+    const { data: allPartiesLicense, error: licenseError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, license_expiry_date")
-      .neq("license_expiry_date", null)
-      .lte("license_expiry_date", futureDate.toISOString())
       .order("license_expiry_date", { ascending: true })
+
+    // Filter out null expiry dates and future dates
+    const licenseExpiring = allPartiesLicense?.filter(party => 
+      party.license_expiry_date && 
+      new Date(party.license_expiry_date) <= futureDate
+    ) || []
 
     if (licenseError) {
       console.warn("Error fetching license expiry alerts:", licenseError)

@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         ),
         promoter:promoters(
           id, name_en, name_ar, id_card_number, mobile_number, 
-          email, id_card_url, passport_url, status, employer_id
+          id_card_url, passport_url, status
         )
       `)
       .eq('id', contract_id)
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
       promoter_name_ar: contract.promoter?.name_ar || '',
       promoter_id_card_number: contract.promoter?.id_card_number || '',
       promoter_mobile_number: contract.promoter?.mobile_number || '',
-      promoter_email: contract.promoter?.email || '',
+      promoter_email: '', // Email field not available in promoters table
       promoter_id_card_url: contract.promoter?.id_card_url || '',
       promoter_passport_url: contract.promoter?.passport_url || '',
       

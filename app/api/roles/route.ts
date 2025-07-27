@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('role')
-      .neq('role', null)
 
     if (usersError) {
       console.error('Error fetching users:', usersError)
@@ -19,9 +18,11 @@ export async function GET(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Count users per role
+    // Count users per role (filter out null roles)
     const roleCounts = (users || []).reduce((acc, user) => {
-      acc[user.role] = (acc[user.role] || 0) + 1
+      if (user.role) {
+        acc[user.role] = (acc[user.role] || 0) + 1
+      }
       return acc
     }, {} as Record<string, number>)
 
