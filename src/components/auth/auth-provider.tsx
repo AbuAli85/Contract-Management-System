@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useEffect, useState, useContext } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase'
 import { Session } from '@supabase/supabase-js'
 
 interface UserProfile {
@@ -70,28 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
   const [profileNotFound, setProfileNotFound] = useState(false)
 
-  // Create Supabase client safely for SSR
-  const getSupabase = () => {
-    try {
-      return createClient()
-    } catch (error) {
-      // Return null during SSR if environment variables are missing
-      if (typeof window === 'undefined') {
-        return null
-      }
-      throw error
-    }
-  }
-
-  const supabase = getSupabase()
+  // Use the robust Supabase client
+  const supabaseClient = supabase
 
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    if (!supabase) return null
+    if (!supabaseClient) return null
     
     try {
       // Try to load from users table first
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await supabaseClient!
         .from('users')
         .select('id, email, role, status, created_at')
         .eq('id', userId)
@@ -124,10 +112,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user roles and permissions
   const loadUserRoles = async (userId: string): Promise<string[]> => {
-    if (!supabase) return []
+    if (!supabaseClient) return []
     
     try {
-      const { data: userData } = await supabase
+      const { data: userData } = await supabaseClient
         .from('users')
         .select('role')
         .eq('id', userId)
@@ -148,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeAuth = async () => {
     console.log('🔧 Initializing auth...')
     
-    if (!supabase) {
+    if (!supabaseClient) {
       console.log('❌ No supabase client, setting loading to false')
       setLoading(false)
       return
@@ -156,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log('🔧 Getting session...')
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const { data: { session: currentSession } } = await supabaseClient.auth.getSession()
       
       console.log('🔧 Session result:', currentSession ? 'found' : 'not found')
       
@@ -241,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('🔧 AuthProvider useEffect started')
     setMounted(true)
     
-    if (!supabase) {
+    if (!supabaseClient) {
       console.log('❌ No supabase client in useEffect')
       setLoading(false)
       return
@@ -252,7 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth()
 
     // Set up auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
+    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(handleAuthStateChange)
 
     // CRITICAL: Force loading to false after 2 seconds maximum
     const safetyTimeout = setTimeout(() => {
@@ -270,11 +258,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
       if (error) {
         console.error('Sign in error:', error)
         return { error: error.message }
@@ -291,12 +279,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ])
           
           if (userProfile?.status === 'pending') {
-            await supabase.auth.signOut()
+            await supabaseClient.auth.signOut()
             return { error: 'Your account is pending approval. Please wait for an administrator to approve your account.' }
           }
           
           if (userProfile?.status === 'inactive') {
-            await supabase.auth.signOut()
+            await supabaseClient.auth.signOut()
             return { error: 'Your account has been deactivated. Please contact an administrator.' }
           }
         } catch (profileError) {
@@ -313,11 +301,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithProvider = async (provider: 'github' | 'google' | 'twitter') => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabaseClient.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
@@ -335,11 +323,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, profile?: Partial<UserProfile>) => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -358,22 +346,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return
     }
     try {
-      await supabase.auth.signOut()
+      await supabaseClient.auth.signOut()
     } catch (error) {
       console.error('Sign out error:', error)
     }
   }
 
   const resetPassword = async (email: string) => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
       if (error) {
@@ -388,11 +376,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updatePassword = async (password: string) => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.updateUser({ password })
+      const { error } = await supabaseClient.auth.updateUser({ password })
       if (error) {
         console.error('Update password error:', error)
         return { error: error.message }
@@ -405,11 +393,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return { error: 'Authentication service not available' }
     }
     try {
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseClient.auth.updateUser({
         data: updates
       })
       if (error) {
@@ -424,11 +412,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshSession = async () => {
-    if (!supabase) {
+    if (!supabaseClient) {
       return
     }
     try {
-      const { data: { session: newSession }, error } = await supabase.auth.refreshSession()
+      const { data: { session: newSession }, error } = await supabaseClient.auth.refreshSession()
       if (error) {
         console.error('Refresh session error:', error)
         return
@@ -459,7 +447,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const forceRefreshRole = async () => {
-    if (!supabase || !user) {
+    if (!supabaseClient || !user) {
       return
     }
     try {
