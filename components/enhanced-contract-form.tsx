@@ -491,9 +491,8 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
                     <FormControl>
                       <EnhancedPromoterSelector
                         value={field.value}
-                        onChange={field.onChange}
-                        promoters={promoters || []}
-                        isLoading={isLoadingPromoters}
+                        onValueChange={field.onChange}
+                        disabled={isLoading}
                       />
                     </FormControl>
                     <FormMessage />
