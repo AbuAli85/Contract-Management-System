@@ -99,7 +99,8 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
               <AuthenticatedAppLayout locale={locale}>
                 {children}
               </AuthenticatedAppLayout>
-              <PerformanceMonitor />
+              {/* PerformanceMonitor temporarily disabled due to port issues */}
+              {/* <PerformanceMonitor /> */}
             </FormProvider>
           </ToastProvider>
         </AuthProvider>

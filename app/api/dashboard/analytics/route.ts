@@ -3,7 +3,21 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔧 Dashboard analytics API called')
     const supabase = await createClient()
+    
+    // Get current user to check authentication
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      console.log('❌ Analytics API: Unauthorized')
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 })
+    }
+
+    console.log('✅ Analytics API: User authenticated:', user.id)
 
     // Fetch contract statistics
     const { data: contracts, error: contractsError } = await supabase

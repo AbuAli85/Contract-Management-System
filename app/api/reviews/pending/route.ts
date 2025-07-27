@@ -51,8 +51,7 @@ export async function GET(request: NextRequest) {
         .or('approval_status.in.(active,draft),status.in.(active,completed)')
     } else {
       // Get all contracts for admin users
-      query = query
-        .not('id', 'is', null)
+      // No additional filtering needed for admin users
     }
 
     const { data: contracts, error: contractsError } = await query

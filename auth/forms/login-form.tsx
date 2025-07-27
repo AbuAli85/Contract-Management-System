@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/src/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +15,6 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   
-  const router = useRouter()
   const { signIn } = useAuth()
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
@@ -29,28 +27,52 @@ export function LoginForm() {
     setError(null)
 
     try {
-      console.log("🔐 Login Debug - Starting login process...")
+      console.log("🔐 Login Debug - Starting server-side login process...")
       
-      const { error } = await signIn(email, password)
+      // Use server-side login API instead of client-side
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      })
 
-      if (error) {
-        console.error("🔐 Login Debug - Login error:", error)
-        setError(error)
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error("🔐 Login Debug - Server login error:", data.error)
+        setError(data.error || 'Login failed')
         setLoading(false)
         return
       }
 
-      console.log("🔐 Login Debug - Login successful")
-      
-      // Redirect after successful login - use window.location for more reliable redirect
-      setTimeout(() => {
-        window.location.href = redirectTo
-      }, 500)
+                   console.log("🔐 Login Debug - Server login successful")
+
+             // Check if the server session is now valid
+             try {
+               console.log("🔐 Login Debug - Checking server session...")
+               const sessionCheckResponse = await fetch('/api/auth/check-session')
+               const sessionCheckData = await sessionCheckResponse.json()
+               
+               if (sessionCheckData.success && sessionCheckData.hasSession) {
+                 console.log("🔐 Login Debug - Server session confirmed, redirecting to dashboard")
+                 window.location.href = redirectTo
+               } else {
+                 console.log("🔐 Login Debug - Server session not found, reloading page")
+                 window.location.reload()
+               }
+             } catch (error) {
+               console.error("🔐 Login Debug - Session check failed:", error)
+               // Fallback to redirect
+               setTimeout(() => {
+                 window.location.href = redirectTo
+               }, 500)
+             }
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
       setError('An unexpected error occurred')
-    } finally {
       setLoading(false)
     }
   }

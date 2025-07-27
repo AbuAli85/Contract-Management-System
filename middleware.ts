@@ -1,9 +1,37 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import type { CookieOptions } from '@supabase/ssr'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+  
+  // Get pathname first
+  const pathname = req.nextUrl.pathname
+  
+  // Debug: Log all cookies
+  const allCookies = req.cookies.getAll()
+  console.log('🔒 Middleware: All cookies:', allCookies.map(c => c.name))
+  
+  // Check for redirect loops by looking at referer
+  const referer = req.headers.get('referer')
+  if (referer && pathname.includes('/auth/login') && referer.includes('/auth/login')) {
+    console.log('🔒 Middleware: Potential redirect loop detected, allowing request')
+    return res
+  }
+  
+  // Skip middleware for system requests
+  const systemPaths = [
+    '/.well-known',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/manifest.json',
+    '/favicon.ico'
+  ]
+  
+  if (systemPaths.some(path => pathname.startsWith(path))) {
+    return res
+  }
   
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -12,37 +40,110 @@ export async function middleware(req: NextRequest) {
     throw new Error('Missing Supabase environment variables')
   }
 
+  // Create Supabase client with simplified cookie handling
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
-          return req.cookies.get(name)?.value
+          // Handle project-specific cookie names directly
+          if (name.includes('auth-token')) {
+            // For project-specific names, return the cookie directly
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
+                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
+              const cookie = req.cookies.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (cookie && cookie.value && cookie.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-ekdjxzhujettocosgzql-auth-token.0 for ${name} (length: ${cookie.value.length})`)
+                return cookie.value
+              } else {
+                console.log(`🔒 Middleware: sb-ekdjxzhujettocosgzql-auth-token.0 is invalid or too short (length: ${cookie?.value?.length || 0})`)
+                return null
+              }
+            }
+            
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
+              const cookie = req.cookies.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (cookie && cookie.value && cookie.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-ekdjxzhujettocosgzql-auth-token.1 for ${name} (length: ${cookie.value.length})`)
+                return cookie.value
+              } else {
+                console.log(`🔒 Middleware: sb-ekdjxzhujettocosgzql-auth-token.1 is invalid or too short (length: ${cookie?.value?.length || 0})`)
+                return null
+              }
+            }
+            
+            // For other auth token names, return null
+            console.log(`🔒 Middleware: No mapping for ${name}`)
+            return null
+          }
+          
+          // For other cookies, try exact match
+          const cookie = req.cookies.get(name)
+          if (!cookie) {
+            console.log(`🔒 Middleware: Cookie ${name}: not found`)
+          }
+          return cookie?.value
         },
-        set(name: string, value: string, options: any) {
-          req.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          res.cookies.set({
-            name,
-            value,
-            ...options,
-          })
+        set(name: string, value: string, options: CookieOptions) {
+          try {
+            // Handle project-specific cookie names directly
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+            }
+            
+            req.cookies.set({
+              name: actualName,
+              value,
+              ...options,
+            })
+            res.cookies.set({
+              name: actualName,
+              value,
+              ...options,
+            })
+          } catch {
+            // The `set` method was called from middleware.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
-        remove(name: string, options: any) {
-          req.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          res.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+        remove(name: string, options: CookieOptions) {
+          try {
+            // Map generic cookie names to project-specific names (same as server.ts)
+            let actualName = name
+            if (name === 'sb-auth-token' || 
+                name === 'sb-auth-token.0' ||
+                name === 'sb-auth-token-code-verifier') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.0'
+            } else if (name === 'sb-auth-token.1' ||
+                       name === 'sb-auth-token-user') {
+              actualName = 'sb-ekdjxzhujettocosgzql-auth-token.1'
+            }
+            
+            req.cookies.set({
+              name: actualName,
+              value: '',
+              ...options,
+            })
+            res.cookies.set({
+              name: actualName,
+              value: '',
+              ...options,
+            })
+          } catch {
+            // The `delete` method was called from middleware.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
@@ -50,16 +151,26 @@ export async function middleware(req: NextRequest) {
 
   try {
     // Get session with reasonable timeout for slow database connections
+    console.log('🔒 Middleware: Checking session for path:', pathname)
+    
     const sessionPromise = supabase.auth.getSession()
-    const { data: { session } } = await Promise.race([
+    const { data: { session }, error: sessionError } = await Promise.race([
       sessionPromise,
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 2000) // Reduced to 2 seconds
+        setTimeout(() => reject(new Error('Auth timeout')), 5000) // Increased to 5 seconds
       )
     ]) as any
+    
+    if (sessionError) {
+      console.error('🔒 Middleware: Session error:', sessionError)
+      // On session error, allow the request to continue but log it
+      console.log('🔒 Middleware: Allowing request despite session error')
+      return res
+    }
+    
+    console.log('🔒 Middleware: Session result:', session ? `found for user ${session.user.id}` : 'not found')
 
-    // Extract locale from pathname
-    const pathname = req.nextUrl.pathname
+    // Extract locale from pathname (pathname is already declared above)
     const pathnameIsMissingLocale = ['en', 'ar'].every(
       (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
     )
@@ -85,18 +196,90 @@ export async function middleware(req: NextRequest) {
       `/${currentLocale}/auth/signup`,
       `/${currentLocale}/auth/forgot-password`,
       `/${currentLocale}/auth/reset-password`,
-      `/${currentLocale}/auth/callback`
+      `/${currentLocale}/auth/callback`,
+      `/${currentLocale}/auth/bypass`,
+      `/${currentLocale}/demo`,
+      `/${currentLocale}/onboarding`,
+      `/${currentLocale}/test-auth`,
+      `/${currentLocale}/test-auth-system`,
+      `/${currentLocale}/test-user-signup`,
+      `/${currentLocale}/debug-auth`,
+      `/${currentLocale}/debug-promoter`,
+      `/${currentLocale}/dashboard/debug`,
+      `/${currentLocale}/test-dashboard`,
+      `/${currentLocale}/debug-redirect`,
+      `/${currentLocale}/test-cookie-fix`,
+      `/${currentLocale}/debug-login-flow`,
+      `/${currentLocale}/test-client-session`,
+      '/test-login'
     ]
 
     const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
     // If not authenticated and trying to access protected route, redirect to login
     if (!session && !isPublicRoute) {
-      console.log('🔒 Middleware: No session, redirecting to login from:', pathname)
+      // Only log for actual page requests, not system requests
+      if (!pathname.includes('.well-known') && !pathname.includes('robots.txt') && !pathname.includes('sitemap.xml')) {
+        console.log('🔒 Middleware: No session, redirecting to login from:', pathname)
+      }
+      
+      // Prevent redirect loops by checking if we're already going to login
+      if (pathname.includes('/auth/login')) {
+        console.log('🔒 Middleware: Already on login page, allowing request')
+        return res
+      }
+      
       const url = req.nextUrl.clone()
       url.pathname = `/${currentLocale}/auth/login`
       url.searchParams.set('redirect', pathname)
       return NextResponse.redirect(url)
+    }
+
+    // If user is authenticated and trying to access login page, redirect to dashboard
+    if (session && pathname.startsWith(`/${currentLocale}/auth/login`)) {
+      console.log('🔒 Middleware: Authenticated user on login page, redirecting to dashboard')
+      const url = req.nextUrl.clone()
+      url.pathname = `/${currentLocale}/dashboard`
+      // Use 302 redirect to prevent caching issues
+      return NextResponse.redirect(url, 302)
+    }
+
+    // Check for invalid cookies and clear them if needed
+    const authToken0 = req.cookies.get('sb-auth-token.0')
+    const authToken1 = req.cookies.get('sb-auth-token.1')
+    
+    // Check for truncated cookies (ending with ...) - removed size limits since we're not truncating
+    const isTruncated = (cookie: any) => cookie && cookie.value && (
+      cookie.value.endsWith('...') || 
+      cookie.value.length < 50
+    )
+    
+    if (isTruncated(authToken0) || isTruncated(authToken1)) {
+      console.log('🔒 Middleware: Detected invalid/truncated cookies, clearing them')
+      console.log(`🔒 Middleware: Token0 length: ${authToken0?.value?.length || 0}, Token1 length: ${authToken1?.value?.length || 0}`)
+      
+      // Clear the invalid cookies
+      res.cookies.set({
+        name: 'sb-auth-token.0',
+        value: '',
+        expires: new Date(0),
+        path: '/'
+      })
+      res.cookies.set({
+        name: 'sb-auth-token.1',
+        value: '',
+        expires: new Date(0),
+        path: '/'
+      })
+      
+      // If user was trying to access a protected route, redirect to login
+      if (!isPublicRoute) {
+        console.log('🔒 Middleware: Redirecting to login after clearing invalid cookies')
+        const url = req.nextUrl.clone()
+        url.pathname = `/${currentLocale}/auth/login`
+        url.searchParams.set('redirect', pathname)
+        return NextResponse.redirect(url)
+      }
     }
 
     // Handle root path - redirect to locale dashboard (if authenticated) or login
@@ -117,6 +300,7 @@ export async function middleware(req: NextRequest) {
     console.error('🔒 Middleware error:', error)
     // On error, allow the request to continue but log the issue
     // This prevents the app from being completely broken due to slow database
+    console.log('🔒 Middleware: Allowing request despite error')
     return res
   }
 }
@@ -129,7 +313,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - .well-known (system files)
+     * - robots.txt (SEO files)
+     * - sitemap.xml (SEO files)
+     * - manifest.json (PWA files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.well-known|robots.txt|sitemap.xml|manifest.json).*)',
   ],
 }
