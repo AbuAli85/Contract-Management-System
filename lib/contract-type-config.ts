@@ -65,7 +65,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     category: 'employment',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: 'enhanced-employment',
+    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     googleDocsTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
@@ -155,7 +155,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     category: 'employment',
     isActive: true,
     requiresApproval: false,
-    makecomTemplateId: 'enhanced-employment',
+    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
         id: 'job_title',
@@ -195,7 +195,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     category: 'employment',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: 'enhanced-employment',
+    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
         id: 'job_title',
@@ -241,7 +241,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     category: 'service',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: 'service-contract',
+    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
         id: 'service_provider',
@@ -387,7 +387,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     category: 'freelance',
     isActive: true,
     requiresApproval: false,
-    makecomTemplateId: 'freelance-contract',
+    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
         id: 'freelancer_name',

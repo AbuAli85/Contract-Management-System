@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     
     // Get user session
     const supabase = await createClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser()
     
-    if (sessionError || !session?.user) {
+          if (sessionError || !user) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized - Please log in' 
@@ -98,9 +98,9 @@ export async function GET(request: NextRequest) {
 
     // Get user session
     const supabase = await createClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser()
     
-    if (sessionError || !session?.user) {
+    if (sessionError || !user) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized - Please log in' 
@@ -171,9 +171,9 @@ export async function PATCH(request: NextRequest) {
 
     // Get user session
     const supabase = await createClient()
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser()
     
-    if (sessionError || !session?.user) {
+    if (sessionError || !user) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized - Please log in' 

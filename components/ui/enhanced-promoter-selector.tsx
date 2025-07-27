@@ -68,8 +68,20 @@ export function EnhancedPromoterSelector({
     }
   }
 
+  // Get employer for current contract context (from form or selected employer)
+  const getCurrentEmployer = () => {
+    // This would need to be passed as a prop or context
+    // For now, we'll look for the most recent employer assignment
+    if (!parties) return null
+    
+    const employers = parties.filter(party => party.type === 'Employer')
+    return employers.length > 0 ? employers[0] : null
+  }
+
   const formatPromoterDisplay = (promoter: any) => {
     const employer = getEmployerInfo(promoter)
+    const currentEmployer = getCurrentEmployer()
+    
     return (
       <div className="flex flex-col space-y-1">
         <div className="flex items-center gap-2">
@@ -85,6 +97,11 @@ export function EnhancedPromoterSelector({
           <div className="text-xs text-blue-600 flex items-center gap-1">
             <Building2 className="h-3 w-3" />
             {employer.name} ({employer.type})
+          </div>
+        ) : currentEmployer ? (
+          <div className="text-xs text-orange-600 flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            Will be assigned to: {currentEmployer.name_en}
           </div>
         ) : (
           <div className="text-xs text-gray-500 flex items-center gap-1">
@@ -172,10 +189,8 @@ export function EnhancedPromoterSelector({
                 </div>
               </div>
               <Button
-                variant="ghost"
-                size="sm"
                 onClick={() => onValueChange("")}
-                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 bg-transparent border-none"
               >
                 ×
               </Button>

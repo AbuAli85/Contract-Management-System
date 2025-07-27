@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { nanoid } from 'nanoid'
 import { getSupabaseConfig } from './supabase/env-check'
 import { generateContractPDF } from './pdf-generator'
+import { getEnhancedContractTypeConfig, generateContractWithMakecom } from './contract-type-config'
 
 // Types for contract generation
 export interface ContractGenerationRequest {
@@ -26,7 +27,7 @@ export interface ContractGenerationResponse {
   success: boolean
   contract_id: string
   contract_number: string
-  status: 'draft' | 'processing' | 'generated' | 'failed'
+  status: 'draft' | 'pending' | 'processing' | 'active' | 'expired' | 'generated' | 'soon-to-expire' | 'approved' | 'rejected' | 'failed'
   pdf_url?: string
   google_drive_url?: string
   message: string
@@ -35,7 +36,7 @@ export interface ContractGenerationResponse {
 
 export interface ContractStatus {
   contract_id: string
-  status: 'draft' | 'processing' | 'generated' | 'failed'
+  status: 'draft' | 'pending' | 'processing' | 'active' | 'expired' | 'generated' | 'soon-to-expire' | 'approved' | 'rejected' | 'failed'
   pdf_url?: string
   google_drive_url?: string
   generated_at?: string
@@ -106,117 +107,127 @@ class ContractGenerationService {
    * Create contract in database
    */
   private async createContractInDatabase(data: ContractGenerationRequest, contractNumber: string): Promise<any> {
-    // Build contract data with only the fields that exist in the database
-    const contractData: any = {
-      contract_number: contractNumber,
-      first_party_id: data.first_party_id,
-      second_party_id: data.second_party_id,
-      promoter_id: data.promoter_id,
-      contract_start_date: data.contract_start_date.toISOString().split('T')[0],
-      contract_end_date: data.contract_end_date.toISOString().split('T')[0],
-      email: data.email,
-      job_title: data.job_title,
-      work_location: data.work_location,
-      status: 'draft',
-      is_current: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+    try {
+      console.log('💾 Creating contract in database...')
+
+      const contractData = {
+        contract_number: contractNumber,
+        first_party_id: data.first_party_id,
+        second_party_id: data.second_party_id,
+        promoter_id: data.promoter_id,
+        contract_start_date: data.contract_start_date.toISOString(),
+        contract_end_date: data.contract_end_date.toISOString(),
+        email: data.email,
+        job_title: data.job_title,
+        work_location: data.work_location,
+        department: data.department,
+        contract_type: data.contract_type,
+        currency: data.currency,
+        basic_salary: data.basic_salary || 0,
+        allowances: data.allowances || 0,
+        special_terms: data.special_terms || '',
+        status: 'processing',
+        approval_status: 'draft',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { data: contract, error } = await this.supabase
+        .from('contracts')
+        .insert(contractData)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('❌ Database error:', error)
+        throw new Error(`Failed to create contract: ${error.message}`)
+      }
+
+      console.log('✅ Contract created in database:', contract.id)
+      return contract
+
+    } catch (error) {
+      console.error('❌ Failed to create contract in database:', error)
+      throw error
     }
-
-    // Add optional fields if they exist in the database
-    if (data.department) contractData.department = data.department
-    if (data.contract_type) contractData.contract_type = data.contract_type
-    if (data.currency) contractData.currency = data.currency
-    if (data.basic_salary) contractData.basic_salary = data.basic_salary
-    if (data.allowances) contractData.allowances = data.allowances
-    if (data.special_terms) contractData.special_terms = data.special_terms
-
-    const { data: contract, error } = await this.supabase
-      .from('contracts')
-      .insert([contractData])
-      .select(`
-        *,
-        first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
-        second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
-        promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
-      `)
-      .single()
-
-    if (error) {
-      throw new Error(`Database error: ${error.message}`)
-    }
-
-    return contract
   }
 
   /**
-   * Trigger Make.com webhook for PDF generation
+   * Trigger Make.com webhook for contract generation
    */
   private async triggerMakecomWebhook(contract: any): Promise<boolean> {
-    if (!this.makecomWebhookUrl) {
-      console.warn('Make.com webhook URL not configured')
-      return false
-    }
-
     try {
+      if (!this.makecomWebhookUrl) {
+        console.log('⚠️ No Make.com webhook URL configured, skipping webhook trigger')
+        return false
+      }
+
+      console.log('🔗 Triggering Make.com webhook...')
+      console.log('🔗 Webhook URL:', this.makecomWebhookUrl)
+
+      // Get contract type configuration
+      const contractTypeConfig = getEnhancedContractTypeConfig(contract.contract_type)
+      if (!contractTypeConfig) {
+        console.error('❌ Contract type configuration not found:', contract.contract_type)
+        return false
+      }
+
+      // Check if this contract type supports Make.com integration
+      if (!contractTypeConfig.makecomTemplateId) {
+        console.log('⚠️ Contract type does not support Make.com integration:', contract.contract_type)
+        return false
+      }
+
+      // Prepare webhook payload
       const webhookPayload = {
         contract_id: contract.id,
         contract_number: contract.contract_number,
-        first_party_name_en: contract.first_party?.name_en || '',
-        first_party_name_ar: contract.first_party?.name_ar || '',
-        first_party_crn: contract.first_party?.crn || '',
-        second_party_name_en: contract.second_party?.name_en || '',
-        second_party_name_ar: contract.second_party?.name_ar || '',
-        second_party_crn: contract.second_party?.crn || '',
-        promoter_name_en: contract.promoters?.name_en || '',
-        promoter_name_ar: contract.promoters?.name_ar || '',
-        promoter_id_card_url: contract.promoters?.id_card_url || '',
-        promoter_passport_url: contract.promoters?.passport_url || '',
-        id_card_number: contract.promoters?.id_card_number || '',
-        job_title: contract.job_title,
-        work_location: contract.work_location,
-        department: contract.department,
-        email: contract.email,
-        start_date: contract.contract_start_date,
-        end_date: contract.contract_end_date,
-        basic_salary: contract.basic_salary,
-        allowances: contract.allowances,
-        currency: contract.currency,
-        contract_type: contract.contract_type,
-        special_terms: contract.special_terms,
-        google_drive_folder_id: this.googleDriveFolderId,
-        timestamp: new Date().toISOString()
+        contract_type: contract.contract_type
       }
+
+      console.log('📤 Sending webhook payload:', webhookPayload)
 
       const response = await fetch(this.makecomWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'ContractGen-Service/1.0'
         },
         body: JSON.stringify(webhookPayload)
       })
 
+      console.log('🔗 Webhook response status:', response.status, response.statusText)
+      console.log('🔗 Webhook response headers:', Object.fromEntries(response.headers.entries()))
+
       if (!response.ok) {
-        throw new Error(`Webhook failed: ${response.status} ${response.statusText}`)
+        console.error('❌ Webhook request failed:', response.status, response.statusText)
+        return false
       }
 
-      // Update contract status to processing
-      await this.supabase
-        .from('contracts')
-        .update({ status: 'processing' })
-        .eq('id', contract.id)
-
-      console.log('✅ Make.com webhook triggered successfully')
+      // Handle different response types
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          const result = await response.json()
+          console.log('✅ Webhook triggered successfully:', result)
+        } catch (jsonError) {
+          console.log('⚠️ Webhook response is not valid JSON, but request was successful')
+        }
+      } else {
+        // Handle non-JSON responses (like "Accepted")
+        const textResponse = await response.text()
+        console.log('✅ Webhook triggered successfully (non-JSON response):', textResponse)
+      }
+      
       return true
+
     } catch (error) {
-      console.error('❌ Make.com webhook error:', error)
+      console.error('❌ Failed to trigger Make.com webhook:', error)
       return false
     }
   }
 
   /**
-   * Main contract generation method
+   * Generate contract with proper template integration
    */
   async generateContract(data: ContractGenerationRequest): Promise<ContractGenerationResponse> {
     try {
@@ -235,19 +246,62 @@ class ContractGenerationService {
         }
       }
 
-      // Step 2: Generate contract number
+      // Step 2: Check contract type configuration
+      const contractTypeConfig = getEnhancedContractTypeConfig(data.contract_type)
+      if (!contractTypeConfig) {
+        return {
+          success: false,
+          contract_id: '',
+          contract_number: '',
+          status: 'failed',
+          message: `Contract type '${data.contract_type}' not found`,
+          errors: [`Invalid contract type: ${data.contract_type}`]
+        }
+      }
+
+      console.log('📋 Contract type configuration:', {
+        id: contractTypeConfig.id,
+        name: contractTypeConfig.name,
+        hasMakecomTemplate: !!contractTypeConfig.makecomTemplateId,
+        hasGoogleDocsTemplate: !!contractTypeConfig.googleDocsTemplateId
+      })
+
+      // Step 3: Generate contract number
       const contractNumber = this.generateContractNumber()
       console.log('📝 Generated contract number:', contractNumber)
 
-      // Step 3: Create contract in database
+      // Step 4: Create contract in database
       const contract = await this.createContractInDatabase(data, contractNumber)
       console.log('💾 Contract saved to database:', contract.id)
 
-      // Step 4: Immediately generate PDF instead of relying on webhooks
+      // Step 5: Check if we should use Make.com integration or direct PDF generation
+      if (contractTypeConfig.makecomTemplateId && this.makecomWebhookUrl) {
+        // Use Make.com integration for Google Docs templates
+        console.log('🔗 Using Make.com integration for Google Docs template')
+        const webhookTriggered = await this.triggerMakecomWebhook(contract)
+        
+        if (webhookTriggered) {
+          return {
+            success: true,
+            contract_id: contract.id,
+            contract_number: contractNumber,
+            status: 'processing',
+            message: 'Contract created and sent to Make.com for Google Docs template processing',
+            google_drive_url: this.googleDriveFolderId 
+              ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
+              : undefined
+          }
+        } else {
+          console.log('⚠️ Make.com webhook failed, falling back to direct PDF generation')
+        }
+      }
+
+      // Step 6: Fallback to direct PDF generation
+      console.log('📄 Using direct PDF generation (fallback)')
       try {
         const pdfResult = await this.generatePDFDirectly(contract.id, contractNumber)
         if (pdfResult.success) {
-          console.log('✅ PDF generated immediately:', pdfResult.pdf_url)
+          console.log('✅ PDF generated directly:', pdfResult.pdf_url)
           return {
             success: true,
             contract_id: contract.id,
@@ -260,7 +314,7 @@ class ContractGenerationService {
               : undefined
           }
         } else {
-          console.log('⚠️ PDF generation failed, setting to draft status')
+          console.log('⚠️ Direct PDF generation failed, setting to draft status')
           return {
             success: true,
             contract_id: contract.id,

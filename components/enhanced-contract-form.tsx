@@ -152,7 +152,7 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
       if (data.success) {
         setContractStatus(data.data)
         
-        if (data.data.status === 'generated') {
+        if (data.data.status === 'generated' || data.data.status === 'completed') {
           setIsPolling(false)
           toast({
             title: "PDF Ready!",
@@ -166,13 +166,20 @@ export default function EnhancedContractForm({ onSuccess, onError }: EnhancedCon
             description: data.data.error_message || "PDF generation failed",
             variant: "destructive"
           })
-        } else {
+        } else if (data.data.status === 'processing' || data.data.status === 'pending') {
           // Continue polling with shorter intervals for immediate generation
-          setTimeout(() => pollContractStatus(contractId), 3000)
+          setTimeout(() => pollContractStatus(contractId), 2000)
+        } else {
+          // For other statuses, stop polling
+          setIsPolling(false)
         }
+      } else {
+        console.error('Status check failed:', data.error)
+        setIsPolling(false)
       }
     } catch (error) {
       console.error('Polling error:', error)
+      setIsPolling(false)
     }
   }
 

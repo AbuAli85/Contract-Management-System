@@ -11,9 +11,9 @@ export async function POST(
     const supabase = await createClient()
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    const { data: { user }, error: sessionError } = await supabase.auth.getUser()
     
-    if (sessionError || !session?.user) {
+          if (sessionError || !user) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized - Please log in' 
