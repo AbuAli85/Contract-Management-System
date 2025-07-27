@@ -73,6 +73,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use the robust Supabase client
   const supabaseClient = supabase
 
+  // Debug logging for Supabase client
+  useEffect(() => {
+    console.log('🔧 Supabase client status:', {
+      exists: !!supabaseClient,
+      type: typeof supabaseClient,
+      hasAuth: !!supabaseClient?.auth
+    })
+  }, [supabaseClient])
+
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     console.log('👤 Loading user profile for:', userId)
@@ -237,6 +246,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabaseClient) {
       console.log('❌ No supabase client in useEffect')
       setLoading(false)
+      setMounted(true)
       return
     }
 
@@ -253,13 +263,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }, 3000)
 
+    // Additional safety check - ensure loading is false after 5 seconds
+    const finalSafetyTimeout = setTimeout(() => {
+      console.log('🚨 Final safety timeout - forcing loading to false')
+      setLoading(false)
+      setMounted(true)
+    }, 5000)
+
     // Cleanup function
     return () => {
       console.log('🔧 AuthProvider cleanup')
       subscription.unsubscribe()
       clearTimeout(safetyTimeout)
+      clearTimeout(finalSafetyTimeout)
     }
-  }, [])
+  }, [supabaseClient])
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {
