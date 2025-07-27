@@ -1,15 +1,15 @@
 import { useEffect } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { devLog } from "@/lib/dev-log"
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 export function useRealtimeTable(table: string, onChange: (payload: any) => void) {
-  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
 
   useEffect(() => {
     // Don't set up realtime if user is not authenticated
-    if (!isAuthenticated) {
+    if (!user) {
       return
     }
 
@@ -42,5 +42,5 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
         supabaseClient.removeChannel(channel as RealtimeChannel)
       }
     }
-  }, [table, onChange, isAuthenticated])
+  }, [table, onChange, user])
 }

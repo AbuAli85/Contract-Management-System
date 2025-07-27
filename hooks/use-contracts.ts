@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { getSupabaseClient } from "@/lib/supabase" // Initialized Supabase client
 import { createContract, deleteContract } from "@/app/actions/contracts"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { useFormContext } from "@/hooks/use-form-context"
 import { devLog } from "@/lib/dev-log"
 import type { Database } from "@/types/supabase"
@@ -130,24 +130,24 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
 export const useContracts = () => {
   const queryClient = useQueryClient()
   const queryKey = ["contracts"]
-  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const { isFormActive } = useFormContext()
 
   // --- Data fetching with React Query ---
   const queryResult = useQuery<ContractWithRelations[], Error>({
     queryKey: queryKey,
     queryFn: fetchContracts,
-    enabled: isAuthenticated !== null, // Only run query when we know auth status
+    enabled: user !== null, // Only run query when we know auth status
   })
 
   // --- Realtime subscription ---
   useEffect(() => {
-    if (isAuthenticated === null) {
+    if (user === null) {
       return
     }
 
     // Don't set up realtime if user is not authenticated
-    if (!isAuthenticated) {
+    if (!user) {
       devLog("User not authenticated, skipping realtime subscription for contracts")
       return
     }
@@ -241,7 +241,7 @@ export const useContracts = () => {
         supabaseClient.removeChannel(channel)
       }
     }
-  }, [queryClient, queryKey, isAuthenticated, isFormActive])
+  }, [queryClient, queryKey, user, isFormActive])
 
   return queryResult
 }

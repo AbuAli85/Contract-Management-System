@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/src/components/auth/auth-provider";
 import { useCallback } from "react";
 import type { Database } from "@/types/supabase";
 
@@ -41,7 +41,7 @@ const fetchContract = async (contractId: string): Promise<ContractWithRelations 
 };
 
 export function useContract(contractId: string) {
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const queryKey = ["contract", contractId];
 
   const {
@@ -52,7 +52,7 @@ export function useContract(contractId: string) {
   } = useQuery<ContractWithRelations | null, Error>({
     queryKey,
     queryFn: () => fetchContract(contractId),
-    enabled: !!contractId && isAuthenticated !== null,
+    enabled: !!contractId && user !== null,
     retry: (failureCount, error) => {
       // Don't retry if contract is not found
       if (error.message.includes('No rows returned') || error.message.includes('PGRST116')) {

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { getSupabaseClient, createRealtimeChannel, subscribeToChannel, handleRealtimeError } from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { useFormContext } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from '@supabase/supabase-js'
@@ -28,7 +28,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryClient = useQueryClient()
   const queryKey = useMemo(() => ["promoters"], [])
   const { toast } = useToast()
-  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
   const { isFormActive } = useFormContext()
   const channelRef = useRef<RealtimeChannel | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -38,17 +38,17 @@ export const usePromoters = (enableRealtime: boolean = true) => {
     queryFn: fetchPromoters,
     staleTime: 1000 * 60 * 5,
     retry: false,
-    enabled: isAuthenticated !== null, // Only run query when we know auth status
+    enabled: user !== null, // Only run query when we know auth status
   })
 
   // --- Realtime subscription ---
   useEffect(() => {
-    if (!enableRealtime || isAuthenticated === null) {
+    if (!enableRealtime || user === null) {
       return
     }
 
     // Don't set up realtime if user is not authenticated
-    if (!isAuthenticated) {
+    if (!user) {
       devLog("User not authenticated, skipping realtime subscription for promoters")
       return
     }
@@ -158,7 +158,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
         channelRef.current = null
       }
     }
-  }, [isAuthenticated, enableRealtime, isFormActive, queryClient, queryKey, toast])
+  }, [user, enableRealtime, isFormActive, queryClient, queryKey, toast])
 
   return queryResult
 }
