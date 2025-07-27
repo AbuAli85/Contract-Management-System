@@ -24,6 +24,12 @@ export async function createClient() {
         },
         async set(name: string, value: string, options: CookieOptions) {
           try {
+            // Check if cookie value is too large (> 3KB)
+            if (value && value.length > 3000) {
+              console.warn(`🔒 Server: Cookie ${name} is too large (${value.length} chars), truncating to prevent issues`)
+              // Truncate the value to prevent cookie size issues
+              value = value.substring(0, 3000) + '...'
+            }
             await cookieStore.set({ name, value, ...options })
           } catch {
             // The `set` method was called from a Server Component.
