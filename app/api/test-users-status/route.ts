@@ -81,9 +81,8 @@ export async function GET(request: NextRequest) {
     // Get users by role
     const { data: usersByRole, error: roleError } = await supabase
       .from('profiles')
-      .select('role, count')
       .select('role')
-      .not('role', 'is', null)
+      .neq('role', null)
 
     if (roleError) {
       console.error('❌ Users by role fetch error:', roleError)

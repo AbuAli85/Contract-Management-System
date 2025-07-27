@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Get all contracts for admin users
       query = query
-        .not('id', 'is', null)
+        .neq('id', null)
     }
 
     const { data: contracts, error: contractsError } = await query

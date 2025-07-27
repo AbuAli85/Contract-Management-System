@@ -247,7 +247,7 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
     const { data: crExpiring, error: crError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, cr_expiry_date")
-      .not("cr_expiry_date", "is", null)
+      .neq("cr_expiry_date", null)
       .lte("cr_expiry_date", futureDate.toISOString())
       .order("cr_expiry_date", { ascending: true })
 
@@ -258,7 +258,7 @@ export async function getDocumentExpiryAlerts(daysAhead: number = 30) {
     const { data: licenseExpiring, error: licenseError } = await supabaseClient
       .from("parties")
       .select("id, name_en, name_ar, crn, license_expiry_date")
-      .not("license_expiry_date", "is", null)
+      .neq("license_expiry_date", null)
       .lte("license_expiry_date", futureDate.toISOString())
       .order("license_expiry_date", { ascending: true })
 

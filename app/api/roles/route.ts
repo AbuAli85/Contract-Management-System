@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('role')
-      .not('role', 'is', null)
+      .neq('role', null)
 
     if (usersError) {
       console.error('Error fetching users:', usersError)
