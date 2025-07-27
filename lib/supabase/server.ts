@@ -21,112 +21,35 @@ export async function createClient() {
         async get(name: string) {
           console.log('🔧 Server: Supabase requesting cookie:', name)
           
-          // Handle auth token cookies - check both generic and project-specific names
-          if (name.includes('auth-token')) {
-            // Check for generic cookie names first (set by login API)
-            if (name === 'sb-auth-token' || 
-                name === 'sb-auth-token.0' ||
-                name === 'sb-auth-token-code-verifier') {
-              const genericCookie = await cookieStore.get('sb-auth-token.0')
-              if (genericCookie?.value) {
-                console.log('🔧 Server: Using generic auth token cookie')
-                return genericCookie.value
-              }
-              
-              // Fallback to project-specific name
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific auth token cookie')
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No auth token cookie found')
-              return null
-            }
-            
-            if (name === 'sb-auth-token.1' ||
-                name === 'sb-auth-token-user') {
-              const genericCookie = await cookieStore.get('sb-auth-token.1')
-              if (genericCookie?.value) {
-                console.log('🔧 Server: Using generic refresh token cookie')
-                return genericCookie.value
-              }
-              
-              // Fallback to project-specific name
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific refresh token cookie')
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No refresh token cookie found')
-              return null
-            }
-            
-            // Handle direct project-specific cookie requests
-            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
-                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
-                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific auth token cookie (direct)')
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No project-specific auth token cookie found')
-              return null
-            }
-            
-            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
-                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific refresh token cookie (direct)')
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No project-specific refresh token cookie found')
-              return null
-            }
-            
-            // Handle code-verifier and user cookie variants with indices
-            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token-code-verifier.')) {
-              // For code-verifier variants, return the main auth token
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific auth token for code-verifier variant:', name)
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No auth token found for code-verifier variant:', name)
-              return null
-            }
-            
-            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token-user.')) {
-              // For user variants, return the refresh token
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific refresh token for user variant:', name)
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No refresh token found for user variant:', name)
-              return null
-            }
-            
-            // Handle other project-specific cookie indices (2, 3, 4, etc.)
-            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token.')) {
-              const projectCookie = await cookieStore.get(name)
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific cookie:', name)
-                return projectCookie.value
-              }
-              console.log('🔧 Server: No project-specific cookie found:', name)
-              return null
-            }
-            
-            // For other auth token names, return null
-            console.log('🔧 Server: Unknown auth token name:', name)
-            return null
+          // Simplified cookie handling - just do direct lookup like middleware
+          const cookie = await cookieStore.get(name)
+          if (cookie?.value) {
+            console.log('🔧 Server: Found cookie:', name)
+            return cookie.value
           }
           
-          // For other cookies, try exact match
-          const cookie = await cookieStore.get(name)
-          return cookie?.value
+          // Fallback for auth token cookies - check both generic and project-specific names
+          if (name.includes('auth-token')) {
+            // If Supabase is looking for generic names, try project-specific
+            if (name === 'sb-auth-token' || name === 'sb-auth-token.0') {
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific auth token as fallback')
+                return projectCookie.value
+              }
+            }
+            
+            if (name === 'sb-auth-token.1') {
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific refresh token as fallback')
+                return projectCookie.value
+              }
+            }
+          }
+          
+          console.log('🔧 Server: No cookie found for:', name)
+          return null
         },
         async set(name: string, value: string, options: CookieOptions) {
           try {

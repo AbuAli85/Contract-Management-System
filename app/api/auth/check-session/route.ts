@@ -31,10 +31,34 @@ export async function GET() {
     })
     
     // Try to get session first
+    console.log('🔐 Attempting to get session from Supabase...')
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log('🔐 Session result:', session ? 'found' : 'not found')
+    console.log('🔐 Session error:', sessionError ? sessionError.message : 'none')
     
     if (sessionError) {
       console.log('🔐 Session error:', sessionError.message)
+      
+      // Debug: Try to decode the JWT token manually to see what's wrong
+      if (projectToken0?.value) {
+        try {
+          const tokenParts = projectToken0.value.split('.')
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+            console.log('🔐 JWT payload:', {
+              exp: payload.exp,
+              iat: payload.iat,
+              sub: payload.sub,
+              aud: payload.aud,
+              iss: payload.iss,
+              currentTime: Math.floor(Date.now() / 1000)
+            })
+          }
+        } catch (decodeError) {
+          console.log('🔐 JWT decode error:', decodeError)
+        }
+      }
+      
       return NextResponse.json({ 
         success: false, 
         hasSession: false, 
