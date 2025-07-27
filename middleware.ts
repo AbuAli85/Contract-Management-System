@@ -54,18 +54,24 @@ export async function middleware(req: NextRequest) {
                 name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
                 name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
               const authToken0 = req.cookies.get('sb-auth-token.0')
-              if (authToken0) {
-                console.log(`🔒 Middleware: Using sb-auth-token.0 for ${name}`)
+              if (authToken0 && authToken0.value && authToken0.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-auth-token.0 for ${name} (length: ${authToken0.value.length})`)
                 return authToken0.value
+              } else {
+                console.log(`🔒 Middleware: sb-auth-token.0 is invalid or too short (length: ${authToken0?.value?.length || 0})`)
+                return null
               }
             }
             
             if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
                 name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
               const authToken1 = req.cookies.get('sb-auth-token.1')
-              if (authToken1) {
-                console.log(`🔒 Middleware: Using sb-auth-token.1 for ${name}`)
+              if (authToken1 && authToken1.value && authToken1.value.length > 10) {
+                console.log(`🔒 Middleware: Using sb-auth-token.1 for ${name} (length: ${authToken1.value.length})`)
                 return authToken1.value
+              } else {
+                console.log(`🔒 Middleware: sb-auth-token.1 is invalid or too short (length: ${authToken1?.value?.length || 0})`)
+                return null
               }
             }
             
@@ -211,6 +217,45 @@ export async function middleware(req: NextRequest) {
       url.pathname = `/${currentLocale}/dashboard`
       // Use 302 redirect to prevent caching issues
       return NextResponse.redirect(url, 302)
+    }
+
+    // Check for invalid cookies and clear them if needed
+    const authToken0 = req.cookies.get('sb-auth-token.0')
+    const authToken1 = req.cookies.get('sb-auth-token.1')
+    
+    // Check for truncated cookies (ending with ...) or cookies that are too large (> 3KB)
+    const isTruncated = (cookie: any) => cookie && cookie.value && (
+      cookie.value.endsWith('...') || 
+      cookie.value.length > 3000 ||
+      cookie.value.length < 50
+    )
+    
+    if (isTruncated(authToken0) || isTruncated(authToken1)) {
+      console.log('🔒 Middleware: Detected invalid/truncated cookies, clearing them')
+      console.log(`🔒 Middleware: Token0 length: ${authToken0?.value?.length || 0}, Token1 length: ${authToken1?.value?.length || 0}`)
+      
+      // Clear the invalid cookies
+      res.cookies.set({
+        name: 'sb-auth-token.0',
+        value: '',
+        expires: new Date(0),
+        path: '/'
+      })
+      res.cookies.set({
+        name: 'sb-auth-token.1',
+        value: '',
+        expires: new Date(0),
+        path: '/'
+      })
+      
+      // If user was trying to access a protected route, redirect to login
+      if (!isPublicRoute) {
+        console.log('🔒 Middleware: Redirecting to login after clearing invalid cookies')
+        const url = req.nextUrl.clone()
+        url.pathname = `/${currentLocale}/auth/login`
+        url.searchParams.set('redirect', pathname)
+        return NextResponse.redirect(url)
+      }
     }
 
     // Handle root path - redirect to locale dashboard (if authenticated) or login

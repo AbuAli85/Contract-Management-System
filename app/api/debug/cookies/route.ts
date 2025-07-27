@@ -5,13 +5,10 @@ export async function GET(request: NextRequest) {
     console.log('🔧 Debug cookies API called')
     
     const allCookies = request.cookies.getAll()
-    const cookieInfo = allCookies.map(cookie => ({
-      name: cookie.name,
-      value: cookie.value ? 'present' : 'empty',
-      path: cookie.path,
-      domain: cookie.domain,
-      expires: cookie.expires
-    }))
+               const cookieInfo = allCookies.map(cookie => ({
+             name: cookie.name,
+             value: cookie.value ? 'present' : 'empty'
+           }))
 
     // Check for specific Supabase auth cookies
     const supabaseCookies = allCookies.filter(cookie => 
