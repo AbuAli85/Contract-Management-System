@@ -1,13 +1,12 @@
 'use client';
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/src/components/auth/auth-provider';
 import { ToastProvider } from '@/components/toast-notifications';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ProfessionalSidebar } from '@/components/professional-sidebar';
 import { ProfessionalHeader } from '@/components/professional-header';
-import { useAuth } from '@/src/components/auth/auth-provider';
 import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { PerformanceMonitor } from '@/components/performance-monitor';
@@ -21,9 +20,10 @@ interface ClientLayoutProps {
 }
 
 function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; locale: string }) {
-  const { user, loading, mounted } = useAuth();
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Don't show sidebar on auth pages
   const isAuthPage = pathname?.includes('/auth/') || 
@@ -40,9 +40,34 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
                       pathname?.includes('/demo') ||
                       pathname?.includes('/onboarding');
 
-  const shouldShowSidebar = !isAuthPage && !isPublicPage && user;
+  const shouldShowSidebar = !isAuthPage && !isPublicPage && isAuthenticated;
 
-  if (loading || !mounted) {
+  // Check authentication on client side only
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch('/api/auth/check-session');
+        const data = await response.json();
+        
+        if (data.success && data.hasSession) {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Only check auth if we're not on auth or public pages
+    if (!isAuthPage && !isPublicPage) {
+      checkAuth();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthPage, isPublicPage]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

@@ -1,14 +1,9 @@
-'use client'
-
-import { useAuth } from '@/src/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Shield, Home, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export default function NotAuthorizedPage() {
-  const { user, profile, roles } = useAuth()
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
@@ -23,14 +18,9 @@ export default function NotAuthorizedPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {user && (
-              <div className="text-center text-sm text-muted-foreground">
-                <p>Logged in as: {user.email}</p>
-                {profile && (
-                  <p>Role: {profile.role}</p>
-                )}
-              </div>
-            )}
+            <div className="text-center text-sm text-muted-foreground">
+              <p>Please log in with appropriate permissions to access this resource.</p>
+            </div>
             
             <div className="flex flex-col gap-2">
               <Button asChild>
@@ -41,9 +31,9 @@ export default function NotAuthorizedPage() {
               </Button>
               
               <Button variant="outline" asChild>
-                <Link href="/auth/profile">
+                <Link href="/auth/login">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Profile
+                  Back to Login
                 </Link>
               </Button>
             </div>
