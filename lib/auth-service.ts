@@ -27,13 +27,8 @@ export class AuthService {
   private listeners: Set<(state: AuthState) => void> = new Set()
 
   private constructor() {
-    // Only create client in browser environment
-    if (typeof window !== 'undefined') {
-      this.supabaseClient = createClient()
-    } else {
-      console.log('🔧 AuthService: SSR detected, skipping client creation')
-      this.supabaseClient = null
-    }
+    // Initialize with null client - will be created when needed
+    this.supabaseClient = null
   }
 
   static getInstance(): AuthService {
@@ -41,6 +36,15 @@ export class AuthService {
       AuthService.instance = new AuthService()
     }
     return AuthService.instance
+  }
+
+  // Lazy initialization of the Supabase client
+  private ensureClient() {
+    if (!this.supabaseClient && typeof window !== 'undefined') {
+      console.log('🔧 AuthService: Creating Supabase client...')
+      this.supabaseClient = createClient()
+    }
+    return this.supabaseClient
   }
 
   // Subscribe to auth state changes
@@ -69,8 +73,9 @@ export class AuthService {
   async initializeAuth(): Promise<void> {
     console.log('🔧 AuthService: Initializing auth...')
     
-    if (!this.supabaseClient) {
-      console.log('❌ AuthService: No supabase client, setting loading to false')
+    const client = this.ensureClient()
+    if (!client) {
+      console.log('❌ AuthService: No supabase client available, setting loading to false')
       this.updateState({ loading: false, mounted: true })
       return
     }
@@ -84,7 +89,7 @@ export class AuthService {
       }
 
       console.log('🔧 AuthService: Getting session...')
-      const { data: { session: currentSession } } = await this.supabaseClient.auth.getSession()
+      const { data: { session: currentSession } } = await client.auth.getSession()
       
       console.log('🔧 AuthService: Session result:', currentSession ? 'found' : 'not found')
       
@@ -99,7 +104,7 @@ export class AuthService {
       if (!currentSession) {
         console.log('🔧 AuthService: No session found, attempting to refresh...')
         try {
-          const { data: { session: refreshedSession }, error: refreshError } = await this.supabaseClient.auth.refreshSession()
+          const { data: { session: refreshedSession }, error: refreshError } = await client.auth.refreshSession()
           
           if (refreshError) {
             console.log('🔧 AuthService: Session refresh failed:', refreshError.message)
@@ -125,9 +130,25 @@ export class AuthService {
                   session: mockSession as any,
                   user: data.user
                 })
+              } else {
+                console.log('🔧 AuthService: No valid session found, clearing state')
+                // Clear any invalid session state
+                this.updateState({
+                  session: null,
+                  user: null,
+                  profile: null,
+                  roles: []
+                })
               }
             } catch (manualError) {
               console.log('🔧 AuthService: Manual session check failed:', manualError)
+              // Clear state on error
+              this.updateState({
+                session: null,
+                user: null,
+                profile: null,
+                roles: []
+              })
             }
           } else if (refreshedSession) {
             console.log('🔧 AuthService: Session refreshed successfully')
@@ -135,9 +156,25 @@ export class AuthService {
               session: refreshedSession,
               user: refreshedSession.user
             })
+          } else {
+            console.log('🔧 AuthService: No session after refresh attempt')
+            // Clear state if no session after refresh
+            this.updateState({
+              session: null,
+              user: null,
+              profile: null,
+              roles: []
+            })
           }
         } catch (refreshError) {
           console.log('🔧 AuthService: Session refresh error:', refreshError)
+          // Clear state on error
+          this.updateState({
+            session: null,
+            user: null,
+            profile: null,
+            roles: []
+          })
         }
       }
 
@@ -184,7 +221,10 @@ export class AuthService {
   // Load user profile
   private async loadUserProfile(userId: string): Promise<any> {
     try {
-      const { data: profile, error } = await this.supabaseClient
+      const client = this.ensureClient()
+      if (!client) return null
+
+      const { data: profile, error } = await client
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -205,7 +245,10 @@ export class AuthService {
   // Load user roles
   private async loadUserRoles(userId: string): Promise<string[]> {
     try {
-      const { data: roles, error } = await this.supabaseClient
+      const client = this.ensureClient()
+      if (!client) return []
+
+      const { data: roles, error } = await client
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
@@ -226,7 +269,12 @@ export class AuthService {
   async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Signing in...')
-      const { data, error } = await this.supabaseClient.auth.signInWithPassword({
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { data, error } = await client.auth.signInWithPassword({
         email,
         password
       })
@@ -256,7 +304,12 @@ export class AuthService {
   async signUp(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Signing up...')
-      const { data, error } = await this.supabaseClient.auth.signUp({
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { data, error } = await client.auth.signUp({
         email,
         password
       })
@@ -286,19 +339,30 @@ export class AuthService {
   async signOut(): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Signing out...')
-      const { error } = await this.supabaseClient.auth.signOut()
+      
+      // Use centralized logout API to ensure proper cookie clearing
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-      if (error) {
-        console.error('AuthService: Sign out error:', error)
-        return { success: false, error: error.message }
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        console.error('🔧 AuthService: Logout API error:', data.error)
+        return { success: false, error: data.error || 'Failed to logout' }
       }
 
+      // Clear local state
       this.updateState({
         user: null,
         session: null,
         profile: null,
         roles: []
       })
+      
       console.log('🔧 AuthService: Sign out successful')
       return { success: true }
     } catch (error) {
@@ -311,7 +375,12 @@ export class AuthService {
   async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Resetting password...')
-      const { error } = await this.supabaseClient.auth.resetPasswordForEmail(email, {
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { error } = await client.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset-password`
       })
 
@@ -332,7 +401,12 @@ export class AuthService {
   async updatePassword(password: string): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Updating password...')
-      const { error } = await this.supabaseClient.auth.updateUser({ password })
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { error } = await client.auth.updateUser({ password })
 
       if (error) {
         console.error('AuthService: Update password error:', error)
@@ -351,7 +425,12 @@ export class AuthService {
   async updateProfile(updates: any): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Updating profile...')
-      const { error } = await this.supabaseClient.auth.updateUser({
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { error } = await client.auth.updateUser({
         data: updates
       })
 
@@ -372,7 +451,12 @@ export class AuthService {
   async signInWithProvider(provider: 'github' | 'google' | 'twitter'): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('🔧 AuthService: Signing in with provider:', provider)
-      const { error } = await this.supabaseClient.auth.signInWithOAuth({
+      const client = this.ensureClient()
+      if (!client) {
+        return { success: false, error: 'No Supabase client available' }
+      }
+
+      const { error } = await client.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
@@ -396,7 +480,13 @@ export class AuthService {
   async refreshSession(): Promise<void> {
     try {
       console.log('🔧 AuthService: Refreshing session...')
-      const { data: { session: newSession }, error } = await this.supabaseClient.auth.refreshSession()
+      const client = this.ensureClient()
+      if (!client) {
+        console.log('🔧 AuthService: No client available for session refresh')
+        return
+      }
+
+      const { data: { session: newSession }, error } = await client.auth.refreshSession()
       
       if (error) {
         console.error('AuthService: Refresh session error:', error)

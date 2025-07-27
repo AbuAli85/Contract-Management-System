@@ -39,8 +39,8 @@ export default function LoginPage() {
         }
       }
       
-      // Add a small delay to allow middleware to process
-      setTimeout(checkServerSession, 500)
+      // Execute immediately without manual delay
+      checkServerSession()
     }
   }, [user, loading, mounted, router, locale])
 

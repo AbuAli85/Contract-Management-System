@@ -12,41 +12,52 @@ export async function POST() {
     
     if (error) {
       console.error('🔐 Logout error:', error)
-      return NextResponse.json({ error: 'Failed to logout' }, { status: 500 })
+      return NextResponse.json({ 
+        success: false,
+        error: 'Failed to logout' 
+      }, { status: 500 })
     }
     
     console.log('🔐 User signed out successfully')
     
     // Create response
-    const response = NextResponse.json({ success: true })
+    const response = NextResponse.json({ 
+      success: true,
+      message: 'Logged out successfully'
+    })
     
-    // Clear all auth cookies with proper settings
+    // Define secure cookie clearing options
     const cookieOptions = {
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
+      sameSite: 'strict' as const,
       expires: new Date(0)
     }
     
-    // Clear generic auth cookies
-    response.cookies.set('sb-auth-token.0', '', cookieOptions)
-    response.cookies.set('sb-auth-token.1', '', cookieOptions)
+    // Clear all auth cookies that were set during login
+    const cookiesToClear = [
+      'sb-auth-token.0',
+      'sb-auth-token.1',
+      'sb-ekdjxzhujettocosgzql-auth-token.0',
+      'sb-ekdjxzhujettocosgzql-auth-token.1',
+      'sb-auth-token',
+      'sb-ekdjxzhujettocosgzql-auth-token'
+    ]
     
-    // Clear project-specific auth cookies
-    response.cookies.set('sb-ekdjxzhujettocosgzql-auth-token.0', '', cookieOptions)
-    response.cookies.set('sb-ekdjxzhujettocosgzql-auth-token.1', '', cookieOptions)
+    cookiesToClear.forEach(cookieName => {
+      response.cookies.set(cookieName, '', cookieOptions)
+    })
     
-    // Clear any other auth-related cookies
-    response.cookies.set('sb-auth-token', '', cookieOptions)
-    response.cookies.set('sb-ekdjxzhujettocosgzql-auth-token', '', cookieOptions)
-    
-    console.log('🔐 Auth cookies cleared')
+    console.log('🔐 Auth cookies cleared:', cookiesToClear)
     
     return response
   } catch (error) {
     console.error('🔐 Logout error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      success: false,
+      error: 'Internal server error' 
+    }, { status: 500 })
   }
 }
 

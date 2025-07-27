@@ -15,16 +15,26 @@ export async function GET(request: NextRequest) {
       'sb-auth-token.1',
       'sb-auth-token.2',
       'sb-auth-token.3',
-      'sb-auth-token.4'
+      'sb-auth-token.4',
+      'sb-ekdjxzhujettocosgzql-auth-token.0',
+      'sb-ekdjxzhujettocosgzql-auth-token.1',
+      'sb-ekdjxzhujettocosgzql-auth-token.2',
+      'sb-ekdjxzhujettocosgzql-auth-token.3',
+      'sb-ekdjxzhujettocosgzql-auth-token.4',
+      'sb-auth-token',
+      'sb-ekdjxzhujettocosgzql-auth-token'
     ]
 
+    const cookieOptions = {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
+      sameSite: 'strict' as const,
+      expires: new Date(0)
+    }
+
     cookiesToClear.forEach(cookieName => {
-      response.cookies.set({
-        name: cookieName,
-        value: '',
-        expires: new Date(0),
-        path: '/'
-      })
+      response.cookies.set(cookieName, '', cookieOptions)
     })
 
     console.log('🔧 Cleared auth cookies')

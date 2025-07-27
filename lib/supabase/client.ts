@@ -31,51 +31,9 @@ export const createClient = () => {
           return null
         }
         
-        // Handle both generic and project-specific cookie names
+        // Handle auth token cookies
         if (name.includes('auth-token')) {
-          // Check for generic cookie names first (set by login API)
-          if (name === 'sb-auth-token' || 
-              name === 'sb-auth-token.0' ||
-              name === 'sb-auth-token-code-verifier') {
-            const cookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-auth-token.0='))
-            if (cookie) {
-              console.log('🔧 Client: Using generic auth token cookie')
-              return cookie.split('=')[1]
-            }
-            
-            // Fallback to project-specific name
-            const projectCookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.0='))
-            if (projectCookie) {
-              console.log('🔧 Client: Using project-specific auth token cookie')
-              return projectCookie.split('=')[1]
-            }
-          }
-          
-          if (name === 'sb-auth-token.1' ||
-              name === 'sb-auth-token-user') {
-            const cookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-auth-token.1='))
-            if (cookie) {
-              console.log('🔧 Client: Using generic refresh token cookie')
-              return cookie.split('=')[1]
-            }
-            
-            // Fallback to project-specific name
-            const projectCookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.1='))
-            if (projectCookie) {
-              console.log('🔧 Client: Using project-specific refresh token cookie')
-              return projectCookie.split('=')[1]
-            }
-          }
-          
-          // Handle direct project-specific cookie requests
+          // Check for project-specific cookies first (what we actually set)
           if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
               name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
               name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
@@ -83,7 +41,7 @@ export const createClient = () => {
               .split('; ')
               .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.0='))
             if (cookie) {
-              console.log('🔧 Client: Using project-specific auth token cookie (direct)')
+              console.log('🔧 Client: Using project-specific auth token cookie')
               return cookie.split('=')[1]
             }
           }
@@ -94,7 +52,31 @@ export const createClient = () => {
               .split('; ')
               .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.1='))
             if (cookie) {
-              console.log('🔧 Client: Using project-specific refresh token cookie (direct)')
+              console.log('🔧 Client: Using project-specific refresh token cookie')
+              return cookie.split('=')[1]
+            }
+          }
+          
+          // Fallback to generic cookie names (for compatibility)
+          if (name === 'sb-auth-token' || 
+              name === 'sb-auth-token.0' ||
+              name === 'sb-auth-token-code-verifier') {
+            const cookie = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('sb-auth-token.0='))
+            if (cookie) {
+              console.log('🔧 Client: Using generic auth token cookie')
+              return cookie.split('=')[1]
+            }
+          }
+          
+          if (name === 'sb-auth-token.1' ||
+              name === 'sb-auth-token-user') {
+            const cookie = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('sb-auth-token.1='))
+            if (cookie) {
+              console.log('🔧 Client: Using generic refresh token cookie')
               return cookie.split('=')[1]
             }
           }

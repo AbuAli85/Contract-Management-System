@@ -46,7 +46,12 @@ export function LoginForm() {
       if (!response.ok) {
         console.error("🔐 Login Debug - Server login error:", data.error)
         setError(data.error || 'Login failed')
-        setLoading(false)
+        return
+      }
+
+      if (!data.success) {
+        console.error("🔐 Login Debug - Server login failed:", data.error)
+        setError(data.error || 'Login failed')
         return
       }
 
@@ -59,6 +64,7 @@ export function LoginForm() {
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
       setError('An unexpected error occurred')
+    } finally {
       setLoading(false)
     }
   }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { ApiErrorHandler } from '@/lib/api-error-handler'
+import { AuthErrorHandler } from '@/lib/auth-error-handler'
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,13 +9,8 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json()
     
     if (!email || !password) {
-      const error = ApiErrorHandler.handleValidationError({ 
-        message: 'Email and password are required' 
-      })
-      return NextResponse.json(
-        ApiErrorHandler.formatErrorResponse(error),
-        { status: error.status }
-      )
+      const error = AuthErrorHandler.createError('Email and password are required', 'VALIDATION_ERROR')
+      return NextResponse.json(error, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -29,56 +24,63 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('🔐 Server login error:', error)
-      const apiError = ApiErrorHandler.handleAuthError(error)
-      return NextResponse.json(
-        ApiErrorHandler.formatErrorResponse(apiError),
-        { status: apiError.status }
-      )
+      const apiError = AuthErrorHandler.handleAuthError(error)
+      return NextResponse.json(apiError, { status: 400 })
     }
 
     if (!data.user) {
       console.error('🔐 No user returned from sign in')
-      const error = ApiErrorHandler.createError('Authentication failed', 'AUTH_FAILED', 400)
-      return NextResponse.json(
-        ApiErrorHandler.formatErrorResponse(error),
-        { status: error.status }
-      )
+      const error = AuthErrorHandler.createError('Authentication failed', 'AUTH_FAILED')
+      return NextResponse.json(error, { status: 400 })
     }
 
     console.log('🔐 Server login successful for user:', data.user.id)
 
     // Create response with success
-    const response = NextResponse.json({
-      success: true,
+    const response = NextResponse.json(AuthErrorHandler.createSuccess({
       user: {
         id: data.user.id,
         email: data.user.email
       }
-    })
+    }, 'Login successful'))
 
     // Check if we have session data
     if (data.session) {
       console.log('🔐 Session data available, setting cookies...')
       
+      // Define secure cookie options
+      const cookieOptions = {
+        path: '/',
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
+        sameSite: 'strict' as const,
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      }
+      
       // Set the generic auth token cookies that middleware expects
       response.cookies.set({
         name: 'sb-auth-token.0',
         value: data.session.access_token,
-        path: '/',
-        httpOnly: true,
-        secure: true, // Always enforce HTTPS
-        sameSite: 'strict', // Stricter same-site policy
-        maxAge: 60 * 60 * 24 * 7 // 7 days
+        ...cookieOptions
       })
       
       response.cookies.set({
         name: 'sb-auth-token.1',
         value: data.session.refresh_token,
-        path: '/',
-        httpOnly: true,
-        secure: true, // Always enforce HTTPS
-        sameSite: 'strict', // Stricter same-site policy
-        maxAge: 60 * 60 * 24 * 7 // 7 days
+        ...cookieOptions
+      })
+      
+      // Also set project-specific cookies for compatibility
+      response.cookies.set({
+        name: 'sb-ekdjxzhujettocosgzql-auth-token.0',
+        value: data.session.access_token,
+        ...cookieOptions
+      })
+      
+      response.cookies.set({
+        name: 'sb-ekdjxzhujettocosgzql-auth-token.1',
+        value: data.session.refresh_token,
+        ...cookieOptions
       })
       
       console.log('🔐 Set auth cookies for middleware')
@@ -96,10 +98,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('🔐 Server login API error:', error)
-    const apiError = ApiErrorHandler.handleGenericError(error)
-    return NextResponse.json(
-      ApiErrorHandler.formatErrorResponse(apiError),
-      { status: apiError.status }
-    )
+    const apiError = AuthErrorHandler.handleGenericError(error)
+    return NextResponse.json(apiError, { status: 500 })
   }
 } 

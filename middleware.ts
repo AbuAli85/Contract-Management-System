@@ -1,225 +1,62 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import type { CookieOptions } from '@supabase/ssr'
+import { createClient } from '@/lib/supabase/middleware'
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
-  
-  // Skip middleware for static files and API routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.') ||
-    pathname.startsWith('/favicon.ico')
-  ) {
-    return NextResponse.next()
-  }
+// Define protected routes that require authentication
+const protectedRoutes = [
+  '/dashboard',
+  '/contracts',
+  '/manage-promoters',
+  '/manage-parties',
+  '/profile',
+  '/admin'
+]
 
-  console.log('🔒 Middleware: Processing request for:', pathname)
+// Define auth routes that should redirect if user is already authenticated
+const authRoutes = [
+  '/auth/login',
+  '/auth/signup',
+  '/auth/forgot-password'
+]
 
-  // Create a response object that we can modify
-  const res = NextResponse.next()
-
-  // Create a custom cookies object that works with NextResponse
-  const cookies = {
-    get(name: string) {
-      return req.cookies.get(name)
-    },
-    set(name: string, value: string, options: CookieOptions) {
-      res.cookies.set({
-        name,
-        value,
-        ...options,
-      })
-    },
-    remove(name: string, options: CookieOptions) {
-      res.cookies.set({
-        name,
-        value: '',
-        expires: new Date(0),
-        ...options,
-      })
-    },
-  }
-
-  // Create Supabase client for middleware
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookies.set(name, value, options)
-        },
-        remove(name: string, options: CookieOptions) {
-          cookies.remove(name, options)
-        },
-      },
-    }
-  )
-
+export async function middleware(request: NextRequest) {
   try {
-    // Get session with reasonable timeout for slow database connections
-    console.log('🔒 Middleware: Checking session for path:', pathname)
+    // Create Supabase client for middleware
+    const supabase = createClient(request)
     
-    // Check for redirect loops by looking at referer
-    const referer = req.headers.get('referer')
-    if (referer && pathname.includes('/auth/login') && referer.includes('/auth/login')) {
-      console.log('🔒 Middleware: Potential redirect loop detected, allowing request')
-      return res
-    }
+    // Get current session
+    const { data: { session } } = await supabase.auth.getSession()
     
-    const sessionPromise = supabase.auth.getSession()
-    const { data: { session }, error: sessionError } = await Promise.race([
-      sessionPromise,
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Auth timeout')), 5000) // Increased to 5 seconds
-      )
-    ]) as any
+    const { pathname } = request.nextUrl
     
-    if (sessionError) {
-      console.error('🔒 Middleware: Session error:', sessionError)
-      // On session error, allow the request to continue but log it
-      console.log('🔒 Middleware: Allowing request despite session error')
-      return res
-    }
-    
-    console.log('🔒 Middleware: Session result:', session ? `found for user ${session.user.id}` : 'not found')
-
-    // Extract locale from pathname (pathname is already declared above)
-    const pathnameIsMissingLocale = ['en', 'ar'].every(
-      (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
+    // Check if the path is a protected route
+    const isProtectedRoute = protectedRoutes.some(route => 
+      pathname.includes(route)
     )
-
-    // Default locale
-    const locale = 'en'
-
-    // Redirect if there is no locale
-    if (pathnameIsMissingLocale) {
-      const url = req.nextUrl.clone()
-      url.pathname = `/${locale}${pathname}`
-      return NextResponse.redirect(url)
-    }
-
-    // Extract locale from pathname
-    const pathLocale = pathname.split('/')[1]
-    const validLocales = ['en', 'ar']
-    const currentLocale = validLocales.includes(pathLocale) ? pathLocale : 'en'
-
-    // Define public routes that don't require authentication
-    const publicRoutes = [
-      `/${currentLocale}/auth/login`,
-      `/${currentLocale}/auth/signup`,
-      `/${currentLocale}/auth/forgot-password`,
-      `/${currentLocale}/auth/reset-password`,
-      `/${currentLocale}/auth/callback`,
-      `/${currentLocale}/auth/bypass`,
-      `/${currentLocale}/demo`,
-      `/${currentLocale}/onboarding`,
-      `/${currentLocale}/test-auth`,
-      `/${currentLocale}/test-auth-system`,
-      `/${currentLocale}/test-user-signup`,
-      `/${currentLocale}/debug-auth`,
-      `/${currentLocale}/debug-promoter`,
-      `/${currentLocale}/dashboard/debug`,
-      `/${currentLocale}/test-dashboard`,
-      `/${currentLocale}/debug-redirect`,
-      `/${currentLocale}/test-cookie-fix`,
-      `/${currentLocale}/debug-login-flow`,
-      `/${currentLocale}/test-client-session`,
-      '/test-login'
-    ]
-
-    const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-
-    // If not authenticated and trying to access protected route, redirect to login
-    if (!session && !isPublicRoute) {
-      // Only log for actual page requests, not system requests
-      if (!pathname.includes('.well-known') && !pathname.includes('robots.txt') && !pathname.includes('sitemap.xml')) {
-        console.log('🔒 Middleware: No session, redirecting to login from:', pathname)
-      }
-      
-      // Prevent redirect loops by checking if we're already going to login
-      if (pathname.includes('/auth/login')) {
-        console.log('🔒 Middleware: Already on login page, allowing request')
-        return res
-      }
-      
-      const url = req.nextUrl.clone()
-      url.pathname = `/${currentLocale}/auth/login`
-      url.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(url)
-    }
-
-    // If user is authenticated and trying to access login page, redirect to dashboard
-    if (session && pathname.startsWith(`/${currentLocale}/auth/login`)) {
-      console.log('🔒 Middleware: Authenticated user on login page, redirecting to dashboard')
-      const url = req.nextUrl.clone()
-      url.pathname = `/${currentLocale}/dashboard`
-      // Use 302 redirect to prevent caching issues
-      return NextResponse.redirect(url, 302)
-    }
-
-    // Check for invalid cookies and clear them if needed
-    const authToken0 = req.cookies.get('sb-auth-token.0')
-    const authToken1 = req.cookies.get('sb-auth-token.1')
     
-    // Improved cookie validation - only check for obviously invalid cookies
-    const isTruncated = (cookie: any) => {
-      if (!cookie || !cookie.value) return false
-      if (cookie.value.endsWith('...')) return true
-      // Don't check length for refresh tokens as they can be short
-      if (cookie.value.length < 5) return true // Very minimal length check
-      return false
+    // Check if the path is an auth route
+    const isAuthRoute = authRoutes.some(route => 
+      pathname.includes(route)
+    )
+    
+    // If accessing protected route without session, redirect to login
+    if (isProtectedRoute && !session) {
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
     }
     
-    // Only validate access token length, refresh tokens can be short
-    const isAccessTokenTruncated = authToken0 && isTruncated(authToken0)
-    const isRefreshTokenTruncated = authToken1 && authToken1.value.length < 5 // Very minimal check for refresh token
+    // If accessing auth route with session, redirect to dashboard
+    if (isAuthRoute && session) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
     
-    if (isAccessTokenTruncated || isRefreshTokenTruncated) {
-      console.log('🔒 Middleware: Detected invalid/truncated cookies, clearing them')
-      console.log('🔒 Middleware: Token0 length:', authToken0?.value?.length || 0, 'Token1 length:', authToken1?.value?.length || 0)
-      
-              if (!session) { // Only clear cookies if we have a valid session to prevent redirect loops
-          console.log('🔒 Middleware: No valid session, clearing cookies and redirecting to login')
-          res.cookies.delete('sb-auth-token.0')
-          res.cookies.delete('sb-auth-token.1')
-          res.cookies.delete('sb-ekdjxzhujettocosgzql-auth-token.0')
-          res.cookies.delete('sb-ekdjxzhujettocosgzql-auth-token.1')
-          
-          return NextResponse.redirect(new URL('/en/auth/login', req.url))
-      } else {
-        console.log('🔒 Middleware: Valid session exists, not clearing cookies to prevent redirect loop')
-      }
-    } else {
-      console.log(`🔒 Middleware: Cookie validation passed - Token0: ${authToken0?.value?.length || 0} chars, Token1: ${authToken1?.value?.length || 0} chars`)
-    }
-
-    // Handle root path - redirect to locale dashboard (if authenticated) or login
-    if (req.nextUrl.pathname === '/') {
-      const url = req.nextUrl.clone()
-      if (session) {
-        console.log('🔒 Middleware: Root path, authenticated user, redirecting to dashboard')
-        url.pathname = `/${currentLocale}/dashboard`
-      } else {
-        console.log('🔒 Middleware: Root path, unauthenticated user, redirecting to login')
-        url.pathname = `/${currentLocale}/auth/login`
-      }
-      return NextResponse.redirect(url)
-    }
-
-    return res
+    // Continue with the request
+    return NextResponse.next()
   } catch (error) {
-    console.error('🔒 Middleware error:', error)
-    // On error, allow the request to continue but log the issue
-    // This prevents the app from being completely broken due to slow database
-    console.log('🔒 Middleware: Allowing request despite error')
-    return res
+    console.error('Middleware error:', error)
+    // On error, continue with the request
+    return NextResponse.next()
   }
 }
 
@@ -231,11 +68,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - .well-known (system files)
-     * - robots.txt (SEO files)
-     * - sitemap.xml (SEO files)
-     * - manifest.json (PWA files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.well-known|robots.txt|sitemap.xml|manifest.json).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 }
