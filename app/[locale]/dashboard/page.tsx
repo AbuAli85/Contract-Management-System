@@ -260,6 +260,15 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             >
               Check Cookies
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log('🔧 Dashboard: Force refreshing page...')
+                window.location.reload()
+              }}
+            >
+              Force Refresh
+            </Button>
           </div>
         </div>
       </div>

@@ -156,6 +156,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
+    // Debug: Check what cookies are available
+    if (typeof window !== 'undefined') {
+      const cookies = document.cookie.split(';').map(c => c.trim())
+      const authCookies = cookies.filter(c => c.includes('auth-token') || c.includes('sb-'))
+      console.log('🔧 Available auth cookies:', authCookies)
+    }
+
     try {
       console.log('🔧 Getting session...')
       const { data: { session: currentSession } } = await supabaseClient.auth.getSession()
@@ -177,6 +184,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (refreshError) {
             console.log('🔧 Session refresh failed:', refreshError.message)
+            
+            // Try manual session check as fallback
+            console.log('🔧 Trying manual session check...')
+            try {
+              const response = await fetch('/api/auth/check-session')
+              const data = await response.json()
+              console.log('🔧 Manual session check result:', data)
+              
+              if (data.success && data.hasSession && data.user) {
+                console.log('🔧 Manual session check found user, updating state...')
+                // Create a mock session object
+                const mockSession = {
+                  user: data.user,
+                  access_token: 'manual-check',
+                  refresh_token: 'manual-check',
+                  expires_in: 3600,
+                  token_type: 'bearer'
+                }
+                setSession(mockSession as any)
+                setUser(data.user)
+              }
+            } catch (manualError) {
+              console.log('🔧 Manual session check failed:', manualError)
+            }
           } else if (refreshedSession) {
             console.log('🔧 Session refreshed successfully')
             setSession(refreshedSession)
@@ -188,30 +219,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Load profile data in background if user exists
-      if (currentSession?.user || (currentSession?.user && !currentSession)) {
-        const userId = currentSession?.user?.id || currentSession?.user?.id
-        if (userId) {
-          console.log('🔧 Loading profile data in background...')
-          setTimeout(async () => {
-            try {
-              const userProfile = await loadUserProfile(userId)
-              const userRoles = await loadUserRoles(userId)
-              
-              setProfile(userProfile)
-              setRoles(userRoles)
-              
-              if (!userProfile) {
-                setProfileNotFound(true)
-              }
-              
-              console.log('🔧 Profile data loaded:', { profile: !!userProfile, roles: userRoles })
-            } catch (error) {
-              console.warn('Profile loading failed, continuing with basic auth')
-              setProfile(null)
-              setRoles([])
+      const userId = currentSession?.user?.id
+      if (userId) {
+        console.log('🔧 Loading profile data in background...')
+        setTimeout(async () => {
+          try {
+            const userProfile = await loadUserProfile(userId)
+            const userRoles = await loadUserRoles(userId)
+            
+            setProfile(userProfile)
+            setRoles(userRoles)
+            
+            if (!userProfile) {
+              setProfileNotFound(true)
             }
-          }, 100)
-        }
+            
+            console.log('🔧 Profile data loaded:', { profile: !!userProfile, roles: userRoles })
+          } catch (error) {
+            console.warn('Profile loading failed, continuing with basic auth')
+            setProfile(null)
+            setRoles([])
+          }
+        }, 100)
       } else {
         setProfile(null)
         setRoles([])
