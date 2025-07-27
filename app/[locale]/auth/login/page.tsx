@@ -21,11 +21,14 @@ export default function LoginPage() {
       console.log('🔧 User exists on login page, checking server session...')
       const checkServerSession = async () => {
         try {
-          const response = await fetch('/api/debug/session')
+          const response = await fetch('/api/auth/check-session')
           const data = await response.json()
           console.log('🔧 Server session check result:', data)
           
-          if (!data.debug?.hasSession) {
+          if (data.success && data.hasSession) {
+            console.log('🔧 Server session confirmed, redirecting to dashboard')
+            router.push(`/${locale}/dashboard`)
+          } else {
             console.log('🔧 Server has no session, clearing client state')
             // Force logout to clear client state
             await fetch('/api/force-logout')
@@ -39,7 +42,7 @@ export default function LoginPage() {
       // Add a small delay to allow middleware to process
       setTimeout(checkServerSession, 500)
     }
-  }, [user, loading, mounted])
+  }, [user, loading, mounted, router, locale])
 
   // Manual redirect function for testing
   const handleManualRedirect = () => {
@@ -76,10 +79,13 @@ export default function LoginPage() {
             onClick={async () => {
               console.log('🔧 Checking server-side session...')
               try {
-                const response = await fetch('/api/debug/session')
+                const response = await fetch('/api/auth/check-session')
                 const data = await response.json()
                 console.log('🔧 Server session check:', data)
-                if (!data.debug?.hasSession) {
+                if (data.success && data.hasSession) {
+                  console.log('🔧 Server session confirmed, redirecting to dashboard')
+                  router.push(`/${locale}/dashboard`)
+                } else {
                   console.log('🔧 Server has no session, clearing client state')
                   // Force logout to clear client state
                   await fetch('/api/force-logout')

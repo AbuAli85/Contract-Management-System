@@ -270,6 +270,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setMounted(true)
     }, 5000)
 
+    // Expose auth state for debugging
+    if (typeof window !== 'undefined') {
+      (window as any).__AUTH_STATE__ = {
+        session,
+        user,
+        profile,
+        roles,
+        loading,
+        mounted,
+        profileNotFound
+      }
+    }
+
     // Cleanup function
     return () => {
       console.log('🔧 AuthProvider cleanup')
@@ -278,6 +291,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(finalSafetyTimeout)
     }
   }, [supabaseClient])
+
+  // Update debug state when auth state changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__AUTH_STATE__ = {
+        session,
+        user,
+        profile,
+        roles,
+        loading,
+        mounted,
+        profileNotFound
+      }
+    }
+  }, [session, user, profile, roles, loading, mounted, profileNotFound])
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {

@@ -41,8 +41,7 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Login successful")
       setSuccess("Login successful! Redirecting...")
       
-      // The auth provider will handle the session update
-      // and the login page will redirect automatically
+      // Use Next.js router for proper navigation
       setTimeout(() => {
         router.push('/en/dashboard')
       }, 1000)

@@ -52,15 +52,12 @@ export async function POST(request: NextRequest) {
 
     // Check if we have session data
     if (data.session) {
-      console.log('🔐 Session data available, manually setting cookies...')
+      console.log('🔐 Session data available, setting cookies...')
       
-      // Manually set the auth cookies based on the session
-      const session = data.session
-      
-      // Set the main auth token cookie
+      // Set the generic auth token cookies that middleware expects
       response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token.0',
-        value: session.access_token,
+        name: 'sb-auth-token.0',
+        value: data.session.access_token,
         path: '/',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -68,10 +65,9 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7 // 7 days
       })
       
-      // Set the refresh token cookie
       response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token.1',
-        value: session.refresh_token,
+        name: 'sb-auth-token.1',
+        value: data.session.refresh_token,
         path: '/',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -79,16 +75,7 @@ export async function POST(request: NextRequest) {
         maxAge: 60 * 60 * 24 * 7 // 7 days
       })
       
-      console.log('🔐 Manually set auth cookies')
-      
-      // Check what cookies are now in the response
-      const responseCookies = response.cookies.getAll()
-      const authCookies = responseCookies.filter(cookie => 
-        cookie.name.includes('auth-token') || 
-        cookie.name.includes('sb-')
-      )
-      
-      console.log('🔐 Response auth cookies after manual set:', authCookies.map(c => c.name))
+      console.log('🔐 Set auth cookies for middleware')
     } else {
       console.log('🔐 No session data available')
     }

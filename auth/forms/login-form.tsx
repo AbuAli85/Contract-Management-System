@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -16,6 +17,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   
   const { signIn } = useAuth()
+  const router = useRouter()
+  
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
@@ -29,7 +32,7 @@ export function LoginForm() {
     try {
       console.log("🔐 Login Debug - Starting server-side login process...")
       
-      // Use server-side login API instead of client-side
+      // Use server-side login API
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -47,28 +50,29 @@ export function LoginForm() {
         return
       }
 
-                   console.log("🔐 Login Debug - Server login successful")
+      console.log("🔐 Login Debug - Server login successful")
 
-             // Check if the server session is now valid
-             try {
-               console.log("🔐 Login Debug - Checking server session...")
-               const sessionCheckResponse = await fetch('/api/auth/check-session')
-               const sessionCheckData = await sessionCheckResponse.json()
-               
-               if (sessionCheckData.success && sessionCheckData.hasSession) {
-                 console.log("🔐 Login Debug - Server session confirmed, redirecting to dashboard")
-                 window.location.href = redirectTo
-               } else {
-                 console.log("🔐 Login Debug - Server session not found, reloading page")
-                 window.location.reload()
-               }
-             } catch (error) {
-               console.error("🔐 Login Debug - Session check failed:", error)
-               // Fallback to redirect
-               setTimeout(() => {
-                 window.location.href = redirectTo
-               }, 500)
-             }
+      // Check if the server session is now valid
+      try {
+        console.log("🔐 Login Debug - Checking server session...")
+        const sessionCheckResponse = await fetch('/api/auth/check-session')
+        const sessionCheckData = await sessionCheckResponse.json()
+        
+        if (sessionCheckData.success && sessionCheckData.hasSession) {
+          console.log("🔐 Login Debug - Server session confirmed, redirecting to dashboard")
+          // Use Next.js router for proper navigation
+          router.push(redirectTo)
+        } else {
+          console.log("🔐 Login Debug - Server session not found, reloading page")
+          window.location.reload()
+        }
+      } catch (error) {
+        console.error("🔐 Login Debug - Session check failed:", error)
+        // Fallback to redirect
+        setTimeout(() => {
+          router.push(redirectTo)
+        }, 500)
+      }
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
