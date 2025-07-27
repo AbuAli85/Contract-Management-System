@@ -19,6 +19,8 @@ export async function createClient() {
     {
       cookies: {
         async get(name: string) {
+          console.log('🔧 Server: Supabase requesting cookie:', name)
+          
           // Handle auth token cookies - check both generic and project-specific names
           if (name.includes('auth-token')) {
             // Check for generic cookie names first (set by login API)
@@ -37,6 +39,7 @@ export async function createClient() {
                 console.log('🔧 Server: Using project-specific auth token cookie')
                 return projectCookie.value
               }
+              console.log('🔧 Server: No auth token cookie found')
               return null
             }
             
@@ -54,10 +57,70 @@ export async function createClient() {
                 console.log('🔧 Server: Using project-specific refresh token cookie')
                 return projectCookie.value
               }
+              console.log('🔧 Server: No refresh token cookie found')
+              return null
+            }
+            
+            // Handle direct project-specific cookie requests
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
+                name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific auth token cookie (direct)')
+                return projectCookie.value
+              }
+              console.log('🔧 Server: No project-specific auth token cookie found')
+              return null
+            }
+            
+            if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
+                name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific refresh token cookie (direct)')
+                return projectCookie.value
+              }
+              console.log('🔧 Server: No project-specific refresh token cookie found')
+              return null
+            }
+            
+            // Handle code-verifier and user cookie variants with indices
+            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token-code-verifier.')) {
+              // For code-verifier variants, return the main auth token
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific auth token for code-verifier variant:', name)
+                return projectCookie.value
+              }
+              console.log('🔧 Server: No auth token found for code-verifier variant:', name)
+              return null
+            }
+            
+            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token-user.')) {
+              // For user variants, return the refresh token
+              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific refresh token for user variant:', name)
+                return projectCookie.value
+              }
+              console.log('🔧 Server: No refresh token found for user variant:', name)
+              return null
+            }
+            
+            // Handle other project-specific cookie indices (2, 3, 4, etc.)
+            if (name.startsWith('sb-ekdjxzhujettocosgzql-auth-token.')) {
+              const projectCookie = await cookieStore.get(name)
+              if (projectCookie?.value) {
+                console.log('🔧 Server: Using project-specific cookie:', name)
+                return projectCookie.value
+              }
+              console.log('🔧 Server: No project-specific cookie found:', name)
               return null
             }
             
             // For other auth token names, return null
+            console.log('🔧 Server: Unknown auth token name:', name)
             return null
           }
           

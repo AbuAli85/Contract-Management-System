@@ -52,18 +52,9 @@ export function LoginForm() {
 
       console.log("🔐 Login Debug - Server login successful")
 
-      // After successful login, redirect directly instead of checking session
+      // After successful login, redirect immediately
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
-      
-      // Use a small delay to ensure cookies are set, then redirect
-      setTimeout(() => {
-        router.push(redirectTo)
-      }, 1000)
-      
-      // Alternative: Force page reload to ensure fresh session state
-      // setTimeout(() => {
-      //   window.location.href = redirectTo
-      // }, 1000)
+      router.push(redirectTo)
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

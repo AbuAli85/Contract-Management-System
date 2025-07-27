@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { ApiErrorHandler } from '@/lib/api-error-handler'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,9 +9,12 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json()
     
     if (!email || !password) {
+      const error = ApiErrorHandler.handleValidationError({ 
+        message: 'Email and password are required' 
+      })
       return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
+        ApiErrorHandler.formatErrorResponse(error),
+        { status: error.status }
       )
     }
 
@@ -25,17 +29,19 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('🔐 Server login error:', error)
+      const apiError = ApiErrorHandler.handleAuthError(error)
       return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
+        ApiErrorHandler.formatErrorResponse(apiError),
+        { status: apiError.status }
       )
     }
 
     if (!data.user) {
       console.error('🔐 No user returned from sign in')
+      const error = ApiErrorHandler.createError('Authentication failed', 'AUTH_FAILED', 400)
       return NextResponse.json(
-        { error: 'Authentication failed' },
-        { status: 400 }
+        ApiErrorHandler.formatErrorResponse(error),
+        { status: error.status }
       )
     }
 
@@ -60,8 +66,8 @@ export async function POST(request: NextRequest) {
         value: data.session.access_token,
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true, // Always enforce HTTPS
+        sameSite: 'strict', // Stricter same-site policy
         maxAge: 60 * 60 * 24 * 7 // 7 days
       })
       
@@ -70,8 +76,8 @@ export async function POST(request: NextRequest) {
         value: data.session.refresh_token,
         path: '/',
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true, // Always enforce HTTPS
+        sameSite: 'strict', // Stricter same-site policy
         maxAge: 60 * 60 * 24 * 7 // 7 days
       })
       
@@ -90,9 +96,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('🔐 Server login API error:', error)
+    const apiError = ApiErrorHandler.handleGenericError(error)
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      ApiErrorHandler.formatErrorResponse(apiError),
+      { status: apiError.status }
     )
   }
 } 

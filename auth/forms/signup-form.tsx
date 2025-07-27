@@ -52,7 +52,7 @@ export function SignupForm() {
         status: 'pending' // All new users start as pending
       }
       
-      const { error } = await signUp(email, password, profile)
+      const { error } = await signUp(email, password)
 
       if (error) {
         console.error("📝 Signup Debug - Signup error:", error)

@@ -14,9 +14,23 @@ export const createClient = () => {
     throw new Error('Missing Supabase environment variables')
   }
   
+  // Check if we're in a browser environment before creating the client
+  if (typeof window === 'undefined') {
+    console.log('🔧 Client: SSR detected, returning null for cookie operations')
+    return null as any
+  }
+  
   return createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name: string) {
+        console.log('🔧 Client: Supabase requesting cookie:', name)
+        
+        // Ensure we're in a browser environment
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+          console.log('🔧 Client: Not in browser environment, returning null')
+          return null
+        }
+        
         // Handle both generic and project-specific cookie names
         if (name.includes('auth-token')) {
           // Check for generic cookie names first (set by login API)
@@ -30,6 +44,15 @@ export const createClient = () => {
               console.log('🔧 Client: Using generic auth token cookie')
               return cookie.split('=')[1]
             }
+            
+            // Fallback to project-specific name
+            const projectCookie = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.0='))
+            if (projectCookie) {
+              console.log('🔧 Client: Using project-specific auth token cookie')
+              return projectCookie.split('=')[1]
+            }
           }
           
           if (name === 'sb-auth-token.1' ||
@@ -41,9 +64,18 @@ export const createClient = () => {
               console.log('🔧 Client: Using generic refresh token cookie')
               return cookie.split('=')[1]
             }
+            
+            // Fallback to project-specific name
+            const projectCookie = document.cookie
+              .split('; ')
+              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.1='))
+            if (projectCookie) {
+              console.log('🔧 Client: Using project-specific refresh token cookie')
+              return projectCookie.split('=')[1]
+            }
           }
           
-          // Fallback to project-specific names
+          // Handle direct project-specific cookie requests
           if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
               name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
               name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
@@ -51,7 +83,7 @@ export const createClient = () => {
               .split('; ')
               .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.0='))
             if (cookie) {
-              console.log('🔧 Client: Using project-specific auth token cookie')
+              console.log('🔧 Client: Using project-specific auth token cookie (direct)')
               return cookie.split('=')[1]
             }
           }
@@ -62,16 +94,24 @@ export const createClient = () => {
               .split('; ')
               .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.1='))
             if (cookie) {
-              console.log('🔧 Client: Using project-specific refresh token cookie')
+              console.log('🔧 Client: Using project-specific refresh token cookie (direct)')
               return cookie.split('=')[1]
             }
           }
+          
+          console.log('🔧 Client: No matching cookie found for:', name)
         }
         
         // For other cookies, return null (let Supabase handle them)
         return null
       },
       set(name: string, value: string, options: any) {
+        // Ensure we're in a browser environment
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+          console.log('🔧 Client: Not in browser environment, skipping cookie set')
+          return
+        }
+        
         // Set both generic and project-specific cookies for compatibility
         if (name === 'sb-auth-token' || 
             name === 'sb-auth-token.0' ||
@@ -85,6 +125,12 @@ export const createClient = () => {
         }
       },
       remove(name: string, options: any) {
+        // Ensure we're in a browser environment
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+          console.log('🔧 Client: Not in browser environment, skipping cookie remove')
+          return
+        }
+        
         // Remove both generic and project-specific cookies
         if (name === 'sb-auth-token' || 
             name === 'sb-auth-token.0' ||
