@@ -68,3 +68,6 @@ export default function EditPromoterPage() {
     </div>
   )
 }
+
+// Force dynamic rendering to prevent SSR issues with useAuth
+export const dynamic = 'force-dynamic'
