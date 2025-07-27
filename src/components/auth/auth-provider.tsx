@@ -75,15 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-<<<<<<< HEAD
-    if (!supabaseClient) return null
-=======
     console.log('👤 Loading user profile for:', userId)
-    if (!supabase) {
+    if (!supabaseClient) {
       console.error('❌ No supabase client for profile loading')
       return null
     }
->>>>>>> 677b0476a8961fd36b64a4f2031137e55ce9d43f
     
     try {
       console.log('👤 Querying users table...')
@@ -100,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fallback to profiles table
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabaseClient
         .from('profiles')
         .select('id, email, role, created_at')
         .eq('id', userId)
@@ -267,15 +263,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Authentication methods
   const signIn = async (email: string, password: string) => {
-<<<<<<< HEAD
-    if (!supabaseClient) {
-      return { error: 'Authentication service not available' }
-    }
-    try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password })
-=======
     console.log('🔐 SignIn called with email:', email)
-    if (!supabase) {
+    if (!supabaseClient) {
       console.error('❌ No supabase client available')
       return { error: 'Authentication service not available' }
     }
@@ -283,15 +272,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('🔐 Attempting sign in with Supabase...')
       
       // Add timeout to prevent hanging
-      const signInPromise = supabase.auth.signInWithPassword({ email, password })
+      const signInPromise = supabaseClient.auth.signInWithPassword({ email, password })
       const timeoutPromise = new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error('Sign in timeout')), 10000)
       )
       
       const { data, error } = await Promise.race([signInPromise, timeoutPromise])
       console.log('🔐 Sign in result:', { success: !error, user: data?.user?.id })
-      
->>>>>>> 677b0476a8961fd36b64a4f2031137e55ce9d43f
       if (error) {
         console.error('Sign in error:', error)
         return { error: error.message }
@@ -356,14 +343,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: 'Authentication service not available' }
     }
     try {
-<<<<<<< HEAD
-      const { error } = await supabaseClient.auth.signUp({
-=======
       console.log('📝 SignUp called with email:', email, 'profile:', profile)
       
       // First, create the user in Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
->>>>>>> 677b0476a8961fd36b64a4f2031137e55ce9d43f
+      const { data, error } = await supabaseClient.auth.signUp({
         email,
         password,
         options: {
@@ -380,7 +363,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log('✅ Auth user created:', data.user.id)
         
         // Create user profile in the users table
-        const { error: profileError } = await supabase
+        const { error: profileError } = await supabaseClient
           .from('users')
           .insert({
             id: data.user.id,
