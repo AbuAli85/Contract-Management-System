@@ -41,9 +41,11 @@ export async function GET(request: NextRequest) {
           description: type.description,
           category: type.category,
           makecomTemplateId: type.makecomTemplateId,
-          requiredFields: type.requiredFields,
-          businessRules: type.businessRules,
-          omanCompliant: type.omanCompliant
+          requiredFields: type.validation.requiredFields,
+          optionalFields: type.validation.optionalFields,
+          fieldsCount: type.fields.length,
+          isActive: type.isActive,
+          requiresApproval: type.requiresApproval
         }))
       })
     }

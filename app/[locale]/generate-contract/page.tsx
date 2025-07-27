@@ -227,13 +227,13 @@ function ContractTypesOverview() {
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-medium">Required Fields:</span>
                       <Badge className="text-xs bg-secondary text-secondary-foreground">
-                        {config.validation.requiredFields.length}
+                        {config.validation?.requiredFields?.length || 0}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2 text-xs">
                       <span className="font-medium">Total Fields:</span>
                       <Badge className="text-xs bg-secondary text-secondary-foreground">
-                        {config.fields.length}
+                        {config.fields?.length || 0}
                       </Badge>
                     </div>
                   </div>
@@ -246,14 +246,14 @@ function ContractTypesOverview() {
                   <div>
                     <h5 className="text-xs font-medium mb-1">Required Fields:</h5>
                     <div className="flex flex-wrap gap-1">
-                      {config.validation.requiredFields.slice(0, 4).map((field, idx) => (
+                      {config.validation?.requiredFields?.slice(0, 4).map((field, idx) => (
                         <Badge key={idx} className="text-xs border border-input bg-background">
                           {field}
                         </Badge>
                       ))}
-                      {config.validation.requiredFields.length > 4 && (
+                      {(config.validation?.requiredFields?.length || 0) > 4 && (
                         <Badge className="text-xs border border-input bg-background">
-                          +{config.validation.requiredFields.length - 4} more
+                          +{(config.validation?.requiredFields?.length || 0) - 4} more
                         </Badge>
                       )}
                     </div>
@@ -262,14 +262,14 @@ function ContractTypesOverview() {
                   <div>
                     <h5 className="text-xs font-medium mb-1">Field Types:</h5>
                     <div className="flex flex-wrap gap-1">
-                      {config.fields.slice(0, 4).map((field, idx) => (
+                      {config.fields?.slice(0, 4).map((field, idx) => (
                         <Badge key={idx} className="text-xs border border-input bg-background">
                           {field.type}
                         </Badge>
                       ))}
-                      {config.fields.length > 4 && (
+                      {(config.fields?.length || 0) > 4 && (
                         <Badge className="text-xs border border-input bg-background">
-                          +{config.fields.length - 4} more
+                          +{(config.fields?.length || 0) - 4} more
                         </Badge>
                       )}
                     </div>
