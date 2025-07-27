@@ -68,6 +68,7 @@ import {
   JOB_TITLES, 
   CURRENCIES, 
   WORK_LOCATIONS,
+  DEPARTMENTS,
 } from "@/constants/contract-options"
 import { createContract, updateContract, ContractInsert } from "@/app/actions/contracts"
 
@@ -138,7 +139,7 @@ export default function UnifiedContractGeneratorForm({
       email: contract?.email || "",
       job_title: contract?.job_title || "",
       work_location: contract?.work_location || "",
-      department: "",
+      department: contract?.department || "",
       contract_type: "",
       currency: "OMR", // Default to OMR for Oman market
       basic_salary: contract?.contract_value || 0,
@@ -631,7 +632,7 @@ export default function UnifiedContractGeneratorForm({
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
                     name="job_title"
@@ -647,6 +648,31 @@ export default function UnifiedContractGeneratorForm({
                               {JOB_TITLES.map((title) => (
                                 <SelectItem key={typeof title === 'string' ? title : title.value} value={typeof title === 'string' ? title : title.value}>
                                   {typeof title === 'string' ? title : title.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {DEPARTMENTS.map((dept) => (
+                                <SelectItem key={dept.value} value={dept.value}>
+                                  {dept.label}
                                 </SelectItem>
                               ))}
                             </SelectContent>
