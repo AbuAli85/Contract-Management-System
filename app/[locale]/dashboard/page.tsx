@@ -243,6 +243,23 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
             >
               Check Session
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                console.log('🔧 Dashboard: Checking cookies...')
+                const cookies = document.cookie.split(';').map(c => c.trim())
+                const authCookies = cookies.filter(c => c.includes('auth-token') || c.includes('sb-'))
+                console.log('🔧 Dashboard: Auth cookies found:', authCookies)
+                
+                if (authCookies.length > 0) {
+                  alert(`Found ${authCookies.length} auth cookies. Check console for details.`)
+                } else {
+                  alert('No auth cookies found. Please log in again.')
+                }
+              }}
+            >
+              Check Cookies
+            </Button>
           </div>
         </div>
       </div>
