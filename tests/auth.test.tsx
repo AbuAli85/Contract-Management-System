@@ -30,14 +30,14 @@ describe('Auth Tests', () => {
       const mockUseAuth = useAuth as jest.Mock
       mockUseAuth.mockReturnValue({
         user: null,
-        role: null,
+        roles: [],
         loading: true
       })
 
       expect(useAuth().loading).toBe(true)
     })
 
-    it('should return user and role when authenticated', () => {
+    it('should return user and roles when authenticated', () => {
       const mockUser = {
         id: '123',
         email: 'test@example.com'
@@ -46,13 +46,13 @@ describe('Auth Tests', () => {
       const mockUseAuth = useAuth as jest.Mock
       mockUseAuth.mockReturnValue({
         user: mockUser,
-        role: 'admin',
+        roles: ['admin'],
         loading: false
       })
 
       const auth = useAuth()
       expect(auth.user).toBe(mockUser)
-      expect(auth.role).toBe('admin')
+      expect(auth.roles).toContain('admin')
     })
   })
 
@@ -61,7 +61,7 @@ describe('Auth Tests', () => {
       const mockUseAuth = useAuth as jest.Mock
       mockUseAuth.mockReturnValue({
         user: null,
-        role: null,
+        roles: [],
         loading: true
       })
 
@@ -78,7 +78,7 @@ describe('Auth Tests', () => {
       const mockUseAuth = useAuth as jest.Mock
       mockUseAuth.mockReturnValue({
         user: { id: '123' },
-        role: 'admin',
+        roles: ['admin'],
         loading: false
       })
 
@@ -95,7 +95,7 @@ describe('Auth Tests', () => {
       const mockUseAuth = useAuth as jest.Mock
       mockUseAuth.mockReturnValue({
         user: { id: '123' },
-        role: 'client',
+        roles: ['client'],
         loading: false
       })
 

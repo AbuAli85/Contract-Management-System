@@ -66,6 +66,13 @@ export async function middleware(req: NextRequest) {
     // Get session with reasonable timeout for slow database connections
     console.log('🔒 Middleware: Checking session for path:', pathname)
     
+    // Check for redirect loops by looking at referer
+    const referer = req.headers.get('referer')
+    if (referer && pathname.includes('/auth/login') && referer.includes('/auth/login')) {
+      console.log('🔒 Middleware: Potential redirect loop detected, allowing request')
+      return res
+    }
+    
     const sessionPromise = supabase.auth.getSession()
     const { data: { session }, error: sessionError } = await Promise.race([
       sessionPromise,
@@ -161,38 +168,58 @@ export async function middleware(req: NextRequest) {
     const authToken0 = req.cookies.get('sb-auth-token.0')
     const authToken1 = req.cookies.get('sb-auth-token.1')
     
-    // Check for truncated cookies (ending with ...) - removed size limits since we're not truncating
-    const isTruncated = (cookie: any) => cookie && cookie.value && (
-      cookie.value.endsWith('...') || 
-      cookie.value.length < 50
-    )
+    // Improved cookie validation - only check for obviously invalid cookies
+    const isTruncated = (cookie: any) => {
+      if (!cookie || !cookie.value) return false
+      
+      // Check for obvious truncation indicators
+      if (cookie.value.endsWith('...')) return true
+      
+      // Check for extremely short tokens (less than 10 chars is suspicious)
+      if (cookie.value.length < 10) return true
+      
+      // Check for malformed JWT tokens (should have 3 parts separated by dots)
+      const parts = cookie.value.split('.')
+      if (parts.length !== 3) return true
+      
+      return false
+    }
     
+    // Only clear cookies if they are obviously invalid
     if (isTruncated(authToken0) || isTruncated(authToken1)) {
       console.log('🔒 Middleware: Detected invalid/truncated cookies, clearing them')
       console.log(`🔒 Middleware: Token0 length: ${authToken0?.value?.length || 0}, Token1 length: ${authToken1?.value?.length || 0}`)
       
-      // Clear the invalid cookies
-      res.cookies.set({
-        name: 'sb-auth-token.0',
-        value: '',
-        expires: new Date(0),
-        path: '/'
-      })
-      res.cookies.set({
-        name: 'sb-auth-token.1',
-        value: '',
-        expires: new Date(0),
-        path: '/'
-      })
-      
-      // If user was trying to access a protected route, redirect to login
-      if (!isPublicRoute) {
-        console.log('🔒 Middleware: Redirecting to login after clearing invalid cookies')
-        const url = req.nextUrl.clone()
-        url.pathname = `/${currentLocale}/auth/login`
-        url.searchParams.set('redirect', pathname)
-        return NextResponse.redirect(url)
+      // Only clear cookies if we have a valid session to prevent redirect loops
+      if (!session) {
+        // Clear the invalid cookies
+        res.cookies.set({
+          name: 'sb-auth-token.0',
+          value: '',
+          expires: new Date(0),
+          path: '/'
+        })
+        res.cookies.set({
+          name: 'sb-auth-token.1',
+          value: '',
+          expires: new Date(0),
+          path: '/'
+        })
+        
+        // If user was trying to access a protected route, redirect to login
+        if (!isPublicRoute) {
+          console.log('🔒 Middleware: Redirecting to login after clearing invalid cookies')
+          const url = req.nextUrl.clone()
+          url.pathname = `/${currentLocale}/auth/login`
+          url.searchParams.set('redirect', pathname)
+          return NextResponse.redirect(url)
+        }
+      } else {
+        console.log('🔒 Middleware: Valid session exists, not clearing cookies to prevent redirect loop')
       }
+    } else {
+      // Log cookie status for debugging (but don't clear valid cookies)
+      console.log(`🔒 Middleware: Cookie validation passed - Token0: ${authToken0?.value?.length || 0} chars, Token1: ${authToken1?.value?.length || 0} chars`)
     }
 
     // Handle root path - redirect to locale dashboard (if authenticated) or login
