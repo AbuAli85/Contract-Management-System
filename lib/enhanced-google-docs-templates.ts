@@ -497,7 +497,7 @@ export const freelanceContractTemplate: EnhancedTemplateConfig = {
 }
 
 // Export all templates
-export const enhancedTemplates = {
+export const enhancedTemplates: Record<string, EnhancedTemplateConfig> = {
   'enhanced-employment': enhancedEmploymentTemplate,
   'service-contract': serviceContractTemplate,
   'freelance-contract': freelanceContractTemplate
