@@ -586,4 +586,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       </div>
     )
   }
-} 
+}
+
+// Force dynamic rendering to prevent SSR issues with useAuth
+export const dynamic = 'force-dynamic'

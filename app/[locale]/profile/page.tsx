@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, Shield, Settings } from "lucide-react"
 
 // Dynamically import the UserProfile component to prevent SSR issues
-const UserProfile = dynamic(
+const UserProfile = dynamicImport(
   () => import("@/src/components/auth/user-profile").then(mod => ({ default: mod.UserProfile })),
   { 
     ssr: false,
@@ -91,4 +91,7 @@ export default function ProfilePage() {
       </Card>
     </div>
   )
-} 
+}
+
+// Force dynamic rendering to prevent SSR issues with useAuth
+export const dynamic = 'force-dynamic'
