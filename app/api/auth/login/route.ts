@@ -36,6 +36,18 @@ export async function POST(request: NextRequest) {
 
     console.log('🔐 Server login successful for user:', data.user.id)
 
+    // Debug: Log session details
+    if (data.session) {
+      console.log('🔐 Session details:', {
+        accessTokenLength: data.session.access_token?.length || 0,
+        refreshTokenLength: data.session.refresh_token?.length || 0,
+        accessTokenPreview: data.session.access_token?.substring(0, 50) + '...',
+        refreshTokenPreview: data.session.refresh_token?.substring(0, 50) + '...',
+        expiresAt: data.session.expires_at,
+        tokenType: data.session.token_type
+      })
+    }
+
     // Create response with success
     const response = NextResponse.json(AuthErrorHandler.createSuccess({
       user: {

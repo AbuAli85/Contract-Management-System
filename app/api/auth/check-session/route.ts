@@ -32,33 +32,58 @@ export async function GET() {
     
     // Try to get session first
     console.log('🔐 Attempting to get session from Supabase...')
+    
+    // If we have tokens, try to set the session manually
+    if (projectToken0?.value && projectToken1?.value) {
+      console.log('🔐 Attempting to set session manually with tokens...')
+      const { data: { session: manualSession }, error: manualError } = await supabase.auth.setSession({
+        access_token: projectToken0.value,
+        refresh_token: projectToken1.value
+      })
+      
+      if (manualSession) {
+        console.log('🔐 Manual session set successfully for user:', manualSession.user.id)
+        return NextResponse.json({
+          success: true,
+          hasSession: true,
+          user: {
+            id: manualSession.user.id,
+            email: manualSession.user.email
+          }
+        })
+      } else {
+        console.log('🔐 Manual session set failed:', manualError?.message)
+      }
+    }
+    
+    // Fallback to normal session check
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     console.log('🔐 Session result:', session ? 'found' : 'not found')
     console.log('🔐 Session error:', sessionError ? sessionError.message : 'none')
     
+    // Debug: Always try to decode the JWT token to see what's in it
+    if (projectToken0?.value) {
+      try {
+        const tokenParts = projectToken0.value.split('.')
+        if (tokenParts.length === 3) {
+          const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+          console.log('🔐 JWT payload:', {
+            exp: payload.exp,
+            iat: payload.iat,
+            sub: payload.sub,
+            aud: payload.aud,
+            iss: payload.iss,
+            currentTime: Math.floor(Date.now() / 1000),
+            isExpired: payload.exp < Math.floor(Date.now() / 1000)
+          })
+        }
+      } catch (decodeError) {
+        console.log('🔐 JWT decode error:', decodeError)
+      }
+    }
+    
     if (sessionError) {
       console.log('🔐 Session error:', sessionError.message)
-      
-      // Debug: Try to decode the JWT token manually to see what's wrong
-      if (projectToken0?.value) {
-        try {
-          const tokenParts = projectToken0.value.split('.')
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
-            console.log('🔐 JWT payload:', {
-              exp: payload.exp,
-              iat: payload.iat,
-              sub: payload.sub,
-              aud: payload.aud,
-              iss: payload.iss,
-              currentTime: Math.floor(Date.now() / 1000)
-            })
-          }
-        } catch (decodeError) {
-          console.log('🔐 JWT decode error:', decodeError)
-        }
-      }
-      
       return NextResponse.json({ 
         success: false, 
         hasSession: false, 
