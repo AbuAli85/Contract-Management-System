@@ -76,7 +76,26 @@ export async function GET() {
       }
     }
     
-    // Fallback to normal session check
+    // Try getUser() first for better security
+    console.log('🔐 Trying getUser() for secure authentication...')
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (userError) {
+      console.log('🔐 User check error:', userError.message)
+    } else if (user) {
+      console.log('🔐 User found via getUser():', user.id)
+      return NextResponse.json({
+        success: true,
+        hasSession: true,
+        user: {
+          id: user.id,
+          email: user.email
+        }
+      })
+    }
+    
+    // Fallback to getSession() if getUser() fails
+    console.log('🔐 getUser() failed, trying getSession()...')
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     console.log('🔐 Session result:', session ? 'found' : 'not found')
     console.log('🔐 Session error:', sessionError ? sessionError.message : 'none')
@@ -124,30 +143,6 @@ export async function GET() {
         user: {
           id: session.user.id,
           email: session.user.email
-        }
-      })
-    }
-    
-    console.log('🔐 Session not found, trying getUser()...')
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (userError) {
-      console.log('🔐 User check error:', userError)
-      return NextResponse.json({ 
-        success: false, 
-        hasSession: false, 
-        error: userError.message 
-      })
-    }
-    
-    if (user) {
-      console.log('🔐 User found:', user.id)
-      return NextResponse.json({
-        success: true,
-        hasSession: true,
-        user: {
-          id: user.id,
-          email: user.email
         }
       })
     }

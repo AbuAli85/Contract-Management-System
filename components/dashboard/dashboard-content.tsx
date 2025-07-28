@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/src/components/auth/auth-provider"
 import { 
   FileText, 
   Users, 

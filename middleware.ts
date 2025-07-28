@@ -24,14 +24,15 @@ export async function middleware(request: NextRequest) {
     // Create Supabase client for middleware
     const supabase = createClient(request)
     
-    // Get current session
-    const { data: { session } } = await supabase.auth.getSession()
+    // Get current user using getUser() for better security
+    const { data: { user }, error } = await supabase.auth.getUser()
     
-    // Debug: Log session status
-    console.log('🔧 Middleware: Session check for path:', request.nextUrl.pathname, {
-      hasSession: !!session,
-      userId: session?.user?.id,
-      userEmail: session?.user?.email
+    // Debug: Log user status
+    console.log('🔧 Middleware: User check for path:', request.nextUrl.pathname, {
+      hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
+      error: error?.message
     })
     
     const { pathname } = request.nextUrl
@@ -50,15 +51,15 @@ export async function middleware(request: NextRequest) {
       pathname.includes(route) || pathname.includes(`/${locale}${route}`)
     )
     
-    // If accessing protected route without session, redirect to login
-    if (isProtectedRoute && !session) {
+    // If accessing protected route without user, redirect to login
+    if (isProtectedRoute && !user) {
       const loginUrl = new URL(`/${locale}/auth/login`, request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
     
-    // If accessing auth route with session, redirect to dashboard
-    if (isAuthRoute && session) {
+    // If accessing auth route with user, redirect to dashboard
+    if (isAuthRoute && user) {
       return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
     }
     

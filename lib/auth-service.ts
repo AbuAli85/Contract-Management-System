@@ -88,43 +88,29 @@ export class AuthService {
         console.log('🔧 AuthService: Available auth cookies:', authCookies)
       }
 
-      console.log('🔧 AuthService: Getting session...')
-      const { data: { session: currentSession } } = await client.auth.getSession()
+      console.log('🔧 AuthService: Getting user...')
+      const { data: { user }, error } = await client.auth.getUser()
       
-      console.log('🔧 AuthService: Session result:', currentSession ? 'found' : 'not found')
+      console.log('🔧 AuthService: User result:', user ? 'found' : 'not found', error ? `error: ${error.message}` : '')
       
-      // Only restore session if it's valid and not expired
-      if (currentSession && currentSession.expires_at) {
-        const now = Math.floor(Date.now() / 1000)
-        const expiresAt = currentSession.expires_at
+      if (user && !error) {
+        console.log('🔧 AuthService: Valid user found, restoring...')
         
-        if (expiresAt > now) {
-          console.log('🔧 AuthService: Valid session found, restoring...')
-          this.updateState({ 
-            session: currentSession, 
-            user: currentSession?.user ?? null,
-            loading: false,
-            mounted: true
-          })
-          
-          // Load user profile and roles if user exists
-          if (currentSession.user) {
-            await this.loadUserProfile(currentSession.user.id)
-            await this.loadUserRoles(currentSession.user.id)
-          }
-        } else {
-          console.log('🔧 AuthService: Session expired, clearing...')
-          // Clear expired session
-          await client.auth.signOut()
-          this.updateState({ 
-            session: null, 
-            user: null,
-            loading: false,
-            mounted: true
-          })
-        }
+        // Get session for additional session data if needed
+        const { data: { session } } = await client.auth.getSession()
+        
+        this.updateState({ 
+          session: session, 
+          user: user,
+          loading: false,
+          mounted: true
+        })
+        
+        // Load user profile and roles if user exists
+        await this.loadUserProfile(user.id)
+        await this.loadUserRoles(user.id)
       } else {
-        console.log('🔧 AuthService: No valid session found, requiring login')
+        console.log('🔧 AuthService: No valid user found, requiring login')
         this.updateState({ 
           session: null, 
           user: null,
