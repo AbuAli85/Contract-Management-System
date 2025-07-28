@@ -1,0 +1,341 @@
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
+
+interface AuthFormProps {
+  locale?: string;
+}
+
+export default function AuthForm({ locale }: AuthFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const validateForm = () => {
+    if (!email.trim()) {
+      toast({ title: "Missing Email", description: "Email is required.", variant: "destructive" });
+      return false;
+    }
+    if (!password.trim()) {
+      toast({ title: "Missing Password", description: "Password is required.", variant: "destructive" });
+      return false;
+    }
+    if (password.length < 6) {
+      toast({ title: "Password Too Short", description: "Password must be at least 6 characters.", variant: "destructive" });
+      return false;
+    }
+    if (!email.includes('@')) {
+      toast({ title: "Invalid Email", description: "Please enter a valid email address.", variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      const trimmedEmail = email.trim().toLowerCase();
+      const trimmedPassword = password.trim();
+      
+      // First check if the user exists in profiles
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', trimmedEmail)
+        .single();
+
+      if (!userProfile) {
+        toast({ 
+          title: "Account Not Found", 
+          description: "No account found with this email. Please sign up first.", 
+          variant: "destructive" 
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: trimmedEmail, 
+        password: trimmedPassword 
+      });
+
+      if (error) {
+        console.error("Sign in error:", error);
+        
+        if (error.message === 'Invalid login credentials') {
+          toast({ 
+            title: "Invalid Password", 
+            description: "The password you entered is incorrect. Please try again.", 
+            variant: "destructive" 
+          });
+        } else if (error.message.includes('Email not confirmed')) {
+          toast({ 
+            title: "Email Not Verified", 
+            description: "Please check your email and verify your account before signing in.", 
+            variant: "destructive" 
+          });
+        } else {
+          toast({ 
+            title: "Sign In Error", 
+            description: error.message || "An error occurred during sign in. Please try again.", 
+            variant: "destructive" 
+          });
+        }
+        return;
+      }
+
+      if (data?.user) {
+        try {
+          // Check if user has verified their email
+          if (!data.user.email_confirmed_at) {
+            toast({ 
+              title: "Email Not Verified", 
+              description: "Please check your email and verify your account before signing in.", 
+              variant: "destructive" 
+            })
+            await supabase.auth.signOut() // Sign out unverified user
+            return
+          }
+
+          // Get user profile with role
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('role, full_name')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileError) {
+          console.error("Error fetching profile:", profileError)
+          toast({ 
+            title: "Profile Error", 
+            description: "Could not load user profile. Please try again.", 
+            variant: "destructive" 
+          })
+          await supabase.auth.signOut() // Sign out if profile can't be loaded
+          return
+        }
+
+        // Show welcome message
+        toast({ 
+          title: "Welcome back!", 
+          description: `Signed in as ${profileData?.full_name || data.user.email}`,
+          variant: "default"
+        })
+
+        // Handle redirection with proper error handling
+        try {
+          const params = new URLSearchParams(window.location.search)
+          const redirectTo = params.get('redirectTo')
+          
+          let targetUrl = `/${locale || 'en'}/dashboard`
+          
+          if (redirectTo) {
+            const decodedUrl = decodeURIComponent(redirectTo)
+            // Ensure the URL is within our application
+            const redirectUrl = new URL(decodedUrl, window.location.origin)
+            if (redirectUrl.origin === window.location.origin) {
+              targetUrl = redirectUrl.pathname + redirectUrl.search
+            }
+          }
+          
+          // Use router for client-side navigation
+          router.push(targetUrl)
+          router.refresh()
+        } catch (error) {
+          console.error('Redirection error:', error)
+          // Fallback to dashboard on any navigation error
+          router.push(`/${locale || 'en'}/dashboard`)
+        }
+      }
+    } catch (error) {
+      console.error("Unexpected error during sign in:", error)
+      toast({ 
+        title: "Unexpected Error", 
+        description: "An unexpected error occurred. Please try again.", 
+        variant: "destructive" 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
+    setIsSubmitting(true)
+    
+    try {
+      const normalizedEmail = email.trim().toLowerCase()
+      
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .single()
+
+      if (existingUser) {
+        toast({ 
+          title: "Account Exists", 
+          description: "An account with this email already exists. Please sign in instead.", 
+          variant: "destructive" 
+        })
+        return
+      }
+
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.signUp({ 
+        email: normalizedEmail, 
+        password: password.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        console.error("Sign up error:", error)
+        if (error.message.includes('email')) {
+          toast({ 
+            title: "Invalid Email", 
+            description: "Please enter a valid email address.", 
+            variant: "destructive" 
+          })
+        } else if (error.message.includes('password')) {
+          toast({ 
+            title: "Invalid Password", 
+            description: "Password must be at least 6 characters long.", 
+            variant: "destructive" 
+          })
+        } else {
+          toast({ 
+            title: "Sign Up Error", 
+            description: error.message, 
+            variant: "destructive" 
+          })
+        }
+        return
+      }
+
+      if (user) {
+        const fullName = normalizedEmail.split('@')[0]
+        // Insert into profiles
+        const { error: profileError } = await supabase.from('profiles').insert([
+          { 
+            id: user.id, 
+            email: normalizedEmail,
+            full_name: fullName, 
+            role: 'user',
+            created_at: new Date().toISOString()
+          }
+        ])
+
+        if (profileError) {
+          console.error("Error inserting into profiles:", profileError)
+          toast({ 
+            title: "Profile Creation Error", 
+            description: "Could not create user profile. Please contact support.", 
+            variant: "destructive" 
+          })
+          return
+        }
+
+        toast({
+          title: "Success!",
+          description: "Please check your email to verify your account before signing in.",
+        })
+      } else {
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your email to continue the sign-up process.",
+        })
+      }
+    } catch (error) {
+      console.error("Unexpected error during sign up:", error)
+      toast({ 
+        title: "Unexpected Error", 
+        description: "An unexpected error occurred. Please try again.", 
+        variant: "destructive" 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>Welcome</CardTitle>
+        <CardDescription>Sign in or create an account to continue</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSignIn}>
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              disabled={isSubmitting}
+            />
+          </div>
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              disabled={isSubmitting}
+              minLength={6}
+            />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign In
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSignUp}
+              variant="outline"
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Sign Up
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}
