@@ -62,17 +62,8 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
       console.log("🔐 Login Debug - Redirect URL:", redirectTo)
       
-      // Add a small delay to ensure state is updated
-      setTimeout(() => {
-        // Try router.push first, fallback to window.location.href
-        try {
-          console.log("🔐 Login Debug - Attempting router.push to:", redirectTo)
-          router.push(redirectTo)
-        } catch (error) {
-          console.log("🔐 Login Debug - Router push failed, using window.location.href")
-          window.location.href = redirectTo
-        }
-      }, 100)
+      // Use window.location.href for more reliable redirect
+      window.location.href = redirectTo
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
