@@ -1,6 +1,6 @@
 "use client"
 
-import { UserProfile } from "@/src/components/auth/user-profile"
+import { UserProfile } from "@/auth/components/user-profile"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { User, Shield, Settings } from "lucide-react"
 

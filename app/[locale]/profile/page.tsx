@@ -7,7 +7,7 @@ import { User, Shield, Settings } from "lucide-react"
 
 // Dynamically import the UserProfile component to prevent SSR issues
 const UserProfile = dynamicImport(
-  () => import("@/src/components/auth/user-profile").then(mod => ({ default: mod.UserProfile })),
+  () => import("@/auth/components/user-profile").then(mod => ({ default: mod.UserProfile })),
   { 
     ssr: false,
     loading: () => (
