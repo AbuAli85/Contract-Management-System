@@ -8,6 +8,20 @@ export type Promoter = Database["public"]["Tables"]["promoters"]["Row"] & {
 }
 export type Contract = Database["public"]["Tables"]["contracts"]["Row"]
 
+// User profile type for authentication
+export type UserProfile = {
+  id: string
+  email: string
+  role: string
+  status: string
+  created_at?: string
+  full_name?: string
+  phone?: string
+  department?: string
+  position?: string
+  permissions?: string[]
+}
+
 // Example Zod schema for a form (can be moved to a lib/validations folder)
 export const promoterFormSchema = z.object({
   name_en: z.string().min(2, "English name is required."),
