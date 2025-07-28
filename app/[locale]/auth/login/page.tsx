@@ -5,11 +5,12 @@ import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
   const router = useRouter()
+  const [redirectAttempted, setRedirectAttempted] = useState(false)
 
   // Get current locale for links
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
@@ -17,11 +18,20 @@ export default function LoginPage() {
 
   // Redirect if user is already logged in
   useEffect(() => {
-    if (mounted && !loading && user) {
+    if (mounted && !loading && user && !redirectAttempted) {
       console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
-      router.replace(`/${locale}/dashboard`)
+      setRedirectAttempted(true)
+      
+      // Use window.location.href for more reliable redirect
+      const dashboardUrl = `/${locale}/dashboard`
+      console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
+      
+      // Add a small delay to ensure state is stable
+      setTimeout(() => {
+        window.location.href = dashboardUrl
+      }, 100)
     }
-  }, [user, loading, mounted, router, locale])
+  }, [user, loading, mounted, locale, redirectAttempted])
 
   // Show loading while checking authentication
   if (loading || !mounted) {
@@ -42,6 +52,7 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
+          <p className="text-sm text-gray-500 mt-2">If you're not redirected automatically, <button onClick={() => window.location.href = `/${locale}/dashboard`} className="text-blue-600 hover:underline">click here</button></p>
         </div>
       </div>
     )
