@@ -21,8 +21,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: auto-sync-$(date +%Y%m%d-%H%M%S)
-          title: "🔄 Auto Sync: $(date +%Y-%m-%d %H:%M)"
+          branch: auto-sync-${{ github.run_number }}
+          title: "🔄 Auto Sync: ${{ github.run_number }}"
           body: |
             ## 🔄 Automatic Sync from Fork
             
