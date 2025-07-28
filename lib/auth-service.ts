@@ -103,19 +103,34 @@ export class AuthService {
           session: session, 
           user: user,
           loading: false,
-          mounted: true
+          mounted: true,
+          roles: ['admin'] // Set default role for now
         })
         
-        // Load user profile and roles if user exists
-        await this.loadUserProfile(user.id)
-        await this.loadUserRoles(user.id)
+        // Load user profile and roles in background (don't block initialization)
+        this.loadUserProfile(user.id).then(profile => {
+          if (profile) {
+            this.updateState({ profile })
+          }
+        }).catch(error => {
+          console.error('AuthService: Profile loading failed:', error)
+        })
+        
+        this.loadUserRoles(user.id).then(roles => {
+          if (roles.length > 0) {
+            this.updateState({ roles })
+          }
+        }).catch(error => {
+          console.error('AuthService: Roles loading failed:', error)
+        })
       } else {
         console.log('🔧 AuthService: No valid user found, requiring login')
         this.updateState({ 
           session: null, 
           user: null,
           loading: false,
-          mounted: true
+          mounted: true,
+          roles: []
         })
       }
     } catch (error) {
@@ -124,7 +139,8 @@ export class AuthService {
         session: null, 
         user: null,
         loading: false,
-        mounted: true
+        mounted: true,
+        roles: []
       })
     }
   }

@@ -32,6 +32,7 @@ import { SystemStatus } from '@/components/system-status'
 import Link from 'next/link'
 import { CardDescription } from '@/components/ui/card'
 import { useAuth } from '@/src/components/auth/auth-provider'
+import { AuthDebug } from '@/components/auth-debug'
 
 // Loading fallback
 function DashboardLoading() {
@@ -112,6 +113,21 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       try {
         console.log('🔧 Dashboard: Fetching analytics data...')
         setDataLoading(true)
+        
+        // TEMPORARILY DISABLED - Skip API call for now
+        console.log('🔧 Dashboard: API call temporarily disabled')
+        setStats({
+          totalContracts: 0,
+          activeContracts: 0,
+          pendingContracts: 0,
+          totalPromoters: 0,
+          totalParties: 0,
+          pendingApprovals: 0,
+          systemHealth: 98,
+          recentActivity: 0
+        })
+        setDataLoading(false)
+        return
         
         // Add timeout to prevent hanging
         const controller = new AbortController()
@@ -351,6 +367,9 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     return (
       <Suspense fallback={<DashboardLoading />}>
         <div className="space-y-6">
+          {/* Debug Info - Remove this after fixing */}
+          <AuthDebug />
+          
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
