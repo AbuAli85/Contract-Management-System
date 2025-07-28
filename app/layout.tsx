@@ -16,6 +16,11 @@ const fontLexend = Lexend({
   variable: "--font-lexend",
 })
 
+
+  // Build timestamp for cache busting
+  const buildTimestamp = require('../public/build-timestamp.json');
+  metadata.description = `${metadata.description} (Build: ${buildTimestamp.buildId})`;
+
 export const metadata: Metadata = {
   title: "Contract Management System",
   description: "Professional contract management and generation system",
