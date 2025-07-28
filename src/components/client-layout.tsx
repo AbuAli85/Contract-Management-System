@@ -11,7 +11,6 @@ import { Loader2 } from 'lucide-react';
 import { PerformanceMonitor } from '@/components/performance-monitor';
 import { FormProvider } from '@/hooks/use-form-context';
 import { useAuth } from '@/src/components/auth/simple-auth-provider';
-import { SimpleAuthProvider } from '@/src/components/auth/simple-auth-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -115,15 +114,13 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
     <div className={inter.className}>
       <ErrorBoundary>
         <ToastProvider>
-          <SimpleAuthProvider>
-            <FormProvider>
-              <AuthenticatedAppLayout locale={locale}>
-                {children}
-              </AuthenticatedAppLayout>
-              {/* PerformanceMonitor temporarily disabled due to port issues */}
-              {/* <PerformanceMonitor /> */}
-            </FormProvider>
-          </SimpleAuthProvider>
+          <FormProvider>
+            <AuthenticatedAppLayout locale={locale}>
+              {children}
+            </AuthenticatedAppLayout>
+            {/* PerformanceMonitor temporarily disabled due to port issues */}
+            {/* <PerformanceMonitor /> */}
+          </FormProvider>
         </ToastProvider>
       </ErrorBoundary>
     </div>

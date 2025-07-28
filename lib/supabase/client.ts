@@ -2,15 +2,25 @@ import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 
 export const createClient = () => {
+  console.log('🔧 Client: createClient called')
+  
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  console.log('🔧 Client: Environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseKey,
+    isBrowser: typeof window !== 'undefined'
+  })
   
   // Return null during SSR if environment variables are missing
   if (!supabaseUrl || !supabaseKey) {
     if (typeof window === 'undefined') {
       // During SSR, return a mock client that doesn't throw
+      console.log('🔧 Client: Missing env vars during SSR, returning null')
       return null as any
     }
+    console.log('🔧 Client: Missing environment variables in browser')
     throw new Error('Missing Supabase environment variables')
   }
   
@@ -20,7 +30,9 @@ export const createClient = () => {
     return null as any
   }
   
-  return createBrowserClient<Database>(supabaseUrl, supabaseKey, {
+  console.log('🔧 Client: Creating Supabase browser client')
+  
+  const client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name: string) {
         console.log('🔧 Client: Supabase requesting cookie:', name)
@@ -37,8 +49,9 @@ export const createClient = () => {
           .find(row => row.startsWith(name + '='))
         
         if (cookie) {
-          console.log('🔧 Client: Found cookie:', name)
-          return cookie.split('=')[1]
+          const value = cookie.split('=')[1]
+          console.log('🔧 Client: Found cookie:', name, 'value length:', value?.length || 0)
+          return value
         }
         
         console.log('🔧 Client: No cookie found for:', name)
@@ -90,6 +103,9 @@ export const createClient = () => {
       }
     }
   })
+  
+  console.log('🔧 Client: Supabase client created successfully')
+  return client
 }
 
 // Safe client for SSR - returns null if environment variables are missing

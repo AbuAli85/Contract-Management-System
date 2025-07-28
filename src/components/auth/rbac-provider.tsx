@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { useAuth } from './auth-provider'
+import { useAuth } from './simple-auth-provider'
 import { createClient } from '@/lib/supabase/client'
 
 // Extend Window interface for preloaded role
