@@ -37,9 +37,10 @@ export function ProtectedRoute({
 
   // Show fallback or loading if no user
   if (!user) {
+    // Add a small delay to prevent flash of redirect message
     return fallback || (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="animate-spin mr-2" /> Redirecting to login...
+        <Loader2 className="animate-spin mr-2" /> Checking authentication...
       </div>
     )
   }
