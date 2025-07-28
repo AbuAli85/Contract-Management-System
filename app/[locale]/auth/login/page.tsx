@@ -26,10 +26,8 @@ export default function LoginPage() {
       const dashboardUrl = `/${locale}/dashboard`
       console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
       
-      // Add a small delay to ensure state is stable
-      setTimeout(() => {
-        window.location.href = dashboardUrl
-      }, 100)
+      // Use immediate redirect instead of setTimeout
+      window.location.href = dashboardUrl
     }
   }, [user, loading, mounted, locale, redirectAttempted])
 
@@ -52,7 +50,15 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">If you're not redirected automatically, <button onClick={() => window.location.href = `/${locale}/dashboard`} className="text-blue-600 hover:underline">click here</button></p>
+          <p className="text-sm text-gray-500 mt-2">
+            If you're not redirected automatically,{' '}
+            <button 
+              onClick={() => window.location.href = `/${locale}/dashboard`} 
+              className="text-blue-600 hover:underline"
+            >
+              click here
+            </button>
+          </p>
         </div>
       </div>
     )

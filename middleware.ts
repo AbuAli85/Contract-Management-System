@@ -27,14 +27,6 @@ export async function middleware(request: NextRequest) {
     // Get current user using getUser() for better security
     const { data: { user }, error } = await supabase.auth.getUser()
     
-    // Debug: Log user status
-    console.log('🔧 Middleware: User check for path:', request.nextUrl.pathname, {
-      hasUser: !!user,
-      userId: user?.id,
-      userEmail: user?.email,
-      error: error?.message
-    })
-    
     const { pathname } = request.nextUrl
     
     // Handle root path redirect
@@ -69,9 +61,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
     
-    // If accessing auth route with user, redirect to dashboard
+    // If accessing auth route with user, allow the client-side redirect to handle it
+    // Don't redirect in middleware to avoid conflicts
     if (isAuthRoute && user) {
-      return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
+      // Let the client-side logic handle the redirect
+      return NextResponse.next()
     }
     
     // Continue with the request
