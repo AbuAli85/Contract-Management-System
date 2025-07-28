@@ -36,12 +36,17 @@ export function UserProfile() {
     }
   }
 
+  // Safely get avatar URL with fallback
+  const avatarUrl = userProfile?.avatar_url || ''
+  const displayName = userProfile?.full_name || user.email || 'User'
+  const userRole = userProfile?.role || 'user'
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={userProfile?.avatar_url || ''} alt={userProfile?.full_name || user.email || 'User'} />
+            <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback>
               {userProfile?.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
             </AvatarFallback>
@@ -52,7 +57,7 @@ export function UserProfile() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {userProfile?.full_name || 'User'}
+              {displayName}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
@@ -60,7 +65,7 @@ export function UserProfile() {
             <div className="flex items-center gap-1 mt-1">
               <Shield className="h-3 w-3" />
               <Badge variant="secondary" className="text-xs">
-                {userProfile?.role || 'user'}
+                {userRole}
               </Badge>
             </div>
           </div>
@@ -108,20 +113,25 @@ export function UserProfileCompact() {
       .slice(0, 2)
   }
 
+  // Safely get avatar URL with fallback
+  const avatarUrl = userProfile?.avatar_url || ''
+  const displayName = userProfile?.full_name || user.email || 'User'
+  const userRole = userProfile?.role || 'user'
+
   return (
     <div className="flex items-center gap-2">
       <Avatar className="h-6 w-6">
-        <AvatarImage src={userProfile?.avatar_url || ''} alt={userProfile?.full_name || user.email || 'User'} />
+        <AvatarImage src={avatarUrl} alt={displayName} />
         <AvatarFallback className="text-xs">
           {userProfile?.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <div className="hidden sm:block">
         <p className="text-sm font-medium">
-          {userProfile?.full_name || user.email || 'User'}
+          {displayName}
         </p>
         <p className="text-xs text-muted-foreground">
-          {userProfile?.role || 'user'}
+          {userRole}
         </p>
       </div>
     </div>
