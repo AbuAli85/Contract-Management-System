@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { User, Settings, LogOut, Shield } from 'lucide-react'
 import Link from 'next/link'
 
-// UserProfile component with proper TypeScript handling for optional avatar_url
 export function UserProfile() {
   const { user, profile, roles, signOut } = useAuth()
 
@@ -17,8 +16,12 @@ export function UserProfile() {
     return null
   }
 
-  // Type assertion to ensure profile has the correct type
-  const userProfile = profile as UserProfile
+  // Extract user profile fields with a type assertion to handle optional data
+  const {
+    avatar_url = '',
+    full_name,
+    role: profileRole,
+  } = profile as UserProfile
 
   const getInitials = (name: string) => {
     return name
@@ -37,10 +40,10 @@ export function UserProfile() {
     }
   }
 
-  // Safely get avatar URL with fallback - using optional chaining
-  const avatarUrl = userProfile?.avatar_url || ''
-  const displayName = userProfile?.full_name || user.email || 'User'
-  const userRole = userProfile?.role || 'user'
+  // Clean variable assignment using destructured values
+  const avatarUrl = avatar_url || undefined
+  const displayName = full_name || user.email || 'User'
+  const userRole = profileRole || 'user'
 
   return (
     <DropdownMenu>
@@ -49,7 +52,7 @@ export function UserProfile() {
           <Avatar className="h-8 w-8">
             <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback>
-              {userProfile?.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+              {full_name ? getInitials(full_name) : user.email?.[0]?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -102,8 +105,12 @@ export function UserProfileCompact() {
     return null
   }
 
-  // Type assertion to ensure profile has the correct type
-  const userProfile = profile as UserProfile
+  // Extract user profile fields with a type assertion to handle optional data
+  const {
+    avatar_url: compactAvatarUrl = '',
+    full_name: compactFullName,
+    role: compactRole,
+  } = profile as UserProfile
 
   const getInitials = (name: string) => {
     return name
@@ -114,17 +121,17 @@ export function UserProfileCompact() {
       .slice(0, 2)
   }
 
-  // Safely get avatar URL with fallback - using optional chaining
-  const avatarUrl = userProfile?.avatar_url || ''
-  const displayName = userProfile?.full_name || user.email || 'User'
-  const userRole = userProfile?.role || 'user'
+  // Clean variable assignment using destructured values
+  const avatarUrl = compactAvatarUrl || undefined
+  const displayName = compactFullName || user.email || 'User'
+  const userRole = compactRole || 'user'
 
   return (
     <div className="flex items-center gap-2">
       <Avatar className="h-6 w-6">
         <AvatarImage src={avatarUrl} alt={displayName} />
         <AvatarFallback className="text-xs">
-          {userProfile?.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+          {compactFullName ? getInitials(compactFullName) : user.email?.[0]?.toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <div className="hidden sm:block">
