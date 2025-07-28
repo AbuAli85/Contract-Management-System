@@ -1,6 +1,6 @@
 import React from 'react'
 import { useRBAC } from '@/src/components/auth/rbac-provider'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import type { Role } from '@/src/components/auth/rbac-provider'
 import {
   type Action,
