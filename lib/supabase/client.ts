@@ -13,6 +13,9 @@ export const createClient = () => {
     isBrowser: typeof window !== 'undefined'
   })
   
+  console.log('🔧 Client: Window object available:', typeof window !== 'undefined')
+  console.log('🔧 Client: Document object available:', typeof document !== 'undefined')
+  
   // Return null during SSR if environment variables are missing
   if (!supabaseUrl || !supabaseKey) {
     if (typeof window === 'undefined') {
@@ -32,6 +35,11 @@ export const createClient = () => {
   
   console.log('🔧 Client: Creating Supabase browser client')
   
+  // Log available cookies for debugging
+  if (typeof document !== 'undefined') {
+    console.log('🔧 Client: Available cookies:', document.cookie)
+  }
+  
   const client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name: string) {
@@ -41,6 +49,11 @@ export const createClient = () => {
         if (typeof window === 'undefined' || typeof document === 'undefined') {
           console.log('🔧 Client: Not in browser environment, returning null')
           return null
+        }
+        
+        // Log all available cookies for debugging
+        if (name.includes('auth-token')) {
+          console.log('🔧 Client: All cookies:', document.cookie)
         }
         
         // Simple cookie lookup

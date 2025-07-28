@@ -18,6 +18,7 @@ interface AuthContextType {
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   forceRefreshRole: () => Promise<void>
+  signInWithProvider: (provider: 'github' | 'google') => Promise<{ success: boolean; error?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -82,9 +83,16 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       let sessionError = null
       
       try {
+        console.log('🔧 SimpleAuthProvider: Attempting to get session from Supabase...')
         const result = await supabase.auth.getSession()
         currentSession = result.data.session
         sessionError = result.error
+        console.log('🔧 SimpleAuthProvider: Session result:', {
+          hasSession: !!currentSession,
+          hasUser: !!currentSession?.user,
+          userEmail: currentSession?.user?.email,
+          error: sessionError?.message
+        })
       } catch (error) {
         console.error('🔧 SimpleAuthProvider: Error getting session:', error)
         sessionError = error as any
@@ -120,10 +128,17 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
           let refreshedSession = null
           let refreshError = null
           
+          console.log('🔧 SimpleAuthProvider: Attempting to refresh session...')
           try {
             const result = await supabase.auth.refreshSession()
             refreshedSession = result.data.session
             refreshError = result.error
+            console.log('🔧 SimpleAuthProvider: Session refresh result:', {
+              hasSession: !!refreshedSession,
+              hasUser: !!refreshedSession?.user,
+              userEmail: refreshedSession?.user?.email,
+              error: refreshError?.message
+            })
           } catch (error) {
             console.error('🔧 SimpleAuthProvider: Error refreshing session:', error)
             refreshError = error as any
@@ -233,6 +248,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     } else {
       console.log('🔧 SimpleAuthProvider: No Supabase client yet, waiting...')
     }
+  }, [supabase])
+
+  // Add a separate effect to track when supabase becomes available
+  useEffect(() => {
+    console.log('🔧 SimpleAuthProvider: Supabase state changed:', !!supabase)
   }, [supabase])
 
   // Fallback timeout to prevent infinite loading
@@ -366,6 +386,35 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  const signInWithProvider = async (provider: 'github' | 'google'): Promise<{ success: boolean; error?: string }> => {
+    if (!supabase) {
+      console.error('🔐 SignInWithProvider: Supabase client not available')
+      return { success: false, error: 'Supabase client not available' }
+    }
+
+    try {
+      console.log('🔐 SignInWithProvider: Attempting to sign in with provider:', provider)
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+
+      if (error) {
+        console.error('🔐 SignInWithProvider: Error during OAuth sign in:', error)
+        return { success: false, error: error.message }
+      }
+
+      console.log('🔐 SignInWithProvider: OAuth sign in initiated successfully')
+      return { success: true }
+    } catch (error) {
+      console.error('🔐 SignInWithProvider: Unexpected error during OAuth sign in:', error)
+      return { success: false, error: 'An unexpected error occurred' }
+    }
+  }
+
   const value: AuthContextType = {
     user,
     profile,
@@ -378,7 +427,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     signUp,
     signOut,
     refreshProfile,
-    forceRefreshRole
+    forceRefreshRole,
+    signInWithProvider
   }
 
   return (
