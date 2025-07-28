@@ -1,10 +1,8 @@
-// app/[locale]/generate-contract/page.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense, lazy } from "react"
 import { usePathname } from "next/navigation"
-import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/src/components/auth/simple-auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +10,61 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Settings, Sparkles, FileText, Info, CheckCircle, AlertTriangle } from "lucide-react"
-import EnhancedContractForm from "@/components/enhanced-contract-form"
+import { Separator } from "@/components/ui/separator"
+import { 
+  Settings, 
+  Sparkles, 
+  FileText, 
+  Info, 
+  CheckCircle, 
+  AlertTriangle,
+  Brain,
+  Zap,
+  Shield,
+  Users,
+  Calendar,
+  DollarSign,
+  Target,
+  TrendingUp,
+  Star,
+  Award,
+  Globe,
+  Lock,
+  Eye,
+  Download,
+  RefreshCw,
+  Plus,
+  Search,
+  Filter,
+  Clock,
+  Calculator,
+  BarChart3,
+  Activity,
+  Bell,
+  BookOpen,
+  Briefcase,
+  Building,
+  CreditCard,
+  FileCheck,
+  Gavel,
+  Lightbulb,
+  MapPin,
+  Monitor,
+  Palette,
+  Phone,
+  PieChart,
+  Settings2,
+  Smartphone,
+  Tablet,
+  Truck,
+  Wifi,
+  Workflow
+} from "lucide-react"
 
+// Lazy load components for better performance
+const EnhancedContractForm = lazy(() => import("@/components/enhanced-contract-form"))
+const UnifiedContractGeneratorForm = lazy(() => import("@/components/unified-contract-generator-form"))
+const ContractIntelligence = lazy(() => import("@/components/ai/contract-intelligence"))
 
 // Enhanced utilities for contract insights
 import { 
@@ -27,316 +77,205 @@ import { CONTRACT_FORM_SECTIONS, getRequiredFields } from "@/lib/schema-generato
 import { CONTRACT_TYPES } from "@/constants/contract-options"
 import { getContractTypesByCategory, getEnhancedContractTypeConfig, contractTypes, type ContractTypeConfig } from "@/lib/contract-type-config"
 
-// Contract insights component
-function ContractInsights() {
-  const [insights, setInsights] = useState({
-    totalRequiredFields: 0,
-    completedFields: 0,
-    completionPercentage: 0,
-    recommendations: [] as string[]
-  })
-
-  useEffect(() => {
-    const requiredFields = getRequiredFields()
-    const recommendations = [
-      "Ensure all party information is accurate and up-to-date",
-      "Verify contract dates align with business requirements", 
-      "Review job title and department classifications",
-      "Confirm work location and arrangement details"
-    ]
-
-    setInsights({
-      totalRequiredFields: requiredFields.length,
-      completedFields: 0,
-      completionPercentage: 0,
-      recommendations
-    })
-  }, [])
-
-  return (
-    <Card className="bg-blue-50/50 border-blue-200">
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Info className="h-5 w-5 text-blue-600" />
-          Contract Generation Insights
-        </CardTitle>
-        <CardDescription>
-          Smart recommendations and validation insights
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span>Form Completion</span>
-            <span className="font-medium">{insights.completionPercentage}%</span>
-          </div>
-          <Progress value={insights.completionPercentage} className="h-2" />
-          <p className="text-xs text-muted-foreground">
-            {insights.completedFields} of {insights.totalRequiredFields} required fields completed
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <h4 className="font-medium text-sm flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            Best Practices
-          </h4>
-          <ul className="space-y-1 text-xs text-muted-foreground">
-            {insights.recommendations.map((rec, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="text-green-600 font-bold">•</span>
-                <span>{rec}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <Alert>
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-xs">
-            All contracts are validated against Oman labor law requirements and business standards.
-          </AlertDescription>
-        </Alert>
-      </CardContent>
-    </Card>
-  )
+interface ContractInsight {
+  type: 'success' | 'warning' | 'info' | 'error'
+  title: string
+  description: string
+  action?: string
+  priority: 'low' | 'medium' | 'high'
 }
 
-// Form sections overview component
-function FormSectionsOverview() {
-  return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileText className="h-5 w-5 text-primary" />
-          Form Sections
-        </CardTitle>
-        <CardDescription>
-          Overview of contract generation sections
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {CONTRACT_FORM_SECTIONS.map((section, index) => (
-            <div
-              key={section.id}
-              className={`p-3 rounded-lg border transition-all ${
-                section.required 
-                  ? 'bg-primary/5 border-primary/20' 
-                  : 'bg-muted/30 border-muted'
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                  section.required 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-muted-foreground text-muted'
-                }`}>
-                  {index + 1}
-                </div>
-                <h4 className="font-medium text-sm">{section.title}</h4>
-                {section.required && (
-                  <Badge variant="secondary" className="text-xs">Required</Badge>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{section.description}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {section.fields.length} field{section.fields.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  )
+interface FormProgress {
+  completed: number
+  total: number
+  percentage: number
+  sections: Array<{
+    name: string
+    completed: boolean
+    required: boolean
+  }>
 }
 
-// Contract Types Overview component
-function ContractTypesOverview() {
-  const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedType, setSelectedType] = useState<string | null>(null)
-
-  const categories = ['employment', 'service', 'freelance', 'consulting', 'partnership', 'nda', 'custom']
-  
-  const getDisplayedTypes = () => {
-    if (selectedCategory === "all") {
-      return contractTypes
-    }
-    return getContractTypesByCategory(selectedCategory)
-  }
-
-  const displayedTypes = getDisplayedTypes()
-
-  return (
-    <Card>
-      <CardHeader className="pb-4">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileText className="h-5 w-5 text-primary" />
-          Contract Types
-          <Badge variant="secondary">{contractTypes.length} Types</Badge>
-        </CardTitle>
-        <CardDescription>
-          Each contract type has unique templates, fields, and business rules
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={selectedCategory === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setSelectedCategory("all")}
-            className="text-xs"
-          >
-            All Types
-          </Button>
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedCategory(category)}
-              className="text-xs"
-            >
-              {category}
-            </Button>
-          ))}
-        </div>
-
-        {/* Contract Types Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
-          {displayedTypes.map((config) => (
-            <div
-              key={config.id}
-              className={`p-3 rounded-lg border transition-all cursor-pointer hover:bg-muted/50 ${
-                selectedType === config.id ? 'ring-2 ring-primary' : 'bg-muted/20'
-              }`}
-              onClick={() => setSelectedType(selectedType === config.id ? null : config.id)}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-medium text-sm">{config.name}</h4>
-                    {config.category === 'employment' && (
-                      <Badge className="text-xs border border-input bg-background">Employment</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">{config.description}</p>
-                  
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="font-medium">Required Fields:</span>
-                      <Badge className="text-xs bg-secondary text-secondary-foreground">
-                        {config.validation?.requiredFields?.length || 0}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="font-medium">Total Fields:</span>
-                      <Badge className="text-xs bg-secondary text-secondary-foreground">
-                        {config.fields?.length || 0}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expanded Details */}
-              {selectedType === config.id && (
-                <div className="mt-3 pt-3 border-t space-y-2">
-                  <div>
-                    <h5 className="text-xs font-medium mb-1">Required Fields:</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {config.validation?.requiredFields?.slice(0, 4).map((field, idx) => (
-                        <Badge key={idx} className="text-xs border border-input bg-background">
-                          {field}
-                        </Badge>
-                      ))}
-                      {(config.validation?.requiredFields?.length || 0) > 4 && (
-                        <Badge className="text-xs border border-input bg-background">
-                          +{(config.validation?.requiredFields?.length || 0) - 4} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h5 className="text-xs font-medium mb-1">Field Types:</h5>
-                    <div className="flex flex-wrap gap-1">
-                      {config.fields?.slice(0, 4).map((field, idx) => (
-                        <Badge key={idx} className="text-xs border border-input bg-background">
-                          {field.type}
-                        </Badge>
-                      ))}
-                      {(config.fields?.length || 0) > 4 && (
-                        <Badge className="text-xs border border-input bg-background">
-                          +{(config.fields?.length || 0) - 4} more
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-1">
-                    {config.category === 'employment' && <Badge className="text-xs border border-input bg-background">Employment</Badge>}
-                    {config.requiresApproval && <Badge className="text-xs border border-input bg-background">Requires Approval</Badge>}
-                    {config.isActive && <Badge className="text-xs border border-input bg-background">Active</Badge>}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center text-xs text-muted-foreground">
-          Click on any contract type to see detailed requirements and business rules
-        </div>
-      </CardContent>
-    </Card>
-  )
+interface SmartRecommendation {
+  category: string
+  title: string
+  description: string
+  impact: 'low' | 'medium' | 'high'
+  implementation: string
+  estimatedSavings?: string
 }
 
 export default function GenerateContractPage() {
-  const [useEnhancedForm, setUseEnhancedForm] = useState(false) // Default to standard form
-  const [showInsights, setShowInsights] = useState(true)
+  const { user, profile } = useAuth()
   const pathname = usePathname()
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
-  
-  // Add authentication check
-  const { user, loading } = useAuth()
-  
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
+  const locale = pathname.split('/')[1] || 'en'
+
+  // State management
+  const [useEnhancedForm, setUseEnhancedForm] = useState(false)
+  const [showAIInsights, setShowAIInsights] = useState(true)
+  const [showContractInsights, setShowContractInsights] = useState(true)
+  const [selectedContractType, setSelectedContractType] = useState<string>('')
+  const [formProgress, setFormProgress] = useState<FormProgress>({
+    completed: 0,
+    total: 11,
+    percentage: 0,
+    sections: [
+      { name: 'Contracting Parties', completed: false, required: true },
+      { name: 'Promoter Required Information', completed: false, required: true },
+      { name: 'Contract Required Period', completed: false, required: true },
+      { name: 'Employment Details', completed: false, required: false },
+      { name: 'Compensation', completed: false, required: false },
+      { name: 'Additional Terms', completed: false, required: false }
+    ]
+  })
+
+  // AI Insights and Recommendations
+  const [insights, setInsights] = useState<ContractInsight[]>([
+    {
+      type: 'info',
+      title: 'Enhanced Schema Validation',
+      description: 'All contracts are validated against Oman labor law requirements and business rules.',
+      priority: 'high'
+    },
+    {
+      type: 'success',
+      title: 'Smart Field Requirements',
+      description: 'Form automatically shows required fields based on contract type selection.',
+      priority: 'medium'
+    },
+    {
+      type: 'warning',
+      title: 'Date Validation & Constraints',
+      description: 'Contract dates are validated to ensure compliance with legal requirements.',
+      priority: 'high'
+    }
+  ])
+
+  const [recommendations, setRecommendations] = useState<SmartRecommendation[]>([
+    {
+      category: 'Compliance',
+      title: 'Oman Labor Law Compliance',
+      description: 'Ensure all contracts meet Oman labor law requirements',
+      impact: 'high',
+      implementation: 'Automated validation checks'
+    },
+    {
+      category: 'Efficiency',
+      title: 'Template Optimization',
+      description: 'Use pre-approved templates for faster processing',
+      impact: 'medium',
+      implementation: 'Template library integration',
+      estimatedSavings: '2-3 hours per contract'
+    },
+    {
+      category: 'Risk Management',
+      title: 'Legal Review Workflow',
+      description: 'Implement automated legal review for high-value contracts',
+      impact: 'high',
+      implementation: 'Workflow automation'
+    }
+  ])
+
+  // Contract type categories
+  const contractCategories = [
+    { id: 'employment', label: 'Employment', icon: Users, count: 4 },
+    { id: 'service', label: 'Service', icon: Briefcase, count: 2 },
+    { id: 'consulting', label: 'Consulting', icon: Brain, count: 1 },
+    { id: 'partnership', label: 'Partnership', icon: Users, count: 1 },
+    { id: 'nda', label: 'NDA', icon: Lock, count: 1 }
+  ]
+
+  // Best practices
+  const bestPractices = [
+    'Ensure all party information is accurate and up-to-date',
+    'Verify contract dates align with business requirements',
+    'Review job title and department classifications',
+    'Confirm work location and arrangement details',
+    'Validate compensation structure and benefits',
+    'Include all required legal clauses and terms'
+  ]
+
+  // Feature comparison
+  const featureComparison = {
+    standard: {
+      title: 'Standard Form',
+      description: 'Enhanced with advanced validation and business rules',
+      features: [
+        'Enhanced schema validation',
+        'Business rule enforcement',
+        'Smart field requirements',
+        'Date validation & constraints',
+        'Comprehensive error handling',
+        'Ready for production use'
+      ],
+      status: 'active'
+    },
+    enhanced: {
+      title: 'Enhanced Form',
+      description: 'Advanced interface with sectioned workflow (In Development)',
+      features: [
+        'Sectioned form with progress tracking',
+        'Real-time contract insights',
+        'Smart auto-completion',
+        'Salary recommendations',
+        'Advanced analytics',
+        'Coming soon...'
+      ],
+      status: 'development'
+    }
   }
-  
-  // Redirect to login if not authenticated
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-          <p className="text-muted-foreground mb-4">Please log in to access the contract generation page.</p>
-          <Button asChild>
-            <Link href="/login">Go to Login</Link>
-          </Button>
-        </div>
-      </div>
-    )
+
+  // Contract types with enhanced configuration
+  const contractTypesConfig = getContractTypesByCategory()
+
+  const handleContractTypeSelect = (type: string) => {
+    setSelectedContractType(type)
+    // Update insights based on contract type
+    updateInsightsForContractType(type)
+  }
+
+  const updateInsightsForContractType = (type: string) => {
+    const typeConfig = getEnhancedContractTypeConfig(type)
+    if (typeConfig) {
+      const newInsights: ContractInsight[] = [
+        {
+          type: 'info',
+          title: `${typeConfig.label} Contract`,
+          description: typeConfig.description,
+          priority: 'medium'
+        },
+        {
+          type: 'success',
+          title: 'Template Available',
+          description: `Professional template with ${typeConfig.requiredFields.length} required fields`,
+          priority: 'high'
+        }
+      ]
+      setInsights(prev => [...prev, ...newInsights])
+    }
+  }
+
+  const updateFormProgress = (section: string, completed: boolean) => {
+    setFormProgress(prev => {
+      const updatedSections = prev.sections.map(s => 
+        s.name === section ? { ...s, completed } : s
+      )
+      const completedCount = updatedSections.filter(s => s.completed).length
+      return {
+        ...prev,
+        completed: completedCount,
+        percentage: Math.round((completedCount / prev.total) * 100)
+      }
+    })
   }
 
   return (
     <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
-      >
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
+    >
       {/* Header */}
       <div className="text-center space-y-4">
         <motion.div
@@ -352,11 +291,32 @@ export default function GenerateContractPage() {
           </p>
         </motion.div>
 
-        {/* Form Type Selector */}
+        {/* Search and Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+        >
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search contracts, promoters, parties..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            New Contract
+          </Button>
+        </motion.div>
+
+        {/* Form Type Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
           className="flex justify-center"
         >
           <Tabs value={useEnhancedForm ? "enhanced" : "standard"} className="w-full max-w-md">
@@ -380,137 +340,385 @@ export default function GenerateContractPage() {
             </TabsList>
           </Tabs>
         </motion.div>
-
-        {/* Feature Comparison */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto"
-        >
-          <Card className={`relative transition-all ${!useEnhancedForm ? 'ring-2 ring-primary' : ''}`}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <FileText className="h-5 w-5 text-primary" />
-                Standard Form
-                {!useEnhancedForm && <Badge variant="default">Active</Badge>}
-              </CardTitle>
-              <CardDescription>
-                Enhanced with advanced validation and business rules
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2">
-              <ul className="space-y-1 text-muted-foreground">
-                <li>✓ Enhanced schema validation</li>
-                <li>✓ Business rule enforcement</li>
-                <li>✓ Smart field requirements</li>
-                <li>✓ Date validation & constraints</li>
-                <li>✓ Comprehensive error handling</li>
-                <li>✓ Ready for production use</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card className={`relative transition-all ${useEnhancedForm ? 'ring-2 ring-primary' : ''}`}>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Sparkles className="h-5 w-5 text-muted-foreground" />
-                Enhanced Form
-                {useEnhancedForm && <Badge variant="default">Active</Badge>}
-              </CardTitle>
-              <CardDescription>
-                Advanced interface with sectioned workflow (In Development)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-sm space-y-2">
-              <ul className="space-y-1 text-muted-foreground">
-                <li>• Sectioned form with progress tracking</li>
-                <li>• Real-time contract insights</li>
-                <li>• Smart auto-completion</li>
-                <li>• Salary recommendations</li>
-                <li>• Advanced analytics</li>
-                <li>• Coming soon...</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
 
-      {/* Insights and Form Sections Overview */}
-      {showInsights && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-        >
-          <ContractInsights />
-          <FormSectionsOverview />
-          <ContractTypesOverview />
-        </motion.div>
-      )}
+      {/* Feature Comparison */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="grid gap-6 md:grid-cols-2"
+      >
+        <Card className={`border-2 transition-all duration-200 ${
+          !useEnhancedForm ? 'border-primary bg-primary/5' : 'border-border'
+        }`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {featureComparison.standard.title}
+            </CardTitle>
+            <CardDescription>
+              {featureComparison.standard.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {featureComparison.standard.features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">{feature}</span>
+                </div>
+              ))}
+            </div>
+            <Badge className="mt-4" variant={featureComparison.standard.status === 'active' ? 'default' : 'secondary'}>
+              {featureComparison.standard.status === 'active' ? 'Active' : 'Development'}
+            </Badge>
+          </CardContent>
+        </Card>
 
-      {/* Enhanced Contract Generation Form */}
+        <Card className={`border-2 transition-all duration-200 ${
+          useEnhancedForm ? 'border-primary bg-primary/5' : 'border-border'
+        }`}>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5" />
+              {featureComparison.enhanced.title}
+            </CardTitle>
+            <CardDescription>
+              {featureComparison.enhanced.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {featureComparison.enhanced.features.map((feature, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">{feature}</span>
+                </div>
+              ))}
+            </div>
+            <Badge className="mt-4" variant={featureComparison.enhanced.status === 'active' ? 'default' : 'secondary'}>
+              {featureComparison.enhanced.status === 'active' ? 'Active' : 'Development'}
+            </Badge>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Contract Generation Insights */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="rounded-lg bg-card shadow-xl"
       >
-        <div className="p-6 md:p-8">
-          <EnhancedContractForm 
-            onSuccess={(contractId) => {
-              console.log('Contract generated successfully:', contractId)
-            }}
-            onError={(error) => {
-              console.error('Contract generation failed:', error)
-            }}
-          />
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-blue-500" />
+              Contract Generation Insights
+            </CardTitle>
+            <CardDescription>
+              Smart recommendations and validation insights
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Form Completion Progress */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Form Completion</span>
+                <span className="text-sm text-muted-foreground">
+                  {formProgress.completed} of {formProgress.total} required fields completed
+                </span>
+              </div>
+              <Progress value={formProgress.percentage} className="h-2" />
+            </div>
+
+            {/* Best Practices */}
+            <div>
+              <h4 className="font-medium mb-3">Best Practices</h4>
+              <div className="space-y-2">
+                {bestPractices.map((practice, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">{practice}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Compliance Note */}
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                All contracts are validated against Oman labor law requirements and business rules.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
       </motion.div>
 
-      {/* Help Section */}
+      {/* Form Sections Overview */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="text-center space-y-4"
       >
-        <Card className="bg-muted/50">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <Settings className="h-5 w-5 text-muted-foreground" />
-              <h3 className="font-semibold">Enhanced Validation & Insights</h3>
-            </div>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Our contract generation system now includes enhanced schema validation with comprehensive 
-              business rules, improved error handling, and smart field requirements. Choose from {contractTypes.length} different 
-              contract types, each with unique templates, placeholders, and validation rules. The form automatically 
-              validates dates, party relationships, and ensures all critical information is captured correctly.
-            </p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <Badge variant="outline">Enhanced Schema</Badge>
-              <Badge variant="outline">Business Rules</Badge>
-              <Badge variant="outline">{contractTypes.length} Contract Types</Badge>
-              <Badge variant="outline">Smart Validation</Badge>
-              <Badge variant="outline">Error Prevention</Badge>
-              <Badge variant="outline">Oman Compliance</Badge>
-            </div>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowInsights(!showInsights)}
-              >
-                {showInsights ? 'Hide' : 'Show'} Contract Insights
-              </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Workflow className="h-5 w-5" />
+              Form Sections Overview
+            </CardTitle>
+            <CardDescription>
+              Overview of contract generation sections
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {formProgress.sections.map((section, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    section.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    {section.completed ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      <span className="text-sm font-medium">{index + 1}</span>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">{section.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {section.required ? 'Required' : 'Optional'}
+                    </div>
+                  </div>
+                  {section.required && (
+                    <Badge variant="outline" className="text-xs">
+                      Required
+                    </Badge>
+                  )}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Contract Types */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.7 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              9 Contract Types
+            </CardTitle>
+            <CardDescription>
+              Each contract type has unique templates, fields, and business rules
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Button variant="outline" size="sm">All Types</Button>
+              {contractCategories.map((category) => (
+                <Button key={category.id} variant="outline" size="sm">
+                  {category.label}
+                </Button>
+              ))}
+            </div>
+
+            {/* Contract Type Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(contractTypesConfig).map(([category, types]) => (
+                <div key={category} className="space-y-3">
+                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    {category}
+                  </h4>
+                  <div className="space-y-2">
+                    {types.map((type) => (
+                      <div
+                        key={type.value}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:border-primary ${
+                          selectedContractType === type.value ? 'border-primary bg-primary/5' : ''
+                        }`}
+                        onClick={() => handleContractTypeSelect(type.value)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{type.label}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {type.requiredFields.length} required fields
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {type.category}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </motion.div>
+
+      {/* AI Insights and Recommendations */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.8 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-5 w-5 text-purple-500" />
+              AI Insights & Recommendations
+            </CardTitle>
+            <CardDescription>
+              Smart analysis and optimization suggestions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Insights */}
+              <div>
+                <h4 className="font-medium mb-3">Current Insights</h4>
+                <div className="space-y-3">
+                  {insights.map((insight, index) => (
+                    <div key={index} className={`p-3 rounded-lg border ${
+                      insight.type === 'success' ? 'border-green-200 bg-green-50' :
+                      insight.type === 'warning' ? 'border-yellow-200 bg-yellow-50' :
+                      insight.type === 'error' ? 'border-red-200 bg-red-50' :
+                      'border-blue-200 bg-blue-50'
+                    }`}>
+                      <div className="flex items-start gap-2">
+                        {insight.type === 'success' && <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />}
+                        {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />}
+                        {insight.type === 'error' && <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />}
+                        {insight.type === 'info' && <Info className="h-4 w-4 text-blue-600 mt-0.5" />}
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">{insight.title}</div>
+                          <div className="text-xs text-muted-foreground">{insight.description}</div>
+                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {insight.priority}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recommendations */}
+              <div>
+                <h4 className="font-medium mb-3">Smart Recommendations</h4>
+                <div className="space-y-3">
+                  {recommendations.map((rec, index) => (
+                    <div key={index} className="p-3 border rounded-lg">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="font-medium text-sm">{rec.title}</div>
+                        <Badge variant="outline" className="text-xs">
+                          {rec.impact}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        {rec.description}
+                      </div>
+                      <div className="text-xs">
+                        <strong>Implementation:</strong> {rec.implementation}
+                      </div>
+                      {rec.estimatedSavings && (
+                        <div className="text-xs text-green-600 mt-1">
+                          💰 Estimated savings: {rec.estimatedSavings}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Main Form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.9 }}
+      >
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center">
+                <div className="text-center">
+                  <FileText className="h-8 w-8 animate-pulse mx-auto mb-4" />
+                  <p className="text-muted-foreground">Loading contract form...</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          {useEnhancedForm ? (
+            <EnhancedContractForm 
+              onSuccess={() => {
+                toast({
+                  title: "Contract Generated",
+                  description: "Your contract has been successfully generated and saved.",
+                })
+              }}
+              onError={(error) => {
+                toast({
+                  title: "Generation Failed",
+                  description: error.message || "Failed to generate contract.",
+                  variant: "destructive"
+                })
+              }}
+            />
+          ) : (
+            <UnifiedContractGeneratorForm 
+              mode="advanced"
+              showAdvanced={true}
+              autoRedirect={false}
+              onFormSubmit={() => {
+                toast({
+                  title: "Contract Saved",
+                  description: "Your contract has been successfully saved.",
+                })
+              }}
+            />
+          )}
+        </Suspense>
+      </motion.div>
+
+      {/* AI Contract Intelligence */}
+      {showAIInsights && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+        >
+          <Suspense fallback={
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <Brain className="h-8 w-8 animate-pulse mx-auto mb-4" />
+                    <p className="text-muted-foreground">Loading AI intelligence...</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          }>
+            <ContractIntelligence contractId="sample-contract-123" />
+          </Suspense>
+        </motion.div>
+      )}
+    </motion.div>
   )
 }
-
-// Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic'

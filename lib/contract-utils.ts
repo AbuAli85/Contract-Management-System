@@ -399,3 +399,126 @@ export function getContractTypeRecommendations(duration: number): string[] {
     return ["permanent", "full-time", "fixed-term"]
   }
 }
+
+/**
+ * Calculate salary recommendations based on job title and contract type
+ */
+export function calculateSalaryRecommendations(
+  salary: number,
+  contractType: string
+): { min: number; max: number; average: number; recommendations: string[] } {
+  const recommendations: string[] = []
+  
+  // Base salary recommendations for different contract types
+  const baseRecommendations = {
+    "permanent": { min: 800, max: 2000, average: 1400 },
+    "fixed-term": { min: 600, max: 1800, average: 1200 },
+    "temporary": { min: 500, max: 1500, average: 1000 },
+    "project-based": { min: 700, max: 1900, average: 1300 },
+    "contract": { min: 600, max: 1700, average: 1150 }
+  }
+
+  const recommendation = baseRecommendations[contractType as keyof typeof baseRecommendations] || 
+    baseRecommendations["permanent"]
+
+  // Add specific recommendations based on salary
+  if (salary < recommendation.min) {
+    recommendations.push("Consider increasing salary to meet market minimum")
+  } else if (salary > recommendation.max) {
+    recommendations.push("Salary is above market range - verify justification")
+  } else if (salary >= recommendation.average) {
+    recommendations.push("Salary is competitive for the market")
+  } else {
+    recommendations.push("Consider salary increase to improve competitiveness")
+  }
+
+  // Add contract type specific recommendations
+  if (contractType === "permanent") {
+    recommendations.push("Include annual salary review clause")
+  } else if (contractType === "temporary") {
+    recommendations.push("Consider shorter review periods for temporary contracts")
+  }
+
+  return {
+    ...recommendation,
+    recommendations
+  }
+}
+
+/**
+ * Check compliance issues in contract data
+ */
+export function checkComplianceIssues(
+  contractData: any
+): { isCompliant: boolean; issues: string[]; warnings: string[]; recommendations: string[] } {
+  const issues: string[] = []
+  const warnings: string[] = []
+  const recommendations: string[] = []
+
+  // Check required fields
+  const requiredFields = [
+    'first_party_id',
+    'second_party_id',
+    'promoter_id',
+    'contract_start_date',
+    'contract_end_date',
+    'job_title',
+    'work_location'
+  ]
+
+  requiredFields.forEach(field => {
+    if (!contractData[field]) {
+      issues.push(`Missing required field: ${field}`)
+    }
+  })
+
+  // Check date validity
+  if (contractData.contract_start_date && contractData.contract_end_date) {
+    const startDate = new Date(contractData.contract_start_date)
+    const endDate = new Date(contractData.contract_end_date)
+    
+    if (endDate <= startDate) {
+      issues.push("End date must be after start date")
+    }
+    
+    const duration = differenceInDays(endDate, startDate)
+    if (duration < 1) {
+      issues.push("Contract duration must be at least 1 day")
+    }
+  }
+
+  // Check salary compliance
+  if (contractData.basic_salary) {
+    const salary = parseFloat(contractData.basic_salary)
+    if (salary < 325) { // Minimum wage in Oman
+      issues.push("Salary below minimum wage requirement")
+    } else if (salary > 10000) {
+      warnings.push("High salary amount - please verify")
+    }
+  }
+
+  // Check parties are different
+  if (contractData.first_party_id && contractData.second_party_id) {
+    if (contractData.first_party_id === contractData.second_party_id) {
+      issues.push("Client and Employer must be different parties")
+    }
+  }
+
+  // Add recommendations
+  if (issues.length === 0) {
+    recommendations.push("Contract appears to be compliant")
+  } else {
+    recommendations.push("Address compliance issues before proceeding")
+  }
+
+  if (warnings.length > 0) {
+    recommendations.push("Review warnings for potential improvements")
+  }
+
+  return {
+    isCompliant: issues.length === 0,
+    issues,
+    warnings,
+    recommendations
+  }
+}
