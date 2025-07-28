@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef } from "react"
 import { getSupabaseClient, createRealtimeChannel, subscribeToChannel, handleRealtimeError } from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/src/components/auth/auth-provider"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
 import { useFormContext } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from '@supabase/supabase-js'

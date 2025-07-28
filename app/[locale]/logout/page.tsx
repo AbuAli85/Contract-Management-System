@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Loader2 } from 'lucide-react'
 
 export default function LogoutPage() {
@@ -20,29 +20,19 @@ export default function LogoutPage() {
         const locale = pathname.split('/')[1] || 'en'
         
         // Call signOut
-        const result = await signOut()
+        await signOut()
         
-        if (result.success) {
-          console.log('🔐 Logout: Successfully logged out')
-          
-          // Clear any remaining client-side state
-          if (typeof window !== 'undefined') {
-            // Clear localStorage if any auth data is stored there
-            localStorage.removeItem('supabase.auth.token')
-            sessionStorage.clear()
-          }
-          
-          // Redirect to localized login page
-          router.push(`/${locale}/auth/login`)
-        } else {
-          console.error('🔐 Logout: Failed to logout:', result.error)
-          setStatus('error')
-          
-          // Still redirect to login even if logout failed
-          setTimeout(() => {
-            router.push(`/${locale}/auth/login`)
-          }, 3000)
+        console.log('🔐 Logout: Successfully logged out')
+        
+        // Clear any remaining client-side state
+        if (typeof window !== 'undefined') {
+          // Clear localStorage if any auth data is stored there
+          localStorage.removeItem('supabase.auth.token')
+          sessionStorage.clear()
         }
+        
+        // Redirect to localized login page
+        router.push(`/${locale}/auth/login`)
       } catch (error) {
         console.error('🔐 Logout: Unexpected error:', error)
         setStatus('error')

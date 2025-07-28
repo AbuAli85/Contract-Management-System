@@ -38,7 +38,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react"
 import { useTheme } from "next-themes"
-import { useAuth } from "@/src/components/auth/auth-provider"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
 import { usePermissions } from "@/hooks/use-permissions"
 
 interface HeaderProps {
