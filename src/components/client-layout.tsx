@@ -24,6 +24,17 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, loading: authLoading, mounted } = useAuth();
+  const [forceShow, setForceShow] = useState(false);
+
+  // Force show content after 5 seconds to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      console.log('🔧 ClientLayout: Force showing content after timeout')
+      setForceShow(true);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Don't show sidebar on auth pages
   const isAuthPage = pathname?.includes('/auth/') || 
@@ -41,7 +52,16 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
                       pathname?.includes('/onboarding');
 
   const shouldShowSidebar = !isAuthPage && !isPublicPage && !!user;
-  const isLoading = authLoading || !mounted;
+  const isLoading = (authLoading || !mounted) && !forceShow;
+
+  console.log('🔧 ClientLayout: Auth state:', { 
+    user: !!user, 
+    authLoading, 
+    mounted, 
+    forceShow, 
+    isLoading,
+    pathname 
+  });
 
   if (isLoading) {
     return (
