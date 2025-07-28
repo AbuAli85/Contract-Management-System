@@ -250,6 +250,28 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         return { success: false, error: 'Authentication failed' }
       }
 
+      // Wait for the auth state to be updated
+      // The handleAuthStateChange will be called automatically
+      // but we need to ensure the state is properly set
+      setUser(data.user)
+      setSession(data.session)
+      
+      // Create a basic profile from auth user data
+      const basicProfile: UserProfile = {
+        id: data.user.id,
+        email: data.user.email || '',
+        full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
+        avatar_url: data.user.user_metadata?.avatar_url || null,
+        created_at: data.user.created_at,
+        updated_at: data.user.updated_at || data.user.created_at,
+        role: 'user'
+      }
+      
+      setProfile(basicProfile)
+      setRoles(['user'])
+      setProfileNotFound(false)
+
+      console.log('🔐 SignIn: Successfully signed in user:', data.user.id)
       return { success: true }
     } catch (error) {
       console.error('🔐 SignIn: Unexpected error during sign in:', error)
