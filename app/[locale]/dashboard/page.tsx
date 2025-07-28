@@ -93,6 +93,9 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   if (!user) {
     return <DashboardLoading />
   }
+
+  // Show dashboard content even if data is still loading
+  // The stats will update when the API call completes
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -112,7 +115,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
         
         // Add timeout to prevent hanging
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 5000) // Reduced to 5 seconds
         
         // Fetch dashboard analytics in background
         const response = await fetch('/api/dashboard/analytics', {
@@ -200,11 +203,16 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       }
     }
 
-    // Only fetch if user is authenticated
-    if (user && !authLoading) {
-      fetchDashboardData()
+    // Only fetch if user is authenticated and not already loading
+    if (user && !authLoading && !dataLoading) {
+      // Add a small delay to ensure auth is fully settled
+      const timer = setTimeout(() => {
+        fetchDashboardData()
+      }, 100)
+      
+      return () => clearTimeout(timer)
     }
-  }, [user, authLoading])
+  }, [user, authLoading, locale])
 
   // Ensure stats has default values to prevent undefined errors
   const safeStats = {
@@ -220,6 +228,41 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
 
   console.log('🔧 Dashboard: Current stats:', stats)
   console.log('🔧 Dashboard: Safe stats:', safeStats)
+  console.log('🔧 Dashboard: Data loading:', dataLoading)
+
+  // Show a simple loading indicator if data is still loading
+  if (dataLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back, {user?.email}. Loading your data...
+            </p>
+          </div>
+          <Badge variant="secondary" className="flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Loading data...
+          </Badge>
+        </div>
+        
+        {/* Show basic content while loading */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">...</div>
+              <p className="text-xs text-muted-foreground">Loading data</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
 
   // Define quickActions
   const quickActions = [
