@@ -37,6 +37,17 @@ export async function middleware(request: NextRequest) {
     
     const { pathname } = request.nextUrl
     
+    // Handle root path redirect
+    if (pathname === '/') {
+      if (user) {
+        // User is authenticated, redirect to dashboard
+        return NextResponse.redirect(new URL('/en/dashboard', request.url))
+      } else {
+        // User is not authenticated, redirect to login
+        return NextResponse.redirect(new URL('/en/auth/login', request.url))
+      }
+    }
+    
     // Extract locale from pathname (e.g., /en/dashboard -> en)
     const pathSegments = pathname.split('/')
     const locale = pathSegments[1] && pathSegments[1].length === 2 ? pathSegments[1] : 'en'

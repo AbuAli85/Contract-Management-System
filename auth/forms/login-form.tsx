@@ -44,37 +44,41 @@ export function LoginForm() {
     setError(null)
 
     try {
-      console.log("🔐 Login Debug - Starting server-side login process...")
+      console.log("🔐 Login Debug - Starting login process...")
+      console.log("🔐 Login Debug - Email:", email)
       
-      // Use server-side login API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+      // Use client-side authentication first
+      const { success, error: clientError } = await signIn(email, password)
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        console.error("🔐 Login Debug - Server login error:", data.error)
-        setError(data.error || 'Login failed')
+      if (!success) {
+        console.error("🔐 Login Debug - Client login failed:", clientError)
+        setError(clientError || 'Login failed')
         return
       }
 
-      if (!data.success) {
-        console.error("🔐 Login Debug - Server login failed:", data.error)
-        setError(data.error || 'Login failed')
-        return
-      }
+      console.log("🔐 Login Debug - Client login successful")
 
-      console.log("🔐 Login Debug - Server login successful")
+      // Also call server-side login to ensure cookies are set properly
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+          credentials: 'include'
+        })
 
-      // Update the user state in the auth context
-      if (data.user) {
-        console.log("🔐 Login Debug - Updating user state...")
-        // updateUserState(data.user) // This line is removed as per the edit hint
+        const data = await response.json()
+        console.log("🔐 Login Debug - Server login response:", data)
+
+        if (!response.ok || !data.success) {
+          console.warn("🔐 Login Debug - Server login failed, but client login succeeded")
+          // Don't fail the login if server-side fails, since client-side worked
+        }
+      } catch (serverError) {
+        console.warn("🔐 Login Debug - Server login error, but client login succeeded:", serverError)
+        // Don't fail the login if server-side fails, since client-side worked
       }
 
       // Debug: Check if cookies are set (note: httpOnly cookies won't be visible to client-side JS)
@@ -90,18 +94,6 @@ export function LoginForm() {
       // After successful login, redirect immediately
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
       console.log("🔐 Login Debug - Redirect URL:", redirectTo)
-      
-      // Check if session is properly set by making a request to check session
-      try {
-        const sessionCheck = await fetch('/api/auth/check-session', {
-          method: 'GET',
-          credentials: 'include'
-        })
-        const sessionData = await sessionCheck.json()
-        console.log("🔐 Login Debug - Session check result:", sessionData)
-      } catch (error) {
-        console.log("🔐 Login Debug - Session check failed:", error)
-      }
       
       // Add a small delay to ensure state is updated
       setTimeout(() => {
@@ -173,11 +165,7 @@ export function LoginForm() {
         </div>
       </div>
       
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={loading}
-      >
+      <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

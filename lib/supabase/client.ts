@@ -33,51 +33,39 @@ export const createClient = () => {
         
         // Handle auth token cookies
         if (name.includes('auth-token')) {
-          // Check for project-specific cookies first (what we actually set)
-          if (name === 'sb-ekdjxzhujettocosgzql-auth-token' || 
-              name === 'sb-ekdjxzhujettocosgzql-auth-token.0' ||
-              name === 'sb-ekdjxzhujettocosgzql-auth-token-code-verifier') {
-            const cookie = document.cookie
+          // Check for the exact cookie name Supabase is requesting
+          const cookie = document.cookie
+            .split('; ')
+            .find(row => row.startsWith(name + '='))
+          
+          if (cookie) {
+            console.log('🔧 Client: Found exact cookie match:', name)
+            return cookie.split('=')[1]
+          }
+          
+          // Fallback: if Supabase is looking for -user cookies, try without -user
+          if (name.includes('-user')) {
+            const fallbackName = name.replace('-user', '')
+            const fallbackCookie = document.cookie
               .split('; ')
-              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.0='))
-            if (cookie) {
-              console.log('🔧 Client: Using project-specific auth token cookie')
-              return cookie.split('=')[1]
+              .find(row => row.startsWith(fallbackName + '='))
+            
+            if (fallbackCookie) {
+              console.log('🔧 Client: Using fallback cookie:', fallbackName)
+              return fallbackCookie.split('=')[1]
             }
           }
           
-          if (name === 'sb-ekdjxzhujettocosgzql-auth-token.1' ||
-              name === 'sb-ekdjxzhujettocosgzql-auth-token-user') {
-            const cookie = document.cookie
+          // Fallback: if Supabase is looking for cookies without -user, try with -user
+          if (!name.includes('-user') && name.includes('auth-token')) {
+            const fallbackName = name.replace('auth-token', 'auth-token-user')
+            const fallbackCookie = document.cookie
               .split('; ')
-              .find(row => row.startsWith('sb-ekdjxzhujettocosgzql-auth-token.1='))
-            if (cookie) {
-              console.log('🔧 Client: Using project-specific refresh token cookie')
-              return cookie.split('=')[1]
-            }
-          }
-          
-          // Fallback to generic cookie names (for compatibility)
-          if (name === 'sb-auth-token' || 
-              name === 'sb-auth-token.0' ||
-              name === 'sb-auth-token-code-verifier') {
-            const cookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-auth-token.0='))
-            if (cookie) {
-              console.log('🔧 Client: Using generic auth token cookie')
-              return cookie.split('=')[1]
-            }
-          }
-          
-          if (name === 'sb-auth-token.1' ||
-              name === 'sb-auth-token-user') {
-            const cookie = document.cookie
-              .split('; ')
-              .find(row => row.startsWith('sb-auth-token.1='))
-            if (cookie) {
-              console.log('🔧 Client: Using generic refresh token cookie')
-              return cookie.split('=')[1]
+              .find(row => row.startsWith(fallbackName + '='))
+            
+            if (fallbackCookie) {
+              console.log('🔧 Client: Using fallback cookie with -user:', fallbackName)
+              return fallbackCookie.split('=')[1]
             }
           }
           
@@ -94,16 +82,22 @@ export const createClient = () => {
           return
         }
         
-        // Set both generic and project-specific cookies for compatibility
-        if (name === 'sb-auth-token' || 
-            name === 'sb-auth-token.0' ||
-            name === 'sb-auth-token-code-verifier') {
-          document.cookie = `sb-auth-token.0=${value}; path=/; max-age=${options.maxAge || 604800}`
-          document.cookie = `sb-ekdjxzhujettocosgzql-auth-token.0=${value}; path=/; max-age=${options.maxAge || 604800}`
-        } else if (name === 'sb-auth-token.1' ||
-                   name === 'sb-auth-token-user') {
-          document.cookie = `sb-auth-token.1=${value}; path=/; max-age=${options.maxAge || 604800}`
-          document.cookie = `sb-ekdjxzhujettocosgzql-auth-token.1=${value}; path=/; max-age=${options.maxAge || 604800}`
+        console.log('🔧 Client: Setting cookie:', name, 'with value length:', value.length)
+        
+        // Set the exact cookie name that Supabase expects
+        document.cookie = `${name}=${value}; path=/; max-age=${options.maxAge || 604800}; ${options.secure ? 'secure; ' : ''}${options.sameSite ? `sameSite=${options.sameSite}; ` : ''}`
+        
+        // Also set fallback cookies for compatibility
+        if (name.includes('auth-token')) {
+          if (name.includes('-user')) {
+            // If setting -user cookie, also set without -user
+            const fallbackName = name.replace('-user', '')
+            document.cookie = `${fallbackName}=${value}; path=/; max-age=${options.maxAge || 604800}; ${options.secure ? 'secure; ' : ''}${options.sameSite ? `sameSite=${options.sameSite}; ` : ''}`
+          } else {
+            // If setting without -user, also set with -user
+            const fallbackName = name.replace('auth-token', 'auth-token-user')
+            document.cookie = `${fallbackName}=${value}; path=/; max-age=${options.maxAge || 604800}; ${options.secure ? 'secure; ' : ''}${options.sameSite ? `sameSite=${options.sameSite}; ` : ''}`
+          }
         }
       },
       remove(name: string, options: any) {
@@ -113,16 +107,22 @@ export const createClient = () => {
           return
         }
         
-        // Remove both generic and project-specific cookies
-        if (name === 'sb-auth-token' || 
-            name === 'sb-auth-token.0' ||
-            name === 'sb-auth-token-code-verifier') {
-          document.cookie = 'sb-auth-token.0=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-          document.cookie = 'sb-ekdjxzhujettocosgzql-auth-token.0=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-        } else if (name === 'sb-auth-token.1' ||
-                   name === 'sb-auth-token-user') {
-          document.cookie = 'sb-auth-token.1=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-          document.cookie = 'sb-ekdjxzhujettocosgzql-auth-token.1=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+        console.log('🔧 Client: Removing cookie:', name)
+        
+        // Remove the exact cookie name
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+        
+        // Also remove fallback cookies
+        if (name.includes('auth-token')) {
+          if (name.includes('-user')) {
+            // If removing -user cookie, also remove without -user
+            const fallbackName = name.replace('-user', '')
+            document.cookie = `${fallbackName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          } else {
+            // If removing without -user, also remove with -user
+            const fallbackName = name.replace('auth-token', 'auth-token-user')
+            document.cookie = `${fallbackName}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          }
         }
       }
     }

@@ -15,6 +15,14 @@ export default function LoginPage() {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (mounted && !loading && user) {
+      console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
+      router.replace(`/${locale}/dashboard`)
+    }
+  }, [user, loading, mounted, router, locale])
+
   // Show loading while checking authentication
   if (loading || !mounted) {
     return (
@@ -27,7 +35,7 @@ export default function LoginPage() {
     )
   }
 
-  // If user is already logged in, redirect to dashboard
+  // If user is already logged in, show redirect message
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -54,10 +62,9 @@ export default function LoginPage() {
           </p>
         </div>
         
-        <div className="mt-8 space-y-6">
-          <LoginForm />
-          <OAuthButtons />
-        </div>
+        <LoginForm />
+        
+        <OAuthButtons />
       </div>
     </div>
   )
