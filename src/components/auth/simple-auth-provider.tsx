@@ -202,17 +202,23 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
       
-      // Set up periodic session refresh
+      // Set up periodic session refresh with shorter interval initially
       const intervalId = setInterval(async () => {
         if (!user) {
           console.log('🔧 SimpleAuthProvider: Periodic session check...')
           await initializeAuth()
         }
-      }, 5000) // Check every 5 seconds if no user
+      }, 1000) // Check every 1 second initially for faster response
+      
+      // Clear the interval after 10 seconds to reduce overhead
+      const clearIntervalTimeout = setTimeout(() => {
+        clearInterval(intervalId)
+      }, 10000)
       
       return () => {
         subscription.unsubscribe()
         clearInterval(intervalId)
+        clearTimeout(clearIntervalTimeout)
       }
     }
   }, [])
