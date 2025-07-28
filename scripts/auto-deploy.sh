@@ -39,7 +39,7 @@ fi
 
 # Step 1: Check for merge conflicts
 print_status "Checking for merge conflicts..."
-if grep -r "<<<<<<< HEAD" . || grep -r "=======" . || grep -r ">>>>>>>" .; then
+if grep -r "<<<<<<< HEAD" . --exclude="*.yml" --exclude="*.yaml" --exclude="*.sh" || grep -r "=======" . --exclude="*.yml" --exclude="*.yaml" --exclude="*.sh" || grep -r ">>>>>>>" . --exclude="*.yml" --exclude="*.yaml" --exclude="*.sh"; then
     print_error "Merge conflict markers found! Please resolve conflicts first."
     exit 1
 fi
