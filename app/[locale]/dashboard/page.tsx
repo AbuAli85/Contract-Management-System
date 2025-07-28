@@ -31,7 +31,7 @@ import {
 import { SystemStatus } from '@/components/system-status'
 import Link from 'next/link'
 import { CardDescription } from '@/components/ui/card'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { AuthDebug } from '@/components/auth-debug'
 
 // Loading fallback
@@ -75,15 +75,6 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     }
     getLocale()
   }, [params])
-
-  // Authentication check - redirect to login if not authenticated
-  useEffect(() => {
-    if (mounted && !authLoading && !user) {
-      console.log('🔧 Dashboard: No user found, redirecting to login...')
-      window.location.href = `/${locale}/auth/login`
-      return
-    }
-  }, [user, authLoading, mounted, locale])
 
   // Show loading while checking authentication
   if (authLoading || !mounted) {

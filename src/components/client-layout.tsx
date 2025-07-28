@@ -18,11 +18,12 @@ interface ClientLayoutProps {
   locale: string;
 }
 
+import { useAuth } from '@/src/components/auth/simple-auth-provider';
+
 function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; locale: string }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user, loading: authLoading, mounted } = useAuth();
 
   // Don't show sidebar on auth pages
   const isAuthPage = pathname?.includes('/auth/') || 
@@ -39,39 +40,15 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
                       pathname?.includes('/demo') ||
                       pathname?.includes('/onboarding');
 
-  const shouldShowSidebar = !isAuthPage && !isPublicPage && isAuthenticated;
-
-  // Check authentication on client side only
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch('/api/auth/check-session');
-        const data = await response.json();
-        
-        if (data.success && data.hasSession) {
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // Only check auth if we're not on auth or public pages
-    if (!isAuthPage && !isPublicPage) {
-      checkAuth();
-    } else {
-      setIsLoading(false);
-    }
-  }, [isAuthPage, isPublicPage]);
+  const shouldShowSidebar = !isAuthPage && !isPublicPage && !!user;
+  const isLoading = authLoading || !mounted;
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Loading authentication...</p>
         </div>
       </div>
     );
@@ -113,18 +90,22 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
   );
 }
 
+import { SimpleAuthProvider } from '@/src/components/auth/simple-auth-provider';
+
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
     <div className={inter.className}>
       <ErrorBoundary>
         <ToastProvider>
-          <FormProvider>
-            <AuthenticatedAppLayout locale={locale}>
-              {children}
-            </AuthenticatedAppLayout>
-            {/* PerformanceMonitor temporarily disabled due to port issues */}
-            {/* <PerformanceMonitor /> */}
-          </FormProvider>
+          <SimpleAuthProvider>
+            <FormProvider>
+              <AuthenticatedAppLayout locale={locale}>
+                {children}
+              </AuthenticatedAppLayout>
+              {/* PerformanceMonitor temporarily disabled due to port issues */}
+              {/* <PerformanceMonitor /> */}
+            </FormProvider>
+          </SimpleAuthProvider>
         </ToastProvider>
       </ErrorBoundary>
     </div>
