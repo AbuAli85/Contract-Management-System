@@ -1,10 +1,9 @@
+import React from "react"
 import type { Metadata } from "next"
 import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
-import { Analytics } from "@vercel/analytics/next"
-import { ErrorBoundary } from "@/components/error-boundary"
 
 const fontInter = Inter({
   subsets: ["latin"],
@@ -16,14 +15,8 @@ const fontLexend = Lexend({
   variable: "--font-lexend",
 })
 
-
-// Build timestamp for cache busting
-let buildTimestamp;
-try {
-  buildTimestamp = require('../public/build-timestamp.json');
-} catch (error) {
-  buildTimestamp = { buildId: 'dev' };
-}
+// Build timestamp for cache busting - simplified approach
+const buildTimestamp = { buildId: process.env.BUILD_ID || 'dev' }
 
 export const metadata: Metadata = {
   title: "Contract Management System",
@@ -38,13 +31,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
-        <ErrorBoundary>
-          <Providers>
-            {children}
-            <Toaster />
-          </Providers>
-        </ErrorBoundary>
-        <Analytics />
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
