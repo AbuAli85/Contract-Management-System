@@ -36,9 +36,29 @@ export async function GET() {
     // If we have tokens, try to set the session manually
     if (projectToken0?.value && projectToken1?.value) {
       console.log('🔐 Attempting to set session manually with tokens...')
+      
+      // Clean tokens by removing 'base64-' prefix if present
+      let accessToken = projectToken0.value
+      let refreshToken = projectToken1.value
+      
+      if (accessToken.startsWith('base64-')) {
+        console.log('🔐 Removing base64- prefix from access token')
+        accessToken = accessToken.substring(7) // Remove 'base64-' prefix
+      }
+      
+      if (refreshToken.startsWith('base64-')) {
+        console.log('🔐 Removing base64- prefix from refresh token')
+        refreshToken = refreshToken.substring(7) // Remove 'base64-' prefix
+      }
+      
+      console.log('🔐 Cleaned tokens:', {
+        accessTokenPreview: accessToken.substring(0, 20) + '...',
+        refreshTokenPreview: refreshToken.substring(0, 20) + '...'
+      })
+      
       const { data: { session: manualSession }, error: manualError } = await supabase.auth.setSession({
-        access_token: projectToken0.value,
-        refresh_token: projectToken1.value
+        access_token: accessToken,
+        refresh_token: refreshToken
       })
       
       if (manualSession) {
@@ -64,7 +84,12 @@ export async function GET() {
     // Debug: Always try to decode the JWT token to see what's in it
     if (projectToken0?.value) {
       try {
-        const tokenParts = projectToken0.value.split('.')
+        let tokenToDecode = projectToken0.value
+        if (tokenToDecode.startsWith('base64-')) {
+          tokenToDecode = tokenToDecode.substring(7)
+        }
+        
+        const tokenParts = tokenToDecode.split('.')
         if (tokenParts.length === 3) {
           const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
           console.log('🔐 JWT payload:', {
