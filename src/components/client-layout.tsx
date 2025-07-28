@@ -10,6 +10,8 @@ import { usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { PerformanceMonitor } from '@/components/performance-monitor';
 import { FormProvider } from '@/hooks/use-form-context';
+import { useAuth } from '@/src/components/auth/simple-auth-provider';
+import { SimpleAuthProvider } from '@/src/components/auth/simple-auth-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -17,8 +19,6 @@ interface ClientLayoutProps {
   children: ReactNode;
   locale: string;
 }
-
-import { useAuth } from '@/src/components/auth/simple-auth-provider';
 
 function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; locale: string }) {
   const pathname = usePathname();
@@ -89,8 +89,6 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
     </div>
   );
 }
-
-import { SimpleAuthProvider } from '@/src/components/auth/simple-auth-provider';
 
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
