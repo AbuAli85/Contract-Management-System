@@ -29,8 +29,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [roles, setRoles] = useState<string[]>([])
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(false) // Start with loading false
-  const [mounted, setMounted] = useState(true) // Start with mounted true
+  const [loading, setLoading] = useState(false)
+  const [mounted, setMounted] = useState(true)
   const [profileNotFound, setProfileNotFound] = useState(false)
 
   const [supabase, setSupabase] = useState<any>(null)
@@ -38,20 +38,16 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     // Only create client on the client side
     if (typeof window === 'undefined') {
-      console.log('🔧 SimpleAuthProvider: SSR detected, skipping client creation')
       return
     }
 
     try {
-      console.log('🔧 SimpleAuthProvider: Creating Supabase client on client side')
       const client = createClient()
-      console.log('🔧 SimpleAuthProvider: Client created:', !!client)
       setSupabase(client)
-      console.log('🔧 SimpleAuthProvider: Supabase client created successfully')
     } catch (error) {
-      console.error('🔧 SimpleAuthProvider: Error creating Supabase client:', error)
+      console.error('Error creating Supabase client:', error)
       setSupabase(null)
-      setLoading(false) // Set loading to false if client creation fails
+      setLoading(false)
     }
   }, [])
 
@@ -68,34 +64,22 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   const initializeAuth = async () => {
-    console.log('🔧 SimpleAuthProvider: initializeAuth called')
-    
     if (!supabase) {
-      console.log('🔧 SimpleAuthProvider: No Supabase client available - setting loading to false')
       setLoading(false)
       return
     }
 
     try {
-      console.log('🔧 SimpleAuthProvider: Initializing auth...')
-      
       // Get current session with error handling
       let currentSession = null
       let sessionError = null
       
       try {
-        console.log('🔧 SimpleAuthProvider: Attempting to get session from Supabase...')
         const result = await supabase.auth.getSession()
         currentSession = result.data.session
         sessionError = result.error
-        console.log('🔧 SimpleAuthProvider: Session result:', {
-          hasSession: !!currentSession,
-          hasUser: !!currentSession?.user,
-          userEmail: currentSession?.user?.email,
-          error: sessionError?.message
-        })
       } catch (error) {
-        console.error('🔧 SimpleAuthProvider: Error getting session:', error)
+        console.error('Error getting session:', error)
         sessionError = error as any
       }
       
@@ -104,7 +88,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
       
       if (currentSession?.user) {
-        console.log('🔧 SimpleAuthProvider: Session found:', currentSession.user.email)
         setSession(currentSession)
         setUser(currentSession.user)
         
@@ -120,7 +103,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfile(basicProfile)
         setRoles(['user'])
         
-        console.log('🔧 SimpleAuthProvider: Session loaded successfully')
       } else {
         console.log('🔧 SimpleAuthProvider: No session found - attempting to refresh session')
         
@@ -190,20 +172,16 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setRoles([])
       setProfileNotFound(false)
     } finally {
-      console.log('🔧 SimpleAuthProvider: Setting loading to false')
       setLoading(false)
     }
   }
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
-    console.log('🔄 SimpleAuthProvider: Auth state changed:', event, newSession?.user?.id)
-    
     setSession(newSession)
     setUser(newSession?.user ?? null)
     setProfileNotFound(false)
     
     if (newSession?.user) {
-      console.log('🔄 SimpleAuthProvider: User session established:', newSession.user.email)
       
       // Create a basic profile from auth user data
       const basicProfile: UserProfile = {
@@ -217,53 +195,36 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(basicProfile)
       setRoles(['user'])
       
-      console.log('🔄 SimpleAuthProvider: Profile data updated')
     } else {
-      console.log('🔄 SimpleAuthProvider: Session cleared')
       setProfile(null)
       setRoles([])
     }
     
-    setLoading(false) // Always set loading to false
+    setLoading(false)
   }
 
   useEffect(() => {
-    console.log('🔧 SimpleAuthProvider: useEffect triggered, supabase:', !!supabase, 'isClient:', typeof window !== 'undefined')
-    setMounted(true)
-    console.log('🔧 SimpleAuthProvider: Mounted set to true')
-    
-    // Only initialize auth on the client side
     if (typeof window === 'undefined') {
-      console.log('🔧 SimpleAuthProvider: SSR detected, skipping auth initialization')
       return
     }
     
     if (supabase) {
-      // Initialize auth when supabase client is available
-      console.log('🔧 SimpleAuthProvider: Starting auth initialization')
       initializeAuth()
 
-      console.log('🔧 SimpleAuthProvider: Setting up auth state change listener')
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
       return () => subscription.unsubscribe()
-    } else {
-      console.log('🔧 SimpleAuthProvider: No Supabase client yet, waiting...')
     }
   }, [supabase])
 
-  // Add a separate effect to track when supabase becomes available
   useEffect(() => {
-    console.log('🔧 SimpleAuthProvider: Supabase state changed:', !!supabase)
   }, [supabase])
 
-  // Fallback timeout to prevent infinite loading
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
-        console.log('🔧 SimpleAuthProvider: Loading timeout reached, setting loading to false')
         setLoading(false)
       }
-    }, 10000) // 10 second timeout
+    }, 10000)
 
     return () => clearTimeout(timeout)
   }, [loading])
@@ -274,8 +235,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      console.log('🔐 SignIn: Attempting to sign in with email:', email)
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -291,7 +250,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         return { success: false, error: 'Authentication failed' }
       }
 
-      console.log('🔐 SignIn: Successfully signed in user:', data.user.id)
       return { success: true }
     } catch (error) {
       console.error('🔐 SignIn: Unexpected error during sign in:', error)
@@ -305,8 +263,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      console.log('🔐 SignUp: Attempting to sign up with email:', email)
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -327,7 +283,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         return { success: false, error: 'Registration failed' }
       }
 
-      console.log('🔐 SignUp: Successfully signed up user:', data.user.id)
       return { success: true }
     } catch (error) {
       console.error('🔐 SignUp: Unexpected error during sign up:', error)
@@ -342,8 +297,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      console.log('🔐 SignOut: Attempting to sign out')
-      
       const { error } = await supabase.auth.signOut()
       
       if (error) {
@@ -394,8 +347,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      console.log('🔐 SignInWithProvider: Attempting to sign in with provider:', provider)
-      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -408,7 +359,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         return { success: false, error: error.message }
       }
 
-      console.log('🔐 SignInWithProvider: OAuth sign in initiated successfully')
       return { success: true }
     } catch (error) {
       console.error('🔐 SignInWithProvider: Unexpected error during OAuth sign in:', error)
@@ -422,8 +372,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      console.log('🔐 UpdateProfile: Updating profile for user:', user.id)
-      
       // For now, just update the local state
       // In a real implementation, you would update the database
       if (profile) {
@@ -431,7 +379,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfile(updatedProfile)
       }
       
-      console.log('🔐 UpdateProfile: Profile updated successfully')
       return { success: true }
     } catch (error) {
       console.error('🔐 UpdateProfile: Error updating profile:', error)
