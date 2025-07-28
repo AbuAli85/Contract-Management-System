@@ -90,17 +90,13 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
   );
 }
 
-<<<<<<< HEAD
 import { SimpleAuthProvider } from '@/src/components/auth/simple-auth-provider';
 
-=======
->>>>>>> a0b9607b2750965fec95fa282005a558de5ef534
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
     <div className={inter.className}>
       <ErrorBoundary>
         <ToastProvider>
-<<<<<<< HEAD
           <SimpleAuthProvider>
             <FormProvider>
               <AuthenticatedAppLayout locale={locale}>
@@ -110,15 +106,6 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
               {/* <PerformanceMonitor /> */}
             </FormProvider>
           </SimpleAuthProvider>
-=======
-          <FormProvider>
-            <AuthenticatedAppLayout locale={locale}>
-              {children}
-            </AuthenticatedAppLayout>
-            {/* PerformanceMonitor temporarily disabled due to port issues */}
-            {/* <PerformanceMonitor /> */}
-          </FormProvider>
->>>>>>> a0b9607b2750965fec95fa282005a558de5ef534
         </ToastProvider>
       </ErrorBoundary>
     </div>
