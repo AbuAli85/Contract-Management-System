@@ -9,18 +9,14 @@ export type Promoter = Database["public"]["Tables"]["promoters"]["Row"] & {
 export type Contract = Database["public"]["Tables"]["contracts"]["Row"]
 
 // User profile type for authentication
-export type UserProfile = {
+export interface UserProfile {
   id: string
   email: string
-  role: string
-  status?: string
-  created_at?: string
-  full_name?: string
-  avatar_url?: string
-  phone?: string
-  department?: string
-  position?: string
-  permissions?: string[]
+  full_name?: string | null
+  avatar_url?: string | null
+  role?: string | null
+  created_at?: string | null
+  last_login?: string | null
 }
 
 // Example Zod schema for a form (can be moved to a lib/validations folder)

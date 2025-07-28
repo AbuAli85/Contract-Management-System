@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { User, Settings, LogOut, Shield } from 'lucide-react'
 import Link from 'next/link'
 
+// UserProfile component with proper TypeScript handling for optional avatar_url
 export function UserProfile() {
   const { user, profile, roles, signOut } = useAuth()
 
@@ -36,7 +37,7 @@ export function UserProfile() {
     }
   }
 
-  // Safely get avatar URL with fallback
+  // Safely get avatar URL with fallback - using optional chaining
   const avatarUrl = userProfile?.avatar_url || ''
   const displayName = userProfile?.full_name || user.email || 'User'
   const userRole = userProfile?.role || 'user'
@@ -113,7 +114,7 @@ export function UserProfileCompact() {
       .slice(0, 2)
   }
 
-  // Safely get avatar URL with fallback
+  // Safely get avatar URL with fallback - using optional chaining
   const avatarUrl = userProfile?.avatar_url || ''
   const displayName = userProfile?.full_name || user.email || 'User'
   const userRole = userProfile?.role || 'user'
