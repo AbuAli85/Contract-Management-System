@@ -399,8 +399,8 @@ export default function UsersPageComponent() {
                         <td className="p-4">
                           <div className="flex items-center space-x-3">
                             <Avatar>
-                              <AvatarImage src={user.avatar_url} />
-                              <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                              <AvatarImage src={user?.avatar_url || ''} />
+                              <AvatarFallback>{getInitials(user?.email || '')}</AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">{user.email}</p>
@@ -452,7 +452,7 @@ export default function UsersPageComponent() {
                                   setNewEmail(user.email);
                                   setNewRole(user.role);
                                   setNewStatus(user.status);
-                                  setNewAvatarUrl(user.avatar_url || "");
+                                  setNewAvatarUrl(user?.avatar_url || "");
                                   setShowEditModal(true);
                                 }}
                               >

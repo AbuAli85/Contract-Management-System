@@ -551,12 +551,12 @@ export function UserManagementDashboard() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatar_url} />
-                            <AvatarFallback>{getInitials(user.full_name || user.email)}</AvatarFallback>
+                            <AvatarImage src={user?.avatar_url || ''} />
+                            <AvatarFallback>{getInitials(user?.full_name || user?.email || '')}</AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{user.full_name || 'No name'}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
+                            <div className="font-medium">{user?.full_name || 'No name'}</div>
+                            <div className="text-sm text-gray-500">{user?.email}</div>
                           </div>
                         </div>
                       </TableCell>

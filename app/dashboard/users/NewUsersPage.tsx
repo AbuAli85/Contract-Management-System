@@ -829,8 +829,8 @@ export default function NewUsersPage() {
                         <td className="p-4">
                           <div className="flex items-center space-x-3">
                             <Avatar>
-                              <AvatarImage src={user.avatar_url} />
-                              <AvatarFallback>{getInitials(user.email)}</AvatarFallback>
+                              <AvatarImage src={user?.avatar_url || ''} />
+                              <AvatarFallback>{getInitials(user?.email || '')}</AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-medium">{user.email}</p>
@@ -914,7 +914,7 @@ export default function NewUsersPage() {
                                     full_name: user.full_name || "",
                                     role: user.role,
                                     status: user.status,
-                                    avatar_url: user.avatar_url || "",
+                                    avatar_url: user?.avatar_url || "",
                                     phone: user.phone || "",
                                     department: user.department || "",
                                     position: user.position || ""
