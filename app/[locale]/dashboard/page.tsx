@@ -230,7 +230,7 @@ function DashboardContent({
     }
 
     // Only fetch if user is authenticated and not already loading
-    if (user && !authLoading && !dataLoading) {
+    if (user && !dataLoading) {
       // Add a small delay to ensure auth is fully settled
       const timer = setTimeout(() => {
         fetchDashboardData()
@@ -238,7 +238,7 @@ function DashboardContent({
       
       return () => clearTimeout(timer)
     }
-  }, [user, authLoading, locale])
+  }, [user, locale])
 
   // Ensure stats has default values to prevent undefined errors
   const safeStats = {
