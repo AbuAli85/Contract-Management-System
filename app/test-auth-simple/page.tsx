@@ -1,169 +1,98 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react';
+import { useAuth } from '@/src/components/auth/simple-auth-provider';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function TestAuthSimplePage() {
-  const { user, profile, loading, signIn, signOut } = useAuth()
-  const [email, setEmail] = useState('luxsess2001@gmail.com')
-  const [password, setPassword] = useState('test123')
-  const [testLoading, setTestLoading] = useState(false)
+  const { user, profile, roles, session, loading, mounted, signIn, signOut } = useAuth();
+  const [email, setEmail] = useState('luxsess2001@gmail.com');
+  const [password, setPassword] = useState('test123');
+  const [signInResult, setSignInResult] = useState<string>('');
 
-  const handleTestLogin = async () => {
-    setTestLoading(true)
-    try {
-      console.log('🧪 Testing login with:', email)
-      const result = await signIn(email, password)
-      console.log('🧪 Login result:', result)
-      
-      if (result.success) {
-        console.log('🧪 Login successful!')
-      } else {
-        console.error('🧪 Login failed:', result.error)
-      }
-    } catch (error) {
-      console.error('🧪 Login error:', error)
-    } finally {
-      setTestLoading(false)
-    }
-  }
+  const handleSignIn = async () => {
+    const result = await signIn(email, password);
+    setSignInResult(JSON.stringify(result, null, 2));
+  };
 
-  const handleTestLogout = async () => {
-    setTestLoading(true)
-    try {
-      console.log('🧪 Testing logout')
-      await signOut()
-      console.log('🧪 Logout completed')
-    } catch (error) {
-      console.error('🧪 Logout error:', error)
-    } finally {
-      setTestLoading(false)
-    }
-  }
+  const handleSignOut = async () => {
+    await signOut();
+    setSignInResult('');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Simple Auth Test</h1>
-          <p className="text-muted-foreground">Testing the simplified authentication flow</p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Authentication Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span>Loading:</span>
-              <Badge variant={loading ? "destructive" : "default"}>
-                {loading ? "Yes" : "No"}
-              </Badge>
+    <div className="container mx-auto p-6 max-w-2xl">
+      <Card>
+        <CardHeader>
+          <CardTitle>Authentication Test Page</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Auth State */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Auth State:</h3>
+            <div className="bg-gray-100 p-4 rounded text-sm">
+              <div><strong>Loading:</strong> {loading ? 'true' : 'false'}</div>
+              <div><strong>Mounted:</strong> {mounted ? 'true' : 'false'}</div>
+              <div><strong>User:</strong> {user ? user.email : 'null'}</div>
+              <div><strong>Profile:</strong> {profile ? profile.full_name : 'null'}</div>
+              <div><strong>Roles:</strong> {roles.join(', ') || 'none'}</div>
+              <div><strong>Session:</strong> {session ? 'active' : 'null'}</div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <span>User:</span>
-              <Badge variant={user ? "default" : "secondary"}>
-                {user ? "Authenticated" : "Not Authenticated"}
-              </Badge>
-            </div>
+          </div>
 
-            {user && (
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-semibold text-green-800">User Details:</h4>
-                <p className="text-sm text-green-700">ID: {user.id}</p>
-                <p className="text-sm text-green-700">Email: {user.email}</p>
-                {profile && (
-                  <p className="text-sm text-green-700">Name: {profile.full_name || 'N/A'}</p>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Test Login</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Email:</label>
+          {/* Sign In Form */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Sign In:</h3>
+            <div className="space-y-2">
               <Input
                 type="email"
+                placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email"
               />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-2">Password:</label>
               <Input
                 type="password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
               />
-            </div>
-
-            <div className="flex gap-4">
-              <Button 
-                onClick={handleTestLogin} 
-                disabled={testLoading || loading}
-                className="flex-1"
-              >
-                {testLoading ? "Testing..." : "Test Login"}
-              </Button>
-              
-              {user && (
-                <Button 
-                  onClick={handleTestLogout} 
-                  disabled={testLoading}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  {testLoading ? "Testing..." : "Test Logout"}
+              <div className="flex space-x-2">
+                <Button onClick={handleSignIn} disabled={loading}>
+                  Sign In
                 </Button>
-              )}
+                <Button onClick={handleSignOut} variant="outline" disabled={!user}>
+                  Sign Out
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.location.href = '/debug-auth'}
-              >
-                Go to Debug Page
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.location.href = '/en/auth/login'}
-              >
-                Go to Login Page
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.location.href = '/en/dashboard'}
-              >
-                Go to Dashboard
-              </Button>
+          {/* Result */}
+          {signInResult && (
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Sign In Result:</h3>
+              <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
+                {signInResult}
+              </pre>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+
+          {/* Debug Info */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold">Debug Info:</h3>
+            <div className="bg-gray-100 p-4 rounded text-sm">
+              <div><strong>User ID:</strong> {user?.id || 'null'}</div>
+              <div><strong>User Email:</strong> {user?.email || 'null'}</div>
+              <div><strong>User Created:</strong> {user?.created_at || 'null'}</div>
+              <div><strong>Profile ID:</strong> {profile?.id || 'null'}</div>
+              <div><strong>Profile Role:</strong> {profile?.role || 'null'}</div>
+              <div><strong>Session Access Token:</strong> {session?.access_token ? 'present' : 'null'}</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 } 
