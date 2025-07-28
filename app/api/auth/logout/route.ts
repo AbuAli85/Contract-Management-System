@@ -35,18 +35,33 @@ export async function POST() {
       expires: new Date(0)
     }
     
-    // Clear all auth cookies that were set during login
+    // Clear all possible auth cookies
     const cookiesToClear = [
+      // Supabase auth cookies
       'sb-auth-token.0',
       'sb-auth-token.1',
+      'sb-auth-token-code-verifier',
+      'sb-auth-token-user',
       'sb-ekdjxzhujettocosgzql-auth-token.0',
       'sb-ekdjxzhujettocosgzql-auth-token.1',
+      'sb-ekdjxzhujettocosgzql-auth-token-code-verifier',
+      'sb-ekdjxzhujettocosgzql-auth-token-user',
+      // Generic auth cookies
       'sb-auth-token',
-      'sb-ekdjxzhujettocosgzql-auth-token'
+      'sb-ekdjxzhujettocosgzql-auth-token',
+      // Session cookies
+      'session',
+      'auth-session',
+      // Any other potential auth cookies
+      'supabase.auth.token',
+      'supabase.auth.refreshToken'
     ]
     
     cookiesToClear.forEach(cookieName => {
       response.cookies.set(cookieName, '', cookieOptions)
+      // Also try with different paths
+      response.cookies.set(cookieName, '', { ...cookieOptions, path: '/' })
+      response.cookies.set(cookieName, '', { ...cookieOptions, path: '/api' })
     })
     
     console.log('🔐 Auth cookies cleared:', cookiesToClear)

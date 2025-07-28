@@ -2,7 +2,6 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { Inter } from 'next/font/google';
-import { AuthProvider } from '@/src/components/auth/auth-provider';
 import { ToastProvider } from '@/components/toast-notifications';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ProfessionalSidebar } from '@/components/professional-sidebar';
@@ -118,17 +117,15 @@ export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
     <div className={inter.className}>
       <ErrorBoundary>
-        <AuthProvider>
-          <ToastProvider>
-            <FormProvider>
-              <AuthenticatedAppLayout locale={locale}>
-                {children}
-              </AuthenticatedAppLayout>
-              {/* PerformanceMonitor temporarily disabled due to port issues */}
-              {/* <PerformanceMonitor /> */}
-            </FormProvider>
-          </ToastProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <FormProvider>
+            <AuthenticatedAppLayout locale={locale}>
+              {children}
+            </AuthenticatedAppLayout>
+            {/* PerformanceMonitor temporarily disabled due to port issues */}
+            {/* <PerformanceMonitor /> */}
+          </FormProvider>
+        </ToastProvider>
       </ErrorBoundary>
     </div>
   );

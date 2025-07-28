@@ -29,26 +29,30 @@ export async function middleware(request: NextRequest) {
     
     const { pathname } = request.nextUrl
     
-    // Check if the path is a protected route
+    // Extract locale from pathname (e.g., /en/dashboard -> en)
+    const pathSegments = pathname.split('/')
+    const locale = pathSegments[1] && pathSegments[1].length === 2 ? pathSegments[1] : 'en'
+    
+    // Check if the path is a protected route (with or without locale)
     const isProtectedRoute = protectedRoutes.some(route => 
-      pathname.includes(route)
+      pathname.includes(route) || pathname.includes(`/${locale}${route}`)
     )
     
-    // Check if the path is an auth route
+    // Check if the path is an auth route (with or without locale)
     const isAuthRoute = authRoutes.some(route => 
-      pathname.includes(route)
+      pathname.includes(route) || pathname.includes(`/${locale}${route}`)
     )
     
     // If accessing protected route without session, redirect to login
     if (isProtectedRoute && !session) {
-      const loginUrl = new URL('/auth/login', request.url)
+      const loginUrl = new URL(`/${locale}/auth/login`, request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
     }
     
     // If accessing auth route with session, redirect to dashboard
     if (isAuthRoute && session) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      return NextResponse.redirect(new URL(`/${locale}/dashboard`, request.url))
     }
     
     // Continue with the request

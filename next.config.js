@@ -7,6 +7,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Environment variables for Vercel Analytics
+  env: {
+    VERCEL_ANALYTICS_DEBUG: 'false',
+  },
   webpack: (config, { dev, isServer }) => {
     // Fix for module compatibility issues
     config.resolve.fallback = {

@@ -93,127 +93,52 @@ export class AuthService {
       
       console.log('🔧 AuthService: Session result:', currentSession ? 'found' : 'not found')
       
-      this.updateState({ 
-        session: currentSession, 
-        user: currentSession?.user ?? null,
-        loading: false,
-        mounted: true
-      })
-
-      // If no session found, try to refresh the session
-      if (!currentSession) {
-        console.log('🔧 AuthService: No session found, attempting to refresh...')
-        try {
-          const { data: { session: refreshedSession }, error: refreshError } = await client.auth.refreshSession()
+      // Only restore session if it's valid and not expired
+      if (currentSession && currentSession.expires_at) {
+        const now = Math.floor(Date.now() / 1000)
+        const expiresAt = currentSession.expires_at
+        
+        if (expiresAt > now) {
+          console.log('🔧 AuthService: Valid session found, restoring...')
+          this.updateState({ 
+            session: currentSession, 
+            user: currentSession?.user ?? null,
+            loading: false,
+            mounted: true
+          })
           
-          if (refreshError) {
-            console.log('🔧 AuthService: Session refresh failed:', refreshError.message)
-            
-            // Try manual session check as fallback
-            console.log('🔧 AuthService: Trying manual session check...')
-            try {
-              const response = await fetch('/api/auth/check-session')
-              const data = await response.json()
-              console.log('🔧 AuthService: Manual session check result:', data)
-              
-              if (data.success && data.hasSession && data.user) {
-                console.log('🔧 AuthService: Manual session check found user, updating state...')
-                // Create a mock session object
-                const mockSession = {
-                  user: data.user,
-                  access_token: 'manual-check',
-                  refresh_token: 'manual-check',
-                  expires_in: 3600,
-                  token_type: 'bearer'
-                }
-                this.updateState({
-                  session: mockSession as any,
-                  user: data.user
-                })
-              } else {
-                console.log('🔧 AuthService: No valid session found, clearing state')
-                // Clear any invalid session state
-                this.updateState({
-                  session: null,
-                  user: null,
-                  profile: null,
-                  roles: []
-                })
-              }
-            } catch (manualError) {
-              console.log('🔧 AuthService: Manual session check failed:', manualError)
-              // Clear state on error
-              this.updateState({
-                session: null,
-                user: null,
-                profile: null,
-                roles: []
-              })
-            }
-          } else if (refreshedSession) {
-            console.log('🔧 AuthService: Session refreshed successfully')
-            this.updateState({
-              session: refreshedSession,
-              user: refreshedSession.user
-            })
-          } else {
-            console.log('🔧 AuthService: No session after refresh attempt')
-            // Clear state if no session after refresh
-            this.updateState({
-              session: null,
-              user: null,
-              profile: null,
-              roles: []
-            })
+          // Load user profile and roles if user exists
+          if (currentSession.user) {
+            await this.loadUserProfile(currentSession.user.id)
+            await this.loadUserRoles(currentSession.user.id)
           }
-        } catch (refreshError) {
-          console.log('🔧 AuthService: Session refresh error:', refreshError)
-          // Clear state on error
-          this.updateState({
-            session: null,
+        } else {
+          console.log('🔧 AuthService: Session expired, clearing...')
+          // Clear expired session
+          await client.auth.signOut()
+          this.updateState({ 
+            session: null, 
             user: null,
-            profile: null,
-            roles: []
+            loading: false,
+            mounted: true
           })
         }
-      }
-
-      // Load profile data in background if user exists
-      const userId = currentSession?.user?.id
-      if (userId) {
-        console.log('🔧 AuthService: Loading profile data in background...')
-        
-        // Load profile and roles concurrently without arbitrary delays
-        Promise.all([
-          this.loadUserProfile(userId),
-          this.loadUserRoles(userId)
-        ]).then(([userProfile, userRoles]) => {
-          this.updateState({
-            profile: userProfile,
-            roles: userRoles,
-            profileNotFound: !userProfile
-          })
-          
-          console.log('🔧 AuthService: Profile data loaded:', { profile: !!userProfile, roles: userRoles })
-        }).catch((error) => {
-          console.warn('AuthService: Profile loading failed, continuing with basic auth:', error)
-          this.updateState({
-            profile: null,
-            roles: []
-          })
-        })
       } else {
-        this.updateState({
-          profile: null,
-          roles: []
+        console.log('🔧 AuthService: No valid session found, requiring login')
+        this.updateState({ 
+          session: null, 
+          user: null,
+          loading: false,
+          mounted: true
         })
       }
     } catch (error) {
-      console.error('AuthService: Auth initialization error:', error)
-      this.updateState({
-        profile: null,
-        roles: [],
-        loading: false
+      console.error('🔧 AuthService: Error during initialization:', error)
+      this.updateState({ 
+        session: null, 
+        user: null,
+        loading: false,
+        mounted: true
       })
     }
   }
@@ -340,34 +265,68 @@ export class AuthService {
     try {
       console.log('🔧 AuthService: Signing out...')
       
+      // Clear local state immediately
+      this.updateState({
+        user: null,
+        session: null,
+        profile: null,
+        roles: [],
+        profileNotFound: false
+      })
+      
       // Use centralized logout API to ensure proper cookie clearing
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include' // Ensure cookies are sent
       })
 
       const data = await response.json()
 
       if (!response.ok || !data.success) {
         console.error('🔧 AuthService: Logout API error:', data.error)
-        return { success: false, error: data.error || 'Failed to logout' }
+        // Even if API fails, we've cleared local state
+        return { success: true, error: data.error || 'Failed to logout on server' }
       }
 
-      // Clear local state
-      this.updateState({
-        user: null,
-        session: null,
-        profile: null,
-        roles: []
-      })
+      // Clear any remaining client-side storage
+      if (typeof window !== 'undefined') {
+        try {
+          // Clear localStorage
+          localStorage.removeItem('supabase.auth.token')
+          localStorage.removeItem('supabase.auth.refreshToken')
+          localStorage.removeItem('sb-auth-token')
+          localStorage.removeItem('sb-ekdjxzhujettocosgzql-auth-token')
+          
+          // Clear sessionStorage
+          sessionStorage.clear()
+          
+          // Clear any other potential auth storage
+          Object.keys(localStorage).forEach(key => {
+            if (key.includes('auth') || key.includes('supabase') || key.includes('sb-')) {
+              localStorage.removeItem(key)
+            }
+          })
+        } catch (storageError) {
+          console.warn('🔧 AuthService: Error clearing storage:', storageError)
+        }
+      }
       
       console.log('🔧 AuthService: Sign out successful')
       return { success: true }
     } catch (error) {
       console.error('AuthService: Sign out error:', error)
-      return { success: false, error: 'Internal error during sign out' }
+      // Even if there's an error, clear local state
+      this.updateState({
+        user: null,
+        session: null,
+        profile: null,
+        roles: [],
+        profileNotFound: false
+      })
+      return { success: true, error: 'Internal error during sign out' }
     }
   }
 

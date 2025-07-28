@@ -15,41 +15,6 @@ export default function LoginPage() {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
 
-  // Check server-side session when user exists but we're on login page
-  useEffect(() => {
-    if (user && !loading && mounted) {
-      console.log('🔧 User exists on login page, checking server session...')
-      const checkServerSession = async () => {
-        try {
-          const response = await fetch('/api/auth/check-session')
-          const data = await response.json()
-          console.log('🔧 Server session check result:', data)
-          
-          if (data.success && data.hasSession) {
-            console.log('🔧 Server session confirmed, redirecting to dashboard')
-            router.push(`/${locale}/dashboard`)
-          } else {
-            console.log('🔧 Server has no session, clearing client state')
-            // Force logout to clear client state
-            await fetch('/api/force-logout')
-            window.location.reload()
-          }
-        } catch (error) {
-          console.error('🔧 Server session check failed:', error)
-        }
-      }
-      
-      // Execute immediately without manual delay
-      checkServerSession()
-    }
-  }, [user, loading, mounted, router, locale])
-
-  // Manual redirect function for testing
-  const handleManualRedirect = () => {
-    console.log('🔧 Manual redirect triggered')
-    router.push(`/${locale}/dashboard`)
-  }
-
   // Show loading while checking authentication
   if (loading || !mounted) {
     return (
@@ -62,43 +27,13 @@ export default function LoginPage() {
     )
   }
 
-  // If user is already logged in, verify with server-side session check
+  // If user is already logged in, redirect to dashboard
   if (user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
-          <button 
-            onClick={handleManualRedirect}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Manual Redirect (if stuck)
-          </button>
-          <button 
-            onClick={async () => {
-              console.log('🔧 Checking server-side session...')
-              try {
-                const response = await fetch('/api/auth/check-session')
-                const data = await response.json()
-                console.log('🔧 Server session check:', data)
-                if (data.success && data.hasSession) {
-                  console.log('🔧 Server session confirmed, redirecting to dashboard')
-                  router.push(`/${locale}/dashboard`)
-                } else {
-                  console.log('🔧 Server has no session, clearing client state')
-                  // Force logout to clear client state
-                  await fetch('/api/force-logout')
-                  window.location.reload()
-                }
-              } catch (error) {
-                console.error('🔧 Session check failed:', error)
-              }
-            }}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Check Server Session
-          </button>
         </div>
       </div>
     )
@@ -113,10 +48,7 @@ export default function LoginPage() {
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
-            <Link
-              href={`/${locale}/auth/signup`}
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
+            <Link href={`/${locale}/auth/signup`} className="font-medium text-blue-600 hover:text-blue-500">
               create a new account
             </Link>
           </p>
@@ -124,21 +56,7 @@ export default function LoginPage() {
         
         <div className="mt-8 space-y-6">
           <LoginForm />
-          
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-gray-50 text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <OAuthButtons />
-            </div>
-          </div>
+          <OAuthButtons />
         </div>
       </div>
     </div>

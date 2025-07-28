@@ -74,6 +74,25 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     }
     getLocale()
   }, [params])
+
+  // Authentication check - redirect to login if not authenticated
+  useEffect(() => {
+    if (mounted && !authLoading && !user) {
+      console.log('🔧 Dashboard: No user found, redirecting to login...')
+      window.location.href = `/${locale}/auth/login`
+      return
+    }
+  }, [user, authLoading, mounted, locale])
+
+  // Show loading while checking authentication
+  if (authLoading || !mounted) {
+    return <DashboardLoading />
+  }
+
+  // Show loading if no user (will redirect)
+  if (!user) {
+    return <DashboardLoading />
+  }
   const [stats, setStats] = useState<DashboardStats>({
     totalContracts: 0,
     activeContracts: 0,
@@ -186,94 +205,6 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
       fetchDashboardData()
     }
   }, [user, authLoading])
-
-  // Show loading if auth is still loading
-  if (authLoading || !mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading authentication...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show error if no user - but allow bypass for testing
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-          <p className="text-gray-600 mb-4">Please log in to access the dashboard.</p>
-          <div className="space-x-4">
-            <Link href={`/${locale}/auth/login`}>
-              <Button>Go to Login</Button>
-            </Link>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log('🔧 Dashboard: Bypassing auth for testing')
-                // Force render the dashboard content
-                window.location.reload()
-              }}
-            >
-              Bypass Auth (Test)
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={async () => {
-                console.log('🔧 Dashboard: Checking session manually...')
-                try {
-                  const response = await fetch('/api/auth/check-session')
-                  const data = await response.json()
-                  console.log('🔧 Dashboard: Manual session check result:', data)
-                  
-                  if (data.success && data.hasSession) {
-                    console.log('🔧 Dashboard: Session found, reloading page...')
-                    window.location.reload()
-                  } else {
-                    console.log('🔧 Dashboard: No session found')
-                    alert('No session found. Please log in again.')
-                  }
-                } catch (error) {
-                  console.error('🔧 Dashboard: Session check failed:', error)
-                }
-              }}
-            >
-              Check Session
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log('🔧 Dashboard: Checking cookies...')
-                const cookies = document.cookie.split(';').map(c => c.trim())
-                const authCookies = cookies.filter(c => c.includes('auth-token') || c.includes('sb-'))
-                console.log('🔧 Dashboard: Auth cookies found:', authCookies)
-                
-                if (authCookies.length > 0) {
-                  alert(`Found ${authCookies.length} auth cookies. Check console for details.`)
-                } else {
-                  alert('No auth cookies found. Please log in again.')
-                }
-              }}
-            >
-              Check Cookies
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                console.log('🔧 Dashboard: Force refreshing page...')
-                window.location.reload()
-              }}
-            >
-              Force Refresh
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   // Ensure stats has default values to prevent undefined errors
   const safeStats = {
