@@ -42,6 +42,12 @@ export const createClient = () => {
         const isProduction = window.location.hostname !== 'localhost'
         if (isProduction) {
           cookieString += '; secure; samesite=lax'
+          
+          // For custom domains, we might need to set the domain
+          const hostname = window.location.hostname
+          if (hostname === 'portal.thesmartpro.io') {
+            cookieString += '; domain=.thesmartpro.io'
+          }
         }
         
         // Add other options if provided
@@ -65,6 +71,12 @@ export const createClient = () => {
         
         if (isProduction) {
           cookieString += '; secure; samesite=lax'
+          
+          // For custom domains, we might need to set the domain
+          const hostname = window.location.hostname
+          if (hostname === 'portal.thesmartpro.io') {
+            cookieString += '; domain=.thesmartpro.io'
+          }
         }
         
         if (options.domain && !isProduction) {

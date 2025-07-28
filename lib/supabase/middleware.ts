@@ -35,11 +35,21 @@ export function createClient(request: NextRequest) {
               headers: request.headers,
             },
           })
-          response.cookies.set({
+          
+          // Set cookie with proper domain for production
+          const hostname = request.headers.get('host') || ''
+          const cookieOptions: any = {
             name,
             value,
             ...options,
-          })
+          }
+          
+          // Add domain for custom domains
+          if (hostname.includes('portal.thesmartpro.io')) {
+            cookieOptions.domain = '.thesmartpro.io'
+          }
+          
+          response.cookies.set(cookieOptions)
         },
         remove(name: string, options: any) {
           request.cookies.set({
@@ -52,11 +62,21 @@ export function createClient(request: NextRequest) {
               headers: request.headers,
             },
           })
-          response.cookies.set({
+          
+          // Remove cookie with proper domain for production
+          const hostname = request.headers.get('host') || ''
+          const cookieOptions: any = {
             name,
             value: '',
             ...options,
-          })
+          }
+          
+          // Add domain for custom domains
+          if (hostname.includes('portal.thesmartpro.io')) {
+            cookieOptions.domain = '.thesmartpro.io'
+          }
+          
+          response.cookies.set(cookieOptions)
         },
       },
     }
