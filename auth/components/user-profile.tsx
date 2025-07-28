@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
+import type { UserProfile } from '@/types/custom'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -14,6 +15,9 @@ export function UserProfile() {
   if (!user || !profile) {
     return null
   }
+
+  // Type assertion to ensure profile has the correct type
+  const userProfile = profile as UserProfile
 
   const getInitials = (name: string) => {
     return name
@@ -37,9 +41,9 @@ export function UserProfile() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || user.email || 'User'} />
+            <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.full_name || user.email || 'User'} />
             <AvatarFallback>
-              {profile.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+              {userProfile.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -48,7 +52,7 @@ export function UserProfile() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {profile.full_name || 'User'}
+              {userProfile.full_name || 'User'}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
@@ -56,7 +60,7 @@ export function UserProfile() {
             <div className="flex items-center gap-1 mt-1">
               <Shield className="h-3 w-3" />
               <Badge variant="secondary" className="text-xs">
-                {profile.role}
+                {userProfile.role}
               </Badge>
             </div>
           </div>
@@ -92,6 +96,9 @@ export function UserProfileCompact() {
     return null
   }
 
+  // Type assertion to ensure profile has the correct type
+  const userProfile = profile as UserProfile
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -104,17 +111,17 @@ export function UserProfileCompact() {
   return (
     <div className="flex items-center gap-2">
       <Avatar className="h-6 w-6">
-        <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || user.email || 'User'} />
+        <AvatarImage src={userProfile.avatar_url || ''} alt={userProfile.full_name || user.email || 'User'} />
         <AvatarFallback className="text-xs">
-          {profile.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+          {userProfile.full_name ? getInitials(userProfile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
         </AvatarFallback>
       </Avatar>
       <div className="hidden sm:block">
         <p className="text-sm font-medium">
-          {profile.full_name || user.email || 'User'}
+          {userProfile.full_name || user.email || 'User'}
         </p>
         <p className="text-xs text-muted-foreground">
-          {profile.role}
+          {userProfile.role}
         </p>
       </div>
     </div>
