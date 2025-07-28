@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST() {
@@ -76,7 +76,7 @@ export async function POST() {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   // Redirect GET requests to POST
-  return NextResponse.redirect(new URL('/api/auth/logout', 'http://localhost:3000'), 307)
-} 
+  return NextResponse.redirect(new URL('/api/auth/logout', request.nextUrl.origin), 307)
+}

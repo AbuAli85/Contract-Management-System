@@ -3,35 +3,28 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session } from '@supabase/supabase-js'
-
-interface UserProfile {
-  id: string
-  email: string
-  role: string
-  status?: string
-  created_at?: string
-}
+import type { UserProfile } from '@/types/custom'
 
 interface AuthContextType {
-  user: Session['user'] | null
   session: Session | null
+  user: Session['user'] | null
   profile: UserProfile | null
   roles: string[]
   loading: boolean
   mounted: boolean
   profileNotFound: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signUp: (email: string, password: string, profile?: any) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<{ success: boolean; error?: string }>
   signInWithProvider: (provider: 'github' | 'google' | 'twitter') => Promise<{ success: boolean; error?: string }>
   resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
   updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>
   updateProfile: (updates: any) => Promise<{ success: boolean; error?: string }>
   refreshSession: () => Promise<void>
-  forceRefreshRole: () => Promise<void>
   hasRole: (role: string) => boolean
   hasAnyRole: (roles: string[]) => boolean
   hasPermission: (permission: string) => boolean
+  forceRefreshRole: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -124,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Initialize authentication state - FIXED VERSION
+  // Initialize authentication state
   const initializeAuth = async () => {
     console.log('🔧 AuthProvider: Initializing auth...')
     
@@ -197,7 +190,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Handle auth state changes - FIXED VERSION
+  // Handle auth state changes
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     console.log('🔄 AuthProvider: Auth state changed:', event, newSession?.user?.id)
     
@@ -275,7 +268,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, session, profile, roles, loading, mounted, profileNotFound])
 
-  // Auth methods (simplified for now)
+  // Auth methods
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase?.auth.signInWithPassword({ email, password }) || {}
@@ -285,7 +278,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, profile?: any) => {
     try {
       const { error } = await supabase?.auth.signUp({ email, password }) || {}
       return { success: !error, error: error?.message }

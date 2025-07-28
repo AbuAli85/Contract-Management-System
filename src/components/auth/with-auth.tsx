@@ -20,7 +20,7 @@ export function withAuth<P extends object>(
           const isValidLocale = locale && locale.length === 2
 
           // Construct the login URL with the current locale
-          const loginPath = `/${isValidLocale ? locale : 'en'}/login`
+          const loginPath = `/${isValidLocale ? locale : 'en'}/auth/login`
           const redirectTo = window.location.href
           
           // Redirect to login with the current URL as the redirect target

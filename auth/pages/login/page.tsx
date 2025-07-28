@@ -6,6 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Link from 'next/link'
 
 export default function LoginPage() {
+  // Determine the current locale from the URL
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const locale = pathname.split('/')[1] || 'en'
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -32,7 +36,7 @@ export default function LoginPage() {
               <OAuthButtons />
               <div className="text-center text-sm">
                 <span className="text-muted-foreground">Don't have an account? </span>
-                <Link href="/auth/signup" className="text-primary hover:underline">
+                <Link href={`/${locale}/auth/signup`} className="text-primary hover:underline">
                   Sign up
                 </Link>
               </div>
