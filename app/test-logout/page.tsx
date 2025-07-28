@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -17,16 +17,10 @@ export default function TestLogoutPage() {
     
     try {
       console.log('🔐 Test Logout: Starting logout...')
-      const result = await signOut()
+      await signOut()
       
-      if (result.success) {
-        console.log('🔐 Test Logout: Success')
-        setLogoutStatus('success')
-      } else {
-        console.error('🔐 Test Logout: Failed:', result.error)
-        setLogoutStatus('error')
-        setErrorMessage(result.error || 'Unknown error')
-      }
+      console.log('🔐 Test Logout: Success')
+      setLogoutStatus('success')
     } catch (error) {
       console.error('🔐 Test Logout: Exception:', error)
       setLogoutStatus('error')

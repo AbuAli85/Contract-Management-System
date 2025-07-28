@@ -274,8 +274,8 @@ export default function TestAuthSystemPage() {
               <div className="text-sm space-y-1">
                 <div><strong>Full Name:</strong> {profile.full_name || "Not set"}</div>
                 <div><strong>Role:</strong> {profile.role}</div>
-                <div><strong>Status:</strong> {profile.status}</div>
-                <div><strong>Department:</strong> {profile.department || "Not set"}</div>
+                <div><strong>Created At:</strong> {profile.created_at ? new Date(profile.created_at).toLocaleString() : "Not set"}</div>
+                <div><strong>Avatar URL:</strong> {profile.avatar_url ? "Set" : "Not set"}</div>
               </div>
             </div>
           )}

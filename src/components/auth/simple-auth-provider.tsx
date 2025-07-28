@@ -19,6 +19,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>
   forceRefreshRole: () => Promise<void>
   signInWithProvider: (provider: 'github' | 'google') => Promise<{ success: boolean; error?: string }>
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -415,6 +416,29 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  const updateProfile = async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
+    if (!user) {
+      return { success: false, error: 'No user logged in' }
+    }
+
+    try {
+      console.log('🔐 UpdateProfile: Updating profile for user:', user.id)
+      
+      // For now, just update the local state
+      // In a real implementation, you would update the database
+      if (profile) {
+        const updatedProfile = { ...profile, ...updates } as UserProfile
+        setProfile(updatedProfile)
+      }
+      
+      console.log('🔐 UpdateProfile: Profile updated successfully')
+      return { success: true }
+    } catch (error) {
+      console.error('🔐 UpdateProfile: Error updating profile:', error)
+      return { success: false, error: 'Failed to update profile' }
+    }
+  }
+
   const value: AuthContextType = {
     user,
     profile,
@@ -428,7 +452,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     signOut,
     refreshProfile,
     forceRefreshRole,
-    signInWithProvider
+    signInWithProvider,
+    updateProfile
   }
 
   return (

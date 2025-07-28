@@ -2,7 +2,7 @@
 
 import { Button } from '@/src/components/ui/button'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Github, Twitter } from 'lucide-react'
+import { Github, Chrome } from 'lucide-react'
 
 export function OAuthButtons() {
   const { signInWithProvider } = useAuth()
@@ -19,11 +19,11 @@ export function OAuthButtons() {
       </Button>
       <Button
         variant="outline"
-        onClick={() => signInWithProvider('twitter')}
+        onClick={() => signInWithProvider('google')}
         className="w-full"
       >
-        <Twitter className="mr-2 h-4 w-4" />
-        Twitter
+        <Chrome className="mr-2 h-4 w-4" />
+        Google
       </Button>
     </div>
   )

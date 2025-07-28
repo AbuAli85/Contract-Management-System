@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -10,12 +10,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, User, Mail, Phone, Building, Briefcase } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { profile, updateProfile, loading } = useAuth()
+  const { user, profile, loading, updateProfile } = useAuth()
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
-    phone: profile?.phone || '',
-    department: profile?.department || '',
-    position: profile?.position || ''
+    avatar_url: profile?.avatar_url || ''
   })
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +105,7 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={profile.email}
+                    value={user?.email || ''}
                     disabled
                     className="bg-gray-50"
                   />
@@ -131,44 +129,16 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    Phone Number
+                  <Label htmlFor="avatar_url" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Avatar URL
                   </Label>
                   <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="department" className="flex items-center gap-2">
-                    <Building className="h-4 w-4" />
-                    Department
-                  </Label>
-                  <Input
-                    id="department"
-                    type="text"
-                    value={formData.department}
-                    onChange={(e) => handleInputChange('department', e.target.value)}
-                    placeholder="Enter your department"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="position" className="flex items-center gap-2">
-                    <Briefcase className="h-4 w-4" />
-                    Position
-                  </Label>
-                  <Input
-                    id="position"
-                    type="text"
-                    value={formData.position}
-                    onChange={(e) => handleInputChange('position', e.target.value)}
-                    placeholder="Enter your position"
+                    id="avatar_url"
+                    type="url"
+                    value={formData.avatar_url}
+                    onChange={(e) => handleInputChange('avatar_url', e.target.value)}
+                    placeholder="Enter your avatar URL"
                   />
                 </div>
 
@@ -177,7 +147,7 @@ export default function ProfilePage() {
                   <Input
                     id="role"
                     type="text"
-                    value={profile.role}
+                    value={profile?.role || 'user'}
                     disabled
                     className="bg-gray-50"
                   />

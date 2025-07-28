@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -59,12 +59,8 @@ export default function TestCompleteAuthPage() {
 
   const handleLogout = async () => {
     try {
-      const result = await signOut()
-      if (result.success) {
-        setTestResults(['✅ Logout successful'])
-      } else {
-        setTestResults([`❌ Logout failed: ${result.error}`])
-      }
+      await signOut()
+      setTestResults(['✅ Logout successful'])
     } catch (error) {
       setTestResults([`❌ Logout error: ${error}`])
     }
