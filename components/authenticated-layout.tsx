@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { RBACProvider } from '@/src/components/auth/rbac-provider'
 import { ThemeProvider } from '@/components/theme-provider'
 import { PermissionAwareSidebar } from '@/components/permission-aware-sidebar'
