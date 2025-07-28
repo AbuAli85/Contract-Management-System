@@ -1,6 +1,6 @@
 import React from 'react'
 import { useRBAC } from '@/src/components/auth/rbac-provider'
-import { useAuth } from '@/app/providers'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import type { Role } from '@/src/components/auth/rbac-provider'
 import {
   type Action,
@@ -76,69 +76,69 @@ export function usePermissions() {
     
     // Action-based permissions
     can: (action: Action): boolean => {
-      return effectiveRoles.some(role => canPerformAction(role as Role, action))
+      return effectiveRoles.some((role: string) => canPerformAction(role as Role, action))
     },
     
     canAny: (actions: Action[]): boolean => {
-      return effectiveRoles.some(role => canPerformAnyAction(role as Role, actions))
+      return effectiveRoles.some((role: string) => canPerformAnyAction(role as Role, actions))
     },
     
     canAll: (actions: Action[]): boolean => {
-      return effectiveRoles.some(role => canPerformAllActions(role as Role, actions))
+      return effectiveRoles.some((role: string) => canPerformAllActions(role as Role, actions))
     },
     
     // Resource-based permissions
     canManage: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => canManageResource(role as Role, resource))
+      return effectiveRoles.some((role: string) => canManageResource(role as Role, resource))
     },
     
     canRead: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => canReadResource(role as Role, resource))
+      return effectiveRoles.some((role: string) => canReadResource(role as Role, resource))
     },
     
     canCreate: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => canCreateResource(role as Role, resource))
+      return effectiveRoles.some((role: string) => canCreateResource(role as Role, resource))
     },
     
     canUpdate: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => canUpdateResource(role as Role, resource))
+      return effectiveRoles.some((role: string) => canUpdateResource(role as Role, resource))
     },
     
     canDelete: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => canDeleteResource(role as Role, resource))
+      return effectiveRoles.some((role: string) => canDeleteResource(role as Role, resource))
     },
     
     hasAnyPermission: (resource: Resource): boolean => {
-      return effectiveRoles.some(role => hasAnyResourcePermission(role as Role, resource))
+      return effectiveRoles.some((role: string) => hasAnyResourcePermission(role as Role, resource))
     },
     
     // Specific permission checks for common actions
-    canAddPromoter: () => effectiveRoles.some(role => canPerformAction(role as Role, 'promoter:create')),
-    canEditPromoter: () => effectiveRoles.some(role => canPerformAction(role as Role, 'promoter:update')),
-    canDeletePromoter: () => effectiveRoles.some(role => canPerformAction(role as Role, 'promoter:delete')),
-    canBulkDeletePromoters: () => effectiveRoles.some(role => canPerformAction(role as Role, 'promoter:bulk_delete')),
-    canExportPromoters: () => effectiveRoles.some(role => canPerformAction(role as Role, 'promoter:export')),
+    canAddPromoter: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'promoter:create')),
+    canEditPromoter: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'promoter:update')),
+    canDeletePromoter: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'promoter:delete')),
+    canBulkDeletePromoters: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'promoter:bulk_delete')),
+    canExportPromoters: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'promoter:export')),
     
-    canAddParty: () => effectiveRoles.some(role => canPerformAction(role as Role, 'party:create')),
-    canEditParty: () => effectiveRoles.some(role => canPerformAction(role as Role, 'party:update')),
-    canDeleteParty: () => effectiveRoles.some(role => canPerformAction(role as Role, 'party:delete')),
-    canBulkDeleteParties: () => effectiveRoles.some(role => canPerformAction(role as Role, 'party:bulk_delete')),
-    canExportParties: () => effectiveRoles.some(role => canPerformAction(role as Role, 'party:export')),
+    canAddParty: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'party:create')),
+    canEditParty: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'party:update')),
+    canDeleteParty: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'party:delete')),
+    canBulkDeleteParties: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'party:bulk_delete')),
+    canExportParties: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'party:export')),
     
-    canCreateContract: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:create')),
-    canEditContract: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:update')),
-    canDeleteContract: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:delete')),
-    canGenerateContract: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:generate')),
-    canApproveContract: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:approve')),
-    canExportContracts: () => effectiveRoles.some(role => canPerformAction(role as Role, 'contract:export')),
+    canCreateContract: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:create')),
+    canEditContract: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:update')),
+    canDeleteContract: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:delete')),
+    canGenerateContract: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:generate')),
+    canApproveContract: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:approve')),
+    canExportContracts: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'contract:export')),
     
-    canManageUsers: () => effectiveRoles.some(role => canPerformAction(role as Role, 'user:create')),
-    canAssignRoles: () => effectiveRoles.some(role => canPerformAction(role as Role, 'user:assign_role')),
+    canManageUsers: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'user:create')),
+    canAssignRoles: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'user:assign_role')),
     
-    canAccessSettings: () => effectiveRoles.some(role => canPerformAction(role as Role, 'system:settings')),
-    canAccessAnalytics: () => effectiveRoles.some(role => canPerformAction(role as Role, 'system:analytics')),
-    canAccessAuditLogs: () => effectiveRoles.some(role => canPerformAction(role as Role, 'system:audit_logs')),
-    canAccessNotifications: () => effectiveRoles.some(role => canPerformAction(role as Role, 'system:notifications')),
+    canAccessSettings: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'system:settings')),
+    canAccessAnalytics: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'system:analytics')),
+    canAccessAuditLogs: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'system:audit_logs')),
+    canAccessNotifications: () => effectiveRoles.some((role: string) => canPerformAction(role as Role, 'system:notifications')),
   }
 }
 

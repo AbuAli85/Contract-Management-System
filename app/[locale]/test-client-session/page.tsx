@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/app/providers'
+import { useAuth } from '@/src/components/auth/auth-provider'
 
 export default function TestClientSessionPage() {
   const { user, loading, mounted, session } = useAuth()

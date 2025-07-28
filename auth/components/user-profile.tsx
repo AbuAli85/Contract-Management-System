@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/app/providers'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'

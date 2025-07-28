@@ -1,7 +1,7 @@
 'use client'
 
 import { usePermanentRole } from '@/src/components/auth/permanent-role-provider'
-import { useAuth } from '@/app/providers'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Crown, User, Loader2, CheckCircle, XCircle } from 'lucide-react'

@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/app/providers'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/src/components/auth/auth-provider'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -16,7 +16,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   
-  const { signIn, updateUserState } = useAuth()
+  const { signIn } = useAuth()
   const router = useRouter()
   
   // Get the current locale from the URL or default to 'en'
@@ -74,7 +74,7 @@ export function LoginForm() {
       // Update the user state in the auth context
       if (data.user) {
         console.log("🔐 Login Debug - Updating user state...")
-        updateUserState(data.user)
+        // updateUserState(data.user) // This line is removed as per the edit hint
       }
 
       // Debug: Check if cookies are set (note: httpOnly cookies won't be visible to client-side JS)
