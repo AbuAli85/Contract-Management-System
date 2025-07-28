@@ -29,8 +29,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [roles, setRoles] = useState<string[]>([])
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [mounted, setMounted] = useState(true)
+  const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [profileNotFound, setProfileNotFound] = useState(false)
 
   const [supabase, setSupabase] = useState<any>(null)
@@ -53,13 +53,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     // For now, return null to trigger fallback profile creation
-    // This avoids database dependency issues
     return null
   }
 
   const loadUserRoles = async (userId: string): Promise<string[]> => {
     // For now, just return default user role
-    // This avoids database dependency issues
     return ['user']
   }
 
@@ -70,107 +68,36 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      // Get current session with error handling
-      let currentSession = null
-      let sessionError = null
+      // Get current session
+      const { data: { session }, error } = await supabase.auth.getSession()
       
-      try {
-        const result = await supabase.auth.getSession()
-        currentSession = result.data.session
-        sessionError = result.error
-      } catch (error) {
+      if (error) {
         console.error('Error getting session:', error)
-        sessionError = error as any
+        setLoading(false)
+        return
       }
-      
-      if (sessionError) {
-        console.log('🔧 SimpleAuthProvider: Session error:', sessionError.message)
-      }
-      
-      if (currentSession?.user) {
-        setSession(currentSession)
-        setUser(currentSession.user)
+
+      if (session?.user) {
+        setSession(session)
+        setUser(session.user)
         
         // Create a basic profile from auth user data
         const basicProfile: UserProfile = {
-          id: currentSession.user.id,
-          email: currentSession.user.email || '',
-          role: 'user',
-          full_name: currentSession.user.user_metadata?.full_name || currentSession.user.email?.split('@')[0] || 'User',
-          avatar_url: currentSession.user.user_metadata?.avatar_url,
-          created_at: currentSession.user.created_at || new Date().toISOString()
+          id: session.user.id,
+          email: session.user.email || '',
+          full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
+          avatar_url: session.user.user_metadata?.avatar_url || null,
+          created_at: session.user.created_at,
+          updated_at: session.user.updated_at || session.user.created_at,
+          role: 'user'
         }
+        
         setProfile(basicProfile)
         setRoles(['user'])
-        
-      } else {
-        console.log('🔧 SimpleAuthProvider: No session found - attempting to refresh session')
-        
-        // Try to refresh the session
-        try {
-          let refreshedSession = null
-          let refreshError = null
-          
-          console.log('🔧 SimpleAuthProvider: Attempting to refresh session...')
-          try {
-            const result = await supabase.auth.refreshSession()
-            refreshedSession = result.data.session
-            refreshError = result.error
-            console.log('🔧 SimpleAuthProvider: Session refresh result:', {
-              hasSession: !!refreshedSession,
-              hasUser: !!refreshedSession?.user,
-              userEmail: refreshedSession?.user?.email,
-              error: refreshError?.message
-            })
-          } catch (error) {
-            console.error('🔧 SimpleAuthProvider: Error refreshing session:', error)
-            refreshError = error as any
-          }
-          
-          if (refreshError) {
-            console.log('🔧 SimpleAuthProvider: Session refresh failed:', refreshError.message)
-          }
-          
-          if (refreshedSession?.user) {
-            console.log('🔧 SimpleAuthProvider: Session refreshed successfully:', refreshedSession.user.email)
-            setSession(refreshedSession)
-            setUser(refreshedSession.user)
-            
-            // Create a basic profile from auth user data
-            const basicProfile: UserProfile = {
-              id: refreshedSession.user.id,
-              email: refreshedSession.user.email || '',
-              role: 'user',
-              full_name: refreshedSession.user.user_metadata?.full_name || refreshedSession.user.email?.split('@')[0] || 'User',
-              avatar_url: refreshedSession.user.user_metadata?.avatar_url,
-              created_at: refreshedSession.user.created_at || new Date().toISOString()
-            }
-            setProfile(basicProfile)
-            setRoles(['user'])
-          } else {
-            console.log('🔧 SimpleAuthProvider: Session refresh failed - user not authenticated')
-            setSession(null)
-            setUser(null)
-            setProfile(null)
-            setRoles([])
-            setProfileNotFound(false)
-          }
-        } catch (error) {
-          console.error('🔧 SimpleAuthProvider: Session refresh error:', error)
-          setSession(null)
-          setUser(null)
-          setProfile(null)
-          setRoles([])
-          setProfileNotFound(false)
-        }
+        setProfileNotFound(false)
       }
     } catch (error) {
-      console.error('🔧 SimpleAuthProvider: Auth initialization error:', error)
-      setSession(null)
-      setUser(null)
-      setProfile(null)
-      setRoles([])
-      setProfileNotFound(false)
+      console.error('Error initializing auth:', error)
     } finally {
       setLoading(false)
     }
@@ -182,19 +109,19 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     setProfileNotFound(false)
     
     if (newSession?.user) {
-      
       // Create a basic profile from auth user data
       const basicProfile: UserProfile = {
         id: newSession.user.id,
         email: newSession.user.email || '',
-        role: 'user',
         full_name: newSession.user.user_metadata?.full_name || newSession.user.email?.split('@')[0] || 'User',
-        avatar_url: newSession.user.user_metadata?.avatar_url,
-        created_at: newSession.user.created_at || new Date().toISOString()
+        avatar_url: newSession.user.user_metadata?.avatar_url || null,
+        created_at: newSession.user.created_at,
+        updated_at: newSession.user.updated_at || newSession.user.created_at,
+        role: 'user'
       }
+      
       setProfile(basicProfile)
       setRoles(['user'])
-      
     } else {
       setProfile(null)
       setRoles([])
@@ -217,17 +144,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }, [supabase])
 
   useEffect(() => {
-  }, [supabase])
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        setLoading(false)
-      }
-    }, 10000)
-
-    return () => clearTimeout(timeout)
-  }, [loading])
+    setMounted(true)
+  }, [])
 
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
@@ -241,40 +159,15 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
-        console.error('🔐 SignIn: Error during sign in:', error)
         return { success: false, error: error.message }
       }
 
       if (!data.user) {
-        console.error('🔐 SignIn: No user returned from sign in')
         return { success: false, error: 'Authentication failed' }
       }
 
-      // Wait for the auth state to be updated
-      // The handleAuthStateChange will be called automatically
-      // but we need to ensure the state is properly set
-      setUser(data.user)
-      setSession(data.session)
-      
-      // Create a basic profile from auth user data
-      const basicProfile: UserProfile = {
-        id: data.user.id,
-        email: data.user.email || '',
-        full_name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0] || 'User',
-        avatar_url: data.user.user_metadata?.avatar_url || null,
-        created_at: data.user.created_at,
-        updated_at: data.user.updated_at || data.user.created_at,
-        role: 'user'
-      }
-      
-      setProfile(basicProfile)
-      setRoles(['user'])
-      setProfileNotFound(false)
-
-      console.log('🔐 SignIn: Successfully signed in user:', data.user.id)
       return { success: true }
     } catch (error) {
-      console.error('🔐 SignIn: Unexpected error during sign in:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
