@@ -4,22 +4,12 @@ import type React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { useState } from "react"
-import { AuthProvider, useAuth } from "@/src/components/auth/auth-provider"
-import { RBACProvider } from "@/src/components/auth/rbac-provider"
+import { SimpleAuthProvider } from "@/src/components/auth/simple-auth-provider"
 
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
 
-// Wrapper component to connect AuthProvider and RBACProvider
-function AuthRBACWrapper({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth()
-  
-  return (
-    <RBACProvider user={user}>
-      {children}
-    </RBACProvider>
-  )
-}
+
 
 function ProvidersContent({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -36,11 +26,9 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AuthRBACWrapper>
-          {children}
-        </AuthRBACWrapper>
-      </AuthProvider>
+      <SimpleAuthProvider>
+        {children}
+      </SimpleAuthProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   )
