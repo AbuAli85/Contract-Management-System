@@ -118,7 +118,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // Initialize authentication state
+=======
+  // Initialize authentication state - FIXED VERSION
+>>>>>>> Stashed changes
 =======
   // Initialize authentication state - FIXED VERSION
 >>>>>>> Stashed changes
@@ -189,11 +193,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null)
       setUser(null)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
 =======
       setProfile(null)
       setRoles([])
       setLoading(false)
     }
+  }
+
+  // Handle auth state changes - FIXED VERSION
+  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    console.log('🔄 AuthProvider: Auth state changed:', event, newSession?.user?.id)
+    
+    setSession(newSession)
+    setUser(newSession?.user ?? null)
+    setProfileNotFound(false)
+    
+    if (newSession?.user) {
+      console.log('🔄 AuthProvider: User session established:', newSession.user.email)
+      
+      // Load profile and roles immediately
+      try {
+        const userProfile = await loadUserProfile(newSession.user.id)
+        const userRoles = await loadUserRoles(newSession.user.id)
+        
+        setProfile(userProfile)
+        setRoles(userRoles)
+        
+        if (!userProfile) {
+          setProfileNotFound(true)
+        }
+        
+        console.log('🔄 AuthProvider: Profile data updated:', { profile: !!userProfile, roles: userRoles })
+      } catch (error) {
+        console.warn('🔄 AuthProvider: Profile loading failed in auth state change:', error)
+        setProfile(null)
+        setRoles([])
+      }
+    } else {
+      console.log('🔄 AuthProvider: Session cleared')
+>>>>>>> Stashed changes
+      setProfile(null)
+      setRoles([])
+      setLoading(false)
+    }
+    
+    setLoading(false) // Always set loading to false
   }
 
   // Handle auth state changes - FIXED VERSION
