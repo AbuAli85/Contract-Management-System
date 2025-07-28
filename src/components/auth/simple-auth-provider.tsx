@@ -147,6 +147,18 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     setMounted(true)
   }, [])
 
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('Auth timeout reached, setting loading to false')
+        setLoading(false)
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [loading])
+
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
       return { success: false, error: 'Supabase client not available' }
