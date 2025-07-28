@@ -51,7 +51,15 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
   // Single effect to handle all role loading logic
   useEffect(() => {
+    console.log('🔄 RBACProvider: Effect triggered', { 
+      user: user?.id, 
+      authLoading, 
+      authRoles: authRoles.length,
+      userRoles: userRoles?.length 
+    })
+
     if (!user) {
+      console.log('🔄 RBACProvider: No user, clearing roles')
       setUserRoles(null)
       setIsLoading(false)
       return
@@ -59,6 +67,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
 
     // Wait for auth provider to finish loading
     if (authLoading) {
+      console.log('🔄 RBACProvider: Auth still loading, waiting...')
       return
     }
 
@@ -66,7 +75,7 @@ export function RBACProvider({ children, user }: { children: React.ReactNode; us
     if (authRoles.length > 0) {
       const primaryAuthRole = authRoles[0]
       if (['admin', 'manager', 'user'].includes(primaryAuthRole)) {
-        console.log('✅ Using auth provider role:', primaryAuthRole)
+        console.log('✅ RBACProvider: Using auth provider role:', primaryAuthRole)
         setUserRoles([primaryAuthRole as Role])
         localStorage.setItem(`user_role_${user.id}`, primaryAuthRole)
         setIsLoading(false)
