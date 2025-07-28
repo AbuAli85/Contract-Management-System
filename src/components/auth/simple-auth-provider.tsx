@@ -101,7 +101,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      // Get session from Supabase client
+      // First try to get session from Supabase client
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       if (currentSession?.user) {
@@ -120,6 +120,50 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
           setProfileNotFound(true)
         }
       } else {
+        // No client session, check server-side session
+        console.log('🔧 SimpleAuthProvider: No client session, checking server-side...')
+        
+        try {
+          const response = await fetch('/api/auth/check-session', {
+            credentials: 'include'
+          })
+          
+          if (response.ok) {
+            const data = await response.json()
+            console.log('🔧 SimpleAuthProvider: Server session check:', data)
+            
+            if (data.success && data.hasSession && data.user) {
+              // Create a session object from server data
+              const serverSession = {
+                user: data.user,
+                access_token: data.access_token || '',
+                refresh_token: data.refresh_token || '',
+                expires_at: data.expires_at || 0
+              } as Session
+              
+              setSession(serverSession)
+              setUser(serverSession.user)
+              
+              // Load profile and roles
+              const userProfile = await loadUserProfile(serverSession.user.id)
+              const userRoles = await loadUserRoles(serverSession.user.id)
+              
+              setProfile(userProfile)
+              setRoles(userRoles)
+              
+              if (!userProfile) {
+                setProfileNotFound(true)
+              }
+              
+              console.log('🔧 SimpleAuthProvider: Server session loaded successfully')
+              setLoading(false)
+              return
+            }
+          }
+        } catch (serverError) {
+          console.error('🔧 SimpleAuthProvider: Server session check failed:', serverError)
+        }
+        
         // No session found, user is not authenticated
         setSession(null)
         setUser(null)
