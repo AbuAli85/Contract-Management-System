@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/src/components/ui/button'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/app/providers'
 import { Github, Twitter } from 'lucide-react'
 
 export function OAuthButtons() {

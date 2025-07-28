@@ -31,7 +31,7 @@ import {
 import { SystemStatus } from '@/components/system-status'
 import Link from 'next/link'
 import { CardDescription } from '@/components/ui/card'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/app/providers'
 
 // Loading fallback
 function DashboardLoading() {
