@@ -2,100 +2,82 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import type { Session } from '@supabase/supabase-js'
+import type { User, Session } from '@supabase/supabase-js'
 import type { UserProfile } from '@/types/custom'
 
 interface AuthContextType {
-  session: Session | null
-  user: Session['user'] | null
+  user: User | null
   profile: UserProfile | null
   roles: string[]
+  session: Session | null
   loading: boolean
   mounted: boolean
   profileNotFound: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  signUp: (email: string, password: string, profile?: any) => Promise<{ success: boolean; error?: string }>
-  signOut: () => Promise<{ success: boolean; error?: string }>
-  signInWithProvider: (provider: 'github' | 'google' | 'twitter') => Promise<{ success: boolean; error?: string }>
-  resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
-  updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>
-  updateProfile: (updates: any) => Promise<{ success: boolean; error?: string }>
-  refreshSession: () => Promise<void>
-  hasRole: (role: string) => boolean
-  hasAnyRole: (roles: string[]) => boolean
-  hasPermission: (permission: string) => boolean
-  forceRefreshRole: () => Promise<void>
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>
+  signOut: () => Promise<void>
+  refreshProfile: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [user, setUser] = useState<Session['user'] | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [roles, setRoles] = useState<string[]>([])
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [profileNotFound, setProfileNotFound] = useState(false)
 
-  // Create Supabase client
   const supabase = createClient()
 
-  // Load user profile from database
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     if (!supabase) return null
     
     try {
-      // Try to load from users table first
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('id, email, role, status, created_at, full_name, avatar_url')
+      const { data, error } = await supabase
+        .from('app_users')
+        .select('*')
         .eq('id', userId)
         .single()
 
-      if (userData && !userError) {
-        return userData as UserProfile
+      if (error) {
+        console.error('Error loading user profile:', error)
+        return null
       }
 
-      // Fallback to profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email, role, created_at, full_name, avatar_url')
-        .eq('id', userId)
-        .single()
-
-      if (profileData && !profileError) {
-        return profileData as UserProfile
-      }
-
-      return null
+      return data
     } catch (error) {
       console.error('Error loading user profile:', error)
       return null
     }
   }
 
-  // Load user roles
   const loadUserRoles = async (userId: string): Promise<string[]> => {
     if (!supabase) return []
     
     try {
-      const { data: userData } = await supabase
-        .from('users')
+      const { data, error } = await supabase
+        .from('user_roles')
         .select('role')
-        .eq('id', userId)
-        .single()
+        .eq('user_id', userId)
 
-      return userData?.role ? [userData.role] : []
+      if (error) {
+        console.error('Error loading user roles:', error)
+        return []
+      }
+
+      return data?.map((row: { role: string }) => row.role) || []
     } catch (error) {
       console.error('Error loading user roles:', error)
       return []
     }
   }
 
-  // Initialize authentication
   const initializeAuth = async () => {
     if (!supabase) {
+      console.log('🔧 SimpleAuthProvider: No Supabase client available')
       setLoading(false)
       return
     }
@@ -103,12 +85,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       console.log('🔧 SimpleAuthProvider: Initializing auth...')
       
-      // First try to get session from Supabase client
+      // Get current session
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       if (currentSession?.user) {
-        console.log('🔧 SimpleAuthProvider: Client session found:', currentSession.user.email)
-        // Use client session
+        console.log('🔧 SimpleAuthProvider: Session found:', currentSession.user.email)
         setSession(currentSession)
         setUser(currentSession.user)
         
@@ -123,56 +104,9 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
           setProfileNotFound(true)
         }
         
-        console.log('🔧 SimpleAuthProvider: Client session loaded successfully')
-        setLoading(false)
-        return
+        console.log('🔧 SimpleAuthProvider: Session loaded successfully')
       } else {
-        // No client session, check server-side session
-        console.log('🔧 SimpleAuthProvider: No client session, checking server-side...')
-        
-        try {
-          const response = await fetch('/api/auth/check-session', {
-            credentials: 'include'
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            console.log('🔧 SimpleAuthProvider: Server session check:', data)
-            
-            if (data.success && data.hasSession && data.user) {
-              // Create a session object from server data
-              const serverSession = {
-                user: data.user,
-                access_token: data.access_token || '',
-                refresh_token: data.refresh_token || '',
-                expires_at: data.expires_at || 0
-              } as Session
-              
-              setSession(serverSession)
-              setUser(serverSession.user)
-              
-              // Load profile and roles
-              const userProfile = await loadUserProfile(serverSession.user.id)
-              const userRoles = await loadUserRoles(serverSession.user.id)
-              
-              setProfile(userProfile)
-              setRoles(userRoles)
-              
-              if (!userProfile) {
-                setProfileNotFound(true)
-              }
-              
-              console.log('🔧 SimpleAuthProvider: Server session loaded successfully')
-              setLoading(false)
-              return
-            }
-          }
-        } catch (serverError) {
-          console.error('🔧 SimpleAuthProvider: Server session check failed:', serverError)
-        }
-        
-        // No session found, user is not authenticated
-        console.log('🔧 SimpleAuthProvider: No session found, user is not authenticated')
+        console.log('🔧 SimpleAuthProvider: No session found')
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -190,7 +124,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
-  // Handle auth state changes
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     console.log('🔄 SimpleAuthProvider: Auth state changed:', event, newSession?.user?.id)
     
@@ -234,121 +167,128 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
-      
-      return () => {
-        subscription.unsubscribe()
-      }
+      return () => subscription.unsubscribe()
     }
   }, [])
 
-  // Auth methods
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: 'Supabase client not available' }
+    }
+
     try {
-      const { error } = await supabase?.auth.signInWithPassword({ email, password }) || {}
-      return { success: !error, error: error?.message }
+      console.log('🔐 SignIn: Attempting to sign in with email:', email)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (error) {
+        console.error('🔐 SignIn: Error during sign in:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (!data.user) {
+        console.error('🔐 SignIn: No user returned from sign in')
+        return { success: false, error: 'Authentication failed' }
+      }
+
+      console.log('🔐 SignIn: Successfully signed in user:', data.user.id)
+      return { success: true }
     } catch (error) {
-      return { success: false, error: 'Sign in failed' }
+      console.error('🔐 SignIn: Unexpected error during sign in:', error)
+      return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
-  const signUp = async (email: string, password: string, profile?: any) => {
+  const signUp = async (email: string, password: string, fullName?: string): Promise<{ success: boolean; error?: string }> => {
+    if (!supabase) {
+      return { success: false, error: 'Supabase client not available' }
+    }
+
     try {
-      const { error } = await supabase?.auth.signUp({ email, password }) || {}
-      return { success: !error, error: error?.message }
+      console.log('🔐 SignUp: Attempting to sign up with email:', email)
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      })
+
+      if (error) {
+        console.error('🔐 SignUp: Error during sign up:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (!data.user) {
+        console.error('🔐 SignUp: No user returned from sign up')
+        return { success: false, error: 'Registration failed' }
+      }
+
+      console.log('🔐 SignUp: Successfully signed up user:', data.user.id)
+      return { success: true }
     } catch (error) {
-      return { success: false, error: 'Sign up failed' }
+      console.error('🔐 SignUp: Unexpected error during sign up:', error)
+      return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      console.error('🔐 SignOut: Supabase client not available')
+      return
+    }
+
     try {
-      const { error } = await supabase?.auth.signOut() || {}
-      return { success: !error, error: error?.message }
+      console.log('🔐 SignOut: Attempting to sign out')
+      
+      const { error } = await supabase.auth.signOut()
+      
+      if (error) {
+        console.error('🔐 SignOut: Error during sign out:', error)
+      } else {
+        console.log('🔐 SignOut: Successfully signed out')
+      }
     } catch (error) {
-      return { success: false, error: 'Sign out failed' }
+      console.error('🔐 SignOut: Unexpected error during sign out:', error)
     }
   }
 
-  const signInWithProvider = async (provider: 'github' | 'google' | 'twitter') => {
-    try {
-      const { error } = await supabase?.auth.signInWithOAuth({ provider }) || {}
-      return { success: !error, error: error?.message }
-    } catch (error) {
-      return { success: false, error: 'Provider sign in failed' }
-    }
-  }
+  const refreshProfile = async () => {
+    if (!user) return
 
-  const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase?.auth.resetPasswordForEmail(email) || {}
-      return { success: !error, error: error?.message }
-    } catch (error) {
-      return { success: false, error: 'Password reset failed' }
-    }
-  }
-
-  const updatePassword = async (password: string) => {
-    try {
-      const { error } = await supabase?.auth.updateUser({ password }) || {}
-      return { success: !error, error: error?.message }
-    } catch (error) {
-      return { success: false, error: 'Password update failed' }
-    }
-  }
-
-  const updateProfile = async (updates: any) => {
-    try {
-      const { error } = await supabase?.auth.updateUser(updates) || {}
-      return { success: !error, error: error?.message }
-    } catch (error) {
-      return { success: false, error: 'Profile update failed' }
-    }
-  }
-
-  const refreshSession = async () => {
-    try {
-      await supabase?.auth.refreshSession()
-    } catch (error) {
-      console.error('Session refresh failed:', error)
-    }
-  }
-
-  const forceRefreshRole = async () => {
-    if (user) {
+      const userProfile = await loadUserProfile(user.id)
       const userRoles = await loadUserRoles(user.id)
+      
+      setProfile(userProfile)
       setRoles(userRoles)
+      
+      if (!userProfile) {
+        setProfileNotFound(true)
+      }
+    } catch (error) {
+      console.error('Error refreshing profile:', error)
     }
-  }
-
-  const hasRole = (role: string) => roles.includes(role)
-  const hasAnyRole = (rolesToCheck: string[]) => rolesToCheck.some(role => roles.includes(role))
-  const hasPermission = (permission: string) => {
-    // Simple permission check based on roles
-    if (hasRole('admin')) return true
-    if (hasRole('manager') && ['read', 'write'].includes(permission)) return true
-    return hasRole('user') && permission === 'read'
   }
 
   const value: AuthContextType = {
-    session,
     user,
     profile,
     roles,
+    session,
     loading,
     mounted,
     profileNotFound,
     signIn,
     signUp,
     signOut,
-    signInWithProvider,
-    resetPassword,
-    updatePassword,
-    updateProfile,
-    refreshSession,
-    hasRole,
-    hasAnyRole,
-    hasPermission,
-    forceRefreshRole
+    refreshProfile
   }
 
   return (

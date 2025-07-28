@@ -56,64 +56,9 @@ export async function POST(request: NextRequest) {
       }
     }, 'Login successful'))
 
-    // Check if we have session data
-    if (data.session) {
-      console.log('🔐 Session data available, setting cookies...')
-      
-      // Define secure cookie options
-      const cookieOptions = {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
-        sameSite: 'lax' as const,
-        maxAge: 60 * 60 * 24 * 7 // 7 days
-      }
-      
-      // Set the cookies with the exact names that Supabase expects
-      // These are the cookie names that Supabase will look for
-      response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token-user.0',
-        value: data.session.access_token,
-        ...cookieOptions
-      })
-      
-      response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token-user.1',
-        value: data.session.refresh_token,
-        ...cookieOptions
-      })
-      
-      // Also set the cookies without -user for compatibility
-      response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token.0',
-        value: data.session.access_token,
-        ...cookieOptions
-      })
-      
-      response.cookies.set({
-        name: 'sb-ekdjxzhujettocosgzql-auth-token.1',
-        value: data.session.refresh_token,
-        ...cookieOptions
-      })
-      
-      console.log('🔐 Set auth cookies for middleware')
-      console.log('🔐 Cookie details:', {
-        token0Length: data.session.access_token.length,
-        token1Length: data.session.refresh_token.length,
-        token0Preview: data.session.access_token.substring(0, 20) + '...',
-        token1Preview: data.session.refresh_token.substring(0, 20) + '...'
-      })
-      
-      // Debug: Log the actual cookie headers being set
-      console.log('🔐 Cookie headers being set:', {
-        'sb-ekdjxzhujettocosgzql-auth-token-user.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
-        'sb-ekdjxzhujettocosgzql-auth-token-user.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
-        'sb-ekdjxzhujettocosgzql-auth-token.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
-        'sb-ekdjxzhujettocosgzql-auth-token.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`
-      })
-    } else {
-      console.log('🔐 No session data available')
-    }
+    // Let Supabase handle cookie management automatically
+    // The createClient() function will handle setting the appropriate cookies
+    console.log('🔐 Login completed, cookies should be set by Supabase')
 
     return response
 

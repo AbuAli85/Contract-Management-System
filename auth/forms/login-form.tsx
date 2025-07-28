@@ -47,7 +47,7 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Starting login process...")
       console.log("🔐 Login Debug - Email:", email)
       
-      // Use client-side authentication first
+      // Use client-side authentication
       const { success, error: clientError } = await signIn(email, password)
 
       if (!success) {
@@ -57,39 +57,6 @@ export function LoginForm() {
       }
 
       console.log("🔐 Login Debug - Client login successful")
-
-      // Also call server-side login to ensure cookies are set properly
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-          credentials: 'include'
-        })
-
-        const data = await response.json()
-        console.log("🔐 Login Debug - Server login response:", data)
-
-        if (!response.ok || !data.success) {
-          console.warn("🔐 Login Debug - Server login failed, but client login succeeded")
-          // Don't fail the login if server-side fails, since client-side worked
-        }
-      } catch (serverError) {
-        console.warn("🔐 Login Debug - Server login error, but client login succeeded:", serverError)
-        // Don't fail the login if server-side fails, since client-side worked
-      }
-
-      // Debug: Check if cookies are set (note: httpOnly cookies won't be visible to client-side JS)
-      if (typeof window !== 'undefined') {
-        const cookies = document.cookie.split(';').map(c => c.trim())
-        const authCookies = cookies.filter(c => 
-          c.includes('auth') || c.includes('supabase') || c.includes('sb-')
-        )
-        console.log("🔐 Login Debug - Client-side auth cookies after login:", authCookies)
-        console.log("🔐 Login Debug - Note: HTTP-only cookies are not visible to client-side JS")
-      }
 
       // After successful login, redirect immediately
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
