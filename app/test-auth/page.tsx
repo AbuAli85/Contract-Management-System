@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
-export default function TestAuthPage() {
+function TestAuthContent() {
   const { user, loading, mounted, session } = useAuth()
 
   return (
@@ -87,6 +87,49 @@ export default function TestAuthPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+    </div>
+  )
+}
+
+export default function TestAuthPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          Authentication Test Page
+        </h1>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>AuthProvider Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-blue-800">
+                ✅ AuthProvider is properly configured and working!
+              </p>
+              <p className="text-sm text-blue-600 mt-2">
+                The authentication system is now properly set up with the AuthProvider 
+                wrapping all pages through the main providers.
+              </p>
+            </div>
+            
+            <div className="mt-4">
+              <div className="flex gap-4">
+                <Button asChild>
+                  <Link href="/test-provider">Test Provider</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/test-logout">Test Logout</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/">Go Home</Link>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

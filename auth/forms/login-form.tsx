@@ -22,7 +22,20 @@ export function LoginForm() {
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
-  const redirectTo = `/${locale}/dashboard`
+  
+  // Get redirect URL from query parameters or default to dashboard
+  const getRedirectUrl = () => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const redirectParam = urlParams.get('redirect')
+      if (redirectParam) {
+        return redirectParam
+      }
+    }
+    return `/${locale}/dashboard`
+  }
+  
+  const redirectTo = getRedirectUrl()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
