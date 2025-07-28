@@ -101,54 +101,10 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      // First try to get session from Supabase client
+      // Get session from Supabase client
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
-      // If no session from client, check server-side session
-      if (!currentSession?.user) {
-        console.log('🔧 SimpleAuthProvider: No client session, checking server-side...')
-        
-        try {
-          const response = await fetch('/api/auth/check-session', {
-            credentials: 'include'
-          })
-          
-          if (response.ok) {
-            const data = await response.json()
-            console.log('🔧 SimpleAuthProvider: Server session check:', data)
-            
-            if (data.success && data.hasSession && data.user) {
-              // Create a session object from server data
-              const serverSession = {
-                user: data.user,
-                access_token: data.access_token || '',
-                refresh_token: data.refresh_token || '',
-                expires_at: data.expires_at || 0
-              } as Session
-              
-              setSession(serverSession)
-              setUser(serverSession.user)
-              
-              // Load profile and roles
-              const userProfile = await loadUserProfile(serverSession.user.id)
-              const userRoles = await loadUserRoles(serverSession.user.id)
-              
-              setProfile(userProfile)
-              setRoles(userRoles)
-              
-              if (!userProfile) {
-                setProfileNotFound(true)
-              }
-              
-              console.log('🔧 SimpleAuthProvider: Server session loaded successfully')
-              setLoading(false)
-              return
-            }
-          }
-        } catch (serverError) {
-          console.error('🔧 SimpleAuthProvider: Server session check failed:', serverError)
-        }
-      } else {
+      if (currentSession?.user) {
         // Use client session
         setSession(currentSession)
         setUser(currentSession.user)
@@ -163,6 +119,12 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         if (!userProfile) {
           setProfileNotFound(true)
         }
+      } else {
+        // No session found, user is not authenticated
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setRoles([])
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
@@ -202,23 +164,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
       
-      // Set up periodic session refresh with shorter interval initially
-      const intervalId = setInterval(async () => {
-        if (!user) {
-          console.log('🔧 SimpleAuthProvider: Periodic session check...')
-          await initializeAuth()
-        }
-      }, 1000) // Check every 1 second initially for faster response
-      
-      // Clear the interval after 10 seconds to reduce overhead
-      const clearIntervalTimeout = setTimeout(() => {
-        clearInterval(intervalId)
-      }, 10000)
-      
       return () => {
         subscription.unsubscribe()
-        clearInterval(intervalId)
-        clearTimeout(clearIntervalTimeout)
       }
     }
   }, [])
