@@ -1,59 +1,94 @@
 'use client'
 
+import { useState } from 'react'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import type { UserProfile } from '@/types/custom'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { User, Settings, LogOut, Shield } from 'lucide-react'
+import type { UserProfile } from '@/types/custom'
 import Link from 'next/link'
 
-// UserProfile component with proper TypeScript handling for optional avatar_url
-export function UserProfile() {
-  const { user, profile, roles, signOut } = useAuth()
+// Helper function to get initials from full name
+const getInitials = (fullName: string) => {
+  return fullName
+    .split(' ')
+    .map(name => name[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
-  if (!user || !profile) {
+interface UserProfileProps {
+  profile?: UserProfile | null
+  compact?: boolean
+}
+
+export function UserProfile({ profile, compact = false }: UserProfileProps) {
+  const { user, signOut } = useAuth()
+  const [isOpen, setIsOpen] = useState(false)
+
+  if (!user) {
     return null
   }
 
-  // Extract user profile fields with a type assertion to handle optional data
-  const {
-    avatar_url = '',
-    full_name,
-    role: profileRole,
-  } = profile as UserProfile
+  // Extract user profile fields with proper destructuring
+  const avatarUrl = profile?.avatar_url || undefined
+  const displayName = profile?.full_name || user.email || 'User'
+  const userRole = profile?.role || 'user'
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
+  if (compact) {
+    return (
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback>
+                {profile?.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/profile">Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard">Dashboard</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => signOut()}>
+            Log out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
   }
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-    } catch (error) {
-      console.error('Sign out error:', error)
-    }
-  }
-
-  // Clean variable assignment using destructured values
-  const avatarUrl = avatar_url || undefined
-  const displayName = full_name || user.email || 'User'
-  const userRole = profileRole || 'user'
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage src={avatarUrl} alt={displayName} />
             <AvatarFallback>
-              {full_name ? getInitials(full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+              {profile?.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -61,88 +96,29 @@ export function UserProfile() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">
-              {displayName}
-            </p>
+            <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
-            <div className="flex items-center gap-1 mt-1">
-              <Shield className="h-3 w-3" />
-              <Badge variant="secondary" className="text-xs">
+            {userRole && (
+              <p className="text-xs leading-none text-muted-foreground capitalize">
                 {userRole}
-              </Badge>
-            </div>
+              </p>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/auth/profile" className="flex items-center">
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </Link>
+          <Link href="/profile">Profile</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings" className="flex items-center">
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </Link>
+          <Link href="/dashboard">Dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="flex items-center">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuItem onClick={() => signOut()}>
+          Log out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-// Compact version for mobile or smaller spaces
-export function UserProfileCompact() {
-  const { user, profile } = useAuth()
-
-  if (!user || !profile) {
-    return null
-  }
-
-  // Extract user profile fields with a type assertion to handle optional data
-  const {
-    avatar_url: compactAvatarUrl = '',
-    full_name: compactFullName,
-    role: compactRole,
-  } = profile as UserProfile
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2)
-  }
-
-  // Clean variable assignment using destructured values
-  const avatarUrl = compactAvatarUrl || undefined
-  const displayName = compactFullName || user.email || 'User'
-  const userRole = compactRole || 'user'
-
-  return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-6 w-6">
-        <AvatarImage src={avatarUrl} alt={displayName} />
-        <AvatarFallback className="text-xs">
-          {compactFullName ? getInitials(compactFullName) : user.email?.[0]?.toUpperCase() || 'U'}
-        </AvatarFallback>
-      </Avatar>
-      <div className="hidden sm:block">
-        <p className="text-sm font-medium">
-          {displayName}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {userRole}
-        </p>
-      </div>
-    </div>
   )
 } 
