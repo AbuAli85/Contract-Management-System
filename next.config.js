@@ -82,8 +82,6 @@ const nextConfig = {
   images: {
     formats: ['image/webp', 'image/avif'],
   },
-  // Add output configuration to prevent issues
-  output: 'standalone',
   // Disable type checking during build to avoid issues
   typescript: {
     ignoreBuildErrors: true,
