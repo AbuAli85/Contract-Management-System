@@ -20,6 +20,10 @@ function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [profile, setProfile] = useState(null)
+  const [roles, setRoles] = useState<string[]>([])
+  const [session, setSession] = useState(null)
+  const [profileNotFound, setProfileNotFound] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -30,6 +34,10 @@ function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     mounted,
+    profile,
+    roles,
+    session,
+    profileNotFound,
     setUser,
     signIn: async (email: string, password: string) => {
       // This is a placeholder - the actual sign in is handled by the server API
@@ -41,11 +49,46 @@ function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
     },
     signOut: async () => {
       setUser(null)
+      setProfile(null)
+      setRoles([])
+      setSession(null)
+      setProfileNotFound(false)
       return { success: true }
     },
     // Add method to update user state after successful login
     updateUserState: (userData: any) => {
       setUser(userData)
+      // Set default roles for now
+      setRoles(['admin'])
+    },
+    // Add placeholder methods for compatibility
+    signUp: async (email: string, password: string) => {
+      return { success: true }
+    },
+    resetPassword: async (email: string) => {
+      return { success: true }
+    },
+    updatePassword: async (password: string) => {
+      return { success: true }
+    },
+    updateProfile: async (updates: any) => {
+      return { success: true }
+    },
+    refreshSession: async () => {
+      // Placeholder
+    },
+    forceRefreshRole: async () => {
+      // Placeholder
+    },
+    hasRole: (role: string) => {
+      return roles.includes(role)
+    },
+    hasAnyRole: (rolesToCheck: string[]) => {
+      return rolesToCheck.some(role => roles.includes(role))
+    },
+    hasPermission: (permission: string) => {
+      // Placeholder - always return true for now
+      return true
     }
   }
 
