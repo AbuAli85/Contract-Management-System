@@ -5,12 +5,23 @@ export const createClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
-  // Return null during SSR if environment variables are missing
+  // Return a mock client during SSR if environment variables are missing
   if (!supabaseUrl || !supabaseKey) {
     if (typeof window === 'undefined') {
-      return null as any
+      // Return a mock client for SSR
+      return {
+        auth: {
+          getSession: async () => ({ data: { session: null }, error: null }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+          signInWithPassword: async () => ({ data: null, error: { message: 'Environment variables not configured' } }),
+          signUp: async () => ({ data: null, error: { message: 'Environment variables not configured' } }),
+          signOut: async () => ({ error: null }),
+          signInWithOAuth: async () => ({ data: null, error: { message: 'Environment variables not configured' } })
+        }
+      } as any
     }
-    throw new Error('Missing Supabase environment variables')
+    console.warn('Missing Supabase environment variables - using mock client')
+    return null as any
   }
   
   // Check if we're in a browser environment

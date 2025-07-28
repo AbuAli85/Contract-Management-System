@@ -88,7 +88,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
           full_name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || 'User',
           avatar_url: session.user.user_metadata?.avatar_url || null,
           created_at: session.user.created_at,
-          updated_at: session.user.updated_at || session.user.created_at,
           role: 'user'
         }
         
@@ -116,7 +115,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         full_name: newSession.user.user_metadata?.full_name || newSession.user.email?.split('@')[0] || 'User',
         avatar_url: newSession.user.user_metadata?.avatar_url || null,
         created_at: newSession.user.created_at,
-        updated_at: newSession.user.updated_at || newSession.user.created_at,
         role: 'user'
       }
       
@@ -140,6 +138,9 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
       return () => subscription.unsubscribe()
+    } else {
+      // If no Supabase client, just set loading to false
+      setLoading(false)
     }
   }, [supabase])
 

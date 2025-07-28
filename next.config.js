@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Temporarily disabled to fix lucide-react import issues
+    // optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
   // Disable ESLint during build to avoid configuration issues
   eslint: {
