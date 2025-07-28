@@ -1,9 +1,25 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { authService, type AuthState } from '@/lib/auth-service'
+import { createClient } from '@/lib/supabase/client'
+import type { Session } from '@supabase/supabase-js'
 
-interface AuthContextType extends AuthState {
+interface UserProfile {
+  id: string
+  email: string
+  role: string
+  status?: string
+  created_at?: string
+}
+
+interface AuthContextType {
+  user: Session['user'] | null
+  session: Session | null
+  profile: UserProfile | null
+  roles: string[]
+  loading: boolean
+  mounted: boolean
+  profileNotFound: boolean
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<{ success: boolean; error?: string }>
@@ -21,17 +37,6 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-<<<<<<< Updated upstream
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-    mounted: false,
-    profile: null,
-    roles: [],
-    profileNotFound: false
-  })
-=======
   const [session, setSession] = useState<Session | null>(null)
   const [user, setUser] = useState<Session['user'] | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
@@ -229,53 +234,153 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     setLoading(false) // Always set loading to false
   }
->>>>>>> Stashed changes
 
   useEffect(() => {
     console.log('🔧 AuthProvider useEffect started')
     
-    // Subscribe to auth service state changes
-    const unsubscribe = authService.subscribe((state) => {
-      console.log('🔧 AuthProvider: State updated:', {
-        user: !!state.user,
-        session: !!state.session,
-        loading: state.loading,
-        mounted: state.mounted
-      })
-      setAuthState(state)
-    })
+    if (!supabase) {
+      console.log('❌ No supabase client available')
+      setLoading(false)
+      setMounted(true)
+      return
+    }
+
+    // Set mounted to true immediately
+    setMounted(true)
 
     // Initialize auth
-    console.log('🔧 AuthProvider: Calling initializeAuth...')
-    authService.initializeAuth()
+    initializeAuth()
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
 
     // Cleanup subscription on unmount
     return () => {
-      unsubscribe()
+      subscription.unsubscribe()
     }
   }, [])
 
   // Expose auth state for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__AUTH_STATE__ = authState
+      (window as any).__AUTH_STATE__ = {
+        user,
+        session,
+        profile,
+        roles,
+        loading,
+        mounted,
+        profileNotFound
+      }
     }
-  }, [authState])
+  }, [user, session, profile, roles, loading, mounted, profileNotFound])
+
+  // Auth methods (simplified for now)
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase?.auth.signInWithPassword({ email, password }) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Sign in failed' }
+    }
+  }
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase?.auth.signUp({ email, password }) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Sign up failed' }
+    }
+  }
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase?.auth.signOut() || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Sign out failed' }
+    }
+  }
+
+  const signInWithProvider = async (provider: 'github' | 'google' | 'twitter') => {
+    try {
+      const { error } = await supabase?.auth.signInWithOAuth({ provider }) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Provider sign in failed' }
+    }
+  }
+
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase?.auth.resetPasswordForEmail(email) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Password reset failed' }
+    }
+  }
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase?.auth.updateUser({ password }) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Password update failed' }
+    }
+  }
+
+  const updateProfile = async (updates: any) => {
+    try {
+      const { error } = await supabase?.auth.updateUser(updates) || {}
+      return { success: !error, error: error?.message }
+    } catch (error) {
+      return { success: false, error: 'Profile update failed' }
+    }
+  }
+
+  const refreshSession = async () => {
+    try {
+      await supabase?.auth.refreshSession()
+    } catch (error) {
+      console.error('Session refresh failed:', error)
+    }
+  }
+
+  const forceRefreshRole = async () => {
+    if (user) {
+      const userRoles = await loadUserRoles(user.id)
+      setRoles(userRoles)
+    }
+  }
+
+  const hasRole = (role: string) => roles.includes(role)
+  const hasAnyRole = (rolesToCheck: string[]) => rolesToCheck.some(role => roles.includes(role))
+  const hasPermission = (permission: string) => {
+    // Implement permission checking logic here
+    return roles.some(role => role === 'admin' || role === 'super_admin')
+  }
 
   const contextValue: AuthContextType = {
-    ...authState,
-    signIn: authService.signIn.bind(authService),
-    signUp: authService.signUp.bind(authService),
-    signOut: authService.signOut.bind(authService),
-    signInWithProvider: authService.signInWithProvider.bind(authService),
-    resetPassword: authService.resetPassword.bind(authService),
-    updatePassword: authService.updatePassword.bind(authService),
-    updateProfile: authService.updateProfile.bind(authService),
-    refreshSession: authService.refreshSession.bind(authService),
-    forceRefreshRole: authService.forceRefreshRole.bind(authService),
-    hasRole: authService.hasRole.bind(authService),
-    hasAnyRole: authService.hasAnyRole.bind(authService),
-    hasPermission: authService.hasPermission.bind(authService)
+    user,
+    session,
+    profile,
+    roles,
+    loading,
+    mounted,
+    profileNotFound,
+    signIn,
+    signUp,
+    signOut,
+    signInWithProvider,
+    resetPassword,
+    updatePassword,
+    updateProfile,
+    refreshSession,
+    forceRefreshRole,
+    hasRole,
+    hasAnyRole,
+    hasPermission
   }
 
   return (
