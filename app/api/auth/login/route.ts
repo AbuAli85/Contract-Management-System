@@ -65,24 +65,25 @@ export async function POST(request: NextRequest) {
         path: '/',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
-        sameSite: 'lax' as const, // Changed from 'strict' to 'lax' for better compatibility
+        sameSite: 'lax' as const,
         maxAge: 60 * 60 * 24 * 7 // 7 days
       }
       
-      // Set the generic auth token cookies that middleware expects
+      // Set the cookies with the exact names that Supabase expects
+      // These are the cookie names that Supabase will look for
       response.cookies.set({
-        name: 'sb-auth-token.0',
+        name: 'sb-ekdjxzhujettocosgzql-auth-token-user.0',
         value: data.session.access_token,
         ...cookieOptions
       })
       
       response.cookies.set({
-        name: 'sb-auth-token.1',
+        name: 'sb-ekdjxzhujettocosgzql-auth-token-user.1',
         value: data.session.refresh_token,
         ...cookieOptions
       })
       
-      // Also set project-specific cookies for compatibility
+      // Also set the cookies without -user for compatibility
       response.cookies.set({
         name: 'sb-ekdjxzhujettocosgzql-auth-token.0',
         value: data.session.access_token,
@@ -105,8 +106,8 @@ export async function POST(request: NextRequest) {
       
       // Debug: Log the actual cookie headers being set
       console.log('🔐 Cookie headers being set:', {
-        'sb-auth-token.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
-        'sb-auth-token.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
+        'sb-ekdjxzhujettocosgzql-auth-token-user.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
+        'sb-ekdjxzhujettocosgzql-auth-token-user.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
         'sb-ekdjxzhujettocosgzql-auth-token.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
         'sb-ekdjxzhujettocosgzql-auth-token.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`
       })

@@ -101,10 +101,13 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
+      console.log('🔧 SimpleAuthProvider: Initializing auth...')
+      
       // First try to get session from Supabase client
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       if (currentSession?.user) {
+        console.log('🔧 SimpleAuthProvider: Client session found:', currentSession.user.email)
         // Use client session
         setSession(currentSession)
         setUser(currentSession.user)
@@ -119,6 +122,10 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         if (!userProfile) {
           setProfileNotFound(true)
         }
+        
+        console.log('🔧 SimpleAuthProvider: Client session loaded successfully')
+        setLoading(false)
+        return
       } else {
         // No client session, check server-side session
         console.log('🔧 SimpleAuthProvider: No client session, checking server-side...')
@@ -165,6 +172,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         }
         
         // No session found, user is not authenticated
+        console.log('🔧 SimpleAuthProvider: No session found, user is not authenticated')
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -172,33 +180,52 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
     } catch (error) {
       console.error('Auth initialization error:', error)
+      setSession(null)
+      setUser(null)
+      setProfile(null)
+      setRoles([])
     } finally {
+      console.log('🔧 SimpleAuthProvider: Setting loading to false')
       setLoading(false)
     }
   }
 
   // Handle auth state changes
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    console.log('🔄 SimpleAuthProvider: Auth state changed:', event, newSession?.user?.id)
+    
     setSession(newSession)
     setUser(newSession?.user ?? null)
     setProfileNotFound(false)
     
     if (newSession?.user) {
-      const userProfile = await loadUserProfile(newSession.user.id)
-      const userRoles = await loadUserRoles(newSession.user.id)
+      console.log('🔄 SimpleAuthProvider: User session established:', newSession.user.email)
       
-      setProfile(userProfile)
-      setRoles(userRoles)
-      
-      if (!userProfile) {
-        setProfileNotFound(true)
+      // Load profile and roles immediately
+      try {
+        const userProfile = await loadUserProfile(newSession.user.id)
+        const userRoles = await loadUserRoles(newSession.user.id)
+        
+        setProfile(userProfile)
+        setRoles(userRoles)
+        
+        if (!userProfile) {
+          setProfileNotFound(true)
+        }
+        
+        console.log('🔄 SimpleAuthProvider: Profile data updated:', { profile: !!userProfile, roles: userRoles })
+      } catch (error) {
+        console.warn('🔄 SimpleAuthProvider: Profile loading failed in auth state change:', error)
+        setProfile(null)
+        setRoles([])
       }
     } else {
+      console.log('🔄 SimpleAuthProvider: Session cleared')
       setProfile(null)
       setRoles([])
     }
     
-    setLoading(false)
+    setLoading(false) // Always set loading to false
   }
 
   useEffect(() => {

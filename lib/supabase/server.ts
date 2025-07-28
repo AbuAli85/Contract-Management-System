@@ -21,30 +21,30 @@ export async function createClient() {
         async get(name: string) {
           console.log('🔧 Server: Supabase requesting cookie:', name)
           
-          // Simplified cookie handling - just do direct lookup like middleware
+          // Try to get the exact cookie name first
           const cookie = await cookieStore.get(name)
           if (cookie?.value) {
-            console.log('🔧 Server: Found cookie:', name)
+            console.log('🔧 Server: Found exact cookie match:', name)
             return cookie.value
           }
           
-          // Fallback for auth token cookies - check both generic and project-specific names
-          if (name.includes('auth-token')) {
-            // If Supabase is looking for generic names, try project-specific
-            if (name === 'sb-auth-token' || name === 'sb-auth-token.0') {
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.0')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific auth token as fallback')
-                return projectCookie.value
-              }
+          // Fallback: if Supabase is looking for -user cookies, try without -user
+          if (name.includes('-user')) {
+            const fallbackName = name.replace('-user', '')
+            const fallbackCookie = await cookieStore.get(fallbackName)
+            if (fallbackCookie?.value) {
+              console.log('🔧 Server: Using fallback cookie:', fallbackName)
+              return fallbackCookie.value
             }
-            
-            if (name === 'sb-auth-token.1') {
-              const projectCookie = await cookieStore.get('sb-ekdjxzhujettocosgzql-auth-token.1')
-              if (projectCookie?.value) {
-                console.log('🔧 Server: Using project-specific refresh token as fallback')
-                return projectCookie.value
-              }
+          }
+          
+          // Fallback: if Supabase is looking for cookies without -user, try with -user
+          if (!name.includes('-user') && name.includes('auth-token')) {
+            const fallbackName = name.replace('auth-token', 'auth-token-user')
+            const fallbackCookie = await cookieStore.get(fallbackName)
+            if (fallbackCookie?.value) {
+              console.log('🔧 Server: Using fallback cookie with -user:', fallbackName)
+              return fallbackCookie.value
             }
           }
           
@@ -53,21 +53,22 @@ export async function createClient() {
         },
         async set(name: string, value: string, options: CookieOptions) {
           try {
-            // Handle auth token cookies - set both generic and project-specific names
-            if (name === 'sb-auth-token' || 
-                name === 'sb-auth-token.0' ||
-                name === 'sb-auth-token-code-verifier') {
-              // Set both generic and project-specific names
-              await cookieStore.set({ name: 'sb-auth-token.0', value, ...options })
-              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.0', value, ...options })
-            } else if (name === 'sb-auth-token.1' ||
-                       name === 'sb-auth-token-user') {
-              // Set both generic and project-specific names
-              await cookieStore.set({ name: 'sb-auth-token.1', value, ...options })
-              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.1', value, ...options })
-            } else {
-              // For other cookies, set normally
-              await cookieStore.set({ name, value, ...options })
+            console.log('🔧 Server: Setting cookie:', name, 'with value length:', value.length)
+            
+            // Set the exact cookie name that Supabase expects
+            await cookieStore.set({ name, value, ...options })
+            
+            // Also set fallback cookies for compatibility
+            if (name.includes('auth-token')) {
+              if (name.includes('-user')) {
+                // If setting -user cookie, also set without -user
+                const fallbackName = name.replace('-user', '')
+                await cookieStore.set({ name: fallbackName, value, ...options })
+              } else {
+                // If setting without -user, also set with -user
+                const fallbackName = name.replace('auth-token', 'auth-token-user')
+                await cookieStore.set({ name: fallbackName, value, ...options })
+              }
             }
           } catch {
             // The `set` method was called from a Server Component.
@@ -77,19 +78,22 @@ export async function createClient() {
         },
         async remove(name: string, options: CookieOptions) {
           try {
-            // Remove both generic and project-specific auth token cookies
-            if (name === 'sb-auth-token' || 
-                name === 'sb-auth-token.0' ||
-                name === 'sb-auth-token-code-verifier') {
-              await cookieStore.set({ name: 'sb-auth-token.0', value: '', ...options })
-              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.0', value: '', ...options })
-            } else if (name === 'sb-auth-token.1' ||
-                       name === 'sb-auth-token-user') {
-              await cookieStore.set({ name: 'sb-auth-token.1', value: '', ...options })
-              await cookieStore.set({ name: 'sb-ekdjxzhujettocosgzql-auth-token.1', value: '', ...options })
-            } else {
-              // For other cookies, remove normally
-              await cookieStore.set({ name, value: '', ...options })
+            console.log('🔧 Server: Removing cookie:', name)
+            
+            // Remove the exact cookie name
+            await cookieStore.set({ name, value: '', ...options })
+            
+            // Also remove fallback cookies
+            if (name.includes('auth-token')) {
+              if (name.includes('-user')) {
+                // If removing -user cookie, also remove without -user
+                const fallbackName = name.replace('-user', '')
+                await cookieStore.set({ name: fallbackName, value: '', ...options })
+              } else {
+                // If removing without -user, also remove with -user
+                const fallbackName = name.replace('auth-token', 'auth-token-user')
+                await cookieStore.set({ name: fallbackName, value: '', ...options })
+              }
             }
           } catch {
             // The `delete` method was called from a Server Component.
