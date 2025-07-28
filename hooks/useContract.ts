@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "@/src/components/auth/auth-provider";
+import { useAuth } from "@/src/components/auth/simple-auth-provider";
 import { useCallback } from "react";
 import type { Database } from "@/types/supabase";
 

@@ -41,7 +41,7 @@ export default function DebugAuthPage() {
           loading,
           mounted,
           session: !!session,
-          profile: profile ? { id: profile.id, role: profile.role, status: profile.status } : null,
+          profile: profile ? { id: profile.id, role: profile.role } : null,
           roles
         },
         serverState: {
@@ -131,7 +131,7 @@ export default function DebugAuthPage() {
               <p className="text-sm font-medium">Profile</p>
               <div className="text-sm text-gray-600 space-y-1">
                 <p>Role: {profile.role}</p>
-                <p>Status: {profile.status}</p>
+                <p>Full Name: {profile.full_name || 'Not set'}</p>
               </div>
             </div>
           )}

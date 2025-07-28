@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 

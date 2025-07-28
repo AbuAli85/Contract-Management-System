@@ -17,6 +17,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
+  forceRefreshRole: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -30,7 +31,27 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const [mounted, setMounted] = useState(true) // Start with mounted true
   const [profileNotFound, setProfileNotFound] = useState(false)
 
-  const supabase = createClient()
+  const [supabase, setSupabase] = useState<any>(null)
+
+  useEffect(() => {
+    // Only create client on the client side
+    if (typeof window === 'undefined') {
+      console.log('🔧 SimpleAuthProvider: SSR detected, skipping client creation')
+      return
+    }
+
+    try {
+      console.log('🔧 SimpleAuthProvider: Creating Supabase client on client side')
+      const client = createClient()
+      console.log('🔧 SimpleAuthProvider: Client created:', !!client)
+      setSupabase(client)
+      console.log('🔧 SimpleAuthProvider: Supabase client created successfully')
+    } catch (error) {
+      console.error('🔧 SimpleAuthProvider: Error creating Supabase client:', error)
+      setSupabase(null)
+      setLoading(false) // Set loading to false if client creation fails
+    }
+  }, [])
 
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
     // For now, return null to trigger fallback profile creation
@@ -56,8 +77,22 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     try {
       console.log('🔧 SimpleAuthProvider: Initializing auth...')
       
-      // Get current session
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      // Get current session with error handling
+      let currentSession = null
+      let sessionError = null
+      
+      try {
+        const result = await supabase.auth.getSession()
+        currentSession = result.data.session
+        sessionError = result.error
+      } catch (error) {
+        console.error('🔧 SimpleAuthProvider: Error getting session:', error)
+        sessionError = error as any
+      }
+      
+      if (sessionError) {
+        console.log('🔧 SimpleAuthProvider: Session error:', sessionError.message)
+      }
       
       if (currentSession?.user) {
         console.log('🔧 SimpleAuthProvider: Session found:', currentSession.user.email)
@@ -78,12 +113,58 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         
         console.log('🔧 SimpleAuthProvider: Session loaded successfully')
       } else {
-        console.log('🔧 SimpleAuthProvider: No session found - user not authenticated')
-        setSession(null)
-        setUser(null)
-        setProfile(null)
-        setRoles([])
-        setProfileNotFound(false)
+        console.log('🔧 SimpleAuthProvider: No session found - attempting to refresh session')
+        
+        // Try to refresh the session
+        try {
+          let refreshedSession = null
+          let refreshError = null
+          
+          try {
+            const result = await supabase.auth.refreshSession()
+            refreshedSession = result.data.session
+            refreshError = result.error
+          } catch (error) {
+            console.error('🔧 SimpleAuthProvider: Error refreshing session:', error)
+            refreshError = error as any
+          }
+          
+          if (refreshError) {
+            console.log('🔧 SimpleAuthProvider: Session refresh failed:', refreshError.message)
+          }
+          
+          if (refreshedSession?.user) {
+            console.log('🔧 SimpleAuthProvider: Session refreshed successfully:', refreshedSession.user.email)
+            setSession(refreshedSession)
+            setUser(refreshedSession.user)
+            
+            // Create a basic profile from auth user data
+            const basicProfile: UserProfile = {
+              id: refreshedSession.user.id,
+              email: refreshedSession.user.email || '',
+              role: 'user',
+              full_name: refreshedSession.user.user_metadata?.full_name || refreshedSession.user.email?.split('@')[0] || 'User',
+              avatar_url: refreshedSession.user.user_metadata?.avatar_url,
+              created_at: refreshedSession.user.created_at || new Date().toISOString()
+            }
+            setProfile(basicProfile)
+            setRoles(['user'])
+          } else {
+            console.log('🔧 SimpleAuthProvider: Session refresh failed - user not authenticated')
+            setSession(null)
+            setUser(null)
+            setProfile(null)
+            setRoles([])
+            setProfileNotFound(false)
+          }
+        } catch (error) {
+          console.error('🔧 SimpleAuthProvider: Session refresh error:', error)
+          setSession(null)
+          setUser(null)
+          setProfile(null)
+          setRoles([])
+          setProfileNotFound(false)
+        }
       }
     } catch (error) {
       console.error('🔧 SimpleAuthProvider: Auth initialization error:', error)
@@ -131,23 +212,40 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   useEffect(() => {
-    console.log('🔧 SimpleAuthProvider: useEffect triggered')
+    console.log('🔧 SimpleAuthProvider: useEffect triggered, supabase:', !!supabase, 'isClient:', typeof window !== 'undefined')
     setMounted(true)
     console.log('🔧 SimpleAuthProvider: Mounted set to true')
     
-    // Initialize auth immediately
-    console.log('🔧 SimpleAuthProvider: Starting auth initialization')
-    initializeAuth()
-
+    // Only initialize auth on the client side
+    if (typeof window === 'undefined') {
+      console.log('🔧 SimpleAuthProvider: SSR detected, skipping auth initialization')
+      return
+    }
+    
     if (supabase) {
+      // Initialize auth when supabase client is available
+      console.log('🔧 SimpleAuthProvider: Starting auth initialization')
+      initializeAuth()
+
       console.log('🔧 SimpleAuthProvider: Setting up auth state change listener')
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
       return () => subscription.unsubscribe()
     } else {
-      console.log('🔧 SimpleAuthProvider: No Supabase client, setting loading to false')
-      setLoading(false)
+      console.log('🔧 SimpleAuthProvider: No Supabase client yet, waiting...')
     }
-  }, [])
+  }, [supabase])
+
+  // Fallback timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (loading) {
+        console.log('🔧 SimpleAuthProvider: Loading timeout reached, setting loading to false')
+        setLoading(false)
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [loading])
 
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
@@ -255,6 +353,19 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }
 
+  const forceRefreshRole = async () => {
+    if (!user) return
+    
+    try {
+      console.log('🔧 SimpleAuthProvider: Force refreshing roles for user:', user.id)
+      const userRoles = await loadUserRoles(user.id)
+      setRoles(userRoles)
+      console.log('🔧 SimpleAuthProvider: Roles refreshed successfully:', userRoles)
+    } catch (error) {
+      console.error('🔧 SimpleAuthProvider: Error refreshing roles:', error)
+    }
+  }
+
   const value: AuthContextType = {
     user,
     profile,
@@ -266,7 +377,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     signIn,
     signUp,
     signOut,
-    refreshProfile
+    refreshProfile,
+    forceRefreshRole
   }
 
   return (
