@@ -33,6 +33,7 @@ import Link from 'next/link'
 import { CardDescription } from '@/components/ui/card'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { AuthDebug } from '@/components/auth-debug'
+import { ProtectedRoute } from '@/components/protected-route'
 
 // Loading fallback
 function DashboardLoading() {
@@ -77,15 +78,32 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   }, [params])
 
 
-  // Show loading while checking authentication
-  if (authLoading || !mounted) {
-    return <DashboardLoading />
-  }
+  return (
+    <ProtectedRoute redirectTo={`/${locale}/auth/login`}>
+      <DashboardContent 
+        user={user} 
+        profile={profile} 
+        locale={locale}
+        dataLoading={dataLoading}
+        setDataLoading={setDataLoading}
+      />
+    </ProtectedRoute>
+  )
+}
 
-  // Show loading if no user (will redirect)
-  if (!user) {
-    return <DashboardLoading />
-  }
+function DashboardContent({ 
+  user, 
+  profile, 
+  locale,
+  dataLoading,
+  setDataLoading
+}: { 
+  user: any
+  profile: any
+  locale: string
+  dataLoading: boolean
+  setDataLoading: (loading: boolean) => void
+}) {
 
   // Show dashboard content even if data is still loading
   // The stats will update when the API call completes
