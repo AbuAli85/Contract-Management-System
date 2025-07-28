@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/app/providers'
 
 export function RoleLoader() {
   // This component is disabled to prevent infinite loops

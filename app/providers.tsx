@@ -42,6 +42,10 @@ function SimpleAuthProvider({ children }: { children: React.ReactNode }) {
     signOut: async () => {
       setUser(null)
       return { success: true }
+    },
+    // Add method to update user state after successful login
+    updateUserState: (userData: any) => {
+      setUser(userData)
     }
   }
 

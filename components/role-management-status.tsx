@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { RefreshCw, Shield, User, Crown, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/app/providers'
 import { useToast } from '@/hooks/use-toast'
 import { RoleRefreshButton } from './role-refresh-button'
 

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { RefreshCw, Shield, User, Database, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import { usePermissions } from '@/hooks/use-permissions'
-import { useAuth } from '@/src/components/auth/auth-provider'
+import { useAuth } from '@/app/providers'
 import { useToast } from '@/hooks/use-toast'
 
 export function RoleDebugPanel() {

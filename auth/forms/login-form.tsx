@@ -16,7 +16,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   
-  const { signIn } = useAuth()
+  const { signIn, updateUserState } = useAuth()
   const router = useRouter()
   
   // Get the current locale from the URL or default to 'en'
@@ -36,6 +36,7 @@ export function LoginForm() {
   }
   
   const redirectTo = getRedirectUrl()
+  console.log("🔐 Login Debug - Initial redirect URL:", redirectTo)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,9 +71,49 @@ export function LoginForm() {
 
       console.log("🔐 Login Debug - Server login successful")
 
+      // Update the user state in the auth context
+      if (data.user) {
+        console.log("🔐 Login Debug - Updating user state...")
+        updateUserState(data.user)
+      }
+
+      // Debug: Check if cookies are set (note: httpOnly cookies won't be visible to client-side JS)
+      if (typeof window !== 'undefined') {
+        const cookies = document.cookie.split(';').map(c => c.trim())
+        const authCookies = cookies.filter(c => 
+          c.includes('auth') || c.includes('supabase') || c.includes('sb-')
+        )
+        console.log("🔐 Login Debug - Client-side auth cookies after login:", authCookies)
+        console.log("🔐 Login Debug - Note: HTTP-only cookies are not visible to client-side JS")
+      }
+
       // After successful login, redirect immediately
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
-      router.push(redirectTo)
+      console.log("🔐 Login Debug - Redirect URL:", redirectTo)
+      
+      // Check if session is properly set by making a request to check session
+      try {
+        const sessionCheck = await fetch('/api/auth/check-session', {
+          method: 'GET',
+          credentials: 'include'
+        })
+        const sessionData = await sessionCheck.json()
+        console.log("🔐 Login Debug - Session check result:", sessionData)
+      } catch (error) {
+        console.log("🔐 Login Debug - Session check failed:", error)
+      }
+      
+      // Add a small delay to ensure state is updated
+      setTimeout(() => {
+        // Try router.push first, fallback to window.location.href
+        try {
+          console.log("🔐 Login Debug - Attempting router.push to:", redirectTo)
+          router.push(redirectTo)
+        } catch (error) {
+          console.log("🔐 Login Debug - Router push failed, using window.location.href")
+          window.location.href = redirectTo
+        }
+      }, 100)
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

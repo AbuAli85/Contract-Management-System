@@ -27,6 +27,13 @@ export async function middleware(request: NextRequest) {
     // Get current session
     const { data: { session } } = await supabase.auth.getSession()
     
+    // Debug: Log session status
+    console.log('🔧 Middleware: Session check for path:', request.nextUrl.pathname, {
+      hasSession: !!session,
+      userId: session?.user?.id,
+      userEmail: session?.user?.email
+    })
+    
     const { pathname } = request.nextUrl
     
     // Extract locale from pathname (e.g., /en/dashboard -> en)

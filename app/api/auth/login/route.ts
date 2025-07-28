@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
         path: '/',
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production' || process.env.FORCE_HTTPS === 'true',
-        sameSite: 'strict' as const,
+        sameSite: 'lax' as const, // Changed from 'strict' to 'lax' for better compatibility
         maxAge: 60 * 60 * 24 * 7 // 7 days
       }
       
@@ -101,6 +101,14 @@ export async function POST(request: NextRequest) {
         token1Length: data.session.refresh_token.length,
         token0Preview: data.session.access_token.substring(0, 20) + '...',
         token1Preview: data.session.refresh_token.substring(0, 20) + '...'
+      })
+      
+      // Debug: Log the actual cookie headers being set
+      console.log('🔐 Cookie headers being set:', {
+        'sb-auth-token.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
+        'sb-auth-token.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
+        'sb-ekdjxzhujettocosgzql-auth-token.0': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`,
+        'sb-ekdjxzhujettocosgzql-auth-token.1': `path=/; httpOnly; maxAge=${60 * 60 * 24 * 7}`
       })
     } else {
       console.log('🔐 No session data available')
