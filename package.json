@@ -1,6 +1,6 @@
 {
   "name": "smartpro-hub-test",
-  "version": "1.0.0-1753732805996",
+  "version": "1.0.0-1753735329242",
   "private": true,
   "scripts": {
     "build": "next build",
