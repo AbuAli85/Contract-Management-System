@@ -88,7 +88,7 @@ export function AuthStatusDebug() {
                 <span className="font-medium">Role:</span> {profile.role}
               </div>
               <div className="text-sm">
-                <span className="font-medium">Status:</span> {profile.status}
+                <span className="font-medium">Created:</span> {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
               </div>
             </>
           )}

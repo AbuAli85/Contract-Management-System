@@ -7,7 +7,7 @@ import { Github, Chrome } from 'lucide-react'
 export function OAuthButtons() {
   const { signInWithProvider } = useAuth()
 
-  const handleOAuthSignIn = async (provider: 'github' | 'google' | 'twitter') => {
+  const handleOAuthSignIn = async (provider: 'github' | 'google') => {
     try {
       const { error } = await signInWithProvider(provider)
       if (error) {
