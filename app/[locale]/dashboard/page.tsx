@@ -76,6 +76,7 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     getLocale()
   }, [params])
 
+
   // Show loading while checking authentication
   if (authLoading || !mounted) {
     return <DashboardLoading />

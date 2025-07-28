@@ -104,14 +104,24 @@ export function UserProfileCompact() {
   return (
     <div className="flex items-center gap-2">
       <Avatar className="h-6 w-6">
+<<<<<<< HEAD
         <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name || user.email || 'User'} />
         <AvatarFallback className="text-xs">
           {profile.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase() || 'U'}
+=======
+        <AvatarImage src={profile.avatar_url} alt={profile.full_name || user.email} />
+        <AvatarFallback className="text-xs">
+          {profile.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase()}
+>>>>>>> a0b9607b2750965fec95fa282005a558de5ef534
         </AvatarFallback>
       </Avatar>
       <div className="hidden sm:block">
         <p className="text-sm font-medium">
+<<<<<<< HEAD
           {profile.full_name || user.email || 'User'}
+=======
+          {profile.full_name || user.email}
+>>>>>>> a0b9607b2750965fec95fa282005a558de5ef534
         </p>
         <p className="text-xs text-muted-foreground">
           {profile.role}
