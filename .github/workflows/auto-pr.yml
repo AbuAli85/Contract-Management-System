@@ -21,7 +21,6 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: AbuAli16/Contract-Management-System
           branch: auto-sync-$(date +%Y%m%d-%H%M%S)
           title: "🔄 Auto Sync: $(date +%Y-%m-%d %H:%M)"
           body: |
