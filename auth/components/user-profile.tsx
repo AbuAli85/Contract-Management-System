@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { User, Settings, LogOut, Shield } from 'lucide-react'
 import Link from 'next/link'
 
+// UserProfile component with proper TypeScript handling for optional avatar_url
 export function UserProfile() {
   const { user, profile, roles, signOut } = useAuth()
 
