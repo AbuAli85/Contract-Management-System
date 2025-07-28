@@ -39,6 +39,7 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
   }
 
   // Extract user profile fields with proper destructuring
+  // Using optional chaining to safely access avatar_url property
   const avatarUrl = profile?.avatar_url || undefined
   const displayName = profile?.full_name || user.email || 'User'
   const userRole = profile?.role || 'user'
