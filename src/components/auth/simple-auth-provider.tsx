@@ -137,15 +137,16 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
   // Initialize auth when supabase client is ready
   useEffect(() => {
-    console.log('🔐 Auth: useEffect triggered', { supabase: !!supabase, mounted })
     if (supabase && !mounted) {
-      console.log('🔐 Auth: Calling initializeAuth')
+      console.log('🔐 Auth: Initializing...')
       initializeAuth()
     }
   }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
-    console.log('🔐 Auth state change:', event, newSession?.user?.email)
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+      console.log('🔐 Auth state change:', event, newSession?.user?.email)
+    }
     
     try {
       if (event === 'SIGNED_IN' && newSession?.user) {

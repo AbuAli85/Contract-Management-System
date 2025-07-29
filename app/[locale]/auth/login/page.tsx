@@ -22,14 +22,14 @@ export default function LoginPage() {
       console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
       setRedirectAttempted(true)
       
-      // Use window.location.href for more reliable redirect
+      // Use Next.js router for client-side navigation
       const dashboardUrl = `/${locale}/dashboard`
       console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
       
-      // Use immediate redirect instead of setTimeout
-      window.location.href = dashboardUrl
+      // Use router.push for client-side navigation
+      router.push(dashboardUrl)
     }
-  }, [user, loading, mounted, locale, redirectAttempted])
+  }, [user, loading, mounted, locale, redirectAttempted, router])
 
   // Show loading while checking authentication
   if (loading || !mounted) {
@@ -53,7 +53,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-500 mt-2">
             If you're not redirected automatically,{' '}
             <button 
-              onClick={() => window.location.href = `/${locale}/dashboard`} 
+              onClick={() => router.push(`/${locale}/dashboard`)} 
               className="text-blue-600 hover:underline"
             >
               click here

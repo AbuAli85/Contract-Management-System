@@ -38,21 +38,19 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     return () => clearTimeout(timer)
   }, [loading, mounted])
 
-  // Check if we should show loading state - temporarily bypass for testing
-  const shouldShowLoading = false // (loading || !mounted) && !forceRender
+  // Check if we should show loading state
+  const shouldShowLoading = (loading || !mounted) && !forceRender
 
-  // Debug logging
-  console.log('🧭 AppLayoutWithSidebar: Rendering', { 
-    loading, 
-    mounted, 
-    user: !!user, 
-    isLandingPage,
-    sidebarOpen,
-    childrenType: typeof children,
-    childrenCount: React.Children.count(children),
-    shouldShowLoading,
-    forceRender
-  })
+  // Debug logging - only log when there are issues
+  if (loading || !mounted) {
+    console.log('🧭 AppLayoutWithSidebar: Loading state', { 
+      loading, 
+      mounted, 
+      user: !!user, 
+      shouldShowLoading,
+      forceRender
+    })
+  }
   
   if (shouldShowLoading) {
     return (
@@ -88,15 +86,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         />
       )}
       
-      {/* Fallback sidebar for testing */}
-      {isLandingPage && (
-        <div className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50">
-          <div className="p-4">
-            <h2 className="text-lg font-bold">🧭 Sidebar Test</h2>
-            <p className="text-sm text-gray-600">This is a test sidebar</p>
-          </div>
-        </div>
-      )}
+      
 
       {/* Main content */}
       <div className={`min-h-screen ${!isLandingPage ? 'md:ml-64' : ''}`}>
@@ -128,31 +118,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </header>
         )}
 
-        {/* Page content */}
-        <main className="p-6">
-          {/* Debug indicator for sidebar status */}
-          {!isLandingPage && (
-            <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-              🧭 Sidebar Navigation Active - Mobile menu: {sidebarOpen ? 'Open' : 'Closed'}
-            </div>
-          )}
-          
-          {/* Debug children rendering */}
-          <div className="mb-4 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
-            🧭 Debug: Children type: {typeof children}, Children count: {React.Children.count(children)}, Pathname: {pathname}, Locale: {locale}, IsLanding: {isLandingPage ? 'true' : 'false'}
-          </div>
-          
-          {/* Force render children */}
-          <div className="children-container">
-            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-              🧭 Debug: About to render children
-            </div>
-            {children}
-            <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
-              🧭 Debug: Children rendered
-            </div>
-          </div>
-        </main>
+                 {/* Page content */}
+         <main className="p-6">
+           {/* Render children */}
+           <div className="children-container">
+             {children}
+           </div>
+         </main>
       </div>
     </div>
   )
