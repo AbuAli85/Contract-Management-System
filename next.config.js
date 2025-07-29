@@ -39,6 +39,26 @@ const nextConfig = {
       },
     ]
   },
+  // Configure internationalization
+  i18n: {
+    locales: ['en', 'ar'],
+    defaultLocale: 'en',
+    localeDetection: true,
+  },
+  // Configure static export for internationalized routes
+  trailingSlash: false,
+  // Handle dynamic routes properly
+  async exportPathMap(defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
+    return {
+      '/': { page: '/[locale]', query: { locale: 'en' } },
+      '/en': { page: '/[locale]', query: { locale: 'en' } },
+      '/ar': { page: '/[locale]', query: { locale: 'ar' } },
+      '/en/dashboard': { page: '/[locale]/dashboard', query: { locale: 'en' } },
+      '/ar/dashboard': { page: '/[locale]/dashboard', query: { locale: 'ar' } },
+      '/en/auth/login': { page: '/[locale]/auth/login', query: { locale: 'en' } },
+      '/ar/auth/login': { page: '/[locale]/auth/login', query: { locale: 'ar' } },
+    }
+  },
   webpack: (config, { dev, isServer }) => {
     // Fix for module compatibility issues
     config.resolve.fallback = {
