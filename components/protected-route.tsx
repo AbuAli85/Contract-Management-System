@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface ProtectedRouteProps {
@@ -30,7 +29,7 @@ export function ProtectedRoute({
   if (authLoading || !mounted) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="animate-spin mr-2" /> Loading authentication...
+        <div className="animate-spin mr-2">⏳</div> Loading authentication...
       </div>
     )
   }
@@ -40,7 +39,7 @@ export function ProtectedRoute({
     // Add a small delay to prevent flash of redirect message
     return fallback || (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="animate-spin mr-2" /> Checking authentication...
+        <div className="animate-spin mr-2">⏳</div> Checking authentication...
       </div>
     )
   }
