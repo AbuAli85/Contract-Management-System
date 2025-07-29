@@ -95,6 +95,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       description: 'Debug sidebar issues'
     },
     {
+      title: 'Layout Test',
+      href: `/${locale}/layout-test`,
+      icon: '🧪',
+      description: 'Test simple layout'
+    },
+    {
+      title: 'Content Test',
+      href: `/${locale}/simple-content-test`,
+      icon: '📄',
+      description: 'Test content rendering'
+    },
+    {
       title: 'Test Working',
       href: `/${locale}/test-working`,
       icon: '✅',

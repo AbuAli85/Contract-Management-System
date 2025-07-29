@@ -1,6 +1,7 @@
 import { i18n } from '@/src/i18n/i18n-config'
 import { cookies } from 'next/headers'
 import { AppLayoutWithSidebar } from '@/components/app-layout-with-sidebar'
+import SimpleLayout from './layout-simple'
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
