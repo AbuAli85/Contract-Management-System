@@ -21,7 +21,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   
   // Check if we're on the landing page (root route)
   useEffect(() => {
-    setIsLandingPage(pathname === `/${locale}`)
+    const isLanding = pathname === `/${locale}`
+    console.log('🧭 AppLayoutWithSidebar: Checking landing page', { pathname, locale, isLanding })
+    setIsLandingPage(isLanding)
   }, [pathname, locale])
 
   // Force render after 3 seconds to prevent infinite loading
@@ -42,7 +44,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     mounted, 
     user: !!user, 
     isLandingPage,
-    sidebarOpen 
+    sidebarOpen,
+    childrenType: typeof children,
+    childrenCount: React.Children.count(children)
   })
 
   // Temporarily bypass loading state for testing
@@ -127,7 +131,16 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
               🧭 Sidebar Navigation Active - Mobile menu: {sidebarOpen ? 'Open' : 'Closed'}
             </div>
           )}
-          {children}
+          
+          {/* Debug children rendering */}
+          <div className="mb-4 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700">
+            🧭 Debug: Children type: {typeof children}, Children count: {React.Children.count(children)}, Pathname: {pathname}, Locale: {locale}, IsLanding: {isLandingPage ? 'true' : 'false'}
+          </div>
+          
+          {/* Force render children */}
+          <div className="children-container">
+            {children}
+          </div>
         </main>
       </div>
     </div>
