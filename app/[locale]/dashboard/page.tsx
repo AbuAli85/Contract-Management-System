@@ -1,8 +1,4 @@
-'use client'
-
-import { Suspense, useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
+import { Suspense } from 'react'
 
 
 // Loading fallback
@@ -25,30 +21,15 @@ interface DashboardStats {
   recentActivity: number
 }
 
-export default function DashboardPage() {
-  const { user, loading: authLoading, profile, mounted } = useAuth()
-  const [dataLoading, setDataLoading] = useState(false)
-  
-  // Get params using useParams for Next.js compatibility
-  const params = useParams()
-  const locale = params.locale as string
-  
-  // Debug logging
-  console.log('🔧 Dashboard: Component rendered', { 
-    user: !!user, 
-    authLoading, 
-    mounted, 
-    profile: !!profile,
-    dataLoading,
-    locale
-  })
+export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back, {user?.email}. Here's your system overview.
+          Welcome back! Here's your system overview.
         </p>
       </div>
 
@@ -94,5 +75,3 @@ export default function DashboardPage() {
 
 
 
-// Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic'

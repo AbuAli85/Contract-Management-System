@@ -13,6 +13,7 @@ interface AppLayoutWithSidebarProps {
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [isLandingPage, setIsLandingPage] = useState(false)
+  const [forceRender, setForceRender] = useState(false)
   const { user, loading, mounted } = useAuth()
   const params = useParams()
   const pathname = usePathname()
@@ -23,12 +24,36 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     setIsLandingPage(pathname === `/${locale}`)
   }, [pathname, locale])
 
-  if (loading || !mounted) {
+  // Force render after 3 seconds to prevent infinite loading
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading || !mounted) {
+        console.log('🧭 AppLayoutWithSidebar: Force rendering due to timeout')
+        setForceRender(true)
+      }
+    }, 3000)
+    
+    return () => clearTimeout(timer)
+  }, [loading, mounted])
+
+  // Debug logging
+  console.log('🧭 AppLayoutWithSidebar: Rendering', { 
+    loading, 
+    mounted, 
+    user: !!user, 
+    isLandingPage,
+    sidebarOpen 
+  })
+
+  // Temporarily bypass loading state for testing
+  const shouldShowLoading = false // (loading || !mounted) && !forceRender
+  
+  if (shouldShowLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin h-8 w-8 mx-auto mb-4">⏳</div>
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Loading authentication...</p>
         </div>
       </div>
     )
@@ -52,6 +77,16 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           isOpen={sidebarOpen} 
           onClose={() => setSidebarOpen(false)} 
         />
+      )}
+      
+      {/* Fallback sidebar for testing */}
+      {isLandingPage && (
+        <div className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50">
+          <div className="p-4">
+            <h2 className="text-lg font-bold">🧭 Sidebar Test</h2>
+            <p className="text-sm text-gray-600">This is a test sidebar</p>
+          </div>
+        </div>
       )}
 
       {/* Main content */}

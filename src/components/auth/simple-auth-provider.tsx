@@ -67,7 +67,10 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   const initializeAuth = async () => {
+    console.log('🔐 Auth: Initializing auth...', { supabase: !!supabase })
+    
     if (!supabase) {
+      console.log('🔐 Auth: No supabase client, setting mounted')
       setLoading(false)
       setMounted(true)
       return
@@ -118,6 +121,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setRoles([])
       setProfileNotFound(false)
     } finally {
+      console.log('🔐 Auth: Setting loading=false, mounted=true')
       setLoading(false)
       setMounted(true)
     }
@@ -125,7 +129,9 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
   // Initialize auth when supabase client is ready
   useEffect(() => {
+    console.log('🔐 Auth: useEffect triggered', { supabase: !!supabase, mounted })
     if (supabase && !mounted) {
+      console.log('🔐 Auth: Calling initializeAuth')
       initializeAuth()
     }
   }, [supabase, mounted])
