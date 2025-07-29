@@ -81,7 +81,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       console.log('🔐 Auth: Timeout reached, forcing mounted state')
       setLoading(false)
       setMounted(true)
-    }, 5000) // 5 second timeout
+    }, 1000) // 1 second timeout
 
     try {
       // Get current session with error handling
@@ -144,8 +144,9 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+    // Only log significant state changes
     if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-      console.log('🔐 Auth state change:', event, newSession?.user?.email)
+      console.log('🔐 Auth:', event, newSession?.user?.email)
     }
     
     try {
