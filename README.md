@@ -1,433 +1,281 @@
-# Extra Contracts YY - Bilingual Contract Management System
+# Contract Management System
 
-A full-stack Next.js application for managing and generating bilingual (Arabic/English) contracts with real-time updates, role-based dashboards, and webhook integrations.
-
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/abuali85s-projects/v0-fork-of-v0-dev-form-component)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/zVc3ijHfuT4)
-
-## 🚀 Deployment & CI/CD
-
-[![Enhanced CI/CD Pipeline](https://github.com/your-username/contract-management-system/workflows/Enhanced%20CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/contract-management-system/actions/workflows/deploy.yml)
-[![Database Health Check](https://img.shields.io/badge/Database%20Health-Healthy-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![Migration Status](https://img.shields.io/badge/Migrations-Valid-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![Preview Deployments](https://img.shields.io/badge/Preview%20Deployments-Active-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![Production Status](https://img.shields.io/badge/Production-Live-brightgreen?style=flat-square)](https://your-production-url.vercel.app)
-
-### Deployment Strategy
-
-Our robust CI/CD pipeline ensures reliable, automated deployments with comprehensive validation:
-
-#### 🔄 Automated Workflow
-- **Pre-deployment Validation**: Linting, unit tests, database health checks
-- **Database Migrations**: Automated `supabase db push` with validation
-- **Multi-environment Support**: Preview, staging, and production deployments
-- **Health Monitoring**: Post-deployment health checks and monitoring
-
-#### 🎯 Environment Management
-- **Preview Deployments**: Automatic for all pull requests
-- **Staging Environment**: Deployed from `develop` branch
-- **Production Environment**: Deployed from `main` branch
-- **Environment Variables**: Properly managed per environment
-
-#### 🛡️ Quality Gates
-- **Database Health**: Pre-deployment connectivity and performance checks
-- **Migration Validation**: Ensures migrations are safe and sequential
-- **Test Coverage**: 80% minimum coverage enforced
-- **Security Checks**: RLS policy validation and vulnerability scanning
-
-### Deployment Commands
-
-```bash
-# Local deployment validation
-pnpm run deploy:validate    # Lint + unit tests + health check
-pnpm run deploy:preview     # Deploy to preview environment
-pnpm run deploy:production  # Deploy to production
-
-# Database operations
-pnpm run db:health-check    # Check database connectivity
-pnpm run db:validate        # Health check + migration validation
-pnpm run supabase:deploy    # Deploy database migrations
-
-# CI/CD pipeline
-pnpm run ci:full           # Full CI pipeline (lint + tests + deploy)
-pnpm run ci:pre-deploy     # Pre-deployment checks only
-```
-
-### Environment Configuration
-
-#### Required Environment Variables
-
-```bash
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-SUPABASE_PROJECT_ID=your_project_id
-SUPABASE_ACCESS_TOKEN=your_access_token
-
-# Vercel Deployment
-VERCEL_TOKEN=your_vercel_token
-VERCEL_ORG_ID=your_org_id
-VERCEL_PROJECT_ID=your_project_id
-
-# Webhook Integrations
-MAKE_WEBHOOK_URL=your_make_webhook_url
-SLACK_WEBHOOK_URL=your_slack_webhook_url
-```
-
-#### Environment-Specific Configurations
-
-- **Development**: Local `.env.local` file
-- **Preview**: Vercel preview environment variables
-- **Staging**: Vercel staging environment variables  
-- **Production**: Vercel production environment variables
-
-## 🧪 Testing & Quality
-
-[![CI/CD Pipeline](https://github.com/your-username/contract-management-system/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/contract-management-system/actions)
-[![Unit Tests](https://img.shields.io/badge/Unit%20Tests-Passing-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![Integration Tests](https://img.shields.io/badge/Integration%20Tests-Passing-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![E2E Tests](https://img.shields.io/badge/E2E%20Tests-Passing-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-[![Code Coverage](https://img.shields.io/badge/Code%20Coverage-85%25-brightgreen?style=flat-square)](https://codecov.io/gh/your-username/contract-management-system)
-[![Security Audit](https://img.shields.io/badge/Security%20Audit-Passing-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
-
-### Testing Strategy
-
-Our comprehensive testing strategy ensures reliability, security, and maintainability:
-
-#### 🧪 Unit Tests
-- **Coverage**: 85%+ across all modules
-- **Framework**: Jest + React Testing Library
-- **Scope**: Individual components, utilities, and business logic
-- **Edge Cases**: Invalid inputs, error handling, RLS enforcement
-
-#### 🔗 Integration Tests
-- **Framework**: Jest with Supabase test instance
-- **Scope**: End-to-end flows, database interactions, API endpoints
-- **Coverage**: Authentication, promoter management, contract workflows
-
-#### 🌐 E2E Tests
-- **Framework**: Cypress (headless in CI)
-- **Scope**: Key user journeys, cross-browser compatibility
-- **Flows**: Login/logout, promoter management, contract generation
-
-#### 🔒 Security Tests
-- **RLS Policies**: Automated verification of Row Level Security
-- **Vulnerability Scanning**: Regular security audits
-- **Access Control**: Role-based permission testing
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm run test:all
-
-# Run specific test suites
-pnpm run test:unit          # Unit tests with coverage
-pnpm run test:integration   # Integration tests
-pnpm run test:e2e          # E2E tests (requires app running)
-pnpm run test:e2e:open     # E2E tests with UI
-
-# Coverage reports
-pnpm run test:coverage      # Generate coverage report
-pnpm run test:coverage:check # Check coverage threshold (80%)
-
-# Security tests
-pnpm run supabase:test-rls  # Test RLS policies
-```
-
-### Test Coverage Reports
-
-- **HTML Reports**: Available in `coverage/` directory
-- **CI Integration**: Automatic upload to Codecov
-- **PR Comments**: Coverage reports on pull requests
-- **Threshold**: 80% minimum coverage enforced
+A modern, secure contract management platform built with Next.js, Supabase, and TypeScript.
 
 ## 🚀 Features
 
-- **Bilingual Contract Generation**: Create contracts in both Arabic and English
-- **Real-time Updates**: Live data synchronization using Supabase real-time subscriptions
-- **Role-based Access**: Different dashboards for different user roles
-- **Audit Logging**: Comprehensive tracking of all system activities
-- **Webhook Integration**: Automated PDF generation via Make.com
-- **Internationalization**: Multi-language support with Next.js i18n
-- **Type Safety**: Full TypeScript support with generated Supabase types
-- **Responsive Design**: Mobile-first UI built with Tailwind CSS and Shadcn/UI
+### Enhanced Authentication System
+- **Automatic Session Refresh**: Seamless session management with automatic token refresh
+- **Memory Leak Prevention**: Proper cleanup of subscriptions and timers
+- **Centralized Error Handling**: User-friendly error messages with toast notifications
+- **Security**: Comprehensive RLS policies and role-based access control
+- **Error Boundaries**: Graceful error handling with recovery options
+- **Automated Reminders**: Email notifications for session expiry
 
-## 🏗️ Architecture
+### Core Features
+- Multi-role authentication (Admin, Client, Provider)
+- Contract generation and management
+- Party and promoter management
+- Real-time notifications
+- Advanced search and filtering
+- PDF generation and export
+- Audit logging and analytics
 
-### Technology Stack
+## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14 (App Router) with React 18 + TypeScript
-- **Styling**: Tailwind CSS + Shadcn/UI components
-- **State Management**: React Query + custom hooks
-- **Database**: Supabase (PostgreSQL) with Row Level Security (RLS)
-- **Authentication**: Supabase Auth
-- **Real-time**: Supabase real-time subscriptions
-- **Testing**: Jest + React Testing Library + Cypress
-- **Deployment**: Vercel with automated CI/CD
-- **Monitoring**: Health checks, error tracking, performance monitoring
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **UI**: Shadcn/UI, Tailwind CSS, Framer Motion
+- **Testing**: Jest, React Testing Library, Cypress
+- **Deployment**: Vercel, GitHub Actions
 
-### Project Structure
-
-```
-extra-contracts-yy/
-├── app/                    # Next.js App Router pages
-│   ├── [locale]/          # Internationalized routes
-│   ├── api/               # API routes for contracts, webhooks
-│   └── actions/           # Server actions
-├── components/            # Reusable UI components
-│   ├── ui/               # Shadcn/UI components
-│   └── dashboard/        # Dashboard-specific components
-├── hooks/                # Custom React hooks
-├── lib/                  # Utilities, schemas, Supabase clients
-├── scripts/              # SQL migrations, seeding, webhook monitors
-└── types/                # TypeScript type definitions
-```
-
-## 🛠️ Setup & Installation
+## 📦 Installation
 
 ### Prerequisites
+- Node.js 18+ 
+- npm 8+
+- Supabase account
+- Vercel account (for deployment)
 
-- **Node.js 20** or higher
-- **pnpm** (recommended) or npm
-- **Supabase** account and project
-- **Make.com** account (for webhook automation)
+### Local Development
 
-### 1. Clone and Install
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/contract-management-system.git
+   cd contract-management-system
+   ```
 
-```bash
-git clone <repository-url>
-cd extra-contracts-yy
-pnpm install
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-### 2. Environment Configuration
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Fill in your environment variables:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+   FRONTEND_URL=http://localhost:3000
+   ```
 
-Copy the example environment file and configure your variables:
+4. **Set up Supabase**
+   ```bash
+   # Install Supabase CLI
+   npm install -g supabase
+   
+   # Link to your project
+   supabase link --project-ref your-project-ref
+   
+   # Run migrations
+   npm run db:migrate
+   ```
 
-```bash
-cp env.example .env.local
-```
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-#### Required Environment Variables
+## 🚀 Deployment
 
-| Variable | Purpose | Scope |
-|----------|---------|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Client |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Client |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Server |
-| `MAKE_WEBHOOK_URL` | Make.com webhook endpoint | Server |
-| `MAKE_WEBHOOK_SECRET` | Webhook authentication secret | Server |
+### Automatic Deployment (Recommended)
 
-#### Optional Environment Variables
+The project is configured for automatic deployment to Vercel using GitHub Actions.
 
-| Variable | Purpose | Scope |
-|----------|---------|-------|
-| `GOOGLE_CREDENTIALS_JSON` | Google service account credentials | Server |
-| `GOOGLE_DOCS_TEMPLATE_ID` | Google Docs template ID | Server |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email configuration | Server |
-
-### 3. Database Setup
-
-Run the SQL migration scripts in order:
-
-```bash
-# Execute scripts in /scripts directory
-# 001_create_promoters_table.sql
-# 002_alter_parties_add_type.sql
-# ... (continue with all numbered scripts)
-```
-
-### 4. Generate TypeScript Types
-
-```bash
-npx supabase gen types typescript --project-id <YOUR_PROJECT_REF> --schema public > types/supabase.ts
-```
-
-### 5. Development
+#### 1. Connect to Vercel
 
 ```bash
-# Start development server
-pnpm dev
+# Install Vercel CLI
+npm install -g vercel
 
-# Run linting
-pnpm lint
+# Login to Vercel
+vercel login
 
-# Run tests
-pnpm test
-
-# Build for production
-pnpm build
+# Link your project
+vercel link
 ```
 
-## 📖 Usage Guide
+#### 2. Set up GitHub Secrets
 
-### Contract Management
+Add the following secrets to your GitHub repository:
 
-1. **Create a Contract**:
-   - Navigate to `/generate-contract`
-   - Fill in party and promoter details
-   - Submit to generate bilingual PDF
+- `VERCEL_TOKEN`: Your Vercel API token
+- `VERCEL_ORG_ID`: Your Vercel organization ID
+- `VERCEL_PROJECT_ID`: Your Vercel project ID
+- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
+- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
+- `FRONTEND_URL`: Your production frontend URL
 
-2. **Manage Contracts**:
-   - View all contracts at `/contracts`
-   - Edit existing contracts
-   - Track contract status and lifecycle
+#### 3. Deploy Database Migrations
 
-### Promoter Management
+```bash
+# Deploy Supabase migrations
+npm run db:migrate
 
-1. **Add Promoters**:
-   - Go to `/manage-promoters`
-   - Fill in promoter details including ID documents
-   - Upload required documents
-
-2. **Promoter Analytics**:
-   - View promoter performance metrics
-   - Track active contracts per promoter
-
-### Dashboard Features
-
-- **Analytics**: Contract statistics and trends
-- **Audit Logs**: System activity tracking
-- **Notifications**: Real-time alerts and updates
-- **User Management**: Role-based access control
-
-## 🔧 API Reference
-
-### Contract Endpoints
-
-```typescript
-// Create contract
-POST /api/contracts
-{
-  "first_party_id": "uuid",
-  "second_party_id": "uuid", 
-  "promoter_id": "uuid",
-  "job_title": "string",
-  "work_location": "string",
-  "contract_start_date": "YYYY-MM-DD",
-  "contract_end_date": "YYYY-MM-DD"
-}
-
-// Get contract
-GET /api/contracts/[id]
-
-// Update contract
-PUT /api/contracts/[id]
-
-// Delete contract
-DELETE /api/contracts/[id]
+# Deploy Edge Functions
+npm run functions:deploy
 ```
 
-### Webhook Endpoints
+#### 4. Push to Deploy
 
-```typescript
-// Trigger webhook
-POST /api/trigger-webhook
+Simply push to the `main` branch to trigger automatic deployment:
 
-// Test webhook
-POST /api/test-webhook
+```bash
+git add .
+git commit -m "feat: enhanced authentication system"
+git push origin main
+```
+
+### Manual Deployment
+
+If you prefer manual deployment:
+
+```bash
+# Build the project
+npm run build
+
+# Deploy to Vercel
+vercel --prod
 ```
 
 ## 🧪 Testing
 
-### Running Tests
-
+### Run Tests
 ```bash
-# Run all tests
-pnpm test
+# Unit tests
+npm run test
 
-# Run tests in watch mode
-pnpm test:watch
+# Watch mode
+npm run test:watch
 
-# Run tests with coverage
-pnpm test:coverage
+# Coverage report
+npm run test:coverage
+
+# E2E tests
+npm run test:e2e
 ```
 
-### Test Structure
+### Test Coverage
+The project includes comprehensive test coverage for:
+- Authentication system
+- Session management
+- Error handling
+- Memory leak prevention
+- Network failure scenarios
 
-- **Unit Tests**: `__tests__/` folders in each directory
-- **Component Tests**: Test files alongside components
-- **API Tests**: Endpoint testing in `app/api/`
+## 🔧 Configuration
 
-## 🔄 Real-time Features
+### Environment Variables
 
-The application uses Supabase real-time subscriptions for live updates:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Yes |
+| `FRONTEND_URL` | Frontend URL for email links | Yes |
+| `SENTRY_DSN` | Sentry error tracking (optional) | No |
 
-```typescript
-// Example: Real-time contracts
-import { useRealtimeContracts } from "@/hooks/use-realtime-contracts"
+### Database Migrations
 
-export default function ContractList() {
-  const contracts = useRealtimeContracts()
-  
-  return (
-    <div>
-      {contracts.map(contract => (
-        <ContractCard key={contract.id} contract={contract} />
-      ))}
-    </div>
-  )
-}
+The project includes comprehensive database migrations:
+
+1. **RLS Policies** (`20250729090000_enforce_profiles_rls.sql`)
+   - Row-level security for all auth tables
+   - Role-based access control
+   - Admin functions and permissions
+
+2. **Session Reminders** (`20250729090001_session_expiry_cron.sql`)
+   - Automated email reminders
+   - pg_cron scheduling
+   - Audit logging
+
+## 📊 Monitoring
+
+### Session Analytics
+```sql
+-- Get reminder statistics
+SELECT * FROM get_reminder_statistics(7);
+
+-- View recent activity
+SELECT * FROM recent_session_reminders;
 ```
 
-Available real-time hooks:
-- `useRealtimeContracts()` - Contract updates
-- `useRealtimePromoters()` - Promoter updates  
-- `useRealtimeParties()` - Party updates
-
-## 🚀 Deployment
-
-### Vercel Deployment
-
-1. Connect your GitHub repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
-
-### Environment Variables for Production
-
-Ensure all required environment variables are set in your production environment:
-
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-
-# Make.com
-MAKE_WEBHOOK_URL=your_webhook_url
-MAKE_WEBHOOK_SECRET=your_webhook_secret
-```
+### Error Monitoring
+- Auth errors are logged with context
+- Error boundaries capture JS errors
+- Session refresh failures are tracked
+- Network errors are categorized
 
 ## 🔒 Security
 
-- **Row Level Security (RLS)**: Database-level access control
-- **Authentication**: Supabase Auth with role-based permissions
-- **API Security**: Server-side validation and type checking
-- **Environment Variables**: Secure configuration management
+### Authentication Security
+- **Session Management**: Automatic refresh with retry logic
+- **Token Security**: Secure handling and validation
+- **RLS Policies**: Row-level security on all user data
+- **Error Handling**: No sensitive information in error messages
 
-## 📝 Contributing
+### Database Security
+- **Row-Level Security**: Users can only access their own data
+- **Admin Access**: Role-based permissions for administrators
+- **Audit Logging**: Comprehensive logging of all operations
+- **Input Validation**: Zod schemas for all user inputs
+
+## 🚀 Performance
+
+### Optimizations
+- **Code Splitting**: Automatic code splitting with Next.js
+- **Image Optimization**: Next.js Image component
+- **Caching**: Strategic caching for auth data
+- **Memory Management**: Proper cleanup of subscriptions
+
+### Monitoring
+- **Bundle Analysis**: Built-in bundle analysis
+- **Performance Metrics**: Core Web Vitals tracking
+- **Error Tracking**: Comprehensive error monitoring
+- **Session Analytics**: User session tracking
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 License
+### Development Guidelines
+- Follow TypeScript best practices
+- Write comprehensive tests
+- Use conventional commit messages
+- Ensure all tests pass before submitting PR
 
-This project is licensed under the MIT License.
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
 For support and questions:
-- Check the documentation in `/docs`
-- Review existing issues
-- Create a new issue with detailed information
+- Create an issue on GitHub
+- Check the [documentation](docs/)
+- Review the [troubleshooting guide](docs/TROUBLESHOOTING.md)
+
+## 🔄 Changelog
+
+### v0.1.0 - Enhanced Authentication System
+- ✅ Automatic session refresh with retry logic
+- ✅ Memory leak prevention and cleanup
+- ✅ Centralized error handling with user-friendly messages
+- ✅ Comprehensive RLS policies and security
+- ✅ Error boundaries with recovery options
+- ✅ Automated session expiry reminders
+- ✅ Expanded test coverage for edge cases
+- ✅ Production-ready deployment configuration
 
 ---
 
-**Live Demo**: [https://vercel.com/abuali85s-projects/v0-fork-of-v0-dev-form-component](https://vercel.com/abuali85s-projects/v0-fork-of-v0-dev-form-component)
-
-**Continue Development**: [https://v0.dev/chat/projects/zVc3ijHfuT4](https://v0.dev/chat/projects/zVc3ijHfuT4)
+**Built with ❤️ using Next.js, Supabase, and TypeScript**
