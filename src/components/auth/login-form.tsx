@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { formatSignInError, isNetworkError, isRateLimitError } from '@/lib/actions/cookie-actions'
+import { useToast } from '@/hooks/use-toast'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
@@ -19,6 +21,7 @@ export function LoginForm() {
   
   const router = useRouter()
   const { signIn } = useAuth()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,11 +32,36 @@ export function LoginForm() {
     try {
       console.log("🔐 Login Debug - Starting login process...")
       
-      const { error } = await signIn(email, password)
+      const result = await signIn(email, password)
 
-      if (error) {
-        console.error("🔐 Login Debug - Login error:", error)
-        setError(error)
+      if (result.error) {
+        console.error("🔐 Login Debug - Login error:", result.error)
+        
+        // Format error using centralized error handling
+        const formattedError = formatSignInError(result.error)
+        setError(formattedError)
+        
+        // Show toast notification based on error type
+        if (isNetworkError(result.error)) {
+          toast({
+            title: "Connection Error",
+            description: formattedError,
+            variant: "destructive",
+          })
+        } else if (isRateLimitError(result.error)) {
+          toast({
+            title: "Too Many Attempts",
+            description: formattedError,
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Login Failed",
+            description: formattedError,
+            variant: "destructive",
+          })
+        }
+        
         setLoading(false)
         return
       }
@@ -41,13 +69,26 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Login successful")
       setSuccess("Login successful! Redirecting...")
       
+      // Show success toast
+      toast({
+        title: "Welcome back!",
+        description: "Login successful. Redirecting to dashboard...",
+      })
+      
       // Use Next.js router for proper navigation
       setTimeout(() => {
         router.push('/en/dashboard')
       }, 1000)
     } catch (err) {
       console.error("🔐 Login Debug - Unexpected error:", err)
-      setError("An unexpected error occurred. Please try again.")
+      const errorMessage = "An unexpected error occurred. Please try again."
+      setError(errorMessage)
+      
+      toast({
+        title: "Unexpected Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }

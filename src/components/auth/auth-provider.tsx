@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session } from '@supabase/supabase-js'
 import type { UserProfile } from '@/types/custom'
@@ -41,9 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Use refs to track subscriptions for cleanup
   const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
   const profileSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isInitializedRef = useRef(false)
 
   // Create Supabase client safely for SSR
-  const getSupabase = () => {
+  const getSupabase = useCallback(() => {
     try {
       return createClient()
     } catch (error) {
@@ -53,12 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       throw error
     }
-  }
+  }, [])
 
   const supabase = getSupabase()
 
   // Load user profile from database
-  const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     console.log('👤 Loading user profile for:', userId)
     if (!supabase) {
       console.error('❌ No supabase client for profile loading')
@@ -97,10 +99,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error loading user profile:', error)
       return null
     }
-  }
+  }, [supabase])
 
   // Load user roles and permissions
-  const loadUserRoles = async (userId: string): Promise<string[]> => {
+  const loadUserRoles = useCallback(async (userId: string): Promise<string[]> => {
     if (!supabase) return []
     
     try {
@@ -119,15 +121,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error loading user roles:', error)
       return []
     }
-  }
+  }, [supabase])
+
+  // Refresh session with retry logic
+  const refreshSessionWithRetry = useCallback(async (maxRetries = 3): Promise<boolean> => {
+    if (!supabase || !session?.refresh_token) {
+      return false
+    }
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔄 Attempting session refresh (attempt ${attempt}/${maxRetries})`)
+        
+        const { data, error } = await supabase.auth.refreshSession({
+          refresh_token: session.refresh_token
+        })
+
+        if (error) {
+          console.error(`🔄 Session refresh attempt ${attempt} failed:`, error)
+          if (attempt === maxRetries) {
+            // Final attempt failed, clear session
+            setSession(null)
+            setUser(null)
+            setProfile(null)
+            setRoles([])
+            return false
+          }
+          // Wait before retry with exponential backoff
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000))
+          continue
+        }
+
+        if (data.session) {
+          console.log('🔄 Session refreshed successfully')
+          setSession(data.session)
+          setUser(data.session.user)
+          return true
+        }
+
+        return false
+      } catch (error) {
+        console.error(`🔄 Session refresh attempt ${attempt} threw error:`, error)
+        if (attempt === maxRetries) {
+          return false
+        }
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000))
+      }
+    }
+
+    return false
+  }, [supabase, session?.refresh_token])
+
+  // Setup automatic session refresh
+  const setupSessionRefresh = useCallback(() => {
+    if (!session?.expires_at) return
+
+    // Clear existing timer
+    if (refreshTimerRef.current) {
+      clearTimeout(refreshTimerRef.current)
+      refreshTimerRef.current = null
+    }
+
+    const expiresAt = new Date(session.expires_at).getTime()
+    const now = Date.now()
+    const timeUntilExpiry = expiresAt - now
+
+    // Refresh 5 minutes before expiry
+    const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60000) // At least 1 minute
+
+    console.log(`🔄 Setting up session refresh in ${Math.round(refreshTime / 1000)} seconds`)
+
+    refreshTimerRef.current = setTimeout(async () => {
+      console.log('🔄 Auto-refreshing session...')
+      const success = await refreshSessionWithRetry()
+      if (success) {
+        setupSessionRefresh() // Setup next refresh
+      }
+    }, refreshTime)
+  }, [session?.expires_at, refreshSessionWithRetry])
 
   // Initialize authentication state
-  const initializeAuth = async () => {
+  const initializeAuth = useCallback(async () => {
     console.log('🔧 AuthProvider: Initializing auth...')
     
     if (!supabase) {
       console.log('❌ No supabase client, setting loading to false')
       setLoading(false)
+      return
+    }
+
+    if (isInitializedRef.current) {
+      console.log('🔧 AuthProvider: Already initialized, skipping')
       return
     }
 
@@ -172,6 +256,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setProfile(null)
           setRoles([])
         }
+
+        // Setup automatic session refresh
+        setupSessionRefresh()
       } else {
         console.log('🔧 AuthProvider: No session found, clearing state')
         setSession(null)
@@ -180,7 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setRoles([])
       }
       
-      // CRITICAL: Set loading to false immediately
+      isInitializedRef.current = true
       console.log('🔧 AuthProvider: Setting loading to false')
       setLoading(false)
       
@@ -192,10 +279,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setRoles([])
       setLoading(false)
     }
-  }
+  }, [supabase, loadUserProfile, loadUserRoles, setupSessionRefresh])
 
   // Handle auth state changes
-  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+  const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
     console.log('🔄 AuthProvider: Auth state changed:', event, newSession?.user?.id)
     
     setSession(newSession)
@@ -223,14 +310,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setProfile(null)
         setRoles([])
       }
+
+      // Setup automatic session refresh for new session
+      setupSessionRefresh()
     } else {
       console.log('🔄 AuthProvider: Session cleared')
       setProfile(null)
       setRoles([])
+      
+      // Clear refresh timer when session is cleared
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = null
+      }
     }
     
     setLoading(false) // Always set loading to false
-  }
+  }, [loadUserProfile, loadUserRoles, setupSessionRefresh])
 
   useEffect(() => {
     console.log('🔧 AuthProvider useEffect started')
@@ -258,6 +354,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       console.log('🔧 AuthProvider: Cleaning up subscriptions...')
       
+      // Clear refresh timer
+      if (refreshTimerRef.current) {
+        console.log('🔧 AuthProvider: Clearing refresh timer')
+        clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = null
+      }
+      
       // Unsubscribe from auth state changes
       if (authSubscriptionRef.current) {
         console.log('🔧 AuthProvider: Unsubscribing from auth state changes')
@@ -272,9 +375,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileSubscriptionRef.current = null
       }
       
+      // Reset initialization flag
+      isInitializedRef.current = false
+      
       console.log('🔧 AuthProvider: Cleanup completed')
     }
-  }, [])
+  }, [supabase, initializeAuth, handleAuthStateChange])
 
   // Expose auth state for debugging
   useEffect(() => {
@@ -312,6 +418,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear refresh timer before signing out
+      if (refreshTimerRef.current) {
+        clearTimeout(refreshTimerRef.current)
+        refreshTimerRef.current = null
+      }
+      
       const { error } = await supabase?.auth.signOut() || {}
       return { success: !error, error: error?.message }
     } catch (error) {
@@ -357,7 +469,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSession = async () => {
     try {
-      await supabase?.auth.refreshSession()
+      const success = await refreshSessionWithRetry()
+      if (success) {
+        setupSessionRefresh() // Setup next refresh
+      }
     } catch (error) {
       console.error('Session refresh failed:', error)
     }

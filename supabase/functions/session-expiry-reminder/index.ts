@@ -6,19 +6,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface SessionExpiryData {
+interface SessionData {
+  id: string
   user_id: string
-  email: string
   expires_at: string
-  hours_until_expiry: number
+  created_at: string
 }
 
-interface EmailQueueItem {
-  user_id: string
+interface UserData {
+  id: string
   email: string
-  template: string
-  data: Record<string, any>
-  scheduled_for: string
+  role: string
+  status: string
 }
 
 serve(async (req) => {
@@ -34,136 +33,270 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Get sessions expiring in the next 24 hours
-    const { data: expiringSessions, error: sessionsError } = await supabase
-      .from('auth.sessions')
+    // Get current timestamp
+    const now = new Date()
+    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000) // 24 hours from now
+
+    console.log(`🔔 Session expiry reminder check at ${now.toISOString()}`)
+    console.log(`🔔 Looking for sessions expiring before ${tomorrow.toISOString()}`)
+
+    // Query for sessions expiring in the next 24 hours
+    const { data: expiringSessions, error: sessionError } = await supabase
+      .from('auth_sessions')
       .select(`
+        id,
         user_id,
         expires_at,
-        users!inner(email)
+        created_at
       `)
-      .gte('expires_at', new Date().toISOString())
-      .lt('expires_at', new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
-      .eq('notified', false) // Only notify once per session
+      .lt('expires_at', tomorrow.toISOString())
+      .gt('expires_at', now.toISOString())
 
-    if (sessionsError) {
-      console.error('Error fetching expiring sessions:', sessionsError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to fetch expiring sessions' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (sessionError) {
+      console.error('❌ Error fetching expiring sessions:', sessionError)
+      throw new Error(`Failed to fetch expiring sessions: ${sessionError.message}`)
     }
 
-    console.log(`Found ${expiringSessions?.length || 0} sessions expiring in the next 24 hours`)
+    console.log(`🔔 Found ${expiringSessions?.length || 0} sessions expiring soon`)
 
     if (!expiringSessions || expiringSessions.length === 0) {
       return new Response(
-        JSON.stringify({ message: 'No sessions expiring in the next 24 hours' }),
+        JSON.stringify({ 
+          message: 'No sessions expiring in the next 24 hours',
+          count: 0 
+        }),
         { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200 
         }
       )
     }
 
-    // Process each expiring session
-    const emailQueue: EmailQueueItem[] = []
-    const now = new Date()
+    // Get unique user IDs
+    const userIds = [...new Set(expiringSessions.map(session => session.user_id))]
 
-    for (const session of expiringSessions) {
-      const expiresAt = new Date(session.expires_at)
-      const hoursUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60))
+    // Fetch user data for these sessions
+    const { data: users, error: userError } = await supabase
+      .from('users')
+      .select(`
+        id,
+        email,
+        role,
+        status
+      `)
+      .in('id', userIds)
+      .eq('status', 'active')
 
-      // Determine email template based on time until expiry
-      let template = 'session_expiry_warning'
-      let subject = 'Your session will expire soon'
+    if (userError) {
+      console.error('❌ Error fetching users:', userError)
+      throw new Error(`Failed to fetch users: ${userError.message}`)
+    }
+
+    console.log(`🔔 Found ${users?.length || 0} active users with expiring sessions`)
+
+    // Create a map of user data for quick lookup
+    const userMap = new Map<string, UserData>()
+    users?.forEach(user => userMap.set(user.id, user))
+
+    // Send email reminders
+    const emailPromises = expiringSessions.map(async (session) => {
+      const user = userMap.get(session.user_id)
       
-      if (hoursUntilExpiry <= 1) {
-        template = 'session_expiry_urgent'
-        subject = 'Your session expires in less than 1 hour'
-      } else if (hoursUntilExpiry <= 6) {
-        template = 'session_expiry_soon'
-        subject = 'Your session expires soon'
+      if (!user) {
+        console.log(`⚠️ User ${session.user_id} not found or inactive, skipping email`)
+        return { success: false, reason: 'user_not_found' }
       }
 
-      // Add to email queue
-      emailQueue.push({
-        user_id: session.user_id,
-        email: session.users.email,
-        template,
-        data: {
-          hours_until_expiry: hoursUntilExpiry,
-          expires_at: session.expires_at,
-          login_url: `${Deno.env.get('SITE_URL')}/auth/login`,
-          user_id: session.user_id
-        },
-        scheduled_for: new Date().toISOString()
-      })
+      try {
+        // Calculate time until expiry
+        const expiryTime = new Date(session.expires_at)
+        const timeUntilExpiry = expiryTime.getTime() - now.getTime()
+        const hoursUntilExpiry = Math.round(timeUntilExpiry / (1000 * 60 * 60))
 
-      // Mark session as notified to prevent duplicate emails
-      await supabase
-        .from('auth.sessions')
-        .update({ notified: true })
-        .eq('user_id', session.user_id)
-        .eq('expires_at', session.expires_at)
-    }
+        // Prepare email content
+        const emailContent = {
+          to: user.email,
+          subject: 'Your Session is Expiring Soon',
+          html: generateEmailHTML(user, hoursUntilExpiry, session.expires_at),
+          text: generateEmailText(user, hoursUntilExpiry, session.expires_at)
+        }
 
-    // Insert email queue items
-    if (emailQueue.length > 0) {
-      const { error: queueError } = await supabase
-        .from('email_queue')
-        .insert(emailQueue)
+        // Send email using Supabase's built-in email service
+        const { error: emailError } = await supabase.auth.admin.sendRawEmail({
+          to: user.email,
+          subject: emailContent.subject,
+          html: emailContent.html,
+          text: emailContent.text
+        })
 
-      if (queueError) {
-        console.error('Error inserting email queue items:', queueError)
-        return new Response(
-          JSON.stringify({ error: 'Failed to queue reminder emails' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
+        if (emailError) {
+          console.error(`❌ Failed to send email to ${user.email}:`, emailError)
+          return { success: false, reason: 'email_failed', error: emailError.message }
+        }
+
+        console.log(`✅ Email reminder sent to ${user.email} for session expiring in ${hoursUntilExpiry} hours`)
+        
+        // Log the reminder in the database
+        await logReminderSent(supabase, session.id, user.id, hoursUntilExpiry)
+
+        return { success: true, user_id: user.id, email: user.email }
+      } catch (error) {
+        console.error(`❌ Error processing reminder for user ${user.id}:`, error)
+        return { success: false, reason: 'processing_error', error: error.message }
       }
+    })
 
-      console.log(`Queued ${emailQueue.length} reminder emails`)
-    }
+    // Wait for all emails to be sent
+    const results = await Promise.all(emailPromises)
+    
+    // Count successes and failures
+    const successful = results.filter(r => r.success)
+    const failed = results.filter(r => !r.success)
 
-    // Log activity for audit trail
-    await supabase
-      .from('system_activity_log')
-      .insert({
-        action: 'session_expiry_reminder_sent',
-        details: {
-          sessions_processed: expiringSessions.length,
-          emails_queued: emailQueue.length,
-          timestamp: new Date().toISOString()
-        },
-        created_by: 'system'
-      })
+    console.log(`📧 Email reminders sent: ${successful.length} successful, ${failed.length} failed`)
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        sessions_processed: expiringSessions.length,
-        emails_queued: emailQueue.length 
+      JSON.stringify({
+        message: 'Session expiry reminders processed',
+        total_sessions: expiringSessions.length,
+        successful_emails: successful.length,
+        failed_emails: failed.length,
+        results: results
       }),
       { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
       }
     )
 
   } catch (error) {
-    console.error('Session expiry reminder function error:', error)
+    console.error('❌ Session expiry reminder function error:', error)
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }),
       { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
       }
     )
   }
 })
+
+function generateEmailHTML(user: UserData, hoursUntilExpiry: number, expiryTime: string): string {
+  const expiryDate = new Date(expiryTime).toLocaleString()
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Session Expiry Reminder</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .content { background: #fff; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; }
+        .button { display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6; font-size: 12px; color: #6c757d; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔔 Session Expiry Reminder</h1>
+        </div>
+        
+        <div class="content">
+          <p>Hello,</p>
+          
+          <p>This is a friendly reminder that your session in the Contract Management System will expire in <strong>${hoursUntilExpiry} hours</strong>.</p>
+          
+          <div class="warning">
+            <strong>Session Details:</strong><br>
+            • Expires: ${expiryDate}<br>
+            • User: ${user.email}<br>
+            • Role: ${user.role}
+          </div>
+          
+          <p>To maintain uninterrupted access to your account, please sign in again before your session expires.</p>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${Deno.env.get('FRONTEND_URL') || 'https://your-app.com'}/en/login" class="button">
+              Sign In Now
+            </a>
+          </p>
+          
+          <p><strong>What happens when my session expires?</strong></p>
+          <ul>
+            <li>You'll be automatically signed out</li>
+            <li>You'll need to sign in again to access your account</li>
+            <li>Any unsaved work will be lost</li>
+          </ul>
+          
+          <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+        </div>
+        
+        <div class="footer">
+          <p>This is an automated message from the Contract Management System.</p>
+          <p>If you didn't expect this email, please contact support immediately.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+function generateEmailText(user: UserData, hoursUntilExpiry: number, expiryTime: string): string {
+  const expiryDate = new Date(expiryTime).toLocaleString()
+  
+  return `
+Session Expiry Reminder
+
+Hello,
+
+This is a friendly reminder that your session in the Contract Management System will expire in ${hoursUntilExpiry} hours.
+
+Session Details:
+- Expires: ${expiryDate}
+- User: ${user.email}
+- Role: ${user.role}
+
+To maintain uninterrupted access to your account, please sign in again before your session expires.
+
+Sign in here: ${Deno.env.get('FRONTEND_URL') || 'https://your-app.com'}/en/login
+
+What happens when my session expires?
+- You'll be automatically signed out
+- You'll need to sign in again to access your account
+- Any unsaved work will be lost
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+---
+This is an automated message from the Contract Management System.
+If you didn't expect this email, please contact support immediately.
+  `
+}
+
+async function logReminderSent(supabase: any, sessionId: string, userId: string, hoursUntilExpiry: number) {
+  try {
+    // Log the reminder in a dedicated table (create if doesn't exist)
+    await supabase
+      .from('session_reminders')
+      .insert({
+        session_id: sessionId,
+        user_id: userId,
+        hours_until_expiry: hoursUntilExpiry,
+        sent_at: new Date().toISOString(),
+        status: 'sent'
+      })
+  } catch (error) {
+    // If the table doesn't exist, just log to console
+    console.log(`📝 Reminder logged for session ${sessionId}, user ${userId}`)
+  }
+}

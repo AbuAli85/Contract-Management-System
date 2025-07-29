@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
+import { formatSignUpError, isNetworkError, isRateLimitError } from '@/lib/actions/cookie-actions'
+import { useToast } from '@/hooks/use-toast'
 
 export function SignUpForm() {
   const [email, setEmail] = useState('')
@@ -18,6 +20,7 @@ export function SignUpForm() {
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+  const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -25,12 +28,24 @@ export function SignUpForm() {
     setSuccess(null)
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      const errorMessage = 'Passwords do not match'
+      setError(errorMessage)
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
       return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+      const errorMessage = 'Password must be at least 6 characters long'
+      setError(errorMessage)
+      toast({
+        title: "Validation Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
       return
     }
 
@@ -46,16 +61,56 @@ export function SignUpForm() {
       })
 
       if (error) {
-        setError(error.message)
+        console.error("🔐 Signup Debug - Signup error:", error)
+        
+        // Format error using centralized error handling
+        const formattedError = formatSignUpError(error)
+        setError(formattedError)
+        
+        // Show toast notification based on error type
+        if (isNetworkError(error)) {
+          toast({
+            title: "Connection Error",
+            description: formattedError,
+            variant: "destructive",
+          })
+        } else if (isRateLimitError(error)) {
+          toast({
+            title: "Too Many Attempts",
+            description: formattedError,
+            variant: "destructive",
+          })
+        } else {
+          toast({
+            title: "Signup Failed",
+            description: formattedError,
+            variant: "destructive",
+          })
+        }
+        
         return
       }
 
       if (data.user) {
-        setSuccess('Account created successfully! Please check your email to verify your account.')
+        const successMessage = 'Account created successfully! Please check your email to verify your account.'
+        setSuccess(successMessage)
+        
+        toast({
+          title: "Account Created",
+          description: successMessage,
+        })
         // Don't redirect immediately - let user verify email first
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error("🔐 Signup Debug - Unexpected error:", err)
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      setError(errorMessage)
+      
+      toast({
+        title: "Unexpected Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
