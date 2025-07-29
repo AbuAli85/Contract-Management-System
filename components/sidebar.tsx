@@ -83,6 +83,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const testPages = [
     {
+      title: 'Simple Test',
+      href: `/${locale}/simple-test`,
+      icon: '🧪',
+      description: 'Simple rendering test'
+    },
+    {
+      title: 'Loading Test',
+      href: `/${locale}/loading-test`,
+      icon: '⚡',
+      description: 'Test loading issues'
+    },
+    {
       title: 'Auth Debug',
       href: `/${locale}/auth-debug`,
       icon: '🔐',
