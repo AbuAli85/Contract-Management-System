@@ -38,8 +38,8 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     return () => clearTimeout(timer)
   }, [loading, mounted])
 
-  // Check if we should show loading state
-  const shouldShowLoading = (loading || !mounted) && !forceRender
+  // Check if we should show loading state - temporarily bypass for testing
+  const shouldShowLoading = false // (loading || !mounted) && !forceRender
 
   // Debug logging
   console.log('🧭 AppLayoutWithSidebar: Rendering', { 
@@ -144,7 +144,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           
           {/* Force render children */}
           <div className="children-container">
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              🧭 Debug: About to render children
+            </div>
             {children}
+            <div className="mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              🧭 Debug: Children rendered
+            </div>
           </div>
         </main>
       </div>
