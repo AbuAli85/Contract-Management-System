@@ -357,6 +357,113 @@ export default function EnhancedContractForm({
     setRecommendations(newRecommendations)
   }
 
+  // Helper function to calculate salary recommendations
+  const calculateSalaryRecommendations = (salary: number, contractType?: string): SmartRecommendation[] => {
+    const recommendations: SmartRecommendation[] = []
+    
+    try {
+      // Basic salary analysis
+      if (salary < 30000) {
+        recommendations.push({
+          category: 'compensation',
+          title: 'Consider Salary Increase',
+          description: 'Current salary is below market average for this role.',
+          impact: 'medium',
+          implementation: 'Review market rates and consider adjustment.',
+          estimatedSavings: 'N/A'
+        })
+      } else if (salary > 100000) {
+        recommendations.push({
+          category: 'compensation',
+          title: 'Competitive Salary',
+          description: 'Salary is competitive for this position.',
+          impact: 'low',
+          implementation: 'Maintain current compensation structure.',
+          estimatedSavings: 'N/A'
+        })
+      }
+
+      // Contract type specific recommendations
+      if (contractType === 'full-time-permanent') {
+        recommendations.push({
+          category: 'benefits',
+          title: 'Full Benefits Package',
+          description: 'Consider comprehensive benefits for permanent employees.',
+          impact: 'high',
+          implementation: 'Include health insurance, retirement plans, and PTO.',
+          estimatedSavings: '15-20% of salary'
+        })
+      } else if (contractType === 'part-time') {
+        recommendations.push({
+          category: 'benefits',
+          title: 'Pro-rated Benefits',
+          description: 'Adjust benefits package for part-time employment.',
+          impact: 'medium',
+          implementation: 'Pro-rate benefits based on hours worked.',
+          estimatedSavings: '10-15% of salary'
+        })
+      }
+    } catch (error) {
+      console.warn('Error calculating salary recommendations:', error)
+    }
+    
+    return recommendations
+  }
+
+  // Helper function to check compliance issues
+  const checkComplianceIssues = (formData: any): string[] => {
+    const issues: string[] = []
+    
+    try {
+      // Check required fields
+      if (!formData.contract_start_date) {
+        issues.push('Contract start date is required')
+      }
+      
+      if (!formData.contract_end_date) {
+        issues.push('Contract end date is required')
+      }
+      
+      if (!formData.employee_name) {
+        issues.push('Employee name is required')
+      }
+      
+      if (!formData.employer_name) {
+        issues.push('Employer name is required')
+      }
+
+      // Check date logic
+      if (formData.contract_start_date && formData.contract_end_date) {
+        const startDate = new Date(formData.contract_start_date)
+        const endDate = new Date(formData.contract_end_date)
+        
+        if (startDate >= endDate) {
+          issues.push('Contract end date must be after start date')
+        }
+        
+        if (startDate < new Date()) {
+          issues.push('Contract start date cannot be in the past')
+        }
+      }
+
+      // Check salary
+      if (formData.basic_salary && formData.basic_salary <= 0) {
+        issues.push('Basic salary must be greater than zero')
+      }
+
+      // Check contract type specific requirements
+      if (formData.contract_type === 'full-time-permanent' && !formData.department) {
+        issues.push('Department is required for full-time permanent contracts')
+      }
+      
+    } catch (error) {
+      console.warn('Error checking compliance issues:', error)
+      issues.push('Error validating form data')
+    }
+    
+    return issues
+  }
+
   // Update form progress
   useEffect(() => {
     const completedSections = sections.filter(section => {
