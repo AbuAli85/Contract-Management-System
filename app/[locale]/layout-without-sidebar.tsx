@@ -1,6 +1,5 @@
 import { i18n } from '@/src/i18n/i18n-config'
 import { cookies } from 'next/headers'
-import { AppLayoutWithSidebar } from '@/components/app-layout-with-sidebar'
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
@@ -21,13 +20,13 @@ async function getLocale(locale: string) {
     return i18n.defaultLocale
 }
 
-export default async function LocaleLayout({ children, params }: { children: React.ReactNode, params: Promise<{ locale: string }> }) {
+export default async function LayoutWithoutSidebar({ children, params }: { children: React.ReactNode, params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const resolvedLocale = await getLocale(locale)
   
   return (
-    <AppLayoutWithSidebar>
+    <div className="min-h-screen bg-background">
       {children}
-    </AppLayoutWithSidebar>
+    </div>
   )
-}
+} 
