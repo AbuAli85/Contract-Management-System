@@ -23,17 +23,58 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  
-  // Only call useAuth on the client side
-  const authResult = isClient ? useAuth() : { user: null, loading: true, mounted: false };
-  const { user, loading: authLoading, mounted } = authResult;
-  
   const [forceShow, setForceShow] = useState(false);
+  
+  // Use a more robust approach to avoid hydration mismatches
+  const [authState, setAuthState] = useState({
+    user: null,
+    loading: true,
+    mounted: false
+  });
 
   // Ensure we're on the client side
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Only call useAuth on the client side to avoid hydration issues
+  useEffect(() => {
+    if (isClient) {
+      try {
+        const { useAuth } = require('@/src/components/auth/simple-auth-provider');
+        const auth = useAuth();
+        
+        // Update auth state
+        setAuthState({
+          user: auth.user,
+          loading: auth.loading,
+          mounted: auth.mounted
+        });
+        
+        // Set up a listener for auth state changes
+        const unsubscribe = auth.onAuthStateChange?.((event: string, session: any) => {
+          setAuthState({
+            user: session?.user || null,
+            loading: false,
+            mounted: true
+          });
+        });
+        
+        return () => {
+          if (unsubscribe) {
+            unsubscribe();
+          }
+        };
+      } catch (error) {
+        console.error('Error getting auth state:', error);
+        setAuthState({
+          user: null,
+          loading: false,
+          mounted: true
+        });
+      }
+    }
+  }, [isClient]);
 
   // Force show content after 5 seconds to prevent infinite loading
   useEffect(() => {
@@ -60,20 +101,21 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
                       pathname?.includes('/demo') ||
                       pathname?.includes('/onboarding');
 
-  const shouldShowSidebar = !isAuthPage && !isPublicPage && !!user;
-  const isLoading = (authLoading || !mounted) && !forceShow;
+  const shouldShowSidebar = !isAuthPage && !isPublicPage && !!authState.user;
+  const isLoading = (authState.loading || !authState.mounted) && !forceShow;
 
   console.log('🔧 ClientLayout: Auth state:', { 
-    user: !!user, 
-    authLoading, 
-    mounted, 
+    user: !!authState.user, 
+    loading: authState.loading, 
+    mounted: authState.mounted, 
     forceShow, 
     isLoading,
     pathname,
     isClient 
   });
 
-  if (isLoading) {
+  // Show loading state only on client side
+  if (isClient && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -84,6 +126,7 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
     );
   }
 
+  // Always render children for auth/public pages or when not showing sidebar
   if (!shouldShowSidebar) {
     return <>{children}</>;
   }
@@ -128,8 +171,8 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
 
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
-    <html lang={locale} className={inter.className}>
-      <body className="min-h-screen bg-background font-sans antialiased">
+    <html lang={locale} className={inter.className} suppressHydrationWarning>
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <AuthenticatedAppLayout locale={locale}>
           {children}
         </AuthenticatedAppLayout>

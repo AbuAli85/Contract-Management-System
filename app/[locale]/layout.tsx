@@ -1,7 +1,6 @@
 import { i18n } from '@/src/i18n/i18n-config'
 import { ClientLayout } from '@/src/components/client-layout'
 import { cookies } from 'next/headers'
-import { AuthenticatedLayout } from '@/auth/components/authenticated-layout'
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
