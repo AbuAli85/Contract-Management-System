@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { usePermissions, PermissionGuard } from "@/hooks/use-permissions"
@@ -151,7 +151,7 @@ export default function ManagePromotersPage() {
     }
     
     try {
-      const supabase = createClient()
+      const supabase = getSupabaseClient()
       
       // Fetch promoters with contract count from the contracts table
       const { data: promotersData, error: promotersError } = await supabase
@@ -382,7 +382,7 @@ export default function ManagePromotersPage() {
 
     setBulkActionLoading(true)
     try {
-      const supabase = createClient()
+      const supabase = getSupabaseClient()
       const { error } = await supabase
         .from("promoters")
         .delete()
