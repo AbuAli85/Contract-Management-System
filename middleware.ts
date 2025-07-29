@@ -29,13 +29,17 @@ export async function middleware(request: NextRequest) {
     
     const { pathname } = request.nextUrl
     
+    console.log('🔍 Middleware processing:', { pathname, hasUser: !!user })
+    
     // Handle root path redirect
     if (pathname === '/') {
       if (user) {
         // User is authenticated, redirect to dashboard
+        console.log('🔍 Root redirect: User authenticated, redirecting to dashboard')
         return NextResponse.redirect(new URL('/en/dashboard', request.url))
       } else {
         // User is not authenticated, redirect to login
+        console.log('🔍 Root redirect: User not authenticated, redirecting to login')
         return NextResponse.redirect(new URL('/en/auth/login', request.url))
       }
     }
@@ -54,8 +58,17 @@ export async function middleware(request: NextRequest) {
       pathname.includes(route) || pathname.includes(`/${locale}${route}`)
     )
     
+    console.log('🔍 Route analysis:', { 
+      pathname, 
+      locale, 
+      isProtectedRoute, 
+      isAuthRoute, 
+      hasUser: !!user 
+    })
+    
     // If accessing protected route without user, redirect to login
     if (isProtectedRoute && !user) {
+      console.log('🔍 Protected route access denied, redirecting to login')
       const loginUrl = new URL(`/${locale}/auth/login`, request.url)
       loginUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(loginUrl)
@@ -64,14 +77,16 @@ export async function middleware(request: NextRequest) {
     // If accessing auth route with user, allow the client-side redirect to handle it
     // Don't redirect in middleware to avoid conflicts
     if (isAuthRoute && user) {
+      console.log('🔍 Auth route with user, allowing client-side redirect')
       // Let the client-side logic handle the redirect
       return NextResponse.next()
     }
     
     // Continue with the request
+    console.log('🔍 Middleware allowing request to continue')
     return NextResponse.next()
   } catch (error) {
-    console.error('Middleware error:', error)
+    console.error('❌ Middleware error:', error)
     // On error, continue with the request
     return NextResponse.next()
   }

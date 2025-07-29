@@ -56,7 +56,15 @@
     "supabase:deploy": "supabase db push",
     "supabase:reset": "supabase db reset",
     "supabase:diff": "supabase db diff",
-    "supabase:test-rls": "tsx scripts/test-rls-policies.ts"
+    "supabase:test-rls": "tsx scripts/test-rls-policies.ts",
+    "db:health-check": "tsx scripts/db-health-check.ts",
+    "db:validate": "npm run db:health-check && npm run supabase:validate-migrations",
+    "deploy:validate": "npm run lint && npm run test:unit && npm run db:health-check",
+    "deploy:preview": "npm run deploy:validate && vercel --preview",
+    "deploy:production": "npm run deploy:validate && vercel --prod",
+    "ci:full": "npm run lint && npm run test:all && npm run db:health-check && npm run supabase:deploy",
+    "ci:pre-deploy": "npm run db:health-check && npm run supabase:validate-migrations",
+    "setup:deployment": "./scripts/setup-deployment.sh"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "^1.2.2",

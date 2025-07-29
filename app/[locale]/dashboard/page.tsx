@@ -55,9 +55,8 @@ interface DashboardStats {
   recentActivity: number
 }
 
-export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function DashboardPage({ params }: { params: { locale: string } }) {
   const { user, loading: authLoading, profile, mounted } = useAuth()
-  const [locale, setLocale] = useState('en')
   const [dataLoading, setDataLoading] = useState(false)
   
   // Debug logging
@@ -66,24 +65,16 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
     authLoading, 
     mounted, 
     profile: !!profile,
-    dataLoading 
+    dataLoading,
+    locale: params.locale
   })
-  
-  useEffect(() => {
-    const getLocale = async () => {
-      const { locale: resolvedLocale } = await params
-      setLocale(resolvedLocale)
-    }
-    getLocale()
-  }, [params])
-
 
   return (
-    <ProtectedRoute redirectTo={`/${locale}/auth/login`}>
+    <ProtectedRoute redirectTo={`/${params.locale}/auth/login`}>
       <DashboardContent 
         user={user} 
         profile={profile} 
-        locale={locale}
+        locale={params.locale}
         dataLoading={dataLoading}
         setDataLoading={setDataLoading}
       />

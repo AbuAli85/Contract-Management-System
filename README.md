@@ -5,6 +5,83 @@ A full-stack Next.js application for managing and generating bilingual (Arabic/E
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/abuali85s-projects/v0-fork-of-v0-dev-form-component)
 [![Built with v0](https://img.shields.io/badge/Built%20with-v0.dev-black?style=for-the-badge)](https://v0.dev/chat/projects/zVc3ijHfuT4)
 
+## 🚀 Deployment & CI/CD
+
+[![Enhanced CI/CD Pipeline](https://github.com/your-username/contract-management-system/workflows/Enhanced%20CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/contract-management-system/actions/workflows/deploy.yml)
+[![Database Health Check](https://img.shields.io/badge/Database%20Health-Healthy-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
+[![Migration Status](https://img.shields.io/badge/Migrations-Valid-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
+[![Preview Deployments](https://img.shields.io/badge/Preview%20Deployments-Active-brightgreen?style=flat-square)](https://github.com/your-username/contract-management-system/actions)
+[![Production Status](https://img.shields.io/badge/Production-Live-brightgreen?style=flat-square)](https://your-production-url.vercel.app)
+
+### Deployment Strategy
+
+Our robust CI/CD pipeline ensures reliable, automated deployments with comprehensive validation:
+
+#### 🔄 Automated Workflow
+- **Pre-deployment Validation**: Linting, unit tests, database health checks
+- **Database Migrations**: Automated `supabase db push` with validation
+- **Multi-environment Support**: Preview, staging, and production deployments
+- **Health Monitoring**: Post-deployment health checks and monitoring
+
+#### 🎯 Environment Management
+- **Preview Deployments**: Automatic for all pull requests
+- **Staging Environment**: Deployed from `develop` branch
+- **Production Environment**: Deployed from `main` branch
+- **Environment Variables**: Properly managed per environment
+
+#### 🛡️ Quality Gates
+- **Database Health**: Pre-deployment connectivity and performance checks
+- **Migration Validation**: Ensures migrations are safe and sequential
+- **Test Coverage**: 80% minimum coverage enforced
+- **Security Checks**: RLS policy validation and vulnerability scanning
+
+### Deployment Commands
+
+```bash
+# Local deployment validation
+pnpm run deploy:validate    # Lint + unit tests + health check
+pnpm run deploy:preview     # Deploy to preview environment
+pnpm run deploy:production  # Deploy to production
+
+# Database operations
+pnpm run db:health-check    # Check database connectivity
+pnpm run db:validate        # Health check + migration validation
+pnpm run supabase:deploy    # Deploy database migrations
+
+# CI/CD pipeline
+pnpm run ci:full           # Full CI pipeline (lint + tests + deploy)
+pnpm run ci:pre-deploy     # Pre-deployment checks only
+```
+
+### Environment Configuration
+
+#### Required Environment Variables
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_PROJECT_ID=your_project_id
+SUPABASE_ACCESS_TOKEN=your_access_token
+
+# Vercel Deployment
+VERCEL_TOKEN=your_vercel_token
+VERCEL_ORG_ID=your_org_id
+VERCEL_PROJECT_ID=your_project_id
+
+# Webhook Integrations
+MAKE_WEBHOOK_URL=your_make_webhook_url
+SLACK_WEBHOOK_URL=your_slack_webhook_url
+```
+
+#### Environment-Specific Configurations
+
+- **Development**: Local `.env.local` file
+- **Preview**: Vercel preview environment variables
+- **Staging**: Vercel staging environment variables  
+- **Production**: Vercel production environment variables
+
 ## 🧪 Testing & Quality
 
 [![CI/CD Pipeline](https://github.com/your-username/contract-management-system/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/your-username/contract-management-system/actions)
@@ -87,8 +164,9 @@ pnpm run supabase:test-rls  # Test RLS policies
 - **Database**: Supabase (PostgreSQL) with Row Level Security (RLS)
 - **Authentication**: Supabase Auth
 - **Real-time**: Supabase real-time subscriptions
-- **Testing**: Jest + React Testing Library
-- **Deployment**: Vercel
+- **Testing**: Jest + React Testing Library + Cypress
+- **Deployment**: Vercel with automated CI/CD
+- **Monitoring**: Health checks, error tracking, performance monitoring
 
 ### Project Structure
 
