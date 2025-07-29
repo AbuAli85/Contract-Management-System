@@ -15,8 +15,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const locale = params.locale as string
   const { user } = useAuth()
   
-  // Debug logging
-  console.log('🧭 Sidebar: Rendering with props', { isOpen, locale, user: !!user })
+  // Debug logging - only log when there are issues
+  if (!user) {
+    console.log('🧭 Sidebar: No user available', { isOpen, locale })
+  }
 
   const navigationItems = [
     {
@@ -81,62 +83,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   ]
 
-  const testPages = [
-    {
-      title: 'Simple Test',
-      href: `/${locale}/simple-test`,
-      icon: '🧪',
-      description: 'Simple rendering test'
-    },
-    {
-      title: 'Loading Test',
-      href: `/${locale}/loading-test`,
-      icon: '⚡',
-      description: 'Test loading issues'
-    },
-    {
-      title: 'Auth Debug',
-      href: `/${locale}/auth-debug`,
-      icon: '🔐',
-      description: 'Debug authentication state'
-    },
-    {
-      title: 'Sidebar Test',
-      href: `/${locale}/sidebar-test`,
-      icon: '🧭',
-      description: 'Test sidebar navigation'
-    },
-    {
-      title: 'Sidebar Debug',
-      href: `/${locale}/sidebar-debug`,
-      icon: '🐛',
-      description: 'Debug sidebar issues'
-    },
-    {
-      title: 'Layout Test',
-      href: `/${locale}/layout-test`,
-      icon: '🧪',
-      description: 'Test simple layout'
-    },
-    {
-      title: 'Content Test',
-      href: `/${locale}/simple-content-test`,
-      icon: '📄',
-      description: 'Test content rendering'
-    },
-    {
-      title: 'Test Working',
-      href: `/${locale}/test-working`,
-      icon: '✅',
-      description: 'Test page'
-    },
-    {
-      title: 'Server Test',
-      href: `/${locale}/server-test`,
-      icon: '🖥️',
-      description: 'Server component test'
-    }
-  ]
+  // Test pages removed - system is working properly
+  const testPages: Array<{title: string, href: string, icon: string, description: string}> = []
 
   return (
     <>
@@ -197,31 +145,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               ))}
             </div>
 
-            {/* Test Pages */}
-            <div className="mt-8 space-y-2">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                Test Pages
-              </h3>
-              
-              {testPages.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                  onClick={() => {
-                    if (window.innerWidth < 768) {
-                      onClose()
-                    }
-                  }}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <div className="flex-1">
-                    <div className="font-medium">{item.title}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            
           </nav>
 
           {/* Footer */}

@@ -28,12 +28,6 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
 
   return (
     <div className="space-y-6">
-      {/* Debug indicator */}
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <h2 className="text-lg font-semibold text-yellow-800">🔧 Dashboard Debug</h2>
-        <p className="text-sm text-yellow-700">Dashboard page is rendering! Locale: {locale}</p>
-      </div>
-      
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground">
