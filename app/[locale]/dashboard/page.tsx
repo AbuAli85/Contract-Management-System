@@ -34,6 +34,7 @@ import { CardDescription } from '@/components/ui/card'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { AuthDebug } from '@/components/auth-debug'
 import { ProtectedRoute } from '@/components/protected-route'
+import { AppLayout } from '@/components/app-layout'
 
 // Loading fallback
 function DashboardLoading() {
@@ -73,15 +74,17 @@ export default function DashboardPage({ params }: { params: Promise<{ locale: st
   })
 
   return (
-    <ProtectedRoute redirectTo={`/${locale}/auth/login`}>
-      <DashboardContent 
-        user={user} 
-        profile={profile} 
-        locale={locale}
-        dataLoading={dataLoading}
-        setDataLoading={setDataLoading}
-      />
-    </ProtectedRoute>
+    <AppLayout locale={locale}>
+      <ProtectedRoute redirectTo={`/${locale}/auth/login`}>
+        <DashboardContent 
+          user={user} 
+          profile={profile} 
+          locale={locale}
+          dataLoading={dataLoading}
+          setDataLoading={setDataLoading}
+        />
+      </ProtectedRoute>
+    </AppLayout>
   )
 }
 
