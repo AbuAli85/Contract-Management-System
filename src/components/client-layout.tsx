@@ -37,44 +37,19 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
     setIsClient(true);
   }, []);
 
-  // Only call useAuth on the client side to avoid hydration issues
+  // Always call useAuth hook, but handle client-side logic in useEffect
+  const auth = useAuth();
+  
+  // Update auth state when auth context changes, but only on client side
   useEffect(() => {
-    if (isClient) {
-      try {
-        const { useAuth } = require('@/src/components/auth/simple-auth-provider');
-        const auth = useAuth();
-        
-        // Update auth state
-        setAuthState({
-          user: auth.user,
-          loading: auth.loading,
-          mounted: auth.mounted
-        });
-        
-        // Set up a listener for auth state changes
-        const unsubscribe = auth.onAuthStateChange?.((event: string, session: any) => {
-          setAuthState({
-            user: session?.user || null,
-            loading: false,
-            mounted: true
-          });
-        });
-        
-        return () => {
-          if (unsubscribe) {
-            unsubscribe();
-          }
-        };
-      } catch (error) {
-        console.error('Error getting auth state:', error);
-        setAuthState({
-          user: null,
-          loading: false,
-          mounted: true
-        });
-      }
+    if (isClient && auth) {
+      setAuthState({
+        user: auth.user,
+        loading: auth.loading,
+        mounted: auth.mounted
+      });
     }
-  }, [isClient]);
+  }, [isClient, auth?.user, auth?.loading, auth?.mounted]);
 
   // Force show content after 5 seconds to prevent infinite loading
   useEffect(() => {
