@@ -26,17 +26,20 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     setIsLandingPage(isLanding)
   }, [pathname, locale])
 
-  // Force render after 3 seconds to prevent infinite loading
+  // Force render after 5 seconds to prevent infinite loading
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading || !mounted) {
         console.log('🧭 AppLayoutWithSidebar: Force rendering due to timeout')
         setForceRender(true)
       }
-    }, 3000)
+    }, 5000) // Increased to 5 seconds to match auth timeout
     
     return () => clearTimeout(timer)
   }, [loading, mounted])
+
+  // Check if we should show loading state
+  const shouldShowLoading = (loading || !mounted) && !forceRender
 
   // Debug logging
   console.log('🧭 AppLayoutWithSidebar: Rendering', { 
@@ -50,9 +53,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     shouldShowLoading,
     forceRender
   })
-
-  // Check if we should show loading state
-  const shouldShowLoading = (loading || !mounted) && !forceRender
   
   if (shouldShowLoading) {
     return (
