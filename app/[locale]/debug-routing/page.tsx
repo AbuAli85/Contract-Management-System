@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams, usePathname } from 'next/navigation'
+import { useParams, usePathname, use } from 'next/navigation'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 
 export default function DebugRoutingPage() {

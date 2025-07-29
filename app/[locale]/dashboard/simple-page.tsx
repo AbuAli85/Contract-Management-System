@@ -1,6 +1,6 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams, use } from 'next/navigation'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 
 export default function SimpleDashboardPage() {
