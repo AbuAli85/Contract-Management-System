@@ -6,6 +6,10 @@ export default async function SidebarTestPage({ params }: { params: Promise<{ lo
       <div className="text-center">
         <h1 className="text-3xl font-bold text-blue-600">🧭 Sidebar Navigation Test</h1>
         <p className="text-muted-foreground">Testing the new sidebar navigation system</p>
+        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <p className="text-green-800 font-medium">✅ Sidebar is working!</p>
+          <p className="text-green-600 text-sm">Check the left side for the navigation menu</p>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">
