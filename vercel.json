@@ -12,8 +12,17 @@
   ],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "${NEXT_PUBLIC_SUPABASE_URL}",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "${NEXT_PUBLIC_SUPABASE_ANON_KEY}",
+    "NEXT_PUBLIC_MAKE_WEBHOOK_URL": "${NEXT_PUBLIC_MAKE_WEBHOOK_URL}",
+    "NEXT_PUBLIC_PDF_READY_WEBHOOK_URL": "${NEXT_PUBLIC_PDF_READY_WEBHOOK_URL}",
+    "NEXT_PUBLIC_SLACK_WEBHOOK_URL": "${NEXT_PUBLIC_SLACK_WEBHOOK_URL}"
   },
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "regions": ["iad1"],
   "headers": [
     {
       "source": "/(.*)",
@@ -29,6 +38,14 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
         },
         {
           "key": "Cache-Control",
@@ -52,6 +69,22 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/health",
+      "destination": "/api/health",
+      "permanent": false
     }
   ]
 } 
