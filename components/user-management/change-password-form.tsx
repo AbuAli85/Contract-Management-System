@@ -294,4 +294,6 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
       </DialogContent>
     </Dialog>
   )
-} 
+}
+
+export default ChangePasswordForm

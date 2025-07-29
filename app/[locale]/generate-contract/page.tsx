@@ -62,9 +62,14 @@ import {
 } from "lucide-react"
 
 // Lazy load components for better performance
-const EnhancedContractForm = lazy(() => import("@/components/enhanced-contract-form"))
-const UnifiedContractGeneratorForm = lazy(() => import("@/components/unified-contract-generator-form"))
-const ContractIntelligence = lazy(() => import("@/components/ai/contract-intelligence"))
+// const EnhancedContractForm = lazy(() => import("@/components/enhanced-contract-form"))
+// const UnifiedContractGeneratorForm = lazy(() => import("@/components/unified-contract-generator-form"))
+// const ContractIntelligence = lazy(() => import("@/components/ai/contract-intelligence"))
+
+// Temporary direct imports for testing
+import EnhancedContractForm from "@/components/enhanced-contract-form"
+import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
+import ContractIntelligence from "@/components/ai/contract-intelligence"
 
 // Enhanced utilities for contract insights
 import { 
@@ -652,48 +657,35 @@ export default function GenerateContractPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9 }}
       >
-        <Suspense fallback={
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center">
-                <div className="text-center">
-                  <FileText className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                  <p className="text-muted-foreground">Loading contract form...</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        }>
-          {useEnhancedForm ? (
-            <EnhancedContractForm 
-              onSuccess={() => {
-                toast({
-                  title: "Contract Generated",
-                  description: "Your contract has been successfully generated and saved.",
-                })
-              }}
-              onError={(error) => {
-                toast({
-                  title: "Generation Failed",
-                  description: error.message || "Failed to generate contract.",
-                  variant: "destructive"
-                })
-              }}
-            />
-          ) : (
-            <UnifiedContractGeneratorForm 
-              mode="advanced"
-              showAdvanced={true}
-              autoRedirect={false}
-              onFormSubmit={() => {
-                toast({
-                  title: "Contract Saved",
-                  description: "Your contract has been successfully saved.",
-                })
-              }}
-            />
-          )}
-        </Suspense>
+        {useEnhancedForm ? (
+          <EnhancedContractForm 
+            onSuccess={() => {
+              toast({
+                title: "Contract Generated",
+                description: "Your contract has been successfully generated and saved.",
+              })
+            }}
+            onError={(error) => {
+              toast({
+                title: "Generation Failed",
+                description: error.message || "Failed to generate contract.",
+                variant: "destructive"
+              })
+            }}
+          />
+        ) : (
+          <UnifiedContractGeneratorForm 
+            mode="advanced"
+            showAdvanced={true}
+            autoRedirect={false}
+            onFormSubmit={() => {
+              toast({
+                title: "Contract Saved",
+                description: "Your contract has been successfully saved.",
+              })
+            }}
+          />
+        )}
       </motion.div>
 
       {/* AI Contract Intelligence */}
@@ -703,20 +695,7 @@ export default function GenerateContractPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.0 }}
         >
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <Brain className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading AI intelligence...</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
-            <ContractIntelligence contractId="sample-contract-123" />
-          </Suspense>
+          <ContractIntelligence contractId="sample-contract-123" />
         </motion.div>
       )}
     </motion.div>

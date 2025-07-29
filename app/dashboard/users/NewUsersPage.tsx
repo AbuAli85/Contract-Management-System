@@ -33,8 +33,8 @@ import { debounce } from "lodash";
 
 // Lazy load components
 const PermissionsManager = lazy(() => import("@/components/user-management/PermissionsManager"));
-const CreateUserForm = lazy(() => import("@/components/user-management/create-user-form").then(module => ({ default: module.CreateUserForm })));
-const ChangePasswordForm = lazy(() => import("@/components/user-management/change-password-form").then(module => ({ default: module.ChangePasswordForm })));
+const CreateUserForm = lazy(() => import("@/components/user-management/create-user-form"));
+const ChangePasswordForm = lazy(() => import("@/components/user-management/change-password-form"));
 
 // TypeScript interfaces for better type safety
 interface User {

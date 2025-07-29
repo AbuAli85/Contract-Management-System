@@ -1,4 +1,4 @@
-// Enhanced Contract Type Configuration with Additional Contract Types
+// Enhanced Contract Type Configuration with 9 Comprehensive Contract Types
 import { enhancedTemplates } from './enhanced-google-docs-templates'
 
 export interface ContractTypeConfig {
@@ -7,7 +7,7 @@ export interface ContractTypeConfig {
   nameAr: string
   description: string
   descriptionAr: string
-  category: 'employment' | 'service' | 'freelance' | 'consulting' | 'partnership' | 'nda' | 'custom'
+  category: 'employment' | 'service' | 'freelance' | 'consulting' | 'partnership' | 'nda' | 'custom' | 'vendor' | 'lease'
   isActive: boolean
   requiresApproval: boolean
   makecomTemplateId?: string
@@ -16,6 +16,7 @@ export interface ContractTypeConfig {
   validation: ContractValidation
   pricing?: ContractPricing
   metadata?: Record<string, any>
+  businessRules?: BusinessRules
 }
 
 export interface ContractField {
@@ -29,6 +30,11 @@ export interface ContractField {
   options?: { value: string; label: string; labelAr: string }[]
   validation?: FieldValidation
   defaultValue?: any
+  conditional?: {
+    field: string
+    value: any
+    operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than'
+  }
 }
 
 export interface FieldValidation {
@@ -53,19 +59,31 @@ export interface ContractPricing {
   features: string[]
 }
 
-// Enhanced Contract Types Configuration
+export interface BusinessRules {
+  autoApproval?: boolean
+  requiresLegalReview?: boolean
+  requiresFinancialApproval?: boolean
+  maxContractValue?: number
+  minContractValue?: number
+  allowedCurrencies?: string[]
+  restrictedParties?: string[]
+  specialConditions?: string[]
+  complianceChecks?: string[]
+}
+
+// Enhanced Contract Types Configuration - 9 Comprehensive Types
 export const enhancedContractTypes: ContractTypeConfig[] = [
-  // Employment Contracts
+  // 1. Full-Time Permanent Employment
   {
     id: 'full-time-permanent',
     name: 'Full-Time Permanent Employment',
     nameAr: 'توظيف بدوام كامل دائم',
-    description: 'Standard full-time permanent employment contract with comprehensive benefits',
-    descriptionAr: 'عقد توظيف بدوام كامل دائم مع مزايا شاملة',
+    description: 'Standard full-time permanent employment contract with comprehensive benefits and legal compliance',
+    descriptionAr: 'عقد توظيف بدوام كامل دائم مع مزايا شاملة والامتثال القانوني',
     category: 'employment',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    makecomTemplateId: 'full_time_permanent_employment_v2',
     googleDocsTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
     fields: [
       {
@@ -133,29 +151,60 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
           { value: '60_days', label: '60 Days', labelAr: '60 يوم' },
           { value: '90_days', label: '90 Days', labelAr: '90 يوم' }
         ]
+      },
+      {
+        id: 'work_location',
+        name: 'Work Location',
+        nameAr: 'موقع العمل',
+        type: 'text',
+        required: true
+      },
+      {
+        id: 'working_hours',
+        name: 'Working Hours',
+        nameAr: 'ساعات العمل',
+        type: 'select',
+        required: true,
+        options: [
+          { value: '40_hours', label: '40 Hours/Week', labelAr: '40 ساعة/أسبوع' },
+          { value: '45_hours', label: '45 Hours/Week', labelAr: '45 ساعة/أسبوع' },
+          { value: '48_hours', label: '48 Hours/Week', labelAr: '48 ساعة/أسبوع' }
+        ]
       }
     ],
     validation: {
-      requiredFields: ['job_title', 'department', 'basic_salary', 'probation_period', 'notice_period'],
+      requiredFields: ['job_title', 'department', 'basic_salary', 'probation_period', 'notice_period', 'work_location', 'working_hours'],
       optionalFields: ['housing_allowance', 'transport_allowance']
     },
     pricing: {
       basePrice: 500,
       currency: 'OMR',
       pricingModel: 'fixed',
-      features: ['Professional template', 'Legal compliance', 'Digital signatures', 'PDF generation']
+      features: ['Professional template', 'Legal compliance', 'Digital signatures', 'PDF generation', 'Make.com automation']
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      requiresFinancialApproval: true,
+      maxContractValue: 50000,
+      minContractValue: 1000,
+      allowedCurrencies: ['OMR', 'USD'],
+      complianceChecks: ['labor_law_compliance', 'visa_requirements', 'tax_obligations']
     }
   },
+
+  // 2. Part-Time Contract
   {
     id: 'part-time-contract',
     name: 'Part-Time Contract',
     nameAr: 'عقد بدوام جزئي',
-    description: 'Part-time employment contract for flexible work arrangements',
-    descriptionAr: 'عقد توظيف بدوام جزئي لترتيبات العمل المرنة',
+    description: 'Part-time employment contract for flexible work arrangements with reduced benefits',
+    descriptionAr: 'عقد توظيف بدوام جزئي لترتيبات العمل المرنة مع مزايا مخفضة',
     category: 'employment',
     isActive: true,
     requiresApproval: false,
-    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    makecomTemplateId: 'part_time_contract_v2',
+    googleDocsTemplateId: '2BcDeFgHiJkLmNoPqRsTuVwXyZ234567890',
     fields: [
       {
         id: 'job_title',
@@ -179,23 +228,45 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
         type: 'number',
         required: true,
         validation: { min: 0 }
+      },
+      {
+        id: 'work_schedule',
+        name: 'Work Schedule',
+        nameAr: 'جدول العمل',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'flexible', label: 'Flexible', labelAr: 'مرن' },
+          { value: 'fixed_schedule', label: 'Fixed Schedule', labelAr: 'جدول ثابت' },
+          { value: 'remote', label: 'Remote', labelAr: 'عن بعد' }
+        ]
       }
     ],
     validation: {
-      requiredFields: ['job_title', 'weekly_hours', 'hourly_rate'],
+      requiredFields: ['job_title', 'weekly_hours', 'hourly_rate', 'work_schedule'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: true,
+      requiresLegalReview: false,
+      maxContractValue: 15000,
+      minContractValue: 500,
+      allowedCurrencies: ['OMR', 'USD']
     }
   },
+
+  // 3. Fixed-Term Contract
   {
     id: 'fixed-term-contract',
     name: 'Fixed-Term Contract',
     nameAr: 'عقد محدد المدة',
-    description: 'Fixed-term employment contract for specific projects or periods',
-    descriptionAr: 'عقد توظيف محدد المدة لمشاريع أو فترات محددة',
+    description: 'Fixed-term employment contract for specific projects or periods with clear end dates',
+    descriptionAr: 'عقد توظيف محدد المدة لمشاريع أو فترات محددة مع تواريخ انتهاء واضحة',
     category: 'employment',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    makecomTemplateId: 'fixed_term_contract_v2',
+    googleDocsTemplateId: '3CdEfGhIjKlMnOpQrStUvWxYzA345678901',
     fields: [
       {
         id: 'job_title',
@@ -223,25 +294,48 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
         nameAr: 'وصف المشروع',
         type: 'textarea',
         required: true
+      },
+      {
+        id: 'start_date',
+        name: 'Start Date',
+        nameAr: 'تاريخ البدء',
+        type: 'date',
+        required: true
+      },
+      {
+        id: 'end_date',
+        name: 'End Date',
+        nameAr: 'تاريخ الانتهاء',
+        type: 'date',
+        required: true
       }
     ],
     validation: {
-      requiredFields: ['job_title', 'contract_duration', 'project_description'],
+      requiredFields: ['job_title', 'contract_duration', 'project_description', 'start_date', 'end_date'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      maxContractValue: 100000,
+      minContractValue: 2000,
+      allowedCurrencies: ['OMR', 'USD'],
+      complianceChecks: ['project_scope_validation', 'budget_approval']
     }
   },
 
-  // Service Contracts
+  // 4. Business Service Contract
   {
     id: 'business-service-contract',
     name: 'Business Service Contract',
     nameAr: 'عقد خدمة تجارية',
-    description: 'Professional service contract for business-to-business services',
-    descriptionAr: 'عقد خدمة احترافي للخدمات بين الشركات',
+    description: 'Professional service contract for business-to-business services with comprehensive terms',
+    descriptionAr: 'عقد خدمة احترافي للخدمات بين الشركات مع شروط شاملة',
     category: 'service',
     isActive: true,
     requiresApproval: true,
-    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    makecomTemplateId: 'business_service_contract_v2',
+    googleDocsTemplateId: '4DeFgHiJkLmNoPqRsTuVwXyZAb456789012',
     fields: [
       {
         id: 'service_provider',
@@ -297,28 +391,48 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
           { value: 'annually', label: 'Annually', labelAr: 'سنوي' },
           { value: 'upon_completion', label: 'Upon Completion', labelAr: 'عند الانتهاء' }
         ]
+      },
+      {
+        id: 'service_level_agreement',
+        name: 'Service Level Agreement',
+        nameAr: 'اتفاقية مستوى الخدمة',
+        type: 'textarea',
+        required: false
       }
     ],
     validation: {
       requiredFields: ['service_provider', 'service_recipient', 'service_description', 'service_duration', 'service_fee', 'payment_terms'],
-      optionalFields: []
+      optionalFields: ['service_level_agreement']
     },
     pricing: {
       basePrice: 300,
       currency: 'OMR',
       pricingModel: 'fixed',
-      features: ['Professional template', 'Service terms', 'Payment schedules', 'Liability clauses']
+      features: ['Professional template', 'Service terms', 'Payment schedules', 'Liability clauses', 'Make.com automation']
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      requiresFinancialApproval: true,
+      maxContractValue: 500000,
+      minContractValue: 1000,
+      allowedCurrencies: ['OMR', 'USD', 'EUR'],
+      complianceChecks: ['vendor_registration', 'tax_compliance', 'insurance_requirements']
     }
   },
+
+  // 5. Consulting Agreement
   {
     id: 'consulting-agreement',
     name: 'Consulting Agreement',
     nameAr: 'اتفاقية استشارية',
-    description: 'Professional consulting services agreement',
-    descriptionAr: 'اتفاقية خدمات استشارية احترافية',
+    description: 'Professional consulting services agreement with expertise-based terms',
+    descriptionAr: 'اتفاقية خدمات استشارية احترافية مع شروط قائمة على الخبرة',
     category: 'consulting',
     isActive: true,
     requiresApproval: true,
+    makecomTemplateId: 'consulting_agreement_v2',
+    googleDocsTemplateId: '5EfGhIjKlMnOpQrStUvWxYzAbC567890123',
     fields: [
       {
         id: 'consultant_name',
@@ -369,25 +483,48 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
         type: 'number',
         required: true,
         validation: { min: 1 }
+      },
+      {
+        id: 'expertise_area',
+        name: 'Area of Expertise',
+        nameAr: 'مجال الخبرة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'management', label: 'Management Consulting', labelAr: 'استشارات إدارية' },
+          { value: 'technology', label: 'Technology Consulting', labelAr: 'استشارات تقنية' },
+          { value: 'financial', label: 'Financial Consulting', labelAr: 'استشارات مالية' },
+          { value: 'legal', label: 'Legal Consulting', labelAr: 'استشارات قانونية' },
+          { value: 'marketing', label: 'Marketing Consulting', labelAr: 'استشارات تسويقية' }
+        ]
       }
     ],
     validation: {
-      requiredFields: ['consultant_name', 'client_name', 'consulting_scope', 'consulting_duration', 'hourly_rate', 'estimated_hours'],
+      requiredFields: ['consultant_name', 'client_name', 'consulting_scope', 'consulting_duration', 'hourly_rate', 'estimated_hours', 'expertise_area'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      maxContractValue: 200000,
+      minContractValue: 5000,
+      allowedCurrencies: ['OMR', 'USD', 'EUR'],
+      complianceChecks: ['consultant_credentials', 'conflict_of_interest', 'confidentiality_agreement']
     }
   },
 
-  // Freelance Contracts
+  // 6. Freelance Service Agreement
   {
     id: 'freelance-service-agreement',
     name: 'Freelance Service Agreement',
     nameAr: 'اتفاقية خدمة مستقلة',
-    description: 'Freelance service agreement for independent contractors',
-    descriptionAr: 'اتفاقية خدمة مستقلة للمقاولين المستقلين',
+    description: 'Freelance service agreement for independent contractors with project-based terms',
+    descriptionAr: 'اتفاقية خدمة مستقلة للمقاولين المستقلين مع شروط قائمة على المشروع',
     category: 'freelance',
     isActive: true,
     requiresApproval: false,
-    makecomTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    makecomTemplateId: 'freelance_service_agreement_v2',
+    googleDocsTemplateId: '6FgHiJkLmNoPqRsTuVwXyZAbCd678901234',
     fields: [
       {
         id: 'freelancer_name',
@@ -442,24 +579,41 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
           { value: 'milestone', label: 'Milestone Payments', labelAr: 'دفعات مراحل' },
           { value: 'upon_completion', label: 'Upon Completion', labelAr: 'عند الانتهاء' }
         ]
+      },
+      {
+        id: 'deliverables',
+        name: 'Deliverables',
+        nameAr: 'المنتجات المطلوبة',
+        type: 'textarea',
+        required: true
       }
     ],
     validation: {
-      requiredFields: ['freelancer_name', 'client_name', 'project_description', 'project_duration', 'project_fee', 'payment_schedule'],
+      requiredFields: ['freelancer_name', 'client_name', 'project_description', 'project_duration', 'project_fee', 'payment_schedule', 'deliverables'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: true,
+      requiresLegalReview: false,
+      maxContractValue: 50000,
+      minContractValue: 1000,
+      allowedCurrencies: ['OMR', 'USD'],
+      complianceChecks: ['freelancer_registration', 'tax_obligations']
     }
   },
 
-  // Partnership Agreements
+  // 7. Business Partnership Agreement
   {
     id: 'business-partnership-agreement',
     name: 'Business Partnership Agreement',
     nameAr: 'اتفاقية شراكة تجارية',
-    description: 'Partnership agreement for business collaboration',
-    descriptionAr: 'اتفاقية شراكة للتعاون التجاري',
+    description: 'Partnership agreement for business collaboration with profit-sharing and governance terms',
+    descriptionAr: 'اتفاقية شراكة للتعاون التجاري مع شروط تقاسم الأرباح والحوكمة',
     category: 'partnership',
     isActive: true,
     requiresApproval: true,
+    makecomTemplateId: 'business_partnership_agreement_v2',
+    googleDocsTemplateId: '7GhIjKlMnOpQrStUvWxYzAbCdE789012345',
     fields: [
       {
         id: 'partner1_name',
@@ -514,24 +668,50 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
           { value: '70_30', label: '70/30 Split', labelAr: 'تقسيم 70/30' },
           { value: 'custom', label: 'Custom Split', labelAr: 'تقسيم مخصص' }
         ]
+      },
+      {
+        id: 'capital_contribution',
+        name: 'Capital Contribution',
+        nameAr: 'المساهمة الرأسمالية',
+        type: 'number',
+        required: true,
+        validation: { min: 0 }
+      },
+      {
+        id: 'governance_structure',
+        name: 'Governance Structure',
+        nameAr: 'هيكل الحوكمة',
+        type: 'textarea',
+        required: true
       }
     ],
     validation: {
-      requiredFields: ['partner1_name', 'partner2_name', 'partnership_name', 'business_description', 'partnership_duration', 'profit_sharing'],
+      requiredFields: ['partner1_name', 'partner2_name', 'partnership_name', 'business_description', 'partnership_duration', 'profit_sharing', 'capital_contribution', 'governance_structure'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      requiresFinancialApproval: true,
+      maxContractValue: 1000000,
+      minContractValue: 10000,
+      allowedCurrencies: ['OMR', 'USD', 'EUR'],
+      complianceChecks: ['partnership_registration', 'tax_obligations', 'regulatory_compliance']
     }
   },
 
-  // NDA Contracts
+  // 8. Non-Disclosure Agreement
   {
     id: 'non-disclosure-agreement',
     name: 'Non-Disclosure Agreement',
     nameAr: 'اتفاقية عدم الإفصاح',
-    description: 'Confidentiality agreement for protecting sensitive information',
-    descriptionAr: 'اتفاقية سرية لحماية المعلومات الحساسة',
+    description: 'Confidentiality agreement for protecting sensitive information and trade secrets',
+    descriptionAr: 'اتفاقية سرية لحماية المعلومات الحساسة والأسرار التجارية',
     category: 'nda',
     isActive: true,
     requiresApproval: true,
+    makecomTemplateId: 'non_disclosure_agreement_v2',
+    googleDocsTemplateId: '8HiJkLmNoPqRsTuVwXyZAbCdEf890123456',
     fields: [
       {
         id: 'disclosing_party',
@@ -573,50 +753,75 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
         nameAr: 'غرض الإفصاح',
         type: 'textarea',
         required: true
+      },
+      {
+        id: 'penalty_clause',
+        name: 'Penalty for Breach',
+        nameAr: 'العقوبة على الإخلال',
+        type: 'textarea',
+        required: true
       }
     ],
     validation: {
-      requiredFields: ['disclosing_party', 'receiving_party', 'confidential_information', 'nda_duration', 'purpose'],
+      requiredFields: ['disclosing_party', 'receiving_party', 'confidential_information', 'nda_duration', 'purpose', 'penalty_clause'],
       optionalFields: []
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      requiresFinancialApproval: false,
+      maxContractValue: 100000,
+      minContractValue: 0,
+      allowedCurrencies: ['OMR', 'USD'],
+      complianceChecks: ['confidentiality_requirements', 'legal_enforceability']
     }
   },
 
-  // Custom Contract
+  // 9. Vendor Service Agreement
   {
-    id: 'custom-contract',
-    name: 'Custom Contract',
-    nameAr: 'عقد مخصص',
-    description: 'Custom contract template for specific business needs',
-    descriptionAr: 'قالب عقد مخصص للاحتياجات التجارية المحددة',
-    category: 'custom',
+    id: 'vendor-service-agreement',
+    name: 'Vendor Service Agreement',
+    nameAr: 'اتفاقية خدمة المورد',
+    description: 'Comprehensive vendor service agreement for supplier relationships and procurement',
+    descriptionAr: 'اتفاقية خدمة شاملة للمورد لعلاقات الموردين والمشتريات',
+    category: 'vendor',
     isActive: true,
     requiresApproval: true,
+    makecomTemplateId: 'vendor_service_agreement_v2',
+    googleDocsTemplateId: '9IjKlMnOpQrStUvWxYzAbCdEfG901234567',
     fields: [
       {
-        id: 'contract_title',
-        name: 'Contract Title',
-        nameAr: 'عنوان العقد',
+        id: 'vendor_name',
+        name: 'Vendor Name',
+        nameAr: 'اسم المورد',
         type: 'text',
         required: true
       },
       {
-        id: 'party1_name',
-        name: 'First Party Name',
-        nameAr: 'اسم الطرف الأول',
+        id: 'client_name',
+        name: 'Client Name',
+        nameAr: 'اسم العميل',
         type: 'text',
         required: true
       },
       {
-        id: 'party2_name',
-        name: 'Second Party Name',
-        nameAr: 'اسم الطرف الثاني',
-        type: 'text',
-        required: true
+        id: 'service_category',
+        name: 'Service Category',
+        nameAr: 'فئة الخدمة',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'it_services', label: 'IT Services', labelAr: 'خدمات تقنية المعلومات' },
+          { value: 'consulting', label: 'Consulting', labelAr: 'استشارات' },
+          { value: 'maintenance', label: 'Maintenance', labelAr: 'صيانة' },
+          { value: 'supply', label: 'Supply', labelAr: 'توريد' },
+          { value: 'logistics', label: 'Logistics', labelAr: 'لوجستيات' }
+        ]
       },
       {
-        id: 'contract_terms',
-        name: 'Contract Terms',
-        nameAr: 'شروط العقد',
+        id: 'service_description',
+        name: 'Service Description',
+        nameAr: 'وصف الخدمة',
         type: 'textarea',
         required: true
       },
@@ -625,20 +830,49 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
         name: 'Contract Value',
         nameAr: 'قيمة العقد',
         type: 'number',
-        required: false,
+        required: true,
         validation: { min: 0 }
       },
       {
-        id: 'special_terms',
-        name: 'Special Terms',
-        nameAr: 'شروط خاصة',
+        id: 'payment_terms',
+        name: 'Payment Terms',
+        nameAr: 'شروط الدفع',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'net_30', label: 'Net 30', labelAr: 'صافي 30' },
+          { value: 'net_60', label: 'Net 60', labelAr: 'صافي 60' },
+          { value: 'upon_delivery', label: 'Upon Delivery', labelAr: 'عند التسليم' },
+          { value: 'monthly', label: 'Monthly', labelAr: 'شهري' }
+        ]
+      },
+      {
+        id: 'service_level_agreement',
+        name: 'Service Level Agreement',
+        nameAr: 'اتفاقية مستوى الخدمة',
         type: 'textarea',
-        required: false
+        required: true
+      },
+      {
+        id: 'quality_standards',
+        name: 'Quality Standards',
+        nameAr: 'معايير الجودة',
+        type: 'textarea',
+        required: true
       }
     ],
     validation: {
-      requiredFields: ['contract_title', 'party1_name', 'party2_name', 'contract_terms'],
-      optionalFields: ['contract_value', 'special_terms']
+      requiredFields: ['vendor_name', 'client_name', 'service_category', 'service_description', 'contract_value', 'payment_terms', 'service_level_agreement', 'quality_standards'],
+      optionalFields: []
+    },
+    businessRules: {
+      autoApproval: false,
+      requiresLegalReview: true,
+      requiresFinancialApproval: true,
+      maxContractValue: 1000000,
+      minContractValue: 5000,
+      allowedCurrencies: ['OMR', 'USD', 'EUR'],
+      complianceChecks: ['vendor_registration', 'quality_certification', 'insurance_coverage', 'tax_compliance']
     }
   }
 ]
@@ -681,6 +915,16 @@ export function validateContractTypeData(contractTypeId: string, data: Record<st
       warnings.push(`Optional field '${field.name}' is missing, will use default value`)
     }
   })
+
+  // Check business rules
+  if (contractType.businessRules) {
+    if (contractType.businessRules.minContractValue && data.contract_value < contractType.businessRules.minContractValue) {
+      errors.push(`Contract value must be at least ${contractType.businessRules.minContractValue} ${contractType.businessRules.allowedCurrencies?.[0] || 'OMR'}`)
+    }
+    if (contractType.businessRules.maxContractValue && data.contract_value > contractType.businessRules.maxContractValue) {
+      errors.push(`Contract value cannot exceed ${contractType.businessRules.maxContractValue} ${contractType.businessRules.allowedCurrencies?.[0] || 'OMR'}`)
+    }
+  }
 
   // Run custom validation if provided
   if (contractType.validation.customValidation) {
@@ -728,6 +972,7 @@ export function generateContractWithMakecom(
     contract_type: contractTypeId,
     template_id: contractConfig.googleDocsTemplateId,
     makecom_template_id: contractConfig.makecomTemplateId,
+    business_rules: contractConfig.businessRules,
     ...contractData
   } : null
 
