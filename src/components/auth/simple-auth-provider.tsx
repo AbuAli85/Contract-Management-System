@@ -133,7 +133,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       clearTimeout(timeout) // Clear the timeout
       setLoading(false)
       setMounted(true)
-      console.log('🔐 Auth: Final state', { user: !!user, loading: false, mounted: true })
     }
   }
 
@@ -144,6 +143,18 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       initializeAuth()
     }
   }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
+
+  // Log final state after auth initialization
+  useEffect(() => {
+    if (mounted && !loading) {
+      console.log('🔐 Auth: Final state after initialization', { 
+        user: !!user, 
+        loading, 
+        mounted,
+        userEmail: user?.email 
+      })
+    }
+  }, [mounted, loading, user])
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     // Only log significant state changes
