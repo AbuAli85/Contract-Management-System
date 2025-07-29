@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,18 +41,18 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
   const [parties, setParties] = useState<any[]>([])
   const [promoters, setPromoters] = useState<any[]>([])
   const { toast } = useToast()
-  const [id, setId] = useState<string>("")
+  
+  // Unwrap params using React.use() for Next.js 15 compatibility
+  const { id } = use(params)
 
   useEffect(() => {
     const init = async () => {
-      const { id: contractId } = await params
-      setId(contractId)
-      await fetchContract(contractId)
+      await fetchContract(id)
       await fetchParties()
       await fetchPromoters()
     }
     init()
-  }, [params])
+  }, [id])
 
   const fetchContract = async (contractId: string) => {
     try {

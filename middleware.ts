@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createClient } from '@/lib/supabase/middleware'
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -21,19 +20,15 @@ const authRoutes = [
 
 export async function middleware(request: NextRequest) {
   try {
-    // Create Supabase client for middleware
-    const supabase = createClient(request)
-    
-    // Get current user using getUser() for better security
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
     const { pathname } = request.nextUrl
     
-    console.log('🔍 Middleware processing:', { pathname, hasUser: !!user })
+    console.log('🔍 Middleware processing:', { pathname })
     
     // Handle root path redirect
     if (pathname === '/') {
-      if (user) {
+      // Check for auth cookie to determine if user is logged in
+      const authCookie = request.cookies.get('sb-access-token')
+      if (authCookie) {
         // User is authenticated, redirect to dashboard
         console.log('🔍 Root redirect: User authenticated, redirecting to dashboard')
         return NextResponse.redirect(new URL('/en/dashboard', request.url))
@@ -58,16 +53,20 @@ export async function middleware(request: NextRequest) {
       pathname.includes(route) || pathname.includes(`/${locale}${route}`)
     )
     
+    // Check for auth cookie to determine if user is logged in
+    const authCookie = request.cookies.get('sb-access-token')
+    const hasUser = !!authCookie
+    
     console.log('🔍 Route analysis:', { 
       pathname, 
       locale, 
       isProtectedRoute, 
       isAuthRoute, 
-      hasUser: !!user 
+      hasUser 
     })
     
     // If accessing protected route without user, redirect to login
-    if (isProtectedRoute && !user) {
+    if (isProtectedRoute && !hasUser) {
       console.log('🔍 Protected route access denied, redirecting to login')
       const loginUrl = new URL(`/${locale}/auth/login`, request.url)
       loginUrl.searchParams.set('redirect', pathname)
@@ -76,7 +75,7 @@ export async function middleware(request: NextRequest) {
     
     // If accessing auth route with user, allow the client-side redirect to handle it
     // Don't redirect in middleware to avoid conflicts
-    if (isAuthRoute && user) {
+    if (isAuthRoute && hasUser) {
       console.log('🔍 Auth route with user, allowing client-side redirect')
       // Let the client-side logic handle the redirect
       return NextResponse.next()
