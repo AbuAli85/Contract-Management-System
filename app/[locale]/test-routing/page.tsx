@@ -1,7 +1,7 @@
 'use client'
 
 import { use } from 'react'
-import { AppLayout } from '@/components/app-layout'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, AlertCircle } from 'lucide-react'
@@ -10,8 +10,7 @@ export default function TestRoutingPage({ params }: { params: Promise<{ locale: 
   const { locale } = use(params)
 
   return (
-    <AppLayout locale={locale}>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Routing Test Page</h1>
           <p className="text-muted-foreground">This page tests if routing and content display are working properly.</p>
@@ -32,11 +31,11 @@ export default function TestRoutingPage({ params }: { params: Promise<{ locale: 
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>AppLayout rendered</span>
+                <span>Page layout rendered</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
-                <span>Navigation header visible</span>
+                <span>Content displayed correctly</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -54,7 +53,7 @@ export default function TestRoutingPage({ params }: { params: Promise<{ locale: 
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Try clicking the navigation links in the header to test if they work properly.
+                Try clicking the navigation links below to test if they work properly.
               </p>
               <div className="space-y-2">
                 <Button variant="outline" className="w-full" asChild>
@@ -84,6 +83,6 @@ export default function TestRoutingPage({ params }: { params: Promise<{ locale: 
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
+    </div>
   )
 }

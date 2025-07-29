@@ -13,15 +13,13 @@ import {
   Star,
   Eye
 } from 'lucide-react'
-import { AppLayout } from '@/components/app-layout'
 import { use } from 'react'
 
 export default function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = use(params)
   
   return (
-    <AppLayout locale={locale}>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center space-y-6">
@@ -115,6 +113,6 @@ export default function HomePage({ params }: { params: Promise<{ locale: string 
           </Card>
         </div>
       </div>
-    </AppLayout>
+    </div>
   )
 }
