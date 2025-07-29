@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 const notificationSchema = z.object({
   user_id: z.string(),
   message: z.string(),

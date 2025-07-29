@@ -3,6 +3,9 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic'
+
 // Validation schema for promoter data
 const promoterSchema = z.object({
   name_en: z.string().min(1, 'English name is required'),
