@@ -16,7 +16,7 @@ export default function DebugSystemPage() {
         
         // Test 2: Check if AuthProvider is available
         try {
-          const { useAuth } = await import('@/src/components/auth/auth-provider')
+          const { useAuth } = await import('@/src/components/auth/simple-auth-provider')
           issues.push('✅ AuthProvider import works')
         } catch (error) {
           issues.push(`❌ AuthProvider import failed: ${error}`)

@@ -16,7 +16,7 @@ import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Lazy load the heavy form component with a more aggressive loading strategy
 const GenerateContractForm = lazy(() => 
-  import("@/components/generate-contract-form").then(module => ({
+  import("@/components/enhanced-contract-form").then(module => ({
     default: module.default
   }))
 )
@@ -30,7 +30,7 @@ const loadContractEnhancementsCSS = () => {
 
 // Preload the form component when user hovers over the button
 const preloadForm = () => {
-  import("@/components/generate-contract-form")
+  import("@/components/enhanced-contract-form")
 }
 
 export default function DashboardGenerateContractPage() {
