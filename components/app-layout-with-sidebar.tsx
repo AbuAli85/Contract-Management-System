@@ -36,27 +36,17 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     return () => clearTimeout(timer)
   }, [loading, mounted])
 
-  // Check if we should show loading state - be very aggressive about showing content
-  const shouldShowLoading = loading && !mounted && !forceRender && !user && !pathname.includes('/dashboard')
+  // Temporarily disable loading state to fix rendering issues
+  const shouldShowLoading = false
 
-  // Only log critical issues
-  if (loading && !user && !forceRender) {
-    console.log('🧭 AppLayoutWithSidebar: Still loading auth...')
-  }
-  
-  if (shouldShowLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 mx-auto mb-4">⏳</div>
-          <p className="text-muted-foreground">Loading authentication...</p>
-          <p className="text-xs text-gray-500 mt-2">
-            Loading: {loading ? 'true' : 'false'}, Mounted: {mounted ? 'true' : 'false'}
-          </p>
-        </div>
-      </div>
-    )
-  }
+  // Debug user state
+  console.log('🧭 AppLayoutWithSidebar: User state', { 
+    user: !!user, 
+    loading, 
+    mounted, 
+    pathname,
+    shouldShowLoading 
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">

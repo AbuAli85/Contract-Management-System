@@ -95,6 +95,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
 
       if (session?.user) {
+        console.log('🔐 Auth: Setting user state', { email: session.user.email })
         setSession(session)
         setUser(session.user)
         
@@ -132,6 +133,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       clearTimeout(timeout) // Clear the timeout
       setLoading(false)
       setMounted(true)
+      console.log('🔐 Auth: Final state', { user: !!user, loading: false, mounted: true })
     }
   }
 

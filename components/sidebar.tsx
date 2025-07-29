@@ -16,8 +16,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { user } = useAuth()
   
   // Debug logging - only log when there are issues
-  if (!user) {
-    console.log('🧭 Sidebar: No user available', { isOpen, locale })
+  if (!user && mounted) {
+    console.log('🧭 Sidebar: No user available', { isOpen, locale, loading, mounted })
   }
 
   const navigationItems = [
