@@ -84,7 +84,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
     isActive: true,
     requiresApproval: true,
     makecomTemplateId: 'full_time_permanent_employment_v2',
-    googleDocsTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
+    googleDocsTemplateId: '1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V', // Extra Contracts Template
     fields: [
       {
         id: 'job_title',

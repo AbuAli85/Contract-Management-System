@@ -14,11 +14,10 @@ function tempFixMakecom() {
     }
 
     // Check if MAKE_WEBHOOK_URL is already set correctly
-    if (envContent.includes('MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4')) {
+    if (envContent.includes('MAKE_WEBHOOK_URL=https://hook.eu2.make.com/2640726')) {
       console.log('✅ MAKE_WEBHOOK_URL is already set to the working webhook')
     } else {
-      // Replace or add the correct webhook URL
-      const newWebhookUrl = 'MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4'
+      const newWebhookUrl = 'MAKE_WEBHOOK_URL=https://hook.eu2.make.com/2640726'
       
       if (envContent.includes('MAKE_WEBHOOK_URL=')) {
         // Replace existing webhook URL
@@ -38,10 +37,10 @@ function tempFixMakecom() {
     }
 
     // Also update NEXT_PUBLIC_MAKE_WEBHOOK_URL
-    if (envContent.includes('NEXT_PUBLIC_MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4')) {
+    if (envContent.includes('NEXT_PUBLIC_MAKE_WEBHOOK_URL=https://hook.eu2.make.com/2640726')) {
       console.log('✅ NEXT_PUBLIC_MAKE_WEBHOOK_URL is already set correctly')
     } else {
-      const newPublicWebhookUrl = 'NEXT_PUBLIC_MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4'
+      const newPublicWebhookUrl = 'NEXT_PUBLIC_MAKE_WEBHOOK_URL=https://hook.eu2.make.com/2640726'
       
       if (envContent.includes('NEXT_PUBLIC_MAKE_WEBHOOK_URL=')) {
         envContent = envContent.replace(
