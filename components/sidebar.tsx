@@ -89,6 +89,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       description: 'Test sidebar navigation'
     },
     {
+      title: 'Sidebar Debug',
+      href: `/${locale}/sidebar-debug`,
+      icon: '🐛',
+      description: 'Debug sidebar issues'
+    },
+    {
       title: 'Test Working',
       href: `/${locale}/test-working`,
       icon: '✅',
