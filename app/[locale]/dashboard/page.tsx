@@ -1,6 +1,7 @@
 'use client'
 
-import { Suspense, useEffect, useState, use } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -56,12 +57,13 @@ interface DashboardStats {
   recentActivity: number
 }
 
-export default function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default function DashboardPage() {
   const { user, loading: authLoading, profile, mounted } = useAuth()
   const [dataLoading, setDataLoading] = useState(false)
   
-  // Unwrap params using React.use() for Next.js 15 compatibility
-  const { locale } = use(params)
+  // Get params using useParams for Next.js compatibility
+  const params = useParams()
+  const locale = params.locale as string
   
   // Debug logging
   console.log('🔧 Dashboard: Component rendered', { 

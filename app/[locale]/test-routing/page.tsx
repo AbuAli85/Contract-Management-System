@@ -1,13 +1,13 @@
 'use client'
 
-import { use } from 'react'
-
+import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, AlertCircle } from 'lucide-react'
 
-export default function TestRoutingPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = use(params)
+export default function TestRoutingPage() {
+  const params = useParams()
+  const locale = params.locale as string
 
   return (
     <div className="space-y-6">
