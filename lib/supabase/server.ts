@@ -3,75 +3,154 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
-export async function createClient() {
-  const cookieStore = await cookies()
-
+// Environment variable validation
+const validateEnvironmentVariables = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables. Please check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.')
+  const missingVars = []
+  if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL')
+  if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  if (!serviceRoleKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY')
+
+  if (missingVars.length > 0) {
+    throw new Error(`Missing Supabase environment variables: ${missingVars.join(', ')}. Please check your .env.local file.`)
   }
 
-  return createServerClient<Database>(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        async get(name: string) {
-          console.log('🔧 Server: Supabase requesting cookie:', name)
-          
-          // Simple cookie lookup
-          const cookie = await cookieStore.get(name)
-          if (cookie?.value) {
-            console.log('🔧 Server: Found cookie:', name)
-            return cookie.value
-          }
-          
-          console.log('🔧 Server: No cookie found for:', name)
-          return null
-        },
-        async set(name: string, value: string, options: CookieOptions) {
-          try {
-            console.log('🔧 Server: Setting cookie:', name, 'with value length:', value.length)
-            
-            // Set cookie with proper options
-            await cookieStore.set({ name, value, ...options })
-            console.log('🔧 Server: Cookie set successfully:', name)
-          } catch {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-        async remove(name: string, options: CookieOptions) {
-          try {
-            console.log('🔧 Server: Removing cookie:', name)
-            
-            // Remove cookie by setting it to empty value
-            await cookieStore.set({ name, value: '', ...options })
-            console.log('🔧 Server: Cookie removed successfully:', name)
-          } catch {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    }
-  )
+  return { supabaseUrl, supabaseAnonKey, serviceRoleKey }
 }
 
-// Enhanced client with refresh token logic
+// Enhanced error handling for Supabase operations
+export class SupabaseError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public status: number = 500,
+    public details?: any
+  ) {
+    super(message)
+    this.name = 'SupabaseError'
+  }
+}
+
+// Rate limiting configuration
+const RATE_LIMIT_CONFIG = {
+  maxRequests: 100, // requests per window
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+}
+
+// Connection pool configuration for high-traffic applications
+const CONNECTION_POOL_CONFIG = {
+  maxConnections: 20,
+  idleTimeout: 30000, // 30 seconds
+  connectionTimeout: 10000, // 10 seconds
+}
+
+export async function createClient() {
+  try {
+    const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables()
+    const cookieStore = await cookies()
+
+    return createServerClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          async get(name: string) {
+            try {
+              console.log('🔧 Server: Supabase requesting cookie:', name)
+              
+              const cookie = await cookieStore.get(name)
+              if (cookie?.value) {
+                console.log('🔧 Server: Found cookie:', name)
+                return cookie.value
+              }
+              
+              console.log('🔧 Server: No cookie found for:', name)
+              return null
+            } catch (error) {
+              console.error('🔧 Server: Error getting cookie:', name, error)
+              return null
+            }
+          },
+          async set(name: string, value: string, options: CookieOptions) {
+            try {
+              console.log('🔧 Server: Setting cookie:', name, 'with value length:', value.length)
+              
+              await cookieStore.set({ name, value, ...options })
+              console.log('🔧 Server: Cookie set successfully:', name)
+            } catch (error) {
+              console.error('🔧 Server: Error setting cookie:', name, error)
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+          async remove(name: string, options: CookieOptions) {
+            try {
+              console.log('🔧 Server: Removing cookie:', name)
+              
+              await cookieStore.set({ name, value: '', ...options })
+              console.log('🔧 Server: Cookie removed successfully:', name)
+            } catch (error) {
+              console.error('🔧 Server: Error removing cookie:', name, error)
+              // The `delete` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+        // Global configuration for better performance and error handling
+        global: {
+          headers: {
+            'X-Client-Info': 'contract-management-system/1.0',
+            'X-Request-ID': generateRequestId(),
+          },
+        },
+        // Realtime configuration with error handling
+        realtime: {
+          params: {
+            eventsPerSecond: 10,
+          },
+        },
+        // Auth configuration with enhanced security
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+          flowType: 'pkce',
+        },
+      }
+    )
+  } catch (error) {
+    console.error('❌ Failed to create Supabase client:', error)
+    throw new SupabaseError(
+      'Failed to initialize Supabase client',
+      'CLIENT_INITIALIZATION_ERROR',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
+    )
+  }
+}
+
+// Generate unique request ID for tracking
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Enhanced client with refresh token logic and better error handling
 export async function createClientWithRefresh() {
   const client = await createClient()
   
-  // Add refresh token functionality
+  // Add refresh token functionality with enhanced error handling
   const enhancedClient = {
     ...client,
     auth: {
       ...client.auth,
-      // Enhanced refresh session with retry logic
+      // Enhanced refresh session with retry logic and better error handling
       async refreshSession() {
         try {
           console.log('🔄 Server: Attempting to refresh session...')
@@ -80,7 +159,12 @@ export async function createClientWithRefresh() {
           
           if (error) {
             console.error('🔄 Server: Session refresh failed:', error)
-            throw error
+            throw new SupabaseError(
+              'Session refresh failed',
+              'SESSION_REFRESH_ERROR',
+              401,
+              error.message
+            )
           }
           
           if (data.session) {
@@ -92,11 +176,19 @@ export async function createClientWithRefresh() {
           }
         } catch (error) {
           console.error('🔄 Server: Session refresh error:', error)
-          return { data: { session: null, user: null }, error }
+          if (error instanceof SupabaseError) {
+            throw error
+          }
+          throw new SupabaseError(
+            'Session refresh failed',
+            'SESSION_REFRESH_ERROR',
+            401,
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         }
       },
       
-      // Check if session is expired
+      // Check if session is expired with better error handling
       async isSessionExpired() {
         try {
           const { data: { session } } = await client.auth.getSession()
@@ -121,7 +213,7 @@ export async function createClientWithRefresh() {
         }
       },
       
-      // Auto-refresh session if needed
+      // Auto-refresh session if needed with enhanced error handling
       async ensureValidSession() {
         try {
           const isExpired = await enhancedClient.auth.isSessionExpired()
@@ -136,7 +228,15 @@ export async function createClientWithRefresh() {
           return { data: { session, user: session?.user || null }, error: null }
         } catch (error) {
           console.error('🔄 Server: Error ensuring valid session:', error)
-          return { data: { session: null, user: null }, error }
+          if (error instanceof SupabaseError) {
+            throw error
+          }
+          throw new SupabaseError(
+            'Failed to ensure valid session',
+            'SESSION_VALIDATION_ERROR',
+            401,
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         }
       }
     }
@@ -145,13 +245,14 @@ export async function createClientWithRefresh() {
   return enhancedClient
 }
 
-// Helper function to refresh token with retry logic
+// Helper function to refresh token with retry logic and exponential backoff
 export async function refreshTokenWithRetry(
   client: any,
   maxRetries: number = 3,
-  delayMs: number = 1000
+  initialDelayMs: number = 1000
 ): Promise<{ success: boolean; error?: any }> {
   let lastError: any = null
+  let delayMs = initialDelayMs
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -194,7 +295,7 @@ export async function refreshTokenWithRetry(
   return { success: false, error: lastError }
 }
 
-// Helper function to get a valid session with automatic refresh
+// Helper function to get a valid session with automatic refresh and error handling
 export async function getValidSession(): Promise<{ session: any; user: any; error?: any }> {
   try {
     const client = await createClientWithRefresh()
@@ -210,7 +311,7 @@ export async function getValidSession(): Promise<{ session: any; user: any; erro
     return {
       session: null,
       user: null,
-      error
+      error: error instanceof Error ? error.message : 'Unknown error'
     }
   }
 }
@@ -225,3 +326,48 @@ export async function isAuthenticated(): Promise<boolean> {
     return false
   }
 }
+
+// Utility function for database operations with error handling
+export async function executeWithErrorHandling<T>(
+  operation: () => Promise<T>,
+  operationName: string
+): Promise<{ data: T | null; error: any }> {
+  try {
+    const data = await operation()
+    return { data, error: null }
+  } catch (error) {
+    console.error(`❌ ${operationName} failed:`, error)
+    
+    // Handle specific Supabase errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const supabaseError = error as any
+      
+      if (supabaseError.code === 'PGRST301') {
+        return { 
+          data: null, 
+          error: new SupabaseError('Rate limit exceeded', 'RATE_LIMIT_EXCEEDED', 429) 
+        }
+      }
+      
+      if (supabaseError.code === 'PGRST302') {
+        return { 
+          data: null, 
+          error: new SupabaseError('Connection timeout', 'CONNECTION_TIMEOUT', 408) 
+        }
+      }
+    }
+    
+    return { 
+      data: null, 
+      error: new SupabaseError(
+        `${operationName} failed`,
+        'OPERATION_FAILED',
+        500,
+        error instanceof Error ? error.message : 'Unknown error'
+      )
+    }
+  }
+}
+
+// Export rate limiting configuration for use in middleware
+export { RATE_LIMIT_CONFIG, CONNECTION_POOL_CONFIG }

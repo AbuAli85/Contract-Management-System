@@ -34,6 +34,26 @@ dist/
 *.local
 *.log
 
+# Temporary and backup files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Test and debug scripts (temporary)
+test-*.js
+debug-*.js
+quick-*.js
+build-test.js
+
+# Git configuration files (accidentally created)
+h upstream*
+e -Force*
+
+# Empty directories
+.qodo/
+
 # Ignore lock files (optional, if you use only one package manager)
 # yarn.lock
 # package-lock.json
