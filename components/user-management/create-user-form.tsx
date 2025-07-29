@@ -380,4 +380,6 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
       </DialogContent>
     </Dialog>
   )
-} 
+}
+
+export default CreateUserForm

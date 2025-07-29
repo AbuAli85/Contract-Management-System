@@ -546,4 +546,6 @@ export function ContractIntelligence({ contractId, contractData }: ContractIntel
       </Tabs>
     </div>
   )
-} 
+}
+
+export default ContractIntelligence
