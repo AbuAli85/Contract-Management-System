@@ -45,15 +45,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     try {
       const client = createClient()
-      if (client) {
-        setSupabase(client)
-      } else {
-        console.warn('Failed to create Supabase client')
-        setLoading(false)
-        setMounted(true)
-      }
+      // The createClient function now always returns a valid client (real or mock)
+      setSupabase(client)
     } catch (error) {
       console.error('Error creating Supabase client:', error)
+      // Even if createClient fails, we should still set mounted to true
       setSupabase(null)
       setLoading(false)
       setMounted(true)
@@ -105,9 +101,22 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfile(basicProfile)
         setRoles(['user'])
         setProfileNotFound(false)
+      } else {
+        // No session found, ensure we're in a clean state
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setRoles([])
+        setProfileNotFound(false)
       }
     } catch (error) {
       console.error('Error initializing auth:', error)
+      // Ensure we're in a clean state even on error
+      setSession(null)
+      setUser(null)
+      setProfile(null)
+      setRoles([])
+      setProfileNotFound(false)
     } finally {
       setLoading(false)
       setMounted(true)
@@ -124,24 +133,34 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     console.log('🔐 Auth state change:', event, newSession?.user?.email)
     
-    if (event === 'SIGNED_IN' && newSession?.user) {
-      setSession(newSession)
-      setUser(newSession.user)
-      
-      // Create basic profile
-      const basicProfile: UserProfile = {
-        id: newSession.user.id,
-        email: newSession.user.email || '',
-        full_name: newSession.user.user_metadata?.full_name || newSession.user.email?.split('@')[0] || 'User',
-        avatar_url: newSession.user.user_metadata?.avatar_url || null,
-        created_at: newSession.user.created_at,
-        role: 'user'
+    try {
+      if (event === 'SIGNED_IN' && newSession?.user) {
+        setSession(newSession)
+        setUser(newSession.user)
+        
+        // Create basic profile
+        const basicProfile: UserProfile = {
+          id: newSession.user.id,
+          email: newSession.user.email || '',
+          full_name: newSession.user.user_metadata?.full_name || newSession.user.email?.split('@')[0] || 'User',
+          avatar_url: newSession.user.user_metadata?.avatar_url || null,
+          created_at: newSession.user.created_at,
+          role: 'user'
+        }
+        
+        setProfile(basicProfile)
+        setRoles(['user'])
+        setProfileNotFound(false)
+      } else if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setUser(null)
+        setProfile(null)
+        setRoles([])
+        setProfileNotFound(false)
       }
-      
-      setProfile(basicProfile)
-      setRoles(['user'])
-      setProfileNotFound(false)
-    } else if (event === 'SIGNED_OUT') {
+    } catch (error) {
+      console.error('Error handling auth state change:', error)
+      // Ensure we're in a clean state on error
       setSession(null)
       setUser(null)
       setProfile(null)
@@ -164,6 +183,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
     } catch (error) {
       console.error('Error setting up auth state change listener:', error)
+      // Don't throw error, just log it and continue
     }
   }, [supabase])
 
