@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { Suspense, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
