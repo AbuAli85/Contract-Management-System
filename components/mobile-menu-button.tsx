@@ -8,9 +8,14 @@ interface MobileMenuButtonProps {
 }
 
 export function MobileMenuButton({ isOpen, onToggle }: MobileMenuButtonProps) {
+  const handleToggle = () => {
+    console.log('🧭 MobileMenuButton: Toggling sidebar', { isOpen: !isOpen })
+    onToggle()
+  }
+  
   return (
     <button
-      onClick={onToggle}
+      onClick={handleToggle}
       className="md:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
       aria-label="Toggle menu"
     >

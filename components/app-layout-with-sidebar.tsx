@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Sidebar } from '@/components/sidebar'
 import { MobileMenuButton } from '@/components/mobile-menu-button'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { useParams } from 'next/navigation'
+import { useParams, usePathname } from 'next/navigation'
 
 interface AppLayoutWithSidebarProps {
   children: React.ReactNode
@@ -12,12 +12,16 @@ interface AppLayoutWithSidebarProps {
 
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isLandingPage, setIsLandingPage] = useState(false)
   const { user, loading, mounted } = useAuth()
   const params = useParams()
+  const pathname = usePathname()
   const locale = params.locale as string
   
   // Check if we're on the landing page (root route)
-  const isLandingPage = typeof window !== 'undefined' && window.location.pathname === `/${locale}`
+  useEffect(() => {
+    setIsLandingPage(pathname === `/${locale}`)
+  }, [pathname, locale])
 
   if (loading || !mounted) {
     return (
@@ -82,6 +86,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
         {/* Page content */}
         <main className="p-6">
+          {/* Debug indicator for sidebar status */}
+          {!isLandingPage && (
+            <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              🧭 Sidebar Navigation Active - Mobile menu: {sidebarOpen ? 'Open' : 'Closed'}
+            </div>
+          )}
           {children}
         </main>
       </div>

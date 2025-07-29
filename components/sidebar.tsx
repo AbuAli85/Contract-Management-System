@@ -14,6 +14,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const params = useParams()
   const locale = params.locale as string
   const { user } = useAuth()
+  
+  // Debug logging
+  console.log('🧭 Sidebar: Rendering with props', { isOpen, locale, user: !!user })
 
   const navigationItems = [
     {
@@ -142,6 +145,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   href={item.href}
                   className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                   onClick={() => {
+                    console.log('🧭 Sidebar: Navigating to', item.href)
                     // Close sidebar on mobile after navigation
                     if (window.innerWidth < 768) {
                       onClose()
