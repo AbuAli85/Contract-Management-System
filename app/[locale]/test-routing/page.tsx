@@ -1,54 +1,89 @@
 'use client'
 
-import { useParams, usePathname } from 'next/navigation'
+import { use } from 'react'
+import { AppLayout } from '@/components/app-layout'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { CheckCircle, AlertCircle } from 'lucide-react'
 
-export default function TestRoutingPage() {
-  const params = useParams()
-  const pathname = usePathname()
-  
+export default function TestRoutingPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params)
+
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Routing Test Page</h1>
-      
-      <div className="space-y-4">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Route Information</h2>
-          <p><strong>Pathname:</strong> {pathname}</p>
-          <p><strong>Params:</strong> {JSON.stringify(params, null, 2)}</p>
+    <AppLayout locale={locale}>
+      <div className="space-y-6">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold">Routing Test Page</h1>
+          <p className="text-muted-foreground">This page tests if routing and content display are working properly.</p>
         </div>
-        
-        <div className="bg-green-50 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Navigation Links</h2>
-          <div className="space-y-2">
-            <a 
-              href={`/${params.locale}/dashboard`} 
-              className="block text-blue-600 hover:underline"
-            >
-              → Dashboard
-            </a>
-            <a 
-              href={`/${params.locale}/debug-routing`} 
-              className="block text-blue-600 hover:underline"
-            >
-              → Debug Routing
-            </a>
-            <a 
-              href={`/${params.locale}/auth/login`} 
-              className="block text-blue-600 hover:underline"
-            >
-              → Login
-            </a>
-          </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                Success Indicators
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Page loaded successfully</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>AppLayout rendered</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Navigation header visible</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <span>Locale: {locale}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-blue-500" />
+                Test Navigation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Try clicking the navigation links in the header to test if they work properly.
+              </p>
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={`/${locale}/dashboard`}>Go to Dashboard</a>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={`/${locale}/generate-contract`}>Go to Generate Contract</a>
+                </Button>
+                <Button variant="outline" className="w-full" asChild>
+                  <a href={`/${locale}/contracts`}>Go to Contracts</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-        
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Status</h2>
-          <p className="text-green-600">✅ Routing is working correctly!</p>
-          <p className="text-sm text-gray-600 mt-2">
-            If you can see this page, the Next.js 15 params handling is working properly.
-          </p>
-        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Debug Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              <div><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'Server-side'}</div>
+              <div><strong>Locale:</strong> {locale}</div>
+              <div><strong>Timestamp:</strong> {new Date().toISOString()}</div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </AppLayout>
   )
 }

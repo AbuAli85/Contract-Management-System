@@ -1,5 +1,4 @@
 import { i18n } from '@/src/i18n/i18n-config'
-import { ClientLayout } from '@/src/components/client-layout'
 import { cookies } from 'next/headers'
 
 export async function generateStaticParams() {
@@ -26,8 +25,8 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const resolvedLocale = await getLocale(locale)
   
   return (
-    <ClientLayout locale={resolvedLocale}>
+    <div className="min-h-screen bg-background">
       {children}
-    </ClientLayout>
+    </div>
   )
 }

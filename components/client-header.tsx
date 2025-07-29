@@ -5,9 +5,9 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { MobileNav } from "@/components/mobile-nav"
 
 const navItems = [
-  { title: "Home", href: "/" },
-  { title: "Generate Contract", href: "/dashboard/generate-contract" },
-  { title: "View History", href: "/contracts" },
+  { title: "Dashboard", href: "/dashboard" },
+  { title: "Generate Contract", href: "/generate-contract" },
+  { title: "Contracts", href: "/contracts" },
   { title: "Manage Parties", href: "/manage-parties" },
   { title: "Manage Promoters", href: "/manage-promoters" },
 ]
