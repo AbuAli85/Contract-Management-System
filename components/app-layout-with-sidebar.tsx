@@ -46,11 +46,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     isLandingPage,
     sidebarOpen,
     childrenType: typeof children,
-    childrenCount: React.Children.count(children)
+    childrenCount: React.Children.count(children),
+    shouldShowLoading,
+    forceRender
   })
 
-  // Temporarily bypass loading state for testing
-  const shouldShowLoading = false // (loading || !mounted) && !forceRender
+  // Check if we should show loading state
+  const shouldShowLoading = (loading || !mounted) && !forceRender
   
   if (shouldShowLoading) {
     return (
@@ -58,6 +60,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         <div className="text-center">
           <div className="animate-spin h-8 w-8 mx-auto mb-4">⏳</div>
           <p className="text-muted-foreground">Loading authentication...</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Loading: {loading ? 'true' : 'false'}, Mounted: {mounted ? 'true' : 'false'}
+          </p>
         </div>
       </div>
     )

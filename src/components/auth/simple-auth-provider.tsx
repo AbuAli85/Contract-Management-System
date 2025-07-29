@@ -76,6 +76,13 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       return
     }
 
+    // Add timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('🔐 Auth: Timeout reached, forcing mounted state')
+      setLoading(false)
+      setMounted(true)
+    }, 5000) // 5 second timeout
+
     try {
       // Get current session with error handling
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -122,6 +129,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setProfileNotFound(false)
     } finally {
       console.log('🔐 Auth: Setting loading=false, mounted=true')
+      clearTimeout(timeout) // Clear the timeout
       setLoading(false)
       setMounted(true)
     }
@@ -134,7 +142,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       console.log('🔐 Auth: Calling initializeAuth')
       initializeAuth()
     }
-  }, [supabase, mounted])
+  }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     console.log('🔐 Auth state change:', event, newSession?.user?.email)
