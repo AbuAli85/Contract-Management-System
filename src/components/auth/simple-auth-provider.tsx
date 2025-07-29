@@ -38,16 +38,25 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     // Only create client on the client side
     if (typeof window === 'undefined') {
+      setLoading(false)
+      setMounted(true)
       return
     }
 
     try {
       const client = createClient()
-      setSupabase(client)
+      if (client) {
+        setSupabase(client)
+      } else {
+        console.warn('Failed to create Supabase client')
+        setLoading(false)
+        setMounted(true)
+      }
     } catch (error) {
       console.error('Error creating Supabase client:', error)
       setSupabase(null)
       setLoading(false)
+      setMounted(true)
     }
   }, [])
 
@@ -64,16 +73,18 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const initializeAuth = async () => {
     if (!supabase) {
       setLoading(false)
+      setMounted(true)
       return
     }
 
     try {
-      // Get current session
+      // Get current session with error handling
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (error) {
         console.error('Error getting session:', error)
         setLoading(false)
+        setMounted(true)
         return
       }
 
@@ -99,16 +110,25 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       console.error('Error initializing auth:', error)
     } finally {
       setLoading(false)
+      setMounted(true)
     }
   }
 
+  // Initialize auth when supabase client is ready
+  useEffect(() => {
+    if (supabase && !mounted) {
+      initializeAuth()
+    }
+  }, [supabase, mounted])
+
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
-    setSession(newSession)
-    setUser(newSession?.user ?? null)
-    setProfileNotFound(false)
+    console.log('🔐 Auth state change:', event, newSession?.user?.email)
     
-    if (newSession?.user) {
-      // Create a basic profile from auth user data
+    if (event === 'SIGNED_IN' && newSession?.user) {
+      setSession(newSession)
+      setUser(newSession.user)
+      
+      // Create basic profile
       const basicProfile: UserProfile = {
         id: newSession.user.id,
         email: newSession.user.email || '',
@@ -120,49 +140,36 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       
       setProfile(basicProfile)
       setRoles(['user'])
-    } else {
+      setProfileNotFound(false)
+    } else if (event === 'SIGNED_OUT') {
+      setSession(null)
+      setUser(null)
       setProfile(null)
       setRoles([])
+      setProfileNotFound(false)
     }
-    
-    setLoading(false)
   }
 
+  // Set up auth state change listener
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-    
-    if (supabase) {
-      initializeAuth()
+    if (!supabase) return
 
+    try {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
-      return () => subscription.unsubscribe()
-    } else {
-      // If no Supabase client, just set loading to false
-      setLoading(false)
+      
+      return () => {
+        if (subscription) {
+          subscription.unsubscribe()
+        }
+      }
+    } catch (error) {
+      console.error('Error setting up auth state change listener:', error)
     }
   }, [supabase])
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        console.log('Auth timeout reached, setting loading to false')
-        setLoading(false)
-      }
-    }, 10000) // 10 second timeout
-
-    return () => clearTimeout(timeout)
-  }, [loading])
-
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
-      return { success: false, error: 'Supabase client not available' }
+      return { success: false, error: 'Supabase client not initialized' }
     }
 
     try {
@@ -172,22 +179,25 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
+        console.error('Sign in error:', error)
         return { success: false, error: error.message }
       }
 
-      if (!data.user) {
-        return { success: false, error: 'Authentication failed' }
+      if (data.user) {
+        console.log('🔐 Sign in successful:', data.user.email)
+        return { success: true }
       }
 
-      return { success: true }
+      return { success: false, error: 'Sign in failed' }
     } catch (error) {
+      console.error('Sign in error:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
   const signUp = async (email: string, password: string, fullName?: string): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
-      return { success: false, error: 'Supabase client not available' }
+      return { success: false, error: 'Supabase client not initialized' }
     }
 
     try {
@@ -202,38 +212,34 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
-        console.error('🔐 SignUp: Error during sign up:', error)
+        console.error('Sign up error:', error)
         return { success: false, error: error.message }
       }
 
-      if (!data.user) {
-        console.error('🔐 SignUp: No user returned from sign up')
-        return { success: false, error: 'Registration failed' }
+      if (data.user) {
+        console.log('🔐 Sign up successful:', data.user.email)
+        return { success: true }
       }
 
-      return { success: true }
+      return { success: false, error: 'Sign up failed' }
     } catch (error) {
-      console.error('🔐 SignUp: Unexpected error during sign up:', error)
+      console.error('Sign up error:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
   const signOut = async () => {
-    if (!supabase) {
-      console.error('🔐 SignOut: Supabase client not available')
-      return
-    }
+    if (!supabase) return
 
     try {
       const { error } = await supabase.auth.signOut()
-      
       if (error) {
-        console.error('🔐 SignOut: Error during sign out:', error)
+        console.error('Sign out error:', error)
       } else {
-        console.log('🔐 SignOut: Successfully signed out')
+        console.log('🔐 Sign out successful')
       }
     } catch (error) {
-      console.error('🔐 SignOut: Unexpected error during sign out:', error)
+      console.error('Sign out error:', error)
     }
   }
 
@@ -241,13 +247,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (!user) return
 
     try {
-      const userProfile = await loadUserProfile(user.id)
-      const userRoles = await loadUserRoles(user.id)
-      
-      setProfile(userProfile)
-      setRoles(userRoles)
-      
-      if (!userProfile) {
+      const profile = await loadUserProfile(user.id)
+      if (profile) {
+        setProfile(profile)
+        setProfileNotFound(false)
+      } else {
         setProfileNotFound(true)
       }
     } catch (error) {
@@ -257,21 +261,18 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
   const forceRefreshRole = async () => {
     if (!user) return
-    
+
     try {
-      console.log('🔧 SimpleAuthProvider: Force refreshing roles for user:', user.id)
-      const userRoles = await loadUserRoles(user.id)
-      setRoles(userRoles)
-      console.log('🔧 SimpleAuthProvider: Roles refreshed successfully:', userRoles)
+      const roles = await loadUserRoles(user.id)
+      setRoles(roles)
     } catch (error) {
-      console.error('🔧 SimpleAuthProvider: Error refreshing roles:', error)
+      console.error('Error refreshing roles:', error)
     }
   }
 
   const signInWithProvider = async (provider: 'github' | 'google'): Promise<{ success: boolean; error?: string }> => {
     if (!supabase) {
-      console.error('🔐 SignInWithProvider: Supabase client not available')
-      return { success: false, error: 'Supabase client not available' }
+      return { success: false, error: 'Supabase client not initialized' }
     }
 
     try {
@@ -283,34 +284,41 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
-        console.error('🔐 SignInWithProvider: Error during OAuth sign in:', error)
+        console.error('OAuth sign in error:', error)
         return { success: false, error: error.message }
       }
 
       return { success: true }
     } catch (error) {
-      console.error('🔐 SignInWithProvider: Unexpected error during OAuth sign in:', error)
+      console.error('OAuth sign in error:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
   const updateProfile = async (updates: Partial<UserProfile>): Promise<{ success: boolean; error?: string }> => {
-    if (!user) {
-      return { success: false, error: 'No user logged in' }
+    if (!supabase || !user) {
+      return { success: false, error: 'Not authenticated' }
     }
 
     try {
-      // For now, just update the local state
-      // In a real implementation, you would update the database
-      if (profile) {
-        const updatedProfile = { ...profile, ...updates } as UserProfile
-        setProfile(updatedProfile)
+      const { error } = await supabase.auth.updateUser({
+        data: updates
+      })
+
+      if (error) {
+        console.error('Profile update error:', error)
+        return { success: false, error: error.message }
       }
-      
+
+      // Update local profile state
+      if (profile) {
+        setProfile({ ...profile, ...updates })
+      }
+
       return { success: true }
     } catch (error) {
-      console.error('🔐 UpdateProfile: Error updating profile:', error)
-      return { success: false, error: 'Failed to update profile' }
+      console.error('Profile update error:', error)
+      return { success: false, error: 'An unexpected error occurred' }
     }
   }
 

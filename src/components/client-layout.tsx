@@ -22,8 +22,18 @@ interface ClientLayoutProps {
 function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; locale: string }) {
   const pathname = usePathname();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { user, loading: authLoading, mounted } = useAuth();
+  const [isClient, setIsClient] = useState(false);
+  
+  // Only call useAuth on the client side
+  const authResult = isClient ? useAuth() : { user: null, loading: true, mounted: false };
+  const { user, loading: authLoading, mounted } = authResult;
+  
   const [forceShow, setForceShow] = useState(false);
+
+  // Ensure we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Force show content after 5 seconds to prevent infinite loading
   useEffect(() => {
@@ -59,7 +69,8 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
     mounted, 
     forceShow, 
     isLoading,
-    pathname 
+    pathname,
+    isClient 
   });
 
   if (isLoading) {
@@ -98,11 +109,17 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
           showActions={true}
         />
         
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <ErrorBoundary>
+            <PerformanceMonitor>
+              <FormProvider>
+                <ToastProvider>
+                  {children}
+                </ToastProvider>
+              </FormProvider>
+            </PerformanceMonitor>
+          </ErrorBoundary>
         </main>
       </div>
     </div>
@@ -111,18 +128,12 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
 
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
-    <div className={inter.className}>
-      <ErrorBoundary>
-        <ToastProvider>
-          <FormProvider>
-            <AuthenticatedAppLayout locale={locale}>
-              {children}
-            </AuthenticatedAppLayout>
-            {/* PerformanceMonitor temporarily disabled due to port issues */}
-            {/* <PerformanceMonitor /> */}
-          </FormProvider>
-        </ToastProvider>
-      </ErrorBoundary>
-    </div>
+    <html lang={locale} className={inter.className}>
+      <body className="min-h-screen bg-background font-sans antialiased">
+        <AuthenticatedAppLayout locale={locale}>
+          {children}
+        </AuthenticatedAppLayout>
+      </body>
+    </html>
   );
 }
