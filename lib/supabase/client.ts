@@ -1,6 +1,38 @@
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 
+// Create a safe storage implementation
+const createSafeStorage = () => {
+  if (typeof window === 'undefined') {
+    // Return a mock storage for SSR
+    return {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+      clear: () => {}
+    }
+  }
+  
+  try {
+    // Try to use localStorage
+    return localStorage
+  } catch (error) {
+    // Fallback to sessionStorage if localStorage is not available
+    try {
+      return sessionStorage
+    } catch (fallbackError) {
+      // Return a mock storage if neither is available
+      console.warn('No storage available, using mock storage')
+      return {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {},
+        clear: () => {}
+      }
+    }
+  }
+}
+
 export const createClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -29,12 +61,14 @@ export const createClient = () => {
     return null as any
   }
   
-  // Create a simpler client without complex cookie handling
+  // Create a client with safe storage configuration
   const client = createBrowserClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storage: createSafeStorage(),
+      storageKey: 'sb-auth-token'
     }
   })
   
@@ -50,5 +84,10 @@ export const createSafeClient = () => {
     return null
   }
   
-  return createBrowserClient<Database>(supabaseUrl, supabaseKey)
+  return createBrowserClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      storage: createSafeStorage(),
+      storageKey: 'sb-auth-token'
+    }
+  })
 }
