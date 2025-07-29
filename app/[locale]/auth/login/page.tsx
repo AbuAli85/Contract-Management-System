@@ -16,20 +16,23 @@ export default function LoginPage() {
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
 
-  // Redirect if user is already logged in
+  // Only redirect if user is already logged in AND we're on the login page
   useEffect(() => {
     if (mounted && !loading && user && !redirectAttempted) {
-      console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
-      setRedirectAttempted(true)
-      
-      // Use Next.js router for client-side navigation
-      const dashboardUrl = `/${locale}/dashboard`
-      console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
-      
-      // Use router.push for client-side navigation
-      router.push(dashboardUrl)
+      // Only redirect if we're actually on the login page and not already on dashboard
+      if (pathname.includes('/auth/login') && !pathname.includes('/dashboard')) {
+        console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
+        setRedirectAttempted(true)
+        
+        // Use Next.js router for client-side navigation
+        const dashboardUrl = `/${locale}/dashboard`
+        console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
+        
+        // Use router.push for client-side navigation
+        router.push(dashboardUrl)
+      }
     }
-  }, [user, loading, mounted, locale, redirectAttempted, router])
+  }, [user, loading, mounted, locale, redirectAttempted, router, pathname])
 
   // Show loading while checking authentication
   if (loading || !mounted) {
@@ -44,7 +47,7 @@ export default function LoginPage() {
   }
 
   // If user is already logged in, show redirect message
-  if (user) {
+  if (user && pathname.includes('/auth/login')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

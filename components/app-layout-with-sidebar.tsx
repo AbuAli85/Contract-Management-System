@@ -22,34 +22,26 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   // Check if we're on the landing page (root route)
   useEffect(() => {
     const isLanding = pathname === `/${locale}`
-    console.log('🧭 AppLayoutWithSidebar: Checking landing page', { pathname, locale, isLanding })
     setIsLandingPage(isLanding)
   }, [pathname, locale])
 
-  // Force render after 5 seconds to prevent infinite loading
+  // Force render after 1 second to prevent infinite loading
   useEffect(() => {
     const timer = setTimeout(() => {
       if (loading || !mounted) {
-        console.log('🧭 AppLayoutWithSidebar: Force rendering due to timeout')
         setForceRender(true)
       }
-    }, 5000) // Increased to 5 seconds to match auth timeout
+    }, 1000) // Reduced to 1 second for faster rendering
     
     return () => clearTimeout(timer)
   }, [loading, mounted])
 
-  // Check if we should show loading state
-  const shouldShowLoading = (loading || !mounted) && !forceRender
+  // Check if we should show loading state - be very aggressive about showing content
+  const shouldShowLoading = loading && !mounted && !forceRender && !user && !pathname.includes('/dashboard')
 
-  // Debug logging - only log when there are issues
-  if (loading || !mounted) {
-    console.log('🧭 AppLayoutWithSidebar: Loading state', { 
-      loading, 
-      mounted, 
-      user: !!user, 
-      shouldShowLoading,
-      forceRender
-    })
+  // Only log critical issues
+  if (loading && !user && !forceRender) {
+    console.log('🧭 AppLayoutWithSidebar: Still loading auth...')
   }
   
   if (shouldShowLoading) {
