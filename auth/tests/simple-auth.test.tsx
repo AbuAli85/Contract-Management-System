@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react'
-import { AuthProvider } from '@/src/components/auth/auth-provider'
+import { AuthProvider } from '@/src/components/auth/simple-auth-provider'
 
 // Simple test to verify the auth provider renders without errors
 describe('Authentication System', () => {

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { LoginForm } from '@/auth/forms/login-form'
 import { SignupForm } from '@/auth/forms/signup-form'
-import { AuthProvider } from '@/src/components/auth/auth-provider'
+import { AuthProvider } from '@/src/components/auth/simple-auth-provider'
 import { createClient } from '@/lib/supabase/client'
 
 // Mock Supabase client
