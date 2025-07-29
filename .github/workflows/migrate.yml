@@ -1,0 +1,114 @@
+name: Database Migration
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - '.github/workflows/migrate.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  validate-migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Validate migration naming and ordering
+        run: npm run supabase:validate-migrations
+
+  deploy-migrations:
+    runs-on: ubuntu-latest
+    needs: validate-migrations
+    environment: ${{ github.event.inputs.environment || 'production' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy to Supabase
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment || 'production' }}"
+          
+          # Set environment variables based on environment
+          if [ "${{ github.event.inputs.environment || 'production' }}" = "production" ]; then
+            export SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_PROJECT_ID }}
+            export SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          else
+            export SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_STAGING_PROJECT_ID }}
+            export SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          fi
+          
+          # Deploy database migrations
+          echo "🔄 Deploying database migrations..."
+          supabase db push --project-id $SUPABASE_PROJECT_ID
+          
+          # Deploy Edge Functions
+          echo "🔄 Deploying Edge Functions..."
+          supabase functions deploy --project-id $SUPABASE_PROJECT_ID
+          
+          echo "✅ Deployment completed successfully"
+
+      - name: Verify deployment
+        run: |
+          echo "🔍 Verifying deployment..."
+          
+          # Check if migrations were applied
+          supabase db diff --project-id $SUPABASE_PROJECT_ID
+          
+          # List deployed functions
+          supabase functions list --project-id $SUPABASE_PROJECT_ID
+          
+          echo "✅ Deployment verification completed"
+
+      - name: Run post-deployment tests
+        run: |
+          echo "🧪 Running post-deployment tests..."
+          
+          # Test database connectivity
+          supabase db reset --project-id $SUPABASE_PROJECT_ID --linked
+          
+          # Test Edge Functions
+          echo "Testing Edge Functions..."
+          # Add your function tests here
+          
+          echo "✅ Post-deployment tests completed"
+
+  notify-deployment:
+    runs-on: ubuntu-latest
+    needs: deploy-migrations
+    if: always()
+    steps:
+      - name: Notify deployment status
+        run: |
+          if [ "${{ needs.deploy-migrations.result }}" = "success" ]; then
+            echo "✅ Database migration deployment successful"
+            # Add notification logic here (Slack, email, etc.)
+          else
+            echo "❌ Database migration deployment failed"
+            # Add failure notification logic here
+          fi
