@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session } from '@supabase/supabase-js'
 import type { UserProfile } from '@/types/custom'
@@ -37,6 +37,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
   const [profileNotFound, setProfileNotFound] = useState(false)
+
+  // Use refs to track subscriptions for cleanup
+  const authSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
+  const profileSubscriptionRef = useRef<{ unsubscribe: () => void } | null>(null)
 
   // Create Supabase client safely for SSR
   const getSupabase = () => {
@@ -246,10 +250,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Subscribe to auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange)
+    
+    // Store subscription reference for cleanup
+    authSubscriptionRef.current = subscription
 
-    // Cleanup subscription on unmount
+    // Cleanup function - properly unsubscribe from all subscriptions
     return () => {
-      subscription.unsubscribe()
+      console.log('🔧 AuthProvider: Cleaning up subscriptions...')
+      
+      // Unsubscribe from auth state changes
+      if (authSubscriptionRef.current) {
+        console.log('🔧 AuthProvider: Unsubscribing from auth state changes')
+        authSubscriptionRef.current.unsubscribe()
+        authSubscriptionRef.current = null
+      }
+      
+      // Unsubscribe from profile changes if exists
+      if (profileSubscriptionRef.current) {
+        console.log('🔧 AuthProvider: Unsubscribing from profile changes')
+        profileSubscriptionRef.current.unsubscribe()
+        profileSubscriptionRef.current = null
+      }
+      
+      console.log('🔧 AuthProvider: Cleanup completed')
     }
   }, [])
 
