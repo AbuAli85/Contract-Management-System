@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@/src/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Github, Chrome } from 'lucide-react'
 

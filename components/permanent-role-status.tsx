@@ -1,6 +1,6 @@
 'use client'
 
-import { usePermanentRole } from '@/src/components/auth/permanent-role-provider'
+import { useRBAC } from '@/src/components/auth/rbac-provider'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,9 @@ import { Crown, User, Loader2, CheckCircle, XCircle } from 'lucide-react'
 
 export function PermanentRoleStatus() {
   const { user } = useAuth()
-  const { role: permanentRole, isLoading, isInitialized } = usePermanentRole()
+  const { userRoles, isLoading } = useRBAC()
+  const permanentRole = userRoles[0] || null
+  const isInitialized = !isLoading
 
   if (!user) {
     return (
