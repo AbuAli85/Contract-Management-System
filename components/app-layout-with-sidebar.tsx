@@ -39,14 +39,15 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   // Temporarily disable loading state to fix rendering issues
   const shouldShowLoading = false
 
-  // Debug user state
-  console.log('🧭 AppLayoutWithSidebar: User state', { 
-    user: !!user, 
-    loading, 
-    mounted, 
-    pathname,
-    shouldShowLoading 
-  })
+  // Only log when there are issues
+  if (!user && mounted && !loading) {
+    console.log('🧭 AppLayoutWithSidebar: No user after auth complete', { 
+      user: !!user, 
+      loading, 
+      mounted, 
+      pathname
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

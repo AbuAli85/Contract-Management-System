@@ -13,11 +13,11 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const params = useParams()
   const locale = params.locale as string
-  const { user } = useAuth()
+  const { user, loading, mounted } = useAuth()
   
   // Debug logging - only log when there are issues
-  if (!user && mounted) {
-    console.log('🧭 Sidebar: No user available', { isOpen, locale, loading, mounted })
+  if (!user && mounted && !loading) {
+    console.log('🧭 Sidebar: No user available after auth complete', { isOpen, locale, loading, mounted })
   }
 
   const navigationItems = [
