@@ -2,6 +2,7 @@ import { i18n } from '@/src/i18n/i18n-config'
 import { cookies } from 'next/headers'
 import { AppLayoutWithSidebar } from '@/components/app-layout-with-sidebar'
 import SimpleLayout from './layout-simple'
+import { ErrorBoundary } from '@/components/error-boundary'
 
 export async function generateStaticParams() {
     return i18n.locales.map((locale) => ({ locale }))
@@ -27,8 +28,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const resolvedLocale = await getLocale(locale)
   
   return (
-    <AppLayoutWithSidebar>
-      {children}
-    </AppLayoutWithSidebar>
+    <ErrorBoundary>
+      <AppLayoutWithSidebar>
+        {children}
+      </AppLayoutWithSidebar>
+    </ErrorBoundary>
   )
 }
