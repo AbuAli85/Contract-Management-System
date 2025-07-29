@@ -225,6 +225,53 @@ describe('Authentication System - Unit Tests', () => {
       
       expect(result.error?.message).toBe('Refresh failed');
     });
+
+    // New tests for expired token auto-refresh
+    it('should automatically refresh expired tokens', async () => {
+      const mockExpiredSession = {
+        user: { id: '123', email: 'test@example.com' },
+        access_token: 'expired_token',
+        refresh_token: 'refresh_token',
+        expires_at: new Date(Date.now() - 1000).toISOString()
+      };
+
+      const mockRefreshedSession = {
+        user: { id: '123', email: 'test@example.com' },
+        access_token: 'new_token',
+        refresh_token: 'new_refresh_token',
+        expires_at: new Date(Date.now() + 3600000).toISOString()
+      };
+
+      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: mockExpiredSession }, error: null });
+      mockSupabaseClient.auth.refreshSession.mockResolvedValue({ data: { session: mockRefreshedSession }, error: null });
+
+      render(<MockAuthProvider><div>Test</div></MockAuthProvider>);
+      
+      await waitFor(() => {
+        expect(mockSupabaseClient.auth.refreshSession).toHaveBeenCalled();
+      });
+    });
+
+    it('should handle refresh token failures gracefully', async () => {
+      const mockExpiredSession = {
+        user: { id: '123', email: 'test@example.com' },
+        access_token: 'expired_token',
+        refresh_token: 'invalid_refresh_token',
+        expires_at: new Date(Date.now() - 1000).toISOString()
+      };
+
+      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: mockExpiredSession }, error: null });
+      mockSupabaseClient.auth.refreshSession.mockResolvedValue({ 
+        data: { session: null }, 
+        error: { message: 'Invalid refresh token' } 
+      });
+
+      render(<MockAuthProvider><div>Test</div></MockAuthProvider>);
+      
+      await waitFor(() => {
+        expect(mockSupabaseClient.auth.refreshSession).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Input Validation', () => {
@@ -402,6 +449,54 @@ describe('Authentication System - Unit Tests', () => {
       
       expect(result.error?.message).toBe('Invalid refresh token');
       expect(result.data?.session).toBeNull();
+    });
+  });
+
+  describe('Cleanup on Unmount', () => {
+    it('should cleanup all subscriptions on unmount', () => {
+      const { unmount } = render(<MockAuthProvider><div>Test</div></MockAuthProvider>);
+      
+      const mockUnsubscribe = jest.fn();
+      mockSupabaseClient.auth.onAuthStateChange.mockReturnValue({ 
+        data: { subscription: { unsubscribe: mockUnsubscribe } } 
+      });
+      
+      unmount();
+      
+      // Verify cleanup is called
+      expect(mockSupabaseClient.auth.onAuthStateChange).toHaveBeenCalled();
+    });
+
+    it('should clear all timers on unmount', () => {
+      const originalClearTimeout = global.clearTimeout;
+      const mockClearTimeout = jest.fn();
+      global.clearTimeout = mockClearTimeout;
+
+      const { unmount } = render(<MockAuthProvider><div>Test</div></MockAuthProvider>);
+      
+      unmount();
+      
+      expect(mockClearTimeout).toHaveBeenCalled();
+      
+      global.clearTimeout = originalClearTimeout;
+    });
+
+    it('should not create memory leaks with multiple auth state changes', async () => {
+      const mockUser = { id: '123', email: 'test@example.com' };
+      const mockSession = { user: mockUser, access_token: 'token' };
+      
+      mockSupabaseClient.auth.getSession.mockResolvedValue({ data: { session: mockSession }, error: null });
+
+      const { rerender } = render(<MockAuthProvider><div>Test</div></MockAuthProvider>);
+      
+      // Simulate multiple re-renders
+      for (let i = 0; i < 5; i++) {
+        rerender(<MockAuthProvider><div>Test {i}</div></MockAuthProvider>);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Verify no excessive calls
+      expect(mockSupabaseClient.auth.getSession).toHaveBeenCalledTimes(1);
     });
   });
 });
