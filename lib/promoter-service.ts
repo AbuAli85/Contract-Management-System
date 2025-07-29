@@ -1,11 +1,418 @@
 import { getSupabaseClient } from "./supabase"
 import type { Promoter } from "./types"
 
+// Retry configuration
+const RETRY_CONFIG = {
+  maxAttempts: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+}
+
+// Retry helper with exponential backoff
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxAttempts: number = RETRY_CONFIG.maxAttempts,
+  baseDelay: number = RETRY_CONFIG.baseDelay
+): Promise<T> {
+  let lastError: Error
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error as Error
+      
+      // Don't retry on the last attempt
+      if (attempt === maxAttempts) {
+        throw lastError
+      }
+      
+      // Check if error is retryable (network, timeout, etc.)
+      const isRetryable = isRetryableError(error)
+      if (!isRetryable) {
+        throw lastError
+      }
+      
+      // Calculate delay with exponential backoff
+      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), RETRY_CONFIG.maxDelay)
+      console.warn(`Retry attempt ${attempt}/${maxAttempts} after ${delay}ms due to:`, error)
+      
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  
+  throw lastError!
+}
+
+// Check if error is retryable
+function isRetryableError(error: any): boolean {
+  if (!error) return false
+  
+  const message = error.message?.toLowerCase() || ''
+  const code = error.code?.toString() || ''
+  
+  // Network errors
+  if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+    return true
+  }
+  
+  // Timeout errors
+  if (message.includes('timeout') || message.includes('timed out')) {
+    return true
+  }
+  
+  // HTTP 5xx errors (server errors)
+  if (code.startsWith('5')) {
+    return true
+  }
+  
+  // Supabase specific retryable errors
+  if (code === 'PGRST301' || code === 'PGRST302') { // Rate limiting
+    return true
+  }
+  
+  return false
+}
+
+// Pagination interface
+export interface PaginationParams {
+  page: number
+  limit: number
+  offset?: number
+}
+
+export interface PaginatedResult<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
 /**
- * Fetch promoters with their active contract counts
+ * Fetch promoters with pagination and contract counts
+ */
+export async function fetchPromotersWithPagination(
+  params: PaginationParams,
+  searchTerm?: string,
+  filters?: {
+    status?: string
+    documentStatus?: string
+    hasContracts?: boolean
+  }
+): Promise<PaginatedResult<Promoter>> {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { page, limit, offset = 0 } = params
+    
+    // Build query
+    let query = supabaseClient
+      .from("promoters")
+      .select("*", { count: "exact" })
+    
+    // Apply search filter
+    if (searchTerm && searchTerm.trim()) {
+      query = query.or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`)
+    }
+    
+    // Apply status filter
+    if (filters?.status && filters.status !== "all") {
+      query = query.eq("status", filters.status)
+    }
+    
+    // Apply document status filter
+    if (filters?.documentStatus && filters.documentStatus !== "all") {
+      const today = new Date()
+      const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+      
+      switch (filters.documentStatus) {
+        case "expired":
+          query = query.or(`id_card_expiry_date.lt.${today.toISOString()},passport_expiry_date.lt.${today.toISOString()}`)
+          break
+        case "expiring":
+          query = query.or(`id_card_expiry_date.lte.${thirtyDaysFromNow.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()}`)
+          break
+        case "valid":
+          query = query.and(`id_card_expiry_date.gt.${thirtyDaysFromNow.toISOString()},passport_expiry_date.gt.${thirtyDaysFromNow.toISOString()}`)
+          break
+      }
+    }
+    
+    // Apply pagination
+    const actualOffset = offset || (page - 1) * limit
+    query = query.range(actualOffset, actualOffset + limit - 1)
+    
+    // Apply ordering
+    query = query.order("name_en", { ascending: true })
+    
+    const { data: promotersData, error: promotersError, count } = await query
+    
+    if (promotersError) {
+      throw new Error(`Error fetching promoters: ${promotersError.message}`)
+    }
+    
+    // Fetch contract counts for promoters (lazy loading)
+    const promotersWithCounts = await Promise.all(
+      (promotersData || []).map(async (promoter) => {
+        try {
+          const { count: contractCount, error: contractError } = await supabaseClient
+            .from("contracts")
+            .select("*", { count: "exact", head: true })
+            .eq("promoter_id", promoter.id)
+            .eq("status", "active")
+          
+          if (contractError) {
+            console.warn(`Error fetching contracts for promoter ${promoter.id}:`, contractError)
+          }
+          
+          return {
+            ...promoter,
+            active_contracts_count: contractCount || 0
+          }
+        } catch (error) {
+          console.warn(`Error processing promoter ${promoter.id}:`, error)
+          return {
+            ...promoter,
+            active_contracts_count: 0
+          }
+        }
+      })
+    )
+    
+    const total = count || 0
+    const totalPages = Math.ceil(total / limit)
+    
+    return {
+      data: promotersWithCounts,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNext: page < totalPages,
+      hasPrev: page > 1
+    }
+  })
+}
+
+/**
+ * Fetch promoters using materialized view for better performance
+ */
+export async function fetchPromotersAnalytics(
+  params: PaginationParams,
+  searchTerm?: string,
+  filters?: {
+    status?: string
+    overallStatus?: string
+    workLocation?: string
+  }
+): Promise<PaginatedResult<any>> {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { page, limit } = params
+    
+    // Use the RPC function for analytics
+    const { data, error } = await supabaseClient.rpc('get_promoter_analytics_paginated', {
+      p_page: page,
+      p_limit: limit,
+      p_search: searchTerm || null,
+      p_status: filters?.status || null,
+      p_overall_status: filters?.overallStatus || null,
+      p_work_location: filters?.workLocation || null,
+      p_sort_by: 'name_en',
+      p_sort_order: 'asc'
+    })
+    
+    if (error) {
+      throw new Error(`Error fetching promoter analytics: ${error.message}`)
+    }
+    
+    if (!data || data.length === 0) {
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false
+      }
+    }
+    
+    const result = data[0]
+    return {
+      data: result.data || [],
+      total: result.total_count || 0,
+      page: result.page || page,
+      limit: result.limit || limit,
+      totalPages: result.total_pages || 0,
+      hasNext: result.total_pages > result.page,
+      hasPrev: result.page > 1
+    }
+  })
+}
+
+/**
+ * Get promoter performance statistics
+ */
+export async function getPromoterPerformanceStats() {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    
+    const { data, error } = await supabaseClient.rpc('get_promoter_performance_stats')
+    
+    if (error) {
+      throw new Error(`Error fetching performance stats: ${error.message}`)
+    }
+    
+    return data?.[0] || {
+      total_promoters: 0,
+      active_promoters: 0,
+      inactive_promoters: 0,
+      critical_status_count: 0,
+      warning_status_count: 0,
+      total_contracts: 0,
+      total_contract_value: 0,
+      avg_contract_duration: 0,
+      avg_completion_rate: 0,
+      expiring_documents_count: 0,
+      expired_documents_count: 0
+    }
+  })
+}
+
+/**
+ * Export promoters to CSV
+ */
+export async function exportPromotersToCSV(
+  searchTerm?: string,
+  filters?: {
+    status?: string
+    documentStatus?: string
+    hasContracts?: boolean
+  }
+): Promise<string> {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    
+    // Build query to get all promoters for export
+    let query = supabaseClient
+      .from("promoters")
+      .select("*")
+    
+    // Apply search filter
+    if (searchTerm && searchTerm.trim()) {
+      query = query.or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`)
+    }
+    
+    // Apply status filter
+    if (filters?.status && filters.status !== "all") {
+      query = query.eq("status", filters.status)
+    }
+    
+    // Apply document status filter
+    if (filters?.documentStatus && filters.documentStatus !== "all") {
+      const today = new Date()
+      const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+      
+      switch (filters.documentStatus) {
+        case "expired":
+          query = query.or(`id_card_expiry_date.lt.${today.toISOString()},passport_expiry_date.lt.${today.toISOString()}`)
+          break
+        case "expiring":
+          query = query.or(`id_card_expiry_date.lte.${thirtyDaysFromNow.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()}`)
+          break
+        case "valid":
+          query = query.and(`id_card_expiry_date.gt.${thirtyDaysFromNow.toISOString()},passport_expiry_date.gt.${thirtyDaysFromNow.toISOString()}`)
+          break
+      }
+    }
+    
+    // Apply ordering
+    query = query.order("name_en", { ascending: true })
+    
+    const { data: promotersData, error: promotersError } = await query
+    
+    if (promotersError) {
+      throw new Error(`Error fetching promoters for export: ${promotersError.message}`)
+    }
+    
+    // Convert to CSV format
+    const csvHeaders = [
+      'First Name',
+      'Last Name',
+      'Email',
+      'Mobile Number',
+      'Nationality',
+      'ID Card Number',
+      'Passport Number',
+      'Job Title',
+      'Work Location',
+      'Status',
+      'ID Card Expiry Date',
+      'Passport Expiry Date',
+      'Notes',
+      'Created At'
+    ]
+    
+    const csvRows = promotersData.map(promoter => [
+      promoter.firstName || '',
+      promoter.lastName || '',
+      promoter.email || '',
+      promoter.mobile_number || '',
+      promoter.nationality || '',
+      promoter.id_card_number || '',
+      promoter.passport_number || '',
+      promoter.job_title || '',
+      promoter.work_location || '',
+      promoter.status || '',
+      promoter.id_card_expiry_date || '',
+      promoter.passport_expiry_date || '',
+      promoter.notes || '',
+      promoter.created_at || ''
+    ])
+    
+    // Combine headers and rows
+    const csvContent = [csvHeaders, ...csvRows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    
+    return csvContent
+  })
+}
+
+/**
+ * Import promoters from CSV data
+ */
+export async function importPromotersFromCSV(
+  csvData: any[],
+  userId: string
+): Promise<{ success: boolean; imported: number; errors: string[]; total: number }> {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    
+    // Call the Edge Function for CSV import
+    const { data, error } = await supabaseClient.functions.invoke('import-promoters-csv', {
+      body: {
+        csvData,
+        userId
+      }
+    })
+    
+    if (error) {
+      throw new Error(`Error importing promoters: ${error.message}`)
+    }
+    
+    return data
+  })
+}
+
+/**
+ * Fetch promoters with their active contract counts (legacy function for backward compatibility)
  */
 export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
-  try {
+  return withRetry(async () => {
     const supabaseClient = getSupabaseClient()
     // Fetch promoters
     const { data: promotersData, error: promotersError } = await supabaseClient
@@ -46,25 +453,24 @@ export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
     )
 
     return enhancedData
-  } catch (error) {
-    console.error("Error in fetchPromotersWithContractCount:", error)
-    throw error
-  }
+  })
 }
 
 /**
  * Delete multiple promoters by IDs
  */
 export async function deletePromoters(promoterIds: string[]): Promise<void> {
-  const supabaseClient = getSupabaseClient()
-  const { error } = await supabaseClient
-    .from("promoters")
-    .delete()
-    .in("id", promoterIds)
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { error } = await supabaseClient
+      .from("promoters")
+      .delete()
+      .in("id", promoterIds)
 
-  if (error) {
-    throw new Error(`Error deleting promoters: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error deleting promoters: ${error.message}`)
+    }
+  })
 }
 
 /**
@@ -74,15 +480,17 @@ export async function updatePromoterStatus(
   promoterId: string, 
   status: string
 ): Promise<void> {
-  const supabaseClient = getSupabaseClient()
-  const { error } = await supabaseClient
-    .from("promoters")
-    .update({ status })
-    .eq("id", promoterId)
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { error } = await supabaseClient
+      .from("promoters")
+      .update({ status })
+      .eq("id", promoterId)
 
-  if (error) {
-    throw new Error(`Error updating promoter status: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error updating promoter status: ${error.message}`)
+    }
+  })
 }
 
 /**
@@ -92,15 +500,17 @@ export async function bulkUpdatePromoterStatus(
   promoterIds: string[], 
   status: string
 ): Promise<void> {
-  const supabaseClient = getSupabaseClient()
-  const { error } = await supabaseClient
-    .from("promoters")
-    .update({ status })
-    .in("id", promoterIds)
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { error } = await supabaseClient
+      .from("promoters")
+      .update({ status })
+      .in("id", promoterIds)
 
-  if (error) {
-    throw new Error(`Error bulk updating promoter status: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error bulk updating promoter status: ${error.message}`)
+    }
+  })
 }
 
 /**
@@ -109,46 +519,50 @@ export async function bulkUpdatePromoterStatus(
 export async function getPromotersWithExpiringDocuments(
   daysAhead: number = 30
 ): Promise<Promoter[]> {
-  const supabaseClient = getSupabaseClient()
-  const futureDate = new Date()
-  futureDate.setDate(futureDate.getDate() + daysAhead)
-  
-  const { data, error } = await supabaseClient
-    .from("promoters")
-    .select("*")
-    .or(`id_card_expiry_date.lte.${futureDate.toISOString()},passport_expiry_date.lte.${futureDate.toISOString()}`)
-    .order("id_card_expiry_date", { ascending: true })
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + daysAhead)
+    
+    const { data, error } = await supabaseClient
+      .from("promoters")
+      .select("*")
+      .or(`id_card_expiry_date.lte.${futureDate.toISOString()},passport_expiry_date.lte.${futureDate.toISOString()}`)
+      .order("id_card_expiry_date", { ascending: true })
 
-  if (error) {
-    throw new Error(`Error fetching promoters with expiring documents: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error fetching promoters with expiring documents: ${error.message}`)
+    }
 
-  return data || []
+    return data || []
+  })
 }
 
 /**
  * Search promoters by text
  */
 export async function searchPromoters(searchTerm: string): Promise<Promoter[]> {
-  const supabaseClient = getSupabaseClient()
-  const { data, error } = await supabaseClient
-    .from("promoters")
-    .select("*")
-    .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`)
-    .order("name_en")
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    const { data, error } = await supabaseClient
+      .from("promoters")
+      .select("*")
+      .or(`name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`)
+      .order("name_en")
 
-  if (error) {
-    throw new Error(`Error searching promoters: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error searching promoters: ${error.message}`)
+    }
 
-  return data || []
+    return data || []
+  })
 }
 
 /**
  * Get promoter activity summary
  */
 export async function getPromoterActivitySummary(promoterId: string) {
-  try {
+  return withRetry(async () => {
     const supabaseClient = getSupabaseClient()
     // Get contracts count
     const { count: contractsCount, error: contractsError } = await supabaseClient
@@ -176,11 +590,29 @@ export async function getPromoterActivitySummary(promoterId: string) {
       contracts_count: contractsCount || 0,
       recent_contracts: recentContracts || [],
     }
-  } catch (error) {
-    console.error("Error getting promoter activity summary:", error)
+  })
+}
+
+/**
+ * Get promoter CV data (lazy loading)
+ */
+export async function getPromoterCVData(promoterId: string) {
+  return withRetry(async () => {
+    const supabaseClient = getSupabaseClient()
+    
+    // Fetch CV-related data only when needed
+    const [skillsResult, experienceResult, educationResult, documentsResult] = await Promise.all([
+      supabaseClient.from("promoter_skills").select("*").eq("promoter_id", promoterId),
+      supabaseClient.from("promoter_experience").select("*").eq("promoter_id", promoterId).order("start_date", { ascending: false }),
+      supabaseClient.from("promoter_education").select("*").eq("promoter_id", promoterId).order("year", { ascending: false }),
+      supabaseClient.from("promoter_documents").select("*").eq("promoter_id", promoterId).order("uploaded_on", { ascending: false })
+    ])
+    
     return {
-      contracts_count: 0,
-      recent_contracts: [],
+      skills: skillsResult.data || [],
+      experience: experienceResult.data || [],
+      education: educationResult.data || [],
+      documents: documentsResult.data || []
     }
-  }
+  })
 }
