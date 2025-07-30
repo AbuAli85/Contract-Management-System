@@ -12,7 +12,10 @@ export async function GET() {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError) {
-      console.log('🔐 User check error:', userError.message)
+      // Only log significant errors, not expected "Auth session missing!" messages
+      if (!userError.message.includes('Auth session missing')) {
+        console.log('🔐 User check error:', userError.message)
+      }
     } else if (user) {
       return NextResponse.json({
         success: true,
@@ -28,7 +31,10 @@ export async function GET() {
     const { data: { session }, error: sessionError } = await supabase.auth.getSession()
     
     if (sessionError) {
-      console.log('🔐 Session error:', sessionError.message)
+      // Only log significant errors
+      if (!sessionError.message.includes('Auth session missing')) {
+        console.log('🔐 Session error:', sessionError.message)
+      }
       return NextResponse.json({ 
         success: false, 
         hasSession: false, 

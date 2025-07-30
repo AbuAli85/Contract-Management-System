@@ -186,8 +186,8 @@ export function middleware(request: NextRequest) {
       })
     }
     
-    // Log important requests for debugging
-    if (process.env.NODE_ENV === 'development') {
+    // Log important requests for debugging (skip repetitive auth checks)
+    if (process.env.NODE_ENV === 'development' && !pathname.includes('/api/auth/check-session')) {
       console.log(`🔧 Middleware: ${request.method} ${fullPath} - ${requestId} ${isRSCRequest ? '(RSC)' : ''}`)
     }
     
@@ -223,8 +223,8 @@ export function middleware(request: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   response.headers.set('X-Request-ID', requestId)
   
-  // Log important requests for debugging
-  if (process.env.NODE_ENV === 'development') {
+  // Log important requests for debugging (skip repetitive auth checks)
+  if (process.env.NODE_ENV === 'development' && !pathname.includes('/api/auth/check-session')) {
     console.log(`🔧 Middleware: ${request.method} ${fullPath} - ${requestId}`)
   }
   
