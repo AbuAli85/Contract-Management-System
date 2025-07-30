@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+// @ts-ignore
 import createMiddleware from 'next-intl/middleware'
 
 // Rate limiting configuration
@@ -48,7 +49,7 @@ function checkRateLimit(identifier: string): boolean {
 // Get client identifier for rate limiting
 function getClientIdentifier(request: NextRequest): string {
   // Use IP address as primary identifier
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
   
   // For API routes, also consider the user agent and path
   if (request.nextUrl.pathname.startsWith('/api/')) {
@@ -92,15 +93,20 @@ const intlMiddleware = createMiddleware({
 })
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
+  const fullPath = pathname + search
   
-  // Skip i18n middleware for API routes, auth routes, and other non-page routes
+  // Check if this is an RSC request
+  const isRSCRequest = search.includes('?_rsc=') || search.includes('?rsc=')
+  
+  // Skip i18n middleware for API routes, auth routes, RSC requests, and other non-page routes
   if (
     pathname.startsWith('/api/') ||
     pathname.startsWith('/auth/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.includes('.') // Static files
+    pathname.includes('.') || // Static files
+    isRSCRequest // React Server Component requests
   ) {
     // Apply only security and rate limiting for these routes
     const response = NextResponse.next()
@@ -182,7 +188,7 @@ export function middleware(request: NextRequest) {
     
     // Log important requests for debugging
     if (process.env.NODE_ENV === 'development') {
-      console.log(`🔧 Middleware: ${request.method} ${pathname} - ${requestId}`)
+      console.log(`🔧 Middleware: ${request.method} ${fullPath} - ${requestId} ${isRSCRequest ? '(RSC)' : ''}`)
     }
     
     return response
@@ -219,7 +225,7 @@ export function middleware(request: NextRequest) {
   
   // Log important requests for debugging
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🔧 Middleware: ${request.method} ${pathname} - ${requestId}`)
+    console.log(`🔧 Middleware: ${request.method} ${fullPath} - ${requestId}`)
   }
   
   return response
