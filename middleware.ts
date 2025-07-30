@@ -92,7 +92,103 @@ const intlMiddleware = createMiddleware({
 })
 
 export function middleware(request: NextRequest) {
-  // Handle i18n routing first
+  const { pathname } = request.nextUrl
+  
+  // Skip i18n middleware for API routes, auth routes, and other non-page routes
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.includes('.') // Static files
+  ) {
+    // Apply only security and rate limiting for these routes
+    const response = NextResponse.next()
+    
+    // Add security headers
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+    
+    // Add request ID for tracking
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    response.headers.set('X-Request-ID', requestId)
+    
+    // Rate limiting for API routes and sensitive endpoints
+    if (pathname.startsWith('/api/') || 
+        pathname.startsWith('/auth/') ||
+        pathname.includes('login') ||
+        pathname.includes('signup')) {
+      
+      const identifier = getClientIdentifier(request)
+      
+      if (!checkRateLimit(identifier)) {
+        console.warn(`Rate limit exceeded for ${identifier}`)
+        
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Too many requests',
+            message: 'Rate limit exceeded. Please try again later.',
+            retryAfter: Math.ceil(RATE_LIMIT_CONFIG.windowMs / 1000)
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'Retry-After': Math.ceil(RATE_LIMIT_CONFIG.windowMs / 1000).toString(),
+              'X-RateLimit-Limit': RATE_LIMIT_CONFIG.maxRequests.toString(),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': (Date.now() + RATE_LIMIT_CONFIG.windowMs).toString(),
+              ...securityHeaders
+            }
+          }
+        )
+      }
+      
+      // Add rate limit headers to successful responses
+      const current = rateLimitStore.get(identifier)
+      if (current) {
+        response.headers.set('X-RateLimit-Limit', RATE_LIMIT_CONFIG.maxRequests.toString())
+        response.headers.set('X-RateLimit-Remaining', (RATE_LIMIT_CONFIG.maxRequests - current.count).toString())
+        response.headers.set('X-RateLimit-Reset', (current.resetTime + RATE_LIMIT_CONFIG.windowMs).toString())
+      }
+    }
+    
+    // Special handling for Supabase-related routes
+    if (pathname.startsWith('/api/supabase/') ||
+        pathname.includes('supabase')) {
+      
+      // Add CORS headers for Supabase requests
+      response.headers.set('Access-Control-Allow-Origin', '*')
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Client-Info')
+      
+      // Add Supabase-specific headers
+      response.headers.set('X-Supabase-Client', 'contract-management-system/1.0')
+    }
+    
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info',
+          ...securityHeaders
+        }
+      })
+    }
+    
+    // Log important requests for debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔧 Middleware: ${request.method} ${pathname} - ${requestId}`)
+    }
+    
+    return response
+  }
+  
+  // Handle i18n routing for page routes
   const intlResponse = intlMiddleware(request)
   
   // If the intl middleware returns a response, apply our custom headers and return
@@ -121,75 +217,9 @@ export function middleware(request: NextRequest) {
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   response.headers.set('X-Request-ID', requestId)
   
-  // Rate limiting for API routes and sensitive endpoints
-  if (request.nextUrl.pathname.startsWith('/api/') || 
-      request.nextUrl.pathname.startsWith('/auth/') ||
-      request.nextUrl.pathname.includes('login') ||
-      request.nextUrl.pathname.includes('signup')) {
-    
-    const identifier = getClientIdentifier(request)
-    
-    if (!checkRateLimit(identifier)) {
-      console.warn(`Rate limit exceeded for ${identifier}`)
-      
-      return new NextResponse(
-        JSON.stringify({
-          error: 'Too many requests',
-          message: 'Rate limit exceeded. Please try again later.',
-          retryAfter: Math.ceil(RATE_LIMIT_CONFIG.windowMs / 1000)
-        }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'Retry-After': Math.ceil(RATE_LIMIT_CONFIG.windowMs / 1000).toString(),
-            'X-RateLimit-Limit': RATE_LIMIT_CONFIG.maxRequests.toString(),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': (Date.now() + RATE_LIMIT_CONFIG.windowMs).toString(),
-            ...securityHeaders
-          }
-        }
-      )
-    }
-    
-    // Add rate limit headers to successful responses
-    const current = rateLimitStore.get(identifier)
-    if (current) {
-      response.headers.set('X-RateLimit-Limit', RATE_LIMIT_CONFIG.maxRequests.toString())
-      response.headers.set('X-RateLimit-Remaining', (RATE_LIMIT_CONFIG.maxRequests - current.count).toString())
-      response.headers.set('X-RateLimit-Reset', (current.resetTime + RATE_LIMIT_CONFIG.windowMs).toString())
-    }
-  }
-  
-  // Special handling for Supabase-related routes
-  if (request.nextUrl.pathname.startsWith('/api/supabase/') ||
-      request.nextUrl.pathname.includes('supabase')) {
-    
-    // Add CORS headers for Supabase requests
-    response.headers.set('Access-Control-Allow-Origin', '*')
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Client-Info')
-    
-    // Add Supabase-specific headers
-    response.headers.set('X-Supabase-Client', 'contract-management-system/1.0')
-  }
-  
-  // Handle preflight requests
-  if (request.method === 'OPTIONS') {
-    return new NextResponse(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info',
-        ...securityHeaders
-      }
-    })
-  }
-  
   // Log important requests for debugging
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🔧 Middleware: ${request.method} ${request.nextUrl.pathname} - ${requestId}`)
+    console.log(`🔧 Middleware: ${request.method} ${pathname} - ${requestId}`)
   }
   
   return response
