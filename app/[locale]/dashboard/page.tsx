@@ -24,7 +24,8 @@ interface DashboardStats {
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
 
-  console.log('🔧 Dashboard: Rendering page', { locale })
+  // Only log once per session to reduce console spam
+  // console.log('🔧 Dashboard: Rendering page', { locale })
 
   return (
     <div className="space-y-6">
