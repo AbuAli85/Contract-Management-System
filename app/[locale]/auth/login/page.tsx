@@ -53,10 +53,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-6 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="w-full space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-card-foreground mb-2">
+        <h2 className="text-2xl font-bold text-card-foreground mb-2">
           Sign In
         </h2>
         <p className="text-muted-foreground">
@@ -64,49 +64,39 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* Main Card */}
-      <Card className="shadow-lg border-0">
-        <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-center text-xl">
-            Sign in to your account
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {oauthError && (
-            <Alert variant="destructive">
-              <AlertDescription>{oauthError}</AlertDescription>
-            </Alert>
-          )}
+      {/* Main Content */}
+      <div className="space-y-4">
+        {oauthError && (
+          <Alert variant="destructive">
+            <AlertDescription>{oauthError}</AlertDescription>
+          </Alert>
+        )}
 
-          <LoginForm />
+        <LoginForm />
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
-              </span>
-            </div>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
           </div>
-
-          <OAuthButtons />
-
-          <div className="text-center text-sm pt-4">
-            <span className="text-muted-foreground">Don't have an account? </span>
-            <Link
-              href={`/${locale}/auth/signup`}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Create a new account
-            </Link>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        <OAuthButtons />
+
+        <div className="text-center text-sm pt-4">
+          <span className="text-muted-foreground">Don't have an account? </span>
+          <Link
+            href={`/${locale}/auth/signup`}
+            className="font-medium text-primary hover:text-primary/80"
+          >
+            Create a new account
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

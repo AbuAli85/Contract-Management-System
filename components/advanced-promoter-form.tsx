@@ -693,6 +693,7 @@ export default function AdvancedPromoterForm({
       )
 
       let result
+
       if (isEditMode && promoterToEdit?.id) {
         console.log("🔄 Updating existing promoter with ID:", promoterToEdit.id)
         const updatePromise = supabase
@@ -712,16 +713,23 @@ export default function AdvancedPromoterForm({
         result = (await Promise.race([insertPromise, dbTimeoutPromise])) as any
       }
 
-      console.log("📊 Database operation result:", result)
+      // Enhanced logging for debugging
+      console.log("📊 Database operation full result:", JSON.stringify(result, null, 2))
 
       if (result.error) {
         console.error("❌ Database error:", result.error)
-        throw new Error(`Database error: ${result.error.message}`)
+        let extra = '';
+        if (result.status) extra += ` (Status: ${result.status})`;
+        throw new Error(`Database error: ${result.error.message}${extra}`)
       }
 
-      if (!result.data || result.data.length === 0) {
-        console.error("❌ No data returned from database operation")
-        throw new Error("No data returned from database operation")
+      if (!result.data || !Array.isArray(result.data) || result.data.length === 0) {
+        // Add more context for debugging
+        let debugMsg = `No data returned from database operation.\n`;
+        debugMsg += `Result: ${JSON.stringify(result, null, 2)}\n`;
+        debugMsg += `Possible causes: RLS policy blocking SELECT, or data constraints not met, or insufficient permissions.`;
+        console.error("❌", debugMsg)
+        throw new Error("No data returned from database operation. Please check your database permissions and policies. See console for details.")
       }
 
       console.log("✅ Database operation successful:", result.data)
