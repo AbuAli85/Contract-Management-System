@@ -6,6 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useAutoSave } from "@/hooks/use-auto-save"
+import { AutoSaveIndicator } from "@/components/ui/auto-save-indicator"
+import { AutoSaveHandler } from "@/components/ui/auto-save-handler"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -415,10 +418,55 @@ export default function AdvancedPromoterForm({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [activeTab, setActiveTab] = useState("personal")
   const [formError, setFormError] = useState<string | null>(null)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const isEditMode = !!promoterToEdit
 
   // Register this form to disable auto-refresh during form interactions
   useFormRegistration()
+
+  // Auto-save functionality
+  const handleAutoSave = useCallback(async (data: AdvancedPromoterFormData) => {
+    try {
+      setAutoSaveStatus("saving")
+      
+      // Only save if we have a promoter to edit (edit mode)
+      if (isEditMode && promoterToEdit?.id) {
+        const supabase = createClient()
+        
+        // Prepare data for update (exclude null values and images)
+        const updateData = {
+          name_en: data.name_en || null,
+          name_ar: data.name_ar || null,
+          mobile_number: data.mobile_number || null,
+          id_card_number: data.id_card_number || null,
+          passport_number: data.passport_number || null,
+          nationality: data.nationality || null,
+          status: data.status || "active",
+          id_card_expiry_date: data.id_card_expiry_date || null,
+          passport_expiry_date: data.passport_expiry_date || null,
+          notify_days_before_id_expiry: data.notify_days_before_id_expiry || 30,
+          notify_days_before_passport_expiry: data.notify_days_before_passport_expiry || 90,
+          notes: data.notes || null,
+          updated_at: new Date().toISOString(),
+        }
+
+        const { error } = await supabase
+          .from("promoters")
+          .update(updateData)
+          .eq("id", promoterToEdit.id)
+
+        if (error) throw error
+        
+        setLastSaved(new Date())
+        setAutoSaveStatus("saved")
+        console.log("💾 Auto-save: Promoter data saved successfully")
+      }
+    } catch (error) {
+      console.error("💾 Auto-save: Failed to save promoter data", error)
+      setAutoSaveStatus("error")
+    }
+  }, [isEditMode, promoterToEdit?.id])
 
   const form = useForm<AdvancedPromoterFormData>({
     resolver: zodResolver(advancedPromoterSchema),
@@ -465,6 +513,8 @@ export default function AdvancedPromoterForm({
       setFormError(null)
     }
   }, [form.formState.errors])
+
+
 
   // Watch form data for progress calculation
   const watchedData = useWatch({ control: form.control })
@@ -797,11 +847,35 @@ export default function AdvancedPromoterForm({
                 <Progress value={formProgress} className="h-2" />
               </div>
             </div>
+            
+            {/* Auto-save Indicator */}
+            {isEditMode && (
+              <div className="flex items-center gap-2">
+                <AutoSaveIndicator 
+                  status={autoSaveStatus} 
+                  lastSaved={lastSaved}
+                  className="text-xs"
+                />
+              </div>
+            )}
           </div>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Auto-save handler */}
+            <AutoSaveHandler
+              formKey={`promoter-form-${promoterToEdit?.id || "new"}`}
+              debounceMs={3000}
+              enabled={isEditMode}
+              onSave={handleAutoSave}
+              onError={(error) => {
+                console.error("💾 Auto-save error:", error)
+                setAutoSaveStatus("error")
+              }}
+              onStatusChange={setAutoSaveStatus}
+              onLastSavedChange={setLastSaved}
+            />
             {/* Document Status Overview */}
             <Card className="border-l-4 border-l-blue-500">
               <CardHeader className="pb-4">

@@ -41,6 +41,9 @@ import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useParties } from "@/hooks/use-parties"
 import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
+import { useAutoSave } from "@/hooks/use-auto-save"
+import { AutoSaveIndicator } from "@/components/ui/auto-save-indicator"
+import { AutoSaveHandler } from "@/components/ui/auto-save-handler"
 
 const BUCKET_NAME = "promoter-documents"
 
@@ -180,8 +183,60 @@ const EnhancedSelect = ({
 export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterFormProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const isEditScreen = !!promoterToEdit
   const [isEditable, setIsEditable] = useState(!isEditScreen)
+
+  // Auto-save functionality
+  const handleAutoSave = useCallback(async (data: PromoterProfileFormData) => {
+    try {
+      setAutoSaveStatus("saving")
+      
+      // Only save if we have a promoter to edit (edit mode)
+      if (isEditScreen && promoterToEdit?.id) {
+        const supabase = getSupabaseClient()
+        
+        // Prepare data for update
+        const updateData = {
+          name_en: data.name_en || null,
+          name_ar: data.name_ar || null,
+          id_card_number: data.id_card_number || null,
+          employer_id: data.employer_id || null,
+          outsourced_to_id: data.outsourced_to_id || null,
+          job_title: data.job_title || null,
+          work_location: data.work_location || null,
+          status: data.status || "active",
+          contract_valid_until: data.contract_valid_until || null,
+          id_card_expiry_date: data.id_card_expiry_date || null,
+          passport_expiry_date: data.passport_expiry_date || null,
+          notify_days_before_id_expiry: data.notify_days_before_id_expiry || 30,
+          notify_days_before_passport_expiry: data.notify_days_before_passport_expiry || 90,
+          notes: data.notes || null,
+          passport_number: data.passport_number || null,
+          mobile_number: data.mobile_number || null,
+          profile_picture_url: data.profile_picture_url || null,
+          updated_at: new Date().toISOString(),
+        }
+
+        const { error } = await supabase
+          .from("promoters")
+          .update(updateData)
+          .eq("id", promoterToEdit.id)
+
+        if (error) throw error
+        
+        setLastSaved(new Date())
+        setAutoSaveStatus("saved")
+        console.log("💾 Auto-save: Promoter data saved successfully")
+      }
+    } catch (error) {
+      console.error("💾 Auto-save: Failed to save promoter data", error)
+      setAutoSaveStatus("error")
+    }
+  }, [isEditScreen, promoterToEdit?.id])
+
+
 
   const form = useForm<PromoterProfileFormData>({
     resolver: zodResolver(promoterProfileSchema),
@@ -269,6 +324,8 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       })
     }
   }, [promoterToEdit, form.reset])
+
+
 
   const uploadFile = async (
     file: File | null | undefined,
@@ -396,9 +453,21 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
   return (
     <div className="mx-auto max-w-3xl rounded-lg bg-card p-4 text-card-foreground shadow-xl sm:p-6 lg:p-8">
       <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-        <h1 className="text-2xl font-bold sm:text-3xl">
-          {promoterToEdit ? "Edit Promoter / تعديل المروج" : "Add New Promoter / إضافة مروج جديد"}
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            {promoterToEdit ? "Edit Promoter / تعديل المروج" : "Add New Promoter / إضافة مروج جديد"}
+          </h1>
+          
+          {/* Auto-save Indicator */}
+          {isEditScreen && (
+            <AutoSaveIndicator 
+              status={autoSaveStatus} 
+              lastSaved={lastSaved}
+              className="text-xs"
+            />
+          )}
+        </div>
+        
         <div className="flex items-center space-x-3">
           {isEditable ? (
             <Edit3Icon className="h-5 w-5 text-primary" />
@@ -420,6 +489,19 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          {/* Auto-save handler */}
+          <AutoSaveHandler
+            formKey={`promoter-form-${promoterToEdit?.id || "new"}`}
+            debounceMs={3000}
+            enabled={isEditScreen}
+            onSave={handleAutoSave}
+            onError={(error) => {
+              console.error("💾 Auto-save error:", error)
+              setAutoSaveStatus("error")
+            }}
+            onStatusChange={setAutoSaveStatus}
+            onLastSavedChange={setLastSaved}
+          />
           {/* Personal Information Section */}
           <div className={sectionClasses}>
             <h2 className={sectionHeaderClasses}>Personal Information / المعلومات الشخصية</h2>
