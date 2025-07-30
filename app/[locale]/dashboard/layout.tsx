@@ -42,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     checkAuth()
   }, []) // Remove dependencies to prevent re-renders
 
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -54,39 +55,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (!isAuthenticated) {
-    // In development mode, allow access with a warning
-    if (process.env.NODE_ENV === "development") {
-      return (
-        <div className="min-h-screen">
-          <div className="mb-4 border-l-4 border-yellow-400 bg-yellow-50 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Development Mode:</strong> No user authenticated. Dashboard is accessible
-                  for testing.
-                </p>
-              </div>
-            </div>
-          </div>
-          {children}
-        </div>
-      )
-    }
-
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <h2 className="mb-4 text-2xl font-bold">Authentication Required</h2>
-          <p className="mb-4 text-muted-foreground">Please log in to access the dashboard.</p>
+          <p className="mb-4 text-muted-foreground">You are not authenticated or your session has expired.</p>
           <a
             href="/en/auth/login"
             className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
