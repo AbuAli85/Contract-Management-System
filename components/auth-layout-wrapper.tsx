@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { AppLayoutWithSidebar } from "@/components/app-layout-with-sidebar"
-import SimpleLayout from "@/app/[locale]/layout-simple"
+import { SimpleLayout } from "@/components/simple-layout"
 
 export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
