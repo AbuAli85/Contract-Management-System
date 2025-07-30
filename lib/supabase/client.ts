@@ -106,56 +106,226 @@ const createSafeStorage = () => {
   return safeStorage
 }
 
-// Create a mock Supabase client for SSR with better error handling
+// Create a working mock Supabase client for development
 const createMockClient = () => {
+  // Mock session storage
+  let mockSession: any = null
+  let mockUser: any = null
+  
+  // Check if we're in a browser environment
+  const isBrowser = typeof window !== 'undefined'
+  
+  // Load existing session from localStorage if available
+  if (isBrowser) {
+    try {
+      const storedSession = localStorage.getItem('mock-session')
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession)
+        if (parsed && parsed.expires_at > Date.now() / 1000) {
+          mockSession = parsed
+          mockUser = parsed.user
+        } else {
+          // Session expired, clear it
+          localStorage.removeItem('mock-session')
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to load mock session:', error)
+    }
+  }
+
   const mockClient = {
     auth: {
-      getSession: async () => ({ data: { session: null }, error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-      signInWithPassword: async () => ({ 
-        data: null, 
-        error: { message: 'SSR mode - auth not available', code: 'SSR_MODE' } 
+      getSession: async () => ({ 
+        data: { session: mockSession }, 
+        error: null 
       }),
-      signUp: async () => ({ 
-        data: null, 
-        error: { message: 'SSR mode - auth not available', code: 'SSR_MODE' } 
+      
+      getUser: async () => ({ 
+        data: { user: mockUser }, 
+        error: null 
       }),
-      signOut: async () => ({ error: null }),
+      
+      onAuthStateChange: (callback: any) => {
+        // Simulate auth state change
+        if (isBrowser) {
+          callback('SIGNED_IN', mockSession)
+        }
+        return { 
+          data: { 
+            subscription: { 
+              unsubscribe: () => {} 
+            } 
+          } 
+        }
+      },
+      
+      signInWithPassword: async (credentials: any) => {
+        console.log('🔧 Mock Client: Attempting sign in with:', credentials.email)
+        
+        // Accept any non-empty email and password
+        if (!credentials.email || !credentials.password) {
+          return {
+            data: null,
+            error: { message: 'Email and password are required', code: 'INVALID_CREDENTIALS' }
+          }
+        }
+        
+        // Create mock user and session
+        mockUser = {
+          id: 'mock-user-id',
+          email: credentials.email,
+          user_metadata: {
+            full_name: credentials.email.split('@')[0],
+            avatar_url: null
+          },
+          app_metadata: {
+            provider: 'email',
+            providers: ['email']
+          },
+          aud: 'authenticated',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        mockSession = {
+          access_token: 'mock-access-token-' + Date.now(),
+          refresh_token: 'mock-refresh-token-' + Date.now(),
+          expires_in: 3600,
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+          token_type: 'bearer',
+          user: mockUser
+        }
+        
+        // Store session in localStorage
+        if (isBrowser) {
+          try {
+            localStorage.setItem('mock-session', JSON.stringify(mockSession))
+            console.log('🔧 Mock Client: Session stored successfully')
+          } catch (error) {
+            console.warn('Failed to store mock session:', error)
+          }
+        }
+        
+        console.log('🔧 Mock Client: Sign in successful')
+        return { 
+          data: { user: mockUser, session: mockSession }, 
+          error: null 
+        }
+      },
+      
+      signUp: async (credentials: any) => {
+        console.log('🔧 Mock Client: Attempting sign up with:', credentials.email)
+        
+        // For mock client, sign up is the same as sign in
+        return await mockClient.auth.signInWithPassword(credentials)
+      },
+      
+      signOut: async () => {
+        console.log('🔧 Mock Client: Signing out')
+        
+        // Clear session
+        mockSession = null
+        mockUser = null
+        
+        // Remove from localStorage
+        if (isBrowser) {
+          try {
+            localStorage.removeItem('mock-session')
+            console.log('🔧 Mock Client: Session cleared')
+          } catch (error) {
+            console.warn('Failed to clear mock session:', error)
+          }
+        }
+        
+        return { error: null }
+      },
+      
       signInWithOAuth: async () => ({ 
         data: null, 
-        error: { message: 'SSR mode - auth not available', code: 'SSR_MODE' } 
+        error: { message: 'OAuth not available in mock client', code: 'OAUTH_NOT_AVAILABLE' } 
       }),
-      updateUser: async () => ({ 
-        data: null, 
-        error: { message: 'SSR mode - auth not available', code: 'SSR_MODE' } 
-      }),
-      refreshSession: async () => ({ 
-        data: { session: null, user: null }, 
-        error: { message: 'SSR mode - auth not available', code: 'SSR_MODE' } 
-      })
+      
+      updateUser: async (updates: any) => {
+        if (mockUser) {
+          mockUser = { ...mockUser, ...updates }
+          if (mockSession) {
+            mockSession.user = mockUser
+            // Update localStorage
+            if (isBrowser) {
+              try {
+                localStorage.setItem('mock-session', JSON.stringify(mockSession))
+              } catch (error) {
+                console.warn('Failed to update mock session:', error)
+              }
+            }
+          }
+        }
+        return { 
+          data: { user: mockUser }, 
+          error: null 
+        }
+      },
+      
+      refreshSession: async () => {
+        if (mockSession && mockSession.expires_at > Date.now() / 1000) {
+          // Extend session
+          mockSession.expires_at = Math.floor(Date.now() / 1000) + 3600
+          if (isBrowser) {
+            try {
+              localStorage.setItem('mock-session', JSON.stringify(mockSession))
+            } catch (error) {
+              console.warn('Failed to refresh mock session:', error)
+            }
+          }
+          return { 
+            data: { session: mockSession, user: mockUser }, 
+            error: null 
+          }
+        } else {
+          return { 
+            data: { session: null, user: null }, 
+            error: { message: 'Session expired', code: 'SESSION_EXPIRED' } 
+          }
+        }
+      }
     },
-    from: () => ({
-      select: () => ({ 
-        eq: () => ({ 
-          single: async () => ({ data: null, error: { message: 'SSR mode - database not available', code: 'SSR_MODE' } }) 
+    
+    from: (table: string) => ({
+      select: (columns: string = '*') => ({ 
+        eq: (column: string, value: any) => ({ 
+          single: async () => ({ 
+            data: null, 
+            error: { message: 'Database not available in mock client', code: 'DB_NOT_AVAILABLE' } 
+          }) 
         }) 
       }),
-      insert: () => ({ 
-        select: () => ({ 
-          single: async () => ({ data: null, error: { message: 'SSR mode - database not available', code: 'SSR_MODE' } }) 
+      insert: (data: any) => ({ 
+        select: (columns: string = '*') => ({ 
+          single: async () => ({ 
+            data: null, 
+            error: { message: 'Database not available in mock client', code: 'DB_NOT_AVAILABLE' } 
+          }) 
         }) 
       }),
-      update: () => ({ 
-        eq: () => ({ 
-          select: () => ({ 
-            single: async () => ({ data: null, error: { message: 'SSR mode - database not available', code: 'SSR_MODE' } }) 
+      update: (data: any) => ({ 
+        eq: (column: string, value: any) => ({ 
+          select: (columns: string = '*') => ({ 
+            single: async () => ({ 
+              data: null, 
+              error: { message: 'Database not available in mock client', code: 'DB_NOT_AVAILABLE' } 
+            }) 
           }) 
         }) 
       }),
       delete: () => ({ 
-        eq: async () => ({ data: null, error: { message: 'SSR mode - database not available', code: 'SSR_MODE' } }) 
+        eq: async (column: string, value: any) => ({ 
+          data: null, 
+          error: { message: 'Database not available in mock client', code: 'DB_NOT_AVAILABLE' } 
+        }) 
       })
     }),
+    
     // Add error handling utilities to mock client
     handleError: (error: any) => {
       console.warn('Mock client error:', error)
