@@ -28,8 +28,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Handle root path redirect
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/en", request.url))
+  }
+
   // Only apply i18n middleware to page routes (not API routes)
-  return intlMiddleware(request)
+  try {
+    return intlMiddleware(request)
+  } catch (error) {
+    console.error("Middleware error:", error)
+    // Fallback to redirect to default locale
+    return NextResponse.redirect(new URL("/en", request.url))
+  }
 }
 
 export const config = {

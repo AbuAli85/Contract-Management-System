@@ -11,13 +11,23 @@ export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
   // Only determine which layout to use - no redirects, no auth checks
   const isAuthPage = useMemo(() => {
     if (!pathname) return false
-    return pathname.startsWith("/en/auth") || 
-           pathname.startsWith("/ar/auth") ||
-           pathname.includes("/login") || 
-           pathname.includes("/signup") ||
-           pathname.includes("/forgot-password") ||
-           pathname.includes("/reset-password") ||
-           pathname.includes("/logout")
+    
+    // Check for specific auth paths
+    const authPaths = [
+      '/login',
+      '/signup', 
+      '/forgot-password',
+      '/reset-password',
+      '/logout'
+    ]
+    
+    // Check if pathname contains any auth path
+    const hasAuthPath = authPaths.some(path => pathname.includes(path))
+    
+    // Check for locale-specific auth paths
+    const hasLocaleAuthPath = pathname.match(/^\/(en|ar)\/auth\/(login|signup|forgot-password|reset-password|logout)/)
+    
+    return hasAuthPath || !!hasLocaleAuthPath
   }, [pathname])
 
   // Simply return the appropriate layout - no redirects here

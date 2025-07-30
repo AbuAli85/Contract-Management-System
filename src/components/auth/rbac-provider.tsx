@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/auth-service"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { useSupabase } from "@/app/providers"
 
 // Define the Role type
 type Role = "admin" | "user" | "manager" | "reviewer" | "promoter"
@@ -32,7 +32,7 @@ export const useRBAC = () => {
 // RBAC Provider Component
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
-  const supabase = useSupabaseClient()
+  const { supabase } = useSupabase()
   const [userRoles, setUserRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
