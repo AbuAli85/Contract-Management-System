@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
   fallback?: React.ReactNode
 }
 
-export default function ProtectedRoute({ 
+function ProtectedRoute({ 
   children, 
   fallback 
 }: ProtectedRouteProps) {
@@ -52,3 +52,6 @@ export default function ProtectedRoute({
   // 5) User exists, render children
   return <>{children}</>
 }
+
+export { ProtectedRoute }
+export default ProtectedRoute
