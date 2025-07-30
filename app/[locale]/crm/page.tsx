@@ -8,7 +8,7 @@ import PromoterDashboard from "@/components/dashboard/PromoterDashboard"
 
 export default function CRMPage() {
   const { roles, loading } = useAuth()
-  const isAdmin = roles.includes("admin")
+  const isAdmin = roles && Array.isArray(roles) && roles.includes("admin")
   const [promoters, setPromoters] = useState<{ id: string }[]>([])
   const [promotersLoading, setPromotersLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
