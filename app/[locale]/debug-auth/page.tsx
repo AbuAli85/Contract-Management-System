@@ -72,9 +72,11 @@ export default function DebugAuthPage() {
     }
   }
 
+  // Only run on mount
   useEffect(() => {
     refreshDebugInfo()
-  }, [user, loading, mounted, session])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const getStatusIcon = (condition: boolean) => {
     return condition ? (

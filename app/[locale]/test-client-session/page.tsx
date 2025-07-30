@@ -7,36 +7,38 @@ export default function TestClientSessionPage() {
   const { user, loading, mounted, session } = useAuth()
   const [debugInfo, setDebugInfo] = useState<any>({})
 
+  // Only run on mount
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const [sessionResponse, checkSessionResponse] = await Promise.all([
-          fetch("/api/debug/session"),
-          fetch("/api/auth/check-session"),
-        ])
-
-        const sessionData = await sessionResponse.json()
-        const checkSessionData = await checkSessionResponse.json()
-
-        const newDebugInfo = {
-          timestamp: new Date().toISOString(),
-          clientUser: user ? user.email : null,
-          clientLoading: loading,
-          clientMounted: mounted,
-          clientSession: !!session,
-          serverSession: sessionData.debug,
-          checkSession: checkSessionData,
-        }
-
-        setDebugInfo(newDebugInfo)
-        console.log("🔧 Client session debug:", newDebugInfo)
-      } catch (error) {
-        console.error("🔧 Debug check failed:", error)
-      }
-    }
-
     checkSession()
-  }, [user, loading, mounted, session])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const checkSession = async () => {
+    try {
+      const [sessionResponse, checkSessionResponse] = await Promise.all([
+        fetch("/api/debug/session"),
+        fetch("/api/auth/check-session"),
+      ])
+
+      const sessionData = await sessionResponse.json()
+      const checkSessionData = await checkSessionResponse.json()
+
+      const newDebugInfo = {
+        timestamp: new Date().toISOString(),
+        clientUser: user ? user.email : null,
+        clientLoading: loading,
+        clientMounted: mounted,
+        clientSession: !!session,
+        serverSession: sessionData.debug,
+        checkSession: checkSessionData,
+      }
+
+      setDebugInfo(newDebugInfo)
+      console.log("🔧 Client session debug:", newDebugInfo)
+    } catch (error) {
+      console.error("🔧 Debug check failed:", error)
+    }
+  }
 
   return (
     <div className="space-y-6 p-8">
