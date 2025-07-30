@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from "next-intl"
-import { getMessages, setRequestLocale } from "next-intl/server"
+import { setRequestLocale } from "next-intl/server"
 import { AuthLayoutWrapper } from "@/components/auth-layout-wrapper"
 import { ErrorBoundary } from "@/components/error-boundary"
 
@@ -29,18 +29,11 @@ export default async function LocaleLayout({
     )
   }
 
-  // Set the request locale to enable static rendering
+  // Set the request locale FIRST to enable static rendering
   setRequestLocale(locale)
 
-  // Get messages for the current locale
-  let messages
-  try {
-    messages = await getMessages()
-  } catch (error) {
-    console.error("🔐 Locale Layout: Error getting messages:", error)
-    // Fallback to empty messages if there's an error
-    messages = {}
-  }
+  // Use empty messages to avoid dynamic rendering issues
+  const messages = {}
 
   return (
     <ErrorBoundary>

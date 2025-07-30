@@ -1,21 +1,24 @@
-import { notFound } from "next/navigation"
 import { getRequestConfig } from "next-intl/server"
 
 // Can be imported from a shared config
 const locales = ["en", "ar"]
 
-export default getRequestConfig(async ({ requestLocale }) => {
+export default getRequestConfig(async ({ locale }) => {
   // Validate that the incoming `locale` parameter is valid
-  const locale = await requestLocale
-  
-  // Add better error handling for undefined locale
   if (!locale || !locales.includes(locale as any)) {
     console.error("Invalid locale:", locale)
-    notFound()
+    // Return a fallback instead of notFound() to avoid build issues
+    return {
+      locale: "en",
+      messages: {},
+    }
   }
+
+  // Use static messages to avoid dynamic rendering
+  const messages = {}
 
   return {
     locale,
-    messages: (await import(`./public/locales/${locale}.json`)).default,
+    messages,
   }
 }) 

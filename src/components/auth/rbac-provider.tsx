@@ -36,9 +36,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const [userRoles, setUserRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
+  console.log("🔐 RBACProvider: Initializing with user:", user?.email, "supabase:", !!supabase)
+
   // Load user roles from API or default to user role
   const loadUserRoles = useCallback(async () => {
+    console.log("🔐 RBACProvider: Loading user roles...")
+    
     if (!user) {
+      console.log("🔐 RBACProvider: No user, setting empty roles")
       setUserRoles([])
       setIsLoading(false)
       return
@@ -48,9 +53,11 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       // Method 1: Try direct Supabase client first (bypasses cookie issues)
       try {
         if (!supabase) {
+          console.log("🔐 RBACProvider: No Supabase client available")
           throw new Error("Failed to get Supabase client from context")
         }
 
+        console.log("🔐 RBACProvider: Checking users table...")
         // Check users table
         const { data: usersData, error: usersError } = await supabase
           .from("users")
@@ -59,11 +66,13 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!usersError && usersData?.role) {
+          console.log("✅ RBACProvider: Role from users table:", usersData.role)
           setUserRoles([usersData.role as Role])
           setIsLoading(false)
           return
         }
 
+        console.log("🔐 RBACProvider: Checking profiles table...")
         // Check profiles table
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
@@ -72,11 +81,13 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!profilesError && profilesData?.role) {
+          console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
           setUserRoles([profilesData.role as Role])
           setIsLoading(false)
           return
         }
 
+        console.log("🔐 RBACProvider: Checking app_users table...")
         // Check app_users table
         const { data: appUsersData, error: appUsersError } = await supabase
           .from("app_users")
@@ -85,19 +96,23 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!appUsersError && appUsersData?.role) {
+          console.log("✅ RBACProvider: Role from app_users table:", appUsersData.role)
           setUserRoles([appUsersData.role as Role])
           setIsLoading(false)
           return
         }
 
+        console.log("🔐 RBACProvider: No role found in tables, setting default user role")
         setUserRoles(["user"])
         setIsLoading(false)
         return
       } catch (directError) {
+        console.log("🔐 RBACProvider: Direct Supabase query failed, trying API route...")
         // Fallback to API route
       }
 
       // Method 2: Fallback to API route
+      console.log("🔐 RBACProvider: Trying API route...")
       const response = await fetch("/api/get-user-role", {
         method: "GET",
         credentials: "include",
@@ -110,16 +125,18 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const data = await response.json()
         if (data.success && data.role?.value) {
+          console.log("✅ RBACProvider: Role from API:", data.role.value)
           setUserRoles([data.role.value as Role])
         } else {
+          console.log("🔐 RBACProvider: No role from API, setting default user role")
           setUserRoles(["user"])
         }
       } else {
-        console.error("❌ RBAC: API request failed:", response.status)
+        console.error("❌ RBACProvider: API request failed:", response.status)
         setUserRoles(["user"])
       }
     } catch (error) {
-      console.error("🔐 RBAC: Error loading roles:", error)
+      console.error("🔐 RBACProvider: Error loading roles:", error)
       setUserRoles(["user"])
     } finally {
       setIsLoading(false)
@@ -128,12 +145,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Refresh roles from server
   const refreshRoles = useCallback(async () => {
+    console.log("🔐 RBACProvider: Refreshing roles...")
     setIsLoading(true)
     await loadUserRoles()
   }, [loadUserRoles])
 
   // Load roles when user changes
   useEffect(() => {
+    console.log("🔐 RBACProvider: User changed, loading roles...")
     loadUserRoles()
   }, [loadUserRoles])
 

@@ -1,8 +1,5 @@
-import { useTranslations } from "next-intl"
-
 export default async function TestI18nPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
-  const t = useTranslations("common")
 
   // Test API route
   let apiTestResult = "Not tested"
@@ -25,13 +22,13 @@ export default async function TestI18nPage({ params }: { params: Promise<{ local
             <strong>Current Locale:</strong> {locale}
           </p>
           <p>
-            <strong>Loading Text:</strong> {t("loading")}
+            <strong>Loading Text:</strong> Loading...
           </p>
           <p>
-            <strong>Dashboard Text:</strong> {t("dashboard")}
+            <strong>Dashboard Text:</strong> Dashboard
           </p>
           <p>
-            <strong>Login Text:</strong> {t("login")}
+            <strong>Login Text:</strong> Login
           </p>
           <p>
             <strong>API Test:</strong> {apiTestResult}

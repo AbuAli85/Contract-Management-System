@@ -1,6 +1,7 @@
 "use client"
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import { Inter } from "next/font/google"
 import { ToastProvider } from "@/components/toast-notifications"
 import { ErrorBoundary } from "@/components/error-boundary"
