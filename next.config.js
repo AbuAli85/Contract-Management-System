@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const withNextIntl = require('next-intl/plugin')('./i18n.cjs')
+
 const nextConfig = {
   experimental: {
     // Temporarily disabled to fix lucide-react import issues
@@ -89,4 +91,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withNextIntl(nextConfig)

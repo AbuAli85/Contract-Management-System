@@ -1,37 +1,35 @@
-import { i18n } from '@/src/i18n/i18n-config'
-import { cookies } from 'next/headers'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
 import { AppLayoutWithSidebar } from '@/components/app-layout-with-sidebar'
 import SimpleLayout from './layout-simple'
 import { ErrorBoundary } from '@/components/error-boundary'
 
 export async function generateStaticParams() {
-    return i18n.locales.map((locale) => ({ locale }))
+    return [
+        { locale: 'en' },
+        { locale: 'ar' }
+    ]
 }
 
-async function getLocale(locale: string) {
-    const cookieStore = await cookies()
-    const savedLocale = cookieStore.get('locale')
-    
-    if (savedLocale && i18n.locales.includes(savedLocale.value)) {
-        return savedLocale.value
-    }
-    
-    if (i18n.locales.includes(locale)) {
-        return locale
-    }
-    
-    return i18n.defaultLocale
-}
-
-export default async function LocaleLayout({ children, params }: { children: React.ReactNode, params: Promise<{ locale: string }> }) {
+export default async function LocaleLayout({ 
+  children, 
+  params 
+}: { 
+  children: React.ReactNode, 
+  params: Promise<{ locale: string }> 
+}) {
   const { locale } = await params
-  const resolvedLocale = await getLocale(locale)
+  
+  // Get messages for the current locale
+  const messages = await getMessages()
   
   return (
     <ErrorBoundary>
-      <AppLayoutWithSidebar>
-        {children}
-      </AppLayoutWithSidebar>
+      <NextIntlClientProvider messages={messages} locale={locale}>
+        <AppLayoutWithSidebar>
+          {children}
+        </AppLayoutWithSidebar>
+      </NextIntlClientProvider>
     </ErrorBoundary>
   )
 }

@@ -4,6 +4,8 @@ import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
 
 const fontInter = Inter({
   subsets: ["latin"],
@@ -23,18 +25,23 @@ export const metadata: Metadata = {
   description: `Professional contract management and generation system (Build: ${buildTimestamp.buildId})`,
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Get messages for the default locale
+  const messages = await getMessages()
+  
   return (
     <html lang="en">
       <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>
+            {children}
+            <Toaster />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   )
