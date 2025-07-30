@@ -4,6 +4,8 @@ import type React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { useState } from "react"
+import { SessionContextProvider } from "@supabase/auth-helpers-react"
+import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs"
 import { AuthProvider } from "@/components/auth-provider"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
 
@@ -23,11 +25,15 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
       }),
   )
 
+  const [supabaseClient] = useState(() => createBrowserSupabaseClient())
+
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RBACProvider>{children}</RBACProvider>
-      </AuthProvider>
+      <SessionContextProvider supabaseClient={supabaseClient}>
+        <AuthProvider>
+          <RBACProvider>{children}</RBACProvider>
+        </AuthProvider>
+      </SessionContextProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   )
