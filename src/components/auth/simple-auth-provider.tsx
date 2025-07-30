@@ -51,10 +51,10 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     try {
       const client = createClient()
-      // The createClient function now always returns a valid client (real or mock)
       setSupabase(client)
+      console.log("🔐 Auth: Supabase client initialized successfully")
     } catch (error) {
-      console.error("Error creating Supabase client:", error)
+      console.error("🔐 Auth: Error creating Supabase client:", error)
       // Even if createClient fails, we should still set mounted to true
       setSupabase(null)
       setLoading(false)
@@ -63,17 +63,50 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }, [])
 
   const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
-    // For now, return null to trigger fallback profile creation
-    return null
+    try {
+      // For now, return a basic profile
+      return {
+        id: userId,
+        email: user?.email || "",
+        full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
+        avatar_url: user?.user_metadata?.avatar_url || null,
+        created_at: user?.created_at || new Date().toISOString(),
+        role: "user",
+      }
+    } catch (error) {
+      console.error("Error loading user profile:", error)
+      return null
+    }
   }
 
   const loadUserRoles = async (userId: string): Promise<string[]> => {
-    // For now, just return default user role
-    return ["user"]
+    try {
+      // Try to fetch roles from API
+      const response = await fetch("/api/get-user-role", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.role?.value) {
+          return [data.role.value]
+        }
+      }
+      
+      // Default to user role
+      return ["user"]
+    } catch (error) {
+      console.error("Error loading user roles:", error)
+      return ["user"]
+    }
   }
 
   const initializeAuth = async () => {
     if (!supabase) {
+      console.log("🔐 Auth: No Supabase client, skipping initialization")
       setLoading(false)
       setMounted(true)
       return
@@ -81,11 +114,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
+      console.log("🔐 Auth: Initialization timeout reached")
       setLoading(false)
       setMounted(true)
-    }, 2000) // Increased timeout to 2 seconds for better reliability
+    }, 3000) // Increased timeout to 3 seconds
 
     try {
+      console.log("🔐 Auth: Starting initialization...")
+      
       // Get current session with error handling
       const {
         data: { session },
@@ -93,13 +129,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       } = await supabase.auth.getSession()
 
       if (error) {
-        console.error("Error getting session:", error)
+        console.error("🔐 Auth: Error getting session:", error)
         setLoading(false)
         setMounted(true)
         return
       }
 
       if (session?.user) {
+        console.log("🔐 Auth: Session found, user:", session.user.email)
         setSession(session)
         setUser(session.user)
 
@@ -115,9 +152,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         }
 
         setProfile(basicProfile)
-        setRoles(["user"])
+        
+        // Load roles
+        const userRoles = await loadUserRoles(session.user.id)
+        setRoles(userRoles)
+        
         setProfileNotFound(false)
       } else {
+        console.log("🔐 Auth: No session found")
         // No session found, ensure we're in a clean state
         setSession(null)
         setUser(null)
@@ -126,7 +168,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfileNotFound(false)
       }
     } catch (error) {
-      console.error("Error initializing auth:", error)
+      console.error("🔐 Auth: Error initializing auth:", error)
       // Ensure we're in a clean state even on error
       setSession(null)
       setUser(null)
@@ -137,6 +179,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       clearTimeout(timeout)
       setLoading(false)
       setMounted(true)
+      console.log("🔐 Auth: Initialization complete")
     }
   }
 
@@ -145,7 +188,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (supabase && !mounted) {
       initializeAuth()
     }
-  }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
+  }, [supabase])
 
   // Log final state after auth initialization (only once)
   useEffect(() => {
@@ -155,12 +198,15 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         loading,
         mounted,
         userEmail: user?.email,
+        roles,
       })
     }
-  }, [mounted, loading]) // Removed user to prevent re-renders
+  }, [mounted, loading, user, roles])
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
     try {
+      console.log("🔐 Auth: State change event:", event)
+      
       if (event === "SIGNED_IN" && newSession?.user) {
         setSession(newSession)
         setUser(newSession.user)
@@ -179,9 +225,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         }
 
         setProfile(basicProfile)
-        setRoles(["user"])
+        
+        // Load roles
+        const userRoles = await loadUserRoles(newSession.user.id)
+        setRoles(userRoles)
+        
         setProfileNotFound(false)
       } else if (event === "SIGNED_OUT") {
+        console.log("🔐 Auth: User signed out")
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -189,7 +240,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfileNotFound(false)
       }
     } catch (error) {
-      console.error("Error handling auth state change:", error)
+      console.error("🔐 Auth: Error handling auth state change:", error)
       // Ensure we're in a clean state on error
       setSession(null)
       setUser(null)
@@ -214,8 +265,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         }
       }
     } catch (error) {
-      console.error("Error setting up auth state change listener:", error)
-      // Don't throw error, just log it and continue
+      console.error("🔐 Auth: Error setting up auth state change listener:", error)
     }
   }, [supabase])
 
@@ -228,23 +278,26 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
+      console.log("🔐 Auth: Attempting sign in for:", email)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
-        console.error("Sign in error:", error)
+        console.error("🔐 Auth: Sign in error:", error)
         return { success: false, error: error.message }
       }
 
       if (data.user) {
+        console.log("🔐 Auth: Sign in successful for:", data.user.email)
         return { success: true }
       }
 
       return { success: false, error: "Sign in failed" }
     } catch (error) {
-      console.error("Sign in error:", error)
+      console.error("🔐 Auth: Sign in error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
@@ -259,6 +312,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
+      console.log("🔐 Auth: Attempting sign up for:", email)
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -270,17 +325,18 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
-        console.error("Sign up error:", error)
+        console.error("🔐 Auth: Sign up error:", error)
         return { success: false, error: error.message }
       }
 
       if (data.user) {
+        console.log("🔐 Auth: Sign up successful for:", data.user.email)
         return { success: true }
       }
 
       return { success: false, error: "Sign up failed" }
     } catch (error) {
-      console.error("Sign up error:", error)
+      console.error("🔐 Auth: Sign up error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
@@ -289,14 +345,16 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (!supabase) return
 
     try {
+      console.log("🔐 Auth: Attempting sign out")
+      
       const { error } = await supabase.auth.signOut()
       if (error) {
-        console.error("Sign out error:", error)
+        console.error("🔐 Auth: Sign out error:", error)
       } else {
-        // Sign out successful
+        console.log("🔐 Auth: Sign out successful")
       }
     } catch (error) {
-      console.error("Sign out error:", error)
+      console.error("🔐 Auth: Sign out error:", error)
     }
   }
 
@@ -304,15 +362,14 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (!user) return
 
     try {
+      console.log("🔐 Auth: Refreshing profile for:", user.email)
+      
       const profile = await loadUserProfile(user.id)
       if (profile) {
         setProfile(profile)
-        setProfileNotFound(false)
-      } else {
-        setProfileNotFound(true)
       }
     } catch (error) {
-      console.error("Error refreshing profile:", error)
+      console.error("🔐 Auth: Error refreshing profile:", error)
     }
   }
 
@@ -320,10 +377,12 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     if (!user) return
 
     try {
+      console.log("🔐 Auth: Force refreshing roles for:", user.email)
+      
       const roles = await loadUserRoles(user.id)
       setRoles(roles)
     } catch (error) {
-      console.error("Error refreshing roles:", error)
+      console.error("🔐 Auth: Error refreshing roles:", error)
     }
   }
 
@@ -335,6 +394,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
+      console.log("🔐 Auth: Attempting OAuth sign in with:", provider)
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -343,13 +404,13 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       })
 
       if (error) {
-        console.error("OAuth sign in error:", error)
+        console.error("🔐 Auth: OAuth sign in error:", error)
         return { success: false, error: error.message }
       }
 
       return { success: true }
     } catch (error) {
-      console.error("OAuth sign in error:", error)
+      console.error("🔐 Auth: OAuth sign in error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
@@ -362,23 +423,26 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      console.log("🔐 Auth: Updating profile for:", user.email)
+      
+      const { data, error } = await supabase.auth.updateUser({
         data: updates,
       })
 
       if (error) {
-        console.error("Profile update error:", error)
+        console.error("🔐 Auth: Update profile error:", error)
         return { success: false, error: error.message }
       }
 
-      // Update local profile state
-      if (profile) {
-        setProfile({ ...profile, ...updates })
+      if (data.user) {
+        // Update local profile state
+        setProfile(prev => prev ? { ...prev, ...updates } : null)
+        return { success: true }
       }
 
-      return { success: true }
+      return { success: false, error: "Update profile failed" }
     } catch (error) {
-      console.error("Profile update error:", error)
+      console.error("🔐 Auth: Update profile error:", error)
       return { success: false, error: "An unexpected error occurred" }
     }
   }
@@ -411,5 +475,5 @@ export function useAuth() {
   return context
 }
 
-// Export AuthProvider for deployment
+// Export for backward compatibility
 export { SimpleAuthProvider as AuthProvider }

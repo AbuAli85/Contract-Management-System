@@ -1,75 +1,61 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-// Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
-
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Try getUser() first for better security
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError) {
-      // Only log significant errors, not expected "Auth session missing!" messages
-      if (!userError.message.includes("Auth session missing")) {
-        console.log("🔐 User check error:", userError.message)
-      }
-    } else if (user) {
-      return NextResponse.json({
-        success: true,
-        hasSession: true,
-        user: {
-          id: user.id,
-          email: user.email,
-        },
-      })
-    }
-
-    // Fallback to getSession() if getUser() fails
+    // Get current session
     const {
       data: { session },
-      error: sessionError,
+      error,
     } = await supabase.auth.getSession()
 
-    if (sessionError) {
-      // Only log significant errors
-      if (!sessionError.message.includes("Auth session missing")) {
-        console.log("🔐 Session error:", sessionError.message)
-      }
-      return NextResponse.json({
-        success: false,
-        hasSession: false,
-        error: sessionError.message,
-      })
+    if (error) {
+      console.error("🔐 Auth Check: Error getting session:", error)
+      return NextResponse.json(
+        { 
+          authenticated: false, 
+          error: error.message 
+        }, 
+        { status: 500 }
+      )
     }
 
-    if (session) {
-      return NextResponse.json({
-        success: true,
-        hasSession: true,
-        user: {
-          id: session.user.id,
-          email: session.user.email,
-        },
-      })
+    if (!session) {
+      return NextResponse.json(
+        { 
+          authenticated: false, 
+          user: null 
+        }, 
+        { status: 200 }
+      )
     }
 
+    // Return user info without sensitive data
     return NextResponse.json({
-      success: false,
-      hasSession: false,
-      error: "No session found",
+      authenticated: true,
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+        created_at: session.user.created_at,
+        updated_at: session.user.updated_at,
+        user_metadata: session.user.user_metadata,
+      },
+      session: {
+        access_token: session.access_token ? "***" : null,
+        refresh_token: session.refresh_token ? "***" : null,
+        expires_at: session.expires_at,
+      },
     })
   } catch (error) {
-    console.error("🔐 Check session API error:", error)
-    return NextResponse.json({
-      success: false,
-      hasSession: false,
-      error: "Internal server error",
-    })
+    console.error("🔐 Auth Check: Unexpected error:", error)
+    return NextResponse.json(
+      { 
+        authenticated: false, 
+        error: "Internal server error" 
+      }, 
+      { status: 500 }
+    )
   }
 }
