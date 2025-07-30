@@ -79,9 +79,6 @@ import { useToast } from "@/hooks/use-toast"
 
 import { FileTextIcon } from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils"
-import { RoleRefreshButton } from "@/components/role-refresh-button"
-import { RoleDebugPanel } from "@/components/role-debug-panel"
-import { RoleStatusIndicator } from "@/components/role-status-indicator"
 import { ProtectedRoute } from "@/components/protected-route"
 
 // Enhanced Contract interface

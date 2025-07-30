@@ -5,6 +5,16 @@ import { useAuth } from "@/lib/auth-service"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Bell, 
+  Settings, 
+  User, 
+  LogOut, 
+  Search,
+  Menu
+} from "lucide-react"
 
 interface AppLayoutWithSidebarProps {
   children: React.ReactNode
@@ -19,6 +29,21 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
   // Check if we're on the landing page (root route)
   const isLandingPage = pathname === `/${locale}` || pathname === `/${locale}/`
+
+  // Get current page title
+  const getPageTitle = () => {
+    if (pathname?.includes('/dashboard')) return 'Dashboard'
+    if (pathname?.includes('/generate-contract')) return 'Generate Contract'
+    if (pathname?.includes('/contracts')) return 'Contracts'
+    if (pathname?.includes('/manage-parties')) return 'Manage Parties'
+    if (pathname?.includes('/manage-promoters')) return 'Manage Promoters'
+    if (pathname?.includes('/promoter-analysis')) return 'Promoter Analysis'
+    if (pathname?.includes('/users')) return 'User Management'
+    if (pathname?.includes('/settings')) return 'Settings'
+    if (pathname?.includes('/notifications')) return 'Notifications'
+    if (pathname?.includes('/audit')) return 'Audit Logs'
+    return 'Dashboard'
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,23 +66,61 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
             <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm">
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <h1 className="text-lg font-semibold text-card-foreground">
-                      Contract Management System
-                    </h1>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-lg font-semibold text-card-foreground">
+                        {getPageTitle()}
+                      </h1>
+                      <Badge variant="outline" className="text-xs">
+                        {user?.email ? 'Admin' : 'Guest'}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    {user && (
-                      <div className="text-sm text-muted-foreground">
-                        <span>Welcome, {user.email}</span>
-                      </div>
-                    )}
-                    <a
-                      href={`/${locale}/auth/logout`}
-                      className="text-sm text-destructive hover:text-destructive/80"
-                    >
-                      Logout
-                    </a>
+                  
+                  <div className="flex items-center gap-3">
+                    {/* Search */}
+                    <div className="relative hidden md:block">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        className="w-64 rounded-md border border-border bg-background px-3 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+
+                    {/* Notifications */}
+                    <Button variant="outline" size="sm" className="relative">
+                      <Bell className="h-4 w-4" />
+                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+                        3
+                      </Badge>
+                    </Button>
+
+                    {/* User Menu */}
+                    <div className="flex items-center gap-2">
+                      {user && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <div className="hidden md:block">
+                            <p className="text-sm font-medium text-card-foreground">
+                              {user.email}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Admin User
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/${locale}/auth/logout`}>
+                          <LogOut className="h-4 w-4" />
+                          <span className="hidden md:inline ml-2">Logout</span>
+                        </a>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -66,7 +129,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
           {/* Page content */}
           <main className={`flex-1 ${!isLandingPage ? "p-6" : ""}`}>
-            <div className="children-container">{children}</div>
+            <div className="children-container">
+              {children}
+            </div>
           </main>
         </div>
       </div>
