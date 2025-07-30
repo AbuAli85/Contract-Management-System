@@ -4,17 +4,35 @@ import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [redirectAttempted, setRedirectAttempted] = useState(false)
+  const [oauthError, setOauthError] = useState<string | null>(null)
 
   // Get current locale for links
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
+
+  // Check for OAuth errors in URL parameters
+  useEffect(() => {
+    const error = searchParams?.get('error')
+    const message = searchParams?.get('message')
+    
+    if (error && message) {
+      setOauthError(`${error}: ${message}`)
+      // Clear the error from URL after displaying it
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('error')
+      newUrl.searchParams.delete('message')
+      window.history.replaceState({}, '', newUrl.toString())
+    }
+  }, [searchParams])
 
   // Only redirect if user is already logged in AND we're on the login page
   useEffect(() => {
@@ -71,9 +89,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h1 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
-          </h2>
+          </h1>
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{' '}
             <Link href={`/${locale}/auth/signup`} className="font-medium text-blue-600 hover:text-blue-500">
@@ -81,6 +99,12 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
+        
+        {oauthError && (
+          <Alert variant="destructive">
+            <AlertDescription>{oauthError}</AlertDescription>
+          </Alert>
+        )}
         
         <LoginForm />
         

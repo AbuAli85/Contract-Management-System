@@ -81,7 +81,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       console.log('🔐 Auth: Timeout reached, forcing mounted state')
       setLoading(false)
       setMounted(true)
-    }, 1000) // 1 second timeout
+    }, 2000) // Increased timeout to 2 seconds for better reliability
 
     try {
       // Get current session with error handling
@@ -129,8 +129,8 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setRoles([])
       setProfileNotFound(false)
     } finally {
+      clearTimeout(timeout)
       console.log('🔐 Auth: Setting loading=false, mounted=true')
-      clearTimeout(timeout) // Clear the timeout
       setLoading(false)
       setMounted(true)
     }
