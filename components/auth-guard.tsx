@@ -4,15 +4,17 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 
-interface ProtectedRouteProps {
+interface AuthGuardProps {
   children: React.ReactNode
-  fallback?: React.ReactNode
+  redirectTo?: string
+  requireAuth?: boolean
 }
 
-export default function ProtectedRoute({ 
+export default function AuthGuard({ 
   children, 
-  fallback 
-}: ProtectedRouteProps) {
+  redirectTo = "/dashboard",
+  requireAuth = false 
+}: AuthGuardProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
@@ -22,14 +24,18 @@ export default function ProtectedRoute({
     setMounted(true)
   }, [])
 
-  // 2) Once hydrated AND no longer loading, redirect if no user
+  // 2) Once hydrated AND no longer loading, handle redirects
   useEffect(() => {
     if (!mounted || loading) return
 
-    if (!user) {
+    if (requireAuth && !user) {
+      // Require auth but no user - redirect to login
       router.replace("/auth/login")
+    } else if (!requireAuth && user) {
+      // Don't require auth but user is logged in - redirect to dashboard
+      router.replace(redirectTo)
     }
-  }, [mounted, loading, user, router])
+  }, [mounted, loading, user, router, requireAuth, redirectTo])
 
   // 3) Before hydration or while loading, show loading state
   if (!mounted || loading) {
@@ -43,12 +49,15 @@ export default function ProtectedRoute({
     )
   }
 
-  // 4) Once hydrated & done loading, check if user exists
-  if (!user) {
-    // No user - show fallback or nothing (will redirect)
-    return fallback ? <>{fallback}</> : null
+  // 4) Once hydrated & done loading, render children if conditions are met
+  if (requireAuth && !user) {
+    // Require auth but no user - show nothing (will redirect)
+    return null
+  } else if (!requireAuth && user) {
+    // Don't require auth but user is logged in - show nothing (will redirect)
+    return null
   }
 
-  // 5) User exists, render children
+  // 5) Otherwise render children
   return <>{children}</>
-}
+} 

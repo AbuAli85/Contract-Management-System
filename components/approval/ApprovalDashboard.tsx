@@ -16,7 +16,7 @@ import {
   Users,
   Calendar,
 } from "lucide-react"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { PendingReviewsList } from "./PendingReviewsList"
 import { CompletedReviewsList } from "./CompletedReviewsList"
 import { WorkflowStats } from "./WorkflowStats"

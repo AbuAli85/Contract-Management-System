@@ -15,7 +15,7 @@ import {
   XCircle,
 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { useToast } from "@/hooks/use-toast"
 
 export function RoleDebugPanel() {

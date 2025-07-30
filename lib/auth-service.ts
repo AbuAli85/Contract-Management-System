@@ -1,34 +1,36 @@
-import { createClient } from "@/lib/supabase/client"
-import { createClient as createServerClient } from "@/lib/supabase/server"
-import type { User, Session } from "@supabase/supabase-js"
+"use client"
 
-export interface AuthState {
+import { createClient } from "@/lib/supabase/client"
+import { User, Session, AuthError } from "@supabase/supabase-js"
+import { useToast } from "@/hooks/use-toast"
+import React from "react"
+
+// Centralized auth state management
+interface AuthState {
   user: User | null
   session: Session | null
   loading: boolean
   mounted: boolean
-  profile: any | null
-  roles: string[]
-  profileNotFound: boolean
+  error: string | null
 }
+
+type AuthListener = (state: AuthState) => void
 
 export class AuthService {
   private static instance: AuthService
-  private supabaseClient: any
-  private authState: AuthState = {
+  private state: AuthState = {
     user: null,
     session: null,
     loading: true,
     mounted: false,
-    profile: null,
-    roles: [],
-    profileNotFound: false,
+    error: null,
   }
-  private listeners: Set<(state: AuthState) => void> = new Set()
+  private listeners: AuthListener[] = []
+  private refreshTimer: NodeJS.Timeout | null = null
+  private supabase: ReturnType<typeof createClient> | null = null
 
   private constructor() {
-    // Initialize with null client - will be created when needed
-    this.supabaseClient = null
+    this.initializeAuth()
   }
 
   static getInstance(): AuthService {
@@ -38,401 +40,186 @@ export class AuthService {
     return AuthService.instance
   }
 
-  // Lazy initialization of the Supabase client
-  private ensureClient() {
-    if (!this.supabaseClient && typeof window !== "undefined") {
-      console.log("🔧 AuthService: Creating Supabase client...")
-      this.supabaseClient = createClient()
-    }
-    return this.supabaseClient
-  }
-
-  // Subscribe to auth state changes
-  subscribe(listener: (state: AuthState) => void): () => void {
-    this.listeners.add(listener)
-    // Immediately call with current state
-    listener(this.authState)
-
-    return () => {
-      this.listeners.delete(listener)
-    }
-  }
-
-  // Notify all listeners of state changes
-  private notifyListeners() {
-    this.listeners.forEach((listener) => listener(this.authState))
-  }
-
-  // Update auth state
   private updateState(updates: Partial<AuthState>) {
-    this.authState = { ...this.authState, ...updates }
+    this.state = { ...this.state, ...updates }
     this.notifyListeners()
   }
 
-  // Initialize authentication
-  async initializeAuth(): Promise<void> {
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener(this.state))
+  }
+
+  subscribe(listener: AuthListener): () => void {
+    this.listeners.push(listener)
+    // Return unsubscribe function
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener)
+    }
+  }
+
+  getState(): AuthState {
+    return { ...this.state }
+  }
+
+  // Initialize authentication with proper error handling
+  private async initializeAuth(): Promise<void> {
     console.log("🔧 AuthService: Initializing auth...")
 
-    const client = this.ensureClient()
-    if (!client) {
-      console.log("❌ AuthService: No supabase client available, setting loading to false")
-      this.updateState({ loading: false, mounted: true })
-      return
-    }
-
     try {
-      // Debug: Check what cookies are available
-      if (typeof window !== "undefined") {
-        const cookies = document.cookie.split(";").map((c) => c.trim())
-        const authCookies = cookies.filter((c) => c.includes("auth-token") || c.includes("sb-"))
-        console.log("🔧 AuthService: Available auth cookies:", authCookies)
-      }
-
-      console.log("🔧 AuthService: Getting user...")
-      const {
-        data: { user },
-        error,
-      } = await client.auth.getUser()
-
-      console.log(
-        "🔧 AuthService: User result:",
-        user ? "found" : "not found",
-        error ? `error: ${error.message}` : "",
+      this.supabase = createClient()
+      
+      // Set up auth state change listener
+      const { data: { subscription } } = this.supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log("🔧 AuthService: Auth state changed:", event, session?.user?.email)
+          
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            this.updateState({
+              user: session?.user || null,
+              session: session,
+              loading: false,
+              mounted: true,
+              error: null,
+            })
+            
+            // Set up automatic token refresh
+            this.setupTokenRefresh(session)
+          } else if (event === 'SIGNED_OUT') {
+            this.updateState({
+              user: null,
+              session: null,
+              loading: false,
+              mounted: true,
+              error: null,
+            })
+            
+            // Clear refresh timer
+            this.clearTokenRefresh()
+          }
+        }
       )
 
-      if (user && !error) {
-        console.log("🔧 AuthService: Valid user found, restoring...")
-
-        // Get session for additional session data if needed
-        const {
-          data: { session },
-        } = await client.auth.getSession()
-
+      // Get initial session
+      const { data: { session }, error } = await this.supabase.auth.getSession()
+      
+      if (error) {
+        console.error("🔧 AuthService: Error getting session:", error)
         this.updateState({
-          session: session,
-          user: user,
           loading: false,
           mounted: true,
-          roles: ["admin"], // Set default role for now
+          error: error.message,
         })
-
-        // Load user profile and roles in background (don't block initialization)
-        this.loadUserProfile(user.id)
-          .then((profile) => {
-            if (profile) {
-              this.updateState({ profile })
-            }
-          })
-          .catch((error) => {
-            console.error("AuthService: Profile loading failed:", error)
-          })
-
-        this.loadUserRoles(user.id)
-          .then((roles) => {
-            if (roles.length > 0) {
-              this.updateState({ roles })
-            }
-          })
-          .catch((error) => {
-            console.error("AuthService: Roles loading failed:", error)
-          })
-      } else {
-        console.log("🔧 AuthService: No valid user found, requiring login")
-        this.updateState({
-          session: null,
-          user: null,
-          loading: false,
-          mounted: true,
-          roles: [],
-        })
+        return
       }
-    } catch (error) {
-      console.error("🔧 AuthService: Error during initialization:", error)
+
       this.updateState({
-        session: null,
-        user: null,
+        user: session?.user || null,
+        session: session,
         loading: false,
         mounted: true,
-        roles: [],
+        error: null,
+      })
+
+      // Set up token refresh if session exists
+      if (session) {
+        this.setupTokenRefresh(session)
+      }
+
+      // Cleanup subscription on unmount
+      return () => {
+        subscription.unsubscribe()
+        this.clearTokenRefresh()
+      }
+    } catch (error) {
+      console.error("🔧 AuthService: Initialization error:", error)
+      this.updateState({
+        loading: false,
+        mounted: true,
+        error: error instanceof Error ? error.message : "Authentication initialization failed",
       })
     }
   }
 
-  // Load user profile
-  private async loadUserProfile(userId: string): Promise<any> {
-    try {
-      const client = this.ensureClient()
-      if (!client) return null
+  // Set up automatic token refresh
+  private setupTokenRefresh(session: Session | null) {
+    if (!session?.expires_at) return
 
-      const { data: profile, error } = await client
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single()
-
-      if (error) {
-        console.error("AuthService: Error loading profile:", error)
-        return null
+    const expiresAt = new Date(session.expires_at * 1000)
+    const now = new Date()
+    const timeUntilExpiry = expiresAt.getTime() - now.getTime()
+    
+    // Refresh 5 minutes before expiry
+    const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 0)
+    
+    this.clearTokenRefresh()
+    
+    this.refreshTimer = setTimeout(async () => {
+      try {
+        console.log("🔧 AuthService: Refreshing token...")
+        const { data, error } = await this.supabase?.auth.refreshSession() || {}
+        
+        if (error) {
+          console.error("🔧 AuthService: Token refresh failed:", error)
+          this.updateState({ error: "Session expired. Please log in again." })
+        } else if (data.session) {
+          console.log("🔧 AuthService: Token refreshed successfully")
+          this.setupTokenRefresh(data.session)
+        }
+      } catch (error) {
+        console.error("🔧 AuthService: Token refresh error:", error)
+        this.updateState({ error: "Session refresh failed. Please log in again." })
       }
+    }, refreshTime)
+  }
 
-      return profile
-    } catch (error) {
-      console.error("AuthService: Profile loading error:", error)
-      return null
+  // Clear token refresh timer
+  private clearTokenRefresh() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer)
+      this.refreshTimer = null
     }
   }
 
-  // Load user roles
-  private async loadUserRoles(userId: string): Promise<string[]> {
-    try {
-      const client = this.ensureClient()
-      if (!client) return []
-
-      const { data: roles, error } = await client
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-
-      if (error) {
-        console.error("AuthService: Error loading roles:", error)
-        return []
-      }
-
-      return roles.map((r: { role: string }) => r.role)
-    } catch (error) {
-      console.error("AuthService: Roles loading error:", error)
-      return []
-    }
-  }
-
-  // Sign in
+  // Sign in with email and password
   async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log("🔧 AuthService: Signing in...")
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
+      if (!this.supabase) {
+        throw new Error("Supabase client not initialized")
       }
 
-      const { data, error } = await client.auth.signInWithPassword({
+      const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
-        console.error("AuthService: Sign in error:", error)
+        console.error("🔧 AuthService: Sign in error:", error)
         return { success: false, error: error.message }
       }
 
-      if (data.user) {
-        this.updateState({
-          user: data.user,
-          session: data.session,
-        })
+      if (data.session) {
         console.log("🔧 AuthService: Sign in successful")
         return { success: true }
       }
 
-      return { success: false, error: "No user returned from sign in" }
+      return { success: false, error: "Sign in failed" }
     } catch (error) {
-      console.error("AuthService: Sign in error:", error)
-      return { success: false, error: "Internal error during sign in" }
+      console.error("🔧 AuthService: Sign in exception:", error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "An unexpected error occurred" 
+      }
     }
   }
 
-  // Sign up
-  async signUp(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  // Sign in with OAuth provider
+  async signInWithProvider(provider: 'github' | 'google'): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log("🔧 AuthService: Signing up...")
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
+      if (!this.supabase) {
+        throw new Error("Supabase client not initialized")
       }
 
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
-      })
-
-      if (error) {
-        console.error("AuthService: Sign up error:", error)
-        return { success: false, error: error.message }
-      }
-
-      if (data.user) {
-        this.updateState({
-          user: data.user,
-          session: data.session,
-        })
-        console.log("🔧 AuthService: Sign up successful")
-        return { success: true }
-      }
-
-      return { success: false, error: "No user returned from sign up" }
-    } catch (error) {
-      console.error("AuthService: Sign up error:", error)
-      return { success: false, error: "Internal error during sign up" }
-    }
-  }
-
-  // Sign out
-  async signOut(): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log("🔧 AuthService: Signing out...")
-
-      // Clear local state immediately
-      this.updateState({
-        user: null,
-        session: null,
-        profile: null,
-        roles: [],
-        profileNotFound: false,
-      })
-
-      // Use centralized logout API to ensure proper cookie clearing
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Ensure cookies are sent
-      })
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        console.error("🔧 AuthService: Logout API error:", data.error)
-        // Even if API fails, we've cleared local state
-        return { success: true, error: data.error || "Failed to logout on server" }
-      }
-
-      // Clear any remaining client-side storage
-      if (typeof window !== "undefined") {
-        try {
-          // Clear localStorage
-          localStorage.removeItem("supabase.auth.token")
-          localStorage.removeItem("supabase.auth.refreshToken")
-          localStorage.removeItem("sb-auth-token")
-          localStorage.removeItem("sb-ekdjxzhujettocosgzql-auth-token")
-
-          // Clear sessionStorage
-          sessionStorage.clear()
-
-          // Clear any other potential auth storage
-          Object.keys(localStorage).forEach((key) => {
-            if (key.includes("auth") || key.includes("supabase") || key.includes("sb-")) {
-              localStorage.removeItem(key)
-            }
-          })
-        } catch (storageError) {
-          console.warn("🔧 AuthService: Error clearing storage:", storageError)
-        }
-      }
-
-      console.log("🔧 AuthService: Sign out successful")
-      return { success: true }
-    } catch (error) {
-      console.error("AuthService: Sign out error:", error)
-      // Even if there's an error, clear local state
-      this.updateState({
-        user: null,
-        session: null,
-        profile: null,
-        roles: [],
-        profileNotFound: false,
-      })
-      return { success: true, error: "Internal error during sign out" }
-    }
-  }
-
-  // Reset password
-  async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log("🔧 AuthService: Resetting password...")
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
-      }
-
-      const { error } = await client.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      })
-
-      if (error) {
-        console.error("AuthService: Reset password error:", error)
-        return { success: false, error: error.message }
-      }
-
-      console.log("🔧 AuthService: Reset password email sent")
-      return { success: true }
-    } catch (error) {
-      console.error("AuthService: Reset password error:", error)
-      return { success: false, error: "Internal error during password reset" }
-    }
-  }
-
-  // Update password
-  async updatePassword(password: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log("🔧 AuthService: Updating password...")
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
-      }
-
-      const { error } = await client.auth.updateUser({ password })
-
-      if (error) {
-        console.error("AuthService: Update password error:", error)
-        return { success: false, error: error.message }
-      }
-
-      console.log("🔧 AuthService: Password updated successfully")
-      return { success: true }
-    } catch (error) {
-      console.error("AuthService: Update password error:", error)
-      return { success: false, error: "Internal error during password update" }
-    }
-  }
-
-  // Update profile
-  async updateProfile(updates: any): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log("🔧 AuthService: Updating profile...")
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
-      }
-
-      const { error } = await client.auth.updateUser({
-        data: updates,
-      })
-
-      if (error) {
-        console.error("AuthService: Update profile error:", error)
-        return { success: false, error: error.message }
-      }
-
-      console.log("🔧 AuthService: Profile updated successfully")
-      return { success: true }
-    } catch (error) {
-      console.error("AuthService: Update profile error:", error)
-      return { success: false, error: "Internal error during profile update" }
-    }
-  }
-
-  // Sign in with provider
-  async signInWithProvider(
-    provider: "github" | "google" | "twitter",
-  ): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log("🔧 AuthService: Signing in with provider:", provider)
-      const client = this.ensureClient()
-      if (!client) {
-        return { success: false, error: "No Supabase client available" }
-      }
-
-      const { error } = await client.auth.signInWithOAuth({
+      const { data, error } = await this.supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
@@ -440,94 +227,119 @@ export class AuthService {
       })
 
       if (error) {
-        console.error("AuthService: OAuth sign in error:", error)
+        console.error("🔧 AuthService: OAuth sign in error:", error)
         return { success: false, error: error.message }
       }
 
       console.log("🔧 AuthService: OAuth sign in initiated")
       return { success: true }
     } catch (error) {
-      console.error("AuthService: OAuth sign in error:", error)
-      return { success: false, error: "Internal error during OAuth sign in" }
+      console.error("🔧 AuthService: OAuth sign in exception:", error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "OAuth sign in failed" 
+      }
     }
   }
 
-  // Refresh session
-  async refreshSession(): Promise<void> {
+  // Sign out
+  async signOut(): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log("🔧 AuthService: Refreshing session...")
-      const client = this.ensureClient()
-      if (!client) {
-        console.log("🔧 AuthService: No client available for session refresh")
-        return
+      if (!this.supabase) {
+        throw new Error("Supabase client not initialized")
       }
 
-      const {
-        data: { session: newSession },
-        error,
-      } = await client.auth.refreshSession()
+      const { error } = await this.supabase.auth.signOut()
 
       if (error) {
-        console.error("AuthService: Refresh session error:", error)
-        return
+        console.error("🔧 AuthService: Sign out error:", error)
+        return { success: false, error: error.message }
       }
 
-      if (newSession) {
-        this.updateState({
-          session: newSession,
-          user: newSession.user,
-        })
-        console.log("🔧 AuthService: Session refreshed successfully")
-      }
+      console.log("🔧 AuthService: Sign out successful")
+      this.clearTokenRefresh()
+      return { success: true }
     } catch (error) {
-      console.error("AuthService: Refresh session error:", error)
+      console.error("🔧 AuthService: Sign out exception:", error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Sign out failed" 
+      }
     }
   }
 
-  // Force refresh role
-  async forceRefreshRole(): Promise<void> {
-    try {
-      console.log("🔧 AuthService: Force refreshing role...")
-      if (!this.authState.user) {
-        console.log("🔧 AuthService: No user to refresh role for")
-        return
-      }
-
-      const userProfile = await this.loadUserProfile(this.authState.user.id)
-      const userRoles = await this.loadUserRoles(this.authState.user.id)
-
-      this.updateState({
-        profile: userProfile,
-        roles: userRoles,
-      })
-
-      console.log("🔧 AuthService: Role refreshed successfully")
-    } catch (error) {
-      console.error("AuthService: Force refresh role error:", error)
-    }
+  // Get current user
+  getUser(): User | null {
+    return this.state.user
   }
 
-  // Check if user has permission
-  hasPermission(permission: string): boolean {
-    if (!this.authState.profile?.permissions) return false
-    return this.authState.profile.permissions.includes(permission)
+  // Get current session
+  getSession(): Session | null {
+    return this.state.session
   }
 
-  // Get current auth state
-  getAuthState(): AuthState {
-    return this.authState
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    return !!this.state.user && !!this.state.session
   }
 
-  // Check if user has role
-  hasRole(role: string): boolean {
-    return this.authState.roles.includes(role)
+  // Get loading state
+  isLoading(): boolean {
+    return this.state.loading
   }
 
-  // Check if user has any of the specified roles
-  hasAnyRole(roles: string[]): boolean {
-    return roles.some((role) => this.authState.roles.includes(role))
+  // Get mounted state
+  isMounted(): boolean {
+    return this.state.mounted
+  }
+
+  // Get error state
+  getError(): string | null {
+    return this.state.error
+  }
+
+  // Clear error
+  clearError(): void {
+    this.updateState({ error: null })
+  }
+
+  // Destroy instance (for cleanup)
+  destroy(): void {
+    this.clearTokenRefresh()
+    this.listeners = []
+    AuthService.instance = null as any
   }
 }
 
-// Export singleton instance
-export const authService = AuthService.getInstance()
+// React hook for using AuthService
+export function useAuth() {
+  const [state, setState] = React.useState<AuthState>({
+    user: null,
+    session: null,
+    loading: true,
+    mounted: false,
+    error: null,
+  })
+
+  React.useEffect(() => {
+    const authService = AuthService.getInstance()
+    const unsubscribe = authService.subscribe(setState)
+    
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  return {
+    user: state.user,
+    session: state.session,
+    loading: state.loading,
+    mounted: state.mounted,
+    error: state.error,
+    signIn: AuthService.getInstance().signIn.bind(AuthService.getInstance()),
+    signInWithProvider: AuthService.getInstance().signInWithProvider.bind(AuthService.getInstance()),
+    signOut: AuthService.getInstance().signOut.bind(AuthService.getInstance()),
+    isAuthenticated: AuthService.getInstance().isAuthenticated.bind(AuthService.getInstance()),
+    clearError: AuthService.getInstance().clearError.bind(AuthService.getInstance()),
+  }
+}

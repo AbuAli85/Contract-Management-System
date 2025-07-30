@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"

@@ -37,7 +37,7 @@ import { useContract } from "@/hooks/useContract"
 import { StatusBadge } from "@/components/StatusBadge"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { OverviewTab } from "@/components/contract-tabs/OverviewTab"
 import { formatDate, calculateDuration, copyToClipboard, formatDateTime } from "@/utils/format"
 

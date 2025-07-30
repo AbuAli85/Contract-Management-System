@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Bell, User, Sun, Moon, Shield, Building2, BarChart3,  } from 'lucide-react'
 import { useTheme } from "next-themes"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { usePermissions } from "@/hooks/use-permissions"
 
 interface HeaderProps {

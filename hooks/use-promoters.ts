@@ -8,7 +8,7 @@ import {
 } from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { useFormContext } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from "@supabase/supabase-js"
@@ -42,8 +42,17 @@ export const usePromoters = (enableRealtime: boolean = true) => {
     queryKey,
     queryFn: fetchPromoters,
     staleTime: 1000 * 60 * 5,
-    retry: false,
+    retry: 3, // Retry 3 times
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: user !== null, // Only run query when we know auth status
+    onError: (error) => {
+      console.error("Error fetching promoters:", error)
+      toast({
+        title: "Error loading promoters",
+        description: error.message || "Failed to load promoters. Please try again.",
+        variant: "destructive",
+      })
+    },
   })
 
   // --- Realtime subscription ---

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { MobileMenuButton } from "@/components/mobile-menu-button"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { useParams, usePathname } from "next/navigation"
 
 interface AppLayoutWithSidebarProps {
