@@ -56,10 +56,10 @@ export default function LoginPage() {
     <div className="w-full max-w-md space-y-6 px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-3xl font-bold text-card-foreground mb-2">
           Sign In
         </h2>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Sign in to your account to continue
         </p>
       </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+              <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">

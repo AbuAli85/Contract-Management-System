@@ -33,26 +33,29 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         </div>
 
         {/* Simplified content for testing */}
-        <div className="rounded-lg bg-white p-6 shadow">
+        <div className="rounded-lg bg-card p-6 shadow border border-border">
           <h2 className="mb-4 text-xl font-semibold">Quick Actions</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             <a
               href={`/${locale}/generate-contract`}
-              className="rounded-lg border p-4 hover:bg-gray-50"
+              className="rounded-lg border border-border p-4 hover:bg-accent transition-colors"
             >
               <h3 className="font-medium">Generate Contract</h3>
-              <p className="text-sm text-gray-600">Create a new contract</p>
+              <p className="text-sm text-muted-foreground">Create a new contract</p>
             </a>
             <a
               href={`/${locale}/manage-promoters`}
-              className="rounded-lg border p-4 hover:bg-gray-50"
+              className="rounded-lg border border-border p-4 hover:bg-accent transition-colors"
             >
               <h3 className="font-medium">Manage Promoters</h3>
-              <p className="text-sm text-gray-600">View and manage promoters</p>
+              <p className="text-sm text-muted-foreground">View and manage promoters</p>
             </a>
-            <a href={`/${locale}/contracts`} className="rounded-lg border p-4 hover:bg-gray-50">
+            <a 
+              href={`/${locale}/contracts`} 
+              className="rounded-lg border border-border p-4 hover:bg-accent transition-colors"
+            >
               <h3 className="font-medium">View Contracts</h3>
-              <p className="text-sm text-gray-600">Browse all contracts</p>
+              <p className="text-sm text-muted-foreground">Browse all contracts</p>
             </a>
           </div>
         </div>

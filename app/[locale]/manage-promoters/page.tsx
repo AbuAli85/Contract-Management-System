@@ -548,16 +548,16 @@ export default function ManagePromotersPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-3 text-lg text-slate-700 dark:text-slate-300">Loading promoters...</p>
+        <p className="ml-3 text-lg text-muted-foreground">Loading promoters...</p>
       </div>
     )
   }
 
   if (showForm) {
     return (
-      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
+      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-3xl">
           <Button variant="outline" onClick={handleFormClose} className="mb-6">
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -575,11 +575,11 @@ export default function ManagePromotersPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
+      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-screen-lg">
         <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-4">
-            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
+            <h1 className="text-3xl font-bold text-card-foreground">
               Manage Promoters
             </h1>
             {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
