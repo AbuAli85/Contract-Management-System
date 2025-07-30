@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import type { Database } from "@/types/supabase"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
@@ -8,18 +10,67 @@ export async function GET(request: NextRequest) {
   try {
     console.log("=== GET USER ROLE START ===")
 
-    const supabase = await createClient()
+    // Check for required environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    // Get current user
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error("❌ Missing Supabase environment variables")
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Server configuration error",
+          details: "Missing Supabase environment variables. Please check your .env.local file.",
+        },
+        { status: 500 }
+      )
+    }
+
+    const cookieStore = await cookies()
+
+    // Create server client that properly reads cookies
+    const supabase = createServerClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            try {
+              cookieStore.set({ name, value, ...options })
+            } catch {
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+          remove(name: string, options: any) {
+            try {
+              cookieStore.set({ name, value: "", ...options })
+            } catch {
+              // The `delete` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        },
+      }
+    )
+
+    // Get current session
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
 
-    if (authError || !user) {
+    if (sessionError || !session) {
+      console.log("❌ No session found:", sessionError?.message || "No session")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const user = session.user
     console.log("✅ User authenticated:", { id: user.id, email: user.email })
 
     // Get the latest role from all possible sources
