@@ -6,18 +6,21 @@ import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/hooks/use-toast'
 
 export function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   
   const { signIn } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
   
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
@@ -42,21 +45,37 @@ export function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSuccess(null)
 
     try {
       console.log("🔐 Login Debug - Starting login process...")
       console.log("🔐 Login Debug - Email:", email)
       
       // Use client-side authentication
-      const { success, error: clientError } = await signIn(email, password)
+      const { success: loginSuccess, error: clientError } = await signIn(email, password)
 
-      if (!success) {
+      if (!loginSuccess) {
         console.error("🔐 Login Debug - Client login failed:", clientError)
-        setError(clientError || 'Login failed')
+        const errorMessage = clientError || 'Login failed. Please check your credentials and try again.'
+        setError(errorMessage)
+        
+        // Show toast notification
+        toast({
+          title: "Login Failed",
+          description: errorMessage,
+          variant: "destructive",
+        })
         return
       }
 
       console.log("🔐 Login Debug - Client login successful")
+      setSuccess("Login successful! Redirecting...")
+      
+      // Show success toast
+      toast({
+        title: "Welcome back!",
+        description: "Login successful. Redirecting to dashboard...",
+      })
 
       // After successful login, redirect immediately
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
@@ -67,22 +86,38 @@ export function LoginForm() {
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
-      setError('An unexpected error occurred')
+      const errorMessage = 'An unexpected error occurred. Please try again.'
+      setError(errorMessage)
+      
+      toast({
+        title: "Unexpected Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
       
+      {success && (
+        <Alert>
+          <AlertDescription>{success}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email" className="flex items-center gap-2">
+          <Mail className="h-4 w-4" />
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
@@ -91,11 +126,17 @@ export function LoginForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           disabled={loading}
+          aria-describedby={error ? "login-error" : undefined}
+          autoComplete="email"
+          autoFocus
         />
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password" className="flex items-center gap-2">
+          <Lock className="h-4 w-4" />
+          Password
+        </Label>
         <div className="relative">
           <Input
             id="password"
@@ -105,6 +146,8 @@ export function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={loading}
+            aria-describedby={error ? "login-error" : undefined}
+            autoComplete="current-password"
           />
           <Button
             type="button"
@@ -113,6 +156,7 @@ export function LoginForm() {
             className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
             disabled={loading}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" />
@@ -123,7 +167,12 @@ export function LoginForm() {
         </div>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button 
+        type="submit" 
+        className="w-full" 
+        disabled={loading}
+        aria-describedby={error ? "login-error" : undefined}
+      >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -133,6 +182,12 @@ export function LoginForm() {
           'Sign in'
         )}
       </Button>
+      
+      {error && (
+        <div id="login-error" className="sr-only" aria-live="polite">
+          {error}
+        </div>
+      )}
     </form>
   )
 } 
