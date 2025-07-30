@@ -18,7 +18,14 @@ export default async function LocaleLayout({
   const { locale } = await params
 
   // Get messages for the current locale
-  const messages = await getMessages()
+  let messages
+  try {
+    messages = await getMessages()
+  } catch (error) {
+    console.error("🔐 Locale Layout: Error getting messages:", error)
+    // Fallback to empty messages if there's an error
+    messages = {}
+  }
 
   return (
     <ErrorBoundary>

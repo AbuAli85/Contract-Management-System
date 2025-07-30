@@ -12,7 +12,14 @@ export default async function AuthLayout({
   const { locale } = await params
 
   // Get messages for the current locale
-  const messages = await getMessages()
+  let messages
+  try {
+    messages = await getMessages()
+  } catch (error) {
+    console.error("🔐 Auth Layout: Error getting messages:", error)
+    // Fallback to empty messages if there's an error
+    messages = {}
+  }
 
   return (
     <ErrorBoundary>

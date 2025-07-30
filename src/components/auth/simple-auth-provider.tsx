@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react"
 import { createClient } from "@/lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
 import type { UserProfile } from "@/types/custom"
@@ -40,6 +40,12 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   const [profileNotFound, setProfileNotFound] = useState(false)
 
   const [supabase, setSupabase] = useState<any>(null)
+  const [roleLoadingRef, setRoleLoadingRef] = useState<{ [key: string]: boolean }>({})
+  
+  // Add refs to prevent unnecessary re-renders
+  const initializedRef = useRef(false)
+  const authStateChangeRef = useRef(false)
+  const lastUserRef = useRef<string | null>(null)
 
   useEffect(() => {
     // Only create client on the client side
@@ -62,7 +68,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }, [])
 
-  const loadUserProfile = async (userId: string): Promise<UserProfile | null> => {
+  const loadUserProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       // For now, return a basic profile
       return {
@@ -74,13 +80,43 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         role: "user",
       }
     } catch (error) {
-      console.error("Error loading user profile:", error)
+      console.error("🔐 Auth: Error loading user profile:", error)
       return null
     }
-  }
+  }, [user])
 
-  const loadUserRoles = async (userId: string): Promise<string[]> => {
+  const loadUserRoles = useCallback(async (userId: string): Promise<string[]> => {
+    // Prevent multiple simultaneous calls for the same user
+    if (roleLoadingRef[userId]) {
+      console.log("🔐 Auth: Role loading already in progress for user:", userId)
+      return ["user"] // Return default while loading
+    }
+
+    // Check if user has changed to prevent unnecessary calls
+    if (lastUserRef.current === userId && roles.length > 0) {
+      console.log("🔐 Auth: Using existing roles for user:", userId)
+      return roles
+    }
+
     try {
+      // Set loading flag
+      setRoleLoadingRef(prev => ({ ...prev, [userId]: true }))
+
+      // Add caching to prevent multiple calls
+      const cacheKey = `user-roles-${userId}`
+      const cached = sessionStorage.getItem(cacheKey)
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        const now = Date.now()
+        // Cache for 5 minutes
+        if (now - parsed.timestamp < 5 * 60 * 1000) {
+          console.log("🔐 Auth: Using cached roles for user:", userId)
+          return parsed.roles
+        }
+      }
+
+      console.log("🔐 Auth: Fetching roles from API for user:", userId)
+      
       // Try to fetch roles from API
       const response = await fetch("/api/get-user-role", {
         method: "GET",
@@ -92,25 +128,41 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       if (response.ok) {
         const data = await response.json()
         if (data.role?.value) {
-          return [data.role.value]
+          const roles = [data.role.value]
+          // Cache the result
+          sessionStorage.setItem(cacheKey, JSON.stringify({
+            roles,
+            timestamp: Date.now()
+          }))
+          return roles
         }
       }
       
       // Default to user role
-      return ["user"]
+      const defaultRoles = ["user"]
+      sessionStorage.setItem(cacheKey, JSON.stringify({
+        roles: defaultRoles,
+        timestamp: Date.now()
+      }))
+      return defaultRoles
     } catch (error) {
-      console.error("Error loading user roles:", error)
+      console.error("🔐 Auth: Error loading user roles:", error)
       return ["user"]
+    } finally {
+      // Clear loading flag
+      setRoleLoadingRef(prev => ({ ...prev, [userId]: false }))
     }
-  }
+  }, [roles, roleLoadingRef])
 
-  const initializeAuth = async () => {
-    if (!supabase) {
-      console.log("🔐 Auth: No Supabase client, skipping initialization")
-      setLoading(false)
-      setMounted(true)
+  const initializeAuth = useCallback(async () => {
+    if (!supabase || initializedRef.current) {
+      console.log("🔐 Auth: Skipping initialization - already done or no client")
       return
     }
+
+    // Prevent multiple initializations
+    if (initializedRef.current) return
+    initializedRef.current = true
 
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
@@ -139,6 +191,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         console.log("🔐 Auth: Session found, user:", session.user.email)
         setSession(session)
         setUser(session.user)
+        lastUserRef.current = session.user.id
 
         // Create a basic profile from auth user data
         const basicProfile: UserProfile = {
@@ -153,7 +206,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
         setProfile(basicProfile)
         
-        // Load roles
+        // Load roles only once
         const userRoles = await loadUserRoles(session.user.id)
         setRoles(userRoles)
         
@@ -166,6 +219,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfile(null)
         setRoles([])
         setProfileNotFound(false)
+        lastUserRef.current = null
       }
     } catch (error) {
       console.error("🔐 Auth: Error initializing auth:", error)
@@ -175,20 +229,21 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(null)
       setRoles([])
       setProfileNotFound(false)
+      lastUserRef.current = null
     } finally {
       clearTimeout(timeout)
       setLoading(false)
       setMounted(true)
       console.log("🔐 Auth: Initialization complete")
     }
-  }
+  }, [supabase, loadUserRoles])
 
   // Initialize auth when supabase client is ready
   useEffect(() => {
-    if (supabase && !mounted) {
+    if (supabase && !mounted && !initializedRef.current) {
       initializeAuth()
     }
-  }, [supabase])
+  }, [supabase, mounted, initializeAuth])
 
   // Log final state after auth initialization (only once)
   useEffect(() => {
@@ -203,13 +258,21 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     }
   }, [mounted, loading, user, roles])
 
-  const handleAuthStateChange = async (event: string, newSession: Session | null) => {
+  const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
+    // Prevent multiple simultaneous state changes
+    if (authStateChangeRef.current) {
+      console.log("🔐 Auth: State change already in progress, skipping")
+      return
+    }
+
     try {
+      authStateChangeRef.current = true
       console.log("🔐 Auth: State change event:", event)
       
       if (event === "SIGNED_IN" && newSession?.user) {
         setSession(newSession)
         setUser(newSession.user)
+        lastUserRef.current = newSession.user.id
 
         // Create basic profile
         const basicProfile: UserProfile = {
@@ -226,7 +289,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
         setProfile(basicProfile)
         
-        // Load roles
+        // Load roles only once
         const userRoles = await loadUserRoles(newSession.user.id)
         setRoles(userRoles)
         
@@ -238,6 +301,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         setProfile(null)
         setRoles([])
         setProfileNotFound(false)
+        lastUserRef.current = null
       }
     } catch (error) {
       console.error("🔐 Auth: Error handling auth state change:", error)
@@ -247,8 +311,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setProfile(null)
       setRoles([])
       setProfileNotFound(false)
+      lastUserRef.current = null
+    } finally {
+      authStateChangeRef.current = false
     }
-  }
+  }, [loadUserRoles])
 
   // Set up auth state change listener
   useEffect(() => {
@@ -267,7 +334,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error("🔐 Auth: Error setting up auth state change listener:", error)
     }
-  }, [supabase])
+  }, [supabase, handleAuthStateChange])
 
   const signIn = async (
     email: string,
