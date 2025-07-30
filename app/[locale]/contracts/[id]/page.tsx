@@ -34,7 +34,7 @@ import {
 
 // Import our refactored components
 import { useContract } from "@/hooks/useContract"
-import { StatusBadge } from "@/components/StatusBadge"
+// StatusBadge component removed - using Badge from UI components instead
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
 import { useAuth } from "@/lib/auth-service"

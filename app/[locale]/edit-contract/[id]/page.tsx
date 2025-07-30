@@ -33,7 +33,7 @@ import {
 import { useContract } from "@/hooks/useContract"
 import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
-import { StatusBadge } from "@/components/StatusBadge"
+// StatusBadge component removed - using Badge from UI components instead
 import { createClient } from "@/lib/supabase/client"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 

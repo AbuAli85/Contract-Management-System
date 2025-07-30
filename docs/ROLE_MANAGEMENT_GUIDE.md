@@ -138,12 +138,8 @@ import { RoleRefreshButton } from '@/components/role-refresh-button'
 #### Solution 3: Use Role Debug Panel
 
 ```typescript
-import { RoleDebugPanel } from '@/components/role-debug-panel'
-
-// Add to page (development only)
-{process.env.NODE_ENV === 'development' && (
-  <RoleDebugPanel />
-)}
+// RoleDebugPanel component has been removed for optimization
+// Use browser console debugging instead
 ```
 
 ### Issue 3: Role Not Loading
@@ -208,12 +204,8 @@ The role debug panel shows detailed information about:
 **Usage:**
 
 ```typescript
-import { RoleDebugPanel } from '@/components/role-debug-panel'
-
-// Add to any page (development only)
-{process.env.NODE_ENV === 'development' && (
-  <RoleDebugPanel />
-)}
+// RoleDebugPanel component has been removed for optimization
+// Use browser console debugging instead
 ```
 
 ### 2. Role Refresh Button
@@ -221,10 +213,8 @@ import { RoleDebugPanel } from '@/components/role-debug-panel'
 Quick way to refresh user role:
 
 ```typescript
-import { RoleRefreshButton } from '@/components/role-refresh-button'
-
-// Add to page header
-<RoleRefreshButton variant="ghost" size="sm" />
+// RoleRefreshButton component has been removed for optimization
+// Use page refresh instead
 ```
 
 ### 3. Browser Console Debugging

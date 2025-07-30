@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import type React from "react"
 
-import TestPromoterForm from "@/components/test-promoter-form"
+// TestPromoterForm import removed - component was deleted
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -67,6 +67,7 @@ import {
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
+  PlusCircle,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, differenceInDays } from "date-fns"
@@ -78,6 +79,7 @@ import { cn } from "@/lib/utils"
 import { useFormContext } from "@/hooks/use-form-context"
 import { AutoRefreshIndicator } from "@/components/ui/auto-refresh-indicator"
 import ProtectedRoute from "@/components/protected-route"
+import PromoterForm from "@/components/promoter-form"
 
 // Enhanced Promoter interface
 interface EnhancedPromoter extends Promoter {
@@ -563,7 +565,21 @@ export default function ManagePromotersPage() {
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoter List
           </Button>
-          <TestPromoterForm />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PlusCircleIcon className="h-5 w-5" />
+                Add New Promoter
+              </CardTitle>
+              <CardDescription>
+                Enter promoter details to add them to the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PromoterForm onFormSubmit={handleFormClose} onCancel={handleFormClose} />
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -1162,7 +1178,24 @@ export default function ManagePromotersPage() {
           </Card>
         ) : (
           /* Grid View */
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredPromoters.length === 0 ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="text-center">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Promoters Found</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Get started by adding your first promoter to the system.
+                  </p>
+                  <Button onClick={handleAddNew} className="gap-2">
+                    <PlusCircle className="h-4 w-4" />
+                    Add New Promoter
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredPromoters.map((promoter) => {
               const idCardStatus = getDocumentStatus(promoter.id_card_expiry_date)
               const passportStatus = getDocumentStatus(promoter.passport_expiry_date)
@@ -1301,6 +1334,7 @@ export default function ManagePromotersPage() {
               )
             })}
           </div>
+        )}
         )}
       </div>
     </div>

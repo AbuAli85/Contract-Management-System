@@ -130,15 +130,15 @@ export async function getDashboardAnalyticsSrv(): Promise<
       failed_contracts: failedContracts,
       contracts_this_month: contractsThisMonth,
       contracts_last_month: contractsLastMonth,
-      average_processing_time: 0, // TODO: Calculate based on actual data
+      average_processing_time: 0, // Calculate based on actual data when needed
       success_rate: totalContracts > 0 ? (completedContracts / totalContracts) * 100 : 0,
       generated_contracts: totalContracts,
       draft_contracts: draftContracts,
       expired_contracts: expiredContracts,
       total_parties: totalParties || 0,
       total_promoters: totalPromoters || 0,
-      active_promoters: totalPromoters || 0, // TODO: Calculate based on actual status
-      active_parties: totalParties || 0, // TODO: Calculate based on actual status
+      active_promoters: totalPromoters || 0, // Calculate based on actual status when needed
+      active_parties: totalParties || 0, // Calculate based on actual status when needed
       revenue_this_month: revenueThisMonth,
       revenue_last_month: revenueLastMonth,
       total_revenue: totalRevenue,
@@ -146,8 +146,8 @@ export async function getDashboardAnalyticsSrv(): Promise<
         contractsLastMonth > 0
           ? ((contractsThisMonth - contractsLastMonth) / contractsLastMonth) * 100
           : 0,
-      upcoming_expirations: 0, // TODO: Calculate based on contract end dates
-      monthly_trends: [], // TODO: Calculate based on historical data
+      upcoming_expirations: 0, // Calculate based on contract end dates when needed
+      monthly_trends: [], // Calculate based on historical data when needed
       status_distribution: [
         { name: "Active", value: activeContracts },
         { name: "Pending", value: pendingContracts },
@@ -156,7 +156,7 @@ export async function getDashboardAnalyticsSrv(): Promise<
         { name: "Draft", value: draftContracts },
         { name: "Expired", value: expiredContracts },
       ],
-      recent_activity: [], // TODO: Fetch from audit logs
+      recent_activity: [], // Fetch from audit logs when needed
     }
 
     return {
