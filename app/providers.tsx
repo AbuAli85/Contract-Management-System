@@ -23,35 +23,47 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-function AuthContextProvider({ children, initialSession }: { children: React.ReactNode; initialSession?: Session | null }) {
-  const [user, setUser] = useState<User | null>(initialSession?.user ?? null)
-  const [session, setSession] = useState<Session | null>(initialSession ?? null)
+function AuthContextProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [supabase, setSupabase] = useState<ReturnType<typeof createBrowserClient> | null>(null)
 
   useEffect(() => {
+    console.log("🔐 AuthContextProvider: Initializing...")
+    
     // Create Supabase client with error handling
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+      console.log("🔐 AuthContextProvider: Environment variables:", {
+        hasUrl: !!supabaseUrl,
+        hasKey: !!supabaseAnonKey,
+        url: supabaseUrl?.substring(0, 20) + "..."
+      })
+
       if (!supabaseUrl || !supabaseAnonKey) {
-        console.error("Missing Supabase environment variables")
+        console.error("❌ AuthContextProvider: Missing Supabase environment variables")
         setLoading(false)
         return
       }
 
+      console.log("🔐 AuthContextProvider: Creating Supabase client...")
       const client = createBrowserClient(supabaseUrl, supabaseAnonKey)
       setSupabase(client as ReturnType<typeof createBrowserClient>)
+      console.log("✅ AuthContextProvider: Supabase client created successfully")
 
       // Get initial session
       const getInitialSession = async () => {
         try {
+          console.log("🔐 AuthContextProvider: Getting initial session...")
           const { data: { session } } = await client.auth.getSession()
+          console.log("🔐 AuthContextProvider: Initial session:", session ? "found" : "not found")
           setSession(session)
           setUser(session?.user ?? null)
         } catch (error) {
-          console.error("Error getting initial session:", error)
+          console.error("❌ AuthContextProvider: Error getting initial session:", error)
         } finally {
           setLoading(false)
         }
@@ -60,17 +72,22 @@ function AuthContextProvider({ children, initialSession }: { children: React.Rea
       getInitialSession()
 
       // Listen for auth changes
+      console.log("🔐 AuthContextProvider: Setting up auth listener...")
       const { data: { subscription } } = client.auth.onAuthStateChange(
         async (event, session) => {
+          console.log("🔐 AuthContextProvider: Auth state changed:", event, session ? "session" : "no session")
           setSession(session)
           setUser(session?.user ?? null)
           setLoading(false)
         }
       )
 
-      return () => subscription.unsubscribe()
+      return () => {
+        console.log("🔐 AuthContextProvider: Cleaning up auth listener...")
+        subscription.unsubscribe()
+      }
     } catch (error) {
-      console.error("Error creating Supabase client:", error)
+      console.error("❌ AuthContextProvider: Error creating Supabase client:", error)
       setLoading(false)
     }
   }, [])
@@ -95,10 +112,9 @@ export function useSupabase() {
 
 interface ProvidersContentProps {
   children: React.ReactNode
-  initialSession?: Session | null
 }
 
-function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
+function ProvidersContent({ children }: ProvidersContentProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -113,7 +129,7 @@ function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthContextProvider initialSession={initialSession}>
+      <AuthContextProvider>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <RBACProvider>{children}</RBACProvider>
@@ -127,9 +143,8 @@ function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
 
 interface ProvidersProps {
   children: React.ReactNode
-  initialSession?: Session | null
 }
 
-export function Providers({ children, initialSession }: ProvidersProps) {
-  return <ProvidersContent initialSession={initialSession}>{children}</ProvidersContent>
+export function Providers({ children }: ProvidersProps) {
+  return <ProvidersContent>{children}</ProvidersContent>
 }

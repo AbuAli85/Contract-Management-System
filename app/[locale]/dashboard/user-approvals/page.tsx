@@ -26,7 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useToastHelpers } from "@/components/toast-notifications"
+
 import { usePermissions } from "@/hooks/use-permissions"
 import {
   Users,
@@ -59,7 +59,24 @@ export default function UserApprovalsPage() {
   const pathname = usePathname()
   const locale = pathname ? pathname.split("/")[1] || "en" : "en"
   const { canManageUsers } = usePermissions()
-  const { success, error, warning } = useToastHelpers()
+  
+  // Safe toast usage with error handling
+  const getToastHelpers = () => {
+    try {
+      const { useToastHelpers } = require("@/components/toast-notifications")
+      return useToastHelpers()
+    } catch (error) {
+      console.warn("Toast context not available:", error)
+      return {
+        success: (title: string, message?: string) => console.log("Success:", title, message),
+        error: (title: string, message?: string) => console.error("Error:", title, message),
+        warning: (title: string, message?: string) => console.warn("Warning:", title, message),
+        info: (title: string, message?: string) => console.log("Info:", title, message),
+      }
+    }
+  }
+
+  const { success, error, warning } = getToastHelpers()
 
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
   const [loading, setLoading] = useState(true)

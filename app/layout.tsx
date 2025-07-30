@@ -4,7 +4,6 @@ import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
-import { createServerComponentClient } from "@/lib/supabaseServer"
 
 const fontInter = Inter({
   subsets: ["latin"],
@@ -25,21 +24,10 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Get initial session for SSR
-  let session = null
-  try {
-    const supabase = await createServerComponentClient()
-    const { data: { session: initialSession } } = await supabase.auth.getSession()
-    session = initialSession
-  } catch (error) {
-    console.error("Root Layout: Error getting session:", error)
-    // Continue without session
-  }
-
   return (
     <html lang="en">
       <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
-        <Providers initialSession={session}>
+        <Providers>
           {children}
           <Toaster />
         </Providers>
