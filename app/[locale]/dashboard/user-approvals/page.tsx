@@ -61,22 +61,29 @@ export default function UserApprovalsPage() {
   const { canManageUsers } = usePermissions()
   
   // Safe toast usage with error handling
-  const getToastHelpers = () => {
+  const [toastHelpers, setToastHelpers] = useState<any>(null)
+
+  useEffect(() => {
     try {
       const { useToastHelpers } = require("@/components/toast-notifications")
-      return useToastHelpers()
+      setToastHelpers(useToastHelpers())
     } catch (error) {
       console.warn("Toast context not available:", error)
-      return {
+      setToastHelpers({
         success: (title: string, message?: string) => console.log("Success:", title, message),
         error: (title: string, message?: string) => console.error("Error:", title, message),
         warning: (title: string, message?: string) => console.warn("Warning:", title, message),
         info: (title: string, message?: string) => console.log("Info:", title, message),
-      }
+      })
     }
-  }
+  }, [])
 
-  const { success, error, warning } = getToastHelpers()
+  const { success, error, warning } = toastHelpers || {
+    success: (title: string, message?: string) => console.log("Success:", title, message),
+    error: (title: string, message?: string) => console.error("Error:", title, message),
+    warning: (title: string, message?: string) => console.warn("Warning:", title, message),
+    info: (title: string, message?: string) => console.log("Info:", title, message),
+  }
 
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([])
   const [loading, setLoading] = useState(true)

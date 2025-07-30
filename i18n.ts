@@ -14,8 +14,20 @@ export default getRequestConfig(async ({ locale }) => {
     }
   }
 
-  // Use static messages to avoid dynamic rendering
-  const messages = {}
+  // Load messages for the locale
+  let messages
+  try {
+    messages = (await import(`./i18n/messages/${locale}.json`)).default
+  } catch (error) {
+    console.error(`Failed to load messages for locale ${locale}:`, error)
+    // Fallback to English messages
+    try {
+      messages = (await import(`./i18n/messages/en.json`)).default
+    } catch (fallbackError) {
+      console.error("Failed to load fallback messages:", fallbackError)
+      messages = {}
+    }
+  }
 
   return {
     locale,

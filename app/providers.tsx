@@ -8,6 +8,7 @@ import { createBrowserClient } from "@supabase/ssr"
 import { AuthProvider } from "@/components/auth-provider"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 import type { Session, User } from "@supabase/supabase-js"
 
 const isDev = process.env.NODE_ENV === "development"
@@ -136,6 +137,7 @@ function ProvidersContent({ children }: ProvidersContentProps) {
           </AuthProvider>
         </ThemeProvider>
       </AuthContextProvider>
+      <Toaster />
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
   )

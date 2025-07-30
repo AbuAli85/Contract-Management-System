@@ -1,5 +1,4 @@
 import { NextIntlClientProvider } from "next-intl"
-import { getMessages } from "next-intl/server"
 import { ErrorBoundary } from "@/components/error-boundary"
 
 export default async function AuthLayout({
@@ -11,15 +10,8 @@ export default async function AuthLayout({
 }) {
   const { locale } = await params
 
-  // Get messages for the current locale
-  let messages
-  try {
-    messages = await getMessages()
-  } catch (error) {
-    console.error("🔐 Auth Layout: Error getting messages:", error)
-    // Fallback to empty messages if there's an error
-    messages = {}
-  }
+  // Use empty messages to avoid dynamic rendering
+  const messages = {}
 
   return (
     <ErrorBoundary>
