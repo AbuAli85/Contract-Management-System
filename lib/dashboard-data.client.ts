@@ -1,7 +1,7 @@
 import { createClient } from "./supabase/client"
 import type { DashboardAnalytics } from "./dashboard-types"
 
-// Explicit export for deployment
+// Explicit export for deployment - getDashboardAnalytics
 export async function getDashboardAnalytics(): Promise<DashboardAnalytics> {
   try {
     // Fetch analytics from the API endpoint
