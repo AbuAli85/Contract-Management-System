@@ -8,6 +8,7 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react"
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { AuthProvider } from "@/components/auth-provider"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
+import { ThemeProvider } from "@/components/theme-provider"
 import type { Session } from "@supabase/supabase-js"
 
 const isDev = process.env.NODE_ENV === "development"
@@ -36,9 +37,11 @@ function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionContextProvider supabaseClient={supabaseClient} initialSession={initialSession}>
-        <AuthProvider>
-          <RBACProvider>{children}</RBACProvider>
-        </AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <RBACProvider>{children}</RBACProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </SessionContextProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>
