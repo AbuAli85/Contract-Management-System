@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import AdvancedPromoterForm from "@/components/advanced-promoter-form"
+import PromoterForm from "@/components/promoter-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
@@ -34,7 +34,7 @@ export default function NewPromoterPage() {
             <CardTitle>Add New Promoter</CardTitle>
           </CardHeader>
           <CardContent>
-            <AdvancedPromoterForm
+            <PromoterForm
               promoterToEdit={null}
               onFormSubmit={handleFormSubmit}
               onCancel={handleCancel}

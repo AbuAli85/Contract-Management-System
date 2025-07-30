@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import type React from "react"
 
-import AdvancedPromoterForm from "@/components/advanced-promoter-form"
+import TestPromoterForm from "@/components/test-promoter-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -563,11 +563,7 @@ export default function ManagePromotersPage() {
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoter List
           </Button>
-          <AdvancedPromoterForm
-            promoterToEdit={selectedPromoter}
-            onFormSubmit={handleFormClose}
-            onCancel={handleFormClose}
-          />
+          <TestPromoterForm />
         </div>
       </div>
     )
