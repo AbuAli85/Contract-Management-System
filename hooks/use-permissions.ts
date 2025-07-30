@@ -23,7 +23,7 @@ export function usePermissions() {
 
   // Use only RBAC roles since auth service doesn't provide roles
   const effectiveRoles = userRoles
-  const primaryRole = (effectiveRoles && effectiveRoles.length > 0) ? effectiveRoles[0] : "admin"
+  const primaryRole = (effectiveRoles && Array.isArray(effectiveRoles) && effectiveRoles.length > 0) ? effectiveRoles[0] : "admin"
 
   return {
     // Current user's role

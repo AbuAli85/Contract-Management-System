@@ -25,7 +25,7 @@ export function AuthenticatedLayout({
 
   // Check if user has required roles
   const hasRequiredRole =
-    requiredRoles.length === 0 || requiredRoles.some((role) => roles.includes(role))
+    requiredRoles.length === 0 || (roles && Array.isArray(roles) && requiredRoles.some((role) => roles.includes(role)))
 
   // Check if user has required permissions
   const hasRequiredPermissions =

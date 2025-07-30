@@ -62,7 +62,7 @@ setRoles(userRoles)
 #### **Key Improvements:**
 ```typescript
 // Multiple role sources
-if (authRoles && authRoles.length > 0) {
+if (authRoles && Array.isArray(authRoles) && authRoles.length > 0) {
   setUserRoles(authRoles as Role[])
   return
 }

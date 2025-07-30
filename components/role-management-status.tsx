@@ -122,7 +122,7 @@ export function RoleManagementStatus({
               Current Role: <Badge variant="default">{permissions.role}</Badge>
             </div>
             <div>
-              Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge>
+              Roles Count: <Badge variant="outline">{permissions.roles && Array.isArray(permissions.roles) ? permissions.roles.length : 0}</Badge>
             </div>
           </div>
         </div>

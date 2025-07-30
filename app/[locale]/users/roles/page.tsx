@@ -377,7 +377,7 @@ export default function RolesAndPermissionsPage() {
           <div className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-blue-600" />
             <Badge variant="outline" className="px-3 py-1 text-lg">
-              {roles.length} Roles
+              {roles && Array.isArray(roles) ? roles.length : 0} Roles
             </Badge>
           </div>
         </div>

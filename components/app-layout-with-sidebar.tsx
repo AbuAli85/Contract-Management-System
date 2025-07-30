@@ -15,7 +15,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const { user } = useAuth()
   const params = useParams()
   const pathname = usePathname()
-  const locale = params.locale as string
+  const locale = (params?.locale as string) || "en"
 
   // Check if we're on the landing page (root route)
   const isLandingPage = pathname === `/${locale}` || pathname === `/${locale}/`
@@ -29,43 +29,46 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         </div>
       )}
 
-      {/* Sidebar - only show if not landing page */}
-      {!isLandingPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+      {/* Layout container */}
+      <div className="flex min-h-screen">
+        {/* Sidebar - only show if not landing page */}
+        {!isLandingPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
 
-      {/* Main content */}
-      <div className={`min-h-screen ${!isLandingPage ? "md:ml-64" : ""}`}>
-        {/* Top header - only show if not landing page */}
-        {!isLandingPage && (
-          <header className="border-b border-border bg-card shadow-sm">
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <h1 className="text-lg font-semibold text-card-foreground">
-                    Contract Management System
-                  </h1>
-                </div>
-                <div className="flex items-center space-x-4">
-                  {user && (
-                    <div className="text-sm text-muted-foreground">
-                      <span>Welcome, {user.email}</span>
-                    </div>
-                  )}
-                  <a
-                    href={`/${locale}/auth/logout`}
-                    className="text-sm text-destructive hover:text-destructive/80"
-                  >
-                    Logout
-                  </a>
+        {/* Main content area */}
+        <div className="flex-1 flex flex-col">
+          {/* Top header - only show if not landing page */}
+          {!isLandingPage && (
+            <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm">
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <h1 className="text-lg font-semibold text-card-foreground">
+                      Contract Management System
+                    </h1>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    {user && (
+                      <div className="text-sm text-muted-foreground">
+                        <span>Welcome, {user.email}</span>
+                      </div>
+                    )}
+                    <a
+                      href={`/${locale}/auth/logout`}
+                      className="text-sm text-destructive hover:text-destructive/80"
+                    >
+                      Logout
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          </header>
-        )}
+            </header>
+          )}
 
-        {/* Page content */}
-        <main className={!isLandingPage ? "p-6" : ""}>
-          <div className="children-container">{children}</div>
-        </main>
+          {/* Page content */}
+          <main className={`flex-1 ${!isLandingPage ? "p-6" : ""}`}>
+            <div className="children-container">{children}</div>
+          </main>
+        </div>
       </div>
     </div>
   )

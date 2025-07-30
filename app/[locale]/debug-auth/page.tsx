@@ -146,7 +146,7 @@ export default function DebugAuthPage() {
             </div>
           )}
 
-          {roles.length > 0 && (
+          {roles && Array.isArray(roles) && roles.length > 0 && (
             <div>
               <p className="text-sm font-medium">Roles</p>
               <div className="flex gap-2">

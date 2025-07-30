@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, FileText, BarChart3, Plus, ArrowRight, Eye, Star } from "lucide-react"
+import { Users as UsersIcon, FileText, BarChart3, Plus, ArrowRight, Eye, Star } from "lucide-react"
 
 export default function DemoPage() {
   return (
@@ -40,7 +40,7 @@ export default function DemoPage() {
         <Tabs defaultValue="admin" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="admin" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <UsersIcon className="h-4 w-4" />
               Admin Dashboard
             </TabsTrigger>
             <TabsTrigger value="promoter" className="flex items-center gap-2">

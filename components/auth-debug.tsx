@@ -39,7 +39,7 @@ export function AuthDebug() {
         </div>
         <div className="flex items-center gap-2">
           <span>Roles:</span>
-          <Badge variant="outline">{auth.roles.length > 0 ? auth.roles.join(", ") : "None"}</Badge>
+          <Badge variant="outline">{auth.roles && Array.isArray(auth.roles) && auth.roles.length > 0 ? auth.roles.join(", ") : "None"}</Badge>
         </div>
         <div className="flex items-center gap-2">
           <span>Profile:</span>
