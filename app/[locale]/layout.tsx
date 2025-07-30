@@ -1,7 +1,6 @@
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
-import { AppLayoutWithSidebar } from "@/components/app-layout-with-sidebar"
-import SimpleLayout from "./layout-simple"
+import { AuthLayoutWrapper } from "@/components/auth-layout-wrapper"
 import { ErrorBoundary } from "@/components/error-boundary"
 
 export async function generateStaticParams() {
@@ -30,7 +29,7 @@ export default async function LocaleLayout({
   return (
     <ErrorBoundary>
       <NextIntlClientProvider messages={messages} locale={locale}>
-        <AppLayoutWithSidebar>{children}</AppLayoutWithSidebar>
+        <AuthLayoutWrapper>{children}</AuthLayoutWrapper>
       </NextIntlClientProvider>
     </ErrorBoundary>
   )
