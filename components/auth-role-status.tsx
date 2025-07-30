@@ -102,7 +102,7 @@ export function AuthRoleStatus() {
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700">RBAC Provider Roles</div>
           <div className="flex flex-wrap gap-2">
-            {userRoles.length > 0 ? (
+            {userRoles && Array.isArray(userRoles) && userRoles.length > 0 ? (
               userRoles.map((role: string, index: number) => (
                 <div key={index} className="flex items-center gap-1">
                   {getRoleIcon(role)}

@@ -48,7 +48,7 @@ if (authStateChangeRef.current) {
 
 // ✅ User tracking
 const lastUserRef = useRef<string | null>(null)
-if (lastUserRef.current === userId && roles.length > 0) {
+if (lastUserRef.current === userId && roles && Array.isArray(roles) && roles.length > 0) {
   console.log("🔐 Auth: Using existing roles for user:", userId)
   return roles
 }

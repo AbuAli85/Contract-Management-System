@@ -130,7 +130,7 @@ export function LoginStatus() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm text-gray-500">Loading roles...</span>
               </div>
-            ) : userRoles.length > 0 ? (
+            ) : userRoles && Array.isArray(userRoles) && userRoles.length > 0 ? (
               userRoles.map((role: string, index: number) => (
                 <div key={index} className="flex items-center gap-1">
                   {getRoleIcon(role)}

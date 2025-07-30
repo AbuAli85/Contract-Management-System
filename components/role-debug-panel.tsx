@@ -129,7 +129,7 @@ export function RoleDebugPanel() {
               Current Role: <Badge variant="default">{permissions.role}</Badge>
             </div>
             <div>
-              Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge>
+              Roles Count: <Badge variant="outline">{permissions.roles && Array.isArray(permissions.roles) ? permissions.roles.length : 0}</Badge>
             </div>
           </div>
         </div>
@@ -153,12 +153,14 @@ export function RoleDebugPanel() {
             <div className="flex items-center gap-2">
               <span>All Roles:</span>
               <div className="flex gap-1">
-                {permissions.roles.map((role, index) => (
+                {permissions.roles && Array.isArray(permissions.roles) ? permissions.roles.map((role, index) => (
                   <div key={index} className="flex items-center gap-1">
                     {getRoleIcon(role)}
                     <Badge variant="outline">{role}</Badge>
                   </div>
-                ))}
+                )) : (
+                  <span className="text-sm text-gray-500">No roles</span>
+                )}
               </div>
             </div>
           </div>

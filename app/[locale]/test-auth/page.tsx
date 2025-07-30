@@ -47,7 +47,7 @@ export default function TestAuthPage() {
                   <strong>Profile:</strong> {profile ? profile.full_name : "No profile"}
                 </p>
                 <p>
-                  <strong>Roles:</strong> {roles.length > 0 ? roles.join(", ") : "No roles"}
+                  <strong>Roles:</strong> {roles && Array.isArray(roles) && roles.length > 0 ? roles.join(", ") : "No roles"}
                 </p>
                 <p>
                   <strong>Loading:</strong> {loading ? "Yes" : "No"}

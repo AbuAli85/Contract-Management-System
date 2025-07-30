@@ -106,7 +106,7 @@ export default function TestAuthSystemPage() {
 
     // Test 6: Roles Loaded
     try {
-      results.rolesLoaded = roles.length > 0
+      results.rolesLoaded = roles && Array.isArray(roles) && roles.length > 0
     } catch (error) {
       console.error("Roles test failed:", error)
     }
@@ -442,12 +442,12 @@ export default function TestAuthSystemPage() {
                       authProvider: authRoles,
                       rbacProvider: userRoles,
                       permissionsHook: permissionRoles,
-                      allSynced:
-                        authRoles.length > 0 &&
-                        userRoles.length > 0 &&
-                        permissionRoles.length > 0 &&
-                        authRoles[0] === userRoles[0] &&
-                        userRoles[0] === permissionRoles[0],
+                                          allSynced:
+                      authRoles && Array.isArray(authRoles) && authRoles.length > 0 &&
+                      userRoles && Array.isArray(userRoles) && userRoles.length > 0 &&
+                      permissionRoles && Array.isArray(permissionRoles) && permissionRoles.length > 0 &&
+                      authRoles[0] === userRoles[0] &&
+                      userRoles[0] === permissionRoles[0],
                     },
                   },
                   null,

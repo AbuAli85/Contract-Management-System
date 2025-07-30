@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const params = useParams()
-  const locale = params.locale as string
+  const locale = (params?.locale as string) || "en"
   const { user, loading, mounted } = useAuth()
 
   // Debug logging - only log when there are issues
@@ -93,14 +93,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay for mobile */}
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:shadow-none`}
+        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out md:static md:translate-x-0 md:shadow-none ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
