@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
 
 // Rate limiting configuration
 const RATE_LIMIT_CONFIG = {
@@ -69,7 +70,46 @@ const securityHeaders = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://vercel.live; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.supabase.com wss://*.supabase.co; frame-src 'self' https://vercel.live; object-src 'none'; base-uri 'self'; form-action 'self';",
 }
 
+// Create next-intl middleware
+const intlMiddleware = createMiddleware({
+  // A list of all locales that are supported
+  locales: ['en', 'ar'],
+  
+  // Used when no locale matches
+  defaultLocale: 'en',
+  
+  // Domains can be used to configure locale-specific domains
+  // domains: [
+  //   {
+  //     domain: 'example.com',
+  //     defaultLocale: 'en',
+  //   },
+  //   {
+  //     domain: 'example.ar',
+  //     defaultLocale: 'ar',
+  //   },
+  // ],
+})
+
 export function middleware(request: NextRequest) {
+  // Handle i18n routing first
+  const intlResponse = intlMiddleware(request)
+  
+  // If the intl middleware returns a response, apply our custom headers and return
+  if (intlResponse) {
+    // Add security headers
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      intlResponse.headers.set(key, value)
+    })
+    
+    // Add request ID for tracking
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    intlResponse.headers.set('X-Request-ID', requestId)
+    
+    return intlResponse
+  }
+  
+  // For non-i18n routes, continue with our custom middleware
   const response = NextResponse.next()
   
   // Add security headers
