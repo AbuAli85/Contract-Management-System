@@ -138,7 +138,7 @@ export default function SimpleAdminDashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
             <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
           </div>
           <div className="flex items-center gap-3">

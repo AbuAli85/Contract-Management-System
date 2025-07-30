@@ -16,7 +16,7 @@ export function MobileMenuButton({ isOpen, onToggle }: MobileMenuButtonProps) {
   return (
     <button
       onClick={handleToggle}
-      className="rounded-md p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 md:hidden"
+      className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:hidden"
       aria-label="Toggle menu"
     >
       <div className="flex h-6 w-6 flex-col items-center justify-center">

@@ -156,7 +156,7 @@ export function ApprovalDashboard({ userRole }: ApprovalDashboardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Approval Dashboard</h1>
+          <h2 className="text-3xl font-bold">Approval Dashboard</h2>
           <p className="text-muted-foreground">Manage contract reviews and approvals</p>
         </div>
         <Button onClick={fetchPendingReviews} variant="outline">

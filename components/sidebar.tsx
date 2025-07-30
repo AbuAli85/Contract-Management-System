@@ -95,22 +95,22 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <>
       {/* Overlay */}
       {isOpen && (
-        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden" onClick={onClose} />
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={onClose} />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:shadow-none`}
+        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:shadow-none`}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="border-b border-gray-200 p-4">
+          <div className="border-b border-border p-4">
             <Link href={`/${locale}`} className="flex items-center space-x-2">
               <span className="text-2xl">📋</span>
-              <span className="text-xl font-bold text-gray-800">ContractGen</span>
+              <span className="text-xl font-bold text-card-foreground">ContractGen</span>
             </Link>
             {user && (
-              <div className="mt-2 text-sm text-gray-600">
+              <div className="mt-2 text-sm text-muted-foreground">
                 <p>Welcome, {user.email}</p>
               </div>
             )}
@@ -119,7 +119,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-2">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Main Navigation
               </h3>
 
@@ -127,7 +127,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                  className="flex items-center space-x-3 rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                   onClick={() => {
                     console.log("🧭 Sidebar: Navigating to", item.href)
                     // Close sidebar on mobile after navigation
@@ -139,7 +139,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   <span className="text-lg">{item.icon}</span>
                   <div className="flex-1">
                     <div className="font-medium">{item.title}</div>
-                    <div className="text-xs text-gray-500">{item.description}</div>
+                    <div className="text-xs text-muted-foreground">{item.description}</div>
                   </div>
                 </Link>
               ))}
@@ -147,8 +147,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </nav>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 p-4">
-            <div className="text-xs text-gray-500">
+          <div className="border-t border-border p-4">
+            <div className="text-xs text-muted-foreground">
               <p>Contract Management System</p>
               <p>Version 1.0.0</p>
             </div>

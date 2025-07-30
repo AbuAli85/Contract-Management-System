@@ -1,10 +1,8 @@
 import React from "react"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { useAuth } from "@/lib/auth-service"
-import type { Role } from "@/src/components/auth/rbac-provider"
+import type { Action, Resource } from "@/lib/permissions"
 import {
-  type Action,
-  type Resource,
   canPerformAction,
   canPerformAnyAction,
   canPerformAllActions,
@@ -16,100 +14,60 @@ import {
   hasAnyResourcePermission,
 } from "@/lib/permissions"
 
+// Define Role type locally since it's not exported from RBAC provider
+type Role = "admin" | "user" | "manager" | "reviewer" | "promoter"
+
 export function usePermissions() {
-  const { userRoles, refreshRoles, updateRoleDirectly, isLoading } = useRBAC()
-  const { profile, roles: authRoles } = useAuth()
+  const { userRoles, refreshRoles, isLoading } = useRBAC()
+  const { user } = useAuth()
 
-  // Prioritize auth provider roles over RBAC roles to prevent sync issues
-  const effectiveRoles = authRoles.length > 0 ? authRoles : userRoles
-  const primaryRole = effectiveRoles.length > 0 ? effectiveRoles[0] : "admin"
-
-  // Force refresh function
-  const forceRefresh = async () => {
-    console.log("🔄 Force refreshing permissions...")
-    console.log("Current role before refresh:", primaryRole)
-
-    try {
-      // Call the immediate role refresh API directly
-      const response = await fetch("/api/immediate-role-refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log("Immediate role refresh API response:", data)
-
-      if (data.success) {
-        console.log("✅ API returned role:", data.role.value)
-
-        // Update the role directly in the RBAC provider
-        updateRoleDirectly(data.role.value as Role)
-
-        // Force a small delay to ensure state updates propagate
-        await new Promise((resolve) => setTimeout(resolve, 200))
-
-        console.log("✅ Role updated directly to:", data.role.value)
-
-        return data.role.value // Return the role from API response
-      } else {
-        console.error("❌ API refresh failed:", data.error)
-        throw new Error(data.error)
-      }
-    } catch (error) {
-      console.error("❌ Force refresh failed:", error)
-      throw error
-    }
-  }
+  // Use only RBAC roles since auth service doesn't provide roles
+  const effectiveRoles = userRoles
+  const primaryRole = (effectiveRoles && effectiveRoles.length > 0) ? effectiveRoles[0] : "admin"
 
   return {
     // Current user's role
     role: primaryRole,
     roles: effectiveRoles,
     isLoading,
-    forceRefresh,
+    refreshRoles,
 
     // Action-based permissions
     can: (action: Action): boolean => {
-      return effectiveRoles.some((role: string) => canPerformAction(role as Role, action))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canPerformAction(role as Role, action))) || false
     },
 
     canAny: (actions: Action[]): boolean => {
-      return effectiveRoles.some((role: string) => canPerformAnyAction(role as Role, actions))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canPerformAnyAction(role as Role, actions))) || false
     },
 
     canAll: (actions: Action[]): boolean => {
-      return effectiveRoles.some((role: string) => canPerformAllActions(role as Role, actions))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canPerformAllActions(role as Role, actions))) || false
     },
 
     // Resource-based permissions
     canManage: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => canManageResource(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canManageResource(role as Role, resource))) || false
     },
 
     canRead: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => canReadResource(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canReadResource(role as Role, resource))) || false
     },
 
     canCreate: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => canCreateResource(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canCreateResource(role as Role, resource))) || false
     },
 
     canUpdate: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => canUpdateResource(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canUpdateResource(role as Role, resource))) || false
     },
 
     canDelete: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => canDeleteResource(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => canDeleteResource(role as Role, resource))) || false
     },
 
     hasAnyPermission: (resource: Resource): boolean => {
-      return effectiveRoles.some((role: string) => hasAnyResourcePermission(role as Role, resource))
+      return (effectiveRoles && effectiveRoles.some((role: string) => hasAnyResourcePermission(role as Role, resource))) || false
     },
 
     // Specific permission checks for common actions

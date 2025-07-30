@@ -56,9 +56,9 @@ export default function LoginPage() {
     <div className="w-full max-w-md space-y-6 px-4 py-12 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
           Sign In
-        </h1>
+        </h2>
         <p className="text-gray-600">
           Sign in to your account to continue
         </p>

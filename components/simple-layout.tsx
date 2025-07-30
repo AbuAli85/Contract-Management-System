@@ -8,12 +8,12 @@ interface SimpleLayoutProps {
 
 export function SimpleLayout({ children }: SimpleLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* App title for auth pages */}
-      <div className="bg-white shadow-sm border-b flex-shrink-0">
+      <div className="bg-card shadow-sm border-b border-border flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-card-foreground">
               Contract Management System
             </h1>
           </div>

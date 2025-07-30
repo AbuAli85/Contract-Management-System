@@ -52,7 +52,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   // }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Mobile menu button - only show if not landing page */}
       {!isLandingPage && (
         <div className="fixed left-4 top-4 z-50 md:hidden">
@@ -67,23 +67,23 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
       <div className={`min-h-screen ${!isLandingPage ? "md:ml-64" : ""}`}>
         {/* Top header - only show if not landing page */}
         {!isLandingPage && (
-          <header className="border-b border-gray-200 bg-white shadow-sm">
+          <header className="border-b border-border bg-card shadow-sm">
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <h1 className="text-lg font-semibold text-gray-900">
+                  <h1 className="text-lg font-semibold text-card-foreground">
                     Contract Management System
                   </h1>
                 </div>
                 <div className="flex items-center space-x-4">
                   {user && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       <span>Welcome, {user.email}</span>
                     </div>
                   )}
                   <a
                     href={`/${locale}/auth/logout`}
-                    className="text-sm text-red-600 hover:text-red-800"
+                    className="text-sm text-destructive hover:text-destructive/80"
                   >
                     Logout
                   </a>
