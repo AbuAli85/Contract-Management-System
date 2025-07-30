@@ -8,11 +8,17 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react"
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs"
 import { AuthProvider } from "@/components/auth-provider"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
+import type { Session } from "@supabase/supabase-js"
 
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
 
-function ProvidersContent({ children }: { children: React.ReactNode }) {
+interface ProvidersContentProps {
+  children: React.ReactNode
+  initialSession?: Session | null
+}
+
+function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -29,7 +35,7 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionContextProvider supabaseClient={supabaseClient}>
+      <SessionContextProvider supabaseClient={supabaseClient} initialSession={initialSession}>
         <AuthProvider>
           <RBACProvider>{children}</RBACProvider>
         </AuthProvider>
@@ -39,6 +45,11 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <ProvidersContent>{children}</ProvidersContent>
+interface ProvidersProps {
+  children: React.ReactNode
+  initialSession?: Session | null
+}
+
+export function Providers({ children, initialSession }: ProvidersProps) {
+  return <ProvidersContent initialSession={initialSession}>{children}</ProvidersContent>
 }

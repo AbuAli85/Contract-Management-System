@@ -2,20 +2,35 @@
 
 import { LoginForm } from "@/auth/forms/login-form"
 import { OAuthButtons } from "@/auth/forms/oauth-buttons"
-import AuthGuard from "@/components/auth-guard"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useSession } from "@supabase/auth-helpers-react"
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const session = useSession()
+  const [mounted, setMounted] = useState(false)
   const [oauthError, setOauthError] = useState<string | null>(null)
 
   // Get current locale for links
   const pathname = typeof window !== "undefined" ? window.location.pathname : ""
   const locale = pathname.split("/")[1] || "en"
+
+  // Mark when component has hydrated
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Only redirect after mounted and session is ready
+  useEffect(() => {
+    if (mounted && session) {
+      router.replace(`/${locale}/dashboard`)
+    }
+  }, [mounted, session, router, locale])
 
   // Check for OAuth errors in URL parameters
   useEffect(() => {
@@ -32,64 +47,67 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
+  // Show nothing while mounting or if user is already logged in
+  if (!mounted || session) {
+    return null
+  }
+
   return (
-    <AuthGuard redirectTo={`/${locale}/dashboard`}>
-      <div className="w-full max-w-md space-y-6 px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Sign In
-          </h1>
-          <p className="text-gray-600">
-            Sign in to your account to continue
-          </p>
-        </div>
-
-        {/* Main Card */}
-        <Card className="shadow-lg border-0">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-center text-xl">
-              Sign in to your account
-            </CardTitle>
-            <CardDescription className="text-center">
-              Enter your credentials to access your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {oauthError && (
-              <Alert variant="destructive">
-                <AlertDescription>{oauthError}</AlertDescription>
-              </Alert>
-            )}
-
-            <LoginForm />
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-
-            <OAuthButtons />
-
-            <div className="text-center text-sm pt-4">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Link
-                href={`/${locale}/auth/signup`}
-                className="font-medium text-blue-600 hover:text-blue-500"
-              >
-                Create a new account
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="w-full max-w-md space-y-6 px-4 py-12 sm:px-6 lg:px-8">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Sign In
+        </h1>
+        <p className="text-gray-600">
+          Sign in to your account to continue
+        </p>
       </div>
-    </AuthGuard>
+
+      {/* Main Card */}
+      <Card className="shadow-lg border-0">
+        <CardHeader className="space-y-1 pb-4">
+          <CardTitle className="text-center text-xl">
+            Sign in to your account
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {oauthError && (
+            <Alert variant="destructive">
+              <AlertDescription>{oauthError}</AlertDescription>
+            </Alert>
+          )}
+
+          <LoginForm />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <OAuthButtons />
+
+          <div className="text-center text-sm pt-4">
+            <span className="text-muted-foreground">Don't have an account? </span>
+            <Link
+              href={`/${locale}/auth/signup`}
+              className="font-medium text-blue-600 hover:text-blue-500"
+            >
+              Create a new account
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

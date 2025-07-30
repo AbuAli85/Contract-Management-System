@@ -39,15 +39,12 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   // Load user roles from API or default to user role
   const loadUserRoles = useCallback(async () => {
     if (!user) {
-      console.log("🔐 RBAC: No user, clearing roles")
       setUserRoles([])
       setIsLoading(false)
       return
     }
 
     try {
-      console.log("🔐 RBAC: Loading roles for user:", user.email)
-
       // Method 1: Try direct Supabase client first (bypasses cookie issues)
       try {
         if (!supabase) {
@@ -62,7 +59,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!usersError && usersData?.role) {
-          console.log("✅ RBAC: Role from users table:", usersData.role)
           setUserRoles([usersData.role as Role])
           setIsLoading(false)
           return
@@ -76,7 +72,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!profilesError && profilesData?.role) {
-          console.log("✅ RBAC: Role from profiles table:", profilesData.role)
           setUserRoles([profilesData.role as Role])
           setIsLoading(false)
           return
@@ -90,25 +85,23 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!appUsersError && appUsersData?.role) {
-          console.log("✅ RBAC: Role from app_users table:", appUsersData.role)
           setUserRoles([appUsersData.role as Role])
           setIsLoading(false)
           return
         }
 
-        console.log("⚠️ RBAC: No role found in database, using default")
         setUserRoles(["user"])
         setIsLoading(false)
         return
       } catch (directError) {
-        console.log("🔐 RBAC: Direct Supabase client failed, trying API...")
+        // Fallback to API route
       }
 
       // Method 2: Fallback to API route
       const response = await fetch("/api/get-user-role", {
         method: "GET",
-        credentials: "include", // Include HttpOnly cookies
-        mode: "cors", // Ensure CORS rules allow cookies
+        credentials: "include",
+        mode: "cors",
         headers: {
           "Content-Type": "application/json",
         },
@@ -116,22 +109,17 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json()
-        console.log("✅ RBAC: Role from API:", data.role?.value || "default")
-
         if (data.success && data.role?.value) {
           setUserRoles([data.role.value as Role])
         } else {
-          console.log("⚠️ RBAC: No role in API response, using default")
           setUserRoles(["user"])
         }
       } else {
-        console.error("❌ RBAC: API request failed:", response.status, response.statusText)
-        console.log("⚠️ RBAC: API failed, using default role")
+        console.error("❌ RBAC: API request failed:", response.status)
         setUserRoles(["user"])
       }
     } catch (error) {
       console.error("🔐 RBAC: Error loading roles:", error)
-      console.log("⚠️ RBAC: Error occurred, using default role")
       setUserRoles(["user"])
     } finally {
       setIsLoading(false)
