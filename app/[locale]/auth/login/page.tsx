@@ -21,15 +21,13 @@ export default function LoginPage() {
   // Handle redirect when user is authenticated
   useEffect(() => {
     if (user && !loading && mounted && !hasRedirected.current) {
-      // Check if we're already on the dashboard to prevent unnecessary redirects
       const currentPath = typeof window !== "undefined" ? window.location.pathname : ""
       if (!currentPath.includes("/dashboard")) {
-        console.log("🔐 Login Page: User authenticated, redirecting to dashboard", {
-          user: user.email,
-        })
         hasRedirected.current = true
-        // Use window.location for more reliable redirect
-        window.location.href = `/${locale}/dashboard`
+        // Add a short delay to ensure session is set
+        setTimeout(() => {
+          window.location.href = `/${locale}/dashboard`
+        }, 700)
       }
     }
   }, [user, loading, mounted, locale])
@@ -61,17 +59,22 @@ export default function LoginPage() {
     )
   }
 
-  // Show redirect message if user is authenticated
+  // Show redirect message only if user is authenticated and not already on dashboard
   if (user && !loading && mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-          <p className="text-gray-600">Redirecting to dashboard...</p>
-          <p className="mt-2 text-sm text-gray-500">Please wait...</p>
+    const currentPath = typeof window !== "undefined" ? window.location.pathname : ""
+    if (!currentPath.includes("/dashboard")) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <div className="text-center">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+            <p className="text-gray-600">Redirecting to dashboard...</p>
+            <p className="mt-2 text-sm text-gray-500">Please wait...</p>
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
+    // If already on dashboard, don't show spinner, just render nothing (or could redirect elsewhere)
+    return null
   }
 
   return (
