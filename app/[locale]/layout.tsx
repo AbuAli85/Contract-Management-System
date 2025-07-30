@@ -42,4 +42,4 @@ export default async function LocaleLayout({
       </NextIntlClientProvider>
     </ErrorBoundary>
   )
-}
+} 
