@@ -60,21 +60,16 @@ export default function LoginPage() {
   }
 
   // Show redirect message only if user is authenticated and not already on dashboard
-  if (user && !loading && mounted) {
-    const currentPath = typeof window !== "undefined" ? window.location.pathname : ""
-    if (!currentPath.includes("/dashboard")) {
-      return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-            <p className="text-gray-600">Redirecting to dashboard...</p>
-            <p className="mt-2 text-sm text-gray-500">Please wait...</p>
-          </div>
+  if (user && !loading && mounted && !window.location.pathname.includes("/dashboard")) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Redirecting to dashboard...</p>
+          <p className="mt-2 text-sm text-gray-500">Please wait...</p>
         </div>
-      )
-    }
-    // If already on dashboard, don't show spinner, just render nothing (or could redirect elsewhere)
-    return null
+      </div>
+    )
   }
 
   return (
