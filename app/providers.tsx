@@ -32,6 +32,7 @@ function ProvidersContent({ children, initialSession }: ProvidersContentProps) {
       }),
   )
 
+  // Single Supabase client instance - no more duplicates
   const [supabaseClient] = useState(() => createPagesBrowserClient())
 
   return (

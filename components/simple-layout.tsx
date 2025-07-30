@@ -8,22 +8,15 @@ interface SimpleLayoutProps {
 
 export function SimpleLayout({ children }: SimpleLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* App title for auth pages */}
-      <div className="bg-card shadow-sm border-b border-border flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center py-4">
-            <h1 className="text-2xl font-bold text-card-foreground">
-              Contract Management System
-            </h1>
-          </div>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-8 border border-border">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-card-foreground">
+            Contract Management System
+          </h1>
         </div>
-      </div>
-      
-      {/* Main content - flex-grow to fill remaining space */}
-      <main className="flex-1 flex items-center justify-center">
         {children}
-      </main>
+      </div>
     </div>
   )
 } 

@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { MobileMenuButton } from "@/components/mobile-menu-button"
+import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useParams, usePathname } from "next/navigation"
+import { Sidebar } from "./sidebar"
+import { MobileMenuButton } from "./mobile-menu-button"
 
 interface AppLayoutWithSidebarProps {
   children: React.ReactNode
@@ -12,44 +12,16 @@ interface AppLayoutWithSidebarProps {
 
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isLandingPage, setIsLandingPage] = useState(false)
-  const [forceRender, setForceRender] = useState(false)
-  const { user, loading, mounted } = useAuth()
+  const { user } = useAuth()
   const params = useParams()
   const pathname = usePathname()
   const locale = params.locale as string
 
   // Check if we're on the landing page (root route) or auth pages
-  useEffect(() => {
-    const isLanding = pathname === `/${locale}`
-    const isAuthPage =
-      pathname.includes("/auth/") || pathname.includes("/login") || pathname.includes("/signup")
-    setIsLandingPage(isLanding || isAuthPage)
-  }, [pathname, locale])
-
-  // Force render after 1 second to prevent infinite loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loading || !mounted) {
-        setForceRender(true)
-      }
-    }, 1000) // Reduced to 1 second for faster rendering
-
-    return () => clearTimeout(timer)
-  }, [loading, mounted])
-
-  // Temporarily disable loading state to fix rendering issues
-  const shouldShowLoading = false
-
-  // Only log when there are issues (disabled for now)
-  // if (!user && mounted && !loading) {
-  //   console.log('🧭 AppLayoutWithSidebar: No user after auth complete', {
-  //     user: !!user,
-  //     loading,
-  //     mounted,
-  //     pathname
-  //   })
-  // }
+  const isLandingPage = pathname === `/${locale}` || 
+    pathname.includes("/auth/") || 
+    pathname.includes("/login") || 
+    pathname.includes("/signup")
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,7 +67,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
         {/* Page content */}
         <main className="p-6">
-          {/* Render children */}
           <div className="children-container">{children}</div>
         </main>
       </div>
