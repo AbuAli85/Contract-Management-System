@@ -1,6 +1,5 @@
 "use client"
 
-import { createClient } from "@/lib/supabase/client"
 import { User, Session, AuthError } from "@supabase/supabase-js"
 import { useToast } from "@/hooks/use-toast"
 import React from "react"
@@ -28,10 +27,10 @@ export class AuthService {
   }
   private listeners: AuthListener[] = []
   private refreshTimer: NodeJS.Timeout | null = null
-  private supabase: ReturnType<typeof createClient> | null = null
 
   private constructor() {
-    this.initializeAuth()
+    // AuthService is now just a state manager
+    // The actual Supabase client comes from the context
   }
 
   static getInstance(): AuthService {
@@ -60,215 +59,6 @@ export class AuthService {
 
   getState(): AuthState {
     return { ...this.state }
-  }
-
-  // Initialize authentication with proper error handling
-  private async initializeAuth(): Promise<void> {
-    console.log("🔧 AuthService: Initializing auth...")
-
-    try {
-      this.supabase = createClient()
-      
-      if (!this.supabase) {
-        throw new Error("Failed to create Supabase client")
-      }
-      
-      // Set up auth state change listener
-      const { data: { subscription } } = this.supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("🔧 AuthService: Auth state changed:", event, session?.user?.email)
-          
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            this.updateState({
-              user: session?.user || null,
-              session: session,
-              loading: false,
-              mounted: true,
-              error: null,
-            })
-            
-            // Set up automatic token refresh
-            this.setupTokenRefresh(session)
-          } else if (event === 'SIGNED_OUT') {
-            this.updateState({
-              user: null,
-              session: null,
-              loading: false,
-              mounted: true,
-              error: null,
-            })
-            
-            // Clear refresh timer
-            this.clearTokenRefresh()
-          }
-        }
-      )
-
-      // Get initial session
-      const { data: { session }, error } = await this.supabase.auth.getSession()
-      
-      if (error) {
-        console.error("🔧 AuthService: Error getting session:", error)
-        this.updateState({
-          loading: false,
-          mounted: true,
-          error: error.message,
-        })
-        return
-      }
-
-      this.updateState({
-        user: session?.user || null,
-        session: session,
-        loading: false,
-        mounted: true,
-        error: null,
-      })
-
-      // Set up token refresh if session exists
-      if (session) {
-        this.setupTokenRefresh(session)
-      }
-
-      // Cleanup subscription on unmount
-      subscription.unsubscribe()
-      this.clearTokenRefresh()
-    } catch (error) {
-      console.error("🔧 AuthService: Initialization error:", error)
-      this.updateState({
-        loading: false,
-        mounted: true,
-        error: error instanceof Error ? error.message : "Authentication initialization failed",
-      })
-    }
-  }
-
-  // Set up automatic token refresh
-  private setupTokenRefresh(session: Session | null) {
-    if (!session?.expires_at) return
-
-    const expiresAt = new Date(session.expires_at * 1000)
-    const now = new Date()
-    const timeUntilExpiry = expiresAt.getTime() - now.getTime()
-    
-    // Refresh 5 minutes before expiry
-    const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 0)
-    
-    this.clearTokenRefresh()
-    
-    this.refreshTimer = setTimeout(async () => {
-      try {
-        console.log("🔧 AuthService: Refreshing token...")
-        const { data, error } = await this.supabase?.auth.refreshSession() || {}
-        
-        if (error) {
-          console.error("🔧 AuthService: Token refresh failed:", error)
-          this.updateState({ error: "Session expired. Please log in again." })
-        } else if (data?.session) {
-          console.log("🔧 AuthService: Token refreshed successfully")
-          this.setupTokenRefresh(data.session)
-        }
-      } catch (error) {
-        console.error("🔧 AuthService: Token refresh error:", error)
-        this.updateState({ error: "Session refresh failed. Please log in again." })
-      }
-    }, refreshTime)
-  }
-
-  // Clear token refresh timer
-  private clearTokenRefresh() {
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer)
-      this.refreshTimer = null
-    }
-  }
-
-  // Sign in with email and password
-  async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
-    try {
-      if (!this.supabase) {
-        throw new Error("Supabase client not initialized")
-      }
-
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        console.error("🔧 AuthService: Sign in error:", error)
-        return { success: false, error: error.message }
-      }
-
-      if (data?.session) {
-        console.log("🔧 AuthService: Sign in successful")
-        return { success: true }
-      }
-
-      return { success: false, error: "Sign in failed" }
-    } catch (error) {
-      console.error("🔧 AuthService: Sign in exception:", error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "An unexpected error occurred" 
-      }
-    }
-  }
-
-  // Sign in with OAuth provider
-  async signInWithProvider(provider: 'github' | 'google'): Promise<{ success: boolean; error?: string }> {
-    try {
-      if (!this.supabase) {
-        throw new Error("Supabase client not initialized")
-      }
-
-      const { data, error } = await this.supabase.auth.signInWithOAuth({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (error) {
-        console.error("🔧 AuthService: OAuth sign in error:", error)
-        return { success: false, error: error.message }
-      }
-
-      console.log("🔧 AuthService: OAuth sign in initiated")
-      return { success: true }
-    } catch (error) {
-      console.error("🔧 AuthService: OAuth sign in exception:", error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "OAuth sign in failed" 
-      }
-    }
-  }
-
-  // Sign out
-  async signOut(): Promise<{ success: boolean; error?: string }> {
-    try {
-      if (!this.supabase) {
-        throw new Error("Supabase client not initialized")
-      }
-
-      const { error } = await this.supabase.auth.signOut()
-
-      if (error) {
-        console.error("🔧 AuthService: Sign out error:", error)
-        return { success: false, error: error.message }
-      }
-
-      console.log("🔧 AuthService: Sign out successful")
-      this.clearTokenRefresh()
-      return { success: true }
-    } catch (error) {
-      console.error("🔧 AuthService: Sign out exception:", error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Sign out failed" 
-      }
-    }
   }
 
   // Get current user
@@ -311,6 +101,14 @@ export class AuthService {
     this.clearTokenRefresh()
     this.listeners = []
     AuthService.instance = null as any
+  }
+
+  // Clear token refresh timer
+  private clearTokenRefresh() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer)
+      this.refreshTimer = null
+    }
   }
 }
 
