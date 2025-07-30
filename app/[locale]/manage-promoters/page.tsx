@@ -67,7 +67,6 @@ import {
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
-  PlusCircle,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, differenceInDays } from "date-fns"
@@ -589,7 +588,7 @@ export default function ManagePromotersPage() {
     <ProtectedRoute>
       <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
         <div className="mx-auto max-w-screen-lg">
-        <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
+          <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-card-foreground">
               Manage Promoters
@@ -1178,25 +1177,26 @@ export default function ManagePromotersPage() {
           </Card>
         ) : (
           /* Grid View */
-          {filteredPromoters.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <div className="text-center">
-                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Promoters Found</h3>
-                  <p className="text-muted-foreground mb-6">
-                    Get started by adding your first promoter to the system.
-                  </p>
-                  <Button onClick={handleAddNew} className="gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    Add New Promoter
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredPromoters.map((promoter) => {
+          <div>
+            {filteredPromoters.length === 0 ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <div className="text-center">
+                    <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No Promoters Found</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Get started by adding your first promoter to the system.
+                    </p>
+                    <Button onClick={handleAddNew} className="gap-2">
+                      <PlusCircleIcon className="h-4 w-4" />
+                      Add New Promoter
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredPromoters.map((promoter) => {
               const idCardStatus = getDocumentStatus(promoter.id_card_expiry_date)
               const passportStatus = getDocumentStatus(promoter.passport_expiry_date)
               const isSelected = selectedPromoters.includes(promoter.id)
@@ -1333,8 +1333,9 @@ export default function ManagePromotersPage() {
                 </Card>
               )
             })}
+              </div>
+            )}
           </div>
-        )}
         )}
       </div>
     </div>

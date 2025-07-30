@@ -72,13 +72,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       description: "Manage contract parties",
       badge: null
     },
-    {
-      title: "Manage Promoters",
-      href: `/${locale}/manage-promoters`,
-      icon: Target,
-      description: "Manage promoters",
-      badge: null
-    },
+              {
+            title: "Manage Promoters",
+            href: `/${locale}/manage-promoters`,
+            icon: Target,
+            description: "Manage promoters",
+            badge: null
+          },
+          {
+            title: "Advanced Promoters",
+            href: `/${locale}/manage-promoters/advanced`,
+            icon: BarChart3,
+            description: "Advanced analytics and bulk operations",
+            badge: "New"
+          },
     {
       title: "Add New Promoter",
       href: `/${locale}/manage-promoters/new`,
