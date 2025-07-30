@@ -1,7 +1,7 @@
 "use client"
 
 import { useRBAC } from "@/src/components/auth/rbac-provider"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Crown, User, Loader2, CheckCircle, XCircle } from "lucide-react"

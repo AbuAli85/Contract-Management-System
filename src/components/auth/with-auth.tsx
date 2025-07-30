@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { useAuth } from "./simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 
 export function withAuth<P extends object>(WrappedComponent: React.ComponentType<P>) {
   return function ProtectedRoute(props: P) {

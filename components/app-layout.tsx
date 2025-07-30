@@ -4,7 +4,7 @@ import React from "react"
 import { ClientHeader } from "@/components/client-header"
 import { ClientFooter } from "@/components/client-footer"
 import { ClientProviders } from "@/components/client-providers"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { Loader2 } from "lucide-react"
 
 interface AppLayoutProps {

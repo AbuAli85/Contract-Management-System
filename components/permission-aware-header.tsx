@@ -4,7 +4,7 @@ import React from "react"
 
 import { usePermissions } from "@/hooks/use-permissions"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {

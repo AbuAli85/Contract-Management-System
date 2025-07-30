@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"

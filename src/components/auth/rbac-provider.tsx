@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { useAuth } from "./simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 
 // Define the Role type
 export type Role = "admin" | "manager" | "user"
@@ -18,11 +18,11 @@ const RBACContext = createContext<RBACContextType | undefined>(undefined)
 
 // RBAC Provider Component
 export function RBACProvider({ children }: { children: React.ReactNode }) {
-  const { user, profile, roles: authRoles } = useAuth()
+  const { user } = useAuth()
   const [userRoles, setUserRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load user roles from profile or default to user role
+  // Load user roles from API or default to user role
   const loadUserRoles = useCallback(async () => {
     if (!user) {
       console.log("🔐 RBAC: No user, clearing roles")
@@ -35,23 +35,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true)
       console.log("🔐 RBAC: Loading roles for user:", user.email)
 
-      // Try to get roles from auth provider first
-      if (authRoles && authRoles.length > 0) {
-        console.log("🔐 RBAC: Using roles from auth provider:", authRoles)
-        setUserRoles(authRoles as Role[])
-        setIsLoading(false)
-        return
-      }
-
-      // Try to get roles from profile
-      if (profile?.role) {
-        console.log("🔐 RBAC: Using role from profile:", profile.role)
-        setUserRoles([profile.role as Role])
-        setIsLoading(false)
-        return
-      }
-
-      // Fallback: fetch roles from API
+      // Fetch roles from API
       console.log("🔐 RBAC: Fetching roles from API...")
       const response = await fetch("/api/get-user-role", {
         method: "GET",
@@ -79,7 +63,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [user, profile, authRoles])
+  }, [user])
 
   // Refresh roles from server
   const refreshRoles = useCallback(async () => {

@@ -77,6 +77,7 @@ import { SafeImage } from "@/components/ui/safe-image"
 import { cn } from "@/lib/utils"
 import { useFormContext } from "@/hooks/use-form-context"
 import { AutoRefreshIndicator } from "@/components/ui/auto-refresh-indicator"
+import ProtectedRoute from "@/components/protected-route"
 
 // Enhanced Promoter interface
 interface EnhancedPromoter extends Promoter {
@@ -573,8 +574,9 @@ export default function ManagePromotersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
-      <div className="mx-auto max-w-screen-lg">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-50 px-4 py-8 dark:bg-slate-950 sm:py-12">
+        <div className="mx-auto max-w-screen-lg">
         <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-4">
             <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
@@ -1306,6 +1308,7 @@ export default function ManagePromotersPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   )
 }
 

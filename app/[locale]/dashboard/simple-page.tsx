@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams, use } from "next/navigation"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 
 export default function SimpleDashboardPage() {
   const params = useParams()

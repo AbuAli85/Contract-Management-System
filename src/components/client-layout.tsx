@@ -10,7 +10,7 @@ import { ProfessionalHeader } from "@/components/professional-header"
 import { Loader2 } from "lucide-react"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { FormProvider } from "@/hooks/use-form-context"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 
 const inter = Inter({ subsets: ["latin"] })
 

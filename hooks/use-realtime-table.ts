@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
-import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useAuth } from "@/lib/auth-service"
 import { devLog } from "@/lib/dev-log"
 import { RealtimeChannel } from "@supabase/supabase-js"
 
