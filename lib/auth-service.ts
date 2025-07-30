@@ -3,7 +3,7 @@
 import { User, Session, AuthError } from "@supabase/supabase-js"
 import { useToast } from "@/hooks/use-toast"
 import React from "react"
-import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react"
+import { useSupabase } from "@/app/providers"
 
 // Centralized auth state management
 interface AuthState {
@@ -114,37 +114,33 @@ export class AuthService {
 
 // React hook for using AuthService with Supabase auth helpers
 export function useAuth() {
-  const session = useSession()
-  const supabase = useSupabaseClient()
+  const { user, session, loading, supabase } = useSupabase()
   const [state, setState] = React.useState<AuthState>({
-    user: session?.user || null,
+    user: user || null,
     session: session,
-    loading: !session,
+    loading: loading,
     mounted: true,
     error: null,
   })
 
   React.useEffect(() => {
-    if (session) {
-      setState({
-        user: session.user,
-        session: session,
-        loading: false,
-        mounted: true,
-        error: null,
-      })
-    } else {
-      setState({
-        user: null,
-        session: null,
-        loading: false,
-        mounted: true,
-        error: null,
-      })
-    }
-  }, [session])
+    setState({
+      user: user || null,
+      session: session,
+      loading: loading,
+      mounted: true,
+      error: null,
+    })
+  }, [user, session, loading])
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      return { 
+        success: false, 
+        error: "Supabase client not available" 
+      }
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) throw error
@@ -158,6 +154,13 @@ export function useAuth() {
   }
 
   const signInWithProvider = async (provider: 'github' | 'google') => {
+    if (!supabase) {
+      return { 
+        success: false, 
+        error: "Supabase client not available" 
+      }
+    }
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -174,6 +177,13 @@ export function useAuth() {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      return { 
+        success: false, 
+        error: "Supabase client not available" 
+      }
+    }
+
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error

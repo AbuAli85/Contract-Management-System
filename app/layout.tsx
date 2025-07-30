@@ -4,10 +4,7 @@ import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
-import { NextIntlClientProvider } from "next-intl"
-import { getMessages } from "next-intl/server"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createServerComponentClient } from "@/lib/supabaseServer"
 
 const fontInter = Inter({
   subsets: ["latin"],
@@ -28,22 +25,24 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Get messages for the default locale
-  const messages = await getMessages()
-  
   // Get initial session for SSR
-  const supabase = createServerComponentClient({ cookies })
-  const { data: { session } } = await supabase.auth.getSession()
+  let session = null
+  try {
+    const supabase = await createServerComponentClient()
+    const { data: { session: initialSession } } = await supabase.auth.getSession()
+    session = initialSession
+  } catch (error) {
+    console.error("Root Layout: Error getting session:", error)
+    // Continue without session
+  }
 
   return (
     <html lang="en">
       <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
-        <NextIntlClientProvider messages={messages}>
-          <Providers initialSession={session}>
-            {children}
-            <Toaster />
-          </Providers>
-        </NextIntlClientProvider>
+        <Providers initialSession={session}>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )

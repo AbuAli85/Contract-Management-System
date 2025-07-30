@@ -17,11 +17,8 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const pathname = usePathname()
   const locale = params.locale as string
 
-  // Check if we're on the landing page (root route) or auth pages
-  const isLandingPage = pathname === `/${locale}` || 
-    pathname.includes("/auth/") || 
-    pathname.includes("/login") || 
-    pathname.includes("/signup")
+  // Check if we're on the landing page (root route)
+  const isLandingPage = pathname === `/${locale}` || pathname === `/${locale}/`
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,7 +63,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         )}
 
         {/* Page content */}
-        <main className="p-6">
+        <main className={!isLandingPage ? "p-6" : ""}>
           <div className="children-container">{children}</div>
         </main>
       </div>

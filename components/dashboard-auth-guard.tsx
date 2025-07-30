@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useSession } from "@supabase/auth-helpers-react"
+import { useSupabase } from "@/app/providers"
 
 interface DashboardAuthGuardProps {
   children: React.ReactNode
@@ -10,7 +10,7 @@ interface DashboardAuthGuardProps {
 }
 
 export function DashboardAuthGuard({ children, locale }: DashboardAuthGuardProps) {
-  const session = useSession()
+  const { session, loading } = useSupabase()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
 
@@ -21,13 +21,13 @@ export function DashboardAuthGuard({ children, locale }: DashboardAuthGuardProps
 
   // Only redirect after mounted and session is ready
   useEffect(() => {
-    if (mounted && !session) {
+    if (mounted && !loading && !session) {
       router.replace(`/${locale}/auth/login`)
     }
-  }, [mounted, session, router, locale])
+  }, [mounted, loading, session, router, locale])
 
   // Show loading while mounting or if no session
-  if (!mounted || !session) {
+  if (!mounted || loading || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">

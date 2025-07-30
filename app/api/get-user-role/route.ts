@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createServerComponentClient } from "@/lib/supabaseServer"
 import { cookies } from "next/headers"
 
 // Force dynamic rendering for this API route
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     console.log("=== GET USER ROLE START ===")
 
     // Create server component client that properly reads cookies
-    const supabase = createServerComponentClient({ cookies })
+    const supabase = await createServerComponentClient()
 
     // Get current session
     const {

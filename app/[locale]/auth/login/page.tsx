@@ -7,12 +7,12 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useSession } from "@supabase/auth-helpers-react"
+import { useSupabase } from "@/app/providers"
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const session = useSession()
+  const { session, loading } = useSupabase()
   const [mounted, setMounted] = useState(false)
   const [oauthError, setOauthError] = useState<string | null>(null)
 
@@ -27,10 +27,10 @@ export default function LoginPage() {
 
   // Only redirect after mounted and session is ready
   useEffect(() => {
-    if (mounted && session) {
+    if (mounted && !loading && session) {
       router.replace(`/${locale}/dashboard`)
     }
-  }, [mounted, session, router, locale])
+  }, [mounted, loading, session, router, locale])
 
   // Check for OAuth errors in URL parameters
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function LoginPage() {
   }, [searchParams])
 
   // Show nothing while mounting or if user is already logged in
-  if (!mounted || session) {
+  if (!mounted || loading || session) {
     return null
   }
 
