@@ -1,15 +1,20 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const hasCheckedAuth = useRef(false);
   const router = useRouter();
   const params = useParams();
 
   useEffect(() => {
+    // Prevent multiple auth checks
+    if (hasCheckedAuth.current) return;
+    hasCheckedAuth.current = true;
+
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/check-session');
@@ -20,14 +25,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         } else {
           // Redirect to login with proper locale
           const locale = params?.locale || 'en';
-          router.push(`/${locale}/auth/login`);
+          router.replace(`/${locale}/auth/login`);
           return;
         }
       } catch (error) {
         console.error('Auth check failed:', error);
         // Redirect to login with proper locale
         const locale = params?.locale || 'en';
-        router.push(`/${locale}/auth/login`);
+        router.replace(`/${locale}/auth/login`);
         return;
       } finally {
         setIsLoading(false);
