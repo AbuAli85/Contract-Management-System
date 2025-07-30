@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import type { Database } from "@/types/supabase"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
@@ -10,54 +9,8 @@ export async function GET(request: NextRequest) {
   try {
     console.log("=== GET USER ROLE START ===")
 
-    // Check for required environment variables
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error("❌ Missing Supabase environment variables")
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Server configuration error",
-          details: "Missing Supabase environment variables. Please check your .env.local file.",
-        },
-        { status: 500 }
-      )
-    }
-
-    const cookieStore = await cookies()
-
-    // Create server client that properly reads cookies
-    const supabase = createServerClient<Database>(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-          set(name: string, value: string, options: any) {
-            try {
-              cookieStore.set({ name, value, ...options })
-            } catch {
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-          remove(name: string, options: any) {
-            try {
-              cookieStore.set({ name, value: "", ...options })
-            } catch {
-              // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        },
-      }
-    )
+    // Create server component client that properly reads cookies
+    const supabase = createServerComponentClient({ cookies })
 
     // Get current session
     const {
@@ -65,8 +18,13 @@ export async function GET(request: NextRequest) {
       error: sessionError,
     } = await supabase.auth.getSession()
 
-    if (sessionError || !session) {
-      console.log("❌ No session found:", sessionError?.message || "No session")
+    if (sessionError) {
+      console.error("❌ Session error:", sessionError)
+      return NextResponse.json({ error: "Session error" }, { status: 401 })
+    }
+
+    if (!session) {
+      console.log("❌ No session found")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

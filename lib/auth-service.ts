@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client"
 import { User, Session, AuthError } from "@supabase/supabase-js"
 import { useToast } from "@/hooks/use-toast"
 import React from "react"
+import { useSession, useSupabaseClient } from "@supabase/auth-helpers-react"
 
 // Centralized auth state management
 interface AuthState {
@@ -68,6 +69,10 @@ export class AuthService {
     try {
       this.supabase = createClient()
       
+      if (!this.supabase) {
+        throw new Error("Failed to create Supabase client")
+      }
+      
       // Set up auth state change listener
       const { data: { subscription } } = this.supabase.auth.onAuthStateChange(
         async (event, session) => {
@@ -126,10 +131,8 @@ export class AuthService {
       }
 
       // Cleanup subscription on unmount
-      return () => {
-        subscription.unsubscribe()
-        this.clearTokenRefresh()
-      }
+      subscription.unsubscribe()
+      this.clearTokenRefresh()
     } catch (error) {
       console.error("🔧 AuthService: Initialization error:", error)
       this.updateState({
@@ -161,7 +164,7 @@ export class AuthService {
         if (error) {
           console.error("🔧 AuthService: Token refresh failed:", error)
           this.updateState({ error: "Session expired. Please log in again." })
-        } else if (data.session) {
+        } else if (data?.session) {
           console.log("🔧 AuthService: Token refreshed successfully")
           this.setupTokenRefresh(data.session)
         }
@@ -197,7 +200,7 @@ export class AuthService {
         return { success: false, error: error.message }
       }
 
-      if (data.session) {
+      if (data?.session) {
         console.log("🔧 AuthService: Sign in successful")
         return { success: true }
       }
@@ -311,24 +314,83 @@ export class AuthService {
   }
 }
 
-// React hook for using AuthService
+// React hook for using AuthService with Supabase auth helpers
 export function useAuth() {
+  const session = useSession()
+  const supabase = useSupabaseClient()
   const [state, setState] = React.useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-    mounted: false,
+    user: session?.user || null,
+    session: session,
+    loading: !session,
+    mounted: true,
     error: null,
   })
 
   React.useEffect(() => {
-    const authService = AuthService.getInstance()
-    const unsubscribe = authService.subscribe(setState)
-    
-    return () => {
-      unsubscribe()
+    if (session) {
+      setState({
+        user: session.user,
+        session: session,
+        loading: false,
+        mounted: true,
+        error: null,
+      })
+    } else {
+      setState({
+        user: null,
+        session: null,
+        loading: false,
+        mounted: true,
+        error: null,
+      })
     }
-  }, [])
+  }, [session])
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Sign in failed" 
+      }
+    }
+  }
+
+  const signInWithProvider = async (provider: 'github' | 'google') => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      })
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "OAuth sign in failed" 
+      }
+    }
+  }
+
+  const signOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+      return { success: true }
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Sign out failed" 
+      }
+    }
+  }
+
+  const isAuthenticated = () => !!state.user && !!state.session
+
+  const clearError = () => setState(prev => ({ ...prev, error: null }))
 
   return {
     user: state.user,
@@ -336,10 +398,10 @@ export function useAuth() {
     loading: state.loading,
     mounted: state.mounted,
     error: state.error,
-    signIn: AuthService.getInstance().signIn.bind(AuthService.getInstance()),
-    signInWithProvider: AuthService.getInstance().signInWithProvider.bind(AuthService.getInstance()),
-    signOut: AuthService.getInstance().signOut.bind(AuthService.getInstance()),
-    isAuthenticated: AuthService.getInstance().isAuthenticated.bind(AuthService.getInstance()),
-    clearError: AuthService.getInstance().clearError.bind(AuthService.getInstance()),
+    signIn,
+    signInWithProvider,
+    signOut,
+    isAuthenticated,
+    clearError,
   }
 }
