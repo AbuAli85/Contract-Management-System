@@ -1,17 +1,18 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 import { AppLayoutWithSidebar } from "@/components/app-layout-with-sidebar"
 import { SimpleLayout } from "@/components/simple-layout"
 
 export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  // Memoize the auth page detection to prevent unnecessary re-renders
+  // Only determine which layout to use - no redirects, no auth checks
   const isAuthPage = useMemo(() => {
     if (!pathname) return false
-    return pathname.includes("/auth/") || 
+    return pathname.startsWith("/en/auth") || 
+           pathname.startsWith("/ar/auth") ||
            pathname.includes("/login") || 
            pathname.includes("/signup") ||
            pathname.includes("/forgot-password") ||
@@ -19,16 +20,10 @@ export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
            pathname.includes("/logout")
   }, [pathname])
 
-  // Only log when pathname or isAuthPage actually changes
-  useEffect(() => {
-    console.log("🔧 AuthLayoutWrapper:", { pathname, isAuthPage })
-  }, [pathname, isAuthPage])
-
+  // Simply return the appropriate layout - no redirects here
   if (isAuthPage) {
-    // Use simple layout for auth pages
     return <SimpleLayout>{children}</SimpleLayout>
   }
 
-  // Use sidebar layout for other pages
   return <AppLayoutWithSidebar>{children}</AppLayoutWithSidebar>
 } 
