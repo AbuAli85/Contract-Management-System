@@ -39,6 +39,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       console.log("🔐 RBAC: Fetching roles from API...")
       const response = await fetch("/api/get-user-role", {
         method: "GET",
+        credentials: "include", // Include HttpOnly cookies
         headers: {
           "Content-Type": "application/json",
         },
