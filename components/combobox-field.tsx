@@ -94,4 +94,4 @@ export function ComboboxField({
   )
 }
 
-export default ComboboxField;
+export default ComboboxField

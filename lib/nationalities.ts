@@ -192,25 +192,25 @@ export const NATIONALITIES = [
   { value: "welsh", label: "Welsh" },
   { value: "yemenite", label: "Yemenite" },
   { value: "zambian", label: "Zambian" },
-  { value: "zimbabwean", label: "Zimbabwean" }
+  { value: "zimbabwean", label: "Zimbabwean" },
 ] as const
 
 // Helper function to get nationality label by value
 export function getNationalityLabel(value: string): string {
-  const nationality = NATIONALITIES.find(n => n.value === value.toLowerCase())
+  const nationality = NATIONALITIES.find((n) => n.value === value.toLowerCase())
   return nationality ? nationality.label : value
 }
 
 // Helper function to get nationality value by label
 export function getNationalityValue(label: string): string {
-  const nationality = NATIONALITIES.find(n => n.label.toLowerCase() === label.toLowerCase())
+  const nationality = NATIONALITIES.find((n) => n.label.toLowerCase() === label.toLowerCase())
   return nationality ? nationality.value : label
 }
 
 // Type for nationality values
-export type NationalityValue = typeof NATIONALITIES[number]['value']
+export type NationalityValue = (typeof NATIONALITIES)[number]["value"]
 
 // Sorted nationalities for better UX (alphabetical order)
-export const SORTED_NATIONALITIES = [...NATIONALITIES].sort((a, b) => 
-  a.label.localeCompare(b.label)
-) 
+export const SORTED_NATIONALITIES = [...NATIONALITIES].sort((a, b) =>
+  a.label.localeCompare(b.label),
+)

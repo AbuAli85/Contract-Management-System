@@ -5,40 +5,47 @@
 ### Original vs Updated Configuration:
 
 #### Before (Incorrect):
+
 - **First Party** = Client
 - **Second Party** = Employer
 
 #### After (Correct) ✅:
+
 - **First Party** = Employer
 - **Second Party** = Client
 
 ## ✅ Changes Applied
 
 ### 1. Webhook Logic Updated ✅
+
 **File:** `app/api/webhook/makecom/route.ts`
 
 **Previous Logic:**
+
 ```json
 {
-    "first_party_name_en": "Client Company",
-    "first_party_name_ar": "شركة العميل", 
-    "second_party_name_en": "Employer Company",
-    "second_party_name_ar": "شركة صاحب العمل"
+  "first_party_name_en": "Client Company",
+  "first_party_name_ar": "شركة العميل",
+  "second_party_name_en": "Employer Company",
+  "second_party_name_ar": "شركة صاحب العمل"
 }
 ```
 
 **New Logic (Implemented):**
+
 ```json
 {
-    "first_party_name_en": "Employer Company",
-    "first_party_name_ar": "شركة صاحب العمل",
-    "second_party_name_en": "Client Company", 
-    "second_party_name_ar": "شركة العميل"
+  "first_party_name_en": "Employer Company",
+  "first_party_name_ar": "شركة صاحب العمل",
+  "second_party_name_en": "Client Company",
+  "second_party_name_ar": "شركة العميل"
 }
 ```
 
 ### 2. Make.com Compatibility ✅
+
 Your existing Make.com scenario will automatically work with the new data structure:
+
 - `{{1.first_party_name_en}}` = **Employer** Company Name
 - `{{1.first_party_name_ar}}` = **Employer** Arabic Name
 - `{{1.first_party_crn}}` = **Employer** CRN
@@ -58,7 +65,7 @@ CRN: 1234567890
 
 AND
 
-SECOND PARTY (CLIENT): 
+SECOND PARTY (CLIENT):
 Name: XYZ Electronics Store
 Name (Arabic): متجر إكس واي زد للإلكترونيات
 CRN: 0987654321
@@ -89,35 +96,41 @@ This new structure makes perfect business sense:
    - Bridge between employer and client
 
 ### 5. Database Party Types ✅
+
 Ensure your companies are correctly typed:
+
 - **Employer companies:** `type: 'Employer'`
 - **Client companies:** `type: 'Client'`
 
 ### 6. Google Docs Template Updates Needed 📝
+
 Update your template to reflect the new roles:
 
 **Current Template Labels:**
+
 - First Party section: "Client"
 - Second Party section: "Employer"
 
 **Should Be Updated To:**
+
 - First Party section: **"EMPLOYER"**
 - Second Party section: **"CLIENT"**
 
 ## 🚀 Implementation Status
 
-| Component | Status | Details |
-|-----------|--------|---------|
-| **Webhook Backend** | ✅ Complete | Party roles swapped in `/app/api/webhook/makecom/route.ts` |
-| **Make.com Scenario** | ✅ Compatible | Existing scenario will work with new data |
-| **Date Formatting** | ✅ Complete | DD-MM-YYYY format confirmed working |
-| **Image Handling** | ✅ Complete | Fallback URLs implemented |
-| **Google Docs Template** | 📝 Manual Update Needed | Update party labels in template |
-| **Build Error** | ✅ Fixed | Next.js compilation error resolved |
+| Component                | Status                  | Details                                                    |
+| ------------------------ | ----------------------- | ---------------------------------------------------------- |
+| **Webhook Backend**      | ✅ Complete             | Party roles swapped in `/app/api/webhook/makecom/route.ts` |
+| **Make.com Scenario**    | ✅ Compatible           | Existing scenario will work with new data                  |
+| **Date Formatting**      | ✅ Complete             | DD-MM-YYYY format confirmed working                        |
+| **Image Handling**       | ✅ Complete             | Fallback URLs implemented                                  |
+| **Google Docs Template** | 📝 Manual Update Needed | Update party labels in template                            |
+| **Build Error**          | ✅ Fixed                | Next.js compilation error resolved                         |
 
 ## 🧪 Testing Steps
 
 1. **Send Test Webhook:**
+
    ```bash
    curl -X POST https://your-domain.com/api/webhook/makecom \
    -H "Content-Type: application/json" \
@@ -125,6 +138,7 @@ Update your template to reflect the new roles:
    ```
 
 2. **Verify Response Structure:**
+
    ```json
    {
      "first_party_name_en": "Employer Company Name",
@@ -156,6 +170,7 @@ Update your template to reflect the new roles:
 ## 🎉 Success Metrics
 
 Your contract automation now correctly represents:
+
 1. **Three-party business relationship** ✅
 2. **Logical employment structure** ✅
 3. **Clear service delivery model** ✅

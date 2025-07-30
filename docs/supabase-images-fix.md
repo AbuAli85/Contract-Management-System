@@ -5,7 +5,7 @@
 Looking at your Make.com scenario:
 
 1. **Webhook** receives contract data with Supabase image URLs
-2. **Modules 30 & 31** download images from Supabase URLs  
+2. **Modules 30 & 31** download images from Supabase URLs
 3. **Modules 4 & 5** upload those images to Google Drive
 4. **Module 6 (Google Docs)** tries to use Google Drive URLs for image replacement
 
@@ -20,12 +20,14 @@ The Google Drive uploads (modules 4 & 5) create **private files**, but Google Do
 **Skip Google Drive completely** and use Supabase URLs directly in Google Docs:
 
 **Update Google Docs Image URLs to:**
+
 ```
 {{1.promoter_id_card_url}}
 {{1.promoter_passport_url}}
 ```
 
 **Requirements:**
+
 - Supabase images must be **publicly accessible**
 - Check your Supabase storage bucket permissions
 
@@ -34,6 +36,7 @@ The Google Drive uploads (modules 4 & 5) create **private files**, but Google Do
 **Make Google Drive uploads public** by updating modules 4 & 5:
 
 **Add to Module 4 & 5 mappers:**
+
 ```json
 "permissions": [
   {
@@ -70,8 +73,8 @@ Ensure your Supabase storage bucket allows public access:
 SELECT * FROM storage.objects WHERE bucket_id = 'your-bucket-name';
 
 -- Make bucket public (if needed)
-UPDATE storage.buckets 
-SET public = true 
+UPDATE storage.buckets
+SET public = true
 WHERE name = 'your-bucket-name';
 ```
 
@@ -86,6 +89,7 @@ WHERE name = 'your-bucket-name';
 5. **Test** image URLs in browser
 
 ### **Typical Supabase Image URL Format:**
+
 ```
 https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file.jpg
 ```

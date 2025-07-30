@@ -85,8 +85,7 @@
     "adminActions": "Admin Actions",
     "systemHealth": "System Health",
     "performance": "Performance",
-    "metrics": "Metrics"
-    ,
+    "metrics": "Metrics",
     "activeContracts": "Active Contracts",
     "activeContractsDescription": "Contracts that are currently active",
     "totalContractsDescription": "Total number of contracts in the system",

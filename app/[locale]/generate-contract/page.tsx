@@ -11,12 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { 
-  Settings, 
-  Sparkles, 
-  FileText, 
-  Info, 
-  CheckCircle, 
+import {
+  Settings,
+  Sparkles,
+  FileText,
+  Info,
+  CheckCircle,
   AlertTriangle,
   Brain,
   Zap,
@@ -58,7 +58,7 @@ import {
   Tablet,
   Truck,
   Wifi,
-  Workflow
+  Workflow,
 } from "lucide-react"
 
 // Lazy load components for better performance
@@ -72,22 +72,27 @@ import UnifiedContractGeneratorForm from "@/components/unified-contract-generato
 import ContractIntelligence from "@/components/ai/contract-intelligence"
 
 // Enhanced utilities for contract insights
-import { 
-  analyzeContractDuration, 
+import {
+  analyzeContractDuration,
   validateContractData,
   formatDuration,
-  getContractTypeRecommendations 
+  getContractTypeRecommendations,
 } from "@/lib/contract-utils"
 import { CONTRACT_FORM_SECTIONS, getRequiredFields } from "@/lib/schema-generator"
 import { CONTRACT_TYPES } from "@/constants/contract-options"
-import { getContractTypesByCategory, getEnhancedContractTypeConfig, contractTypes, type ContractTypeConfig } from "@/lib/contract-type-config"
+import {
+  getContractTypesByCategory,
+  getEnhancedContractTypeConfig,
+  contractTypes,
+  type ContractTypeConfig,
+} from "@/lib/contract-type-config"
 
 interface ContractInsight {
-  type: 'success' | 'warning' | 'info' | 'error'
+  type: "success" | "warning" | "info" | "error"
   title: string
   description: string
   action?: string
-  priority: 'low' | 'medium' | 'high'
+  priority: "low" | "medium" | "high"
 }
 
 interface FormProgress {
@@ -105,7 +110,7 @@ interface SmartRecommendation {
   category: string
   title: string
   description: string
-  impact: 'low' | 'medium' | 'high'
+  impact: "low" | "medium" | "high"
   implementation: string
   estimatedSavings?: string
 }
@@ -113,121 +118,122 @@ interface SmartRecommendation {
 export default function GenerateContractPage() {
   const { user, profile } = useAuth()
   const pathname = usePathname()
-  const locale = pathname.split('/')[1] || 'en'
+  const locale = pathname.split("/")[1] || "en"
 
   // State management
   const [useEnhancedForm, setUseEnhancedForm] = useState(false)
   const [showAIInsights, setShowAIInsights] = useState(true)
   const [showContractInsights, setShowContractInsights] = useState(true)
-  const [selectedContractType, setSelectedContractType] = useState<string>('')
+  const [selectedContractType, setSelectedContractType] = useState<string>("")
   const [formProgress, setFormProgress] = useState<FormProgress>({
     completed: 0,
     total: 11,
     percentage: 0,
     sections: [
-      { name: 'Contracting Parties', completed: false, required: true },
-      { name: 'Promoter Required Information', completed: false, required: true },
-      { name: 'Contract Required Period', completed: false, required: true },
-      { name: 'Employment Details', completed: false, required: false },
-      { name: 'Compensation', completed: false, required: false },
-      { name: 'Additional Terms', completed: false, required: false }
-    ]
+      { name: "Contracting Parties", completed: false, required: true },
+      { name: "Promoter Required Information", completed: false, required: true },
+      { name: "Contract Required Period", completed: false, required: true },
+      { name: "Employment Details", completed: false, required: false },
+      { name: "Compensation", completed: false, required: false },
+      { name: "Additional Terms", completed: false, required: false },
+    ],
   })
 
   // AI Insights and Recommendations
   const [insights, setInsights] = useState<ContractInsight[]>([
     {
-      type: 'info',
-      title: 'Enhanced Schema Validation',
-      description: 'All contracts are validated against Oman labor law requirements and business rules.',
-      priority: 'high'
+      type: "info",
+      title: "Enhanced Schema Validation",
+      description:
+        "All contracts are validated against Oman labor law requirements and business rules.",
+      priority: "high",
     },
     {
-      type: 'success',
-      title: 'Smart Field Requirements',
-      description: 'Form automatically shows required fields based on contract type selection.',
-      priority: 'medium'
+      type: "success",
+      title: "Smart Field Requirements",
+      description: "Form automatically shows required fields based on contract type selection.",
+      priority: "medium",
     },
     {
-      type: 'warning',
-      title: 'Date Validation & Constraints',
-      description: 'Contract dates are validated to ensure compliance with legal requirements.',
-      priority: 'high'
-    }
+      type: "warning",
+      title: "Date Validation & Constraints",
+      description: "Contract dates are validated to ensure compliance with legal requirements.",
+      priority: "high",
+    },
   ])
 
   const [recommendations, setRecommendations] = useState<SmartRecommendation[]>([
     {
-      category: 'Compliance',
-      title: 'Oman Labor Law Compliance',
-      description: 'Ensure all contracts meet Oman labor law requirements',
-      impact: 'high',
-      implementation: 'Automated validation checks'
+      category: "Compliance",
+      title: "Oman Labor Law Compliance",
+      description: "Ensure all contracts meet Oman labor law requirements",
+      impact: "high",
+      implementation: "Automated validation checks",
     },
     {
-      category: 'Efficiency',
-      title: 'Template Optimization',
-      description: 'Use pre-approved templates for faster processing',
-      impact: 'medium',
-      implementation: 'Template library integration',
-      estimatedSavings: '2-3 hours per contract'
+      category: "Efficiency",
+      title: "Template Optimization",
+      description: "Use pre-approved templates for faster processing",
+      impact: "medium",
+      implementation: "Template library integration",
+      estimatedSavings: "2-3 hours per contract",
     },
     {
-      category: 'Risk Management',
-      title: 'Legal Review Workflow',
-      description: 'Implement automated legal review for high-value contracts',
-      impact: 'high',
-      implementation: 'Workflow automation'
-    }
+      category: "Risk Management",
+      title: "Legal Review Workflow",
+      description: "Implement automated legal review for high-value contracts",
+      impact: "high",
+      implementation: "Workflow automation",
+    },
   ])
 
   // Contract type categories
   const contractCategories = [
-    { id: 'employment', label: 'Employment', icon: Users, count: 4 },
-    { id: 'service', label: 'Service', icon: Briefcase, count: 2 },
-    { id: 'consulting', label: 'Consulting', icon: Brain, count: 1 },
-    { id: 'partnership', label: 'Partnership', icon: Users, count: 1 },
-    { id: 'nda', label: 'NDA', icon: Lock, count: 1 }
+    { id: "employment", label: "Employment", icon: Users, count: 4 },
+    { id: "service", label: "Service", icon: Briefcase, count: 2 },
+    { id: "consulting", label: "Consulting", icon: Brain, count: 1 },
+    { id: "partnership", label: "Partnership", icon: Users, count: 1 },
+    { id: "nda", label: "NDA", icon: Lock, count: 1 },
   ]
 
   // Best practices
   const bestPractices = [
-    'Ensure all party information is accurate and up-to-date',
-    'Verify contract dates align with business requirements',
-    'Review job title and department classifications',
-    'Confirm work location and arrangement details',
-    'Validate compensation structure and benefits',
-    'Include all required legal clauses and terms'
+    "Ensure all party information is accurate and up-to-date",
+    "Verify contract dates align with business requirements",
+    "Review job title and department classifications",
+    "Confirm work location and arrangement details",
+    "Validate compensation structure and benefits",
+    "Include all required legal clauses and terms",
   ]
 
   // Feature comparison
   const featureComparison = {
     standard: {
-      title: 'Standard Form',
-      description: 'Enhanced with advanced validation and business rules',
+      title: "Standard Form",
+      description: "Enhanced with advanced validation and business rules",
       features: [
-        'Enhanced schema validation',
-        'Business rule enforcement',
-        'Smart field requirements',
-        'Date validation & constraints',
-        'Comprehensive error handling',
-        'Ready for production use'
+        "Enhanced schema validation",
+        "Business rule enforcement",
+        "Smart field requirements",
+        "Date validation & constraints",
+        "Comprehensive error handling",
+        "Ready for production use",
       ],
-      status: 'active'
+      status: "active",
     },
     enhanced: {
-      title: 'Enhanced Form',
-      description: 'Advanced interface with sectioned workflow (In Development)',
+      title: "Enhanced Form",
+      description: "Advanced interface with sectioned workflow (In Development)",
       features: [
-        'Sectioned form with progress tracking',
-        'Real-time contract insights',
-        'Smart auto-completion',
-        'Salary recommendations',
-        'Advanced analytics',
-        'Coming soon...'
+        "Sectioned form with progress tracking",
+        "Real-time contract insights",
+        "Smart auto-completion",
+        "Salary recommendations",
+        "Advanced analytics",
+        "Coming soon...",
       ],
-      status: 'development'
-    }
+      status: "development",
+    },
   }
 
   // Contract types with enhanced configuration
@@ -244,32 +250,32 @@ export default function GenerateContractPage() {
     if (typeConfig) {
       const newInsights: ContractInsight[] = [
         {
-          type: 'info',
+          type: "info",
           title: `${typeConfig.label} Contract`,
           description: typeConfig.description,
-          priority: 'medium'
+          priority: "medium",
         },
         {
-          type: 'success',
-          title: 'Template Available',
+          type: "success",
+          title: "Template Available",
           description: `Professional template with ${typeConfig.requiredFields.length} required fields`,
-          priority: 'high'
-        }
+          priority: "high",
+        },
       ]
-      setInsights(prev => [...prev, ...newInsights])
+      setInsights((prev) => [...prev, ...newInsights])
     }
   }
 
   const updateFormProgress = (section: string, completed: boolean) => {
-    setFormProgress(prev => {
-      const updatedSections = prev.sections.map(s => 
-        s.name === section ? { ...s, completed } : s
+    setFormProgress((prev) => {
+      const updatedSections = prev.sections.map((s) =>
+        s.name === section ? { ...s, completed } : s,
       )
-      const completedCount = updatedSections.filter(s => s.completed).length
+      const completedCount = updatedSections.filter((s) => s.completed).length
       return {
         ...prev,
         completed: completedCount,
-        percentage: Math.round((completedCount / prev.total) * 100)
+        percentage: Math.round((completedCount / prev.total) * 100),
       }
     })
   }
@@ -282,16 +288,14 @@ export default function GenerateContractPage() {
       className="space-y-6"
     >
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="space-y-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="font-heading text-3xl font-bold md:text-4xl">
-            Create New Contract
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
+          <h1 className="font-heading text-3xl font-bold md:text-4xl">Create New Contract</h1>
+          <p className="mt-2 text-lg text-muted-foreground">
             Generate professional bilingual contracts with enhanced validation and insights
           </p>
         </motion.div>
@@ -301,14 +305,14 @@ export default function GenerateContractPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          className="flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
             <input
               type="text"
               placeholder="Search contracts, promoters, parties..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="w-full rounded-lg border py-2 pl-10 pr-4 focus:border-transparent focus:ring-2 focus:ring-primary"
             />
           </div>
           <Button className="flex items-center gap-2">
@@ -326,16 +330,16 @@ export default function GenerateContractPage() {
         >
           <Tabs value={useEnhancedForm ? "enhanced" : "standard"} className="w-full max-w-md">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger 
-                value="standard" 
+              <TabsTrigger
+                value="standard"
                 onClick={() => setUseEnhancedForm(false)}
                 className="flex items-center gap-2"
               >
                 <FileText className="h-4 w-4" />
                 Standard
               </TabsTrigger>
-              <TabsTrigger 
-                value="enhanced" 
+              <TabsTrigger
+                value="enhanced"
                 onClick={() => setUseEnhancedForm(true)}
                 className="flex items-center gap-2"
               >
@@ -354,17 +358,17 @@ export default function GenerateContractPage() {
         transition={{ delay: 0.4 }}
         className="grid gap-6 md:grid-cols-2"
       >
-        <Card className={`border-2 transition-all duration-200 ${
-          !useEnhancedForm ? 'border-primary bg-primary/5' : 'border-border'
-        }`}>
+        <Card
+          className={`border-2 transition-all duration-200 ${
+            !useEnhancedForm ? "border-primary bg-primary/5" : "border-border"
+          }`}
+        >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               {featureComparison.standard.title}
             </CardTitle>
-            <CardDescription>
-              {featureComparison.standard.description}
-            </CardDescription>
+            <CardDescription>{featureComparison.standard.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -375,23 +379,26 @@ export default function GenerateContractPage() {
                 </div>
               ))}
             </div>
-            <Badge className="mt-4" variant={featureComparison.standard.status === 'active' ? 'default' : 'secondary'}>
-              {featureComparison.standard.status === 'active' ? 'Active' : 'Development'}
+            <Badge
+              className="mt-4"
+              variant={featureComparison.standard.status === "active" ? "default" : "secondary"}
+            >
+              {featureComparison.standard.status === "active" ? "Active" : "Development"}
             </Badge>
           </CardContent>
         </Card>
 
-        <Card className={`border-2 transition-all duration-200 ${
-          useEnhancedForm ? 'border-primary bg-primary/5' : 'border-border'
-        }`}>
+        <Card
+          className={`border-2 transition-all duration-200 ${
+            useEnhancedForm ? "border-primary bg-primary/5" : "border-border"
+          }`}
+        >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
               {featureComparison.enhanced.title}
             </CardTitle>
-            <CardDescription>
-              {featureComparison.enhanced.description}
-            </CardDescription>
+            <CardDescription>{featureComparison.enhanced.description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -402,8 +409,11 @@ export default function GenerateContractPage() {
                 </div>
               ))}
             </div>
-            <Badge className="mt-4" variant={featureComparison.enhanced.status === 'active' ? 'default' : 'secondary'}>
-              {featureComparison.enhanced.status === 'active' ? 'Active' : 'Development'}
+            <Badge
+              className="mt-4"
+              variant={featureComparison.enhanced.status === "active" ? "default" : "secondary"}
+            >
+              {featureComparison.enhanced.status === "active" ? "Active" : "Development"}
             </Badge>
           </CardContent>
         </Card>
@@ -421,14 +431,12 @@ export default function GenerateContractPage() {
               <Brain className="h-5 w-5 text-blue-500" />
               Contract Generation Insights
             </CardTitle>
-            <CardDescription>
-              Smart recommendations and validation insights
-            </CardDescription>
+            <CardDescription>Smart recommendations and validation insights</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Form Completion Progress */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 <span className="text-sm font-medium">Form Completion</span>
                 <span className="text-sm text-muted-foreground">
                   {formProgress.completed} of {formProgress.total} required fields completed
@@ -439,7 +447,7 @@ export default function GenerateContractPage() {
 
             {/* Best Practices */}
             <div>
-              <h4 className="font-medium mb-3">Best Practices</h4>
+              <h4 className="mb-3 font-medium">Best Practices</h4>
               <div className="space-y-2">
                 {bestPractices.map((practice, index) => (
                   <div key={index} className="flex items-center gap-2">
@@ -473,17 +481,19 @@ export default function GenerateContractPage() {
               <Workflow className="h-5 w-5" />
               Form Sections Overview
             </CardTitle>
-            <CardDescription>
-              Overview of contract generation sections
-            </CardDescription>
+            <CardDescription>Overview of contract generation sections</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {formProgress.sections.map((section, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    section.completed ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                  }`}>
+                <div key={index} className="flex items-center gap-3 rounded-lg border p-3">
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                      section.completed
+                        ? "bg-green-100 text-green-600"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
                     {section.completed ? (
                       <CheckCircle className="h-4 w-4" />
                     ) : (
@@ -491,9 +501,9 @@ export default function GenerateContractPage() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium text-sm">{section.name}</div>
+                    <div className="text-sm font-medium">{section.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {section.required ? 'Required' : 'Optional'}
+                      {section.required ? "Required" : "Optional"}
                     </div>
                   </div>
                   {section.required && (
@@ -517,8 +527,7 @@ export default function GenerateContractPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              9 Contract Types
+              <FileText className="h-5 w-5" />9 Contract Types
             </CardTitle>
             <CardDescription>
               Each contract type has unique templates, fields, and business rules
@@ -526,8 +535,10 @@ export default function GenerateContractPage() {
           </CardHeader>
           <CardContent>
             {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Button variant="outline" size="sm">All Types</Button>
+            <div className="mb-6 flex flex-wrap gap-2">
+              <Button variant="outline" size="sm">
+                All Types
+              </Button>
               {contractCategories.map((category) => (
                 <Button key={category.id} variant="outline" size="sm">
                   {category.label}
@@ -539,15 +550,15 @@ export default function GenerateContractPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {Object.entries(contractTypesConfig).map(([category, types]) => (
                 <div key={category} className="space-y-3">
-                  <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                  <h4 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
                     {category}
                   </h4>
                   <div className="space-y-2">
                     {types.map((type) => (
                       <div
                         key={type.value}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all duration-200 hover:border-primary ${
-                          selectedContractType === type.value ? 'border-primary bg-primary/5' : ''
+                        className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
+                          selectedContractType === type.value ? "border-primary bg-primary/5" : ""
                         }`}
                         onClick={() => handleContractTypeSelect(type.value)}
                       >
@@ -584,30 +595,42 @@ export default function GenerateContractPage() {
               <Brain className="h-5 w-5 text-purple-500" />
               AI Insights & Recommendations
             </CardTitle>
-            <CardDescription>
-              Smart analysis and optimization suggestions
-            </CardDescription>
+            <CardDescription>Smart analysis and optimization suggestions</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-6 md:grid-cols-2">
               {/* Insights */}
               <div>
-                <h4 className="font-medium mb-3">Current Insights</h4>
+                <h4 className="mb-3 font-medium">Current Insights</h4>
                 <div className="space-y-3">
                   {insights.map((insight, index) => (
-                    <div key={index} className={`p-3 rounded-lg border ${
-                      insight.type === 'success' ? 'border-green-200 bg-green-50' :
-                      insight.type === 'warning' ? 'border-yellow-200 bg-yellow-50' :
-                      insight.type === 'error' ? 'border-red-200 bg-red-50' :
-                      'border-blue-200 bg-blue-50'
-                    }`}>
+                    <div
+                      key={index}
+                      className={`rounded-lg border p-3 ${
+                        insight.type === "success"
+                          ? "border-green-200 bg-green-50"
+                          : insight.type === "warning"
+                            ? "border-yellow-200 bg-yellow-50"
+                            : insight.type === "error"
+                              ? "border-red-200 bg-red-50"
+                              : "border-blue-200 bg-blue-50"
+                      }`}
+                    >
                       <div className="flex items-start gap-2">
-                        {insight.type === 'success' && <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />}
-                        {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />}
-                        {insight.type === 'error' && <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />}
-                        {insight.type === 'info' && <Info className="h-4 w-4 text-blue-600 mt-0.5" />}
+                        {insight.type === "success" && (
+                          <CheckCircle className="mt-0.5 h-4 w-4 text-green-600" />
+                        )}
+                        {insight.type === "warning" && (
+                          <AlertTriangle className="mt-0.5 h-4 w-4 text-yellow-600" />
+                        )}
+                        {insight.type === "error" && (
+                          <AlertTriangle className="mt-0.5 h-4 w-4 text-red-600" />
+                        )}
+                        {insight.type === "info" && (
+                          <Info className="mt-0.5 h-4 w-4 text-blue-600" />
+                        )}
                         <div className="flex-1">
-                          <div className="font-medium text-sm">{insight.title}</div>
+                          <div className="text-sm font-medium">{insight.title}</div>
                           <div className="text-xs text-muted-foreground">{insight.description}</div>
                         </div>
                         <Badge variant="outline" className="text-xs">
@@ -621,24 +644,22 @@ export default function GenerateContractPage() {
 
               {/* Recommendations */}
               <div>
-                <h4 className="font-medium mb-3">Smart Recommendations</h4>
+                <h4 className="mb-3 font-medium">Smart Recommendations</h4>
                 <div className="space-y-3">
                   {recommendations.map((rec, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="font-medium text-sm">{rec.title}</div>
+                    <div key={index} className="rounded-lg border p-3">
+                      <div className="mb-2 flex items-start justify-between">
+                        <div className="text-sm font-medium">{rec.title}</div>
                         <Badge variant="outline" className="text-xs">
                           {rec.impact}
                         </Badge>
                       </div>
-                      <div className="text-xs text-muted-foreground mb-2">
-                        {rec.description}
-                      </div>
+                      <div className="mb-2 text-xs text-muted-foreground">{rec.description}</div>
                       <div className="text-xs">
                         <strong>Implementation:</strong> {rec.implementation}
                       </div>
                       {rec.estimatedSavings && (
-                        <div className="text-xs text-green-600 mt-1">
+                        <div className="mt-1 text-xs text-green-600">
                           💰 Estimated savings: {rec.estimatedSavings}
                         </div>
                       )}
@@ -658,7 +679,7 @@ export default function GenerateContractPage() {
         transition={{ delay: 0.9 }}
       >
         {useEnhancedForm ? (
-          <EnhancedContractForm 
+          <EnhancedContractForm
             onSuccess={() => {
               toast({
                 title: "Contract Generated",
@@ -669,12 +690,12 @@ export default function GenerateContractPage() {
               toast({
                 title: "Generation Failed",
                 description: error.message || "Failed to generate contract.",
-                variant: "destructive"
+                variant: "destructive",
               })
             }}
           />
         ) : (
-          <UnifiedContractGeneratorForm 
+          <UnifiedContractGeneratorForm
             mode="advanced"
             showAdvanced={true}
             autoRedirect={false}

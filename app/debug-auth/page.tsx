@@ -1,11 +1,11 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Loader2, User, Mail, Shield, RefreshCw } from 'lucide-react'
+import { useEffect, useState } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Loader2, User, Mail, Shield, RefreshCw } from "lucide-react"
 
 export default function DebugAuthPage() {
   const { user, profile, loading, mounted, signOut } = useAuth()
@@ -15,12 +15,12 @@ export default function DebugAuthPage() {
   const checkServerAuth = async () => {
     setServerLoading(true)
     try {
-      const response = await fetch('/api/auth/check-session')
+      const response = await fetch("/api/auth/check-session")
       const data = await response.json()
       setServerAuth(data)
     } catch (error) {
-      console.error('Server auth check failed:', error)
-      setServerAuth({ error: 'Failed to check server auth' })
+      console.error("Server auth check failed:", error)
+      setServerAuth({ error: "Failed to check server auth" })
     } finally {
       setServerLoading(false)
     }
@@ -37,9 +37,9 @@ export default function DebugAuthPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin" />
           <p>Loading...</p>
         </div>
       </div>
@@ -48,13 +48,13 @@ export default function DebugAuthPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">Authentication Debug</h1>
+          <h1 className="mb-2 text-3xl font-bold">Authentication Debug</h1>
           <p className="text-muted-foreground">Debug information for authentication issues</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {/* Client Auth State */}
           <Card>
             <CardHeader>
@@ -70,7 +70,7 @@ export default function DebugAuthPage() {
                   {loading ? "Yes" : "No"}
                 </Badge>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <span>Mounted:</span>
                 <Badge variant={mounted ? "default" : "destructive"}>
@@ -86,7 +86,7 @@ export default function DebugAuthPage() {
               </div>
 
               {user && (
-                <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-2 rounded-lg bg-gray-50 p-4">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
                     <span className="font-mono text-sm">{user.email}</span>
@@ -99,11 +99,9 @@ export default function DebugAuthPage() {
               )}
 
               {profile && (
-                <div className="space-y-2 p-4 bg-blue-50 rounded-lg">
+                <div className="space-y-2 rounded-lg bg-blue-50 p-4">
                   <h4 className="font-semibold">Profile Data:</h4>
-                  <pre className="text-xs overflow-auto">
-                    {JSON.stringify(profile, null, 2)}
-                  </pre>
+                  <pre className="overflow-auto text-xs">{JSON.stringify(profile, null, 2)}</pre>
                 </div>
               )}
             </CardContent>
@@ -115,13 +113,13 @@ export default function DebugAuthPage() {
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
                 Server Auth State
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={checkServerAuth}
                   disabled={serverLoading}
                 >
-                  <RefreshCw className={`h-4 w-4 ${serverLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 ${serverLoading ? "animate-spin" : ""}`} />
                 </Button>
               </CardTitle>
             </CardHeader>
@@ -139,24 +137,24 @@ export default function DebugAuthPage() {
                       {serverAuth.success ? "Success" : "Error"}
                     </Badge>
                   </div>
-                  
+
                   {serverAuth.hasSession && (
-                    <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="rounded-lg bg-green-50 p-4">
                       <h4 className="font-semibold text-green-800">Session Found</h4>
-                      <pre className="text-xs overflow-auto text-green-700">
+                      <pre className="overflow-auto text-xs text-green-700">
                         {JSON.stringify(serverAuth.user, null, 2)}
                       </pre>
                     </div>
                   )}
 
                   {serverAuth.error && (
-                    <div className="p-4 bg-red-50 rounded-lg">
+                    <div className="rounded-lg bg-red-50 p-4">
                       <h4 className="font-semibold text-red-800">Error</h4>
                       <p className="text-sm text-red-700">{serverAuth.error}</p>
                     </div>
                   )}
 
-                  <pre className="text-xs overflow-auto bg-gray-50 p-2 rounded">
+                  <pre className="overflow-auto rounded bg-gray-50 p-2 text-xs">
                     {JSON.stringify(serverAuth, null, 2)}
                   </pre>
                 </div>
@@ -175,16 +173,16 @@ export default function DebugAuthPage() {
           <CardContent className="space-y-4">
             <div className="flex gap-4">
               <Button onClick={checkServerAuth} disabled={serverLoading}>
-                <RefreshCw className={`h-4 w-4 mr-2 ${serverLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`mr-2 h-4 w-4 ${serverLoading ? "animate-spin" : ""}`} />
                 Refresh Server Auth
               </Button>
-              
+
               {user && (
                 <Button variant="destructive" onClick={handleSignOut}>
                   Sign Out
                 </Button>
               )}
-              
+
               <Button variant="outline" onClick={() => window.location.reload()}>
                 Reload Page
               </Button>
@@ -193,13 +191,21 @@ export default function DebugAuthPage() {
             <div className="space-y-2">
               <h4 className="font-semibold">Quick Links:</h4>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/en/auth/login'}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = "/en/auth/login")}
+                >
                   Go to Login
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/en/dashboard'}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (window.location.href = "/en/dashboard")}
+                >
                   Go to Dashboard
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => window.location.href = '/'}>
+                <Button variant="outline" size="sm" onClick={() => (window.location.href = "/")}>
                   Go to Root
                 </Button>
               </div>
@@ -209,4 +215,4 @@ export default function DebugAuthPage() {
       </div>
     </div>
   )
-} 
+}

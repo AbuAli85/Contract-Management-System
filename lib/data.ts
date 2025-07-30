@@ -1,5 +1,5 @@
 import type { ContractWithRelations } from "@/hooks/use-contracts"
-import { getSupabaseClient } from '@/lib/supabase'
+import { getSupabaseClient } from "@/lib/supabase"
 
 export const getContract = async (contractId: string): Promise<ContractWithRelations | null> => {
   if (!contractId) {

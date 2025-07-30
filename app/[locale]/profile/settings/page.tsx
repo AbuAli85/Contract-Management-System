@@ -14,9 +14,7 @@ export default function ProfileSettingsPage() {
       {/* Page Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
+        <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
       {/* Settings Content */}
@@ -49,7 +47,7 @@ export default function ProfileSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input id="firstName" placeholder="Enter your first name" />
@@ -84,17 +82,13 @@ export default function ProfileSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>
-                Configure how you receive notifications
-              </CardDescription>
+              <CardDescription>Configure how you receive notifications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive notifications via email
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -110,9 +104,7 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>System Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive system-wide alerts
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive system-wide alerts</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -128,9 +120,7 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Weekly Reports</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive weekly activity reports
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive weekly activity reports</p>
                 </div>
                 <Switch />
               </div>
@@ -143,16 +133,14 @@ export default function ProfileSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>General Preferences</CardTitle>
-              <CardDescription>
-                Configure your general account preferences
-              </CardDescription>
+              <CardDescription>Configure your general account preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="language">Language</Label>
-                <select 
-                  id="language" 
-                  className="w-full p-2 border rounded-md"
+                <select
+                  id="language"
+                  className="w-full rounded-md border p-2"
                   defaultValue="en"
                   aria-label="Select language"
                 >
@@ -162,9 +150,9 @@ export default function ProfileSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone">Timezone</Label>
-                <select 
-                  id="timezone" 
-                  className="w-full p-2 border rounded-md"
+                <select
+                  id="timezone"
+                  className="w-full rounded-md border p-2"
                   defaultValue="UTC"
                   aria-label="Select timezone"
                 >
@@ -176,9 +164,9 @@ export default function ProfileSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dateFormat">Date Format</Label>
-                <select 
-                  id="dateFormat" 
-                  className="w-full p-2 border rounded-md"
+                <select
+                  id="dateFormat"
+                  className="w-full rounded-md border p-2"
                   defaultValue="MM/DD/YYYY"
                   aria-label="Select date format"
                 >
@@ -190,9 +178,7 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Auto-save</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically save form data
-                  </p>
+                  <p className="text-sm text-muted-foreground">Automatically save form data</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -205,26 +191,38 @@ export default function ProfileSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Appearance Settings</CardTitle>
-              <CardDescription>
-                Customize the look and feel of your interface
-              </CardDescription>
+              <CardDescription>Customize the look and feel of your interface</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Theme</Label>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Light</Button>
-                  <Button variant="outline" size="sm">Dark</Button>
-                  <Button variant="outline" size="sm">System</Button>
+                  <Button variant="outline" size="sm">
+                    Light
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Dark
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    System
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Color Scheme</Label>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Blue</Button>
-                  <Button variant="outline" size="sm">Green</Button>
-                  <Button variant="outline" size="sm">Purple</Button>
-                  <Button variant="outline" size="sm">Orange</Button>
+                  <Button variant="outline" size="sm">
+                    Blue
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Green
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Purple
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Orange
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -239,9 +237,7 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Show Icons</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Display icons in navigation
-                  </p>
+                  <p className="text-sm text-muted-foreground">Display icons in navigation</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -252,4 +248,4 @@ export default function ProfileSettingsPage() {
       </Tabs>
     </div>
   )
-} 
+}

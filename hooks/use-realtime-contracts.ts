@@ -8,14 +8,19 @@ export function useRealtimeContracts() {
 
   const fetchContracts = useCallback(async () => {
     const supabaseClient = getSupabaseClient()
-    const { data } = await supabaseClient.from("contracts").select("*").order("created_at", { ascending: false })
+    const { data } = await supabaseClient
+      .from("contracts")
+      .select("*")
+      .order("created_at", { ascending: false })
     setContracts(Array.isArray(data) ? (data as Contract[]) : [])
   }, [])
 
   useRealtimeTable("contracts", fetchContracts)
 
   // Initial fetch
-  useEffect(() => { fetchContracts() }, [fetchContracts])
+  useEffect(() => {
+    fetchContracts()
+  }, [fetchContracts])
 
   return contracts
 }

@@ -1,19 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
 
 // Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status') || 'all'
+    const status = searchParams.get("status") || "all"
 
     // Mock data for promoter tasks
     const mockTasks = [
       {
         id: 1,
         title: "Product Launch Event",
-        description: "Lead product demonstration at tech conference. Set up booth, demonstrate features, collect leads.",
+        description:
+          "Lead product demonstration at tech conference. Set up booth, demonstrate features, collect leads.",
         dueDate: "2024-06-25",
         priority: "high",
         status: "in_progress",
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
         client: "TechCorp Inc",
         location: "Convention Center",
         attachments: ["presentation.pdf", "product-specs.docx"],
-        notes: "Remember to bring demo devices and marketing materials"
+        notes: "Remember to bring demo devices and marketing materials",
       },
       {
         id: 2,
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         client: "ABC Corporation",
         location: "Client Office",
         attachments: ["quarterly-report.pdf"],
-        notes: "Prepare presentation slides and bring printed reports"
+        notes: "Prepare presentation slides and bring printed reports",
       },
       {
         id: 3,
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
         client: "BrandX",
         location: "Remote",
         attachments: ["campaign-brief.pdf", "content-calendar.xlsx"],
-        notes: "Campaign performed above expectations with 15% engagement rate"
+        notes: "Campaign performed above expectations with 15% engagement rate",
       },
       {
         id: 4,
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
         client: "Internal",
         location: "Office",
         attachments: ["training-materials.zip"],
-        notes: "Prepare interactive demo and Q&A session"
+        notes: "Prepare interactive demo and Q&A session",
       },
       {
         id: 5,
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
         client: "Industry Expo",
         location: "Exhibition Center",
         attachments: ["booth-layout.pdf", "product-catalog.pdf"],
-        notes: "Booth setup completed, need to finalize presentation materials"
+        notes: "Booth setup completed, need to finalize presentation materials",
       },
       {
         id: 6,
@@ -104,36 +105,37 @@ export async function GET(request: NextRequest) {
         client: "Various",
         location: "Remote",
         attachments: ["lead-list.xlsx", "call-script.docx"],
-        notes: "Generated 5 qualified leads, 2 meetings scheduled"
-      }
+        notes: "Generated 5 qualified leads, 2 meetings scheduled",
+      },
     ]
 
     // Filter tasks based on status if specified
     let filteredTasks = mockTasks
-    if (status !== 'all') {
-      filteredTasks = mockTasks.filter(task => task.status === status)
+    if (status !== "all") {
+      filteredTasks = mockTasks.filter((task) => task.status === status)
     }
 
     return NextResponse.json({
       tasks: filteredTasks,
       summary: {
         total: mockTasks.length,
-        completed: mockTasks.filter(t => t.status === 'completed').length,
-        inProgress: mockTasks.filter(t => t.status === 'in_progress').length,
-        pending: mockTasks.filter(t => t.status === 'pending').length,
-        overdue: mockTasks.filter(t => new Date(t.dueDate) < new Date() && t.status !== 'completed').length
-      }
-    })
-
-  } catch (error) {
-    console.error('Promoter tasks error:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch promoter tasks',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        completed: mockTasks.filter((t) => t.status === "completed").length,
+        inProgress: mockTasks.filter((t) => t.status === "in_progress").length,
+        pending: mockTasks.filter((t) => t.status === "pending").length,
+        overdue: mockTasks.filter(
+          (t) => new Date(t.dueDate) < new Date() && t.status !== "completed",
+        ).length,
       },
-      { status: 500 }
+    })
+  } catch (error) {
+    console.error("Promoter tasks error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to fetch promoter tasks",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
     )
   }
-} 
+}

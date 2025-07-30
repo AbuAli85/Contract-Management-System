@@ -11,12 +11,14 @@
 ### **1. Image Replacement Fix**
 
 **Current (Broken) Code:**
+
 ```javascript
 {{if(exists(4.id); "https://drive.google.com/uc?id=" + 4.id; "")}}
 {{if(exists(5.id); "https://drive.google.com/uc?id=" + 5.id; "")}}
 ```
 
 **Fixed Code:**
+
 ```javascript
 {{if(4.id; "https://drive.google.com/uc?id=" + 4.id; "")}}
 {{if(5.id; "https://drive.google.com/uc?id=" + 5.id; "")}}
@@ -27,11 +29,13 @@
 Instead of complex conditional logic, use this simpler approach:
 
 **ID Card Image URL:**
+
 ```javascript
 https://drive.google.com/uc?id={{4.id}}
 ```
 
 **Passport Image URL:**
+
 ```javascript
 https://drive.google.com/uc?id={{5.id}}
 ```
@@ -48,10 +52,12 @@ https://drive.google.com/uc?id={{5.id}}
 ### **Specific Changes:**
 
 **For ID Card Image (ID_CARD_IMAGE):**
+
 - **Replace**: `{{if(exists(4.id); "https://drive.google.com/uc?id=" + 4.id; "")}}`
 - **With**: `https://drive.google.com/uc?id={{4.id}}`
 
 **For Passport Image (PASSPORT_IMAGE):**
+
 - **Replace**: `{{if(exists(5.id); "https://drive.google.com/uc?id=" + 5.id; "")}}`
 - **With**: `https://drive.google.com/uc?id={{5.id}}`
 
@@ -67,15 +73,18 @@ https://drive.google.com/uc?id={{5.id}}
 Here's what your Google Docs module should look like:
 
 **Title:**
+
 ```
 {{1.contract_number}}-{{1.promoter_name_en}}.pdf
 ```
 
 **Image Replacements:**
+
 - **ID_CARD_IMAGE**: `https://drive.google.com/uc?id={{4.id}}`
 - **PASSPORT_IMAGE**: `https://drive.google.com/uc?id={{5.id}}`
 
 **Text Replacements:** (Keep these as they are - they're working)
+
 - ref_number: `{{1.contract_number}}`
 - first_party_name_en: `{{1.first_party_name_en}}`
 - etc.
@@ -83,6 +92,7 @@ Here's what your Google Docs module should look like:
 ## 🧪 **Expected Results**
 
 After applying these fixes:
+
 - ✅ No more "exists not found" errors
 - ✅ No more "if finished with error" messages
 - ✅ Images will load when available

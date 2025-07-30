@@ -1,18 +1,18 @@
-'use client'
+"use client"
 
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 export function AuthDebug() {
   const auth = useAuth()
-  
+
   return (
     <Card className="mb-4">
       <CardHeader>
         <CardTitle className="text-sm">Auth Debug Info</CardTitle>
       </CardHeader>
-      <CardContent className="text-xs space-y-2">
+      <CardContent className="space-y-2 text-xs">
         <div className="flex items-center gap-2">
           <span>Loading:</span>
           <Badge variant={auth.loading ? "destructive" : "default"}>
@@ -39,9 +39,7 @@ export function AuthDebug() {
         </div>
         <div className="flex items-center gap-2">
           <span>Roles:</span>
-          <Badge variant="outline">
-            {auth.roles.length > 0 ? auth.roles.join(', ') : "None"}
-          </Badge>
+          <Badge variant="outline">{auth.roles.length > 0 ? auth.roles.join(", ") : "None"}</Badge>
         </div>
         <div className="flex items-center gap-2">
           <span>Profile:</span>
@@ -52,4 +50,4 @@ export function AuthDebug() {
       </CardContent>
     </Card>
   )
-} 
+}

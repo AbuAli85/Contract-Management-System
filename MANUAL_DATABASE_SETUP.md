@@ -7,6 +7,7 @@ Since the automated setup script encountered some issues with SQL execution, her
 Go to your **Supabase Dashboard > SQL Editor** and run these commands one by one:
 
 ### Enable RLS on Tables
+
 ```sql
 -- Enable RLS on users table
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -19,6 +20,7 @@ ALTER TABLE user_activity_log ENABLE ROW LEVEL SECURITY;
 ```
 
 ### Users Table Policies
+
 ```sql
 -- Policy: Users can view their own profile
 CREATE POLICY "Users can view own profile" ON users
@@ -40,7 +42,7 @@ CREATE POLICY "Admins can view all users" ON users
     FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
@@ -50,7 +52,7 @@ CREATE POLICY "Admins can create users" ON users
     FOR INSERT
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
@@ -60,13 +62,13 @@ CREATE POLICY "Admins can update all users" ON users
     FOR UPDATE
     USING (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     )
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
@@ -76,7 +78,7 @@ CREATE POLICY "Admins can delete users" ON users
     FOR DELETE
     USING (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
@@ -87,7 +89,7 @@ CREATE POLICY "Managers can view department users" ON users
     USING (
         EXISTS (
             SELECT 1 FROM users manager
-            WHERE manager.id = auth.uid() 
+            WHERE manager.id = auth.uid()
             AND manager.role = 'manager'
             AND manager.department = users.department
         )
@@ -95,6 +97,7 @@ CREATE POLICY "Managers can view department users" ON users
 ```
 
 ### Permissions Table Policies
+
 ```sql
 -- Policy: All authenticated users can view permissions
 CREATE POLICY "Authenticated users can view permissions" ON permissions
@@ -106,19 +109,20 @@ CREATE POLICY "Admins can manage permissions" ON permissions
     FOR ALL
     USING (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     )
     WITH CHECK (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
 ```
 
 ### User Activity Log Policies
+
 ```sql
 -- Policy: Users can view their own activity logs
 CREATE POLICY "Users can view own activity logs" ON user_activity_log
@@ -135,13 +139,14 @@ CREATE POLICY "Admins can view all activity logs" ON user_activity_log
     FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM users 
+            SELECT 1 FROM users
             WHERE id = auth.uid() AND role = 'admin'
         )
     );
 ```
 
 ### Grant Permissions
+
 ```sql
 -- Grant necessary permissions to authenticated users
 GRANT USAGE ON SCHEMA public TO authenticated;
@@ -201,28 +206,33 @@ INSERT INTO public.users (
 ## 🧪 **Step 3: Test the Setup**
 
 ### Test Login
+
 1. Go to your application's login page
 2. Try logging in with:
    - **Email**: `admin@example.com`
    - **Password**: `admin123`
 
 ### Test Profile Access
+
 1. After login, navigate to `/auth/profile`
 2. Verify you can see and edit your profile
 
 ### Test Debug Page
+
 1. Navigate to `/debug-auth`
 2. Verify all authentication state is displayed correctly
 
 ## 🔍 **Step 4: Verify RLS Policies**
 
 ### Test User Isolation
+
 ```sql
 -- This should only return the current user's profile
 SELECT * FROM users WHERE id = auth.uid();
 ```
 
 ### Test Admin Access
+
 ```sql
 -- This should return all users if you're an admin
 SELECT * FROM users;
@@ -231,16 +241,19 @@ SELECT * FROM users;
 ## 🚨 **Troubleshooting**
 
 ### If Login Fails
+
 1. Check if the user exists in **Authentication > Users**
 2. Reset the password in the dashboard
 3. Verify the user profile exists in the `users` table
 
 ### If RLS Policies Don't Work
+
 1. Verify RLS is enabled: `SELECT schemaname, tablename, rowsecurity FROM pg_tables WHERE tablename = 'users';`
 2. Check policy existence: `SELECT * FROM pg_policies WHERE tablename = 'users';`
 3. Test with service role to bypass RLS
 
 ### If Profile Access Fails
+
 1. Check if the user profile exists in `public.users`
 2. Verify the user ID matches between `auth.users` and `public.users`
 3. Check RLS policies are correctly applied
@@ -266,4 +279,4 @@ After manual setup is complete:
 
 ---
 
-**The manual setup should resolve the issues encountered with the automated script!** 🚀 
+**The manual setup should resolve the issues encountered with the automated script!** 🚀

@@ -7,10 +7,12 @@ Since your scenario works without images, the issue is that your Google Docs tem
 ## 📋 **EXACT STEPS TO FIX**
 
 ### **1. Open Your Google Docs Template**
+
 - **Go to**: https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit
 - **This is your contract template** that needs image placeholders
 
 ### **2. Add ID Card Image Placeholder**
+
 1. **Find** where you want the ID card to appear in the contract
 2. **Click** Insert → Image → "Upload from computer"
 3. **Upload any sample image** (can be a placeholder image)
@@ -20,6 +22,7 @@ Since your scenario works without images, the issue is that your Google Docs tem
 7. **Click** "Apply"
 
 ### **3. Add Passport Image Placeholder**
+
 1. **Find** where you want the passport to appear in the contract
 2. **Click** Insert → Image → "Upload from computer"
 3. **Upload any sample image** (can be a placeholder image)
@@ -29,6 +32,7 @@ Since your scenario works without images, the issue is that your Google Docs tem
 7. **Click** "Apply"
 
 ### **4. Save the Template**
+
 - **File** → **Save** or Ctrl+S
 
 ## 🔧 **Then Fix Make.com Image Settings**
@@ -36,6 +40,7 @@ Since your scenario works without images, the issue is that your Google Docs tem
 ### **Option A: Use Google Drive (Current Setup)**
 
 **Add to your Google Drive upload modules (4 & 5):**
+
 ```json
 "permissions": [
   {
@@ -46,12 +51,14 @@ Since your scenario works without images, the issue is that your Google Docs tem
 ```
 
 **Image URLs in Google Docs module:**
+
 - **ID_CARD_IMAGE**: `https://drive.google.com/uc?export=view&id={{4.id}}`
 - **PASSPORT_IMAGE**: `https://drive.google.com/uc?export=view&id={{5.id}}`
 
 ### **Option B: Use Supabase Direct (Simpler)**
 
 **Skip Google Drive uploads, use Supabase URLs directly:**
+
 - **ID_CARD_IMAGE**: `{{1.promoter_id_card_url}}`
 - **PASSPORT_IMAGE**: `{{1.promoter_passport_url}}`
 
@@ -65,6 +72,7 @@ Since your scenario works without images, the issue is that your Google Docs tem
 ## ⚡ **Quick Verification**
 
 **To check if template is ready:**
+
 1. **Open** your template
 2. **Look for** two images with alt text: `ID_CARD_IMAGE` and `PASSPORT_IMAGE`
 3. **If not found** → Add them using steps above

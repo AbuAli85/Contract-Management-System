@@ -11,29 +11,23 @@ const DynamicLoading = () => (
 )
 
 // Dynamic imports for heavy components
-export const DynamicContractsTable = lazy(() => 
-  import("./contracts/ContractsTable")
-)
+export const DynamicContractsTable = lazy(() => import("./contracts/ContractsTable"))
 
-export const DynamicContractGeneratorForm = lazy(() => 
-  import("./unified-contract-generator-form")
-)
+export const DynamicContractGeneratorForm = lazy(() => import("./unified-contract-generator-form"))
 
-export const DynamicDashboard = lazy(() => 
-  import("./dashboard")
-)
+export const DynamicDashboard = lazy(() => import("./dashboard"))
 
 // Wrapper component for dynamic imports with Suspense
 export const withSuspense = <P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: React.ReactNode
+  fallback?: React.ReactNode,
 ) => {
   const WrappedComponent = (props: P) => (
     <Suspense fallback={fallback || <DynamicLoading />}>
       <Component {...props} />
     </Suspense>
   )
-  
+
   WrappedComponent.displayName = `withSuspense(${Component.displayName || Component.name})`
   return WrappedComponent
 }
@@ -46,14 +40,10 @@ export const preloadComponent = (importFn: () => Promise<unknown>) => {
 }
 
 // Export preload functions
-export const preloadContractsTable = preloadComponent(() => 
-  import("./contracts/ContractsTable")
+export const preloadContractsTable = preloadComponent(() => import("./contracts/ContractsTable"))
+
+export const preloadContractGenerator = preloadComponent(
+  () => import("./unified-contract-generator-form"),
 )
 
-export const preloadContractGenerator = preloadComponent(() => 
-  import("./unified-contract-generator-form")
-)
-
-export const preloadDashboard = preloadComponent(() => 
-  import("./dashboard")
-) 
+export const preloadDashboard = preloadComponent(() => import("./dashboard"))

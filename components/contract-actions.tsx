@@ -20,19 +20,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { 
-  MoreHorizontal, 
-  Edit3, 
-  Eye, 
-  Download, 
-  Send, 
-  Archive, 
-  Trash2, 
+import {
+  MoreHorizontal,
+  Edit3,
+  Eye,
+  Download,
+  Send,
+  Archive,
+  Trash2,
   RefreshCw,
   Copy,
   FileText,
   Calendar,
-  Users
+  Users,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { getSupabaseClient } from "@/lib/supabase"
@@ -45,11 +45,11 @@ interface ContractActionsProps {
   onDelete?: () => void
 }
 
-export function ContractActions({ 
-  contractId, 
-  status, 
-  onStatusChange, 
-  onDelete 
+export function ContractActions({
+  contractId,
+  status,
+  onStatusChange,
+  onDelete,
 }: ContractActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
@@ -59,9 +59,9 @@ export function ContractActions({
     try {
       const supabase = getSupabaseClient()
       const { error } = await supabase
-        .from('contracts')
+        .from("contracts")
         .update({ status: newStatus })
-        .eq('id', contractId)
+        .eq("id", contractId)
 
       if (error) throw error
 
@@ -69,7 +69,7 @@ export function ContractActions({
         title: "Status Updated",
         description: `Contract status changed to ${newStatus}`,
       })
-      
+
       onStatusChange?.()
     } catch (error) {
       toast({
@@ -85,10 +85,7 @@ export function ContractActions({
   const handleDelete = async () => {
     try {
       const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from('contracts')
-        .delete()
-        .eq('id', contractId)
+      const { error } = await supabase.from("contracts").delete().eq("id", contractId)
 
       if (error) throw error
 
@@ -96,7 +93,7 @@ export function ContractActions({
         title: "Contract Deleted",
         description: "Contract has been permanently deleted",
       })
-      
+
       onDelete?.()
     } catch (error) {
       toast({
@@ -112,9 +109,9 @@ export function ContractActions({
     try {
       const supabase = getSupabaseClient()
       const { data: originalContract, error: fetchError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('id', contractId)
+        .from("contracts")
+        .select("*")
+        .eq("id", contractId)
         .single()
 
       if (fetchError) throw fetchError
@@ -124,13 +121,11 @@ export function ContractActions({
       const duplicatedContract = {
         ...contractData,
         user_id: user_id ?? undefined, // Ensure user_id is not null
-        status: 'draft',
-        contract_number: `${contractData.contract_number || 'Contract'} (Copy)`,
+        status: "draft",
+        contract_number: `${contractData.contract_number || "Contract"} (Copy)`,
       }
 
-      const { error: insertError } = await supabase
-        .from('contracts')
-        .insert([duplicatedContract]) // insert expects an array
+      const { error: insertError } = await supabase.from("contracts").insert([duplicatedContract]) // insert expects an array
 
       if (insertError) throw insertError
 
@@ -147,10 +142,10 @@ export function ContractActions({
     }
   }
 
-  const canEdit = ['draft', 'pending_review'].includes(status)
-  const canActivate = ['draft', 'pending_review', 'suspended'].includes(status)
-  const canSuspend = ['active'].includes(status)
-  const canArchive = ['expired', 'terminated'].includes(status)
+  const canEdit = ["draft", "pending_review"].includes(status)
+  const canActivate = ["draft", "pending_review", "suspended"].includes(status)
+  const canSuspend = ["active"].includes(status)
+  const canArchive = ["expired", "terminated"].includes(status)
 
   return (
     <>
@@ -164,7 +159,7 @@ export function ContractActions({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Contract Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          
+
           {/* View Actions */}
           <DropdownMenuItem asChild>
             <Link href={`/contracts/${contractId}`} className="flex items-center">
@@ -172,7 +167,7 @@ export function ContractActions({
               View Details
             </Link>
           </DropdownMenuItem>
-          
+
           <DropdownMenuItem asChild>
             <Link href={`/contracts/${contractId}/pdf`} className="flex items-center">
               <Download className="mr-2 h-4 w-4" />
@@ -199,8 +194,8 @@ export function ContractActions({
 
           {/* Status Actions */}
           {canActivate && (
-            <DropdownMenuItem 
-              onClick={() => handleStatusUpdate('active')}
+            <DropdownMenuItem
+              onClick={() => handleStatusUpdate("active")}
               disabled={isUpdatingStatus}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -209,8 +204,8 @@ export function ContractActions({
           )}
 
           {canSuspend && (
-            <DropdownMenuItem 
-              onClick={() => handleStatusUpdate('suspended')}
+            <DropdownMenuItem
+              onClick={() => handleStatusUpdate("suspended")}
               disabled={isUpdatingStatus}
             >
               <Archive className="mr-2 h-4 w-4" />
@@ -219,8 +214,8 @@ export function ContractActions({
           )}
 
           {canArchive && (
-            <DropdownMenuItem 
-              onClick={() => handleStatusUpdate('archived')}
+            <DropdownMenuItem
+              onClick={() => handleStatusUpdate("archived")}
               disabled={isUpdatingStatus}
             >
               <Archive className="mr-2 h-4 w-4" />
@@ -248,7 +243,7 @@ export function ContractActions({
           <DropdownMenuSeparator />
 
           {/* Danger Zone */}
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
             className="text-red-600 focus:text-red-600"
           >
@@ -263,8 +258,8 @@ export function ContractActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the contract
-              and remove all associated data from our servers.
+              This action cannot be undone. This will permanently delete the contract and remove all
+              associated data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

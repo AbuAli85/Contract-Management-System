@@ -2,10 +2,10 @@ name: Auto Pull Request
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths-ignore:
-      - 'README.md'
-      - 'docs/**'
+      - "README.md"
+      - "docs/**"
 
 jobs:
   create-pr:
@@ -25,27 +25,27 @@ jobs:
           title: "🔄 Auto Sync: ${{ github.run_number }}"
           body: |
             ## 🔄 Automatic Sync from Fork
-            
+
             This PR automatically syncs changes from the fork to the main repository.
-            
+
             ### Changes Included:
             - Latest authentication fixes
             - Build error resolutions
             - Code improvements and optimizations
-            
+
             ### Build Status:
             - ✅ All tests passing
             - ✅ No merge conflicts
             - ✅ Security scan passed
             - ✅ Ready for deployment
-            
+
             ### Deployment:
             - Preview: Available on PR creation
             - Production: Will deploy automatically on merge
-            
+
             ---
             *This PR was created automatically by GitHub Actions*
           base: main
           delete-branch: true
           committer: GitHub <noreply@github.com>
-          author: GitHub <noreply@github.com> 
+          author: GitHub <noreply@github.com>

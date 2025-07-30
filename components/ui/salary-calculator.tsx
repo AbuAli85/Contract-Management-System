@@ -1,12 +1,18 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calculator, TrendingUp, TrendingDown, DollarSign } from 'lucide-react'
+import React, { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Calculator, TrendingUp, TrendingDown, DollarSign } from "lucide-react"
 
 interface SalaryCalculatorProps {
   onSalaryChange?: (salary: number, currency: string) => void
@@ -21,10 +27,10 @@ interface SalaryBreakdown {
   total: number
 }
 
-export function SalaryCalculator({ 
-  onSalaryChange, 
-  initialSalary = 0, 
-  initialCurrency = 'SAR' 
+export function SalaryCalculator({
+  onSalaryChange,
+  initialSalary = 0,
+  initialCurrency = "SAR",
 }: SalaryCalculatorProps) {
   const [basicSalary, setBasicSalary] = useState(initialSalary)
   const [currency, setCurrency] = useState(initialCurrency)
@@ -34,14 +40,14 @@ export function SalaryCalculator({
     basic: initialSalary,
     allowances: 0,
     benefits: 0,
-    total: initialSalary
+    total: initialSalary,
   })
 
   const currencies = [
-    { value: 'SAR', label: 'Saudi Riyal (SAR)' },
-    { value: 'USD', label: 'US Dollar (USD)' },
-    { value: 'EUR', label: 'Euro (EUR)' },
-    { value: 'GBP', label: 'British Pound (GBP)' }
+    { value: "SAR", label: "Saudi Riyal (SAR)" },
+    { value: "USD", label: "US Dollar (USD)" },
+    { value: "EUR", label: "Euro (EUR)" },
+    { value: "GBP", label: "British Pound (GBP)" },
   ]
 
   useEffect(() => {
@@ -50,10 +56,10 @@ export function SalaryCalculator({
       basic: basicSalary,
       allowances,
       benefits,
-      total
+      total,
     }
     setBreakdown(newBreakdown)
-    
+
     if (onSalaryChange) {
       onSalaryChange(total, currency)
     }
@@ -72,22 +78,22 @@ export function SalaryCalculator({
   const handleBasicSalaryChange = (value: string) => {
     const salary = parseFloat(value) || 0
     setBasicSalary(salary)
-    
+
     // Auto-calculate allowances and benefits
     const calculatedAllowances = calculateAllowances(salary)
     const calculatedBenefits = calculateBenefits(salary)
-    
+
     setAllowances(calculatedAllowances)
     setBenefits(calculatedBenefits)
   }
 
   const getSalaryRecommendation = (basic: number) => {
     if (basic < 3000) {
-      return { type: 'low', message: 'Consider market rates for this position' }
+      return { type: "low", message: "Consider market rates for this position" }
     } else if (basic > 15000) {
-      return { type: 'high', message: 'Salary is competitive for the market' }
+      return { type: "high", message: "Salary is competitive for the market" }
     } else {
-      return { type: 'medium', message: 'Salary is within market range' }
+      return { type: "medium", message: "Salary is within market range" }
     }
   }
 
@@ -102,7 +108,7 @@ export function SalaryCalculator({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="basic-salary">Basic Salary</Label>
             <Input
@@ -113,7 +119,7 @@ export function SalaryCalculator({
               placeholder="Enter basic salary"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="currency">Currency</Label>
             <Select value={currency} onValueChange={setCurrency}>
@@ -131,7 +137,7 @@ export function SalaryCalculator({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="allowances">Allowances</Label>
             <Input
@@ -142,7 +148,7 @@ export function SalaryCalculator({
               placeholder="Housing, transport, etc."
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="benefits">Benefits</Label>
             <Input
@@ -153,10 +159,10 @@ export function SalaryCalculator({
               placeholder="Insurance, bonuses, etc."
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label>Total Package</Label>
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+            <div className="flex items-center gap-2 rounded-md bg-muted p-2">
               <DollarSign className="h-4 w-4" />
               <span className="font-semibold">
                 {breakdown.total.toLocaleString()} {currency}
@@ -167,36 +173,48 @@ export function SalaryCalculator({
 
         <div className="space-y-2">
           <Label>Salary Breakdown</Label>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 text-sm">
-            <div className="p-2 bg-blue-50 rounded">
+          <div className="grid grid-cols-1 gap-2 text-sm md:grid-cols-4">
+            <div className="rounded bg-blue-50 p-2">
               <div className="font-medium">Basic</div>
-              <div>{breakdown.basic.toLocaleString()} {currency}</div>
+              <div>
+                {breakdown.basic.toLocaleString()} {currency}
+              </div>
             </div>
-            <div className="p-2 bg-green-50 rounded">
+            <div className="rounded bg-green-50 p-2">
               <div className="font-medium">Allowances</div>
-              <div>{breakdown.allowances.toLocaleString()} {currency}</div>
+              <div>
+                {breakdown.allowances.toLocaleString()} {currency}
+              </div>
             </div>
-            <div className="p-2 bg-purple-50 rounded">
+            <div className="rounded bg-purple-50 p-2">
               <div className="font-medium">Benefits</div>
-              <div>{breakdown.benefits.toLocaleString()} {currency}</div>
+              <div>
+                {breakdown.benefits.toLocaleString()} {currency}
+              </div>
             </div>
-            <div className="p-2 bg-orange-50 rounded">
+            <div className="rounded bg-orange-50 p-2">
               <div className="font-medium">Total</div>
-              <div className="font-bold">{breakdown.total.toLocaleString()} {currency}</div>
+              <div className="font-bold">
+                {breakdown.total.toLocaleString()} {currency}
+              </div>
             </div>
           </div>
         </div>
 
         {basicSalary > 0 && (
-          <div className={`p-3 rounded-md ${
-            recommendation.type === 'high' ? 'bg-green-50 border border-green-200' :
-            recommendation.type === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
-            'bg-red-50 border border-red-200'
-          }`}>
+          <div
+            className={`rounded-md p-3 ${
+              recommendation.type === "high"
+                ? "border border-green-200 bg-green-50"
+                : recommendation.type === "medium"
+                  ? "border border-yellow-200 bg-yellow-50"
+                  : "border border-red-200 bg-red-50"
+            }`}
+          >
             <div className="flex items-center gap-2">
-              {recommendation.type === 'high' ? (
+              {recommendation.type === "high" ? (
                 <TrendingUp className="h-4 w-4 text-green-600" />
-              ) : recommendation.type === 'medium' ? (
+              ) : recommendation.type === "medium" ? (
                 <TrendingUp className="h-4 w-4 text-yellow-600" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-red-600" />
@@ -219,7 +237,7 @@ export function SalaryCalculator({
           >
             Auto-Calculate
           </Button>
-          
+
           <Button
             variant="outline"
             onClick={() => {
@@ -234,4 +252,4 @@ export function SalaryCalculator({
       </CardContent>
     </Card>
   )
-} 
+}

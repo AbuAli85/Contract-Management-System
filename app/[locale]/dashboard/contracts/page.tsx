@@ -17,9 +17,9 @@ export default function DashboardContractsPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin" />
         <p className="text-muted-foreground">Redirecting to contracts...</p>
       </div>
     </div>
   )
-} 
+}

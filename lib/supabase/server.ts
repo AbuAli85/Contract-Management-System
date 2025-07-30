@@ -1,4 +1,4 @@
-import 'server-only'
+import "server-only"
 import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
@@ -10,12 +10,14 @@ const validateEnvironmentVariables = () => {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   const missingVars = []
-  if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL')
-  if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  if (!serviceRoleKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY')
+  if (!supabaseUrl) missingVars.push("NEXT_PUBLIC_SUPABASE_URL")
+  if (!supabaseAnonKey) missingVars.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  if (!serviceRoleKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY")
 
   if (missingVars.length > 0) {
-    console.warn(`Missing Supabase environment variables: ${missingVars.join(', ')}. Using mock client for development.`)
+    console.warn(
+      `Missing Supabase environment variables: ${missingVars.join(", ")}. Using mock client for development.`,
+    )
     return { supabaseUrl: null, supabaseAnonKey: null, serviceRoleKey: null }
   }
 
@@ -24,105 +26,117 @@ const validateEnvironmentVariables = () => {
 
 // Create a mock server client for development
 const createMockServerClient = () => {
-  console.log('🔧 Server: Creating mock server client')
-  
+  console.log("🔧 Server: Creating mock server client")
+
   const mockClient = {
     auth: {
       getSession: async () => {
         // For mock client, we'll return null session to indicate no authentication
         // This prevents the client-server mismatch
-        return { 
-          data: { session: null }, 
-          error: null 
+        return {
+          data: { session: null },
+          error: null,
         }
       },
-      
+
       getUser: async () => {
         // For mock client, return null user to indicate no authentication
-        return { 
-          data: { user: null }, 
-          error: null 
+        return {
+          data: { user: null },
+          error: null,
         }
       },
-      
-      onAuthStateChange: () => ({ 
-        data: { 
-          subscription: { 
-            unsubscribe: () => {} 
-          } 
-        } 
+
+      onAuthStateChange: () => ({
+        data: {
+          subscription: {
+            unsubscribe: () => {},
+          },
+        },
       }),
-      
-      signInWithPassword: async () => ({ 
-        data: null, 
-        error: { message: 'Server-side auth not available in mock mode', code: 'SERVER_MOCK_MODE' } 
+
+      signInWithPassword: async () => ({
+        data: null,
+        error: { message: "Server-side auth not available in mock mode", code: "SERVER_MOCK_MODE" },
       }),
-      
-      signUp: async () => ({ 
-        data: null, 
-        error: { message: 'Server-side auth not available in mock mode', code: 'SERVER_MOCK_MODE' } 
+
+      signUp: async () => ({
+        data: null,
+        error: { message: "Server-side auth not available in mock mode", code: "SERVER_MOCK_MODE" },
       }),
-      
+
       signOut: async () => ({ error: null }),
-      
-      signInWithOAuth: async () => ({ 
-        data: null, 
-        error: { message: 'OAuth not available in server mock mode', code: 'OAUTH_NOT_AVAILABLE' } 
+
+      signInWithOAuth: async () => ({
+        data: null,
+        error: { message: "OAuth not available in server mock mode", code: "OAUTH_NOT_AVAILABLE" },
       }),
-      
-      updateUser: async () => ({ 
-        data: null, 
-        error: { message: 'Server-side auth not available in mock mode', code: 'SERVER_MOCK_MODE' } 
+
+      updateUser: async () => ({
+        data: null,
+        error: { message: "Server-side auth not available in mock mode", code: "SERVER_MOCK_MODE" },
       }),
-      
-      refreshSession: async () => ({ 
-        data: { session: null, user: null }, 
-        error: { message: 'Server-side auth not available in mock mode', code: 'SERVER_MOCK_MODE' } 
-      })
+
+      refreshSession: async () => ({
+        data: { session: null, user: null },
+        error: { message: "Server-side auth not available in mock mode", code: "SERVER_MOCK_MODE" },
+      }),
     },
-    
+
     from: (table: string) => ({
-      select: (columns: string = '*') => ({ 
-        eq: (column: string, value: any) => ({ 
-          single: async () => ({ 
-            data: null, 
-            error: { message: 'Database not available in server mock mode', code: 'DB_NOT_AVAILABLE' } 
-          }) 
-        }) 
+      select: (columns: string = "*") => ({
+        eq: (column: string, value: any) => ({
+          single: async () => ({
+            data: null,
+            error: {
+              message: "Database not available in server mock mode",
+              code: "DB_NOT_AVAILABLE",
+            },
+          }),
+        }),
       }),
-      insert: (data: any) => ({ 
-        select: (columns: string = '*') => ({ 
-          single: async () => ({ 
-            data: null, 
-            error: { message: 'Database not available in server mock mode', code: 'DB_NOT_AVAILABLE' } 
-          }) 
-        }) 
+      insert: (data: any) => ({
+        select: (columns: string = "*") => ({
+          single: async () => ({
+            data: null,
+            error: {
+              message: "Database not available in server mock mode",
+              code: "DB_NOT_AVAILABLE",
+            },
+          }),
+        }),
       }),
-      update: (data: any) => ({ 
-        eq: (column: string, value: any) => ({ 
-          select: (columns: string = '*') => ({ 
-            single: async () => ({ 
-              data: null, 
-              error: { message: 'Database not available in server mock mode', code: 'DB_NOT_AVAILABLE' } 
-            }) 
-          }) 
-        }) 
+      update: (data: any) => ({
+        eq: (column: string, value: any) => ({
+          select: (columns: string = "*") => ({
+            single: async () => ({
+              data: null,
+              error: {
+                message: "Database not available in server mock mode",
+                code: "DB_NOT_AVAILABLE",
+              },
+            }),
+          }),
+        }),
       }),
-      delete: () => ({ 
-        eq: async (column: string, value: any) => ({ 
-          data: null, 
-          error: { message: 'Database not available in server mock mode', code: 'DB_NOT_AVAILABLE' } 
-        }) 
-      })
+      delete: () => ({
+        eq: async (column: string, value: any) => ({
+          data: null,
+          error: {
+            message: "Database not available in server mock mode",
+            code: "DB_NOT_AVAILABLE",
+          },
+        }),
+      }),
     }),
-    
+
     // Add error handling utilities to mock client
     handleError: (error: any) => {
-      console.warn('Mock server client error:', error)
+      console.warn("Mock server client error:", error)
       return { data: null, error }
-    }
+    },
   } as any
-  
+
   return mockClient
 }
 
@@ -132,10 +146,10 @@ export class SupabaseError extends Error {
     message: string,
     public code: string,
     public status: number = 500,
-    public details?: any
+    public details?: any,
   ) {
     super(message)
-    this.name = 'SupabaseError'
+    this.name = "SupabaseError"
   }
 }
 
@@ -157,83 +171,81 @@ const CONNECTION_POOL_CONFIG = {
 export async function createClient() {
   try {
     const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables()
-    
+
     // Return mock client if environment variables are missing
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.log('🔧 Server: Missing environment variables - using mock server client')
-      console.log('🔧 Server: Please create a .env.local file with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
+      console.log("🔧 Server: Missing environment variables - using mock server client")
+      console.log(
+        "🔧 Server: Please create a .env.local file with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      )
       return createMockServerClient()
     }
-    
+
     const cookieStore = await cookies()
 
-    return createServerClient<Database>(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        cookies: {
-          async get(name: string) {
-            try {
-              const cookie = await cookieStore.get(name)
-              if (cookie?.value) {
-                return cookie.value
-              }
-              return null
-            } catch (error) {
-              console.error('🔧 Server: Error getting cookie:', name, error)
-              return null
+    return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        async get(name: string) {
+          try {
+            const cookie = await cookieStore.get(name)
+            if (cookie?.value) {
+              return cookie.value
             }
-          },
-          async set(name: string, value: string, options: CookieOptions) {
-            try {
-              await cookieStore.set({ name, value, ...options })
-            } catch (error) {
-              console.error('🔧 Server: Error setting cookie:', name, error)
-              // The `set` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-          async remove(name: string, options: CookieOptions) {
-            try {
-              await cookieStore.set({ name, value: '', ...options })
-            } catch (error) {
-              console.error('🔧 Server: Error removing cookie:', name, error)
-              // The `delete` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
+            return null
+          } catch (error) {
+            console.error("🔧 Server: Error getting cookie:", name, error)
+            return null
+          }
         },
-        // Global configuration for better performance and error handling
-        global: {
-          headers: {
-            'X-Client-Info': 'contract-management-system/1.0',
-            'X-Request-ID': generateRequestId(),
-          },
+        async set(name: string, value: string, options: CookieOptions) {
+          try {
+            await cookieStore.set({ name, value, ...options })
+          } catch (error) {
+            console.error("🔧 Server: Error setting cookie:", name, error)
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
-        // Realtime configuration with error handling
-        realtime: {
-          params: {
-            eventsPerSecond: 10,
-          },
+        async remove(name: string, options: CookieOptions) {
+          try {
+            await cookieStore.set({ name, value: "", ...options })
+          } catch (error) {
+            console.error("🔧 Server: Error removing cookie:", name, error)
+            // The `delete` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
-        // Auth configuration with enhanced security
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true,
-          flowType: 'pkce',
+      },
+      // Global configuration for better performance and error handling
+      global: {
+        headers: {
+          "X-Client-Info": "contract-management-system/1.0",
+          "X-Request-ID": generateRequestId(),
         },
-      }
-    )
+      },
+      // Realtime configuration with error handling
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+      // Auth configuration with enhanced security
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: "pkce",
+      },
+    })
   } catch (error) {
-    console.error('❌ Failed to create Supabase client:', error)
+    console.error("❌ Failed to create Supabase client:", error)
     throw new SupabaseError(
-      'Failed to initialize Supabase client',
-      'CLIENT_INITIALIZATION_ERROR',
+      "Failed to initialize Supabase client",
+      "CLIENT_INITIALIZATION_ERROR",
       500,
-      error instanceof Error ? error.message : 'Unknown error'
+      error instanceof Error ? error.message : "Unknown error",
     )
   }
 }
@@ -246,7 +258,7 @@ function generateRequestId(): string {
 // Enhanced client with refresh token logic and better error handling
 export async function createClientWithRefresh() {
   const client = await createClient()
-  
+
   // Add refresh token functionality with enhanced error handling
   const enhancedClient = {
     ...client,
@@ -255,95 +267,99 @@ export async function createClientWithRefresh() {
       // Enhanced refresh session with retry logic and better error handling
       async refreshSession() {
         try {
-          console.log('🔄 Server: Attempting to refresh session...')
-          
+          console.log("🔄 Server: Attempting to refresh session...")
+
           const { data, error } = await client.auth.refreshSession()
-          
+
           if (error) {
-            console.error('🔄 Server: Session refresh failed:', error)
+            console.error("🔄 Server: Session refresh failed:", error)
             throw new SupabaseError(
-              'Session refresh failed',
-              'SESSION_REFRESH_ERROR',
+              "Session refresh failed",
+              "SESSION_REFRESH_ERROR",
               401,
-              error.message
+              error.message,
             )
           }
-          
+
           if (data.session) {
-            console.log('🔄 Server: Session refreshed successfully')
+            console.log("🔄 Server: Session refreshed successfully")
             return { data, error: null }
           } else {
-            console.log('🔄 Server: No session to refresh')
+            console.log("🔄 Server: No session to refresh")
             return { data: { session: null, user: null }, error: null }
           }
         } catch (error) {
-          console.error('🔄 Server: Session refresh error:', error)
+          console.error("🔄 Server: Session refresh error:", error)
           if (error instanceof SupabaseError) {
             throw error
           }
           throw new SupabaseError(
-            'Session refresh failed',
-            'SESSION_REFRESH_ERROR',
+            "Session refresh failed",
+            "SESSION_REFRESH_ERROR",
             401,
-            error instanceof Error ? error.message : 'Unknown error'
+            error instanceof Error ? error.message : "Unknown error",
           )
         }
       },
-      
+
       // Check if session is expired with better error handling
       async isSessionExpired() {
         try {
-          const { data: { session } } = await client.auth.getSession()
-          
+          const {
+            data: { session },
+          } = await client.auth.getSession()
+
           if (!session) {
             return true
           }
-          
+
           // Check if token expires in the next 5 minutes
           const expiresAt = session.expires_at
           if (!expiresAt) {
             return true
           }
-          
+
           const now = Math.floor(Date.now() / 1000)
-          const fiveMinutesFromNow = now + (5 * 60)
-          
+          const fiveMinutesFromNow = now + 5 * 60
+
           return expiresAt < fiveMinutesFromNow
         } catch (error) {
-          console.error('🔄 Server: Error checking session expiry:', error)
+          console.error("🔄 Server: Error checking session expiry:", error)
           return true
         }
       },
-      
+
       // Auto-refresh session if needed with enhanced error handling
       async ensureValidSession() {
         try {
           const isExpired = await enhancedClient.auth.isSessionExpired()
-          
+
           if (isExpired) {
-            console.log('🔄 Server: Session expired, attempting refresh...')
+            console.log("🔄 Server: Session expired, attempting refresh...")
             return await enhancedClient.auth.refreshSession()
           }
-          
+
           // Session is still valid
-          const { data: { session } } = await client.auth.getSession()
+          const {
+            data: { session },
+          } = await client.auth.getSession()
           return { data: { session, user: session?.user || null }, error: null }
         } catch (error) {
-          console.error('🔄 Server: Error ensuring valid session:', error)
+          console.error("🔄 Server: Error ensuring valid session:", error)
           if (error instanceof SupabaseError) {
             throw error
           }
           throw new SupabaseError(
-            'Failed to ensure valid session',
-            'SESSION_VALIDATION_ERROR',
+            "Failed to ensure valid session",
+            "SESSION_VALIDATION_ERROR",
             401,
-            error instanceof Error ? error.message : 'Unknown error'
+            error instanceof Error ? error.message : "Unknown error",
           )
         }
-      }
-    }
+      },
+    },
   }
-  
+
   return enhancedClient
 }
 
@@ -351,49 +367,49 @@ export async function createClientWithRefresh() {
 export async function refreshTokenWithRetry(
   client: any,
   maxRetries: number = 3,
-  initialDelayMs: number = 1000
+  initialDelayMs: number = 1000,
 ): Promise<{ success: boolean; error?: any }> {
   let lastError: any = null
   let delayMs = initialDelayMs
-  
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`🔄 Server: Token refresh attempt ${attempt}/${maxRetries}`)
-      
+
       const { data, error } = await client.auth.refreshSession()
-      
+
       if (error) {
         lastError = error
         console.error(`🔄 Server: Token refresh attempt ${attempt} failed:`, error)
-        
+
         if (attempt < maxRetries) {
           console.log(`🔄 Server: Waiting ${delayMs}ms before retry...`)
-          await new Promise(resolve => setTimeout(resolve, delayMs))
+          await new Promise((resolve) => setTimeout(resolve, delayMs))
           delayMs *= 2 // Exponential backoff
         }
         continue
       }
-      
+
       if (data.session) {
-        console.log('🔄 Server: Token refresh successful')
+        console.log("🔄 Server: Token refresh successful")
         return { success: true }
       } else {
-        console.log('🔄 Server: No session to refresh')
-        return { success: false, error: 'No session found' }
+        console.log("🔄 Server: No session to refresh")
+        return { success: false, error: "No session found" }
       }
     } catch (error) {
       lastError = error
       console.error(`🔄 Server: Token refresh attempt ${attempt} threw error:`, error)
-      
+
       if (attempt < maxRetries) {
         console.log(`🔄 Server: Waiting ${delayMs}ms before retry...`)
-        await new Promise(resolve => setTimeout(resolve, delayMs))
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
         delayMs *= 2 // Exponential backoff
       }
     }
   }
-  
-  console.error('🔄 Server: All token refresh attempts failed')
+
+  console.error("🔄 Server: All token refresh attempts failed")
   return { success: false, error: lastError }
 }
 
@@ -402,18 +418,18 @@ export async function getValidSession(): Promise<{ session: any; user: any; erro
   try {
     const client = await createClientWithRefresh()
     const { data, error } = await client.auth.ensureValidSession()
-    
+
     return {
       session: data.session,
       user: data.user,
-      error: error || null
+      error: error || null,
     }
   } catch (error) {
-    console.error('🔄 Server: Error getting valid session:', error)
+    console.error("🔄 Server: Error getting valid session:", error)
     return {
       session: null,
       user: null,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     }
   }
 }
@@ -424,7 +440,7 @@ export async function isAuthenticated(): Promise<boolean> {
     const { session, error } = await getValidSession()
     return !error && !!session
   } catch (error) {
-    console.error('🔄 Server: Error checking authentication:', error)
+    console.error("🔄 Server: Error checking authentication:", error)
     return false
   }
 }
@@ -432,41 +448,41 @@ export async function isAuthenticated(): Promise<boolean> {
 // Utility function for database operations with error handling
 export async function executeWithErrorHandling<T>(
   operation: () => Promise<T>,
-  operationName: string
+  operationName: string,
 ): Promise<{ data: T | null; error: any }> {
   try {
     const data = await operation()
     return { data, error: null }
   } catch (error) {
     console.error(`❌ ${operationName} failed:`, error)
-    
+
     // Handle specific Supabase errors
-    if (error && typeof error === 'object' && 'code' in error) {
+    if (error && typeof error === "object" && "code" in error) {
       const supabaseError = error as any
-      
-      if (supabaseError.code === 'PGRST301') {
-        return { 
-          data: null, 
-          error: new SupabaseError('Rate limit exceeded', 'RATE_LIMIT_EXCEEDED', 429) 
+
+      if (supabaseError.code === "PGRST301") {
+        return {
+          data: null,
+          error: new SupabaseError("Rate limit exceeded", "RATE_LIMIT_EXCEEDED", 429),
         }
       }
-      
-      if (supabaseError.code === 'PGRST302') {
-        return { 
-          data: null, 
-          error: new SupabaseError('Connection timeout', 'CONNECTION_TIMEOUT', 408) 
+
+      if (supabaseError.code === "PGRST302") {
+        return {
+          data: null,
+          error: new SupabaseError("Connection timeout", "CONNECTION_TIMEOUT", 408),
         }
       }
     }
-    
-    return { 
-      data: null, 
+
+    return {
+      data: null,
       error: new SupabaseError(
         `${operationName} failed`,
-        'OPERATION_FAILED',
+        "OPERATION_FAILED",
         500,
-        error instanceof Error ? error.message : 'Unknown error'
-      )
+        error instanceof Error ? error.message : "Unknown error",
+      ),
     }
   }
 }

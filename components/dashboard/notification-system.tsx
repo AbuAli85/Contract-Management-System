@@ -43,7 +43,19 @@ export default function NotificationSystem() {
         .limit(20)
 
       if (error) throw error
-      if (Array.isArray(data) && data.every(n => n && typeof n === 'object' && 'id' in n && 'type' in n && 'message' in n && 'created_at' in n && 'is_read' in n)) {
+      if (
+        Array.isArray(data) &&
+        data.every(
+          (n) =>
+            n &&
+            typeof n === "object" &&
+            "id" in n &&
+            "type" in n &&
+            "message" in n &&
+            "created_at" in n &&
+            "is_read" in n,
+        )
+      ) {
         setNotifications(
           data.map((n: any) => ({
             id: n.id.toString(), // Convert number to string
@@ -64,7 +76,7 @@ export default function NotificationSystem() {
                 : n.user_email
                   ? `User: ${n.user_email}`
                   : undefined,
-          }))
+          })),
         )
       } else {
         setNotifications([])
@@ -162,9 +174,8 @@ export default function NotificationSystem() {
                     <div>
                       <p className="text-sm">{notif.message}</p>
                       <p className="text-xs text-muted-foreground">
-                        {notif.timestamp && (
-                          formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })
-                        )}
+                        {notif.timestamp &&
+                          formatDistanceToNow(new Date(notif.timestamp), { addSuffix: true })}
                         {notif.context && ` (${notif.context})`}
                       </p>
                     </div>

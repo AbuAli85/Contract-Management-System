@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, AlertTriangle, Info, Settings } from "lucide-react"
 
 // Force dynamic rendering to prevent SSR issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default function TestEnvConfigPage() {
   const [envConfig, setEnvConfig] = useState<any>(null)
@@ -16,7 +16,7 @@ export default function TestEnvConfigPage() {
   useEffect(() => {
     const checkEnvConfig = async () => {
       try {
-        const response = await fetch('/api/test-config')
+        const response = await fetch("/api/test-config")
         const data = await response.json()
         setEnvConfig(data)
       } catch (error) {
@@ -32,9 +32,9 @@ export default function TestEnvConfigPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <div className="text-center">
-            <Settings className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <Settings className="mx-auto mb-4 h-8 w-8 animate-spin" />
             <p>Checking environment configuration...</p>
           </div>
         </div>
@@ -44,9 +44,9 @@ export default function TestEnvConfigPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Environment Configuration Test</h1>
+          <h1 className="mb-2 text-3xl font-bold">Environment Configuration Test</h1>
           <p className="text-muted-foreground">
             Check the current environment variable configuration for Make.com integration
           </p>
@@ -62,22 +62,20 @@ export default function TestEnvConfigPage() {
               {envConfig?.error ? (
                 <Alert variant="destructive">
                   <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    {envConfig.error}
-                  </AlertDescription>
+                  <AlertDescription>{envConfig.error}</AlertDescription>
                 </Alert>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Make.com Webhook URL</h3>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border p-4">
+                    <h3 className="mb-2 font-semibold">Make.com Webhook URL</h3>
                     {envConfig?.makeWebhookUrl ? (
                       <>
                         <Badge variant="default">✅ Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1 break-all">
+                        <p className="mt-1 break-all text-sm text-muted-foreground">
                           {envConfig.makeWebhookUrl}
                         </p>
-                        {envConfig.makeWebhookUrl.includes('YOUR_') && (
-                          <p className="text-xs text-red-600 mt-1">
+                        {envConfig.makeWebhookUrl.includes("YOUR_") && (
+                          <p className="mt-1 text-xs text-red-600">
                             ⚠️ This appears to be a placeholder URL
                           </p>
                         )}
@@ -85,64 +83,64 @@ export default function TestEnvConfigPage() {
                     ) : (
                       <>
                         <Badge variant="destructive">❌ Not Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           MAKE_WEBHOOK_URL environment variable is not configured
                         </p>
                       </>
                     )}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Google Docs Template ID</h3>
+
+                  <div className="rounded-lg border p-4">
+                    <h3 className="mb-2 font-semibold">Google Docs Template ID</h3>
                     {envConfig?.googleDocsTemplateId ? (
                       <>
                         <Badge variant="default">✅ Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {envConfig.googleDocsTemplateId}
                         </p>
                       </>
                     ) : (
                       <>
                         <Badge variant="destructive">❌ Not Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           GOOGLE_DOCS_TEMPLATE_ID environment variable is not configured
                         </p>
                       </>
                     )}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Supabase Configuration</h3>
+
+                  <div className="rounded-lg border p-4">
+                    <h3 className="mb-2 font-semibold">Supabase Configuration</h3>
                     {envConfig?.supabaseUrl && envConfig?.supabaseServiceRoleKey ? (
                       <>
                         <Badge variant="default">✅ Configured</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           Supabase URL and service role key are set
                         </p>
                       </>
                     ) : (
                       <>
                         <Badge variant="destructive">❌ Not Configured</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           Supabase configuration is missing
                         </p>
                       </>
                     )}
                   </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <h3 className="font-semibold mb-2">Google Service Account</h3>
+
+                  <div className="rounded-lg border p-4">
+                    <h3 className="mb-2 font-semibold">Google Service Account</h3>
                     {envConfig?.googleServiceAccountKey ? (
                       <>
                         <Badge variant="default">✅ Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           Google service account key is configured
                         </p>
                       </>
                     ) : (
                       <>
                         <Badge variant="destructive">❌ Not Set</Badge>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           GOOGLE_SERVICE_ACCOUNT_KEY environment variable is not configured
                         </p>
                       </>
@@ -167,9 +165,9 @@ export default function TestEnvConfigPage() {
                   <strong>Required Environment Variables:</strong>
                 </AlertDescription>
               </Alert>
-              
+
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span>MAKE_WEBHOOK_URL:</span>
                   {envConfig?.makeWebhookUrl ? (
                     <Badge variant="default">✅ Configured</Badge>
@@ -177,8 +175,8 @@ export default function TestEnvConfigPage() {
                     <Badge variant="destructive">❌ Missing</Badge>
                   )}
                 </div>
-                
-                <div className="flex justify-between items-center">
+
+                <div className="flex items-center justify-between">
                   <span>GOOGLE_DOCS_TEMPLATE_ID:</span>
                   {envConfig?.googleDocsTemplateId ? (
                     <Badge variant="default">✅ Configured</Badge>
@@ -186,8 +184,8 @@ export default function TestEnvConfigPage() {
                     <Badge variant="destructive">❌ Missing</Badge>
                   )}
                 </div>
-                
-                <div className="flex justify-between items-center">
+
+                <div className="flex items-center justify-between">
                   <span>GOOGLE_SERVICE_ACCOUNT_KEY:</span>
                   {envConfig?.googleServiceAccountKey ? (
                     <Badge variant="default">✅ Configured</Badge>
@@ -195,8 +193,8 @@ export default function TestEnvConfigPage() {
                     <Badge variant="destructive">❌ Missing</Badge>
                   )}
                 </div>
-                
-                <div className="flex justify-between items-center">
+
+                <div className="flex items-center justify-between">
                   <span>SUPABASE_URL:</span>
                   {envConfig?.supabaseUrl ? (
                     <Badge variant="default">✅ Configured</Badge>
@@ -204,8 +202,8 @@ export default function TestEnvConfigPage() {
                     <Badge variant="destructive">❌ Missing</Badge>
                   )}
                 </div>
-                
-                <div className="flex justify-between items-center">
+
+                <div className="flex items-center justify-between">
                   <span>SUPABASE_SERVICE_ROLE_KEY:</span>
                   {envConfig?.supabaseServiceRoleKey ? (
                     <Badge variant="default">✅ Configured</Badge>
@@ -226,19 +224,21 @@ export default function TestEnvConfigPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-2">If Environment Variables Are Missing:</h3>
-                <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>Create a <code>.env.local</code> file in your project root</li>
+                <h3 className="mb-2 font-semibold">If Environment Variables Are Missing:</h3>
+                <ol className="list-inside list-decimal space-y-1 text-sm">
+                  <li>
+                    Create a <code>.env.local</code> file in your project root
+                  </li>
                   <li>Add the required environment variables</li>
                   <li>Restart your development server</li>
                   <li>Test the configuration again</li>
                 </ol>
               </div>
-              
+
               <div>
-                <h3 className="font-semibold mb-2">Example .env.local File:</h3>
-                <pre className="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
-{`# Make.com Integration
+                <h3 className="mb-2 font-semibold">Example .env.local File:</h3>
+                <pre className="overflow-x-auto rounded bg-gray-100 p-4 text-sm">
+                  {`# Make.com Integration
 MAKE_WEBHOOK_URL=https://hook.eu2.make.com/YOUR_ACTUAL_WEBHOOK_ID
 
 # Google Docs Integration
@@ -256,4 +256,4 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key`}
       </div>
     </div>
   )
-} 
+}

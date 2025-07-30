@@ -19,7 +19,7 @@ const fontLexend = Lexend({
   weight: ["400", "500", "600", "700"],
 })
 
-export { ClientLayout };
+export { ClientLayout }
 
 export default function ClientLayout({
   children,
@@ -40,7 +40,7 @@ export default function ClientLayout({
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontInter.variable,
-          fontLexend.variable
+          fontLexend.variable,
         )}
       >
         <ClientProviders>

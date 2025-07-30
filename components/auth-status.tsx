@@ -13,9 +13,9 @@ export default function AuthStatus() {
   const handleLogout = async () => {
     try {
       await signOut()
-      router.push('/login')
+      router.push("/login")
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout error:", error)
     }
   }
 

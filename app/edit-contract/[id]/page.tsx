@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { ArrowLeftIcon, Save, Loader2 } from "lucide-react"
 import Link from "next/link"
@@ -41,7 +47,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
   const [parties, setParties] = useState<any[]>([])
   const [promoters, setPromoters] = useState<any[]>([])
   const { toast } = useToast()
-  
+
   // Unwrap params using React.use() for Next.js 15 compatibility
   const { id } = use(params)
 
@@ -58,14 +64,16 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
     try {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('contracts')
-        .select(`
+        .from("contracts")
+        .select(
+          `
           *,
           first_party:parties!contracts_first_party_id_fkey(name_en),
           second_party:parties!contracts_second_party_id_fkey(name_en),
           promoter:promoters(name_en)
-        `)
-        .eq('id', contractId)
+        `,
+        )
+        .eq("id", contractId)
         .single()
 
       if (error) throw error
@@ -75,7 +83,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
       toast({
         title: "Error",
         description: "Failed to load contract details",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -85,10 +93,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
   const fetchParties = async () => {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('parties')
-        .select('id, name_en')
-        .order('name_en')
+      const { data, error } = await supabase.from("parties").select("id, name_en").order("name_en")
 
       if (error) throw error
       setParties(data || [])
@@ -101,9 +106,9 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
     try {
       const supabase = createClient()
       const { data, error } = await supabase
-        .from('promoters')
-        .select('id, name_en')
-        .order('name_en')
+        .from("promoters")
+        .select("id, name_en")
+        .order("name_en")
 
       if (error) throw error
       setPromoters(data || [])
@@ -119,7 +124,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from('contracts')
+        .from("contracts")
         .update({
           job_title: contract.job_title,
           work_location: contract.work_location,
@@ -134,22 +139,22 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
           first_party_id: contract.first_party_id,
           second_party_id: contract.second_party_id,
           promoter_id: contract.promoter_id,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', contract.id)
+        .eq("id", contract.id)
 
       if (error) throw error
 
       toast({
         title: "Success",
-        description: "Contract updated successfully"
+        description: "Contract updated successfully",
       })
     } catch (error) {
       console.error("Error updating contract:", error)
       toast({
         title: "Error",
         description: "Failed to update contract",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setSaving(false)
@@ -168,7 +173,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-lg">
-          <CardContent className="text-center p-6">
+          <CardContent className="p-6 text-center">
             <p className="text-muted-foreground">Contract not found</p>
             <Button asChild className="mt-4">
               <Link href="/contracts">Back to Contracts</Link>
@@ -180,13 +185,11 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto space-y-6 py-8">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Edit Contract</h1>
-          <p className="text-muted-foreground">
-            Contract: {contract.contract_number || id}
-          </p>
+          <p className="text-muted-foreground">Contract: {contract.contract_number || id}</p>
         </div>
         <Button asChild variant="outline">
           <Link href={`/contracts/${id}`}>
@@ -202,7 +205,7 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
           <CardDescription>Update contract information</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="job_title">Job Title</Label>
               <Input
@@ -271,7 +274,9 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
                 id="basic_salary"
                 type="number"
                 value={contract.basic_salary || ""}
-                onChange={(e) => setContract({ ...contract, basic_salary: parseFloat(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setContract({ ...contract, basic_salary: parseFloat(e.target.value) || 0 })
+                }
               />
             </div>
 
@@ -281,7 +286,9 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
                 id="allowances"
                 type="number"
                 value={contract.allowances || ""}
-                onChange={(e) => setContract({ ...contract, allowances: parseFloat(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setContract({ ...contract, allowances: parseFloat(e.target.value) || 0 })
+                }
               />
             </div>
 

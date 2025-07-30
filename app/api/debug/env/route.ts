@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,13 +17,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      env: envCheck
+      env: envCheck,
     })
   } catch (error) {
-    console.error('Environment debug error:', error)
-    return NextResponse.json({
-      success: false,
-      error: 'Failed to check environment variables'
-    }, { status: 500 })
+    console.error("Environment debug error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to check environment variables",
+      },
+      { status: 500 },
+    )
   }
-} 
+}

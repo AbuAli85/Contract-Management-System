@@ -15,11 +15,12 @@ This document provides comprehensive documentation for all Supabase Edge Functio
 **Trigger**: Manual invocation via HTTP POST
 
 **Input**:
+
 ```typescript
 interface ExportRequest {
   contractId: string
   contractType?: string
-  exportMethod?: 'puppeteer' | 'makecom' | 'google_docs'
+  exportMethod?: "puppeteer" | "makecom" | "google_docs"
   options?: {
     includeImages?: boolean
     highQuality?: boolean
@@ -29,6 +30,7 @@ interface ExportRequest {
 ```
 
 **Output**:
+
 ```typescript
 interface ExportSuccess {
   success: true
@@ -36,7 +38,7 @@ interface ExportSuccess {
   contractNumber: string
   pdfUrl: string
   googleDriveUrl?: string
-  exportMethod: 'puppeteer' | 'makecom' | 'google_docs'
+  exportMethod: "puppeteer" | "makecom" | "google_docs"
   timestamp: string
   processingTime: number
 }
@@ -52,6 +54,7 @@ interface ExportError {
 ```
 
 **Error Codes**:
+
 - `INVALID_CONTRACT_ID`: Contract ID is missing or invalid
 - `MISSING_REQUIRED_FIELDS`: Required contract fields are missing
 - `TEMPLATE_NOT_FOUND`: Contract template not found
@@ -59,6 +62,7 @@ interface ExportError {
 - `RATE_LIMIT_ERROR`: Rate limit exceeded
 
 **Usage Example**:
+
 ```bash
 curl -X POST https://your-project.supabase.co/functions/v1/export-contract \
   -H "Authorization: Bearer YOUR_ANON_KEY" \
@@ -81,6 +85,7 @@ curl -X POST https://your-project.supabase.co/functions/v1/export-contract \
 **Trigger**: Scheduled via pg_cron (hourly)
 
 **Configuration**:
+
 - Reminder threshold: 48 hours
 - Escalation threshold: 120 hours (5 days)
 - Max reminders per contract: 3
@@ -88,6 +93,7 @@ curl -X POST https://your-project.supabase.co/functions/v1/export-contract \
 **Input**: None (automated execution)
 
 **Output**:
+
 ```typescript
 interface ReminderResult {
   success: boolean
@@ -98,7 +104,7 @@ interface ReminderResult {
   results: Array<{
     contractId: string
     contractNumber: string
-    action: 'reminder_sent' | 'escalated' | 'skipped'
+    action: "reminder_sent" | "escalated" | "skipped"
     recipients: string[]
     emailSent: boolean
   }>
@@ -106,6 +112,7 @@ interface ReminderResult {
 ```
 
 **Features**:
+
 - Identifies contracts pending approval beyond threshold
 - Sends reminder emails to stakeholders
 - Escalates to admin users when thresholds exceeded
@@ -122,6 +129,7 @@ interface ReminderResult {
 **Input**: None (automated execution)
 
 **Output**:
+
 ```typescript
 interface SessionReminderResult {
   success: boolean
@@ -132,6 +140,7 @@ interface SessionReminderResult {
 ```
 
 **Features**:
+
 - Identifies sessions expiring within 24 hours
 - Sends personalized reminder emails
 - Updates session status to 'notified'
@@ -146,6 +155,7 @@ interface SessionReminderResult {
 **Trigger**: Manual invocation via HTTP POST
 
 **Input**:
+
 ```typescript
 interface ImportRequest {
   csvData: string
@@ -158,6 +168,7 @@ interface ImportRequest {
 ```
 
 **Output**:
+
 ```typescript
 interface ImportResult {
   success: boolean
@@ -173,6 +184,7 @@ interface ImportResult {
 ```
 
 **Features**:
+
 - CSV parsing and validation
 - Data transformation and cleaning
 - Duplicate detection and handling
@@ -187,6 +199,7 @@ interface ImportResult {
 **Trigger**: Manual invocation via HTTP POST
 
 **Input**:
+
 ```typescript
 interface DeleteRequest {
   partyIds: string[]
@@ -198,6 +211,7 @@ interface DeleteRequest {
 ```
 
 **Output**:
+
 ```typescript
 interface DeleteResult {
   success: boolean
@@ -208,6 +222,7 @@ interface DeleteResult {
 ```
 
 **Features**:
+
 - Bulk deletion with transaction safety
 - Cascade deletion of related records
 - Soft delete option for audit trails
@@ -222,11 +237,12 @@ interface DeleteResult {
 **Trigger**: Manual invocation via HTTP POST
 
 **Input**:
+
 ```typescript
 interface PDFRequest {
   htmlContent: string
   options?: {
-    format?: 'A4' | 'Letter'
+    format?: "A4" | "Letter"
     margin?: {
       top?: string
       right?: string
@@ -240,6 +256,7 @@ interface PDFRequest {
 ```
 
 **Output**:
+
 ```typescript
 interface PDFResult {
   success: boolean
@@ -250,6 +267,7 @@ interface PDFResult {
 ```
 
 **Features**:
+
 - HTML to PDF conversion
 - Custom page formatting
 - Header/footer templates
@@ -264,10 +282,12 @@ interface PDFResult {
 **Purpose**: Retrieves contracts pending approval that need reminders or escalation.
 
 **Parameters**:
+
 - `reminder_threshold_hours` (INTEGER, DEFAULT 48): Hours after which to send reminders
 - `escalation_threshold_hours` (INTEGER, DEFAULT 120): Hours after which to escalate
 
 **Return Type**:
+
 ```sql
 TABLE (
     id UUID,
@@ -287,6 +307,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_pending_contracts(48, 120);
 ```
@@ -296,11 +317,13 @@ SELECT * FROM get_pending_contracts(48, 120);
 **Purpose**: Analytics function to get contract submission trends over time.
 
 **Parameters**:
+
 - `start_date` (DATE): Start date for analysis
 - `end_date` (DATE): End date for analysis
 - `group_by` (TEXT, DEFAULT 'day'): Grouping interval ('day', 'week', 'month')
 
 **Return Type**:
+
 ```sql
 TABLE (
     period_start DATE,
@@ -313,6 +336,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_contract_submissions_over_time(
     '2024-01-01'::DATE,
@@ -326,10 +350,12 @@ SELECT * FROM get_contract_submissions_over_time(
 **Purpose**: Calculates average approval time for contracts by type and status.
 
 **Parameters**:
+
 - `contract_type` (TEXT, OPTIONAL): Filter by contract type
 - `status` (TEXT, OPTIONAL): Filter by contract status
 
 **Return Type**:
+
 ```sql
 TABLE (
     contract_type TEXT,
@@ -342,6 +368,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_average_approval_time('employment', 'approved');
 ```
@@ -353,6 +380,7 @@ SELECT * FROM get_average_approval_time('employment', 'approved');
 **Parameters**: None
 
 **Return Type**:
+
 ```sql
 TABLE (
     id UUID,
@@ -365,6 +393,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_contracts_requiring_attention();
 ```
@@ -374,12 +403,14 @@ SELECT * FROM get_contracts_requiring_attention();
 **Purpose**: Updates contract reminder count and last reminder timestamp.
 
 **Parameters**:
+
 - `contract_id` (UUID): Contract ID to update
 - `reminder_count` (INTEGER): New reminder count
 
 **Return Type**: BOOLEAN (success indicator)
 
 **Usage**:
+
 ```sql
 SELECT update_contract_reminder('contract-uuid', 2);
 ```
@@ -389,12 +420,14 @@ SELECT update_contract_reminder('contract-uuid', 2);
 **Purpose**: Escalates a contract to admin users.
 
 **Parameters**:
+
 - `contract_id` (UUID): Contract ID to escalate
 - `escalated_to` (TEXT): Admin email addresses (comma-separated)
 
 **Return Type**: BOOLEAN (success indicator)
 
 **Usage**:
+
 ```sql
 SELECT escalate_contract('contract-uuid', 'admin1@example.com,admin2@example.com');
 ```
@@ -406,9 +439,11 @@ SELECT escalate_contract('contract-uuid', 'admin1@example.com,admin2@example.com
 **Purpose**: Fuzzy search for parties using trigram similarity.
 
 **Parameters**:
+
 - `search_text` (TEXT): Search query
 
 **Return Type**:
+
 ```sql
 TABLE (
     id UUID,
@@ -421,6 +456,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM search_parties('company name');
 ```
@@ -430,9 +466,11 @@ SELECT * FROM search_parties('company name');
 **Purpose**: Fuzzy search for parties including their contacts.
 
 **Parameters**:
+
 - `search_text` (TEXT): Search query
 
 **Return Type**:
+
 ```sql
 TABLE (
     id UUID,
@@ -446,6 +484,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM search_parties_with_contacts('company name');
 ```
@@ -455,9 +494,11 @@ SELECT * FROM search_parties_with_contacts('company name');
 **Purpose**: Retrieves all contacts for a specific party.
 
 **Parameters**:
+
 - `party_id` (UUID): Party ID
 
 **Return Type**:
+
 ```sql
 TABLE (
     id UUID,
@@ -471,6 +512,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_party_contacts('party-uuid');
 ```
@@ -482,10 +524,12 @@ SELECT * FROM get_party_contacts('party-uuid');
 **Purpose**: Calculates performance statistics for promoters.
 
 **Parameters**:
+
 - `start_date` (DATE, OPTIONAL): Start date for analysis
 - `end_date` (DATE, OPTIONAL): End date for analysis
 
 **Return Type**:
+
 ```sql
 TABLE (
     promoter_id UUID,
@@ -499,6 +543,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_promoter_performance_stats('2024-01-01'::DATE, '2024-12-31'::DATE);
 ```
@@ -508,10 +553,12 @@ SELECT * FROM get_promoter_performance_stats('2024-01-01'::DATE, '2024-12-31'::D
 **Purpose**: Comprehensive contract analytics and reporting.
 
 **Parameters**:
+
 - `date_range` (TEXT, DEFAULT '30d'): Date range ('7d', '30d', '90d', '1y')
 - `group_by` (TEXT, DEFAULT 'day'): Grouping interval
 
 **Return Type**:
+
 ```sql
 TABLE (
     period_start DATE,
@@ -525,6 +572,7 @@ TABLE (
 ```
 
 **Usage**:
+
 ```sql
 SELECT * FROM get_contract_analytics('90d', 'week');
 ```
@@ -559,7 +607,8 @@ SELECT * FROM get_contract_analytics('90d', 'week');
 
 **Schedule**: `0 2 * * *` (Daily at 2 AM)
 
-**Functions**: 
+**Functions**:
+
 - `cleanup_email_queue()`
 - `cleanup_system_activity_log()`
 
@@ -568,16 +617,19 @@ SELECT * FROM get_contract_analytics('90d', 'week');
 ## Security Considerations
 
 ### Authentication
+
 - All Edge Functions require valid JWT tokens
 - RPC functions use RLS policies for authorization
 - Service role key used for internal operations
 
 ### Rate Limiting
+
 - Edge Functions implement rate limiting
 - Database queries optimized with proper indexing
 - Bulk operations use transactions for consistency
 
 ### Error Handling
+
 - Structured error responses with actionable messages
 - Comprehensive logging for debugging
 - Graceful degradation on failures
@@ -585,16 +637,19 @@ SELECT * FROM get_contract_analytics('90d', 'week');
 ## Monitoring & Logging
 
 ### Activity Logging
+
 - All Edge Function executions logged
 - RPC function calls tracked
 - Performance metrics collected
 
 ### Error Tracking
+
 - Error codes and messages logged
 - Stack traces captured for debugging
 - Alert thresholds configured
 
 ### Performance Monitoring
+
 - Response times tracked
 - Database query performance monitored
 - Resource usage metrics collected
@@ -602,6 +657,7 @@ SELECT * FROM get_contract_analytics('90d', 'week');
 ## Deployment
 
 ### Edge Functions
+
 ```bash
 # Deploy all functions
 supabase functions deploy
@@ -611,6 +667,7 @@ supabase functions deploy export-contract
 ```
 
 ### Database Migrations
+
 ```bash
 # Apply migrations
 supabase db push
@@ -620,6 +677,7 @@ supabase db reset
 ```
 
 ### RPC Functions
+
 - Automatically deployed with migrations
 - Version controlled in SQL files
 - Tested in staging environment
@@ -627,6 +685,7 @@ supabase db reset
 ## Testing
 
 ### Edge Function Testing
+
 ```bash
 # Test locally
 supabase functions serve
@@ -639,6 +698,7 @@ curl -X POST http://localhost:54321/functions/v1/export-contract \
 ```
 
 ### RPC Function Testing
+
 ```sql
 -- Test RPC function
 SELECT * FROM get_pending_contracts();
@@ -671,6 +731,7 @@ SELECT * FROM get_contract_submissions_over_time(
    - Review dependency constraints
 
 ### Debug Commands
+
 ```bash
 # Check function logs
 supabase functions logs

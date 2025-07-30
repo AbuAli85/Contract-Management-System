@@ -66,7 +66,7 @@ import {
   Clock,
   ArrowUpDown,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, differenceInDays } from "date-fns"
@@ -109,7 +109,9 @@ export default function ManagePromotersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [documentFilter, setDocumentFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"name" | "id_expiry" | "passport_expiry" | "contracts">("name")
+  const [sortBy, setSortBy] = useState<"name" | "id_expiry" | "passport_expiry" | "contracts">(
+    "name",
+  )
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showStats, setShowStats] = useState(true)
@@ -119,7 +121,10 @@ export default function ManagePromotersPage() {
   const isMountedRef = useRef(true)
 
   // Helper functions for enhanced promoter data
-  const getDocumentStatusType = (daysUntilExpiry: number | null, dateString: string | null): "valid" | "expiring" | "expired" | "missing" => {
+  const getDocumentStatusType = (
+    daysUntilExpiry: number | null,
+    dateString: string | null,
+  ): "valid" | "expiring" | "expired" | "missing" => {
     if (!dateString) return "missing"
     if (daysUntilExpiry === null) return "missing"
     if (daysUntilExpiry < 0) return "expired"
@@ -129,18 +134,25 @@ export default function ManagePromotersPage() {
 
   const getOverallStatus = (promoter: Promoter): "active" | "warning" | "critical" | "inactive" => {
     if (!promoter.status || promoter.status === "inactive") return "inactive"
-    
-    const idExpiry = promoter.id_card_expiry_date ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date()) : null
-    const passportExpiry = promoter.passport_expiry_date ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date()) : null
-    
+
+    const idExpiry = promoter.id_card_expiry_date
+      ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+      : null
+    const passportExpiry = promoter.passport_expiry_date
+      ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+      : null
+
     if ((idExpiry !== null && idExpiry < 0) || (passportExpiry !== null && passportExpiry < 0)) {
       return "critical"
     }
-    
-    if ((idExpiry !== null && idExpiry <= 30) || (passportExpiry !== null && passportExpiry <= 30)) {
+
+    if (
+      (idExpiry !== null && idExpiry <= 30) ||
+      (passportExpiry !== null && passportExpiry <= 30)
+    ) {
       return "warning"
     }
-    
+
     return "active"
   }
 
@@ -149,16 +161,18 @@ export default function ManagePromotersPage() {
     if (isMountedRef.current) {
       setIsLoading(true)
     }
-    
+
     try {
       const supabase = getSupabaseClient()
-      
+
       // Fetch promoters with contract count from the contracts table
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
-        .select(`
+        .select(
+          `
           *
-        `)
+        `,
+        )
         .order("name_en")
 
       if (promotersError) {
@@ -187,16 +201,16 @@ export default function ManagePromotersPage() {
 
             return {
               ...promoter,
-              active_contracts_count: contractCount || 0
+              active_contracts_count: contractCount || 0,
             }
           } catch (error) {
             console.warn(`Error processing promoter ${promoter.id}:`, error)
             return {
               ...promoter,
-              active_contracts_count: 0
+              active_contracts_count: 0,
             }
           }
-        })
+        }),
       )
 
       if (isMountedRef.current) {
@@ -223,16 +237,18 @@ export default function ManagePromotersPage() {
       return
     }
 
-    const filtered = promoters.filter(promoter => {
+    const filtered = promoters.filter((promoter) => {
       // Search filter - enhanced to include passport number
-      const searchMatch = !searchTerm || 
+      const searchMatch =
+        !searchTerm ||
         promoter.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
         promoter.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
         promoter.id_card_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (promoter.notes && promoter.notes.toLowerCase().includes(searchTerm.toLowerCase()))
 
       // Status filter
-      const statusMatch = filterStatus === "all" ||
+      const statusMatch =
+        filterStatus === "all" ||
         (filterStatus === "active" && (promoter.active_contracts_count || 0) > 0) ||
         (filterStatus === "inactive" && (promoter.active_contracts_count || 0) === 0)
 
@@ -240,8 +256,8 @@ export default function ManagePromotersPage() {
     })
 
     // Convert to enhanced promoters for display
-    const enhancedFiltered: EnhancedPromoter[] = filtered.map(promoter => {
-      const idExpiryDays = promoter.id_card_expiry_date 
+    const enhancedFiltered: EnhancedPromoter[] = filtered.map((promoter) => {
+      const idExpiryDays = promoter.id_card_expiry_date
         ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
         : null
 
@@ -252,7 +268,10 @@ export default function ManagePromotersPage() {
       return {
         ...promoter,
         id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date || null),
-        passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date || null),
+        passport_status: getDocumentStatusType(
+          passportExpiryDays,
+          promoter.passport_expiry_date || null,
+        ),
         overall_status: getOverallStatus(promoter),
         days_until_id_expiry: idExpiryDays || undefined,
         days_until_passport_expiry: passportExpiryDays || undefined,
@@ -260,11 +279,16 @@ export default function ManagePromotersPage() {
     })
 
     // Apply document filter to enhanced data
-    const finalFiltered = enhancedFiltered.filter(promoter => {
-      const documentMatch = documentFilter === "all" ||
-        (documentFilter === "expiring" && (promoter.id_card_status === "expiring" || promoter.passport_status === "expiring")) ||
-        (documentFilter === "expired" && (promoter.id_card_status === "expired" || promoter.passport_status === "expired")) ||
-        (documentFilter === "valid" && promoter.id_card_status === "valid" && promoter.passport_status === "valid")
+    const finalFiltered = enhancedFiltered.filter((promoter) => {
+      const documentMatch =
+        documentFilter === "all" ||
+        (documentFilter === "expiring" &&
+          (promoter.id_card_status === "expiring" || promoter.passport_status === "expiring")) ||
+        (documentFilter === "expired" &&
+          (promoter.id_card_status === "expired" || promoter.passport_status === "expired")) ||
+        (documentFilter === "valid" &&
+          promoter.id_card_status === "valid" &&
+          promoter.passport_status === "valid")
 
       return documentMatch
     })
@@ -272,7 +296,7 @@ export default function ManagePromotersPage() {
     // Apply sorting
     const sorted = [...finalFiltered].sort((a, b) => {
       let aValue: any, bValue: any
-      
+
       switch (sortBy) {
         case "name":
           aValue = a.name_en.toLowerCase()
@@ -310,11 +334,14 @@ export default function ManagePromotersPage() {
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
     const total = filteredPromoters.length
-    const active = filteredPromoters.filter(p => p.overall_status === "active").length
-    const expiring = filteredPromoters.filter(p => p.overall_status === "warning").length
-    const expired = filteredPromoters.filter(p => p.overall_status === "critical").length
-    const totalContracts = filteredPromoters.reduce((sum, p) => sum + (p.active_contracts_count || 0), 0)
-    
+    const active = filteredPromoters.filter((p) => p.overall_status === "active").length
+    const expiring = filteredPromoters.filter((p) => p.overall_status === "warning").length
+    const expired = filteredPromoters.filter((p) => p.overall_status === "critical").length
+    const totalContracts = filteredPromoters.reduce(
+      (sum, p) => sum + (p.active_contracts_count || 0),
+      0,
+    )
+
     return {
       total,
       active,
@@ -344,17 +371,20 @@ export default function ManagePromotersPage() {
       // Don't auto-refresh when forms are being used
       return
     }
-    
-    const refreshInterval = setInterval(() => {
-      if (isMountedRef.current && !isLoading) {
-        setIsRefreshing(true)
-        fetchPromotersWithContractCount().finally(() => {
-          if (isMountedRef.current) {
-            setIsRefreshing(false)
-          }
-        })
-      }
-    }, 5 * 60 * 1000) // Refresh every 5 minutes
+
+    const refreshInterval = setInterval(
+      () => {
+        if (isMountedRef.current && !isLoading) {
+          setIsRefreshing(true)
+          fetchPromotersWithContractCount().finally(() => {
+            if (isMountedRef.current) {
+              setIsRefreshing(false)
+            }
+          })
+        }
+      },
+      5 * 60 * 1000,
+    ) // Refresh every 5 minutes
 
     return () => {
       clearInterval(refreshInterval)
@@ -383,17 +413,14 @@ export default function ManagePromotersPage() {
     setBulkActionLoading(true)
     try {
       const supabase = getSupabaseClient()
-      const { error } = await supabase
-        .from("promoters")
-        .delete()
-        .in("id", selectedPromoters)
+      const { error } = await supabase.from("promoters").delete().in("id", selectedPromoters)
 
       if (error) throw error
 
       toast({
         title: "Success",
         description: `Deleted ${selectedPromoters.length} promoters`,
-        variant: "default"
+        variant: "default",
       })
 
       setSelectedPromoters([])
@@ -403,7 +430,7 @@ export default function ManagePromotersPage() {
       toast({
         title: "Error",
         description: "Failed to delete promoters",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setBulkActionLoading(false)
@@ -417,7 +444,7 @@ export default function ManagePromotersPage() {
       toast({
         title: "Refreshed",
         description: "Promoter data has been updated",
-        variant: "default"
+        variant: "default",
       })
     } finally {
       setIsRefreshing(false)
@@ -427,45 +454,51 @@ export default function ManagePromotersPage() {
   const handleExportCSV = async () => {
     setIsExporting(true)
     try {
-      const csvData = filteredPromoters.map(promoter => ({
-        'Name (EN)': promoter.name_en,
-        'Name (AR)': promoter.name_ar,
-        'ID Card Number': promoter.id_card_number,
-        'Passport Number': promoter.passport_number || '',
-        'Mobile Number': promoter.mobile_number || '',
-        'Photograph': promoter.profile_picture_url || '',
-        'ID Card Status': promoter.id_card_status,
-        'ID Card Expiry': promoter.id_card_expiry_date || 'N/A',
-        'Passport Status': promoter.passport_status,
-        'Passport Expiry': promoter.passport_expiry_date || 'N/A',
-        'Active Contracts': promoter.active_contracts_count || 0,
-        'Overall Status': promoter.overall_status,
-        'Created At': promoter.created_at ? format(parseISO(promoter.created_at), 'yyyy-MM-dd') : 'N/A',
-        'Notes': promoter.notes || ''
+      const csvData = filteredPromoters.map((promoter) => ({
+        "Name (EN)": promoter.name_en,
+        "Name (AR)": promoter.name_ar,
+        "ID Card Number": promoter.id_card_number,
+        "Passport Number": promoter.passport_number || "",
+        "Mobile Number": promoter.mobile_number || "",
+        Photograph: promoter.profile_picture_url || "",
+        "ID Card Status": promoter.id_card_status,
+        "ID Card Expiry": promoter.id_card_expiry_date || "N/A",
+        "Passport Status": promoter.passport_status,
+        "Passport Expiry": promoter.passport_expiry_date || "N/A",
+        "Active Contracts": promoter.active_contracts_count || 0,
+        "Overall Status": promoter.overall_status,
+        "Created At": promoter.created_at
+          ? format(parseISO(promoter.created_at), "yyyy-MM-dd")
+          : "N/A",
+        Notes: promoter.notes || "",
       }))
 
       const csvContent = [
-        Object.keys(csvData[0] || {}).join(','),
-        ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
-      ].join('\n')
+        Object.keys(csvData[0] || {}).join(","),
+        ...csvData.map((row) =>
+          Object.values(row)
+            .map((val) => `"${val}"`)
+            .join(","),
+        ),
+      ].join("\n")
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
       link.href = URL.createObjectURL(blob)
-      link.download = `promoters-export-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      link.download = `promoters-export-${format(new Date(), "yyyy-MM-dd")}.csv`
       link.click()
 
       toast({
         title: "Export Complete",
         description: `Exported ${filteredPromoters.length} promoters to CSV`,
-        variant: "default"
+        variant: "default",
       })
     } catch (error) {
       console.error("Export error:", error)
       toast({
         title: "Export Failed",
         description: "Failed to export promoter data",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsExporting(false)
@@ -476,33 +509,39 @@ export default function ManagePromotersPage() {
     if (selectedPromoters.length === filteredPromoters.length) {
       setSelectedPromoters([])
     } else {
-      setSelectedPromoters(filteredPromoters.map(p => p.id))
+      setSelectedPromoters(filteredPromoters.map((p) => p.id))
     }
   }
 
   const toggleSelectPromoter = (promoterId: string) => {
-    setSelectedPromoters(prev => 
-      prev.includes(promoterId)
-        ? prev.filter(id => id !== promoterId)
-        : [...prev, promoterId]
+    setSelectedPromoters((prev) =>
+      prev.includes(promoterId) ? prev.filter((id) => id !== promoterId) : [...prev, promoterId],
     )
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "active": return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "warning": return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-      case "critical": return <XCircle className="h-4 w-4 text-red-500" />
-      default: return <Clock className="h-4 w-4 text-gray-500" />
+      case "active":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "warning":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      case "critical":
+        return <XCircle className="h-4 w-4 text-red-500" />
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />
     }
   }
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "active": return "default"
-      case "warning": return "secondary"
-      case "critical": return "destructive"
-      default: return "outline"
+      case "active":
+        return "default"
+      case "warning":
+        return "secondary"
+      case "critical":
+        return "destructive"
+      default:
+        return "outline"
     }
   }
 
@@ -523,9 +562,9 @@ export default function ManagePromotersPage() {
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoter List
           </Button>
-          <AdvancedPromoterForm 
-            promoterToEdit={selectedPromoter} 
-            onFormSubmit={handleFormClose} 
+          <AdvancedPromoterForm
+            promoterToEdit={selectedPromoter}
+            onFormSubmit={handleFormClose}
             onCancel={handleFormClose}
           />
         </div>
@@ -541,9 +580,7 @@ export default function ManagePromotersPage() {
             <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
               Manage Promoters
             </h1>
-            {isRefreshing && (
-              <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-            )}
+            {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
             <AutoRefreshIndicator />
           </div>
           <div className="flex gap-2">
@@ -579,7 +616,9 @@ export default function ManagePromotersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {stats.total}
+                    </p>
                   </div>
                   <Users className="h-8 w-8 text-blue-500" />
                 </div>
@@ -591,7 +630,9 @@ export default function ManagePromotersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-green-600 dark:text-green-400">Active</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.active}</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      {stats.active}
+                    </p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-green-500" />
                 </div>
@@ -602,8 +643,12 @@ export default function ManagePromotersPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Expiring</p>
-                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{stats.expiring_documents}</p>
+                    <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                      Expiring
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+                      {stats.expiring_documents}
+                    </p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-yellow-500" />
                 </div>
@@ -615,7 +660,9 @@ export default function ManagePromotersPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
-                    <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.expired_documents}</p>
+                    <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+                      {stats.expired_documents}
+                    </p>
                   </div>
                   <XCircle className="h-8 w-8 text-red-500" />
                 </div>
@@ -626,8 +673,12 @@ export default function ManagePromotersPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Contracts</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.total_contracts}</p>
+                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                      Contracts
+                    </p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      {stats.total_contracts}
+                    </p>
                   </div>
                   <BriefcaseIcon className="h-8 w-8 text-purple-500" />
                 </div>
@@ -662,11 +713,7 @@ export default function ManagePromotersPage() {
                     </>
                   )}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowStats(!showStats)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
                   <Activity className="mr-2 h-4 w-4" />
                   {showStats ? "Hide" : "Show"} Stats
                 </Button>
@@ -677,7 +724,9 @@ export default function ManagePromotersPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
               {/* Search Input */}
               <div className="sm:col-span-2">
-                <Label htmlFor="search" className="sr-only">Search</Label>
+                <Label htmlFor="search" className="sr-only">
+                  Search
+                </Label>
                 <div className="relative">
                   <Input
                     id="search"
@@ -751,7 +800,7 @@ export default function ManagePromotersPage() {
                 <span className="text-sm font-medium">
                   {selectedPromoters.length} promoter(s) selected
                 </span>
-                <div className="flex gap-2 ml-auto">
+                <div className="ml-auto flex gap-2">
                   <PermissionGuard action="promoter:export">
                     <Button
                       variant="outline"
@@ -808,8 +857,8 @@ export default function ManagePromotersPage() {
                 <div>
                   <CardTitle className="text-xl">Promoter Directory</CardTitle>
                   <CardDescription>
-                    View, add, or edit promoter details, documents, and contract status.
-                    Showing {filteredPromoters.length} of {promoters.length} promoters.
+                    View, add, or edit promoter details, documents, and contract status. Showing{" "}
+                    {filteredPromoters.length} of {promoters.length} promoters.
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -836,7 +885,10 @@ export default function ManagePromotersPage() {
                     <TableRow>
                       <TableHead className="w-12 px-4 py-3">
                         <Checkbox
-                          checked={selectedPromoters.length === filteredPromoters.length && filteredPromoters.length > 0}
+                          checked={
+                            selectedPromoters.length === filteredPromoters.length &&
+                            filteredPromoters.length > 0
+                          }
                           onCheckedChange={toggleSelectAll}
                           aria-label="Select all promoters"
                         />
@@ -875,13 +927,13 @@ export default function ManagePromotersPage() {
                       const idCardStatus = getDocumentStatus(promoter.id_card_expiry_date)
                       const passportStatus = getDocumentStatus(promoter.passport_expiry_date)
                       const isSelected = selectedPromoters.includes(promoter.id)
-                      
+
                       return (
                         <TableRow
                           key={promoter.id}
                           className={cn(
-                            "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors",
-                            isSelected && "bg-blue-50 dark:bg-blue-950/20"
+                            "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                            isSelected && "bg-blue-50 dark:bg-blue-950/20",
                           )}
                         >
                           <TableCell className="px-4 py-3">
@@ -894,18 +946,18 @@ export default function ManagePromotersPage() {
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-sm font-semibold text-white">
                                   {promoter.name_en.charAt(0).toUpperCase()}
                                 </div>
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                                <div className="truncate font-medium text-slate-900 dark:text-slate-100">
                                   {promoter.name_en}
                                 </div>
-                                <div className="text-sm text-muted-foreground truncate" dir="rtl">
+                                <div className="truncate text-sm text-muted-foreground" dir="rtl">
                                   {promoter.name_ar}
                                 </div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                <div className="truncate text-xs text-slate-500 dark:text-slate-400">
                                   ID: {promoter.id_card_number}
                                 </div>
                                 {promoter.created_at && (
@@ -923,10 +975,10 @@ export default function ManagePromotersPage() {
                                 alt={promoter.name_en + " photo"}
                                 width={40}
                                 height={40}
-                                className="h-10 w-10 rounded-full object-cover mx-auto"
+                                className="mx-auto h-10 w-10 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center mx-auto text-gray-400">
+                              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-gray-400">
                                 <UserIcon className="h-6 w-6" />
                               </div>
                             )}
@@ -948,11 +1000,12 @@ export default function ManagePromotersPage() {
                                     <span className={`mt-1 text-xs ${idCardStatus.colorClass}`}>
                                       {idCardStatus.text}
                                     </span>
-                                    {promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30 && (
-                                      <span className="text-xs text-amber-600 font-medium mt-0.5">
-                                        {promoter.days_until_id_expiry}d left
-                                      </span>
-                                    )}
+                                    {promoter.days_until_id_expiry !== undefined &&
+                                      promoter.days_until_id_expiry <= 30 && (
+                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                          {promoter.days_until_id_expiry}d left
+                                        </span>
+                                      )}
                                     {promoter.id_card_url && (
                                       <a
                                         href={promoter.id_card_url}
@@ -984,11 +1037,12 @@ export default function ManagePromotersPage() {
                                     <span className={`mt-1 text-xs ${passportStatus.colorClass}`}>
                                       {passportStatus.text}
                                     </span>
-                                    {promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30 && (
-                                      <span className="text-xs text-amber-600 font-medium mt-0.5">
-                                        {promoter.days_until_passport_expiry}d left
-                                      </span>
-                                    )}
+                                    {promoter.days_until_passport_expiry !== undefined &&
+                                      promoter.days_until_passport_expiry <= 30 && (
+                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                          {promoter.days_until_passport_expiry}d left
+                                        </span>
+                                      )}
                                     {promoter.passport_url && (
                                       <a
                                         href={promoter.passport_url}
@@ -1013,7 +1067,9 @@ export default function ManagePromotersPage() {
                             <div className="flex flex-col items-center gap-1">
                               <Badge
                                 variant={
-                                  (promoter.active_contracts_count || 0) > 0 ? "default" : "secondary"
+                                  (promoter.active_contracts_count || 0) > 0
+                                    ? "default"
+                                    : "secondary"
                                 }
                                 className={
                                   (promoter.active_contracts_count || 0) > 0
@@ -1034,17 +1090,21 @@ export default function ManagePromotersPage() {
                           <TableCell className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-2">
                               {getStatusIcon(promoter.overall_status)}
-                              <Badge variant={getStatusBadgeVariant(promoter.overall_status)} className="text-xs">
-                                {promoter.overall_status.charAt(0).toUpperCase() + promoter.overall_status.slice(1)}
+                              <Badge
+                                variant={getStatusBadgeVariant(promoter.overall_status)}
+                                className="text-xs"
+                              >
+                                {promoter.overall_status.charAt(0).toUpperCase() +
+                                  promoter.overall_status.slice(1)}
                               </Badge>
                             </div>
                           </TableCell>
                           <TableCell className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                asChild 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
                                 className="text-xs"
                                 disabled={!promoter.id}
                               >
@@ -1080,7 +1140,7 @@ export default function ManagePromotersPage() {
                                     </Link>
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="text-red-600"
                                     onClick={() => {
                                       setSelectedPromoters([promoter.id])
@@ -1109,26 +1169,26 @@ export default function ManagePromotersPage() {
               const idCardStatus = getDocumentStatus(promoter.id_card_expiry_date)
               const passportStatus = getDocumentStatus(promoter.passport_expiry_date)
               const isSelected = selectedPromoters.includes(promoter.id)
-              
+
               return (
-                <Card 
-                  key={promoter.id} 
+                <Card
+                  key={promoter.id}
                   className={cn(
-                    "relative hover:shadow-lg transition-shadow duration-200",
-                    isSelected && "ring-2 ring-primary ring-offset-2"
+                    "relative transition-shadow duration-200 hover:shadow-lg",
+                    isSelected && "ring-2 ring-primary ring-offset-2",
                   )}
                 >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 font-semibold text-white">
                           {promoter.name_en.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
                             {promoter.name_en}
                           </h3>
-                          <p className="text-sm text-muted-foreground truncate" dir="rtl">
+                          <p className="truncate text-sm text-muted-foreground" dir="rtl">
                             {promoter.name_ar}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -1168,40 +1228,44 @@ export default function ManagePromotersPage() {
                     {/* Document Status */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">ID Card</div>
+                        <div className="mb-1 text-xs text-muted-foreground">ID Card</div>
                         <div className="flex flex-col items-center">
                           <idCardStatus.Icon className={`h-6 w-6 ${idCardStatus.colorClass}`} />
                           <span className={`text-xs ${idCardStatus.colorClass} mt-1`}>
                             {idCardStatus.text}
                           </span>
-                          {promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30 && (
-                            <span className="text-xs text-amber-600 font-medium">
-                              {promoter.days_until_id_expiry}d left
-                            </span>
-                          )}
+                          {promoter.days_until_id_expiry !== undefined &&
+                            promoter.days_until_id_expiry <= 30 && (
+                              <span className="text-xs font-medium text-amber-600">
+                                {promoter.days_until_id_expiry}d left
+                              </span>
+                            )}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Passport</div>
+                        <div className="mb-1 text-xs text-muted-foreground">Passport</div>
                         <div className="flex flex-col items-center">
                           <passportStatus.Icon className={`h-6 w-6 ${passportStatus.colorClass}`} />
                           <span className={`text-xs ${passportStatus.colorClass} mt-1`}>
                             {passportStatus.text}
                           </span>
-                          {promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30 && (
-                            <span className="text-xs text-amber-600 font-medium">
-                              {promoter.days_until_passport_expiry}d left
-                            </span>
-                          )}
+                          {promoter.days_until_passport_expiry !== undefined &&
+                            promoter.days_until_passport_expiry <= 30 && (
+                              <span className="text-xs font-medium text-amber-600">
+                                {promoter.days_until_passport_expiry}d left
+                              </span>
+                            )}
                         </div>
                       </div>
                     </div>
 
                     {/* Contract Status */}
                     <div className="text-center">
-                      <div className="text-xs text-muted-foreground mb-2">Active Contracts</div>
+                      <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
                       <Badge
-                        variant={(promoter.active_contracts_count || 0) > 0 ? "default" : "secondary"}
+                        variant={
+                          (promoter.active_contracts_count || 0) > 0 ? "default" : "secondary"
+                        }
                         className="text-sm"
                       >
                         <BriefcaseIcon className="mr-1.5 h-4 w-4" />
@@ -1213,18 +1277,14 @@ export default function ManagePromotersPage() {
                     <div className="flex items-center justify-center gap-2">
                       {getStatusIcon(promoter.overall_status)}
                       <Badge variant={getStatusBadgeVariant(promoter.overall_status)}>
-                        {promoter.overall_status.charAt(0).toUpperCase() + promoter.overall_status.slice(1)}
+                        {promoter.overall_status.charAt(0).toUpperCase() +
+                          promoter.overall_status.slice(1)}
                       </Badge>
                     </div>
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
-                      <Button 
-                        asChild 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                      >
+                      <Button asChild variant="outline" size="sm" className="flex-1">
                         <Link href={`/manage-promoters/${promoter.id}`}>
                           <EyeIcon className="mr-1 h-4 w-4" /> View
                         </Link>
@@ -1250,4 +1310,4 @@ export default function ManagePromotersPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"

@@ -1,28 +1,28 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { RefreshCw, Shield } from 'lucide-react'
-import { usePermissions } from '@/hooks/use-permissions'
-import { useToast } from '@/hooks/use-toast'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { RefreshCw, Shield } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useToast } from "@/hooks/use-toast"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface RoleRefreshButtonProps {
-  variant?: 'default' | 'outline' | 'ghost'
-  size?: 'default' | 'sm' | 'lg' | 'icon'
+  variant?: "default" | "outline" | "ghost"
+  size?: "default" | "sm" | "lg" | "icon"
   showIcon?: boolean
   showText?: boolean
   className?: string
   compact?: boolean
 }
 
-export function RoleRefreshButton({ 
-  variant = 'outline', 
-  size = 'sm', 
+export function RoleRefreshButton({
+  variant = "outline",
+  size = "sm",
   showIcon = true,
   showText = true,
-  className = '',
-  compact = false
+  className = "",
+  compact = false,
 }: RoleRefreshButtonProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const { forceRefresh, role } = usePermissions()
@@ -33,14 +33,14 @@ export function RoleRefreshButton({
     try {
       const newRole = await forceRefresh()
       toast({
-        title: 'Role Refreshed',
+        title: "Role Refreshed",
         description: `Your role has been updated to: ${newRole}`,
       })
     } catch (error) {
       toast({
-        title: 'Refresh Failed',
-        description: 'Failed to refresh your role. Please try again.',
-        variant: 'destructive',
+        title: "Refresh Failed",
+        description: "Failed to refresh your role. Please try again.",
+        variant: "destructive",
       })
     } finally {
       setIsRefreshing(false)
@@ -86,14 +86,13 @@ export function RoleRefreshButton({
       disabled={isRefreshing}
       className={className}
     >
-      {showIcon && (
-        isRefreshing ? (
+      {showIcon &&
+        (isRefreshing ? (
           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           <Shield className="mr-2 h-4 w-4" />
-        )
-      )}
-      {showText && (isRefreshing ? 'Refreshing...' : 'Refresh Role')}
+        ))}
+      {showText && (isRefreshing ? "Refreshing..." : "Refresh Role")}
     </Button>
   )
-} 
+}

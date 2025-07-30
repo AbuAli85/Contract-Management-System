@@ -17,13 +17,9 @@ function SimpleProvidersContent({ children }: { children: React.ReactNode }) {
       }),
   )
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
-  )
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
 }
 
 export function SimpleProviders({ children }: { children: React.ReactNode }) {
   return <SimpleProvidersContent>{children}</SimpleProvidersContent>
-} 
+}

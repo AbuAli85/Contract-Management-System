@@ -12,6 +12,7 @@ The error "Failed to evaluate filter '0=0': Cannot read properties of undefined 
 ### 1. Webhook Response Fix ✅ COMPLETED
 
 Updated `app/api/webhook/makecom/route.ts` to ensure:
+
 - **All string fields return actual strings** (never null/undefined)
 - **Empty image URLs return `""` instead of `null`**
 - **All fields are explicitly converted to strings using `.toString()`**
@@ -21,6 +22,7 @@ Updated `app/api/webhook/makecom/route.ts` to ensure:
 Based on your screenshots, you need to update your Make.com filters:
 
 #### Current Filter (causing errors):
+
 ```
 Status code "Equal to" [undefined/empty condition]
 ```
@@ -28,6 +30,7 @@ Status code "Equal to" [undefined/empty condition]
 #### Recommended Filter Logic:
 
 **For "Passport Download Success" Filter:**
+
 ```
 Condition 1: promoter_passport_url "not equal" ""
 AND
@@ -35,16 +38,19 @@ Condition 2: length(promoter_passport_url) "greater" 0
 ```
 
 **For "ID Card Download Success" Filter:**
+
 ```
 Condition 1: promoter_id_card_url "not equal" ""
-AND 
+AND
 Condition 2: length(promoter_id_card_url) "greater" 0
 ```
 
 #### Alternative Simple Filter:
+
 ```
 promoter_passport_url "contains" "http"
 ```
+
 This will only pass when there's an actual URL.
 
 ## Step-by-Step Fix in Make.com
@@ -77,12 +83,14 @@ This will only pass when there's an actual URL.
 ## Expected Behavior After Fix
 
 ### When NO images provided:
+
 - `promoter_id_card_url`: `""`
 - `promoter_passport_url`: `""`
 - **Filter result**: SKIP (doesn't process images)
 - **Scenario**: Continues to next module
 
 ### When images ARE provided:
+
 - `promoter_id_card_url`: `"https://example.com/image.jpg"`
 - `promoter_passport_url`: `"https://example.com/passport.jpg"`
 - **Filter result**: PASS (processes images)
@@ -91,7 +99,9 @@ This will only pass when there's an actual URL.
 ## Testing the Fix
 
 ### 1. Test with No Images
+
 Send this payload to test empty image handling:
+
 ```json
 {
   "contract_number": "TEST-001",
@@ -102,10 +112,12 @@ Send this payload to test empty image handling:
 ```
 
 ### 2. Test with Images
+
 Send this payload to test image processing:
+
 ```json
 {
-  "contract_number": "TEST-002", 
+  "contract_number": "TEST-002",
   "promoter_name_en": "Test User",
   "promoter_id_card_url": "https://via.placeholder.com/600x400",
   "promoter_passport_url": "https://via.placeholder.com/600x400",
@@ -140,6 +152,6 @@ curl -X POST http://localhost:3000/api/webhook/makecom \
 
 ✅ **Webhook Fixed**: All string fields guaranteed to be strings  
 ⚠️ **Make.com Filter**: Needs updating to handle empty strings properly  
-🎯 **Result**: No more `.split()` errors, proper conditional processing  
+🎯 **Result**: No more `.split()` errors, proper conditional processing
 
 The webhook now returns safe string values that Make.com can process without errors. Update your filters as described above to complete the fix.

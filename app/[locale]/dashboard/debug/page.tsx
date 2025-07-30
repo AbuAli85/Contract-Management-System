@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useEffect, useState } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 export default function DebugDashboardPage() {
   const { user, loading: authLoading, profile, mounted } = useAuth()
@@ -15,35 +15,35 @@ export default function DebugDashboardPage() {
     const fetchDebugInfo = async () => {
       try {
         // Test environment variables
-        const envResponse = await fetch('/api/debug/env')
+        const envResponse = await fetch("/api/debug/env")
         const envData = await envResponse.json()
-        
+
         // Test auth status
-        const authResponse = await fetch('/api/auth/status')
+        const authResponse = await fetch("/api/auth/status")
         const authData = await authResponse.json()
-        
+
         // Test Supabase connection
-        const supabaseResponse = await fetch('/api/debug/supabase')
+        const supabaseResponse = await fetch("/api/debug/supabase")
         const supabaseData = await supabaseResponse.json()
-        
+
         // Test analytics API
-        const analyticsResponse = await fetch('/api/dashboard/analytics')
+        const analyticsResponse = await fetch("/api/dashboard/analytics")
         const analyticsData = await analyticsResponse.json()
-        
+
         setDebugInfo({
           env: envData,
           auth: authData,
           supabase: supabaseData,
           analytics: {
             status: analyticsResponse.status,
-            data: analyticsData
+            data: analyticsData,
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       } catch (error) {
         setDebugInfo({
-          error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
+          error: error instanceof Error ? error.message : "Unknown error",
+          timestamp: new Date().toISOString(),
         })
       } finally {
         setLoading(false)
@@ -55,9 +55,9 @@ export default function DebugDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="text-gray-600">Loading debug information...</p>
         </div>
       </div>
@@ -83,10 +83,18 @@ export default function DebugDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <p><strong>Mounted:</strong> {mounted ? "Yes" : "No"}</p>
-            <p><strong>Loading:</strong> {authLoading ? "Yes" : "No"}</p>
-            <p><strong>User:</strong> {user ? user.email : "None"}</p>
-            <p><strong>Profile:</strong> {profile ? "Loaded" : "None"}</p>
+            <p>
+              <strong>Mounted:</strong> {mounted ? "Yes" : "No"}
+            </p>
+            <p>
+              <strong>Loading:</strong> {authLoading ? "Yes" : "No"}
+            </p>
+            <p>
+              <strong>User:</strong> {user ? user.email : "None"}
+            </p>
+            <p>
+              <strong>Profile:</strong> {profile ? "Loaded" : "None"}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -99,11 +107,24 @@ export default function DebugDashboardPage() {
         <CardContent>
           {debugInfo.env ? (
             <div className="space-y-2">
-              <p><strong>Supabase URL:</strong> {debugInfo.env.env?.hasSupabaseUrl ? "✅ Set" : "❌ Missing"}</p>
-              <p><strong>Supabase Anon Key:</strong> {debugInfo.env.env?.hasSupabaseAnonKey ? "✅ Set" : "❌ Missing"}</p>
-              <p><strong>Service Role Key:</strong> {debugInfo.env.env?.hasServiceRoleKey ? "✅ Set" : "❌ Missing"}</p>
-              <p><strong>Node Environment:</strong> {debugInfo.env.env?.nodeEnv || "Not set"}</p>
-              <p><strong>Vercel Environment:</strong> {debugInfo.env.env?.vercelEnv || "Not set"}</p>
+              <p>
+                <strong>Supabase URL:</strong>{" "}
+                {debugInfo.env.env?.hasSupabaseUrl ? "✅ Set" : "❌ Missing"}
+              </p>
+              <p>
+                <strong>Supabase Anon Key:</strong>{" "}
+                {debugInfo.env.env?.hasSupabaseAnonKey ? "✅ Set" : "❌ Missing"}
+              </p>
+              <p>
+                <strong>Service Role Key:</strong>{" "}
+                {debugInfo.env.env?.hasServiceRoleKey ? "✅ Set" : "❌ Missing"}
+              </p>
+              <p>
+                <strong>Node Environment:</strong> {debugInfo.env.env?.nodeEnv || "Not set"}
+              </p>
+              <p>
+                <strong>Vercel Environment:</strong> {debugInfo.env.env?.vercelEnv || "Not set"}
+              </p>
             </div>
           ) : (
             <p className="text-red-500">Failed to load environment info</p>
@@ -119,12 +140,23 @@ export default function DebugDashboardPage() {
         <CardContent>
           {debugInfo.auth ? (
             <div className="space-y-2">
-              <p><strong>Has Session:</strong> {debugInfo.auth.auth?.hasSession ? "✅ Yes" : "❌ No"}</p>
-              <p><strong>Has User:</strong> {debugInfo.auth.auth?.hasUser ? "✅ Yes" : "❌ No"}</p>
-              <p><strong>User ID:</strong> {debugInfo.auth.auth?.userId || "None"}</p>
-              <p><strong>User Email:</strong> {debugInfo.auth.auth?.userEmail || "None"}</p>
+              <p>
+                <strong>Has Session:</strong> {debugInfo.auth.auth?.hasSession ? "✅ Yes" : "❌ No"}
+              </p>
+              <p>
+                <strong>Has User:</strong> {debugInfo.auth.auth?.hasUser ? "✅ Yes" : "❌ No"}
+              </p>
+              <p>
+                <strong>User ID:</strong> {debugInfo.auth.auth?.userId || "None"}
+              </p>
+              <p>
+                <strong>User Email:</strong> {debugInfo.auth.auth?.userEmail || "None"}
+              </p>
               {debugInfo.auth.auth?.sessionError && (
-                <p><strong>Session Error:</strong> <span className="text-red-500">{debugInfo.auth.auth.sessionError}</span></p>
+                <p>
+                  <strong>Session Error:</strong>{" "}
+                  <span className="text-red-500">{debugInfo.auth.auth.sessionError}</span>
+                </p>
               )}
             </div>
           ) : (
@@ -141,10 +173,19 @@ export default function DebugDashboardPage() {
         <CardContent>
           {debugInfo.supabase ? (
             <div className="space-y-2">
-              <p><strong>Can Connect:</strong> {debugInfo.supabase.supabase?.canConnect ? "✅ Yes" : "❌ No"}</p>
-              <p><strong>Has Data:</strong> {debugInfo.supabase.supabase?.hasData ? "✅ Yes" : "❌ No"}</p>
+              <p>
+                <strong>Can Connect:</strong>{" "}
+                {debugInfo.supabase.supabase?.canConnect ? "✅ Yes" : "❌ No"}
+              </p>
+              <p>
+                <strong>Has Data:</strong>{" "}
+                {debugInfo.supabase.supabase?.hasData ? "✅ Yes" : "❌ No"}
+              </p>
               {debugInfo.supabase.supabase?.error && (
-                <p><strong>Error:</strong> <span className="text-red-500">{debugInfo.supabase.supabase.error}</span></p>
+                <p>
+                  <strong>Error:</strong>{" "}
+                  <span className="text-red-500">{debugInfo.supabase.supabase.error}</span>
+                </p>
               )}
             </div>
           ) : (
@@ -160,10 +201,17 @@ export default function DebugDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <p><strong>Status:</strong> {debugInfo.analytics?.status || "Unknown"}</p>
-            <p><strong>Success:</strong> {debugInfo.analytics?.data?.success ? "✅ Yes" : "❌ No"}</p>
+            <p>
+              <strong>Status:</strong> {debugInfo.analytics?.status || "Unknown"}
+            </p>
+            <p>
+              <strong>Success:</strong> {debugInfo.analytics?.data?.success ? "✅ Yes" : "❌ No"}
+            </p>
             {debugInfo.analytics?.data?.error && (
-              <p><strong>Error:</strong> <span className="text-red-500">{debugInfo.analytics.data.error}</span></p>
+              <p>
+                <strong>Error:</strong>{" "}
+                <span className="text-red-500">{debugInfo.analytics.data.error}</span>
+              </p>
             )}
           </div>
         </CardContent>
@@ -176,10 +224,18 @@ export default function DebugDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            <p><strong>URL:</strong> {window.location.href}</p>
-            <p><strong>User Agent:</strong> {navigator.userAgent}</p>
-            <p><strong>Local Storage Keys:</strong> {Object.keys(localStorage).length}</p>
-            <p><strong>Session Storage Keys:</strong> {Object.keys(sessionStorage).length}</p>
+            <p>
+              <strong>URL:</strong> {window.location.href}
+            </p>
+            <p>
+              <strong>User Agent:</strong> {navigator.userAgent}
+            </p>
+            <p>
+              <strong>Local Storage Keys:</strong> {Object.keys(localStorage).length}
+            </p>
+            <p>
+              <strong>Session Storage Keys:</strong> {Object.keys(sessionStorage).length}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -196,12 +252,10 @@ export default function DebugDashboardPage() {
         </Card>
       )}
 
-      <div className="text-sm text-gray-500">
-        Last updated: {debugInfo.timestamp}
-      </div>
+      <div className="text-sm text-gray-500">Last updated: {debugInfo.timestamp}</div>
     </div>
   )
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

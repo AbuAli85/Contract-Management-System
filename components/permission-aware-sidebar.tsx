@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+
 import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -10,57 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import {
-  Home,
-  BarChart3,
-  FileText,
-  FilePlus,
-  Users,
-  UserPlus,
-  UserCheck,
-  User,
-  Bell,
-  Shield,
-  Settings,
-  LogOut,
-  Moon,
-  Sun,
-  PanelLeft,
-  Package2,
-  Building2,
-  UserCog,
-  ClipboardList,
-  FileSpreadsheet,
-  Database,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Download,
-  Upload,
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  Star,
-  Mail,
-  MessageSquare,
-  TrendingUp,
-  ArrowUpDown,
-  ChevronUp,
-  ChevronDown,
-  Menu,
-  X,
-  Briefcase,
-  FileCheck,
-  FileX,
-  FileSearch,
-  FileEdit,
-  HelpCircle,
-} from "lucide-react"
+import { Home, BarChart3, FilePlus, UserCheck, User, Bell, Shield, Moon, Sun, Building2, Briefcase, FileCheck, FileX, FileSearch, FileEdit,  } from 'lucide-react'
 import { useTheme } from "next-themes"
 
 interface NavItem {
@@ -71,7 +21,7 @@ interface NavItem {
   permission?: string
   badge?: string
   badgeVariant?: "default" | "secondary" | "destructive" | "outline"
-  children?: Omit<NavItem, 'children'>[]
+  children?: Omit<NavItem, "children">[]
 }
 
 interface SidebarProps {
@@ -87,7 +37,12 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
 
   // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  const locale =
+    pathname && pathname.startsWith("/en/")
+      ? "en"
+      : pathname && pathname.startsWith("/ar/")
+        ? "ar"
+        : "en"
 
   useEffect(() => {
     setMounted(true)
@@ -114,37 +69,37 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Main Dashboard",
           labelAr: "لوحة التحكم الرئيسية",
           icon: Home,
-          permission: "system:analytics"
+          permission: "system:analytics",
         },
         {
           href: `/${locale}/dashboard/overview`,
           label: "Overview",
           labelAr: "نظرة عامة",
           icon: BarChart3,
-          permission: "system:analytics"
+          permission: "system:analytics",
         },
         {
           href: `/${locale}/dashboard/analytics`,
           label: "Analytics",
           labelAr: "التحليلات",
           icon: TrendingUp,
-          permission: "system:analytics"
+          permission: "system:analytics",
         },
         {
           href: `/${locale}/dashboard/notifications`,
           label: "Notifications",
           labelAr: "الإشعارات",
           icon: Bell,
-          permission: "system:notifications"
+          permission: "system:notifications",
         },
         {
           href: `/${locale}/dashboard/reports`,
           label: "Reports",
           labelAr: "التقارير",
           icon: FileSpreadsheet,
-          permission: "system:analytics"
-        }
-      ]
+          permission: "system:analytics",
+        },
+      ],
     },
     {
       title: "Contract Management",
@@ -157,14 +112,14 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           icon: FilePlus,
           permission: "contract:create",
           badge: "New",
-          badgeVariant: "default"
+          badgeVariant: "default",
         },
         {
           href: `/${locale}/contracts`,
           label: "View Contracts",
           labelAr: "عرض العقود",
           icon: FileText,
-          permission: "contract:read"
+          permission: "contract:read",
         },
         {
           href: `/${locale}/contracts/pending`,
@@ -173,23 +128,23 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           icon: Clock,
           permission: "contract:read",
           badge: "3",
-          badgeVariant: "secondary"
+          badgeVariant: "secondary",
         },
         {
           href: `/${locale}/contracts/approved`,
           label: "Approved Contracts",
           labelAr: "العقود المعتمدة",
           icon: CheckCircle,
-          permission: "contract:read"
+          permission: "contract:read",
         },
         {
           href: `/${locale}/contracts/rejected`,
           label: "Rejected Contracts",
           labelAr: "العقود المرفوضة",
           icon: XCircle,
-          permission: "contract:read"
-        }
-      ]
+          permission: "contract:read",
+        },
+      ],
     },
     {
       title: "Approval Workflow",
@@ -202,7 +157,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           icon: UserCheck,
           permission: "user:create",
           badge: "New",
-          badgeVariant: "secondary"
+          badgeVariant: "secondary",
         },
         {
           href: `/${locale}/dashboard/approvals`,
@@ -211,23 +166,23 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           icon: FileCheck,
           permission: "contract:approve",
           badge: "New",
-          badgeVariant: "default"
+          badgeVariant: "default",
         },
         {
           href: `/${locale}/dashboard/approvals/pending`,
           label: "Pending Reviews",
           labelAr: "المراجعات المعلقة",
           icon: Clock,
-          permission: "contract:approve"
+          permission: "contract:approve",
         },
         {
           href: `/${locale}/dashboard/approvals/completed`,
           label: "Completed Reviews",
           labelAr: "المراجعات المكتملة",
           icon: CheckCircle,
-          permission: "contract:approve"
-        }
-      ]
+          permission: "contract:approve",
+        },
+      ],
     },
     {
       title: "Promoter Management",
@@ -238,30 +193,30 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Manage Promoters",
           labelAr: "إدارة المروجين",
           icon: Users,
-          permission: "promoter:read"
+          permission: "promoter:read",
         },
         {
           href: `/${locale}/promoter-analysis`,
           label: "Promoter Analysis",
           labelAr: "تحليل المروجين",
           icon: UserCheck,
-          permission: "promoter:read"
+          permission: "promoter:read",
         },
         {
           href: `/${locale}/promoters/performance`,
           label: "Performance Metrics",
           labelAr: "مقاييس الأداء",
           icon: TrendingUp,
-          permission: "promoter:read"
+          permission: "promoter:read",
         },
         {
           href: `/${locale}/promoters/commission`,
           label: "Commission Tracking",
           labelAr: "تتبع العمولات",
           icon: Star,
-          permission: "promoter:read"
-        }
-      ]
+          permission: "promoter:read",
+        },
+      ],
     },
     {
       title: "Party Management",
@@ -272,23 +227,23 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Manage Parties",
           labelAr: "إدارة الأطراف",
           icon: Building2,
-          permission: "party:read"
+          permission: "party:read",
         },
         {
           href: `/${locale}/parties/contacts`,
           label: "Contact Directory",
           labelAr: "دليل الاتصال",
           icon: Mail,
-          permission: "party:read"
+          permission: "party:read",
         },
         {
           href: `/${locale}/parties/communications`,
           label: "Communications",
           labelAr: "الاتصالات",
           icon: MessageSquare,
-          permission: "party:read"
-        }
-      ]
+          permission: "party:read",
+        },
+      ],
     },
     {
       title: "CRM",
@@ -299,9 +254,9 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "CRM Dashboard",
           labelAr: "لوحة إدارة علاقات العملاء",
           icon: Briefcase,
-          permission: "promoter:read"
-        }
-      ]
+          permission: "promoter:read",
+        },
+      ],
     },
     {
       title: "User Management",
@@ -314,37 +269,37 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           icon: UserCheck,
           permission: "user:create",
           badge: "New",
-          badgeVariant: "secondary"
+          badgeVariant: "secondary",
         },
         {
           href: `/${locale}/dashboard/users`,
           label: "Users",
           labelAr: "المستخدمون",
           icon: Users,
-          permission: "user:read"
+          permission: "user:read",
         },
         {
           href: `/${locale}/dashboard/user-management`,
           label: "User Management",
           labelAr: "إدارة المستخدمين",
           icon: UserCog,
-          permission: "user:create"
+          permission: "user:create",
         },
         {
           href: `/${locale}/users/roles`,
           label: "Roles & Permissions",
           labelAr: "الأدوار والصلاحيات",
           icon: Shield,
-          permission: "user:create"
+          permission: "user:create",
         },
         {
           href: `/${locale}/users/activity`,
           label: "User Activity",
           labelAr: "نشاط المستخدم",
           icon: Activity,
-          permission: "user:read"
-        }
-      ]
+          permission: "user:read",
+        },
+      ],
     },
     {
       title: "Data Management",
@@ -355,23 +310,23 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Import Data",
           labelAr: "استيراد البيانات",
           icon: Upload,
-          permission: "system:settings"
+          permission: "system:settings",
         },
         {
           href: `/${locale}/data/export`,
           label: "Export Data",
           labelAr: "تصدير البيانات",
           icon: Download,
-          permission: "system:settings"
+          permission: "system:settings",
         },
         {
           href: `/${locale}/data/backup`,
           label: "Backup & Restore",
           labelAr: "النسخ الاحتياطي والاستعادة",
           icon: Database,
-          permission: "system:settings"
-        }
-      ]
+          permission: "system:settings",
+        },
+      ],
     },
     {
       title: "System Administration",
@@ -382,37 +337,37 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Audit Logs",
           labelAr: "سجلات التدقيق",
           icon: Shield,
-          permission: "system:audit_logs"
+          permission: "system:audit_logs",
         },
         {
           href: `/${locale}/dashboard/settings`,
           label: "Settings",
           labelAr: "الإعدادات",
           icon: Settings,
-          permission: "system:settings"
+          permission: "system:settings",
         },
         {
           href: `/${locale}/dashboard/admin-tools`,
           label: "Admin Tools",
           labelAr: "أدوات الإدارة",
           icon: Package2,
-          permission: "system:settings"
+          permission: "system:settings",
         },
         {
           href: `/${locale}/system/security`,
           label: "Security",
           labelAr: "الأمان",
           icon: AlertTriangle,
-          permission: "system:settings"
+          permission: "system:settings",
         },
         {
           href: `/${locale}/system/logs`,
           label: "System Logs",
           labelAr: "سجلات النظام",
           icon: ClipboardList,
-          permission: "system:settings"
-        }
-      ]
+          permission: "system:settings",
+        },
+      ],
     },
     {
       title: "User",
@@ -423,50 +378,50 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           label: "Profile",
           labelAr: "الملف الشخصي",
           icon: User,
-          permission: "contract:read"
+          permission: "contract:read",
         },
         {
           href: `/${locale}/profile/settings`,
           label: "Account Settings",
           labelAr: "إعدادات الحساب",
           icon: Settings,
-          permission: "contract:read"
+          permission: "contract:read",
         },
         {
           href: `/${locale}/profile/security`,
           label: "Security Settings",
           labelAr: "إعدادات الأمان",
           icon: Shield,
-          permission: "contract:read"
+          permission: "contract:read",
         },
         {
           href: "/help",
           label: "Help & Support",
           labelAr: "المساعدة والدعم",
           icon: HelpCircle,
-          permission: "contract:read"
-        }
-      ]
-    }
+          permission: "contract:read",
+        },
+      ],
+    },
   ]
 
   const NavLink = ({ item, isMobile = false }: { item: NavItem; isMobile?: boolean }) => {
     const hasPermission = !item.permission || permissions.can(item.permission as any)
-    
+
     if (!hasPermission) return null
 
     return (
       <Link
         href={item.href}
         className={cn(
-          "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary hover:bg-accent",
+          "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-accent hover:text-primary",
           pathname === item.href ? "bg-accent text-primary" : "text-muted-foreground",
           isMobile ? "text-lg" : "text-sm",
         )}
       >
         <item.icon className="h-4 w-4" />
         <span className={cn(isCollapsed && !isMobile ? "sr-only" : "")}>
-          {locale === 'ar' ? item.labelAr : item.label}
+          {locale === "ar" ? item.labelAr : item.label}
         </span>
         {item.badge && (
           <Badge variant={item.badgeVariant || "secondary"} className="ml-auto">
@@ -479,7 +434,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
 
   const NavLinkIconOnly = ({ item }: { item: NavItem }) => {
     const hasPermission = !item.permission || permissions.can(item.permission as any)
-    
+
     if (!hasPermission) return null
 
     return (
@@ -489,16 +444,18 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
             <Link
               href={item.href}
               className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground hover:bg-accent md:h-8 md:w-8",
-                pathname === item.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                "flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-accent hover:text-foreground md:h-8 md:w-8",
+                pathname === item.href
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground",
               )}
             >
               <item.icon className="h-4 w-4" />
-              <span className="sr-only">{locale === 'ar' ? item.labelAr : item.label}</span>
+              <span className="sr-only">{locale === "ar" ? item.labelAr : item.label}</span>
             </Link>
           </TooltipTrigger>
           <TooltipContent side="right">
-            {locale === 'ar' ? item.labelAr : item.label}
+            {locale === "ar" ? item.labelAr : item.label}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -506,8 +463,8 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
   }
 
   const renderSection = (section: any, index: number) => {
-    const hasAnyPermission = section.items.some((item: NavItem) => 
-      !item.permission || permissions.can(item.permission as any)
+    const hasAnyPermission = section.items.some(
+      (item: NavItem) => !item.permission || permissions.can(item.permission as any),
     )
 
     if (!hasAnyPermission) return null
@@ -519,8 +476,8 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       <div key={sectionId} className="space-y-1">
         {!isCollapsed && (
           <div className="flex items-center justify-between px-3 py-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {locale === 'ar' ? section.titleAr : section.title}
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {locale === "ar" ? section.titleAr : section.title}
             </h3>
             <Button
               variant="ghost"
@@ -528,42 +485,28 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
               onClick={() => toggleSection(section.title)}
               className="h-4 w-4 p-0"
             >
-              {isExpanded ? (
-                <ChevronUp className="h-3 w-3" />
-              ) : (
-                <ChevronDown className="h-3 w-3" />
-              )}
+              {isExpanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
             </Button>
           </div>
         )}
-        
-        <div className={cn(
-          "space-y-1",
-          !isCollapsed && !isExpanded && "hidden"
-        )}>
+
+        <div className={cn("space-y-1", !isCollapsed && !isExpanded && "hidden")}>
           {section.items.map((item: NavItem, itemIndex: number) => (
             <div key={`${sectionId}-item-${itemIndex}`}>
-              {isCollapsed ? (
-                <NavLinkIconOnly item={item} />
-              ) : (
-                <NavLink item={item} />
-              )}
+              {isCollapsed ? <NavLinkIconOnly item={item} /> : <NavLink item={item} />}
             </div>
           ))}
         </div>
-        
-        {!isCollapsed && index < navigationSections.length - 1 && (
-          <Separator className="my-2" />
-        )}
+
+        {!isCollapsed && index < navigationSections.length - 1 && <Separator className="my-2" />}
       </div>
     )
   }
 
   return (
-    <div className={cn(
-      "flex h-full flex-col border-r bg-background",
-      isCollapsed ? "w-16" : "w-64"
-    )}>
+    <div
+      className={cn("flex h-full flex-col border-r bg-background", isCollapsed ? "w-16" : "w-64")}
+    >
       {/* Header */}
       <div className="flex h-14 items-center border-b px-3">
         {!isCollapsed && (
@@ -572,9 +515,7 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
             <span className="font-semibold">Contract Manager</span>
           </div>
         )}
-        {isCollapsed && (
-          <Package2 className="h-6 w-6 mx-auto" />
-        )}
+        {isCollapsed && <Package2 className="mx-auto h-6 w-6" />}
       </div>
 
       {/* Navigation */}
@@ -592,17 +533,14 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
               variant="ghost"
               size="sm"
               onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className={cn(
-                "h-8 w-8 p-0",
-                isCollapsed ? "mx-auto" : ""
-              )}
+              className={cn("h-8 w-8 p-0", isCollapsed ? "mx-auto" : "")}
             >
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
               <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
               <span className="sr-only">Toggle theme</span>
             </Button>
           )}
-          
+
           {!isCollapsed && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>Role: {permissions.role}</span>
@@ -631,4 +569,4 @@ export function MobileSidebar() {
       </SheetContent>
     </Sheet>
   )
-} 
+}

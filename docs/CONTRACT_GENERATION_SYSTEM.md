@@ -34,16 +34,19 @@ This document describes the complete end-to-end contract generation system that 
 ## 🔄 Workflow
 
 ### 1. Contract Creation
+
 ```
 User fills form → Validation → Database storage → Make.com webhook → PDF generation
 ```
 
 ### 2. PDF Generation Process
+
 ```
 Make.com receives webhook → Fetches contract data → Creates Google Doc → Exports PDF → Uploads to Supabase → Updates contract status
 ```
 
 ### 3. Status Tracking
+
 ```
 Draft → Processing → Generated/Failed → Download available
 ```
@@ -87,6 +90,7 @@ Draft → Processing → Generated/Failed → Download available
 ### For Users
 
 1. **Navigate to Contract Generation**
+
    ```
    /en/generate-contract
    ```
@@ -106,11 +110,13 @@ Draft → Processing → Generated/Failed → Download available
 ### For Administrators
 
 1. **Monitor Contract Status**
+
    ```
    /en/contracts
    ```
 
 2. **Manage Templates**
+
    ```
    /en/dashboard/makecom-templates
    ```
@@ -173,6 +179,7 @@ CREATE TABLE contracts (
 ### API Endpoints
 
 #### Generate Contract
+
 ```http
 POST /api/contracts/generate
 Content-Type: application/json
@@ -196,16 +203,19 @@ Content-Type: application/json
 ```
 
 #### Check Status
+
 ```http
 GET /api/contracts/generate?contract_id=uuid&action=status
 ```
 
 #### Download PDF
+
 ```http
 GET /api/contracts/generate?contract_id=uuid&action=download
 ```
 
 #### Retry Generation
+
 ```http
 PATCH /api/contracts/generate
 Content-Type: application/json
@@ -219,11 +229,13 @@ Content-Type: application/json
 ## 🎯 Make.com Configuration
 
 ### Webhook Trigger
+
 - **URL**: `https://your-domain.com/api/webhook/contract-pdf-ready`
 - **Method**: POST
 - **Content-Type**: application/json
 
 ### Expected Payload
+
 ```json
 {
   "contract_id": "uuid",
@@ -235,6 +247,7 @@ Content-Type: application/json
 ```
 
 ### Google Docs Template Variables
+
 ```json
 {
   "contract_number": "CNT-20240101-ABC123",
@@ -257,12 +270,14 @@ Content-Type: application/json
 ## 🔍 Monitoring & Debugging
 
 ### Status Codes
+
 - `draft` - Contract created, pending generation
 - `processing` - PDF generation in progress
 - `generated` - PDF ready for download
 - `failed` - Generation failed, retry available
 
 ### Log Locations
+
 - **Frontend**: Browser console
 - **Backend**: Server logs
 - **Make.com**: Scenario execution logs
@@ -288,6 +303,7 @@ Content-Type: application/json
 ## 🚀 Deployment Checklist
 
 ### Pre-deployment
+
 - [ ] Environment variables configured
 - [ ] Database schema updated
 - [ ] Make.com scenario imported and tested
@@ -295,6 +311,7 @@ Content-Type: application/json
 - [ ] Supabase storage bucket configured
 
 ### Post-deployment
+
 - [ ] Test contract generation end-to-end
 - [ ] Verify PDF download functionality
 - [ ] Check Google Drive integration
@@ -304,12 +321,14 @@ Content-Type: application/json
 ## 📊 Performance Metrics
 
 ### Expected Performance
+
 - **Form Submission**: < 2 seconds
 - **PDF Generation**: 30-60 seconds
 - **Download Speed**: < 5 seconds
 - **Status Updates**: Real-time polling
 
 ### Monitoring Points
+
 - Contract generation success rate
 - PDF generation time
 - Download success rate
@@ -345,4 +364,4 @@ For technical support or questions about the contract generation system:
 
 **Last Updated**: January 2024  
 **Version**: 1.0.0  
-**Status**: Production Ready ✅ 
+**Status**: Production Ready ✅

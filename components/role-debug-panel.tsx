@@ -1,14 +1,22 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { RefreshCw, Shield, User, Database, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
-import { usePermissions } from '@/hooks/use-permissions'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { useToast } from '@/hooks/use-toast'
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import {
+  RefreshCw,
+  Shield,
+  User,
+  Database,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+} from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useToast } from "@/hooks/use-toast"
 
 export function RoleDebugPanel() {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -22,14 +30,14 @@ export function RoleDebugPanel() {
     try {
       const newRole = await permissions.forceRefresh()
       toast({
-        title: 'Role Refreshed',
+        title: "Role Refreshed",
         description: `Role updated to: ${newRole}`,
       })
     } catch (error) {
       toast({
-        title: 'Refresh Failed',
-        description: 'Failed to refresh role',
-        variant: 'destructive',
+        title: "Refresh Failed",
+        description: "Failed to refresh role",
+        variant: "destructive",
       })
     } finally {
       setIsRefreshing(false)
@@ -38,11 +46,11 @@ export function RoleDebugPanel() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Shield className="h-4 w-4 text-yellow-500" />
-      case 'manager':
+      case "manager":
         return <User className="h-4 w-4 text-blue-500" />
-      case 'user':
+      case "user":
         return <User className="h-4 w-4 text-green-500" />
       default:
         return <User className="h-4 w-4 text-gray-500" />
@@ -66,11 +74,7 @@ export function RoleDebugPanel() {
               <Shield className="h-5 w-5" />
               <CardTitle className="text-lg">Role Debug Panel</CardTitle>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsExpanded(true)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsExpanded(true)}>
               Expand
             </Button>
           </div>
@@ -91,12 +95,7 @@ export function RoleDebugPanel() {
             <CardTitle>Role Debug Panel</CardTitle>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefreshRole}
-              disabled={isRefreshing}
-            >
+            <Button variant="outline" size="sm" onClick={handleRefreshRole} disabled={isRefreshing}>
               {isRefreshing ? (
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
               ) : (
@@ -104,32 +103,34 @@ export function RoleDebugPanel() {
               )}
               Refresh Role
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setIsExpanded(false)}>
               Collapse
             </Button>
           </div>
         </div>
-        <CardDescription>
-          Detailed role and permission information for debugging
-        </CardDescription>
+        <CardDescription>Detailed role and permission information for debugging</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* User Information */}
         <div className="space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-medium">
             <User className="h-4 w-4" />
             User Information
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>User ID: <Badge variant="outline">{user?.id?.substring(0, 8)}...</Badge></div>
-            <div>Email: <Badge variant="outline">{user?.email}</Badge></div>
-            <div>Current Role: <Badge variant="default">{permissions.role}</Badge></div>
-            <div>Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge></div>
+            <div>
+              User ID: <Badge variant="outline">{user?.id?.substring(0, 8)}...</Badge>
+            </div>
+            <div>
+              Email: <Badge variant="outline">{user?.email}</Badge>
+            </div>
+            <div>
+              Current Role: <Badge variant="default">{permissions.role}</Badge>
+            </div>
+            <div>
+              Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge>
+            </div>
           </div>
         </div>
 
@@ -137,7 +138,7 @@ export function RoleDebugPanel() {
 
         {/* Role Sources */}
         <div className="space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-medium">
             <Database className="h-4 w-4" />
             Role Sources
           </h4>
@@ -199,7 +200,7 @@ export function RoleDebugPanel() {
           <h4 className="font-medium">Promoter Permissions</h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              {getPermissionStatus(permissions.can('promoter:create'))}
+              {getPermissionStatus(permissions.can("promoter:create"))}
               <span>Create Promoter</span>
             </div>
             <div className="flex items-center gap-2">
@@ -224,7 +225,7 @@ export function RoleDebugPanel() {
           <h4 className="font-medium">Party Permissions</h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div className="flex items-center gap-2">
-              {getPermissionStatus(permissions.can('party:create'))}
+              {getPermissionStatus(permissions.can("party:create"))}
               <span>Create Party</span>
             </div>
             <div className="flex items-center gap-2">
@@ -270,17 +271,17 @@ export function RoleDebugPanel() {
         {/* Debug Information */}
         <Separator />
         <div className="space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-medium">
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
             Debug Information
           </h4>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div>Loading: {permissions.isLoading ? 'Yes' : 'No'}</div>
-            <div>Initialized: {permissions.isLoading ? 'No' : 'Yes'}</div>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div>Loading: {permissions.isLoading ? "Yes" : "No"}</div>
+            <div>Initialized: {permissions.isLoading ? "No" : "Yes"}</div>
             <div>Timestamp: {new Date().toLocaleString()}</div>
           </div>
         </div>
       </CardContent>
     </Card>
   )
-} 
+}

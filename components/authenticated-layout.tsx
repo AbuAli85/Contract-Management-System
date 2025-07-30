@@ -1,41 +1,41 @@
-'use client'
+"use client"
 
-import { ReactNode } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { RBACProvider } from '@/src/components/auth/rbac-provider'
-import { ThemeProvider } from '@/components/theme-provider'
-import { PermissionAwareSidebar } from '@/components/permission-aware-sidebar'
-import { PermissionAwareHeader } from '@/components/permission-aware-header'
-import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { ReactNode } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { RBACProvider } from "@/src/components/auth/rbac-provider"
+import { ThemeProvider } from "@/components/theme-provider"
+import { PermissionAwareSidebar } from "@/components/permission-aware-sidebar"
+import { PermissionAwareHeader } from "@/components/permission-aware-header"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/auth/callback',
-  '/setup-admin',
-  '/test-auth',
-  '/debug-auth',
-  '/test-db',
-  '/test-supabase',
-  '/test-env',
-  '/test-simple',
-  '/test-webhook',
-  '/test-webhooks',
-  '/trigger-webhook',
-  '/test-makecom',
-  '/test-promoters',
-  '/promoters/profile-test',
-  '/logout',
-  '/demo',
-  '/onboarding',
-  '/preview',
-  '/instant',
-  '/bypass',
-  '/dashboard-direct'
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/auth/callback",
+  "/setup-admin",
+  "/test-auth",
+  "/debug-auth",
+  "/test-db",
+  "/test-supabase",
+  "/test-env",
+  "/test-simple",
+  "/test-webhook",
+  "/test-webhooks",
+  "/trigger-webhook",
+  "/test-makecom",
+  "/test-promoters",
+  "/promoters/profile-test",
+  "/logout",
+  "/demo",
+  "/onboarding",
+  "/preview",
+  "/instant",
+  "/bypass",
+  "/dashboard-direct",
 ]
 
 interface AuthenticatedLayoutProps {
@@ -62,7 +62,7 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
   }
 
   // Check if current page is public
-  const isPublicPage = PUBLIC_PAGES.some(page => pathname?.includes(page))
+  const isPublicPage = PUBLIC_PAGES.some((page) => pathname?.includes(page))
 
   // For public pages, render without sidebar and header
   if (isPublicPage) {
@@ -73,7 +73,7 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
           <p>Loading...</p>
         </div>
       </div>
@@ -84,11 +84,11 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
-          <p className="text-muted-foreground mb-4">Please log in to access the application.</p>
-          <a 
-            href="/login" 
-            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          <h2 className="mb-4 text-2xl font-bold">Authentication Required</h2>
+          <p className="mb-4 text-muted-foreground">Please log in to access the application.</p>
+          <a
+            href="/login"
+            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
           >
             Go to Login
           </a>
@@ -102,28 +102,23 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
       <RBACProvider user={user}>
         <div className="flex h-screen bg-background">
           {/* Sidebar */}
-          <PermissionAwareSidebar 
-            isCollapsed={isSidebarCollapsed} 
-            onToggle={toggleSidebar}
-          />
-          
+          <PermissionAwareSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
+
           {/* Main Content */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden">
             {/* Header */}
-            <PermissionAwareHeader 
+            <PermissionAwareHeader
               onSidebarToggle={toggleSidebar}
               isSidebarCollapsed={isSidebarCollapsed}
             />
-            
+
             {/* Page Content */}
             <main className="flex-1 overflow-auto">
-              <div className="container mx-auto p-6">
-                {children}
-              </div>
+              <div className="container mx-auto p-6">{children}</div>
             </main>
           </div>
         </div>
       </RBACProvider>
     </ThemeProvider>
   )
-} 
+}

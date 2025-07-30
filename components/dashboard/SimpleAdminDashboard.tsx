@@ -1,29 +1,10 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { 
-  Users, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  Calendar,
-  Plus,
-  Filter,
-  Download,
-  RefreshCw,
-  Eye,
-  BarChart3,
-  Activity,
-  Target,
-  Award,
-  DollarSign,
-  FileText
-} from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { BarChart3, DollarSign,  } from 'lucide-react'
 
 interface DashboardMetrics {
   totalPromoters: number
@@ -63,21 +44,21 @@ export default function SimpleAdminDashboard() {
         setError(null)
 
         // Fetch metrics
-        const metricsResponse = await fetch('/api/dashboard/metrics?period=today')
+        const metricsResponse = await fetch("/api/dashboard/metrics?period=today")
         if (metricsResponse.ok) {
           const metricsData = await metricsResponse.json()
           setMetrics(metricsData)
         }
 
         // Fetch attendance
-        const attendanceResponse = await fetch('/api/dashboard/attendance?period=today')
+        const attendanceResponse = await fetch("/api/dashboard/attendance?period=today")
         if (attendanceResponse.ok) {
           const attendanceData = await attendanceResponse.json()
           setAttendance(attendanceData)
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err)
-        setError('Failed to load dashboard data')
+        console.error("Error fetching dashboard data:", err)
+        setError("Failed to load dashboard data")
       } finally {
         setLoading(false)
       }
@@ -86,13 +67,13 @@ export default function SimpleAdminDashboard() {
     fetchData()
   }, [])
 
-  const KpiCard = ({ 
-    title, 
-    value, 
-    change, 
-    icon: Icon, 
-    color = 'blue',
-    subtitle 
+  const KpiCard = ({
+    title,
+    value,
+    change,
+    icon: Icon,
+    color = "blue",
+    subtitle,
   }: {
     title: string
     value: string | number
@@ -103,31 +84,27 @@ export default function SimpleAdminDashboard() {
   }) => (
     <Card className="relative overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">
-          {title}
-        </CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
         <Icon className={`h-4 w-4 text-${color}-600`} />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
         {change && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <p className="flex items-center gap-1 text-xs text-muted-foreground">
             <TrendingUp className="h-3 w-3 text-green-600" />
             {change}
           </p>
         )}
-        {subtitle && (
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
       </CardContent>
     </Card>
   )
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
           <p className="text-lg">Loading beautiful dashboard...</p>
         </div>
       </div>
@@ -136,15 +113,18 @@ export default function SimpleAdminDashboard() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-red-500" />
           <p className="text-lg text-red-600">{error}</p>
-          <Button onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.location.reload()
-            }
-          }} className="mt-4">
+          <Button
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.reload()
+              }
+            }}
+            className="mt-4"
+          >
             Retry
           </Button>
         </div>
@@ -154,7 +134,7 @@ export default function SimpleAdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -163,11 +143,11 @@ export default function SimpleAdminDashboard() {
           </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
             <Button variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
           </div>
@@ -289,24 +269,24 @@ export default function SimpleAdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex items-center gap-3 rounded-lg p-3 hover:bg-gray-50">
+                <div className="h-2 w-2 rounded-full bg-green-500"></div>
                 <div className="flex-1">
                   <p className="font-medium">New contract signed with ABC Corp</p>
                   <p className="text-sm text-muted-foreground">2 hours ago</p>
                 </div>
                 <Badge variant="secondary">Contract</Badge>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex items-center gap-3 rounded-lg p-3 hover:bg-gray-50">
+                <div className="h-2 w-2 rounded-full bg-blue-500"></div>
                 <div className="flex-1">
                   <p className="font-medium">Sarah Johnson completed task</p>
                   <p className="text-sm text-muted-foreground">4 hours ago</p>
                 </div>
                 <Badge variant="secondary">Task</Badge>
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <div className="flex items-center gap-3 rounded-lg p-3 hover:bg-gray-50">
+                <div className="h-2 w-2 rounded-full bg-purple-500"></div>
                 <div className="flex-1">
                   <p className="font-medium">Payment received from XYZ Inc</p>
                   <p className="text-sm text-muted-foreground">6 hours ago</p>
@@ -319,4 +299,4 @@ export default function SimpleAdminDashboard() {
       </div>
     </div>
   )
-} 
+}

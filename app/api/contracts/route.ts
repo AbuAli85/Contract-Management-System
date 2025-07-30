@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/server"
 
 // Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,8 +10,9 @@ export async function GET(request: NextRequest) {
 
     // First, let's check if the contracts table exists and has data
     const { data: contracts, error: contractsError } = await supabase
-      .from('contracts')
-      .select(`
+      .from("contracts")
+      .select(
+        `
         id,
         contract_number,
         status,
@@ -28,34 +29,38 @@ export async function GET(request: NextRequest) {
         first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type),
         second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type),
         promoters:promoters!contracts_promoter_id_fkey(id, name_en, name_ar, id_card_number, status)
-      `)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .order("created_at", { ascending: false })
 
     if (contractsError) {
-      console.error('Error fetching contracts:', contractsError)
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to fetch contracts',
-        details: contractsError.message
-      }, { status: 500 })
+      console.error("Error fetching contracts:", contractsError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to fetch contracts",
+          details: contractsError.message,
+        },
+        { status: 500 },
+      )
     }
 
     // Get basic statistics
     const { count: totalContracts, error: countError } = await supabase
-      .from('contracts')
-      .select('*', { count: 'exact', head: true })
+      .from("contracts")
+      .select("*", { count: "exact", head: true })
 
     if (countError) {
-      console.error('Error counting contracts:', countError)
+      console.error("Error counting contracts:", countError)
     }
 
     // Get status distribution
     const { data: statusData, error: statusError } = await supabase
-      .from('contracts')
-      .select('status')
+      .from("contracts")
+      .select("status")
 
     if (statusError) {
-      console.error('Error fetching status data:', statusError)
+      console.error("Error fetching status data:", statusError)
     }
 
     // Calculate statistics
@@ -66,27 +71,27 @@ export async function GET(request: NextRequest) {
       upcoming: 0,
       unknown: 0,
       total_value: 0,
-      avg_duration: 0
+      avg_duration: 0,
     }
 
     if (statusData) {
-      statusData.forEach(contract => {
+      statusData.forEach((contract) => {
         switch (contract.status) {
-          case 'active':
+          case "active":
             stats.active++
             break
-          case 'expired':
+          case "expired":
             stats.expired++
             break
-          case 'pending':
-          case 'legal_review':
-          case 'hr_review':
-          case 'final_approval':
-          case 'signature':
+          case "pending":
+          case "legal_review":
+          case "hr_review":
+          case "final_approval":
+          case "signature":
             stats.upcoming++
             break
-          case 'draft':
-          case 'generated':
+          case "draft":
+          case "generated":
             stats.unknown++
             break
           default:
@@ -99,16 +104,18 @@ export async function GET(request: NextRequest) {
       success: true,
       contracts: contracts || [],
       stats,
-      total: totalContracts || 0
+      total: totalContracts || 0,
     })
-
   } catch (error) {
-    console.error('Contracts API error:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error',
-      details: (error as Error).message
-    }, { status: 500 })
+    console.error("Contracts API error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+        details: (error as Error).message,
+      },
+      { status: 500 },
+    )
   }
 }
 
@@ -118,13 +125,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized' 
-      }, { status: 401 })
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 401 },
+      )
     }
 
     // Prepare contract data
@@ -142,36 +155,41 @@ export async function POST(request: NextRequest) {
       contract_type: body.contract_type,
       currency: body.currency,
       user_id: session.user.id,
-      status: 'draft'
+      status: "draft",
     }
 
     // Insert the contract
     const { data: contract, error } = await supabase
-      .from('contracts')
+      .from("contracts")
       .insert([contractData])
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating contract:', error)
-      return NextResponse.json({ 
-        success: false,
-        error: 'Failed to create contract',
-        details: error.message 
-      }, { status: 500 })
+      console.error("Error creating contract:", error)
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to create contract",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
     return NextResponse.json({
       success: true,
-      contract
+      contract,
     })
-
   } catch (error) {
-    console.error('Create contract error:', error)
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Internal server error',
-      details: (error as Error).message
-    }, { status: 500 })
+    console.error("Create contract error:", error)
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Internal server error",
+        details: (error as Error).message,
+      },
+      { status: 500 },
+    )
   }
 }

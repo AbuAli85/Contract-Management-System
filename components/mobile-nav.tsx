@@ -28,10 +28,10 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
   const handleLogout = async () => {
     try {
       await signOut()
-      router.push('/login')
+      router.push("/login")
       setIsOpen(false)
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout error:", error)
     }
   }
 
@@ -68,7 +68,7 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
               key={item.title}
               href={`/${locale}${item.href === "/" ? "" : item.href}`}
               className={`py-2 text-lg font-medium transition-colors hover:text-primary ${
-                pathname?.includes(item.href) ? 'text-primary' : 'text-foreground/80'
+                pathname?.includes(item.href) ? "text-primary" : "text-foreground/80"
               }`}
               onClick={() => setIsOpen(false)}
             >
@@ -76,10 +76,8 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
             </Link>
           ))}
           {user && (
-            <div className="pt-4 border-t">
-              <div className="py-2 text-sm text-muted-foreground">
-                Signed in as: {user.email}
-              </div>
+            <div className="border-t pt-4">
+              <div className="py-2 text-sm text-muted-foreground">Signed in as: {user.email}</div>
               <Button
                 variant="ghost"
                 className="w-full justify-start p-2 text-lg font-medium text-foreground/80 transition-colors hover:text-primary"

@@ -1,7 +1,7 @@
-import '@testing-library/jest-dom'
+import "@testing-library/jest-dom"
 
 // Mock Next.js router
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter() {
     return {
       push: jest.fn(),
@@ -16,12 +16,12 @@ jest.mock('next/navigation', () => ({
     return new URLSearchParams()
   },
   usePathname() {
-    return '/'
+    return "/"
   },
 }))
 
 // Mock Next.js headers
-jest.mock('next/headers', () => ({
+jest.mock("next/headers", () => ({
   cookies() {
     return {
       get: jest.fn(),
@@ -32,9 +32,9 @@ jest.mock('next/headers', () => ({
 }))
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -69,8 +69,8 @@ const originalWarn = console.warn
 beforeAll(() => {
   console.error = (...args) => {
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: ReactDOM.render is no longer supported')
+      typeof args[0] === "string" &&
+      args[0].includes("Warning: ReactDOM.render is no longer supported")
     ) {
       return
     }
@@ -78,8 +78,8 @@ beforeAll(() => {
   }
   console.warn = (...args) => {
     if (
-      typeof args[0] === 'string' &&
-      args[0].includes('Warning: componentWillReceiveProps has been renamed')
+      typeof args[0] === "string" &&
+      args[0].includes("Warning: componentWillReceiveProps has been renamed")
     ) {
       return
     }
@@ -114,21 +114,21 @@ global.sessionStorage = sessionStorageMock
 global.fetch = jest.fn()
 
 // Mock crypto.randomUUID
-Object.defineProperty(global, 'crypto', {
+Object.defineProperty(global, "crypto", {
   value: {
-    randomUUID: () => 'test-uuid-123',
+    randomUUID: () => "test-uuid-123",
   },
 })
 
 // Mock URL.createObjectURL
-global.URL.createObjectURL = jest.fn(() => 'mocked-url')
+global.URL.createObjectURL = jest.fn(() => "mocked-url")
 
 // Mock URL.revokeObjectURL
 global.URL.revokeObjectURL = jest.fn()
 
 // Setup test environment
-process.env.NODE_ENV = 'test'
-process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
-process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
-process.env.FRONTEND_URL = 'https://test.example.com'
+process.env.NODE_ENV = "test"
+process.env.NEXT_PUBLIC_SUPABASE_URL = "https://test.supabase.co"
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key"
+process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key"
+process.env.FRONTEND_URL = "https://test.example.com"

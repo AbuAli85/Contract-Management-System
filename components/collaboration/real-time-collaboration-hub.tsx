@@ -8,11 +8,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  MessageSquare, 
-  Users, 
-  FileText, 
-  Bell, 
+import {
+  MessageSquare,
+  Users,
+  FileText,
+  Bell,
   Send,
   Paperclip,
   Smile,
@@ -39,7 +39,7 @@ import {
   Lock,
   Globe,
   Hash,
-  AtSign
+  AtSign,
 } from "lucide-react"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
@@ -54,7 +54,7 @@ interface Message {
     avatar?: string
   }
   timestamp: string
-  type: 'text' | 'file' | 'system' | 'reaction'
+  type: "text" | "file" | "system" | "reaction"
   reactions: Array<{
     emoji: string
     users: string[]
@@ -73,7 +73,7 @@ interface Message {
 interface Channel {
   id: string
   name: string
-  type: 'public' | 'private' | 'direct'
+  type: "public" | "private" | "direct"
   description?: string
   members: string[]
   unreadCount: number
@@ -86,7 +86,7 @@ interface TeamMember {
   name: string
   email: string
   avatar?: string
-  status: 'online' | 'away' | 'busy' | 'offline'
+  status: "online" | "away" | "busy" | "offline"
   role: string
   lastSeen?: string
 }
@@ -127,56 +127,56 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
     // Mock data - in production, fetch from API
     const mockChannels: Channel[] = [
       {
-        id: 'general',
-        name: 'General',
-        type: 'public',
-        description: 'General discussions and announcements',
-        members: ['user1', 'user2', 'user3'],
+        id: "general",
+        name: "General",
+        type: "public",
+        description: "General discussions and announcements",
+        members: ["user1", "user2", "user3"],
         unreadCount: 0,
         isActive: true,
         lastMessage: {
-          id: 'msg_1',
-          content: 'Contract #123 has been approved!',
-          sender: { id: 'user1', name: 'Sarah Johnson', email: 'sarah@company.com' },
+          id: "msg_1",
+          content: "Contract #123 has been approved!",
+          sender: { id: "user1", name: "Sarah Johnson", email: "sarah@company.com" },
           timestamp: new Date().toISOString(),
-          type: 'text',
-          reactions: []
-        }
+          type: "text",
+          reactions: [],
+        },
       },
       {
-        id: 'contracts',
-        name: 'Contracts',
-        type: 'public',
-        description: 'Contract-related discussions',
-        members: ['user1', 'user2', 'user3', 'user4'],
+        id: "contracts",
+        name: "Contracts",
+        type: "public",
+        description: "Contract-related discussions",
+        members: ["user1", "user2", "user3", "user4"],
         unreadCount: 3,
         isActive: false,
         lastMessage: {
-          id: 'msg_2',
-          content: 'New contract template uploaded',
-          sender: { id: 'user2', name: 'Mike Chen', email: 'mike@company.com' },
+          id: "msg_2",
+          content: "New contract template uploaded",
+          sender: { id: "user2", name: "Mike Chen", email: "mike@company.com" },
           timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-          type: 'text',
-          reactions: []
-        }
+          type: "text",
+          reactions: [],
+        },
       },
       {
-        id: 'legal-team',
-        name: 'Legal Team',
-        type: 'private',
-        description: 'Legal team discussions',
-        members: ['user1', 'user3'],
+        id: "legal-team",
+        name: "Legal Team",
+        type: "private",
+        description: "Legal team discussions",
+        members: ["user1", "user3"],
         unreadCount: 1,
         isActive: false,
         lastMessage: {
-          id: 'msg_3',
-          content: 'Review needed for contract #456',
-          sender: { id: 'user3', name: 'Emma Davis', email: 'emma@company.com' },
+          id: "msg_3",
+          content: "Review needed for contract #456",
+          sender: { id: "user3", name: "Emma Davis", email: "emma@company.com" },
           timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          type: 'text',
-          reactions: []
-        }
-      }
+          type: "text",
+          reactions: [],
+        },
+      },
     ]
 
     setChannels(mockChannels)
@@ -187,33 +187,33 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
     // Mock data
     const mockMembers: TeamMember[] = [
       {
-        id: 'user1',
-        name: 'Sarah Johnson',
-        email: 'sarah@company.com',
-        status: 'online',
-        role: 'Legal Manager'
+        id: "user1",
+        name: "Sarah Johnson",
+        email: "sarah@company.com",
+        status: "online",
+        role: "Legal Manager",
       },
       {
-        id: 'user2',
-        name: 'Mike Chen',
-        email: 'mike@company.com',
-        status: 'away',
-        role: 'Contract Specialist'
+        id: "user2",
+        name: "Mike Chen",
+        email: "mike@company.com",
+        status: "away",
+        role: "Contract Specialist",
       },
       {
-        id: 'user3',
-        name: 'Emma Davis',
-        email: 'emma@company.com',
-        status: 'busy',
-        role: 'Legal Counsel'
+        id: "user3",
+        name: "Emma Davis",
+        email: "emma@company.com",
+        status: "busy",
+        role: "Legal Counsel",
       },
       {
-        id: 'user4',
-        name: 'Alex Rodriguez',
-        email: 'alex@company.com',
-        status: 'offline',
-        role: 'HR Manager'
-      }
+        id: "user4",
+        name: "Alex Rodriguez",
+        email: "alex@company.com",
+        status: "offline",
+        role: "HR Manager",
+      },
     ]
 
     setTeamMembers(mockMembers)
@@ -223,43 +223,41 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
     // Mock messages
     const mockMessages: Message[] = [
       {
-        id: 'msg_1',
-        content: 'Welcome to the General channel! 👋',
-        sender: { id: 'system', name: 'System', email: 'system@company.com' },
+        id: "msg_1",
+        content: "Welcome to the General channel! 👋",
+        sender: { id: "system", name: "System", email: "system@company.com" },
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        type: 'system',
-        reactions: []
+        type: "system",
+        reactions: [],
       },
       {
-        id: 'msg_2',
-        content: 'Hi everyone! I\'ve uploaded the new contract template.',
-        sender: { id: 'user2', name: 'Mike Chen', email: 'mike@company.com' },
+        id: "msg_2",
+        content: "Hi everyone! I've uploaded the new contract template.",
+        sender: { id: "user2", name: "Mike Chen", email: "mike@company.com" },
         timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-        type: 'text',
-        reactions: [
-          { emoji: '👍', users: ['user1', 'user3'] }
-        ]
+        type: "text",
+        reactions: [{ emoji: "👍", users: ["user1", "user3"] }],
       },
       {
-        id: 'msg_3',
-        content: 'Thanks Mike! I\'ll review it and let you know if we need any changes.',
-        sender: { id: 'user1', name: 'Sarah Johnson', email: 'sarah@company.com' },
+        id: "msg_3",
+        content: "Thanks Mike! I'll review it and let you know if we need any changes.",
+        sender: { id: "user1", name: "Sarah Johnson", email: "sarah@company.com" },
         timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        type: 'text',
-        reactions: []
+        type: "text",
+        reactions: [],
       },
       {
-        id: 'msg_4',
-        content: 'Contract #123 has been approved! 🎉',
-        sender: { id: 'user1', name: 'Sarah Johnson', email: 'sarah@company.com' },
+        id: "msg_4",
+        content: "Contract #123 has been approved! 🎉",
+        sender: { id: "user1", name: "Sarah Johnson", email: "sarah@company.com" },
         timestamp: new Date().toISOString(),
-        type: 'text',
+        type: "text",
         reactions: [
-          { emoji: '🎉', users: ['user2', 'user3'] },
-          { emoji: '👍', users: ['user4'] }
+          { emoji: "🎉", users: ["user2", "user3"] },
+          { emoji: "👍", users: ["user4"] },
         ],
-        isPinned: true
-      }
+        isPinned: true,
+      },
     ]
 
     setMessages(mockMessages)
@@ -271,13 +269,13 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
     const message: Message = {
       id: `msg_${Date.now()}`,
       content: newMessage,
-      sender: { id: 'current_user', name: 'You', email: 'you@company.com' },
+      sender: { id: "current_user", name: "You", email: "you@company.com" },
       timestamp: new Date().toISOString(),
-      type: 'text',
-      reactions: []
+      type: "text",
+      reactions: [],
     }
 
-    setMessages(prev => [...prev, message])
+    setMessages((prev) => [...prev, message])
     setNewMessage("")
 
     // Simulate typing indicator
@@ -291,25 +289,34 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
   }
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'online': return 'bg-green-500'
-      case 'away': return 'bg-yellow-500'
-      case 'busy': return 'bg-red-500'
-      case 'offline': return 'bg-gray-500'
-      default: return 'bg-gray-500'
+      case "online":
+        return "bg-green-500"
+      case "away":
+        return "bg-yellow-500"
+      case "busy":
+        return "bg-red-500"
+      case "offline":
+        return "bg-gray-500"
+      default:
+        return "bg-gray-500"
     }
   }
 
   const getChannelIcon = (type: string) => {
     switch (type) {
-      case 'public': return <Hash className="h-4 w-4" />
-      case 'private': return <Lock className="h-4 w-4" />
-      case 'direct': return <AtSign className="h-4 w-4" />
-      default: return <Hash className="h-4 w-4" />
+      case "public":
+        return <Hash className="h-4 w-4" />
+      case "private":
+        return <Lock className="h-4 w-4" />
+      case "direct":
+        return <AtSign className="h-4 w-4" />
+      default:
+        return <Hash className="h-4 w-4" />
     }
   }
 
@@ -317,27 +324,27 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
     const date = new Date(timestamp)
     const now = new Date()
     const diff = now.getTime() - date.getTime()
-    
-    if (diff < 1000 * 60) return 'Just now'
+
+    if (diff < 1000 * 60) return "Just now"
     if (diff < 1000 * 60 * 60) return `${Math.floor(diff / (1000 * 60))}m ago`
     if (diff < 1000 * 60 * 60 * 24) return `${Math.floor(diff / (1000 * 60 * 60))}h ago`
     return date.toLocaleDateString()
   }
 
   return (
-    <div className="h-[600px] flex border rounded-lg overflow-hidden">
+    <div className="flex h-[600px] overflow-hidden rounded-lg border">
       {/* Sidebar */}
-      <div className="w-80 bg-gray-50 border-r flex flex-col">
+      <div className="flex w-80 flex-col border-r bg-gray-50">
         {/* Header */}
-        <div className="p-4 border-b bg-white">
-          <div className="flex items-center justify-between mb-4">
+        <div className="border-b bg-white p-4">
+          <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Collaboration Hub</h2>
             <Button variant="outline" size="sm">
               <Plus className="h-4 w-4" />
             </Button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
             <Input
               placeholder="Search messages..."
               value={searchQuery}
@@ -350,13 +357,13 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
         {/* Channels */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Channels</h3>
+            <h3 className="mb-2 text-sm font-medium text-gray-500">Channels</h3>
             <div className="space-y-1">
               {channels.map((channel) => (
                 <div
                   key={channel.id}
-                  className={`flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-gray-100 ${
-                    selectedChannel?.id === channel.id ? 'bg-blue-50 border border-blue-200' : ''
+                  className={`flex cursor-pointer items-center gap-2 rounded p-2 hover:bg-gray-100 ${
+                    selectedChannel?.id === channel.id ? "border border-blue-200 bg-blue-50" : ""
                   }`}
                   onClick={() => setSelectedChannel(channel)}
                 >
@@ -373,18 +380,23 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
           </div>
 
           {/* Team Members */}
-          <div className="p-4 border-t">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Team Members</h3>
+          <div className="border-t p-4">
+            <h3 className="mb-2 text-sm font-medium text-gray-500">Team Members</h3>
             <div className="space-y-2">
               {teamMembers.map((member) => (
                 <div key={member.id} className="flex items-center gap-2">
                   <div className="relative">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="text-xs">
-                        {member.name.split(' ').map(n => n[0]).join('')}
+                        {member.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(member.status)}`} />
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white ${getStatusColor(member.status)}`}
+                    />
                   </div>
                   <div className="flex-1">
                     <div className="text-sm font-medium">{member.name}</div>
@@ -398,11 +410,11 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex flex-1 flex-col bg-white">
         {selectedChannel ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b bg-white">
+            <div className="border-b bg-white p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   {getChannelIcon(selectedChannel.type)}
@@ -428,31 +440,35 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 space-y-4 overflow-y-auto p-4">
               {messages.map((message) => (
                 <div key={message.id} className="flex gap-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs">
-                      {message.sender.name.split(' ').map(n => n[0]).join('')}
+                      {message.sender.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">{message.sender.name}</span>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="text-sm font-medium">{message.sender.name}</span>
                       <span className="text-xs text-gray-500">
                         {formatTimestamp(message.timestamp)}
                       </span>
                       {message.isPinned && <Pin className="h-3 w-3 text-blue-500" />}
-                      {message.isEdited && (
-                        <span className="text-xs text-gray-500">(edited)</span>
-                      )}
+                      {message.isEdited && <span className="text-xs text-gray-500">(edited)</span>}
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="rounded-lg bg-gray-50 p-3">
                       <p className="text-sm">{message.content}</p>
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="mt-2 space-y-1">
                           {message.attachments.map((attachment) => (
-                            <div key={attachment.id} className="flex items-center gap-2 p-2 bg-white rounded border">
+                            <div
+                              key={attachment.id}
+                              className="flex items-center gap-2 rounded border bg-white p-2"
+                            >
                               <FileText className="h-4 w-4 text-gray-500" />
                               <span className="text-sm">{attachment.name}</span>
                               <Button variant="ghost" size="sm">
@@ -463,7 +479,7 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
                         </div>
                       )}
                       {message.reactions.length > 0 && (
-                        <div className="flex gap-1 mt-2">
+                        <div className="mt-2 flex gap-1">
                           {message.reactions.map((reaction, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {reaction.emoji} {reaction.users.length}
@@ -475,7 +491,7 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
                   </div>
                 </div>
               ))}
-              
+
               {/* Typing Indicator */}
               {isTyping && (
                 <div className="flex gap-3">
@@ -483,34 +499,40 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
                     <AvatarFallback className="text-xs">MJ</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-sm">Mike Chen</span>
+                    <div className="mb-1 flex items-center gap-2">
+                      <span className="text-sm font-medium">Mike Chen</span>
                       <span className="text-xs text-gray-500">is typing...</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="rounded-lg bg-gray-50 p-3">
                       <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400" />
+                        <div
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{ animationDelay: "0.1s" }}
+                        />
+                        <div
+                          className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                          style={{ animationDelay: "0.2s" }}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t bg-white">
+            <div className="border-t bg-white p-4">
               <div className="flex gap-2">
-                <div className="flex-1 relative">
+                <div className="relative flex-1">
                   <Textarea
                     placeholder="Type a message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
+                      if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault()
                         sendMessage()
                       }
@@ -518,7 +540,7 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
                     className="resize-none"
                     rows={1}
                   />
-                  <div className="absolute right-2 bottom-2 flex gap-1">
+                  <div className="absolute bottom-2 right-2 flex gap-1">
                     <Button variant="ghost" size="sm">
                       <Paperclip className="h-4 w-4" />
                     </Button>
@@ -534,10 +556,10 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-1 items-center justify-center">
             <div className="text-center">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-600">
                 Select a channel to start chatting
               </h3>
               <p className="text-gray-500">
@@ -549,4 +571,4 @@ export function RealTimeCollaborationHub({ contractId }: CollaborationHubProps) 
       </div>
     </div>
   )
-} 
+}

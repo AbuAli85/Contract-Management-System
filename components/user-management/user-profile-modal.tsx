@@ -1,72 +1,73 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
-import { Separator } from '@/components/ui/separator'
-import { 
-  User, 
-  Shield, 
-  Activity, 
-  Settings, 
-  Key, 
-  Eye, 
-  EyeOff,
-  Save,
-  X,
-  Loader2
-} from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Separator } from "@/components/ui/separator"
+import { User, Shield, Activity, Settings, Key, Eye, EyeOff, Save, X, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
 
 interface UserProfileModalProps {
   user: unknown
   isOpen: boolean
   onClose: () => void
   onUpdate: () => void
-  mode: 'view' | 'edit'
+  mode: "view" | "edit"
 }
 
 const ROLES = [
-  { value: 'admin', label: 'Administrator', description: 'Full system access' },
-  { value: 'manager', label: 'Manager', description: 'Manage contracts and users' },
-  { value: 'user', label: 'User', description: 'Basic access to contracts' },
-  { value: 'viewer', label: 'Viewer', description: 'Read-only access' }
+  { value: "admin", label: "Administrator", description: "Full system access" },
+  { value: "manager", label: "Manager", description: "Manage contracts and users" },
+  { value: "user", label: "User", description: "Basic access to contracts" },
+  { value: "viewer", label: "Viewer", description: "Read-only access" },
 ]
 
 const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active', color: 'bg-green-100 text-green-800' },
-  { value: 'inactive', label: 'Inactive', color: 'bg-gray-100 text-gray-800' },
-  { value: 'suspended', label: 'Suspended', color: 'bg-red-100 text-red-800' },
-  { value: 'pending', label: 'Pending', color: 'bg-yellow-100 text-yellow-800' }
+  { value: "active", label: "Active", color: "bg-green-100 text-green-800" },
+  { value: "inactive", label: "Inactive", color: "bg-gray-100 text-gray-800" },
+  { value: "suspended", label: "Suspended", color: "bg-red-100 text-red-800" },
+  { value: "pending", label: "Pending", color: "bg-yellow-100 text-yellow-800" },
 ]
 
 export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: UserProfileModalProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    email: (user as unknown as { email?: string })?.email || '',
-    role: (user as unknown as { role?: string })?.role || 'user',
-    status: (user as unknown as { status?: string })?.status || 'active',
-    full_name: (user as unknown as { full_name?: string })?.full_name || '',
-    phone: (user as unknown as { phone?: string })?.phone || '',
-    department: (user as unknown as { department?: string })?.department || '',
-    position: (user as unknown as { position?: string })?.position || '',
-    avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || '',
-    notes: (user as unknown as { notes?: string })?.notes || '',
-    permissions: (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {}
+    email: (user as unknown as { email?: string })?.email || "",
+    role: (user as unknown as { role?: string })?.role || "user",
+    status: (user as unknown as { status?: string })?.status || "active",
+    full_name: (user as unknown as { full_name?: string })?.full_name || "",
+    phone: (user as unknown as { phone?: string })?.phone || "",
+    department: (user as unknown as { department?: string })?.department || "",
+    position: (user as unknown as { position?: string })?.position || "",
+    avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || "",
+    notes: (user as unknown as { notes?: string })?.notes || "",
+    permissions: (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {},
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [userActivity, setUserActivity] = useState<any[]>([])
   const [userStats, setUserStats] = useState<any>({})
   const { toast } = useToast()
@@ -75,16 +76,17 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   useEffect(() => {
     if (user && isOpen) {
       setFormData({
-        email: (user as unknown as { email?: string })?.email || '',
-        role: (user as unknown as { role?: string })?.role || 'user',
-        status: (user as unknown as { status?: string })?.status || 'active',
-        full_name: (user as unknown as { full_name?: string })?.full_name || '',
-        phone: (user as unknown as { phone?: string })?.phone || '',
-        department: (user as unknown as { department?: string })?.department || '',
-        position: (user as unknown as { position?: string })?.position || '',
-        avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || '',
-        notes: (user as unknown as { notes?: string })?.notes || '',
-        permissions: (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {}
+        email: (user as unknown as { email?: string })?.email || "",
+        role: (user as unknown as { role?: string })?.role || "user",
+        status: (user as unknown as { status?: string })?.status || "active",
+        full_name: (user as unknown as { full_name?: string })?.full_name || "",
+        phone: (user as unknown as { phone?: string })?.phone || "",
+        department: (user as unknown as { department?: string })?.department || "",
+        position: (user as unknown as { position?: string })?.position || "",
+        avatar_url: (user as unknown as { avatar_url?: string })?.avatar_url || "",
+        notes: (user as unknown as { notes?: string })?.notes || "",
+        permissions:
+          (user as unknown as { permissions?: Record<string, boolean> })?.permissions || {},
       })
       fetchUserActivity()
       fetchUserStats()
@@ -92,71 +94,73 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }, [user, isOpen])
 
   const fetchUserActivity = async () => {
-    const userId = (user as unknown as { id?: string })?.id;
+    const userId = (user as unknown as { id?: string })?.id
     if (!user || !userId) return
-    
+
     try {
       const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        .from("audit_logs")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .limit(10)
-      
+
       if (!error && data) {
         setUserActivity(data)
       }
     } catch (error) {
-      console.error('Error fetching user activity:', error)
+      console.error("Error fetching user activity:", error)
     }
   }
 
   const fetchUserStats = async () => {
-    const userId = (user as unknown as { id?: string })?.id;
+    const userId = (user as unknown as { id?: string })?.id
     if (!user || !userId) return
-    
+
     try {
       // Fetch user statistics
       const { data: contracts, error: contractsError } = await supabase
-        .from('contracts')
-        .select('id, status')
-        .eq('user_id', userId)
-      
+        .from("contracts")
+        .select("id, status")
+        .eq("user_id", userId)
+
       const { data: parties, error: partiesError } = await supabase
-        .from('parties')
-        .select('id')
-        .eq('owner_id', userId)
-      
+        .from("parties")
+        .select("id")
+        .eq("owner_id", userId)
+
       if (!contractsError && !partiesError) {
         setUserStats({
           totalContracts: contracts?.length || 0,
-          activeContracts: contracts?.filter((c: { id: string; status: string }) => c.status === 'active').length || 0,
+          activeContracts:
+            contracts?.filter((c: { id: string; status: string }) => c.status === "active")
+              .length || 0,
           totalParties: parties?.length || 0,
-          lastActivity: userActivity[0]?.created_at || null
+          lastActivity: userActivity[0]?.created_at || null,
         })
       }
     } catch (error) {
-      console.error('Error fetching user stats:', error)
+      console.error("Error fetching user stats:", error)
     }
   }
 
   const handleSave = async () => {
     setLoading(true)
-    
+
     try {
-      const userId = (user as unknown as { id?: string })?.id;
+      const userId = (user as unknown as { id?: string })?.id
       if (!userId) {
         toast({
           title: "Error",
           description: "User ID is missing.",
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
       }
 
       const { error } = await supabase
-        .from('app_users')
+        .from("app_users")
         .update({
           email: formData.email,
           role: formData.role,
@@ -168,9 +172,9 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
           avatar_url: formData.avatar_url,
           notes: formData.notes,
           permissions: formData.permissions,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', userId);
+        .eq("id", userId)
 
       if (error) throw error
 
@@ -178,14 +182,14 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
         title: "User updated successfully",
         description: "The user profile has been updated.",
       })
-      
+
       onUpdate()
       onClose()
     } catch (error: any) {
       toast({
         title: "Error updating user",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -197,7 +201,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
       toast({
         title: "Passwords don't match",
         description: "Please make sure both passwords are the same.",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
@@ -206,26 +210,26 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
       toast({
         title: "Password too short",
         description: "Password must be at least 6 characters long.",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
 
     setLoading(true)
-    
+
     try {
       // Note: This would require admin privileges to change user passwords
       // In a real implementation, you'd need to use Supabase admin functions
       toast({
         title: "Password change not implemented",
         description: "Password changes require admin privileges.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } catch (error: any) {
       toast({
         title: "Error changing password",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -233,14 +237,19 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
   }
 
   const getInitials = (name: string) => {
-    if (!name) return '?'
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    if (!name) return "?"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
   }
 
   const getStatusBadge = (status: string) => {
-    const statusOption = STATUS_OPTIONS.find(s => s.value === status)
+    const statusOption = STATUS_OPTIONS.find((s) => s.value === status)
     return (
-      <Badge className={statusOption?.color || 'bg-gray-100 text-gray-800'}>
+      <Badge className={statusOption?.color || "bg-gray-100 text-gray-800"}>
         {statusOption?.label || status}
       </Badge>
     )
@@ -248,11 +257,11 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {mode === 'view' ? 'User Profile' : 'Edit User Profile'}
+            {mode === "view" ? "User Profile" : "Edit User Profile"}
           </DialogTitle>
         </DialogHeader>
 
@@ -265,7 +274,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -278,7 +287,9 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                   <div className="flex items-center gap-4">
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={formData.avatar_url} />
-                      <AvatarFallback>{getInitials(formData.full_name || formData.email)}</AvatarFallback>
+                      <AvatarFallback>
+                        {getInitials(formData.full_name || formData.email)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <Label htmlFor="full_name">Full Name</Label>
@@ -286,7 +297,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                         id="full_name"
                         value={formData.full_name}
                         onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                        disabled={mode === 'view'}
+                        disabled={mode === "view"}
                         placeholder="Enter full name"
                       />
                     </div>
@@ -299,7 +310,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      disabled={mode === 'view'}
+                      disabled={mode === "view"}
                       placeholder="Enter email address"
                     />
                   </div>
@@ -310,7 +321,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                       id="phone"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      disabled={mode === 'view'}
+                      disabled={mode === "view"}
                       placeholder="Enter phone number"
                     />
                   </div>
@@ -322,7 +333,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                         id="department"
                         value={formData.department}
                         onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                        disabled={mode === 'view'}
+                        disabled={mode === "view"}
                         placeholder="Department"
                       />
                     </div>
@@ -332,7 +343,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                         id="position"
                         value={formData.position}
                         onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                        disabled={mode === 'view'}
+                        disabled={mode === "view"}
                         placeholder="Position"
                       />
                     </div>
@@ -354,7 +365,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                     <Select
                       value={formData.role}
                       onValueChange={(value) => setFormData({ ...formData, role: value })}
-                      disabled={mode === 'view'}
+                      disabled={mode === "view"}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
@@ -377,7 +388,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                     <Select
                       value={formData.status}
                       onValueChange={(value) => setFormData({ ...formData, status: value })}
-                      disabled={mode === 'view'}
+                      disabled={mode === "view"}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select status" />
@@ -398,7 +409,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                       id="notes"
                       value={formData.notes}
                       onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      disabled={mode === 'view'}
+                      disabled={mode === "view"}
                       placeholder="Add notes about this user"
                       rows={3}
                     />
@@ -416,22 +427,28 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">{userStats.totalContracts}</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {userStats.totalContracts}
+                    </div>
                     <div className="text-sm text-gray-500">Total Contracts</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">{userStats.activeContracts}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {userStats.activeContracts}
+                    </div>
                     <div className="text-sm text-gray-500">Active Contracts</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">{userStats.totalParties}</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {userStats.totalParties}
+                    </div>
                     <div className="text-sm text-gray-500">Managed Parties</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-orange-600">
-                      {userStats.lastActivity ? 'Yes' : 'No'}
+                      {userStats.lastActivity ? "Yes" : "No"}
                     </div>
                     <div className="text-sm text-gray-500">Recent Activity</div>
                   </div>
@@ -452,11 +469,15 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                 {userActivity.length > 0 ? (
                   <div className="space-y-3">
                     {userActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      <div
+                        key={activity.id}
+                        className="flex items-center gap-3 rounded-lg border p-3"
+                      >
                         <div className="flex-1">
                           <div className="font-medium">{activity.action}</div>
                           <div className="text-sm text-gray-500">
-                            {activity.entity_type} • {new Date(activity.created_at).toLocaleString()}
+                            {activity.entity_type} •{" "}
+                            {new Date(activity.created_at).toLocaleString()}
                           </div>
                         </div>
                         <Badge variant="outline">{activity.entity_type}</Badge>
@@ -464,9 +485,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No recent activity found
-                  </div>
+                  <div className="py-8 text-center text-gray-500">No recent activity found</div>
                 )}
               </CardContent>
             </Card>
@@ -482,7 +501,7 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-3">
                       <h4 className="font-medium">Contract Management</h4>
                       <div className="space-y-2">
@@ -490,39 +509,39 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                           <span className="text-sm">Create Contracts</span>
                           <Switch
                             checked={formData.permissions?.createContracts || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, createContracts: checked }
+                                permissions: { ...formData.permissions, createContracts: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Edit Contracts</span>
                           <Switch
                             checked={formData.permissions?.editContracts || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, editContracts: checked }
+                                permissions: { ...formData.permissions, editContracts: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Delete Contracts</span>
                           <Switch
                             checked={formData.permissions?.deleteContracts || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, deleteContracts: checked }
+                                permissions: { ...formData.permissions, deleteContracts: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                       </div>
@@ -535,39 +554,39 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                           <span className="text-sm">View Users</span>
                           <Switch
                             checked={formData.permissions?.viewUsers || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, viewUsers: checked }
+                                permissions: { ...formData.permissions, viewUsers: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Edit Users</span>
                           <Switch
                             checked={formData.permissions?.editUsers || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, editUsers: checked }
+                                permissions: { ...formData.permissions, editUsers: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Delete Users</span>
                           <Switch
                             checked={formData.permissions?.deleteUsers || false}
-                            onCheckedChange={(checked) => 
+                            onCheckedChange={(checked) =>
                               setFormData({
                                 ...formData,
-                                permissions: { ...formData.permissions, deleteUsers: checked }
+                                permissions: { ...formData.permissions, deleteUsers: checked },
                               })
                             }
-                            disabled={mode === 'view'}
+                            disabled={mode === "view"}
                           />
                         </div>
                       </div>
@@ -625,7 +644,11 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                   disabled={loading || !newPassword || !confirmPassword}
                   className="w-full"
                 >
-                  {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Key className="mr-2 h-4 w-4" />}
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Key className="mr-2 h-4 w-4" />
+                  )}
                   Change Password
                 </Button>
 
@@ -636,10 +659,13 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
                   <div className="flex items-center gap-2">
                     {getStatusBadge(formData.status)}
                     <span className="text-sm text-gray-500">
-                      {formData.status === 'active' ? 'Account is active and can access the system' :
-                       formData.status === 'inactive' ? 'Account is inactive and cannot access the system' :
-                       formData.status === 'suspended' ? 'Account is suspended due to policy violation' :
-                       'Account is pending activation'}
+                      {formData.status === "active"
+                        ? "Account is active and can access the system"
+                        : formData.status === "inactive"
+                          ? "Account is inactive and cannot access the system"
+                          : formData.status === "suspended"
+                            ? "Account is suspended due to policy violation"
+                            : "Account is pending activation"}
                     </span>
                   </div>
                 </div>
@@ -653,9 +679,13 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
             <X className="mr-2 h-4 w-4" />
             Cancel
           </Button>
-          {mode === 'edit' && (
+          {mode === "edit" && (
             <Button onClick={handleSave} disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
               Save Changes
             </Button>
           )}
@@ -663,4 +693,4 @@ export function UserProfileModal({ user, isOpen, onClose, onUpdate, mode }: User
       </DialogContent>
     </Dialog>
   )
-} 
+}

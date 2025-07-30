@@ -5,8 +5,16 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase"
-import type { Promoter, Contract, Party, PromoterSkill, PromoterExperience, PromoterEducation, PromoterDocument } from "@/lib/types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type {
+  Promoter,
+  Contract,
+  Party,
+  PromoterSkill,
+  PromoterExperience,
+  PromoterEducation,
+  PromoterDocument,
+} from "@/lib/types"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -33,14 +41,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { DocumentStatusBadge } from "@/components/unified-status-badge"
-import { useUserRole } from '@/hooks/useUserRole'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { PromoterCVResume } from '@/components/promoter-cv-resume'
-import { PromoterAttendance } from '@/components/promoter-attendance'
-import { PromoterReports } from '@/components/promoter-reports'
-import { PromoterRanking } from '@/components/promoter-ranking'
-import { PromoterCRM } from '@/components/promoter-crm'
+import { useUserRole } from "@/hooks/useUserRole"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { PromoterCVResume } from "@/components/promoter-cv-resume"
+import { PromoterAttendance } from "@/components/promoter-attendance"
+import { PromoterReports } from "@/components/promoter-reports"
+import { PromoterRanking } from "@/components/promoter-ranking"
+import { PromoterCRM } from "@/components/promoter-crm"
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -87,7 +95,7 @@ export default function PromoterDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [auditLogs, setAuditLogs] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState("overview")
   const [skills, setSkills] = useState<PromoterSkill[]>([])
   const [experience, setExperience] = useState<PromoterExperience[]>([])
   const [education, setEducation] = useState<PromoterEducation[]>([])
@@ -123,7 +131,7 @@ export default function PromoterDetailPage() {
           `
           *,
           second_party:parties!inner(id, name_en, name_ar)
-        `
+        `,
         )
         .eq("promoter_id", promoterId)
 
@@ -143,14 +151,14 @@ export default function PromoterDetailPage() {
     }
 
     async function fetchAuditLogs() {
-      if (role !== 'admin') return
+      if (role !== "admin") return
       const supabase = getSupabaseClient()
       const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .eq('table_name', 'promoters')
-        .eq('record_id', promoterId)
-        .order('created_at', { ascending: false })
+        .from("audit_logs")
+        .select("*")
+        .eq("table_name", "promoters")
+        .eq("record_id", promoterId)
+        .order("created_at", { ascending: false })
       if (!error && data) setAuditLogs(data)
     }
 
@@ -163,21 +171,21 @@ export default function PromoterDetailPage() {
           const skillsData = await skillsResponse.json()
           setSkills(skillsData)
         }
-        
+
         // Fetch experience
         const experienceResponse = await fetch(`/api/promoters/${promoterId}/experience`)
         if (experienceResponse.ok) {
           const experienceData = await experienceResponse.json()
           setExperience(experienceData)
         }
-        
+
         // Fetch education
         const educationResponse = await fetch(`/api/promoters/${promoterId}/education`)
         if (educationResponse.ok) {
           const educationData = await educationResponse.json()
           setEducation(educationData)
         }
-        
+
         // Fetch documents
         const documentsResponse = await fetch(`/api/promoters/${promoterId}/documents`)
         if (documentsResponse.ok) {
@@ -185,10 +193,10 @@ export default function PromoterDetailPage() {
           setDocuments(documentsData)
         }
       } catch (error) {
-        console.error('Error fetching CV data:', error)
+        console.error("Error fetching CV data:", error)
       }
     }
-    
+
     fetchPromoterDetails()
     fetchAuditLogs()
     fetchCVData()
@@ -207,7 +215,7 @@ export default function PromoterDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || "Promoter not found"}</p>
+          <p className="mb-4 text-red-600">{error || "Promoter not found"}</p>
           <Button onClick={() => router.push("/manage-promoters")}>Back to Promoters</Button>
         </div>
       </div>
@@ -215,7 +223,7 @@ export default function PromoterDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-6 py-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Promoter Details</h1>
@@ -226,7 +234,7 @@ export default function PromoterDetailPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
-          {role === 'admin' && (
+          {role === "admin" && (
             <Button onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit
@@ -255,38 +263,45 @@ export default function PromoterDetailPage() {
             <CardContent>
               <div className="flex items-start space-x-6">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={promoterDetails?.profile_picture_url || undefined} alt={promoterDetails?.name_en} />
+                  <AvatarImage
+                    src={promoterDetails?.profile_picture_url || undefined}
+                    alt={promoterDetails?.name_en}
+                  />
                   <AvatarFallback>{promoterDetails?.name_en?.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-4">
                   <div>
                     <h2 className="text-2xl font-semibold">{promoterDetails?.name_en}</h2>
                     <p className="text-lg text-muted-foreground">{promoterDetails?.name_ar}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant={promoterDetails?.status === 'active' ? 'default' : 'secondary'}>
+                    <div className="mt-2 flex items-center gap-2">
+                      <Badge
+                        variant={promoterDetails?.status === "active" ? "default" : "secondary"}
+                      >
                         {promoterDetails?.status}
                       </Badge>
                       {promoterDetails?.tags?.map((tag, index) => (
-                        <Badge key={index} variant="outline">{tag}</Badge>
+                        <Badge key={index} variant="outline">
+                          {tag}
+                        </Badge>
                       ))}
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <p>{promoterDetails?.email || 'N/A'}</p>
+                      <p>{promoterDetails?.email || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <p>{promoterDetails?.phone || 'N/A'}</p>
+                      <p>{promoterDetails?.phone || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Mobile</p>
-                      <p>{promoterDetails?.mobile_number || 'N/A'}</p>
+                      <p>{promoterDetails?.mobile_number || "N/A"}</p>
                     </div>
                     <div>
                       <p className="text-sm font-medium text-muted-foreground">Address</p>
-                      <p>{promoterDetails?.address || 'N/A'}</p>
+                      <p>{promoterDetails?.address || "N/A"}</p>
                     </div>
                   </div>
                 </div>
@@ -298,7 +313,7 @@ export default function PromoterDetailPage() {
         </TabsContent>
 
         <TabsContent value="cv-resume" className="space-y-6">
-          <PromoterCVResume 
+          <PromoterCVResume
             promoterId={promoterId}
             skills={skills}
             setSkills={setSkills}
@@ -308,36 +323,24 @@ export default function PromoterDetailPage() {
             setEducation={setEducation}
             documents={documents}
             setDocuments={setDocuments}
-            isAdmin={role === 'admin'}
+            isAdmin={role === "admin"}
           />
         </TabsContent>
 
         <TabsContent value="attendance" className="space-y-6">
-          <PromoterAttendance 
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-          />
+          <PromoterAttendance promoterId={promoterId} isAdmin={role === "admin"} />
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-6">
-          <PromoterReports 
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-          />
+          <PromoterReports promoterId={promoterId} isAdmin={role === "admin"} />
         </TabsContent>
 
         <TabsContent value="ranking" className="space-y-6">
-          <PromoterRanking 
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-          />
+          <PromoterRanking promoterId={promoterId} isAdmin={role === "admin"} />
         </TabsContent>
 
         <TabsContent value="crm" className="space-y-6">
-          <PromoterCRM 
-            promoterId={promoterId}
-            isAdmin={role === 'admin'}
-          />
+          <PromoterCRM promoterId={promoterId} isAdmin={role === "admin"} />
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
@@ -348,18 +351,18 @@ export default function PromoterDetailPage() {
               <CardDescription>Recent activities and changes for this promoter</CardDescription>
             </CardHeader>
             <CardContent>
-              {role === 'admin' ? (
+              {role === "admin" ? (
                 <div className="space-y-4">
                   {auditLogs.map((log) => (
-                    <div key={log.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div key={log.id} className="flex items-start space-x-3 rounded-lg border p-3">
+                      <div className="mt-2 h-2 w-2 rounded-full bg-blue-500"></div>
                       <div className="flex-1">
                         <p className="text-sm font-medium">{log.action}</p>
                         <p className="text-xs text-muted-foreground">
                           {new Date(log.created_at).toLocaleString()}
                         </p>
                         {log.new_values && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Changes: {JSON.stringify(log.new_values)}
                           </p>
                         )}
@@ -368,7 +371,9 @@ export default function PromoterDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">Activity timeline is restricted to administrators.</p>
+                <p className="text-muted-foreground">
+                  Activity timeline is restricted to administrators.
+                </p>
               )}
             </CardContent>
           </Card>

@@ -9,60 +9,60 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8
-        
-    - name: Install dependencies
-      run: pnpm install
-      
-    - name: Update build timestamp
-      run: |
-        timestamp=$(date +%s)
-        echo "BUILD_ID=build-$timestamp" >> $GITHUB_ENV
-        echo "BUILD_VERSION=1.0.0-$timestamp" >> $GITHUB_ENV
-        
-        # Update package.json version
-        node -e "
-          const fs = require('fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          pkg.version = process.env.BUILD_VERSION;
-          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-        "
-        
-        # Create build timestamp file
-        mkdir -p public
-        echo "{\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)\",\"buildId\":\"build-$timestamp\",\"version\":\"1.0.0-$timestamp\"}" > public/build-timestamp.json
-        
-    - name: Build project
-      run: pnpm build
-      
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-        github-comment: true
-        github-deployment: false
-        
-    - name: Commit and push timestamp changes
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add package.json public/build-timestamp.json
-        git commit -m "Auto-deploy: Build ${{ env.BUILD_ID }} - $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" || exit 0
-        git push 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Update build timestamp
+        run: |
+          timestamp=$(date +%s)
+          echo "BUILD_ID=build-$timestamp" >> $GITHUB_ENV
+          echo "BUILD_VERSION=1.0.0-$timestamp" >> $GITHUB_ENV
+
+          # Update package.json version
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = process.env.BUILD_VERSION;
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+
+          # Create build timestamp file
+          mkdir -p public
+          echo "{\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)\",\"buildId\":\"build-$timestamp\",\"version\":\"1.0.0-$timestamp\"}" > public/build-timestamp.json
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"
+          github-comment: true
+          github-deployment: false
+
+      - name: Commit and push timestamp changes
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add package.json public/build-timestamp.json
+          git commit -m "Auto-deploy: Build ${{ env.BUILD_ID }} - $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" || exit 0
+          git push

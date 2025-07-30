@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback } from "react"
 
 interface FormContextType {
   isFormActive: boolean
@@ -17,7 +17,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   const [isFormActive, setIsFormActive] = useState(false)
 
   const registerForm = useCallback(() => {
-    setFormCount(prev => {
+    setFormCount((prev) => {
       const newCount = prev + 1
       setIsFormActive(newCount > 0)
       return newCount
@@ -25,7 +25,7 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const unregisterForm = useCallback(() => {
-    setFormCount(prev => {
+    setFormCount((prev) => {
       const newCount = Math.max(0, prev - 1)
       setIsFormActive(newCount > 0)
       return newCount
@@ -37,13 +37,15 @@ export function FormProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <FormContext.Provider value={{
-      isFormActive,
-      setFormActive,
-      registerForm,
-      unregisterForm,
-      formCount
-    }}>
+    <FormContext.Provider
+      value={{
+        isFormActive,
+        setFormActive,
+        registerForm,
+        unregisterForm,
+        formCount,
+      }}
+    >
       {children}
     </FormContext.Provider>
   )
@@ -58,7 +60,7 @@ export function useFormContext() {
       setFormActive: () => {},
       registerForm: () => {},
       unregisterForm: () => {},
-      formCount: 0
+      formCount: 0,
     }
   }
   return context
@@ -70,11 +72,11 @@ export function useFormRegistration() {
 
   React.useEffect(() => {
     // Only register on the client side
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       registerForm()
       return () => {
         unregisterForm()
       }
     }
   }, [registerForm, unregisterForm])
-} 
+}

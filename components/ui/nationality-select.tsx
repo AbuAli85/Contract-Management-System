@@ -12,11 +12,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SORTED_NATIONALITIES } from "@/lib/nationalities"
 
 interface NationalitySelectProps {
@@ -30,12 +26,12 @@ export function NationalitySelect({
   value,
   onValueChange,
   placeholder = "Select nationality...",
-  disabled = false
+  disabled = false,
 }: NationalitySelectProps) {
   const [open, setOpen] = useState(false)
 
   const selectedNationality = SORTED_NATIONALITIES.find(
-    (nationality) => nationality.value === value
+    (nationality) => nationality.value === value,
   )
 
   return (
@@ -70,7 +66,7 @@ export function NationalitySelect({
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === nationality.value ? "opacity-100" : "opacity-0"
+                      value === nationality.value ? "opacity-100" : "opacity-0",
                     )}
                   />
                   {nationality.label}
@@ -82,4 +78,4 @@ export function NationalitySelect({
       </PopoverContent>
     </Popover>
   )
-} 
+}

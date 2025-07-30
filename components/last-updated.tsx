@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Clock, RefreshCw } from 'lucide-react'
+import { useEffect, useState } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Clock, RefreshCw } from "lucide-react"
 
 interface BuildTimestamp {
   timestamp: string
@@ -18,15 +18,15 @@ export function LastUpdated() {
   useEffect(() => {
     const fetchBuildInfo = async () => {
       try {
-        const response = await fetch('/build-timestamp.json', {
-          cache: 'no-store' // Force fresh fetch
+        const response = await fetch("/build-timestamp.json", {
+          cache: "no-store", // Force fresh fetch
         })
         if (response.ok) {
           const data = await response.json()
           setBuildInfo(data)
         }
       } catch (error) {
-        console.error('Failed to fetch build info:', error)
+        console.error("Failed to fetch build info:", error)
       } finally {
         setLoading(false)
       }
@@ -36,14 +36,14 @@ export function LastUpdated() {
   }, [])
 
   const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      timeZoneName: 'short'
+    return new Date(timestamp).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
     })
   }
 
@@ -75,7 +75,7 @@ export function LastUpdated() {
             </div>
             <button
               onClick={handleRefresh}
-              className="text-xs text-blue-600 hover:text-blue-800 underline"
+              className="text-xs text-blue-600 underline hover:text-blue-800"
             >
               Refresh
             </button>
@@ -93,9 +93,7 @@ export function LastUpdated() {
             <Clock className="h-4 w-4 text-gray-500" />
             <div>
               <div className="text-sm font-medium">Last Updated</div>
-              <div className="text-xs text-gray-500">
-                {formatDate(buildInfo.timestamp)}
-              </div>
+              <div className="text-xs text-gray-500">{formatDate(buildInfo.timestamp)}</div>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -104,7 +102,7 @@ export function LastUpdated() {
             </Badge>
             <button
               onClick={handleRefresh}
-              className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
+              className="flex items-center gap-1 text-xs text-blue-600 underline hover:text-blue-800"
             >
               <RefreshCw className="h-3 w-3" />
               Refresh
@@ -114,4 +112,4 @@ export function LastUpdated() {
       </CardContent>
     </Card>
   )
-} 
+}

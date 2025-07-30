@@ -1,12 +1,12 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from "@/lib/supabase/client"
 
 // Utility function to properly parse cookies with base64 values
 function parseCookieString(cookieString: string): Array<{ name: string; value: string }> {
-  return cookieString.split(';').map(cookie => {
+  return cookieString.split(";").map((cookie) => {
     const trimmedCookie = cookie.trim()
-    const firstEqualsIndex = trimmedCookie.indexOf('=')
+    const firstEqualsIndex = trimmedCookie.indexOf("=")
     if (firstEqualsIndex === -1) {
-      return { name: trimmedCookie, value: '' }
+      return { name: trimmedCookie, value: "" }
     }
     const name = trimmedCookie.substring(0, firstEqualsIndex)
     const value = trimmedCookie.substring(firstEqualsIndex + 1)
@@ -18,41 +18,41 @@ function parseCookieString(cookieString: string): Array<{ name: string; value: s
 export const authCookies = {
   // Get auth token from cookies
   getAuthToken: (): string | null => {
-    if (typeof document === 'undefined') return null
-    
+    if (typeof document === "undefined") return null
+
     const cookies = parseCookieString(document.cookie)
-    const authCookie = cookies.find(cookie => 
-      cookie.name === 'sb-auth-token'
-    )
-    
+    const authCookie = cookies.find((cookie) => cookie.name === "sb-auth-token")
+
     return authCookie?.value || null
   },
 
   // Set auth token in cookies
   setAuthToken: (token: string, expiresIn: number = 7): void => {
-    if (typeof document === 'undefined') return
-    
+    if (typeof document === "undefined") return
+
     const expires = new Date()
     expires.setDate(expires.getDate() + expiresIn)
-    
+
     document.cookie = `sb-auth-token=${token}; expires=${expires.toUTCString()}; path=/; secure; samesite=strict`
   },
 
   // Remove auth token from cookies
   removeAuthToken: (): void => {
-    if (typeof document === 'undefined') return
-    
-    document.cookie = 'sb-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+    if (typeof document === "undefined") return
+
+    document.cookie = "sb-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
   },
 
   // Check if user is authenticated via cookies
   isAuthenticated: async (): Promise<boolean> => {
     try {
       const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       return !!session
     } catch (error) {
-      console.error('Error checking authentication:', error)
+      console.error("Error checking authentication:", error)
       return false
     }
   },
@@ -61,13 +61,15 @@ export const authCookies = {
   getSession: async () => {
     try {
       const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       return session
     } catch (error) {
-      console.error('Error getting session:', error)
+      console.error("Error getting session:", error)
       return null
     }
-  }
+  },
 }
 
 // Session refresh utilities
@@ -76,16 +78,19 @@ export const sessionUtils = {
   refreshSession: async () => {
     try {
       const supabase = createClient()
-      const { data: { session }, error } = await supabase.auth.refreshSession()
-      
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.refreshSession()
+
       if (error) {
-        console.error('Error refreshing session:', error)
+        console.error("Error refreshing session:", error)
         return null
       }
-      
+
       return session
     } catch (error) {
-      console.error('Error refreshing session:', error)
+      console.error("Error refreshing session:", error)
       return null
     }
   },
@@ -93,22 +98,22 @@ export const sessionUtils = {
   // Check if session is expired
   isSessionExpired: (session: any): boolean => {
     if (!session?.expires_at) return true
-    
+
     const expiresAt = new Date(session.expires_at * 1000)
     const now = new Date()
-    
+
     return now >= expiresAt
   },
 
   // Get time until session expires (in minutes)
   getTimeUntilExpiry: (session: any): number => {
     if (!session?.expires_at) return 0
-    
+
     const expiresAt = new Date(session.expires_at * 1000)
     const now = new Date()
-    
+
     return Math.max(0, Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60)))
-  }
+  },
 }
 
 // Role and permission utilities
@@ -120,12 +125,12 @@ export const roleUtils = {
 
   // Check if user has any of the required roles
   hasAnyRole: (userRoles: string[], requiredRoles: string[]): boolean => {
-    return requiredRoles.some(role => userRoles.includes(role))
+    return requiredRoles.some((role) => userRoles.includes(role))
   },
 
   // Check if user has all required roles
   hasAllRoles: (userRoles: string[], requiredRoles: string[]): boolean => {
-    return requiredRoles.every(role => userRoles.includes(role))
+    return requiredRoles.every((role) => userRoles.includes(role))
   },
 
   // Check if user has specific permission
@@ -135,11 +140,11 @@ export const roleUtils = {
 
   // Check if user has any of the required permissions
   hasAnyPermission: (userPermissions: string[], requiredPermissions: string[]): boolean => {
-    return requiredPermissions.some(permission => userPermissions.includes(permission))
+    return requiredPermissions.some((permission) => userPermissions.includes(permission))
   },
 
   // Check if user has all required permissions
   hasAllPermissions: (userPermissions: string[], requiredPermissions: string[]): boolean => {
-    return requiredPermissions.every(permission => userPermissions.includes(permission))
-  }
-} 
+    return requiredPermissions.every((permission) => userPermissions.includes(permission))
+  },
+}

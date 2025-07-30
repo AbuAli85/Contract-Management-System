@@ -2,12 +2,18 @@
 
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
 
 // Force dynamic rendering to prevent SSR issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default function TestContractDropdownsPage() {
   const [selectedJobTitle, setSelectedJobTitle] = useState<string>("")
@@ -16,11 +22,12 @@ export default function TestContractDropdownsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Contract Form Dropdown Test</h1>
+          <h1 className="mb-2 text-3xl font-bold">Contract Form Dropdown Test</h1>
           <p className="text-muted-foreground">
-            Verify that Job Title, Department, and Work Location fields are working as dropdown lists
+            Verify that Job Title, Department, and Work Location fields are working as dropdown
+            lists
           </p>
         </div>
 
@@ -29,9 +36,9 @@ export default function TestContractDropdownsPage() {
             <CardTitle>Contract Form Fields</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="text-sm font-medium mb-2 block">Job Title</label>
+                <label className="mb-2 block text-sm font-medium">Job Title</label>
                 <Select value={selectedJobTitle} onValueChange={setSelectedJobTitle}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select job title" />
@@ -45,14 +52,12 @@ export default function TestContractDropdownsPage() {
                   </SelectContent>
                 </Select>
                 {selectedJobTitle && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Selected: {selectedJobTitle}
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">Selected: {selectedJobTitle}</p>
                 )}
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Department</label>
+                <label className="mb-2 block text-sm font-medium">Department</label>
                 <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
@@ -66,14 +71,14 @@ export default function TestContractDropdownsPage() {
                   </SelectContent>
                 </Select>
                 {selectedDepartment && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Selected: {selectedDepartment}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Work Location</label>
+                <label className="mb-2 block text-sm font-medium">Work Location</label>
                 <Select value={selectedWorkLocation} onValueChange={setSelectedWorkLocation}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select work location" />
@@ -84,7 +89,7 @@ export default function TestContractDropdownsPage() {
                         <div className="flex flex-col">
                           <span className="font-medium">{location.label}</span>
                           {location.description && (
-                            <span className="text-xs text-muted-foreground mt-0.5">
+                            <span className="mt-0.5 text-xs text-muted-foreground">
                               {location.description}
                             </span>
                           )}
@@ -94,7 +99,7 @@ export default function TestContractDropdownsPage() {
                   </SelectContent>
                 </Select>
                 {selectedWorkLocation && (
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     Selected: {selectedWorkLocation}
                   </p>
                 )}
@@ -102,8 +107,8 @@ export default function TestContractDropdownsPage() {
             </div>
 
             {(selectedJobTitle || selectedDepartment || selectedWorkLocation) && (
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-semibold mb-2">Selected Values:</h3>
+              <div className="rounded-lg bg-muted p-4">
+                <h3 className="mb-2 font-semibold">Selected Values:</h3>
                 <div className="space-y-2">
                   {selectedJobTitle && (
                     <div>
@@ -129,15 +134,15 @@ export default function TestContractDropdownsPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Job Titles ({JOB_TITLES.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {JOB_TITLES.map((title) => (
-                  <div key={title.value} className="p-2 border rounded">
+                  <div key={title.value} className="rounded border p-2">
                     <div className="font-medium">{title.label}</div>
                     <Badge variant="secondary" className="text-xs">
                       {title.value}
@@ -153,9 +158,9 @@ export default function TestContractDropdownsPage() {
               <CardTitle>Departments ({DEPARTMENTS.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {DEPARTMENTS.map((dept) => (
-                  <div key={dept.value} className="p-2 border rounded">
+                  <div key={dept.value} className="rounded border p-2">
                     <div className="font-medium">{dept.label}</div>
                     <Badge variant="secondary" className="text-xs">
                       {dept.value}
@@ -171,14 +176,12 @@ export default function TestContractDropdownsPage() {
               <CardTitle>Work Locations ({WORK_LOCATIONS.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {WORK_LOCATIONS.map((location) => (
-                  <div key={location.value} className="p-2 border rounded">
+                  <div key={location.value} className="rounded border p-2">
                     <div className="font-medium">{location.label}</div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {location.description}
-                    </div>
-                    <Badge variant="secondary" className="text-xs mt-1">
+                    <div className="mt-1 text-sm text-muted-foreground">{location.description}</div>
+                    <Badge variant="secondary" className="mt-1 text-xs">
                       {location.value}
                     </Badge>
                   </div>
@@ -194,23 +197,23 @@ export default function TestContractDropdownsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span>Job Title Dropdown:</span>
                 <Badge variant="default">✅ Implemented</Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span>Department Dropdown:</span>
                 <Badge variant="default">✅ Implemented</Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span>Work Location Dropdown:</span>
                 <Badge variant="default">✅ Implemented</Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span>Work Location Descriptions:</span>
                 <Badge variant="default">✅ Implemented</Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex items-center justify-between">
                 <span>New Sales Job Titles:</span>
                 <Badge variant="default">✅ Added</Badge>
               </div>
@@ -220,4 +223,4 @@ export default function TestContractDropdownsPage() {
       </div>
     </div>
   )
-} 
+}

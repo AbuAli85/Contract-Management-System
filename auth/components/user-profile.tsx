@@ -1,8 +1,8 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Button } from '@/components/ui/button'
+import { useState } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,17 +10,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import type { UserProfile } from '@/types/custom'
-import Link from 'next/link'
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type { UserProfile } from "@/types/custom"
+import Link from "next/link"
 
 // Helper function to get initials from full name
 const getInitials = (fullName: string) => {
   return fullName
-    .split(' ')
-    .map(name => name[0])
-    .join('')
+    .split(" ")
+    .map((name) => name[0])
+    .join("")
     .toUpperCase()
     .slice(0, 2)
 }
@@ -41,8 +41,8 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
   // Extract user profile fields with proper destructuring
   // Using optional chaining to safely access avatar_url property
   const avatarUrl = profile?.avatar_url || undefined
-  const displayName = profile?.full_name || user.email || 'User'
-  const userRole = profile?.role || 'user'
+  const displayName = profile?.full_name || user.email || "User"
+  const userRole = profile?.role || "user"
 
   if (compact) {
     return (
@@ -52,7 +52,9 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
             <Avatar className="h-8 w-8">
               <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback>
-                {profile?.full_name ? getInitials(profile.full_name) : user.email?.[0]?.toUpperCase()}
+                {profile?.full_name
+                  ? getInitials(profile.full_name)
+                  : user.email?.[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -61,9 +63,7 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{displayName}</p>
-              <p className="text-xs leading-none text-muted-foreground">
-                {user.email}
-              </p>
+              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -74,9 +74,7 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
             <Link href="/dashboard">Dashboard</Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => signOut()}>
-            Log out
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -98,13 +96,9 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{displayName}</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
-            </p>
+            <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             {userRole && (
-              <p className="text-xs leading-none text-muted-foreground capitalize">
-                {userRole}
-              </p>
+              <p className="text-xs capitalize leading-none text-muted-foreground">{userRole}</p>
             )}
           </div>
         </DropdownMenuLabel>
@@ -116,10 +110,8 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
           <Link href="/dashboard">Dashboard</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
-          Log out
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => signOut()}>Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
-} 
+}

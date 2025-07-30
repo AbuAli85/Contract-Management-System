@@ -14,7 +14,9 @@ export function useRealtimePromoters() {
 
   useRealtimeTable("promoters", fetchPromoters)
 
-  useEffect(() => { fetchPromoters() }, [fetchPromoters])
+  useEffect(() => {
+    fetchPromoters()
+  }, [fetchPromoters])
 
   return promoters
 }

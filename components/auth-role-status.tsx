@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { usePermissions } from '@/hooks/use-permissions'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Loader2, RefreshCw, User, Shield, Crown } from 'lucide-react'
-import { useState } from 'react'
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { usePermissions } from "@/hooks/use-permissions"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Loader2, RefreshCw, User, Shield, Crown } from "lucide-react"
+import { useState } from "react"
 
 export function AuthRoleStatus() {
   const { user, roles: authRoles, loading: authLoading } = useAuth()
@@ -24,11 +24,11 @@ export function AuthRoleStatus() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Crown className="h-4 w-4 text-yellow-600" />
-      case 'manager':
+      case "manager":
         return <Shield className="h-4 w-4 text-blue-600" />
-      case 'user':
+      case "user":
         return <User className="h-4 w-4 text-gray-600" />
       default:
         return <User className="h-4 w-4 text-gray-400" />
@@ -37,14 +37,14 @@ export function AuthRoleStatus() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
-      case 'manager':
-        return 'bg-blue-100 text-blue-800 border-blue-300'
-      case 'user':
-        return 'bg-gray-100 text-gray-800 border-gray-300'
+      case "admin":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300"
+      case "manager":
+        return "bg-blue-100 text-blue-800 border-blue-300"
+      case "user":
+        return "bg-gray-100 text-gray-800 border-gray-300"
       default:
-        return 'bg-gray-100 text-gray-600 border-gray-300'
+        return "bg-gray-100 text-gray-600 border-gray-300"
     }
   }
 
@@ -69,12 +69,7 @@ export function AuthRoleStatus() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Auth Role Status</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
             {refreshing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -87,26 +82,20 @@ export function AuthRoleStatus() {
         {/* User Info */}
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700">User</div>
-          <div className="text-sm text-gray-600">
-            {user?.email || 'No user logged in'}
-          </div>
-          <div className="text-xs text-gray-500">
-            ID: {user?.id || 'N/A'}
-          </div>
+          <div className="text-sm text-gray-600">{user?.email || "No user logged in"}</div>
+          <div className="text-xs text-gray-500">ID: {user?.id || "N/A"}</div>
         </div>
 
         {/* Auth Provider Role */}
         <div className="space-y-2">
           <div className="text-sm font-medium text-gray-700">Auth Provider Role</div>
           <div className="flex items-center gap-2">
-            {getRoleIcon(authRoles[0] || 'unknown')}
-            <Badge className={getRoleColor(authRoles[0] || 'unknown')}>
-              {authRoles[0] || 'No role'}
+            {getRoleIcon(authRoles[0] || "unknown")}
+            <Badge className={getRoleColor(authRoles[0] || "unknown")}>
+              {authRoles[0] || "No role"}
             </Badge>
           </div>
-          <div className="text-xs text-gray-500">
-            Source: AuthProvider
-          </div>
+          <div className="text-xs text-gray-500">Source: AuthProvider</div>
         </div>
 
         {/* RBAC Provider Roles */}
@@ -117,31 +106,27 @@ export function AuthRoleStatus() {
               userRoles.map((role: string, index: number) => (
                 <div key={index} className="flex items-center gap-1">
                   {getRoleIcon(role)}
-                  <Badge className={getRoleColor(role)}>
-                    {role}
-                  </Badge>
+                  <Badge className={getRoleColor(role)}>{role}</Badge>
                 </div>
               ))
             ) : (
               <div className="text-sm text-gray-500">No roles assigned</div>
             )}
           </div>
-          <div className="text-xs text-gray-500">
-            Source: RBACProvider
-          </div>
+          <div className="text-xs text-gray-500">Source: RBACProvider</div>
         </div>
 
         {/* Status Summary */}
-        <div className="pt-2 border-t">
+        <div className="border-t pt-2">
           <div className="text-sm font-medium text-gray-700">Status</div>
-          <div className="text-xs text-gray-600 space-y-1">
-            <div>Auth Loading: {authLoading ? 'Yes' : 'No'}</div>
-            <div>RBAC Loading: {rbacLoading ? 'Yes' : 'No'}</div>
-            <div>Roles Match: {authRoles[0] === userRoles[0] ? '✅ Yes' : '❌ No'}</div>
-            <div>Has Admin: {userRoles.includes('admin') ? '✅ Yes' : '❌ No'}</div>
+          <div className="space-y-1 text-xs text-gray-600">
+            <div>Auth Loading: {authLoading ? "Yes" : "No"}</div>
+            <div>RBAC Loading: {rbacLoading ? "Yes" : "No"}</div>
+            <div>Roles Match: {authRoles[0] === userRoles[0] ? "✅ Yes" : "❌ No"}</div>
+            <div>Has Admin: {userRoles.includes("admin") ? "✅ Yes" : "❌ No"}</div>
           </div>
         </div>
       </CardContent>
     </Card>
   )
-} 
+}

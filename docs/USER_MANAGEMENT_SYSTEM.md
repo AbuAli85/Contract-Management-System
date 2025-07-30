@@ -32,6 +32,7 @@ The User Management System provides comprehensive user administration capabiliti
 ### Database Schema
 
 #### `app_users` Table
+
 ```sql
 - id (UUID, Primary Key)
 - email (TEXT, Unique)
@@ -58,6 +59,7 @@ The User Management System provides comprehensive user administration capabiliti
 ```
 
 #### Supporting Tables
+
 - `user_roles` - Role definitions and permissions
 - `user_sessions` - Session tracking
 - `user_activity_logs` - Activity audit trail
@@ -66,6 +68,7 @@ The User Management System provides comprehensive user administration capabiliti
 ## 🎯 Features
 
 ### 1. User Management
+
 - ✅ Create, read, update, delete users
 - ✅ Bulk operations (activate, deactivate, delete, change role)
 - ✅ User search and filtering
@@ -73,6 +76,7 @@ The User Management System provides comprehensive user administration capabiliti
 - ✅ User statistics and analytics
 
 ### 2. Role-Based Access Control (RBAC)
+
 - ✅ **Admin**: Full system access
 - ✅ **Manager**: Manage contracts and users
 - ✅ **User**: Basic contract access
@@ -81,6 +85,7 @@ The User Management System provides comprehensive user administration capabiliti
 - ✅ Custom permission sets
 
 ### 3. User Profiles
+
 - ✅ Detailed user information
 - ✅ Avatar and personal details
 - ✅ Department and position tracking
@@ -89,6 +94,7 @@ The User Management System provides comprehensive user administration capabiliti
 - ✅ Permission management
 
 ### 4. Security Features
+
 - ✅ Session tracking
 - ✅ Failed login attempt monitoring
 - ✅ Account locking
@@ -97,6 +103,7 @@ The User Management System provides comprehensive user administration capabiliti
 - ✅ Activity audit trail
 
 ### 5. User Activity Tracking
+
 - ✅ Comprehensive activity logging
 - ✅ User session monitoring
 - ✅ Login/logout tracking
@@ -174,7 +181,9 @@ function UserProfileExample() {
 ### API Endpoints
 
 #### GET /api/users
+
 Fetch users with filtering and pagination
+
 ```typescript
 // Query parameters
 {
@@ -189,7 +198,9 @@ Fetch users with filtering and pagination
 ```
 
 #### POST /api/users
+
 Create new user
+
 ```typescript
 {
   email: string
@@ -203,7 +214,9 @@ Create new user
 ```
 
 #### PUT /api/users/[id]
+
 Update user
+
 ```typescript
 {
   email?: string
@@ -219,10 +232,13 @@ Update user
 ```
 
 #### DELETE /api/users/[id]
+
 Delete user
 
 #### PUT /api/users/bulk
+
 Bulk update users
+
 ```typescript
 {
   userIds: string[]
@@ -231,7 +247,9 @@ Bulk update users
 ```
 
 #### DELETE /api/users/bulk
+
 Bulk delete users
+
 ```typescript
 {
   userIds: string[]
@@ -241,23 +259,27 @@ Bulk delete users
 ## 🔐 Security
 
 ### Authentication
+
 - All API endpoints require authentication
 - Session-based authentication with Supabase
 - Automatic session refresh
 
 ### Authorization
+
 - Role-based access control
 - Admin-only operations for user management
 - User can only view/edit their own profile
 - Granular permissions per feature
 
 ### Data Protection
+
 - Row Level Security (RLS) policies
 - Input validation and sanitization
 - SQL injection prevention
 - XSS protection
 
 ### Audit Trail
+
 - All user actions are logged
 - Session tracking
 - Failed login monitoring
@@ -266,6 +288,7 @@ Bulk delete users
 ## 📊 Analytics & Reporting
 
 ### User Statistics
+
 - Total users by role
 - Active vs inactive users
 - User activity metrics
@@ -273,12 +296,14 @@ Bulk delete users
 - Department distribution
 
 ### Activity Tracking
+
 - User actions per day/week/month
 - Most active users
 - Feature usage statistics
 - Session duration analytics
 
 ### Security Analytics
+
 - Failed login attempts
 - Account lockouts
 - Suspicious activity detection
@@ -287,6 +312,7 @@ Bulk delete users
 ## 🛠️ Configuration
 
 ### Environment Variables
+
 ```env
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -299,13 +325,17 @@ ACCOUNT_LOCKOUT_DURATION=1800
 ```
 
 ### Database Setup
+
 Run the migration script to set up the database:
+
 ```bash
 psql -d your_database -f scripts/010_enhance_user_management.sql
 ```
 
 ### Role Configuration
+
 Default roles are created automatically:
+
 - **Admin**: Full system access
 - **Manager**: Contract and user management
 - **User**: Basic contract access
@@ -314,29 +344,33 @@ Default roles are created automatically:
 ## 🔧 Customization
 
 ### Adding New Roles
+
 ```sql
 INSERT INTO user_roles (name, description, permissions) VALUES
 ('supervisor', 'Department Supervisor', '{"contracts": {"read": true, "write": true}, "users": {"read": true}}');
 ```
 
 ### Custom Permissions
+
 ```typescript
 const customPermissions = {
   contracts: {
     read: true,
     write: true,
-    delete: false
+    delete: false,
   },
   users: {
     read: true,
     write: false,
-    delete: false
-  }
+    delete: false,
+  },
 }
 ```
 
 ### Custom User Fields
+
 Add new columns to the `app_users` table:
+
 ```sql
 ALTER TABLE app_users ADD COLUMN custom_field TEXT;
 ```
@@ -344,6 +378,7 @@ ALTER TABLE app_users ADD COLUMN custom_field TEXT;
 ## 📈 Performance
 
 ### Optimization Strategies
+
 - Database indexing on frequently queried columns
 - Pagination for large user lists
 - Caching of user data
@@ -351,6 +386,7 @@ ALTER TABLE app_users ADD COLUMN custom_field TEXT;
 - Background job processing for analytics
 
 ### Monitoring
+
 - Database query performance
 - API response times
 - User activity patterns
@@ -361,30 +397,36 @@ ALTER TABLE app_users ADD COLUMN custom_field TEXT;
 ### Common Issues
 
 #### User Not Found
+
 - Check if user exists in `app_users` table
 - Verify authentication status
 - Check RLS policies
 
 #### Permission Denied
+
 - Verify user role and permissions
 - Check if user status is active
 - Review RLS policies
 
 #### Session Issues
+
 - Check session expiration
 - Verify session token validity
 - Review session cleanup jobs
 
 ### Debug Mode
+
 Enable debug logging:
+
 ```typescript
 // In development
-console.log('User management debug:', { users, filters, pagination })
+console.log("User management debug:", { users, filters, pagination })
 ```
 
 ## 🔄 Maintenance
 
 ### Regular Tasks
+
 - Clean up expired sessions
 - Archive old activity logs
 - Update user statistics
@@ -392,6 +434,7 @@ console.log('User management debug:', { users, filters, pagination })
 - Backup user data
 
 ### Automated Jobs
+
 ```sql
 -- Clean up expired sessions (run daily)
 SELECT cleanup_expired_sessions();
@@ -403,6 +446,7 @@ SELECT cleanup_expired_invitations();
 ## 📚 API Reference
 
 ### Types
+
 ```typescript
 interface User {
   id: string
@@ -428,18 +472,19 @@ interface UserFilters {
   page?: number
   limit?: number
   sortBy?: string
-  sortOrder?: 'asc' | 'desc'
+  sortOrder?: "asc" | "desc"
 }
 ```
 
 ### Hooks
+
 ```typescript
 const {
   // State
   loading,
   users,
   pagination,
-  
+
   // Actions
   fetchUsers,
   createUser,
@@ -449,7 +494,7 @@ const {
   bulkDeleteUsers,
   getUserById,
   getUserStats,
-  getUserActivity
+  getUserActivity,
 } = useUserManagement()
 ```
 
@@ -457,7 +502,7 @@ const {
 
 The User Management System provides a robust, scalable, and secure foundation for user administration. It includes comprehensive features for user management, role-based access control, activity tracking, and security monitoring.
 
-For additional support or customization, refer to the API documentation or contact the development team. 
+For additional support or customization, refer to the API documentation or contact the development team.
 
 ## ✅ **Performance Optimizations Successfully Applied**
 
@@ -487,7 +532,7 @@ All the optimizations have been implemented and compiled successfully:
 - **Loading time**: Reduced from 3-5 seconds to **0.5-1 second** ⚡
 - **Search response**: **0.1-0.3 seconds** ⚡
 - **Filter response**: **0.2-0.5 seconds** ⚡
-- **API calls**: Reduced by **80%** 
+- **API calls**: Reduced by **80%**
 
 ## 🧪 **Test Your Optimized System**
 
@@ -528,6 +573,6 @@ For maximum performance, you can apply the database indexes when you have databa
 psql -d your_database -f scripts/011_optimize_user_management_performance.sql
 ```
 
-The system is now **significantly faster** and should provide a much better user experience! 
+The system is now **significantly faster** and should provide a much better user experience!
 
-Would you like me to help you test any specific functionality or make any additional optimizations? 
+Would you like me to help you test any specific functionality or make any additional optimizations?

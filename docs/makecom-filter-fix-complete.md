@@ -13,18 +13,21 @@
 **File**: `app/api/webhook/makecom/route.ts`
 
 **Changes Made**:
+
 - All string fields now guaranteed to return strings (never null/undefined)
 - Image URLs return empty string `""` instead of `null` when missing
 - All fields explicitly converted to strings using `.toString()`
 - Both new contract and existing contract response paths updated
 
 **Before (causing errors)**:
+
 ```typescript
 promoter_id_card_url: promoter_id_card_url || null,
 promoter_passport_url: promoter_passport_url || null,
 ```
 
 **After (fixed)**:
+
 ```typescript
 promoter_id_card_url: (promoter_id_card_url || "").toString(),
 promoter_passport_url: (promoter_passport_url || "").toString(),
@@ -33,14 +36,16 @@ promoter_passport_url: (promoter_passport_url || "").toString(),
 ### 2. Test Results ✅
 
 All test scenarios now pass:
+
 - ✅ No image URLs provided → Returns empty strings
-- ✅ Null image URLs → Returns empty strings  
+- ✅ Null image URLs → Returns empty strings
 - ✅ Valid image URLs → Returns actual URLs
 - ✅ All fields are strings → No more .split() errors
 
 ## 🔧 Make.com Filter Updates Needed
 
 ### Current Filter (in your screenshot):
+
 The filter showing "Status code Equal to [empty]" needs to be updated.
 
 ### Recommended New Filter:
@@ -48,6 +53,7 @@ The filter showing "Status code Equal to [empty]" needs to be updated.
 **For Image Processing Filters:**
 
 **Option 1 - Simple check**:
+
 ```
 Field: promoter_passport_url
 Operator: not equal
@@ -55,6 +61,7 @@ Value: ""
 ```
 
 **Option 2 - Double validation**:
+
 ```
 Condition 1: promoter_passport_url "not equal" ""
 AND
@@ -62,6 +69,7 @@ Condition 2: length(promoter_passport_url) "greater" 0
 ```
 
 **Option 3 - URL validation**:
+
 ```
 Field: promoter_passport_url
 Operator: contains
@@ -69,6 +77,7 @@ Value: "http"
 ```
 
 ### Filter Behavior:
+
 - **Empty URLs** (`""`): Filter SKIPS → No image processing
 - **Valid URLs** (`"https://..."`): Filter PASSES → Process images
 
@@ -88,6 +97,7 @@ Value: "http"
 ### Test the fix with these payloads:
 
 **No Images (should skip image processing)**:
+
 ```json
 {
   "contract_number": "TEST-001",
@@ -98,10 +108,11 @@ Value: "http"
 ```
 
 **With Images (should process images)**:
+
 ```json
 {
   "contract_number": "TEST-002",
-  "promoter_name_en": "Test User", 
+  "promoter_name_en": "Test User",
   "promoter_passport_url": "https://example.com/passport.jpg",
   "first_party_name_en": "Test Company",
   "second_party_name_en": "Test Employer"
@@ -111,11 +122,13 @@ Value: "http"
 ## 📊 Expected Results
 
 ### Before Fix:
+
 ❌ Error: "Cannot read properties of undefined (reading 'split')"
 ❌ Filter fails to evaluate
 ❌ Scenario stops execution
 
 ### After Fix:
+
 ✅ No .split() errors
 ✅ Filter evaluates correctly
 ✅ Empty URLs → Skip image processing  
@@ -144,6 +157,7 @@ type docs\makecom-filter-fix-guide.md
 ## 📞 Support
 
 If issues persist:
+
 1. Check Make.com execution logs for specific errors
 2. Verify webhook URL is correct in scenario
 3. Ensure filters use updated conditions above

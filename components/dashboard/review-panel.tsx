@@ -32,45 +32,45 @@ export default function ReviewPanel() {
     setLoading(true)
     try {
       // Fetch contracts that need review (draft or pending status)
-      const response = await fetch('/api/contracts?status=draft')
-      
+      const response = await fetch("/api/contracts?status=draft")
+
       if (!response.ok) {
-        throw new Error('Failed to fetch contracts')
+        throw new Error("Failed to fetch contracts")
       }
-      
+
       const data = await response.json()
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch contracts')
+        throw new Error(data.error || "Failed to fetch contracts")
       }
 
       // Transform contracts into review items
       const items: ReviewItem[] = (data.contracts || []).map((contract: any) => ({
         id: contract.id,
         title: contract.contract_number || `Contract ${contract.id.slice(0, 8)}`,
-        promoter: contract.promoters && contract.promoters.length > 0 
-          ? contract.promoters[0].name_en 
-          : 'Unknown Promoter',
-        parties: `${contract.first_party?.name_en || 'Unknown'} / ${contract.second_party?.name_en || 'Unknown'}`,
+        promoter:
+          contract.promoters && contract.promoters.length > 0
+            ? contract.promoters[0].name_en
+            : "Unknown Promoter",
+        parties: `${contract.first_party?.name_en || "Unknown"} / ${contract.second_party?.name_en || "Unknown"}`,
         period: `Created ${new Date(contract.created_at).toLocaleDateString()}`,
         contractLink: `/contracts/${contract.id}`,
-        submitter: contract.user_id ? 'System User' : 'Unknown',
-        avatar: '/placeholder.svg',
-        status: contract.status || 'draft',
+        submitter: contract.user_id ? "System User" : "Unknown",
+        avatar: "/placeholder.svg",
+        status: contract.status || "draft",
         contract_number: contract.contract_number,
         job_title: contract.job_title,
-        work_location: contract.work_location
+        work_location: contract.work_location,
       }))
-      
+
       setReviewItems(items)
-      
     } catch (error: any) {
       console.error("Error in review panel:", error)
       setReviewItems([])
       toast({
         title: "Error",
         description: "Failed to load review items",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -83,52 +83,55 @@ export default function ReviewPanel() {
 
   const handleAction = async (itemId: string, action: "approve" | "reject" | "comment") => {
     try {
-      const endpoint = action === 'approve' ? '/api/contracts/approval/approve' : 
-                      action === 'reject' ? '/api/contracts/approval/reject' : 
-                      '/api/contracts/approval/comment'
-      
+      const endpoint =
+        action === "approve"
+          ? "/api/contracts/approval/approve"
+          : action === "reject"
+            ? "/api/contracts/approval/reject"
+            : "/api/contracts/approval/comment"
+
       const response = await fetch(endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           contract_id: itemId,
           action: action,
-          comments: action === 'comment' ? 'Review comment' : undefined
-        })
+          comments: action === "comment" ? "Review comment" : undefined,
+        }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to process action')
+        throw new Error("Failed to process action")
       }
 
-      toast({ 
-        title: `Action: ${action}`, 
-        description: `Successfully processed contract ${itemId}` 
+      toast({
+        title: `Action: ${action}`,
+        description: `Successfully processed contract ${itemId}`,
       })
-      
+
       // Refresh the list
       fetchReviewItems()
     } catch (error) {
-      console.error('Error processing action:', error)
+      console.error("Error processing action:", error)
       toast({
         title: "Error",
         description: `Failed to ${action} contract`,
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'draft':
+      case "draft":
         return <Badge variant="secondary">Draft</Badge>
-      case 'pending':
+      case "pending":
         return <Badge variant="outline">Pending Review</Badge>
-      case 'active':
+      case "active":
         return <Badge variant="default">Active</Badge>
-      case 'rejected':
+      case "rejected":
         return <Badge variant="destructive">Rejected</Badge>
       default:
         return <Badge variant="secondary">{status}</Badge>
@@ -145,11 +148,11 @@ export default function ReviewPanel() {
         <CardContent>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center space-x-4 animate-pulse">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div key={i} className="flex animate-pulse items-center space-x-4">
+                <div className="h-10 w-10 rounded-full bg-gray-200"></div>
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 w-3/4 rounded bg-gray-200"></div>
+                  <div className="h-3 w-1/2 rounded bg-gray-200"></div>
                 </div>
               </div>
             ))}
@@ -164,20 +167,23 @@ export default function ReviewPanel() {
       <CardHeader>
         <CardTitle>Pending Reviews</CardTitle>
         <CardDescription>
-          {reviewItems.length} contract{reviewItems.length !== 1 ? 's' : ''} awaiting review
+          {reviewItems.length} contract{reviewItems.length !== 1 ? "s" : ""} awaiting review
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {reviewItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <div className="py-8 text-center text-muted-foreground">
+              <Clock className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p>No contracts pending review</p>
               <p className="text-sm">All contracts are up to date</p>
             </div>
           ) : (
             reviewItems.map((item) => (
-              <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div
+                key={item.id}
+                className="flex items-center justify-between rounded-lg border p-4 transition-shadow hover:shadow-md"
+              >
                 <div className="flex items-center space-x-4">
                   <Avatar>
                     <AvatarImage src={item.avatar} alt={item.promoter} />
@@ -204,7 +210,7 @@ export default function ReviewPanel() {
                     variant="outline"
                     onClick={() => handleAction(item.id, "comment")}
                   >
-                    <MessageCircle className="h-4 w-4 mr-1" />
+                    <MessageCircle className="mr-1 h-4 w-4" />
                     Comment
                   </Button>
                   <Button
@@ -212,14 +218,11 @@ export default function ReviewPanel() {
                     variant="outline"
                     onClick={() => handleAction(item.id, "reject")}
                   >
-                    <XCircle className="h-4 w-4 mr-1" />
+                    <XCircle className="mr-1 h-4 w-4" />
                     Reject
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handleAction(item.id, "approve")}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-1" />
+                  <Button size="sm" onClick={() => handleAction(item.id, "approve")}>
+                    <CheckCircle className="mr-1 h-4 w-4" />
                     Approve
                   </Button>
                 </div>

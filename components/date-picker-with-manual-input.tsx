@@ -26,7 +26,7 @@ const safeFormat = (date: Date, formatString: string): string => {
     if (!date || !isValid(date)) return ""
     return format(date, formatString)
   } catch (error) {
-    console.warn('Safe format failed:', error)
+    console.warn("Safe format failed:", error)
     return ""
   }
 }
@@ -35,18 +35,18 @@ const safeFormat = (date: Date, formatString: string): string => {
 const safeParse = (value: string, formatString: string): Date | null => {
   try {
     if (!value || !value.trim()) return null
-    
+
     const parsed = parse(value, formatString, new Date())
-    
+
     // Additional validation to ensure we have a valid Date object
     if (!(parsed instanceof Date) || isNaN(parsed.getTime())) {
-      console.warn('Invalid date parsed:', parsed)
+      console.warn("Invalid date parsed:", parsed)
       return null
     }
-    
+
     return isValid(parsed) ? parsed : null
   } catch (error) {
-    console.warn('Safe parse failed:', error)
+    console.warn("Safe parse failed:", error)
     return null
   }
 }
@@ -90,7 +90,7 @@ export function DatePickerWithManualInput({
       try {
         // Check if component is still mounted
         if (!mountedRef.current) {
-          console.warn('Component unmounted, skipping setDate call')
+          console.warn("Component unmounted, skipping setDate call")
           return
         }
 
@@ -98,17 +98,17 @@ export function DatePickerWithManualInput({
         if (newDate !== undefined && newDate !== null) {
           // Check if it's a valid Date object
           if (!(newDate instanceof Date) || isNaN(newDate.getTime())) {
-            console.warn('Invalid date object provided to safeSetDate:', newDate)
+            console.warn("Invalid date object provided to safeSetDate:", newDate)
             return
           }
         }
-        
+
         // Call the appropriate callback function
         if (dateChangeCallback) {
           dateChangeCallback(newDate)
         }
       } catch (error) {
-        console.error('Error setting date:', error)
+        console.error("Error setting date:", error)
         // Don't re-throw the error, just log it
       }
     }, 10) // Small delay to debounce rapid calls
@@ -119,7 +119,7 @@ export function DatePickerWithManualInput({
     try {
       setInputValue(value || "")
     } catch (error) {
-      console.error('Error setting input value:', error)
+      console.error("Error setting input value:", error)
     }
   }
 
@@ -128,7 +128,7 @@ export function DatePickerWithManualInput({
       const formattedDate = safeFormat(date, dateFormat)
       safeSetInputValue(formattedDate)
     } catch (error) {
-      console.error('Error in useEffect:', error)
+      console.error("Error in useEffect:", error)
       safeSetInputValue("")
     }
   }, [date, dateFormat])
@@ -137,13 +137,13 @@ export function DatePickerWithManualInput({
     try {
       const value = e.target.value || ""
       safeSetInputValue(value)
-      
+
       // Handle empty input
       if (!value.trim()) {
         safeSetDate(undefined)
         return
       }
-      
+
       // Try to parse the date
       const parsedDate = safeParse(value, dateFormat)
       if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
@@ -154,7 +154,7 @@ export function DatePickerWithManualInput({
         }
       }
     } catch (error) {
-      console.error('Error in handleInputChange:', error)
+      console.error("Error in handleInputChange:", error)
       // Just update the input value, don't change the date
       safeSetInputValue(e.target.value || "")
     }
@@ -170,7 +170,7 @@ export function DatePickerWithManualInput({
 
       // Try to parse the date
       const parsedDate = safeParse(inputValue, dateFormat)
-      
+
       if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
         // Format the date to ensure consistency
         const correctlyFormatted = safeFormat(parsedDate, dateFormat)
@@ -187,7 +187,7 @@ export function DatePickerWithManualInput({
         }
       }
     } catch (error) {
-      console.error('Error in handleInputBlur:', error)
+      console.error("Error in handleInputBlur:", error)
       // Ultimate fallback: clear everything
       safeSetInputValue("")
       safeSetDate(undefined)
@@ -197,24 +197,24 @@ export function DatePickerWithManualInput({
   const handleDateSelect = (selectedDate: Date | undefined) => {
     try {
       safeSetDate(selectedDate)
-      
+
       if (selectedDate && isValid(selectedDate)) {
         const formattedDate = safeFormat(selectedDate, dateFormat)
         safeSetInputValue(formattedDate)
       } else {
         safeSetInputValue("")
       }
-      
+
       setIsCalendarOpen(false)
-      
+
       // Safe focus
       try {
         inputRef.current?.focus()
       } catch (focusError) {
-        console.warn('Focus failed:', focusError)
+        console.warn("Focus failed:", focusError)
       }
     } catch (error) {
-      console.error('Error in handleDateSelect:', error)
+      console.error("Error in handleDateSelect:", error)
       // Fallback: clear everything
       safeSetInputValue("")
       safeSetDate(undefined)
@@ -261,4 +261,4 @@ export function DatePickerWithManualInput({
   )
 }
 
-export default DatePickerWithManualInput;
+export default DatePickerWithManualInput

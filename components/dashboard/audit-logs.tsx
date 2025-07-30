@@ -38,31 +38,30 @@ export default function AuditLogs() {
   const fetchAuditLogs = async () => {
     setLoading(true)
     try {
-      const response = await fetch('/api/audit-logs')
-      
+      const response = await fetch("/api/audit-logs")
+
       if (!response.ok) {
-        throw new Error('Failed to fetch audit logs')
+        throw new Error("Failed to fetch audit logs")
       }
-      
+
       const data = await response.json()
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch audit logs')
+        throw new Error(data.error || "Failed to fetch audit logs")
       }
 
       // Transform API data to component format
       const transformedLogs: AuditLogItem[] = (data.data || []).map((log: any) => ({
         id: log.id.toString(),
-        user: log.user?.full_name || log.user_id || 'Unknown User',
+        user: log.user?.full_name || log.user_id || "Unknown User",
         action: log.action,
-        ipAddress: log.ip_address || 'Unknown',
+        ipAddress: log.ip_address || "Unknown",
         timestamp: log.created_at,
-        details: log.details ? JSON.parse(log.details) : {}
+        details: log.details ? JSON.parse(log.details) : {},
       }))
-      
+
       setLogs(transformedLogs)
       devLog("Audit logs loaded successfully:", transformedLogs.length)
-      
     } catch (error: any) {
       console.error("Error fetching audit logs:", error)
       toast({

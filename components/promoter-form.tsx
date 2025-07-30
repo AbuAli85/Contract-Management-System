@@ -3,16 +3,34 @@ import { useState, useEffect } from "react"
 import type React from "react"
 
 import { useForm, useWatch } from "react-hook-form"
-import { promoterProfileSchema, type PromoterProfileFormData, type PromoterStatus } from "@/lib/promoter-profile-schema"
+import {
+  promoterProfileSchema,
+  type PromoterProfileFormData,
+  type PromoterStatus,
+} from "@/lib/promoter-profile-schema"
 import { promoterStatusesList } from "@/types/custom"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Form, FormControl, FormField, FormItem, FormLabel as ShadcnFormLabel, FormMessage } from "@/components/ui/form"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel as ShadcnFormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SelectSeparator,
+} from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Loader2, Edit3Icon, LockIcon, FileWarningIcon as WarningIcon } from "lucide-react"
 import type { Promoter } from "@/lib/types"
@@ -20,7 +38,7 @@ import { format, parseISO, differenceInDays, isPast, isValid } from "date-fns"
 import ImageUploadField from "@/components/image-upload-field"
 import DatePickerWithPresetsField from "@/components/date-picker-with-presets-field"
 import { cn } from "@/lib/utils"
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@hookform/resolvers/zod"
 import { useParties } from "@/hooks/use-parties"
 import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
 
@@ -63,12 +81,12 @@ const getExpiryAlert = (
 }
 
 // Enhanced Select Component with Add Option and Descriptions
-const EnhancedSelect = ({ 
-  options, 
-  value, 
-  onValueChange, 
-  placeholder, 
-  onAddCustom 
+const EnhancedSelect = ({
+  options,
+  value,
+  onValueChange,
+  placeholder,
+  onAddCustom,
 }: {
   options: readonly { value: string; label: string; description?: string }[]
   value?: string | null
@@ -103,9 +121,7 @@ const EnhancedSelect = ({
             <div className="flex flex-col">
               <span className="font-medium">{option.label}</span>
               {option.description && (
-                <span className="text-xs text-muted-foreground mt-0.5">
-                  {option.description}
-                </span>
+                <span className="mt-0.5 text-xs text-muted-foreground">{option.description}</span>
               )}
             </div>
           </SelectItem>
@@ -114,24 +130,20 @@ const EnhancedSelect = ({
           <>
             <SelectSeparator />
             {isAdding ? (
-              <div className="p-2 space-y-2">
+              <div className="space-y-2 p-2">
                 <Input
                   placeholder="Enter custom value..."
                   value={customValue}
                   onChange={(e) => setCustomValue(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       e.preventDefault()
                       handleAddCustom()
                     }
                   }}
                 />
                 <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={handleAddCustom}
-                    disabled={!customValue.trim()}
-                  >
+                  <Button size="sm" onClick={handleAddCustom} disabled={!customValue.trim()}>
                     Add
                   </Button>
                   <Button
@@ -153,7 +165,7 @@ const EnhancedSelect = ({
                   e.preventDefault()
                   setIsAdding(true)
                 }}
-                className="text-primary cursor-pointer"
+                className="cursor-pointer text-primary"
               >
                 + Add Custom Value
               </SelectItem>
@@ -222,7 +234,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         passport_image: null,
         existing_id_card_url: promoterToEdit.id_card_url || null,
         existing_passport_url: promoterToEdit.passport_url || null,
-        id_card_expiry_date: promoterToEdit.id_card_expiry_date ? parseISO(promoterToEdit.id_card_expiry_date) : null,
+        id_card_expiry_date: promoterToEdit.id_card_expiry_date
+          ? parseISO(promoterToEdit.id_card_expiry_date)
+          : null,
         passport_expiry_date: promoterToEdit.passport_expiry_date
           ? parseISO(promoterToEdit.passport_expiry_date)
           : null,
@@ -273,9 +287,13 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         }
       }
 
-      const { data, error } = await getSupabaseClient().storage.from(BUCKET_NAME).upload(filePath, file)
+      const { data, error } = await getSupabaseClient()
+        .storage.from(BUCKET_NAME)
+        .upload(filePath, file)
       if (error) throw new Error(`Failed to upload ${file.name}: ${error.message}`)
-      const { data: urlData } = getSupabaseClient().storage.from(BUCKET_NAME).getPublicUrl(data.path)
+      const { data: urlData } = getSupabaseClient()
+        .storage.from(BUCKET_NAME)
+        .getPublicUrl(data.path)
       return urlData.publicUrl
     }
     return currentUrl
@@ -312,8 +330,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
         id_card_number: values.id_card_number,
         id_card_url: idCardUrlResult,
         passport_url: passportUrlResult,
-        id_card_expiry_date: values.id_card_expiry_date ? format(values.id_card_expiry_date, "yyyy-MM-dd") : null,
-        passport_expiry_date: values.passport_expiry_date ? format(values.passport_expiry_date, "yyyy-MM-dd") : null,
+        id_card_expiry_date: values.id_card_expiry_date
+          ? format(values.id_card_expiry_date, "yyyy-MM-dd")
+          : null,
+        passport_expiry_date: values.passport_expiry_date
+          ? format(values.passport_expiry_date, "yyyy-MM-dd")
+          : null,
         status: values.status,
         notify_days_before_id_expiry: values.notify_days_before_id_expiry,
         notify_days_before_passport_expiry: values.notify_days_before_passport_expiry,
@@ -324,11 +346,18 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
       }
 
       if (promoterToEdit?.id) {
-        const { error } = await getSupabaseClient().from("promoters").update(promoterData).eq("id", promoterToEdit.id).select()
+        const { error } = await getSupabaseClient()
+          .from("promoters")
+          .update(promoterData)
+          .eq("id", promoterToEdit.id)
+          .select()
         if (error) throw error
         toast({ title: "Success!", description: "Promoter updated successfully." })
       } else {
-        const { error } = await getSupabaseClient().from("promoters").insert([promoterData]).select()
+        const { error } = await getSupabaseClient()
+          .from("promoters")
+          .insert([promoterData])
+          .select()
         if (error) throw error
         toast({ title: "Success!", description: "Promoter added successfully." })
       }
@@ -342,24 +371,26 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
 
   const formActuallyDisabled = !isEditable || isSubmitting
 
-  const sectionClasses = "space-y-6 p-5 border rounded-lg shadow-sm bg-card-foreground/5 dark:bg-card-foreground/5"
-  const sectionHeaderClasses = "text-xl font-semibold text-foreground border-b border-border pb-3 mb-6"
+  const sectionClasses =
+    "space-y-6 p-5 border rounded-lg shadow-sm bg-card-foreground/5 dark:bg-card-foreground/5"
+  const sectionHeaderClasses =
+    "text-xl font-semibold text-foreground border-b border-border pb-3 mb-6"
 
   const PROMOTER_STATUS_OPTIONS = [
-    { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'suspended', label: 'Suspended' },
-    { value: 'holiday', label: 'Holiday' },
-    { value: 'on_leave', label: 'On Leave' },
-    { value: 'terminated', label: 'Terminated' },
-    { value: 'pending_approval', label: 'Pending Approval' },
-    { value: 'retired', label: 'Retired' },
-    { value: 'probation', label: 'Probation' },
-    { value: 'resigned', label: 'Resigned' },
-    { value: 'contractor', label: 'Contractor' },
-    { value: 'temporary', label: 'Temporary' },
-    { value: 'training', label: 'Training' },
-    { value: 'other', label: 'Other' },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "suspended", label: "Suspended" },
+    { value: "holiday", label: "Holiday" },
+    { value: "on_leave", label: "On Leave" },
+    { value: "terminated", label: "Terminated" },
+    { value: "pending_approval", label: "Pending Approval" },
+    { value: "retired", label: "Retired" },
+    { value: "probation", label: "Probation" },
+    { value: "resigned", label: "Resigned" },
+    { value: "contractor", label: "Contractor" },
+    { value: "temporary", label: "Temporary" },
+    { value: "training", label: "Training" },
+    { value: "other", label: "Other" },
   ]
 
   return (
@@ -400,7 +431,11 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                   <FormItem>
                     <ShadcnFormLabel>Name (English)</ShadcnFormLabel>
                     <FormControl>
-                      <Input placeholder="Promoter Name (EN)" {...field} disabled={formActuallyDisabled} />
+                      <Input
+                        placeholder="Promoter Name (EN)"
+                        {...field}
+                        disabled={formActuallyDisabled}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -432,7 +467,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                   <FormItem>
                     <ShadcnFormLabel>Passport Number</ShadcnFormLabel>
                     <FormControl>
-                      <Input placeholder="Passport Number" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                      <Input
+                        placeholder="Passport Number"
+                        {...field}
+                        value={field.value ?? ""}
+                        disabled={formActuallyDisabled}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -445,7 +485,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                   <FormItem>
                     <ShadcnFormLabel>Mobile Number</ShadcnFormLabel>
                     <FormControl>
-                      <Input placeholder="Mobile Number" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                      <Input
+                        placeholder="Mobile Number"
+                        {...field}
+                        value={field.value ?? ""}
+                        disabled={formActuallyDisabled}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -458,7 +503,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                   <FormItem>
                     <ShadcnFormLabel>Photograph (URL or Upload)</ShadcnFormLabel>
                     <FormControl>
-                      <Input placeholder="Photo URL or upload below" {...field} value={field.value ?? ""} disabled={formActuallyDisabled} />
+                      <Input
+                        placeholder="Photo URL or upload below"
+                        {...field}
+                        value={field.value ?? ""}
+                        disabled={formActuallyDisabled}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -508,7 +558,11 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={partiesLoading ? "Loading companies..." : "Select company/employer"} />
+                          <SelectValue
+                            placeholder={
+                              partiesLoading ? "Loading companies..." : "Select company/employer"
+                            }
+                          />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -528,7 +582,12 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                     <FormMessage />
                     {/* Optionally, add a link/button to add a new company */}
                     <div className="mt-2">
-                      <a href="/manage-parties" target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">
+                      <a
+                        href="/manage-parties"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary underline"
+                      >
                         Add new company/party
                       </a>
                     </div>
@@ -541,7 +600,11 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                 render={({ field }) => (
                   <FormItem>
                     <ShadcnFormLabel>Status / الحالة</ShadcnFormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={formActuallyDisabled}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      disabled={formActuallyDisabled}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -622,7 +685,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                 name="id_card_image"
                 render={({ field }) => (
                   <FormItem>
-                    <ShadcnFormLabel htmlFor={field.name}>ID Card Image / صورة البطاقة</ShadcnFormLabel>
+                    <ShadcnFormLabel htmlFor={field.name}>
+                      ID Card Image / صورة البطاقة
+                    </ShadcnFormLabel>
                     <FormControl>
                       <ImageUploadField
                         field={field}
@@ -649,8 +714,14 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                       />
                     </FormControl>
                     {idCardAlert && !form.formState.errors.id_card_expiry_date && (
-                      <p className={cn("mt-1.5 flex items-center text-xs font-medium", idCardAlert.className)}>
-                        <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" /> {idCardAlert.message}
+                      <p
+                        className={cn(
+                          "mt-1.5 flex items-center text-xs font-medium",
+                          idCardAlert.className,
+                        )}
+                      >
+                        <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" />{" "}
+                        {idCardAlert.message}
                       </p>
                     )}
                     <FormMessage />
@@ -662,7 +733,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                 name="passport_image"
                 render={({ field }) => (
                   <FormItem>
-                    <ShadcnFormLabel htmlFor={field.name}>Passport Image / صورة الجواز</ShadcnFormLabel>
+                    <ShadcnFormLabel htmlFor={field.name}>
+                      Passport Image / صورة الجواز
+                    </ShadcnFormLabel>
                     <FormControl>
                       <ImageUploadField
                         field={field}
@@ -689,8 +762,14 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                       />
                     </FormControl>
                     {passportAlert && !form.formState.errors.passport_expiry_date && (
-                      <p className={cn("mt-1.5 flex items-center text-xs font-medium", passportAlert.className)}>
-                        <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" /> {passportAlert.message}
+                      <p
+                        className={cn(
+                          "mt-1.5 flex items-center text-xs font-medium",
+                          passportAlert.className,
+                        )}
+                      >
+                        <WarningIcon className="mr-1.5 h-3.5 w-3.5 shrink-0" />{" "}
+                        {passportAlert.message}
                       </p>
                     )}
                     <FormMessage />
@@ -709,7 +788,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                 name="notify_days_before_id_expiry"
                 render={({ field }) => (
                   <FormItem>
-                    <ShadcnFormLabel>ID Expiry Alert (Days) / تنبيه انتهاء البطاقة (أيام)</ShadcnFormLabel>
+                    <ShadcnFormLabel>
+                      ID Expiry Alert (Days) / تنبيه انتهاء البطاقة (أيام)
+                    </ShadcnFormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -717,7 +798,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value, 10))
+                          field.onChange(
+                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
+                          )
                         }
                         disabled={formActuallyDisabled}
                       />
@@ -731,7 +814,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                 name="notify_days_before_passport_expiry"
                 render={({ field }) => (
                   <FormItem>
-                    <ShadcnFormLabel>Passport Expiry Alert (Days) / تنبيه انتهاء الجواز (أيام)</ShadcnFormLabel>
+                    <ShadcnFormLabel>
+                      Passport Expiry Alert (Days) / تنبيه انتهاء الجواز (أيام)
+                    </ShadcnFormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -739,7 +824,9 @@ export default function PromoterForm({ promoterToEdit, onFormSubmit }: PromoterF
                         {...field}
                         value={field.value ?? ""}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          field.onChange(e.target.value === "" ? null : Number.parseInt(e.target.value, 10))
+                          field.onChange(
+                            e.target.value === "" ? null : Number.parseInt(e.target.value, 10),
+                          )
                         }
                         disabled={formActuallyDisabled}
                       />

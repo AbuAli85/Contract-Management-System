@@ -71,7 +71,9 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         crn: partyToEdit.crn || "",
         type: (partyToEdit.type as "Employer" | "Client") || "Employer",
         role: partyToEdit.role || "",
-        cr_expiry_date: partyToEdit.cr_expiry_date ? parseISO(partyToEdit.cr_expiry_date) : undefined,
+        cr_expiry_date: partyToEdit.cr_expiry_date
+          ? parseISO(partyToEdit.cr_expiry_date)
+          : undefined,
         contact_person: partyToEdit.contact_person || "",
         contact_email: partyToEdit.contact_email || "",
         contact_phone: partyToEdit.contact_phone || "",
@@ -79,7 +81,9 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         address_ar: partyToEdit.address_ar || "",
         tax_number: partyToEdit.tax_number || "",
         license_number: partyToEdit.license_number || "",
-        license_expiry_date: partyToEdit.license_expiry_date ? parseISO(partyToEdit.license_expiry_date) : undefined,
+        license_expiry_date: partyToEdit.license_expiry_date
+          ? parseISO(partyToEdit.license_expiry_date)
+          : undefined,
         status: (partyToEdit.status as "Active" | "Inactive" | "Suspended") || "Active",
         notes: partyToEdit.notes || "",
       })
@@ -114,7 +118,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         crn: values.crn || "",
         type: values.type as "Employer" | "Client",
         role: values.role || null,
-        cr_expiry_date: values.cr_expiry_date ? format(values.cr_expiry_date, 'yyyy-MM-dd') : null,
+        cr_expiry_date: values.cr_expiry_date ? format(values.cr_expiry_date, "yyyy-MM-dd") : null,
         contact_person: values.contact_person || null,
         contact_email: values.contact_email || null,
         contact_phone: values.contact_phone || null,
@@ -122,7 +126,9 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         address_ar: values.address_ar || null,
         tax_number: values.tax_number || null,
         license_number: values.license_number || null,
-        license_expiry_date: values.license_expiry_date ? format(values.license_expiry_date, 'yyyy-MM-dd') : null,
+        license_expiry_date: values.license_expiry_date
+          ? format(values.license_expiry_date, "yyyy-MM-dd")
+          : null,
         status: values.status,
         notes: values.notes || null,
       }
@@ -191,14 +197,19 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                     <FormItem>
                       <FormLabel>الاسم (عربي)</FormLabel>
                       <FormControl>
-                        <Input placeholder="اسم الطرف (AR)" {...field} dir="rtl" className="text-right" />
+                        <Input
+                          placeholder="اسم الطرف (AR)"
+                          {...field}
+                          dir="rtl"
+                          className="text-right"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FormField
                   control={form.control}
@@ -301,7 +312,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                   )}
                 />
               </div>
-              
+
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
@@ -330,7 +341,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="license_expiry_date"
@@ -388,7 +399,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                   )}
                 />
               </div>
-              
+
               <FormField
                 control={form.control}
                 name="contact_email"
@@ -435,7 +446,12 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                     <FormItem>
                       <FormLabel>العنوان (عربي)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="العنوان الكامل بالعربية" {...field} dir="rtl" className="text-right" />
+                        <Textarea
+                          placeholder="العنوان الكامل بالعربية"
+                          {...field}
+                          dir="rtl"
+                          className="text-right"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -460,10 +476,10 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Textarea 
+                      <Textarea
                         placeholder="Enter any additional notes, special requirements, or important information about this party..."
                         className="min-h-[100px]"
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />

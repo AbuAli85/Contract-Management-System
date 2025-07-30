@@ -1,28 +1,28 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, User, Mail, Phone, Building, Briefcase } from 'lucide-react'
+import { useState } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, User, Mail, Phone, Building, Briefcase } from "lucide-react"
 
 export default function ProfilePage() {
   const { user, profile, loading, updateProfile } = useAuth()
   const [formData, setFormData] = useState({
-    full_name: profile?.full_name || '',
-    avatar_url: profile?.avatar_url || ''
+    full_name: profile?.full_name || "",
+    avatar_url: profile?.avatar_url || "",
   })
   const [updating, setUpdating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
   }
 
@@ -34,14 +34,14 @@ export default function ProfilePage() {
 
     try {
       const { error } = await updateProfile(formData)
-      
+
       if (error) {
         setError(error)
       } else {
-        setSuccess('Profile updated successfully!')
+        setSuccess("Profile updated successfully!")
       }
     } catch (error) {
-      setError('An unexpected error occurred')
+      setError("An unexpected error occurred")
     } finally {
       setUpdating(false)
     }
@@ -49,7 +49,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     )
@@ -57,7 +57,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <Card className="w-full max-w-md">
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground">
@@ -70,17 +70,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               Profile Settings
             </CardTitle>
-            <CardDescription>
-              Update your personal information and preferences
-            </CardDescription>
+            <CardDescription>Update your personal information and preferences</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -89,14 +87,14 @@ export default function ProfilePage() {
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
+
               {success && (
                 <Alert>
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
@@ -105,13 +103,11 @@ export default function ProfilePage() {
                   <Input
                     id="email"
                     type="email"
-                    value={user?.email || ''}
+                    value={user?.email || ""}
                     disabled
                     className="bg-gray-50"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Email cannot be changed
-                  </p>
+                  <p className="text-sm text-muted-foreground">Email cannot be changed</p>
                 </div>
 
                 <div className="space-y-2">
@@ -123,7 +119,7 @@ export default function ProfilePage() {
                     id="full_name"
                     type="text"
                     value={formData.full_name}
-                    onChange={(e) => handleInputChange('full_name', e.target.value)}
+                    onChange={(e) => handleInputChange("full_name", e.target.value)}
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -137,7 +133,7 @@ export default function ProfilePage() {
                     id="avatar_url"
                     type="url"
                     value={formData.avatar_url}
-                    onChange={(e) => handleInputChange('avatar_url', e.target.value)}
+                    onChange={(e) => handleInputChange("avatar_url", e.target.value)}
                     placeholder="Enter your avatar URL"
                   />
                 </div>
@@ -147,28 +143,23 @@ export default function ProfilePage() {
                   <Input
                     id="role"
                     type="text"
-                    value={profile?.role || 'user'}
+                    value={profile?.role || "user"}
                     disabled
                     className="bg-gray-50"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Role is managed by administrators
-                  </p>
+                  <p className="text-sm text-muted-foreground">Role is managed by administrators</p>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  disabled={updating}
-                >
+                <Button type="submit" disabled={updating}>
                   {updating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Updating...
                     </>
                   ) : (
-                    'Update Profile'
+                    "Update Profile"
                   )}
                 </Button>
               </div>
@@ -178,4 +169,4 @@ export default function ProfilePage() {
       </div>
     </div>
   )
-} 
+}

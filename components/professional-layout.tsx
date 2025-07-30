@@ -12,12 +12,12 @@ interface ProfessionalLayoutProps {
   showActions?: boolean
 }
 
-export function ProfessionalLayout({ 
-  children, 
-  title, 
-  subtitle, 
-  showSearch = true, 
-  showActions = true 
+export function ProfessionalLayout({
+  children,
+  title,
+  subtitle,
+  showSearch = true,
+  showActions = true,
 }: ProfessionalLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -28,13 +28,10 @@ export function ProfessionalLayout({
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <ProfessionalSidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggle={toggleSidebar} 
-      />
-      
+      <ProfessionalSidebar isCollapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <ProfessionalHeader
           onMenuToggle={toggleSidebar}
@@ -43,14 +40,12 @@ export function ProfessionalLayout({
           showSearch={showSearch}
           showActions={showActions}
         />
-        
+
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+          <div className="container mx-auto p-6">{children}</div>
         </main>
       </div>
     </div>
   )
-} 
+}

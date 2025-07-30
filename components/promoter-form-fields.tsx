@@ -3,7 +3,13 @@ import React from "react"
 import { useFormContext } from "react-hook-form"
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, CheckCircle, Mail, Phone, User, Globe, Calendar } from "lucide-react"
@@ -15,11 +21,23 @@ interface PromoterFormFieldsProps {
   disabled?: boolean
 }
 
-export function PromoterFormFields({ showValidation = true, disabled = false }: PromoterFormFieldsProps) {
+export function PromoterFormFields({
+  showValidation = true,
+  disabled = false,
+}: PromoterFormFieldsProps) {
   const form = useFormContext<PromoterProfileFormData>()
-  const [emailValidation, setEmailValidation] = React.useState<{ isValid: boolean; error?: string }>({ isValid: true })
-  const [phoneValidation, setPhoneValidation] = React.useState<{ isValid: boolean; error?: string }>({ isValid: true })
-  const [nationalityValidation, setNationalityValidation] = React.useState<{ isValid: boolean; error?: string }>({ isValid: true })
+  const [emailValidation, setEmailValidation] = React.useState<{
+    isValid: boolean
+    error?: string
+  }>({ isValid: true })
+  const [phoneValidation, setPhoneValidation] = React.useState<{
+    isValid: boolean
+    error?: string
+  }>({ isValid: true })
+  const [nationalityValidation, setNationalityValidation] = React.useState<{
+    isValid: boolean
+    error?: string
+  }>({ isValid: true })
 
   // Real-time validation
   const handleEmailChange = (value: string) => {
@@ -53,12 +71,12 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
     <div className="space-y-6">
       {/* Personal Information Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
           <User className="h-5 w-5" />
           Personal Information
         </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="firstName"
@@ -73,7 +91,11 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                     placeholder="Enter first name"
                     {...field}
                     disabled={disabled}
-                    className={showValidation && field.value && !form.formState.errors.firstName ? "border-green-500" : ""}
+                    className={
+                      showValidation && field.value && !form.formState.errors.firstName
+                        ? "border-green-500"
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -95,7 +117,11 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                     placeholder="Enter last name"
                     {...field}
                     disabled={disabled}
-                    className={showValidation && field.value && !form.formState.errors.lastName ? "border-green-500" : ""}
+                    className={
+                      showValidation && field.value && !form.formState.errors.lastName
+                        ? "border-green-500"
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -104,7 +130,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="nationality"
@@ -123,7 +149,11 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                       field.onChange(e)
                       handleNationalityChange(e.target.value)
                     }}
-                    className={showValidation && field.value && !form.formState.errors.nationality ? "border-green-500" : ""}
+                    className={
+                      showValidation && field.value && !form.formState.errors.nationality
+                        ? "border-green-500"
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -184,12 +214,12 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
 
       {/* Contact Information Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
           <Mail className="h-5 w-5" />
           Contact Information
         </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="email"
@@ -209,7 +239,11 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                       field.onChange(e)
                       handleEmailChange(e.target.value)
                     }}
-                    className={showValidation && field.value && !form.formState.errors.email ? "border-green-500" : ""}
+                    className={
+                      showValidation && field.value && !form.formState.errors.email
+                        ? "border-green-500"
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -248,7 +282,11 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                       field.onChange(e)
                       handlePhoneChange(e.target.value)
                     }}
-                    className={showValidation && field.value && !form.formState.errors.mobile_number ? "border-green-500" : ""}
+                    className={
+                      showValidation && field.value && !form.formState.errors.mobile_number
+                        ? "border-green-500"
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -272,12 +310,12 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
 
       {/* Document Information Section */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
           <Calendar className="h-5 w-5" />
           Document Information
         </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="id_card_number"
@@ -285,11 +323,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
               <FormItem>
                 <FormLabel>ID Card Number *</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter ID card number"
-                    {...field}
-                    disabled={disabled}
-                  />
+                  <Input placeholder="Enter ID card number" {...field} disabled={disabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -303,11 +337,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
               <FormItem>
                 <FormLabel>Passport Number</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter passport number"
-                    {...field}
-                    disabled={disabled}
-                  />
+                  <Input placeholder="Enter passport number" {...field} disabled={disabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -315,7 +345,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="id_card_expiry_date"
@@ -327,7 +357,13 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                     type="date"
                     {...field}
                     disabled={disabled}
-                    value={field.value ? (typeof field.value === 'string' ? field.value : field.value.toISOString().split('T')[0]) : ''}
+                    value={
+                      field.value
+                        ? typeof field.value === "string"
+                          ? field.value
+                          : field.value.toISOString().split("T")[0]
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -346,7 +382,13 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
                     type="date"
                     {...field}
                     disabled={disabled}
-                    value={field.value ? (typeof field.value === 'string' ? field.value : field.value.toISOString().split('T')[0]) : ''}
+                    value={
+                      field.value
+                        ? typeof field.value === "string"
+                          ? field.value
+                          : field.value.toISOString().split("T")[0]
+                        : ""
+                    }
                   />
                 </FormControl>
                 <FormMessage />
@@ -359,8 +401,8 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
       {/* Additional Information Section */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Additional Information</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="job_title"
@@ -368,11 +410,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
               <FormItem>
                 <FormLabel>Job Title</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter job title"
-                    {...field}
-                    disabled={disabled}
-                  />
+                  <Input placeholder="Enter job title" {...field} disabled={disabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -386,11 +424,7 @@ export function PromoterFormFields({ showValidation = true, disabled = false }: 
               <FormItem>
                 <FormLabel>Work Location</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter work location"
-                    {...field}
-                    disabled={disabled}
-                  />
+                  <Input placeholder="Enter work location" {...field} disabled={disabled} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

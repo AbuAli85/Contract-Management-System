@@ -14,4 +14,4 @@ export default async function ServerTestPage({ params }: { params: Promise<{ loc
       </div>
     </div>
   )
-} 
+}

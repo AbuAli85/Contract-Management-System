@@ -10,7 +10,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Loader2, MessageSquare, Phone, Mail, Calendar, User, Building2, Clock, AlertCircle, FileText } from "lucide-react"
+import {
+  Loader2,
+  MessageSquare,
+  Phone,
+  Mail,
+  Calendar,
+  User,
+  Building2,
+  Clock,
+  AlertCircle,
+  FileText,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface Communication {
@@ -34,7 +45,10 @@ interface CommunicationsTimelineProps {
   className?: string
 }
 
-export default function CommunicationsTimeline({ partyId, className }: CommunicationsTimelineProps) {
+export default function CommunicationsTimeline({
+  partyId,
+  className,
+}: CommunicationsTimelineProps) {
   const { toast } = useToast()
   const [communications, setCommunications] = useState<Communication[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,50 +60,53 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
 
   const LIMIT = 20
 
-  const fetchCommunications = useCallback(async (isLoadMore = false) => {
-    if (loading) return
+  const fetchCommunications = useCallback(
+    async (isLoadMore = false) => {
+      if (loading) return
 
-    setLoading(true)
-    setError(null)
+      setLoading(true)
+      setError(null)
 
-    try {
-      const supabase = getSupabaseClient()
-      
-      const { data, error: fetchError } = await supabase.rpc('get_party_communications', {
-        p_party_id: partyId,
-        p_offset: isLoadMore ? offset : 0,
-        p_limit: LIMIT
-      })
+      try {
+        const supabase = getSupabaseClient()
 
-      if (fetchError) {
-        throw new Error(fetchError.message)
-      }
+        const { data, error: fetchError } = await supabase.rpc("get_party_communications", {
+          p_party_id: partyId,
+          p_offset: isLoadMore ? offset : 0,
+          p_limit: LIMIT,
+        })
 
-      if (data && Array.isArray(data)) {
-        if (isLoadMore) {
-          setCommunications(prev => [...prev, ...data])
-        } else {
-          setCommunications(data)
+        if (fetchError) {
+          throw new Error(fetchError.message)
         }
-        
-        setHasMore(data.length === LIMIT)
-        setOffset(isLoadMore ? offset + LIMIT : LIMIT)
-      } else {
-        setCommunications([])
-        setHasMore(false)
+
+        if (data && Array.isArray(data)) {
+          if (isLoadMore) {
+            setCommunications((prev) => [...prev, ...data])
+          } else {
+            setCommunications(data)
+          }
+
+          setHasMore(data.length === LIMIT)
+          setOffset(isLoadMore ? offset + LIMIT : LIMIT)
+        } else {
+          setCommunications([])
+          setHasMore(false)
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch communications"
+        setError(errorMessage)
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch communications'
-      setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
-  }, [partyId, offset, loading, toast])
+    },
+    [partyId, offset, loading, toast],
+  )
 
   // Initial load
   useEffect(() => {
@@ -105,13 +122,13 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
 
   const getCommunicationIcon = (type: string) => {
     switch (type) {
-      case 'email':
+      case "email":
         return <Mail className="h-4 w-4" />
-      case 'phone':
+      case "phone":
         return <Phone className="h-4 w-4" />
-      case 'meeting':
+      case "meeting":
         return <Calendar className="h-4 w-4" />
-      case 'note':
+      case "note":
         return <MessageSquare className="h-4 w-4" />
       default:
         return <MessageSquare className="h-4 w-4" />
@@ -123,7 +140,7 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
       sent: "default",
       received: "secondary",
       pending: "outline",
-      failed: "destructive"
+      failed: "destructive",
     } as const
 
     return (
@@ -139,7 +156,7 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
       phone: "secondary",
       meeting: "outline",
       note: "outline",
-      other: "outline"
+      other: "outline",
     } as const
 
     return (
@@ -170,9 +187,9 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Failed to load communications</h3>
-              <p className="text-muted-foreground mb-4">{error}</p>
+              <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">Failed to load communications</h3>
+              <p className="mb-4 text-muted-foreground">{error}</p>
               <Button onClick={() => fetchCommunications()} variant="outline">
                 Try Again
               </Button>
@@ -194,9 +211,9 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
       <CardContent>
         <div className="space-y-6">
           {communications.length === 0 && !loading ? (
-            <div className="text-center py-8">
-              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No communications yet</h3>
+            <div className="py-8 text-center">
+              <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-semibold">No communications yet</h3>
               <p className="text-muted-foreground">
                 Communications with this party will appear here
               </p>
@@ -207,13 +224,13 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
                 <div key={communication.id} className="relative">
                   {/* Timeline line */}
                   {index < communications.length - 1 && (
-                    <div className="absolute left-6 top-8 w-0.5 h-full bg-border" />
+                    <div className="absolute left-6 top-8 h-full w-0.5 bg-border" />
                   )}
-                  
+
                   <div className="flex gap-4 pb-6">
                     {/* Timeline dot */}
                     <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                         {getCommunicationIcon(communication.type)}
                       </div>
                     </div>
@@ -234,9 +251,7 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
                       </div>
 
                       {communication.description && (
-                        <p className="text-sm text-muted-foreground">
-                          {communication.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{communication.description}</p>
                       )}
 
                       {communication.participants && communication.participants.length > 0 && (
@@ -249,8 +264,8 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
                       )}
 
                       {communication.outcome && (
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <p className="text-sm font-medium mb-1">Outcome:</p>
+                        <div className="rounded-lg bg-muted/50 p-3">
+                          <p className="mb-1 text-sm font-medium">Outcome:</p>
                           <p className="text-sm">{communication.outcome}</p>
                         </div>
                       )}
@@ -265,7 +280,7 @@ export default function CommunicationsTimeline({ partyId, className }: Communica
                                 href={attachment.file_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline flex items-center gap-1"
+                                className="flex items-center gap-1 text-sm text-primary hover:underline"
                               >
                                 <FileText className="h-3 w-3" />
                                 {attachment.file_name}

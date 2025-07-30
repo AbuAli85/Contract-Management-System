@@ -1,6 +1,7 @@
 # 🔧 Google Docs Template Setup Guide - Fix Template Reading Issues
 
 ## 🎯 **Problem Identified**
+
 The contract form is not properly reading the Google Docs templates and the generated contract doesn't match what's configured. This is because:
 
 1. **Template IDs are not properly configured** in the contract type configuration
@@ -12,6 +13,7 @@ The contract form is not properly reading the Google Docs templates and the gene
 ### **Step 1: Create Google Docs Templates**
 
 #### **1.1 Create Employment Contract Template**
+
 1. **Go to**: https://docs.google.com/document/create
 2. **Create a new document** with this structure:
 
@@ -63,6 +65,7 @@ SPECIAL TERMS:
 4. **Document ID format**: `https://docs.google.com/document/d/[DOCUMENT_ID]/edit`
 
 #### **1.2 Add Image Placeholders (Optional)**
+
 If you want to include ID card and passport images:
 
 1. **Insert** → **Image** → **Upload from computer** (any placeholder image)
@@ -73,17 +76,18 @@ If you want to include ID card and passport images:
 ### **Step 2: Update Contract Type Configuration**
 
 #### **2.1 Update Template IDs**
+
 Edit `lib/contract-type-config.ts` and update the template IDs:
 
 ```typescript
 export const enhancedContractTypes: ContractTypeConfig[] = [
   {
-    id: 'oman-unlimited-contract',
-    name: 'Oman Unlimited Employment Contract',
-    description: 'Standard unlimited duration employment contract',
-    category: 'employment',
-    googleDocsTemplateId: 'YOUR_ACTUAL_TEMPLATE_ID_HERE', // Replace with your template ID
-    makecomTemplateId: 'oman-unlimited-contract-template',
+    id: "oman-unlimited-contract",
+    name: "Oman Unlimited Employment Contract",
+    description: "Standard unlimited duration employment contract",
+    category: "employment",
+    googleDocsTemplateId: "YOUR_ACTUAL_TEMPLATE_ID_HERE", // Replace with your template ID
+    makecomTemplateId: "oman-unlimited-contract-template",
     isActive: true,
     requiresApproval: true,
     // ... rest of configuration
@@ -93,6 +97,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
 ```
 
 #### **2.2 Get Your Template ID**
+
 1. **Open your Google Docs template**
 2. **Copy the ID** from the URL: `https://docs.google.com/document/d/[YOUR_TEMPLATE_ID]/edit`
 3. **Replace** `YOUR_ACTUAL_TEMPLATE_ID_HERE` with your actual template ID
@@ -100,6 +105,7 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
 ### **Step 3: Configure Make.com Integration**
 
 #### **3.1 Environment Variables**
+
 Add to your `.env.local`:
 
 ```bash
@@ -114,6 +120,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 #### **3.2 Make.com Scenario Setup**
 
 **Module 1: Webhook Trigger**
+
 ```json
 {
   "webhook": {
@@ -125,6 +132,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 **Module 2: HTTP Request (Get Contract Data)**
+
 ```json
 {
   "http": {
@@ -140,6 +148,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 **Module 3: Google Docs (Create from Template)**
+
 ```json
 {
   "google_docs": {
@@ -173,6 +182,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 **Module 4: Google Docs (Export as PDF)**
+
 ```json
 {
   "google_docs": {
@@ -184,6 +194,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 **Module 5: Supabase (Upload PDF)**
+
 ```json
 {
   "supabase": {
@@ -196,6 +207,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 **Module 6: HTTP Request (Update Contract)**
+
 ```json
 {
   "http": {
@@ -213,8 +225,10 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ### **Step 4: Test the Integration**
 
 #### **4.1 Test Template Data**
+
 1. **Navigate to**: `/api/webhook/makecom`
 2. **Send a test request** with:
+
 ```json
 {
   "contract_id": "test-contract-id",
@@ -224,6 +238,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ```
 
 #### **4.2 Test Contract Generation**
+
 1. **Go to**: `/generate-contract`
 2. **Select** "Oman Unlimited Employment Contract"
 3. **Fill in** the form with test data
@@ -232,7 +247,9 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ### **Step 5: Verify Template Reading**
 
 #### **5.1 Check Logs**
+
 Look for these log messages:
+
 ```
 🔗 Make.com webhook received
 📋 Contract data fetched: { id: "...", type: "oman-unlimited-contract" }
@@ -240,6 +257,7 @@ Look for these log messages:
 ```
 
 #### **5.2 Check Make.com Execution**
+
 1. **Open Make.com scenario**
 2. **Check execution history**
 3. **Verify** Google Docs module receives correct template ID
@@ -248,25 +266,31 @@ Look for these log messages:
 ## 🔧 **Troubleshooting**
 
 ### **Issue: Template Not Found**
+
 **Error**: `Template not found` or `Invalid template ID`
 
 **Solution**:
+
 1. **Verify template ID** in `lib/contract-type-config.ts`
 2. **Check** Google Docs template exists and is accessible
 3. **Ensure** Make.com has access to the template
 
 ### **Issue: Placeholders Not Replaced**
+
 **Error**: Placeholders show as `{{placeholder_name}}` in generated document
 
 **Solution**:
+
 1. **Check** placeholder names match exactly
 2. **Verify** Make.com variable mapping
 3. **Test** with simple placeholders first
 
 ### **Issue: Make.com Not Triggered**
+
 **Error**: No webhook execution in Make.com
 
 **Solution**:
+
 1. **Check** `MAKE_WEBHOOK_URL` environment variable
 2. **Verify** webhook URL is correct
 3. **Test** webhook endpoint manually
@@ -274,6 +298,7 @@ Look for these log messages:
 ## ✅ **Expected Result**
 
 After proper setup:
+
 1. ✅ **Contract form** reads template configuration correctly
 2. ✅ **Make.com** receives contract data with template ID
 3. ✅ **Google Docs** creates document from template
@@ -282,25 +307,25 @@ After proper setup:
 
 ## 📋 **Template Placeholder Reference**
 
-| Placeholder | Description | Example |
-|-------------|-------------|---------|
-| `{{contract_number}}` | Unique contract identifier | `PAC-01012024-ABC1` |
-| `{{contract_date}}` | Contract signing date | `01/01/2024` |
-| `{{first_party_name_en}}` | Client company name (English) | `ABC Company Ltd` |
-| `{{first_party_name_ar}}` | Client company name (Arabic) | `شركة ABC المحدودة` |
-| `{{second_party_name_en}}` | Employer company name (English) | `XYZ Corporation` |
-| `{{second_party_name_ar}}` | Employer company name (Arabic) | `شركة XYZ` |
-| `{{promoter_name_en}}` | Employee name (English) | `John Doe` |
-| `{{promoter_name_ar}}` | Employee name (Arabic) | `جون دو` |
-| `{{job_title}}` | Position title | `Software Developer` |
-| `{{department}}` | Department/division | `IT Department` |
-| `{{work_location}}` | Primary work location | `Muscat, Oman` |
-| `{{contract_start_date}}` | Start date (DD/MM/YYYY) | `01/01/2024` |
-| `{{contract_end_date}}` | End date (DD/MM/YYYY) | `31/12/2024` |
-| `{{basic_salary}}` | Monthly basic salary | `1000` |
-| `{{allowances}}` | Monthly allowances | `200` |
-| `{{currency}}` | Currency code | `OMR` |
-| `{{total_salary}}` | Total monthly compensation | `1200` |
-| `{{special_terms}}` | Special terms and conditions | `As per company policy` |
+| Placeholder                | Description                     | Example                 |
+| -------------------------- | ------------------------------- | ----------------------- |
+| `{{contract_number}}`      | Unique contract identifier      | `PAC-01012024-ABC1`     |
+| `{{contract_date}}`        | Contract signing date           | `01/01/2024`            |
+| `{{first_party_name_en}}`  | Client company name (English)   | `ABC Company Ltd`       |
+| `{{first_party_name_ar}}`  | Client company name (Arabic)    | `شركة ABC المحدودة`     |
+| `{{second_party_name_en}}` | Employer company name (English) | `XYZ Corporation`       |
+| `{{second_party_name_ar}}` | Employer company name (Arabic)  | `شركة XYZ`              |
+| `{{promoter_name_en}}`     | Employee name (English)         | `John Doe`              |
+| `{{promoter_name_ar}}`     | Employee name (Arabic)          | `جون دو`                |
+| `{{job_title}}`            | Position title                  | `Software Developer`    |
+| `{{department}}`           | Department/division             | `IT Department`         |
+| `{{work_location}}`        | Primary work location           | `Muscat, Oman`          |
+| `{{contract_start_date}}`  | Start date (DD/MM/YYYY)         | `01/01/2024`            |
+| `{{contract_end_date}}`    | End date (DD/MM/YYYY)           | `31/12/2024`            |
+| `{{basic_salary}}`         | Monthly basic salary            | `1000`                  |
+| `{{allowances}}`           | Monthly allowances              | `200`                   |
+| `{{currency}}`             | Currency code                   | `OMR`                   |
+| `{{total_salary}}`         | Total monthly compensation      | `1200`                  |
+| `{{special_terms}}`        | Special terms and conditions    | `As per company policy` |
 
-This setup will ensure that your contract form properly reads the Google Docs templates and generates contracts that match your configuration! 
+This setup will ensure that your contract form properly reads the Google Docs templates and generates contracts that match your configuration!

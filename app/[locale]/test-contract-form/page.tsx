@@ -3,11 +3,17 @@
 import { useState } from "react"
 import { JOB_TITLES, DEPARTMENTS, WORK_LOCATIONS } from "@/constants/contract-options"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
 // Force dynamic rendering to prevent SSR issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default function TestContractFormPage() {
   const [selectedJobTitle, setSelectedJobTitle] = useState<string>("")
@@ -16,9 +22,9 @@ export default function TestContractFormPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Contract Form Dropdown Test</h1>
+          <h1 className="mb-2 text-3xl font-bold">Contract Form Dropdown Test</h1>
           <p className="text-muted-foreground">
             Test the dropdown fields for Job Title, Department, and Work Location
           </p>
@@ -29,9 +35,9 @@ export default function TestContractFormPage() {
             <CardTitle>Contract Form Fields</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="text-sm font-medium mb-2 block">Job Title</label>
+                <label className="mb-2 block text-sm font-medium">Job Title</label>
                 <Select value={selectedJobTitle} onValueChange={setSelectedJobTitle}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select job title" />
@@ -47,7 +53,7 @@ export default function TestContractFormPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Department</label>
+                <label className="mb-2 block text-sm font-medium">Department</label>
                 <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select department" />
@@ -63,7 +69,7 @@ export default function TestContractFormPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Work Location</label>
+                <label className="mb-2 block text-sm font-medium">Work Location</label>
                 <Select value={selectedWorkLocation} onValueChange={setSelectedWorkLocation}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select work location" />
@@ -74,7 +80,7 @@ export default function TestContractFormPage() {
                         <div className="flex flex-col">
                           <span className="font-medium">{location.label}</span>
                           {location.description && (
-                            <span className="text-xs text-muted-foreground mt-0.5">
+                            <span className="mt-0.5 text-xs text-muted-foreground">
                               {location.description}
                             </span>
                           )}
@@ -87,8 +93,8 @@ export default function TestContractFormPage() {
             </div>
 
             {(selectedJobTitle || selectedDepartment || selectedWorkLocation) && (
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-semibold mb-2">Selected Values:</h3>
+              <div className="rounded-lg bg-muted p-4">
+                <h3 className="mb-2 font-semibold">Selected Values:</h3>
                 <div className="space-y-2">
                   {selectedJobTitle && (
                     <div>
@@ -114,15 +120,15 @@ export default function TestContractFormPage() {
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
               <CardTitle>Job Titles ({JOB_TITLES.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {JOB_TITLES.map((title) => (
-                  <div key={title.value} className="p-2 border rounded">
+                  <div key={title.value} className="rounded border p-2">
                     <div className="font-medium">{title.label}</div>
                     <Badge variant="secondary" className="text-xs">
                       {title.value}
@@ -138,9 +144,9 @@ export default function TestContractFormPage() {
               <CardTitle>Departments ({DEPARTMENTS.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {DEPARTMENTS.map((dept) => (
-                  <div key={dept.value} className="p-2 border rounded">
+                  <div key={dept.value} className="rounded border p-2">
                     <div className="font-medium">{dept.label}</div>
                     <Badge variant="secondary" className="text-xs">
                       {dept.value}
@@ -156,14 +162,12 @@ export default function TestContractFormPage() {
               <CardTitle>Work Locations ({WORK_LOCATIONS.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
+              <div className="max-h-60 space-y-2 overflow-y-auto">
                 {WORK_LOCATIONS.map((location) => (
-                  <div key={location.value} className="p-2 border rounded">
+                  <div key={location.value} className="rounded border p-2">
                     <div className="font-medium">{location.label}</div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {location.description}
-                    </div>
-                    <Badge variant="secondary" className="text-xs mt-1">
+                    <div className="mt-1 text-sm text-muted-foreground">{location.description}</div>
+                    <Badge variant="secondary" className="mt-1 text-xs">
                       {location.value}
                     </Badge>
                   </div>
@@ -175,4 +179,4 @@ export default function TestContractFormPage() {
       </div>
     </div>
   )
-} 
+}

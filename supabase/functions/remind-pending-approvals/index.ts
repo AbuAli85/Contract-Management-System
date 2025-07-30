@@ -2,7 +2,7 @@
 // Automated approval reminders and escalations for pending contracts
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 // Configuration
 const REMINDER_THRESHOLD_HOURS = 48 // Send reminder after 48 hours
@@ -20,13 +20,13 @@ interface PendingContract {
   reminder_count: number
   last_reminder_sent?: string
   assigned_reviewer?: string
-  priority: 'low' | 'medium' | 'high'
+  priority: "low" | "medium" | "high"
 }
 
 interface ReminderResult {
   contractId: string
   contractNumber: string
-  action: 'reminder_sent' | 'escalated' | 'skipped'
+  action: "reminder_sent" | "escalated" | "skipped"
   reason?: string
   recipients: string[]
   emailSent: boolean
@@ -34,22 +34,22 @@ interface ReminderResult {
 
 serve(async (req) => {
   // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     })
   }
 
   try {
-    console.log('🔄 Starting pending approval reminders check...')
+    console.log("🔄 Starting pending approval reminders check...")
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Get pending contracts that need attention
@@ -67,43 +67,45 @@ serve(async (req) => {
     // Log activity
     await logReminderActivity(supabase, {
       totalProcessed: pendingContracts.length,
-      remindersSent: results.filter(r => r.action === 'reminder_sent').length,
-      escalationsSent: results.filter(r => r.action === 'escalated').length,
-      skipped: results.filter(r => r.action === 'skipped').length,
-      timestamp: new Date().toISOString()
+      remindersSent: results.filter((r) => r.action === "reminder_sent").length,
+      escalationsSent: results.filter((r) => r.action === "escalated").length,
+      skipped: results.filter((r) => r.action === "skipped").length,
+      timestamp: new Date().toISOString(),
     })
 
     const summary = {
       success: true,
       processed: pendingContracts.length,
-      remindersSent: results.filter(r => r.action === 'reminder_sent').length,
-      escalationsSent: results.filter(r => r.action === 'escalated').length,
-      skipped: results.filter(r => r.action === 'skipped').length,
-      results
+      remindersSent: results.filter((r) => r.action === "reminder_sent").length,
+      escalationsSent: results.filter((r) => r.action === "escalated").length,
+      skipped: results.filter((r) => r.action === "skipped").length,
+      results,
     }
 
-    console.log('✅ Reminder processing completed:', summary)
+    console.log("✅ Reminder processing completed:", summary)
 
     return new Response(JSON.stringify(summary), {
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
     })
-
   } catch (error) {
-    console.error('❌ Reminder processing error:', error)
-    
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    })
+    console.error("❌ Reminder processing error:", error)
+
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
+    )
   }
 })
 
@@ -112,8 +114,9 @@ async function getPendingContracts(supabase: any): Promise<PendingContract[]> {
   cutoffTime.setHours(cutoffTime.getHours() - REMINDER_THRESHOLD_HOURS)
 
   const { data: contracts, error } = await supabase
-    .from('contracts')
-    .select(`
+    .from("contracts")
+    .select(
+      `
       id,
       contract_number,
       contract_type,
@@ -125,10 +128,11 @@ async function getPendingContracts(supabase: any): Promise<PendingContract[]> {
       last_reminder_sent,
       assigned_reviewer,
       priority
-    `)
-    .eq('status', 'pending_approval')
-    .lt('updated_at', cutoffTime.toISOString())
-    .order('updated_at', { ascending: true })
+    `,
+    )
+    .eq("status", "pending_approval")
+    .lt("updated_at", cutoffTime.toISOString())
+    .order("updated_at", { ascending: true })
 
   if (error) {
     throw new Error(`Failed to fetch pending contracts: ${error.message}`)
@@ -138,8 +142,8 @@ async function getPendingContracts(supabase: any): Promise<PendingContract[]> {
 }
 
 async function processPendingContract(
-  supabase: any, 
-  contract: PendingContract
+  supabase: any,
+  contract: PendingContract,
 ): Promise<ReminderResult> {
   const now = new Date()
   const lastUpdate = new Date(contract.updated_at)
@@ -147,7 +151,10 @@ async function processPendingContract(
   const reminderCount = contract.reminder_count || 0
 
   // Check if contract should be escalated
-  if (hoursSinceUpdate >= ESCALATION_THRESHOLD_HOURS || reminderCount >= MAX_REMINDERS_PER_CONTRACT) {
+  if (
+    hoursSinceUpdate >= ESCALATION_THRESHOLD_HOURS ||
+    reminderCount >= MAX_REMINDERS_PER_CONTRACT
+  ) {
     return await escalateContract(supabase, contract)
   }
 
@@ -157,15 +164,15 @@ async function processPendingContract(
     if (contract.last_reminder_sent) {
       const lastReminder = new Date(contract.last_reminder_sent)
       const hoursSinceLastReminder = (now.getTime() - lastReminder.getTime()) / (1000 * 60 * 60)
-      
+
       if (hoursSinceLastReminder < 24) {
         return {
           contractId: contract.id,
           contractNumber: contract.contract_number,
-          action: 'skipped',
-          reason: 'Reminder sent recently',
+          action: "skipped",
+          reason: "Reminder sent recently",
           recipients: [],
-          emailSent: false
+          emailSent: false,
         }
       }
     }
@@ -176,10 +183,10 @@ async function processPendingContract(
   return {
     contractId: contract.id,
     contractNumber: contract.contract_number,
-    action: 'skipped',
-    reason: 'Not yet due for reminder',
+    action: "skipped",
+    reason: "Not yet due for reminder",
     recipients: [],
-    emailSent: false
+    emailSent: false,
   }
 }
 
@@ -187,14 +194,16 @@ async function sendReminder(supabase: any, contract: PendingContract): Promise<R
   try {
     // Get contract details with parties and promoter
     const { data: contractDetails, error } = await supabase
-      .from('contracts')
-      .select(`
+      .from("contracts")
+      .select(
+        `
         *,
         first_party:parties!first_party_id(name_en, contact_email, contact_person),
         second_party:parties!second_party_id(name_en, contact_email, contact_person),
         promoters(name_en, email)
-      `)
-      .eq('id', contract.id)
+      `,
+      )
+      .eq("id", contract.id)
       .single()
 
     if (error || !contractDetails) {
@@ -203,60 +212,63 @@ async function sendReminder(supabase: any, contract: PendingContract): Promise<R
 
     // Determine recipients
     const recipients = getReminderRecipients(contractDetails, contract.assigned_reviewer)
-    
+
     if (recipients.length === 0) {
       return {
         contractId: contract.id,
         contractNumber: contract.contract_number,
-        action: 'skipped',
-        reason: 'No valid recipients found',
+        action: "skipped",
+        reason: "No valid recipients found",
         recipients: [],
-        emailSent: false
+        emailSent: false,
       }
     }
 
     // Send reminder email
-    const emailSent = await sendReminderEmail(contractDetails, recipients, contract.reminder_count || 0)
+    const emailSent = await sendReminderEmail(
+      contractDetails,
+      recipients,
+      contract.reminder_count || 0,
+    )
 
     // Update contract with reminder information
     await supabase
-      .from('contracts')
+      .from("contracts")
       .update({
         reminder_count: (contract.reminder_count || 0) + 1,
         last_reminder_sent: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', contract.id)
+      .eq("id", contract.id)
 
     // Log reminder activity
     await logContractActivity(supabase, {
       contractId: contract.id,
-      action: 'reminder_sent',
+      action: "reminder_sent",
       details: {
         recipients,
         reminderCount: (contract.reminder_count || 0) + 1,
-        emailSent
-      }
+        emailSent,
+      },
     })
 
     return {
       contractId: contract.id,
       contractNumber: contract.contract_number,
-      action: 'reminder_sent',
+      action: "reminder_sent",
       recipients,
-      emailSent
+      emailSent,
     }
-
   } catch (error) {
     console.error(`❌ Failed to send reminder for contract ${contract.id}:`, error)
-    
+
     return {
       contractId: contract.id,
       contractNumber: contract.contract_number,
-      action: 'skipped',
+      action: "skipped",
       reason: `Failed to send reminder: ${error.message}`,
       recipients: [],
-      emailSent: false
+      emailSent: false,
     }
   }
 }
@@ -265,60 +277,59 @@ async function escalateContract(supabase: any, contract: PendingContract): Promi
   try {
     // Get admin users for escalation
     const { data: admins, error } = await supabase
-      .from('users')
-      .select('email, name')
-      .eq('role', 'admin')
-      .eq('is_active', true)
+      .from("users")
+      .select("email, name")
+      .eq("role", "admin")
+      .eq("is_active", true)
 
     if (error || !admins || admins.length === 0) {
-      throw new Error('No admin users found for escalation')
+      throw new Error("No admin users found for escalation")
     }
 
-    const adminEmails = admins.map(admin => admin.email).filter(Boolean)
+    const adminEmails = admins.map((admin) => admin.email).filter(Boolean)
 
     // Send escalation email
     const emailSent = await sendEscalationEmail(contract, adminEmails)
 
     // Update contract status
     await supabase
-      .from('contracts')
+      .from("contracts")
       .update({
-        status: 'escalated',
+        status: "escalated",
         escalated_at: new Date().toISOString(),
-        escalated_to: adminEmails.join(', '),
-        updated_at: new Date().toISOString()
+        escalated_to: adminEmails.join(", "),
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', contract.id)
+      .eq("id", contract.id)
 
     // Log escalation activity
     await logContractActivity(supabase, {
       contractId: contract.id,
-      action: 'escalated',
+      action: "escalated",
       details: {
         escalatedTo: adminEmails,
-        reason: 'Exceeded reminder threshold',
-        emailSent
-      }
+        reason: "Exceeded reminder threshold",
+        emailSent,
+      },
     })
 
     return {
       contractId: contract.id,
       contractNumber: contract.contract_number,
-      action: 'escalated',
+      action: "escalated",
       recipients: adminEmails,
-      emailSent
+      emailSent,
     }
-
   } catch (error) {
     console.error(`❌ Failed to escalate contract ${contract.id}:`, error)
-    
+
     return {
       contractId: contract.id,
       contractNumber: contract.contract_number,
-      action: 'skipped',
+      action: "skipped",
       reason: `Failed to escalate: ${error.message}`,
       recipients: [],
-      emailSent: false
+      emailSent: false,
     }
   }
 }
@@ -349,89 +360,94 @@ function getReminderRecipients(contractDetails: any, assignedReviewer?: string):
     recipients.add(contractDetails.email)
   }
 
-  return Array.from(recipients).filter(email => email && email.includes('@'))
+  return Array.from(recipients).filter((email) => email && email.includes("@"))
 }
 
-async function sendReminderEmail(contractDetails: any, recipients: string[], reminderCount: number): Promise<boolean> {
+async function sendReminderEmail(
+  contractDetails: any,
+  recipients: string[],
+  reminderCount: number,
+): Promise<boolean> {
   try {
     const subject = `Contract Approval Reminder - ${contractDetails.contract_number}`
     const body = generateReminderEmailBody(contractDetails, reminderCount)
 
     // Send email using your email service
     // This is a placeholder - replace with your actual email service
-    const emailServiceUrl = Deno.env.get('EMAIL_SERVICE_URL')
+    const emailServiceUrl = Deno.env.get("EMAIL_SERVICE_URL")
     if (emailServiceUrl) {
       const response = await fetch(emailServiceUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: recipients,
           subject,
           body,
-          template: 'contract_reminder'
-        })
+          template: "contract_reminder",
+        }),
       })
 
       return response.ok
     }
 
     // Fallback: log email details
-    console.log('📧 Reminder email would be sent:', {
+    console.log("📧 Reminder email would be sent:", {
       to: recipients,
       subject,
       contractNumber: contractDetails.contract_number,
-      reminderCount
+      reminderCount,
     })
 
     return true
-
   } catch (error) {
-    console.error('Failed to send reminder email:', error)
+    console.error("Failed to send reminder email:", error)
     return false
   }
 }
 
-async function sendEscalationEmail(contract: PendingContract, adminEmails: string[]): Promise<boolean> {
+async function sendEscalationEmail(
+  contract: PendingContract,
+  adminEmails: string[],
+): Promise<boolean> {
   try {
     const subject = `URGENT: Contract Escalation - ${contract.contract_number}`
     const body = generateEscalationEmailBody(contract)
 
     // Send email using your email service
-    const emailServiceUrl = Deno.env.get('EMAIL_SERVICE_URL')
+    const emailServiceUrl = Deno.env.get("EMAIL_SERVICE_URL")
     if (emailServiceUrl) {
       const response = await fetch(emailServiceUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: adminEmails,
           subject,
           body,
-          template: 'contract_escalation',
-          priority: 'high'
-        })
+          template: "contract_escalation",
+          priority: "high",
+        }),
       })
 
       return response.ok
     }
 
     // Fallback: log email details
-    console.log('🚨 Escalation email would be sent:', {
+    console.log("🚨 Escalation email would be sent:", {
       to: adminEmails,
       subject,
-      contractNumber: contract.contract_number
+      contractNumber: contract.contract_number,
     })
 
     return true
-
   } catch (error) {
-    console.error('Failed to send escalation email:', error)
+    console.error("Failed to send escalation email:", error)
     return false
   }
 }
 
 function generateReminderEmailBody(contractDetails: any, reminderCount: number): string {
   const daysSinceCreation = Math.floor(
-    (new Date().getTime() - new Date(contractDetails.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    (new Date().getTime() - new Date(contractDetails.created_at).getTime()) / (1000 * 60 * 60 * 24),
   )
 
   return `
@@ -459,7 +475,7 @@ Contract Management System
 
 function generateEscalationEmailBody(contract: PendingContract): string {
   const daysSinceCreation = Math.floor(
-    (new Date().getTime() - new Date(contract.created_at).getTime()) / (1000 * 60 * 60 * 24)
+    (new Date().getTime() - new Date(contract.created_at).getTime()) / (1000 * 60 * 60 * 24),
   )
 
   return `
@@ -486,29 +502,25 @@ Contract Management System
 
 async function logReminderActivity(supabase: any, data: any): Promise<void> {
   try {
-    await supabase
-      .from('system_activity_log')
-      .insert({
-        action: 'reminder_processing',
-        details: data,
-        created_at: new Date().toISOString()
-      })
+    await supabase.from("system_activity_log").insert({
+      action: "reminder_processing",
+      details: data,
+      created_at: new Date().toISOString(),
+    })
   } catch (error) {
-    console.error('Failed to log reminder activity:', error)
+    console.error("Failed to log reminder activity:", error)
   }
 }
 
 async function logContractActivity(supabase: any, data: any): Promise<void> {
   try {
-    await supabase
-      .from('contract_activity_log')
-      .insert({
-        contract_id: data.contractId,
-        action: data.action,
-        details: data.details,
-        created_at: new Date().toISOString()
-      })
+    await supabase.from("contract_activity_log").insert({
+      contract_id: data.contractId,
+      action: data.action,
+      details: data.details,
+      created_at: new Date().toISOString(),
+    })
   } catch (error) {
-    console.error('Failed to log contract activity:', error)
+    console.error("Failed to log contract activity:", error)
   }
 }

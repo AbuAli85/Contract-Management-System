@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
           category: "Performance",
           rarity: "rare",
           progress: 100,
-          totalRequired: 1
+          totalRequired: 1,
         },
         {
           id: 2,
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
           category: "Attendance",
           rarity: "uncommon",
           progress: 100,
-          totalRequired: 30
+          totalRequired: 30,
         },
         {
           id: 3,
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
           category: "Client Relations",
           rarity: "common",
           progress: 100,
-          totalRequired: 1
+          totalRequired: 1,
         },
         {
           id: 4,
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
           category: "Productivity",
           rarity: "common",
           progress: 100,
-          totalRequired: 100
+          totalRequired: 100,
         },
         {
           id: 5,
@@ -63,8 +63,8 @@ export async function GET(request: NextRequest) {
           category: "Productivity",
           rarity: "uncommon",
           progress: 100,
-          totalRequired: 10
-        }
+          totalRequired: 10,
+        },
       ],
       available: [
         {
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
           category: "Social Media",
           rarity: "common",
           progress: 35,
-          totalRequired: 50
+          totalRequired: 50,
         },
         {
           id: 7,
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
           category: "Sales",
           rarity: "rare",
           progress: 65,
-          totalRequired: 10000
+          totalRequired: 10000,
         },
         {
           id: 8,
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
           category: "Leadership",
           rarity: "uncommon",
           progress: 60,
-          totalRequired: 5
+          totalRequired: 5,
         },
         {
           id: 9,
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
           category: "Innovation",
           rarity: "uncommon",
           progress: 33,
-          totalRequired: 3
+          totalRequired: 3,
         },
         {
           id: 10,
@@ -125,8 +125,8 @@ export async function GET(request: NextRequest) {
           category: "Performance",
           rarity: "rare",
           progress: 85,
-          totalRequired: 3
-        }
+          totalRequired: 3,
+        },
       ],
       stats: {
         totalEarned: 5,
@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
         totalPoints: 280,
         rank: "Gold",
         nextAchievement: "Social Butterfly",
-        progressToNext: 35
+        progressToNext: 35,
       },
       leaderboard: {
         rank: 1,
@@ -144,22 +144,21 @@ export async function GET(request: NextRequest) {
           { rank: 2, name: "Mike Chen", points: 245, achievements: 4 },
           { rank: 3, name: "Emma Davis", points: 220, achievements: 4 },
           { rank: 4, name: "Alex Rodriguez", points: 195, achievements: 3 },
-          { rank: 5, name: "Lisa Wang", points: 170, achievements: 3 }
-        ]
-      }
+          { rank: 5, name: "Lisa Wang", points: 170, achievements: 3 },
+        ],
+      },
     }
 
     return NextResponse.json(mockAchievements)
-
   } catch (error) {
-    console.error('Promoter achievements error:', error)
+    console.error("Promoter achievements error:", error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch promoter achievements',
-        message: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: "Failed to fetch promoter achievements",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-} 
+}

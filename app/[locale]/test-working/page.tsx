@@ -9,15 +9,23 @@ export default async function TestWorkingPage({ params }: { params: Promise<{ lo
       </div>
 
       <div className="text-center">
-        <p><strong>Locale:</strong> {locale}</p>
-        <p><strong>Status:</strong> ✅ Build Successful</p>
-        <p><strong>Authentication:</strong> ✅ Working (User signed in)</p>
-        <p><strong>Navigation:</strong> ✅ Pages loading</p>
+        <p>
+          <strong>Locale:</strong> {locale}
+        </p>
+        <p>
+          <strong>Status:</strong> ✅ Build Successful
+        </p>
+        <p>
+          <strong>Authentication:</strong> ✅ Working (User signed in)
+        </p>
+        <p>
+          <strong>Navigation:</strong> ✅ Pages loading
+        </p>
       </div>
 
       <div className="text-center">
-        <h2 className="text-xl font-semibold mb-4">What's Working:</h2>
-        <ul className="text-left max-w-md mx-auto space-y-2">
+        <h2 className="mb-4 text-xl font-semibold">What's Working:</h2>
+        <ul className="mx-auto max-w-md space-y-2 text-left">
           <li>✅ Next.js 14 App Router</li>
           <li>✅ Server Components</li>
           <li>✅ Client Components</li>
@@ -29,8 +37,8 @@ export default async function TestWorkingPage({ params }: { params: Promise<{ lo
       </div>
 
       <div className="text-center">
-        <h2 className="text-xl font-semibold mb-4">Known Issues:</h2>
-        <ul className="text-left max-w-md mx-auto space-y-2 text-yellow-600">
+        <h2 className="mb-4 text-xl font-semibold">Known Issues:</h2>
+        <ul className="mx-auto max-w-md space-y-2 text-left text-yellow-600">
           <li>⚠️ Some console errors (non-critical)</li>
           <li>⚠️ Date parsing warnings</li>
           <li>⚠️ CSP frame restrictions</li>
@@ -39,10 +47,10 @@ export default async function TestWorkingPage({ params }: { params: Promise<{ lo
 
       <div className="text-center">
         <p className="text-sm text-gray-500">
-          The application is functional despite the console warnings. 
-          These are minor issues that don't affect core functionality.
+          The application is functional despite the console warnings. These are minor issues that
+          don't affect core functionality.
         </p>
       </div>
     </div>
   )
-} 
+}

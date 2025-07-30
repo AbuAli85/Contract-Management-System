@@ -4,7 +4,13 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Eye, EyeOff, UserPlus } from "lucide-react"
@@ -43,7 +49,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
     status: "active",
     department: "",
     position: "",
-    phone: ""
+    phone: "",
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -72,7 +78,9 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      setError("Password must contain at least one uppercase letter, one lowercase letter, and one number")
+      setError(
+        "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      )
       return false
     }
 
@@ -87,7 +95,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -96,10 +104,10 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
     setError(null)
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
+      const response = await fetch("/api/users", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
@@ -109,7 +117,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           status: formData.status,
           department: formData.department,
           position: formData.position,
-          phone: formData.phone
+          phone: formData.phone,
         }),
       })
 
@@ -120,7 +128,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           title: "User created successfully",
           description: `User ${formData.email} has been created with role ${formData.role}`,
         })
-        
+
         // Reset form
         setFormData({
           email: "",
@@ -131,9 +139,9 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           status: "active",
           department: "",
           position: "",
-          phone: ""
+          phone: "",
         })
-        
+
         onOpenChange(false)
         onUserCreated()
       } else {
@@ -157,7 +165,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
       status: "active",
       department: "",
       position: "",
-      phone: ""
+      phone: "",
     })
     setError(null)
     setShowPassword(false)
@@ -165,13 +173,16 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
   }
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        resetForm()
-      }
-      onOpenChange(newOpen)
-    }}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          resetForm()
+        }
+        onOpenChange(newOpen)
+      }}
+    >
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
@@ -187,7 +198,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           )}
 
           {/* Email and Full Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -211,7 +222,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           </div>
 
           {/* Password Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
               <div className="relative">
@@ -255,14 +266,18 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
           </div>
 
           {/* Role and Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="role">Role *</Label>
               <Select
@@ -302,7 +317,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
           </div>
 
           {/* Department and Position */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
               <Select
@@ -365,12 +380,12 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating User...
                 </>
               ) : (
                 <>
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Create User
                 </>
               )}

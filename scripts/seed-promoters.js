@@ -1,11 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
-import 'dotenv/config'
+import { createClient } from "@supabase/supabase-js"
+import "dotenv/config"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables')
+  console.error("Missing Supabase environment variables")
   process.exit(1)
 }
 
@@ -21,7 +21,7 @@ const testPromoters = [
     passport_expiry_date: "2026-06-30",
     notify_days_before_id_expiry: 30,
     notify_days_before_passport_expiry: 60,
-    notes: "Experienced promoter with 5+ years in the industry"
+    notes: "Experienced promoter with 5+ years in the industry",
   },
   {
     name_en: "Fatima Al-Zahra",
@@ -32,7 +32,7 @@ const testPromoters = [
     passport_expiry_date: "2027-03-20",
     notify_days_before_id_expiry: 30,
     notify_days_before_passport_expiry: 60,
-    notes: "Specializes in luxury events and corporate functions"
+    notes: "Specializes in luxury events and corporate functions",
   },
   {
     name_en: "Mohammed Al-Sayed",
@@ -43,7 +43,7 @@ const testPromoters = [
     passport_expiry_date: "2025-09-15",
     notify_days_before_id_expiry: 30,
     notify_days_before_passport_expiry: 60,
-    notes: "New promoter, requires training and certification"
+    notes: "New promoter, requires training and certification",
   },
   {
     name_en: "Aisha Al-Mansouri",
@@ -54,7 +54,7 @@ const testPromoters = [
     passport_expiry_date: "2028-01-10",
     notify_days_before_id_expiry: 30,
     notify_days_before_passport_expiry: 60,
-    notes: "Expert in international events and exhibitions"
+    notes: "Expert in international events and exhibitions",
   },
   {
     name_en: "Omar Al-Hassan",
@@ -65,46 +65,46 @@ const testPromoters = [
     passport_expiry_date: "2025-12-20",
     notify_days_before_id_expiry: 30,
     notify_days_before_passport_expiry: 60,
-    notes: "On temporary leave, returning in 3 months"
-  }
+    notes: "On temporary leave, returning in 3 months",
+  },
 ]
 
 async function seedPromoters() {
-  console.log('Starting to seed promoters...')
-  
+  console.log("Starting to seed promoters...")
+
   try {
     // First, let's check if there are any existing promoters
     const { data: existingPromoters, error: fetchError } = await supabase
-      .from('promoters')
-      .select('id, name_en')
-    
+      .from("promoters")
+      .select("id, name_en")
+
     if (fetchError) {
-      console.error('Error fetching existing promoters:', fetchError)
+      console.error("Error fetching existing promoters:", fetchError)
       return
     }
-    
+
     console.log(`Found ${existingPromoters?.length || 0} existing promoters`)
-    
+
     // Insert test promoters (even if some already exist)
     const { data: insertedPromoters, error: insertError } = await supabase
-      .from('promoters')
+      .from("promoters")
       .insert(testPromoters)
       .select()
-    
+
     if (insertError) {
-      console.error('Error inserting promoters:', insertError)
-      
+      console.error("Error inserting promoters:", insertError)
+
       // If it's a unique constraint violation, try inserting one by one
-      if (insertError.code === '23505') {
-        console.log('Attempting to insert promoters one by one...')
+      if (insertError.code === "23505") {
+        console.log("Attempting to insert promoters one by one...")
         let successCount = 0
-        
+
         for (const promoter of testPromoters) {
           const { data: singleInsert, error: singleError } = await supabase
-            .from('promoters')
+            .from("promoters")
             .insert(promoter)
             .select()
-          
+
           if (singleError) {
             console.log(`Skipped ${promoter.name_en}: ${singleError.message}`)
           } else {
@@ -112,35 +112,34 @@ async function seedPromoters() {
             successCount++
           }
         }
-        
+
         console.log(`Successfully added ${successCount} new promoters`)
         return
       }
-      
+
       return
     }
-    
+
     console.log(`Successfully inserted ${insertedPromoters?.length || 0} promoters:`)
-    insertedPromoters?.forEach(promoter => {
+    insertedPromoters?.forEach((promoter) => {
       console.log(`- ${promoter.name_en} (${promoter.id})`)
     })
-    
+
     // Verify the data was inserted
     const { data: allPromoters, error: verifyError } = await supabase
-      .from('promoters')
-      .select('*')
-      .order('name_en')
-    
+      .from("promoters")
+      .select("*")
+      .order("name_en")
+
     if (verifyError) {
-      console.error('Error verifying promoters:', verifyError)
+      console.error("Error verifying promoters:", verifyError)
       return
     }
-    
+
     console.log(`\nTotal promoters in database: ${allPromoters?.length || 0}`)
-    console.log('Seeding completed successfully!')
-    
+    console.log("Seeding completed successfully!")
   } catch (error) {
-    console.error('Unexpected error:', error)
+    console.error("Unexpected error:", error)
   }
 }
 

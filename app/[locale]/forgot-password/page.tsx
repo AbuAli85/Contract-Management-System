@@ -36,11 +36,11 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 dark:from-gray-900 dark:to-gray-800">
         <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
+          <Card className="border-0 shadow-xl">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Check your email</CardTitle>
+              <CardTitle className="text-center text-2xl">Check your email</CardTitle>
               <CardDescription className="text-center">
                 We've sent a password reset link to {email}
               </CardDescription>
@@ -48,16 +48,13 @@ export default function ForgotPasswordPage() {
             <CardContent className="space-y-4">
               <Alert>
                 <AlertDescription>
-                  If you don't see the email, check your spam folder. The link will expire in 1 hour.
+                  If you don't see the email, check your spam folder. The link will expire in 1
+                  hour.
                 </AlertDescription>
               </Alert>
-              
+
               <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => router.push('/login')}
-                >
+                <Button variant="outline" className="w-full" onClick={() => router.push("/login")}>
                   <ArrowLeft className="mr-2 h-4 w-4" />
                   Back to login
                 </Button>
@@ -70,25 +67,23 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 dark:from-gray-900 dark:to-gray-800">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex items-center justify-center">
             <Mail className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Forgot Password
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Forgot Password</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Enter your email to reset your password
           </p>
         </div>
 
         {/* Forgot Password Card */}
-        <Card className="shadow-xl border-0">
+        <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Reset password</CardTitle>
+            <CardTitle className="text-center text-2xl">Reset password</CardTitle>
             <CardDescription className="text-center">
               Enter your email address and we'll send you a link to reset your password
             </CardDescription>
@@ -117,11 +112,7 @@ export default function ForgotPasswordPage() {
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -136,7 +127,7 @@ export default function ForgotPasswordPage() {
                 Remember your password?{" "}
                 <Link
                   href="/login"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
                 >
                   Sign in
                 </Link>
@@ -146,7 +137,7 @@ export default function ForgotPasswordPage() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>© 2024 Contract Management System. All rights reserved.</p>
         </div>
       </div>
@@ -155,4 +146,4 @@ export default function ForgotPasswordPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

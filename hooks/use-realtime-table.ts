@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useAuth } from "@/src/components/auth/simple-auth-provider"
 import { devLog } from "@/lib/dev-log"
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel } from "@supabase/supabase-js"
 
 export function useRealtimeTable(table: string, onChange: (payload: any) => void) {
   const { user } = useAuth()
@@ -24,9 +24,13 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
           if (status === "CHANNEL_ERROR") {
             const message = err?.message ?? "Unknown channel error"
             devLog(`${table} channel error (${status}): ${message}`)
-            
+
             // Check if it's an authentication error
-            if (message.includes("JWT") || message.includes("auth") || message.includes("permission")) {
+            if (
+              message.includes("JWT") ||
+              message.includes("auth") ||
+              message.includes("permission")
+            ) {
               devLog(`Authentication error detected for ${table}, will retry after auth check`)
               return
             }

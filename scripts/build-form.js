@@ -1,6 +1,6 @@
-import 'dotenv/config'
-import fs from 'fs'
-import path from 'path'
+import "dotenv/config"
+import fs from "fs"
+import path from "path"
 
 const { NEXT_PUBLIC_MAKE_WEBHOOK_URL } = process.env
 

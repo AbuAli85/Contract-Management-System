@@ -1,11 +1,6 @@
-import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
-import { 
-  FileText, 
-  Users, 
-  BarChart3, 
-  PlusCircle,
-} from 'lucide-react'
+import Link from "next/link"
+import { Card, CardContent } from "@/components/ui/card"
+import { FileText, Users, BarChart3, PlusCircle } from "lucide-react"
 
 interface QuickActionProps {
   href: string
@@ -18,14 +13,12 @@ interface QuickActionProps {
 function QuickAction({ href, icon, title, description, className }: QuickActionProps) {
   return (
     <Link href={href}>
-      <Card className={`hover:shadow-lg transition-all hover:-translate-y-1 ${className}`}>
+      <Card className={`transition-all hover:-translate-y-1 hover:shadow-lg ${className}`}>
         <CardContent className="p-6">
           <div className="space-y-4">
-            <div className="p-3 w-fit rounded-lg bg-primary/10">
-              {icon}
-            </div>
+            <div className="w-fit rounded-lg bg-primary/10 p-3">{icon}</div>
             <div className="space-y-2">
-              <h3 className="font-semibold text-lg">{title}</h3>
+              <h3 className="text-lg font-semibold">{title}</h3>
               <p className="text-sm text-muted-foreground">{description}</p>
             </div>
           </div>
