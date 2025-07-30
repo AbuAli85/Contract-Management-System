@@ -19,10 +19,11 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const pathname = usePathname()
   const locale = params.locale as string
   
-  // Check if we're on the landing page (root route)
+  // Check if we're on the landing page (root route) or auth pages
   useEffect(() => {
     const isLanding = pathname === `/${locale}`
-    setIsLandingPage(isLanding)
+    const isAuthPage = pathname.includes('/auth/') || pathname.includes('/login') || pathname.includes('/signup')
+    setIsLandingPage(isLanding || isAuthPage)
   }, [pathname, locale])
 
   // Force render after 1 second to prevent infinite loading
@@ -39,15 +40,15 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   // Temporarily disable loading state to fix rendering issues
   const shouldShowLoading = false
 
-  // Only log when there are issues
-  if (!user && mounted && !loading) {
-    console.log('🧭 AppLayoutWithSidebar: No user after auth complete', { 
-      user: !!user, 
-      loading, 
-      mounted, 
-      pathname
-    })
-  }
+  // Only log when there are issues (disabled for now)
+  // if (!user && mounted && !loading) {
+  //   console.log('🧭 AppLayoutWithSidebar: No user after auth complete', { 
+  //     user: !!user, 
+  //     loading, 
+  //     mounted, 
+  //     pathname
+  //   })
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50">

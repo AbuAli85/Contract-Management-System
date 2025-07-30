@@ -29,57 +29,18 @@ const createMockServerClient = () => {
   const mockClient = {
     auth: {
       getSession: async () => {
-        // For mock client, we'll return a mock session if available
-        // This simulates a logged-in user for development
-        const mockSession = {
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_in: 3600,
-          expires_at: Math.floor(Date.now() / 1000) + 3600,
-          token_type: 'bearer',
-          user: {
-            id: 'mock-user-id',
-            email: 'luxsess2001@gmail.com',
-            user_metadata: {
-              full_name: 'luxsess2001',
-              avatar_url: null
-            },
-            app_metadata: {
-              provider: 'email',
-              providers: ['email']
-            },
-            aud: 'authenticated',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        }
-        
+        // For mock client, we'll return null session to indicate no authentication
+        // This prevents the client-server mismatch
         return { 
-          data: { session: mockSession }, 
+          data: { session: null }, 
           error: null 
         }
       },
       
       getUser: async () => {
-        // Return the same mock user as getSession
-        const mockUser = {
-          id: 'mock-user-id',
-          email: 'luxsess2001@gmail.com',
-          user_metadata: {
-            full_name: 'luxsess2001',
-            avatar_url: null
-          },
-          app_metadata: {
-            provider: 'email',
-            providers: ['email']
-          },
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-        
+        // For mock client, return null user to indicate no authentication
         return { 
-          data: { user: mockUser }, 
+          data: { user: null }, 
           error: null 
         }
       },
@@ -200,6 +161,7 @@ export async function createClient() {
     // Return mock client if environment variables are missing
     if (!supabaseUrl || !supabaseAnonKey) {
       console.log('🔧 Server: Missing environment variables - using mock server client')
+      console.log('🔧 Server: Please create a .env.local file with NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
       return createMockServerClient()
     }
     
@@ -212,15 +174,10 @@ export async function createClient() {
         cookies: {
           async get(name: string) {
             try {
-              console.log('🔧 Server: Supabase requesting cookie:', name)
-              
               const cookie = await cookieStore.get(name)
               if (cookie?.value) {
-                console.log('🔧 Server: Found cookie:', name)
                 return cookie.value
               }
-              
-              console.log('🔧 Server: No cookie found for:', name)
               return null
             } catch (error) {
               console.error('🔧 Server: Error getting cookie:', name, error)
@@ -229,10 +186,7 @@ export async function createClient() {
           },
           async set(name: string, value: string, options: CookieOptions) {
             try {
-              console.log('🔧 Server: Setting cookie:', name, 'with value length:', value.length)
-              
               await cookieStore.set({ name, value, ...options })
-              console.log('🔧 Server: Cookie set successfully:', name)
             } catch (error) {
               console.error('🔧 Server: Error setting cookie:', name, error)
               // The `set` method was called from a Server Component.
@@ -242,10 +196,7 @@ export async function createClient() {
           },
           async remove(name: string, options: CookieOptions) {
             try {
-              console.log('🔧 Server: Removing cookie:', name)
-              
               await cookieStore.set({ name, value: '', ...options })
-              console.log('🔧 Server: Cookie removed successfully:', name)
             } catch (error) {
               console.error('🔧 Server: Error removing cookie:', name, error)
               // The `delete` method was called from a Server Component.

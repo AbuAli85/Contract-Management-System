@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import { Input } from '@/components/ui/input'
@@ -27,7 +27,7 @@ export function LoginForm() {
   const locale = pathname.split('/')[1] || 'en'
   
   // Get redirect URL from query parameters or default to dashboard
-  const getRedirectUrl = () => {
+  const redirectTo = React.useMemo(() => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search)
       const redirectParam = urlParams.get('redirect')
@@ -36,10 +36,12 @@ export function LoginForm() {
       }
     }
     return `/${locale}/dashboard`
-  }
+  }, [locale])
   
-  const redirectTo = getRedirectUrl()
-  console.log("🔐 Login Debug - Initial redirect URL:", redirectTo)
+  // Only log once when component mounts
+  React.useEffect(() => {
+    console.log("🔐 Login Debug - Initial redirect URL:", redirectTo)
+  }, [redirectTo])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -81,8 +83,8 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
       console.log("🔐 Login Debug - Redirect URL:", redirectTo)
       
-      // Use window.location.href for more reliable redirect
-      window.location.href = redirectTo
+      // Use router.replace for client-side navigation without adding to history
+      router.replace(redirectTo)
       
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

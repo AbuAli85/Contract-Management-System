@@ -67,10 +67,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   }
 
   const initializeAuth = async () => {
-    console.log('🔐 Auth: Initializing auth...', { supabase: !!supabase })
-    
     if (!supabase) {
-      console.log('🔐 Auth: No supabase client, setting mounted')
       setLoading(false)
       setMounted(true)
       return
@@ -78,7 +75,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
 
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
-      console.log('🔐 Auth: Timeout reached, forcing mounted state')
       setLoading(false)
       setMounted(true)
     }, 2000) // Increased timeout to 2 seconds for better reliability
@@ -95,7 +91,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
 
       if (session?.user) {
-        console.log('🔐 Auth: Setting user state', { email: session.user.email })
         setSession(session)
         setUser(session.user)
         
@@ -130,7 +125,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       setProfileNotFound(false)
     } finally {
       clearTimeout(timeout)
-      console.log('🔐 Auth: Setting loading=false, mounted=true')
       setLoading(false)
       setMounted(true)
     }
@@ -139,12 +133,11 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
   // Initialize auth when supabase client is ready
   useEffect(() => {
     if (supabase && !mounted) {
-      console.log('🔐 Auth: Initializing...')
       initializeAuth()
     }
   }, [supabase]) // Remove mounted from dependencies to prevent circular dependency
 
-  // Log final state after auth initialization
+  // Log final state after auth initialization (only once)
   useEffect(() => {
     if (mounted && !loading) {
       console.log('🔐 Auth: Final state after initialization', { 
@@ -154,14 +147,9 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
         userEmail: user?.email 
       })
     }
-  }, [mounted, loading, user])
+  }, [mounted, loading]) // Removed user to prevent re-renders
 
   const handleAuthStateChange = async (event: string, newSession: Session | null) => {
-    // Only log significant state changes
-    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-      console.log('🔐 Auth:', event, newSession?.user?.email)
-    }
-    
     try {
       if (event === 'SIGNED_IN' && newSession?.user) {
         setSession(newSession)
@@ -233,7 +221,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
 
       if (data.user) {
-        console.log('🔐 Sign in successful:', data.user.email)
         return { success: true }
       }
 
@@ -266,7 +253,6 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       }
 
       if (data.user) {
-        console.log('🔐 Sign up successful:', data.user.email)
         return { success: true }
       }
 
@@ -285,7 +271,7 @@ export function SimpleAuthProvider({ children }: { children: React.ReactNode }) 
       if (error) {
         console.error('Sign out error:', error)
       } else {
-        console.log('🔐 Sign out successful')
+        // Sign out successful
       }
     } catch (error) {
       console.error('Sign out error:', error)
