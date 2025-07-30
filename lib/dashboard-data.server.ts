@@ -173,7 +173,7 @@ export async function getDashboardAnalyticsSrv(): Promise<
   }
 }
 
-export { getDashboardAnalyticsSrv as getDashboardAnalytics }
+export { getDashboardAnalyticsSrv }
 
 // Add other server-only implementations
 export async function getPendingReviewsSrv(): Promise<ServerActionResponse<PendingReview[]>> {
