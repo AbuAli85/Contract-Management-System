@@ -12,26 +12,31 @@ const intlMiddleware = createMiddleware({
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Skip all problematic routes to prevent infinite loops
+  // Skip ALL API routes and static files completely
   if (
     pathname.startsWith("/api/") ||
-    pathname.startsWith("/auth/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon.ico") ||
     pathname.includes(".") ||
     pathname.includes("/.well-known/") ||
     pathname.includes("?_rsc=") ||
-    pathname.includes("?rsc=")
+    pathname.includes("?rsc=") ||
+    pathname.includes("/static/") ||
+    pathname.includes("/images/") ||
+    pathname.includes("/fonts/")
   ) {
     return NextResponse.next()
   }
 
-  // Handle i18n routing for page routes only
+  // Only apply i18n middleware to page routes (not API routes)
   return intlMiddleware(request)
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Skip all internal paths (_next)
+    // Skip all api routes
+    // Skip all static files
+    "/((?!_next|api|.*\\..*).*)",
   ],
 } 
