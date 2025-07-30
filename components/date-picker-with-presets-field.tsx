@@ -92,5 +92,5 @@ function DatePickerWithPresetsField({
   )
 }
 
-export { DatePickerWithPresetsField };
-export default DatePickerWithPresetsField;
+export { DatePickerWithPresetsField }
+export default DatePickerWithPresetsField

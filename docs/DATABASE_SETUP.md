@@ -93,10 +93,10 @@ CREATE INDEX idx_user_activity_log_created_at ON user_activity_log(created_at);
 
 -- Step 7: Create admin user
 INSERT INTO users (
-    email, 
-    full_name, 
-    role, 
-    status, 
+    email,
+    full_name,
+    role,
+    status,
     permissions,
     email_verified,
     created_at
@@ -121,18 +121,18 @@ ALTER TABLE user_activity_log ENABLE ROW LEVEL SECURITY;
 
 -- Step 9: Create RLS policies
 CREATE POLICY "Users can view own data" ON users
-    FOR SELECT USING (auth.uid() = id OR 
+    FOR SELECT USING (auth.uid() = id OR
                      EXISTS (
-                         SELECT 1 FROM users 
-                         WHERE id = auth.uid() 
+                         SELECT 1 FROM users
+                         WHERE id = auth.uid()
                          AND (role = 'admin' OR permissions @> ARRAY['users.view'])
                      ));
 
 CREATE POLICY "Only admins and authorized users can create users" ON users
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() 
+            SELECT 1 FROM users
+            WHERE id = auth.uid()
             AND (role = 'admin' OR permissions @> ARRAY['users.create'])
         )
     );
@@ -140,8 +140,8 @@ CREATE POLICY "Only admins and authorized users can create users" ON users
 CREATE POLICY "Only admins and authorized users can update users" ON users
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() 
+            SELECT 1 FROM users
+            WHERE id = auth.uid()
             AND (role = 'admin' OR permissions @> ARRAY['users.edit'])
         )
     );
@@ -149,17 +149,17 @@ CREATE POLICY "Only admins and authorized users can update users" ON users
 CREATE POLICY "Only admins and authorized users can delete users" ON users
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() 
+            SELECT 1 FROM users
+            WHERE id = auth.uid()
             AND (role = 'admin' OR permissions @> ARRAY['users.delete'])
         )
     );
 
 CREATE POLICY "Users can view own activity" ON user_activity_log
-    FOR SELECT USING (auth.uid() = user_id OR 
+    FOR SELECT USING (auth.uid() = user_id OR
                      EXISTS (
-                         SELECT 1 FROM users 
-                         WHERE id = auth.uid() 
+                         SELECT 1 FROM users
+                         WHERE id = auth.uid()
                          AND (role = 'admin' OR permissions @> ARRAY['logs.view'])
                      ));
 
@@ -170,17 +170,20 @@ CREATE POLICY "System can insert activity logs" ON user_activity_log
 ### Option 2: Using the Setup Script
 
 1. **Install dependencies:**
+
 ```bash
 npm install dotenv
 ```
 
 2. **Set up environment variables** in your `.env.local`:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 3. **Run the setup script:**
+
 ```bash
 node scripts/setup-database.js
 ```
@@ -208,18 +211,21 @@ supabase db push
 After setup, verify everything works:
 
 1. **Check tables exist:**
+
 ```sql
-SELECT table_name FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
 AND table_name IN ('users', 'permissions', 'user_activity_log');
 ```
 
 2. **Check admin user:**
+
 ```sql
 SELECT email, role, permissions FROM users WHERE email = 'admin@example.com';
 ```
 
 3. **Check permissions:**
+
 ```sql
 SELECT COUNT(*) FROM permissions;
 ```
@@ -259,11 +265,13 @@ GRANT ALL ON SCHEMA public TO public;
 After successful database setup:
 
 1. **Start your development server:**
+
 ```bash
 pnpm run dev
 ```
 
 2. **Navigate to the user management page:**
+
 ```
 http://localhost:3000/en/dashboard/users
 ```
@@ -280,4 +288,4 @@ If you're still having issues:
 1. Check the Supabase logs in your dashboard
 2. Verify your environment variables are correct
 3. Make sure you're using the service role key for setup
-4. Check the browser console for any frontend errors 
+4. Check the browser console for any frontend errors

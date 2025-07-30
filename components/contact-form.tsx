@@ -38,7 +38,12 @@ interface ContactFormProps {
   onCancel: () => void
 }
 
-export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCancel }: ContactFormProps) {
+export default function ContactForm({
+  contactToEdit,
+  partyId,
+  onFormSubmit,
+  onCancel,
+}: ContactFormProps) {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -94,12 +99,14 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
 
     try {
       await saveContact(values)
-      
+
       toast({
         title: "Success",
-        description: contactToEdit ? "Contact updated successfully" : "Contact created successfully",
+        description: contactToEdit
+          ? "Contact updated successfully"
+          : "Contact created successfully",
       })
-      
+
       onFormSubmit()
     } catch (error) {
       console.error("Error saving contact:", error)
@@ -114,7 +121,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <User className="h-5 w-5" />
@@ -124,7 +131,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* English Name */}
               <FormField
                 control={form.control}
@@ -156,7 +163,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Email */}
               <FormField
                 control={form.control}
@@ -166,7 +173,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                         <Input placeholder="Enter email address" className="pl-10" {...field} />
                       </div>
                     </FormControl>
@@ -184,7 +191,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                         <Input placeholder="Enter phone number" className="pl-10" {...field} />
                       </div>
                     </FormControl>
@@ -194,7 +201,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Mobile */}
               <FormField
                 control={form.control}
@@ -204,7 +211,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
                     <FormLabel>Mobile</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-muted-foreground" />
                         <Input placeholder="Enter mobile number" className="pl-10" {...field} />
                       </div>
                     </FormControl>
@@ -251,10 +258,7 @@ export default function ContactForm({ contactToEdit, partyId, onFormSubmit, onCa
               render={({ field }) => (
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                   <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="flex items-center gap-2">

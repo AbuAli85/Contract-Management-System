@@ -14,30 +14,30 @@ export default function AdminTools() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.endsWith(".csv")) {
       toast({
         title: "Invalid File",
         description: "Please select a CSV file",
-        variant: "destructive"
+        variant: "destructive",
       })
       return
     }
 
     try {
       const formData = new FormData()
-      formData.append('file', file)
+      formData.append("file", file)
 
-      const response = await fetch('/api/admin/bulk-import', {
-        method: 'POST',
-        body: formData
+      const response = await fetch("/api/admin/bulk-import", {
+        method: "POST",
+        body: formData,
       })
 
       if (!response.ok) {
-        throw new Error('Failed to upload file')
+        throw new Error("Failed to upload file")
       }
 
       const data = await response.json()
-      
+
       toast({
         title: "Upload Successful",
         description: `Processed ${data.processed} records from ${file.name}`,
@@ -47,7 +47,7 @@ export default function AdminTools() {
       toast({
         title: "Upload Failed",
         description: "Failed to process the CSV file",
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
@@ -59,7 +59,7 @@ export default function AdminTools() {
       icon: Users,
       action: () => {
         // Navigate to user management page
-        window.location.href = '/dashboard/users'
+        window.location.href = "/dashboard/users"
       },
     },
     {
@@ -68,7 +68,7 @@ export default function AdminTools() {
       icon: Settings,
       action: () => {
         // Navigate to settings page
-        window.location.href = '/dashboard/settings'
+        window.location.href = "/dashboard/settings"
       },
     },
     {
@@ -77,16 +77,16 @@ export default function AdminTools() {
       icon: Database,
       action: async () => {
         try {
-          const response = await fetch('/api/admin/backup', {
-            method: 'POST'
+          const response = await fetch("/api/admin/backup", {
+            method: "POST",
           })
 
           if (!response.ok) {
-            throw new Error('Backup failed')
+            throw new Error("Backup failed")
           }
 
           const data = await response.json()
-          
+
           toast({
             title: "Backup Started",
             description: "Database backup has been initiated",
@@ -96,7 +96,7 @@ export default function AdminTools() {
           toast({
             title: "Backup Failed",
             description: "Failed to initiate database backup",
-            variant: "destructive"
+            variant: "destructive",
           })
         }
       },
@@ -107,7 +107,7 @@ export default function AdminTools() {
       icon: Mail,
       action: () => {
         // Navigate to email templates page
-        window.location.href = '/dashboard/email-templates'
+        window.location.href = "/dashboard/email-templates"
       },
     },
   ]

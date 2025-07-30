@@ -11,6 +11,7 @@
 ### 1. Webhook Response Updated ✅
 
 I've updated the webhook to provide cleaner, template-safe data:
+
 - **Added `.trim()`** to remove extra whitespace
 - **Added character filtering** for contract numbers
 - **Ensured all fields are properly formatted**
@@ -20,27 +21,30 @@ I've updated the webhook to provide cleaner, template-safe data:
 #### Replace `replaceAll()` with `replace()` + Global Regex
 
 **Instead of:**
+
 ```javascript
 {{1.promoter_name_en.replaceAll(" ", "_")}}
 ```
 
 **Use:**
+
 ```javascript
 {{1.promoter_name_en.replace(/ /g, "_")}}
 ```
 
 #### Common Template Function Replacements:
 
-| ❌ Don't Use (ES2021+) | ✅ Use Instead (Compatible) | Purpose |
-|------------------------|---------------------------|---------|
-| `replaceAll(" ", "_")` | `replace(/ /g, "_")` | Replace all spaces with underscores |
-| `replaceAll("\\n", " ")` | `replace(/\\n/g, " ")` | Replace line breaks with spaces |
-| `replaceAll(".", "")` | `replace(/\\./g, "")` | Remove all dots |
-| `replaceAll(",", "")` | `replace(/,/g, "")` | Remove all commas |
+| ❌ Don't Use (ES2021+)   | ✅ Use Instead (Compatible) | Purpose                             |
+| ------------------------ | --------------------------- | ----------------------------------- |
+| `replaceAll(" ", "_")`   | `replace(/ /g, "_")`        | Replace all spaces with underscores |
+| `replaceAll("\\n", " ")` | `replace(/\\n/g, " ")`      | Replace line breaks with spaces     |
+| `replaceAll(".", "")`    | `replace(/\\./g, "")`       | Remove all dots                     |
+| `replaceAll(",", "")`    | `replace(/,/g, "")`         | Remove all commas                   |
 
 ### 3. Safe Template Patterns
 
 #### For Names and Text Fields:
+
 ```javascript
 // Safe text formatting
 {{1.promoter_name_en.replace(/[^a-zA-Z0-9\s]/g, "").trim()}}
@@ -53,6 +57,7 @@ I've updated the webhook to provide cleaner, template-safe data:
 ```
 
 #### For Numbers and Values:
+
 ```javascript
 // Safe number formatting
 {{parseFloat(1.contract_value).toFixed(2)}}
@@ -64,21 +69,26 @@ I've updated the webhook to provide cleaner, template-safe data:
 ### 4. Step-by-Step Google Docs Fix
 
 #### Step 1: Open Your Google Docs Module
+
 1. **Click on the Google Docs module** (showing the error)
 2. **Look for any template mappings** using `replaceAll`
 
 #### Step 2: Update Template Mappings
+
 **Find mappings like:**
+
 ```
 {{1.promoter_name_en.replaceAll(" ", "_")}}
 ```
 
 **Replace with:**
+
 ```
 {{1.promoter_name_en.replace(/ /g, "_")}}
 ```
 
 #### Step 3: Common Field Mappings
+
 ```javascript
 // Promoter name (safe)
 {{1.promoter_name_en.trim()}}
@@ -136,7 +146,9 @@ The webhook now provides these clean, template-ready fields:
 ### 6. Testing the Fix
 
 #### Test Template:
+
 Create a simple Google Doc template with:
+
 ```
 Contract Number: {{1.contract_number}}
 Promoter: {{1.promoter_name_en}}
@@ -149,6 +161,7 @@ Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
 ```
 
 #### Test Payload:
+
 ```json
 {
   "contract_number": "TEST-001",
@@ -172,10 +185,11 @@ Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
    - `includes()` → Use `indexOf() !== -1`
 
 2. **Use simpler templates first:**
+
    ```javascript
    // Start simple
    {{1.promoter_name_en}}
-   
+
    // Then add formatting if needed
    {{1.promoter_name_en.trim()}}
    ```
@@ -188,11 +202,13 @@ Contract Value: ${{parseFloat(1.contract_value).toFixed(2)}}
 ## 🚀 Summary
 
 ### ✅ Fixed:
+
 - **Webhook response** now provides clean, template-safe data
 - **String fields** properly trimmed and formatted
 - **No more replaceAll compatibility issues**
 
 ### ⚠️ Action Required:
+
 - **Update Google Docs template** to use `replace()` instead of `replaceAll()`
 - **Test with simple template** first
 - **Verify all template mappings** work correctly

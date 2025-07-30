@@ -85,8 +85,7 @@
     "adminActions": "Acciones de Administrador",
     "systemHealth": "Estado del Sistema",
     "performance": "Rendimiento",
-    "metrics": "Métricas"
-    ,
+    "metrics": "Métricas",
     "activeContracts": "Contratos Activos",
     "activeContractsDescription": "Contratos que están actualmente activos",
     "totalContractsDescription": "Número total de contratos en el sistema",

@@ -1,4 +1,4 @@
-import ContractsTable from '@/components/contracts/ContractsTable'
+import ContractsTable from "@/components/contracts/ContractsTable"
 
 export default function ContractsPage() {
   return (
@@ -10,9 +10,9 @@ export default function ContractsPage() {
 
 // Required exports to fix Next.js build error
 export const metadata = {
-  title: 'Contracts Management',
-  description: 'Manage contracts with updated party roles: Party A = Client, Party B = Employer'
+  title: "Contracts Management",
+  description: "Manage contracts with updated party roles: Party A = Client, Party B = Employer",
 }
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 export const revalidate = 0

@@ -1,14 +1,14 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select'
-import { Badge } from './badge'
-import { Card, CardContent } from './card'
-import { Button } from './button'
-import { Input } from './input'
-import { Search, User, Building2, MapPin, Phone, Mail, Calendar } from 'lucide-react'
-import { useParties } from '@/hooks/use-parties'
-import { usePromoters } from '@/hooks/use-promoters'
+import React, { useState, useEffect } from "react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
+import { Badge } from "./badge"
+import { Card, CardContent } from "./card"
+import { Button } from "./button"
+import { Input } from "./input"
+import { Search, User, Building2, MapPin, Phone, Mail, Calendar } from "lucide-react"
+import { useParties } from "@/hooks/use-parties"
+import { usePromoters } from "@/hooks/use-promoters"
 
 interface EnhancedPromoterSelectorProps {
   value?: string
@@ -23,18 +23,18 @@ export function EnhancedPromoterSelector({
   onValueChange,
   placeholder = "Select Promoter",
   disabled = false,
-  className = ""
+  className = "",
 }: EnhancedPromoterSelectorProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPromoter, setSelectedPromoter] = useState<any>(null)
-  
+
   const { data: promoters, isLoading: isLoadingPromoters } = usePromoters()
   const { data: parties, isLoading: isLoadingParties } = useParties()
 
   // Find selected promoter details
   useEffect(() => {
     if (value && promoters) {
-      const promoter = promoters.find(p => p.id === value)
+      const promoter = promoters.find((p) => p.id === value)
       setSelectedPromoter(promoter)
     } else {
       setSelectedPromoter(null)
@@ -42,29 +42,30 @@ export function EnhancedPromoterSelector({
   }, [value, promoters])
 
   // Filter promoters based on search term
-  const filteredPromoters = promoters?.filter(promoter => {
-    if (!searchTerm) return true
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      promoter.name_en?.toLowerCase().includes(searchLower) ||
-      promoter.name_ar?.toLowerCase().includes(searchLower) ||
-      promoter.id_card_number?.toLowerCase().includes(searchLower) ||
-      promoter.mobile_number?.toLowerCase().includes(searchLower)
-    )
-  }) || []
+  const filteredPromoters =
+    promoters?.filter((promoter) => {
+      if (!searchTerm) return true
+      const searchLower = searchTerm.toLowerCase()
+      return (
+        promoter.name_en?.toLowerCase().includes(searchLower) ||
+        promoter.name_ar?.toLowerCase().includes(searchLower) ||
+        promoter.id_card_number?.toLowerCase().includes(searchLower) ||
+        promoter.mobile_number?.toLowerCase().includes(searchLower)
+      )
+    }) || []
 
   // Get employer information for a promoter
   const getEmployerInfo = (promoter: any) => {
     if (!parties || !promoter.employer_id) return null
-    
-    const employer = parties.find(party => party.id === promoter.employer_id)
+
+    const employer = parties.find((party) => party.id === promoter.employer_id)
     if (!employer) return null
-    
+
     return {
       name: employer.name_en,
       nameAr: employer.name_ar,
       type: employer.type,
-      contact: employer.contact_email || employer.contact_phone
+      contact: employer.contact_email || employer.contact_phone,
     }
   }
 
@@ -73,38 +74,38 @@ export function EnhancedPromoterSelector({
     // This would need to be passed as a prop or context
     // For now, we'll look for the most recent employer assignment
     if (!parties) return null
-    
-    const employers = parties.filter(party => party.type === 'Employer')
+
+    const employers = parties.filter((party) => party.type === "Employer")
     return employers.length > 0 ? employers[0] : null
   }
 
   const formatPromoterDisplay = (promoter: any) => {
     const employer = getEmployerInfo(promoter)
     const currentEmployer = getCurrentEmployer()
-    
+
     return (
       <div className="flex flex-col space-y-1">
         <div className="flex items-center gap-2">
           <span className="font-medium">{promoter.name_en}</span>
-          <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-            {promoter.status || 'Active'}
+          <span className="rounded bg-gray-100 px-2 py-1 text-xs">
+            {promoter.status || "Active"}
           </span>
         </div>
         <div className="text-sm text-muted-foreground">
           {promoter.name_ar} • ID: {promoter.id_card_number}
         </div>
         {employer ? (
-          <div className="text-xs text-blue-600 flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs text-blue-600">
             <Building2 className="h-3 w-3" />
             {employer.name} ({employer.type})
           </div>
         ) : currentEmployer ? (
-          <div className="text-xs text-orange-600 flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs text-orange-600">
             <Building2 className="h-3 w-3" />
             Will be assigned to: {currentEmployer.name_en}
           </div>
         ) : (
-          <div className="text-xs text-gray-500 flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs text-gray-500">
             <Building2 className="h-3 w-3" />
             No employer assigned
           </div>
@@ -119,11 +120,11 @@ export function EnhancedPromoterSelector({
         <SelectTrigger disabled={disabled || isLoadingPromoters} className={className}>
           <SelectValue placeholder={isLoadingPromoters ? "Loading promoters..." : placeholder} />
         </SelectTrigger>
-        <SelectContent className="w-[400px] max-h-[300px]">
+        <SelectContent className="max-h-[300px] w-[400px]">
           {/* Search Input */}
-          <div className="p-2 border-b">
+          <div className="border-b p-2">
             <div className="relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
                 placeholder="Search promoters..."
                 value={searchTerm}
@@ -156,14 +157,14 @@ export function EnhancedPromoterSelector({
           <CardContent className="p-3">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="mb-1 flex items-center gap-2">
                   <User className="h-4 w-4 text-green-600" />
-                  <span className="font-medium text-sm">{selectedPromoter.name_en}</span>
-                  <span className="text-xs bg-gray-200 px-2 py-1 rounded">
-                    {selectedPromoter.status || 'Active'}
+                  <span className="text-sm font-medium">{selectedPromoter.name_en}</span>
+                  <span className="rounded bg-gray-200 px-2 py-1 text-xs">
+                    {selectedPromoter.status || "Active"}
                   </span>
                 </div>
-                <div className="text-xs text-muted-foreground space-y-1">
+                <div className="space-y-1 text-xs text-muted-foreground">
                   <div>{selectedPromoter.name_ar}</div>
                   <div className="flex items-center gap-1">
                     <Phone className="h-3 w-3" />
@@ -172,13 +173,14 @@ export function EnhancedPromoterSelector({
                   {selectedPromoter.id_card_expiry_date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      ID Expires: {new Date(selectedPromoter.id_card_expiry_date).toLocaleDateString('en-GB')}
+                      ID Expires:{" "}
+                      {new Date(selectedPromoter.id_card_expiry_date).toLocaleDateString("en-GB")}
                     </div>
                   )}
                   {getEmployerInfo(selectedPromoter) && (
-                    <div className="flex items-center gap-1 mt-2 pt-2 border-t border-green-200">
+                    <div className="mt-2 flex items-center gap-1 border-t border-green-200 pt-2">
                       <Building2 className="h-3 w-3 text-blue-600" />
-                      <span className="text-blue-600 font-medium">
+                      <span className="font-medium text-blue-600">
                         {getEmployerInfo(selectedPromoter)?.name}
                       </span>
                       <span className="text-gray-500">
@@ -190,7 +192,7 @@ export function EnhancedPromoterSelector({
               </div>
               <Button
                 onClick={() => onValueChange("")}
-                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600 bg-transparent border-none"
+                className="h-6 w-6 border-none bg-transparent p-0 text-gray-400 hover:text-gray-600"
               >
                 ×
               </Button>
@@ -200,4 +202,4 @@ export function EnhancedPromoterSelector({
       )}
     </div>
   )
-} 
+}

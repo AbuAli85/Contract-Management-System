@@ -52,7 +52,11 @@ export default function EditPromoterPage() {
   }
 
   if (!promoterToEdit) {
-    return <div className="flex min-h-[80vh] items-center justify-center text-gray-500">{t("promoterNotFound")}</div>
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center text-gray-500">
+        {t("promoterNotFound")}
+      </div>
+    )
   }
 
   return (
@@ -70,4 +74,4 @@ export default function EditPromoterPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"

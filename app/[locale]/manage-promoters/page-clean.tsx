@@ -55,7 +55,7 @@ export default function ManagePromotersPage() {
   const fetchPromotersWithContractCount = useCallback(async () => {
     if (!isMountedRef.current) return
     setIsLoading(true)
-    
+
     try {
       const supabase = getSupabaseClient()
       const { data: promotersData, error: promotersError } = await supabase
@@ -145,7 +145,7 @@ export default function ManagePromotersPage() {
   useEffect(() => {
     isMountedRef.current = true
     fetchPromotersWithContractCount()
-    
+
     const promotersChannel = getSupabaseClient()
       .channel("public:promoters:manage")
       .on("postgres_changes", { event: "*", schema: "public", table: "promoters" }, () =>
@@ -266,10 +266,7 @@ export default function ManagePromotersPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row">
-            <Select
-              value={filterStatus}
-              onValueChange={setFilterStatus}
-            >
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full sm:w-auto">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -422,10 +419,10 @@ export default function ManagePromotersPage() {
                           </TableCell>
                           <TableCell className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                asChild 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
                                 className="text-xs"
                                 disabled={!promoter.id}
                               >

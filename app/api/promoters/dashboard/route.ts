@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from "next/server"
 
 // Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const promoterId = searchParams.get('promoterId') || '1'
+    const promoterId = searchParams.get("promoterId") || "1"
 
     // Mock data for promoter dashboard
     const mockPromoterData = {
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
         id: promoterId,
         name: "Sarah Johnson",
         email: "sarah.johnson@example.com",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+        avatar:
+          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
         role: "Senior Promoter",
         joinDate: "2023-03-15",
         status: "active",
@@ -26,14 +27,44 @@ export async function GET(request: NextRequest) {
         totalEarnings: 12500,
         thisMonthEarnings: 2800,
         achievements: [
-          { id: 1, name: "Top Performer", icon: "🏆", description: "Achieved highest performance rating", date: "2024-06-01" },
-          { id: 2, name: "Perfect Attendance", icon: "📅", description: "30 days of perfect attendance", date: "2024-05-15" },
-          { id: 3, name: "Client Favorite", icon: "⭐", description: "Highest client satisfaction rating", date: "2024-04-20" },
-          { id: 4, name: "Task Master", icon: "✅", description: "Completed 100+ tasks", date: "2024-03-10" }
+          {
+            id: 1,
+            name: "Top Performer",
+            icon: "🏆",
+            description: "Achieved highest performance rating",
+            date: "2024-06-01",
+          },
+          {
+            id: 2,
+            name: "Perfect Attendance",
+            icon: "📅",
+            description: "30 days of perfect attendance",
+            date: "2024-05-15",
+          },
+          {
+            id: 3,
+            name: "Client Favorite",
+            icon: "⭐",
+            description: "Highest client satisfaction rating",
+            date: "2024-04-20",
+          },
+          {
+            id: 4,
+            name: "Task Master",
+            icon: "✅",
+            description: "Completed 100+ tasks",
+            date: "2024-03-10",
+          },
         ],
-        skills: ["Product Demonstrations", "Client Relations", "Sales", "Event Management", "Social Media Marketing"],
+        skills: [
+          "Product Demonstrations",
+          "Client Relations",
+          "Sales",
+          "Event Management",
+          "Social Media Marketing",
+        ],
         leaderboardRank: 1,
-        performanceScore: 98
+        performanceScore: 98,
       },
       tasks: [
         {
@@ -44,7 +75,7 @@ export async function GET(request: NextRequest) {
           priority: "high",
           status: "in_progress",
           progress: 75,
-          category: "Event"
+          category: "Event",
         },
         {
           id: 2,
@@ -54,7 +85,7 @@ export async function GET(request: NextRequest) {
           priority: "medium",
           status: "pending",
           progress: 0,
-          category: "Meeting"
+          category: "Meeting",
         },
         {
           id: 3,
@@ -64,7 +95,7 @@ export async function GET(request: NextRequest) {
           priority: "low",
           status: "completed",
           progress: 100,
-          category: "Marketing"
+          category: "Marketing",
         },
         {
           id: 4,
@@ -74,8 +105,8 @@ export async function GET(request: NextRequest) {
           priority: "medium",
           status: "pending",
           progress: 0,
-          category: "Training"
-        }
+          category: "Training",
+        },
       ],
       recentActivity: [
         {
@@ -84,7 +115,7 @@ export async function GET(request: NextRequest) {
           title: "Task Completed",
           description: "Social Media Campaign finished successfully",
           timestamp: new Date().toISOString(),
-          points: 50
+          points: 50,
         },
         {
           id: 2,
@@ -92,7 +123,7 @@ export async function GET(request: NextRequest) {
           title: "Achievement Earned",
           description: "Earned 'Perfect Attendance' badge",
           timestamp: new Date(Date.now() - 3600000).toISOString(),
-          points: 100
+          points: 100,
         },
         {
           id: 3,
@@ -100,8 +131,8 @@ export async function GET(request: NextRequest) {
           title: "Positive Feedback",
           description: "Received 5-star rating from client",
           timestamp: new Date(Date.now() - 7200000).toISOString(),
-          points: 25
-        }
+          points: 25,
+        },
       ],
       performanceStats: {
         thisMonth: {
@@ -109,15 +140,15 @@ export async function GET(request: NextRequest) {
           tasksPending: 4,
           attendanceRate: 100,
           clientRating: 4.9,
-          earnings: 2800
+          earnings: 2800,
         },
         lastMonth: {
           tasksCompleted: 22,
           tasksPending: 2,
           attendanceRate: 96,
           clientRating: 4.8,
-          earnings: 3200
-        }
+          earnings: 3200,
+        },
       },
       upcomingEvents: [
         {
@@ -126,7 +157,7 @@ export async function GET(request: NextRequest) {
           date: "2024-06-25",
           time: "10:00 AM",
           location: "Convention Center",
-          type: "Product Demo"
+          type: "Product Demo",
         },
         {
           id: 2,
@@ -134,26 +165,25 @@ export async function GET(request: NextRequest) {
           date: "2024-06-30",
           time: "2:00 PM",
           location: "Office",
-          type: "Training"
-        }
-      ]
+          type: "Training",
+        },
+      ],
     }
 
     return NextResponse.json({
       success: true,
       data: mockPromoterData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     })
-
   } catch (error) {
-    console.error('Promoter dashboard error:', error)
+    console.error("Promoter dashboard error:", error)
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch promoter dashboard data',
-        message: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: "Failed to fetch promoter dashboard data",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
-} 
+}

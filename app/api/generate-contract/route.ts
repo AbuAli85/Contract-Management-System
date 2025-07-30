@@ -10,8 +10,8 @@ export async function POST(request: NextRequest) {
 
     // Generate unique contract number with new format
     const now = new Date()
-    const day = now.getDate().toString().padStart(2, '0')
-    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, "0")
+    const month = (now.getMonth() + 1).toString().padStart(2, "0")
     const year = now.getFullYear()
     const random = nanoid(4).toUpperCase()
     const contractNumber = `PAC-${day}${month}${year}-${random}`
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             contractId: contract.id,
             contractNumber,
-            update_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/generate-contract`,
+            update_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/generate-contract`,
             ...body,
           }),
         })

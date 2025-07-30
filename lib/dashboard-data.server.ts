@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Database } from "@/types/supabase"
 
-import 'server-only' // Mark this module as server-only
+import "server-only" // Mark this module as server-only
 import type {
   AdminAction,
   AuditLog,
@@ -15,7 +15,7 @@ import type {
 
 const createSupabaseClient = async () => {
   const cookieStore = await cookies()
-  
+
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -29,15 +29,17 @@ const createSupabaseClient = async () => {
           await cookieStore.set({ name, value, ...options })
         },
         async remove(name: string, options: CookieOptions) {
-          await cookieStore.set({ name, value: '', ...options })
+          await cookieStore.set({ name, value: "", ...options })
         },
       },
-    }
+    },
   )
 }
 
 // Server-only implementations
-export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<DashboardAnalytics>> {
+export async function getDashboardAnalyticsSrv(): Promise<
+  ServerActionResponse<DashboardAnalytics>
+> {
   const supabase = await createSupabaseClient()
 
   try {
@@ -86,28 +88,37 @@ export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<D
     const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
     const totalContracts = contracts?.length || 0
-    const activeContracts = contracts?.filter(c => c.status === 'active').length || 0
-    const pendingContracts = contracts?.filter(c => c.status === 'pending').length || 0
-    const completedContracts = contracts?.filter(c => c.status === 'completed').length || 0
-    const failedContracts = contracts?.filter(c => c.status === 'failed').length || 0
-    const draftContracts = contracts?.filter(c => c.status === 'draft').length || 0
-    const expiredContracts = contracts?.filter(c => c.status === 'expired').length || 0
+    const activeContracts = contracts?.filter((c) => c.status === "active").length || 0
+    const pendingContracts = contracts?.filter((c) => c.status === "pending").length || 0
+    const completedContracts = contracts?.filter((c) => c.status === "completed").length || 0
+    const failedContracts = contracts?.filter((c) => c.status === "failed").length || 0
+    const draftContracts = contracts?.filter((c) => c.status === "draft").length || 0
+    const expiredContracts = contracts?.filter((c) => c.status === "expired").length || 0
 
-    const contractsThisMonth = contracts?.filter(c => 
-      c.created_at && new Date(c.created_at) >= thisMonth
-    ).length || 0
+    const contractsThisMonth =
+      contracts?.filter((c) => c.created_at && new Date(c.created_at) >= thisMonth).length || 0
 
-    const contractsLastMonth = contracts?.filter(c => 
-      c.created_at && new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth
-    ).length || 0
+    const contractsLastMonth =
+      contracts?.filter(
+        (c) =>
+          c.created_at && new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth,
+      ).length || 0
 
-    const revenueThisMonth = contracts?.filter(c => 
-      c.created_at && new Date(c.created_at) >= thisMonth && c.contract_value
-    ).reduce((sum, c) => sum + (c.contract_value || 0), 0) || 0
+    const revenueThisMonth =
+      contracts
+        ?.filter((c) => c.created_at && new Date(c.created_at) >= thisMonth && c.contract_value)
+        .reduce((sum, c) => sum + (c.contract_value || 0), 0) || 0
 
-    const revenueLastMonth = contracts?.filter(c => 
-      c.created_at && new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth && c.contract_value
-    ).reduce((sum, c) => sum + (c.contract_value || 0), 0) || 0
+    const revenueLastMonth =
+      contracts
+        ?.filter(
+          (c) =>
+            c.created_at &&
+            new Date(c.created_at) >= lastMonth &&
+            new Date(c.created_at) < thisMonth &&
+            c.contract_value,
+        )
+        .reduce((sum, c) => sum + (c.contract_value || 0), 0) || 0
 
     const totalRevenue = contracts?.reduce((sum, c) => sum + (c.contract_value || 0), 0) || 0
 
@@ -131,16 +142,19 @@ export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<D
       revenue_this_month: revenueThisMonth,
       revenue_last_month: revenueLastMonth,
       total_revenue: totalRevenue,
-      growth_percentage: contractsLastMonth > 0 ? ((contractsThisMonth - contractsLastMonth) / contractsLastMonth) * 100 : 0,
+      growth_percentage:
+        contractsLastMonth > 0
+          ? ((contractsThisMonth - contractsLastMonth) / contractsLastMonth) * 100
+          : 0,
       upcoming_expirations: 0, // TODO: Calculate based on contract end dates
       monthly_trends: [], // TODO: Calculate based on historical data
       status_distribution: [
-        { name: 'Active', value: activeContracts },
-        { name: 'Pending', value: pendingContracts },
-        { name: 'Completed', value: completedContracts },
-        { name: 'Failed', value: failedContracts },
-        { name: 'Draft', value: draftContracts },
-        { name: 'Expired', value: expiredContracts },
+        { name: "Active", value: activeContracts },
+        { name: "Pending", value: pendingContracts },
+        { name: "Completed", value: completedContracts },
+        { name: "Failed", value: failedContracts },
+        { name: "Draft", value: draftContracts },
+        { name: "Expired", value: expiredContracts },
       ],
       recent_activity: [], // TODO: Fetch from audit logs
     }
@@ -159,7 +173,7 @@ export async function getDashboardAnalyticsSrv(): Promise<ServerActionResponse<D
   }
 }
 
-export { getDashboardAnalyticsSrv as getDashboardAnalytics };
+export { getDashboardAnalyticsSrv as getDashboardAnalytics }
 
 // Add other server-only implementations
 export async function getPendingReviewsSrv(): Promise<ServerActionResponse<PendingReview[]>> {
@@ -183,9 +197,9 @@ export async function getPendingReviewsSrv(): Promise<ServerActionResponse<Pendi
     const reviews: PendingReview[] = (data || []).map((contract) => ({
       id: contract.id,
       title: `Contract ${contract.id}`,
-      type: 'contract',
+      type: "contract",
       description: `Contract pending since ${new Date(contract.created_at || Date.now()).toLocaleDateString()}`,
-      priority: 'medium',
+      priority: "medium",
       created_at: contract.created_at || new Date().toISOString(),
       updated_at: contract.updated_at || null,
     }))
@@ -209,9 +223,11 @@ export async function getAdminActionsSrv(): Promise<ServerActionResponse<AdminAc
   try {
     const { data, error } = await supabase
       .from("audit_logs")
-      .select(`
+      .select(
+        `
         id, action, created_at, user_id, details, entity_type, entity_id
-      `)
+      `,
+      )
       .order("created_at", { ascending: false })
       .limit(10)
 
@@ -225,12 +241,12 @@ export async function getAdminActionsSrv(): Promise<ServerActionResponse<AdminAc
 
     const adminActions: AdminAction[] = (data || []).map((log) => ({
       id: log.id.toString(),
-      action: log.action || 'unknown',
+      action: log.action || "unknown",
       created_at: log.created_at || new Date().toISOString(),
-      user_id: log.user_id || '',
-      details: log.details ? JSON.stringify(log.details) : '',
-      resource_type: log.entity_type || 'unknown',
-      resource_id: log.entity_id?.toString() || 'unknown',
+      user_id: log.user_id || "",
+      details: log.details ? JSON.stringify(log.details) : "",
+      resource_type: log.entity_type || "unknown",
+      resource_id: log.entity_id?.toString() || "unknown",
       user: null,
     }))
 
@@ -252,11 +268,13 @@ export async function getAuditLogsSrv(): Promise<ServerActionResponse<AuditLog[]
   const supabase = await createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('audit_logs')
-      .select(`
+      .from("audit_logs")
+      .select(
+        `
         id, action, created_at, user_id, details, entity_type, entity_id
-      `)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .order("created_at", { ascending: false })
       .limit(50)
 
     if (error) {
@@ -264,19 +282,18 @@ export async function getAuditLogsSrv(): Promise<ServerActionResponse<AuditLog[]
       return { success: false, message: `Failed to fetch audit logs: ${error.message}` }
     }
 
-    const auditLogs: AuditLog[] = (data || []).map(log => ({
+    const auditLogs: AuditLog[] = (data || []).map((log) => ({
       id: log.id.toString(),
-      action: log.action || 'unknown',
+      action: log.action || "unknown",
       created_at: log.created_at || new Date().toISOString(),
-      user_id: log.user_id || '',
-      details: log.details ? JSON.stringify(log.details) : '',
-      entity_type: log.entity_type || 'unknown',
-      entity_id: log.entity_id?.toString() || 'unknown',
-      user: null
+      user_id: log.user_id || "",
+      details: log.details ? JSON.stringify(log.details) : "",
+      entity_type: log.entity_type || "unknown",
+      entity_id: log.entity_id?.toString() || "unknown",
+      user: null,
     }))
 
     return { success: true, data: auditLogs, message: "Audit logs fetched successfully." }
-
   } catch (error) {
     console.error("Error in getAuditLogs:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }
@@ -287,9 +304,9 @@ export async function getNotificationsSrv(): Promise<ServerActionResponse<Notifi
   const supabase = await createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("notifications")
+      .select("*")
+      .order("created_at", { ascending: false })
       .limit(20)
 
     if (error) {
@@ -297,18 +314,17 @@ export async function getNotificationsSrv(): Promise<ServerActionResponse<Notifi
       return { success: false, message: `Failed to fetch notifications: ${error.message}` }
     }
 
-    const notifications: Notification[] = (data || []).map(n => ({
+    const notifications: Notification[] = (data || []).map((n) => ({
       id: n.id.toString(),
-      message: n.message || '',
+      message: n.message || "",
       created_at: n.created_at || new Date().toISOString(),
       isRead: n.is_read || false,
-      type: (n.type as "success" | "error" | "warning" | "info" | "default") || 'info',
-      user_id: n.user_id || '',
+      type: (n.type as "success" | "error" | "warning" | "info" | "default") || "info",
+      user_id: n.user_id || "",
       timestamp: n.created_at || new Date().toISOString(),
     }))
 
     return { success: true, data: notifications, message: "Notifications fetched successfully." }
-
   } catch (error) {
     console.error("Error fetching notifications:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }
@@ -319,8 +335,8 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
   const supabase = await createSupabaseClient()
   try {
     const { data, error } = await supabase
-      .from('users')
-      .select('id, email, role, created_at')
+      .from("users")
+      .select("id, email, role, created_at")
       .limit(20)
 
     if (error) {
@@ -328,15 +344,14 @@ export async function getUsersSrv(): Promise<ServerActionResponse<User[]>> {
       return { success: false, message: `Failed to fetch users: ${error.message}` }
     }
 
-    const users: User[] = (data || []).map(u => ({
+    const users: User[] = (data || []).map((u) => ({
       id: u.id,
-      email: u.email || '',
-      role: u.role || 'User',
+      email: u.email || "",
+      role: u.role || "User",
       created_at: u.created_at || new Date().toISOString(),
     }))
 
     return { success: true, data: users, message: "Users fetched successfully." }
-
   } catch (error) {
     console.error("Error fetching users:", error)
     return { success: false, message: `An unexpected error occurred: ${(error as Error).message}` }

@@ -54,19 +54,20 @@ export async function generateContractWithMakecom(contractData: {
 }) {
   try {
     const contractService = getContractGenerationService()
-    
+
     // Convert to the expected format, handling optional contract_end_date
     const generationData = {
       ...contractData,
-      contract_end_date: contractData.contract_end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000) // Default to 1 year from now if not provided
+      contract_end_date:
+        contractData.contract_end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Default to 1 year from now if not provided
     }
-    
+
     const result = await contractService.generateContract(generationData)
-    
+
     if (!result.success) {
-      throw new Error(result.message || 'Contract generation failed')
+      throw new Error(result.message || "Contract generation failed")
     }
-    
+
     // Return the contract data in the expected format
     return {
       id: result.contract_id,
@@ -75,11 +76,11 @@ export async function generateContractWithMakecom(contractData: {
       pdf_url: result.pdf_url,
       google_drive_url: result.google_drive_url,
       message: result.message,
-      success: true
+      success: true,
     }
   } catch (error) {
-    console.error('Contract generation error:', error)
-    throw new Error(error instanceof Error ? error.message : 'Contract generation failed')
+    console.error("Contract generation error:", error)
+    throw new Error(error instanceof Error ? error.message : "Contract generation failed")
   }
 }
 

@@ -5,6 +5,7 @@
 To fix the `vercel-token` error, ensure these secrets are configured in your GitHub repository:
 
 ### 1. Go to your GitHub repository
+
 - Navigate to: `https://github.com/[your-username]/Contract-Management-System`
 - Click on **Settings** tab
 - Click on **Secrets and variables** → **Actions** in the left sidebar
@@ -12,11 +13,13 @@ To fix the `vercel-token` error, ensure these secrets are configured in your Git
 ### 2. Verify these secrets exist:
 
 #### Required for Vercel Deployment:
+
 - `VERCEL_TOKEN` - Your Vercel API token
 - `VERCEL_ORG_ID` - Your Vercel organization ID
 - `VERCEL_PROJECT_ID` - Your Vercel project ID
 
 #### Required for Supabase:
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Your Supabase anonymous key
 - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
@@ -24,17 +27,20 @@ To fix the `vercel-token` error, ensure these secrets are configured in your Git
 - `SUPABASE_ACCESS_TOKEN` - Your Supabase access token
 
 #### Optional but recommended:
+
 - `FRONTEND_URL` - Your frontend URL
 
 ### 3. How to get Vercel credentials:
 
 #### Get Vercel Token:
+
 1. Go to https://vercel.com/account/tokens
 2. Click "Create Token"
 3. Give it a name (e.g., "GitHub Actions")
 4. Copy the token and add it as `VERCEL_TOKEN` secret
 
 #### Get Vercel Org ID and Project ID:
+
 1. Go to your Vercel dashboard
 2. Select your project
 3. Go to Settings → General
@@ -80,4 +86,4 @@ If the `amondnet/vercel-action@v25` continues to have issues, you can modify the
     VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
     VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-``` 
+```

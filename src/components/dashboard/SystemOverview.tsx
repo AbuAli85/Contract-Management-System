@@ -1,17 +1,6 @@
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { 
-  FileText, 
-  Users, 
-  BarChart3,
-  ChevronRight,
-} from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileText, Users, BarChart3, ChevronRight } from "lucide-react"
 
 interface FeatureCardProps {
   icon: React.ReactNode
@@ -21,10 +10,8 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <div className="flex items-start space-x-4 p-4 rounded-lg hover:bg-accent/50 transition-colors">
-      <div className="p-2 bg-primary/10 rounded-lg">
-        {icon}
-      </div>
+    <div className="flex items-start space-x-4 rounded-lg p-4 transition-colors hover:bg-accent/50">
+      <div className="rounded-lg bg-primary/10 p-2">{icon}</div>
       <div className="space-y-1">
         <h4 className="text-sm font-medium">{title}</h4>
         <p className="text-sm text-muted-foreground">{description}</p>

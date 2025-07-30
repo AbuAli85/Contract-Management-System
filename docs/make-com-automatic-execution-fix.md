@@ -1,6 +1,7 @@
 # Fix Make.com Automatic Execution Issue
 
 ## Problem
+
 The webhook is working (returns "Accepted"), but Make.com only executes the scenario when you manually press "Run once" instead of automatically triggering when data is received.
 
 ## Solution Steps
@@ -28,29 +29,29 @@ The webhook is working (returns "Accepted"), but Make.com only executes the scen
 1. **In the Webhook trigger module**, click **"Show data structure"**
 2. **Click "Add"** to add a sample data structure
 3. **Use this sample data**:
-\`\`\`json
-{
-  "contract_id": "test-123",
-  "first_party_name_en": "Test Client",
-  "first_party_name_ar": "عميل تجريبي",
-  "first_party_crn": "123456789",
-  "second_party_name_en": "Test Employer",
-  "second_party_name_ar": "صاحب عمل تجريبي",
-  "second_party_crn": "987654321",
-  "promoter_name_en": "Test Promoter",
-  "promoter_name_ar": "مروج تجريبي",
-  "job_title": "Developer",
-  "work_location": "Riyadh",
-  "email": "test@example.com",
-  "start_date": "2024-01-01",
-  "end_date": "2024-12-31",
-  "contract_number": "CONTRACT-001",
-  "id_card_number": "1234567890",
-  "promoter_id_card_url": "https://example.com/id.jpg",
-  "promoter_passport_url": "https://example.com/passport.jpg",
-  "pdf_url": "https://example.com/contract.pdf"
-}
-\`\`\`
+   \`\`\`json
+   {
+   "contract_id": "test-123",
+   "first_party_name_en": "Test Client",
+   "first_party_name_ar": "عميل تجريبي",
+   "first_party_crn": "123456789",
+   "second_party_name_en": "Test Employer",
+   "second_party_name_ar": "صاحب عمل تجريبي",
+   "second_party_crn": "987654321",
+   "promoter_name_en": "Test Promoter",
+   "promoter_name_ar": "مروج تجريبي",
+   "job_title": "Developer",
+   "work_location": "Riyadh",
+   "email": "test@example.com",
+   "start_date": "2024-01-01",
+   "end_date": "2024-12-31",
+   "contract_number": "CONTRACT-001",
+   "id_card_number": "1234567890",
+   "promoter_id_card_url": "https://example.com/id.jpg",
+   "promoter_passport_url": "https://example.com/passport.jpg",
+   "pdf_url": "https://example.com/contract.pdf"
+   }
+   \`\`\`
 
 ### 4. Test the Webhook Trigger
 
@@ -88,8 +89,8 @@ Try sending a simpler test payload to see if the issue is with the data structur
 
 \`\`\`json
 {
-  "test": "simple",
-  "timestamp": "2024-01-01T00:00:00Z"
+"test": "simple",
+"timestamp": "2024-01-01T00:00:00Z"
 }
 \`\`\`
 
@@ -102,24 +103,30 @@ Try sending a simpler test payload to see if the issue is with the data structur
 ### 10. Check Webhook URL Format
 
 Ensure your webhook URL is in the correct format:
+
 - ✅ `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4`
 - ❌ `https://hook.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4` (wrong region)
 
 ## Common Issues and Solutions
 
 ### Issue 1: Scenario is Paused
+
 **Solution**: Activate the scenario in settings
 
 ### Issue 2: Manual Execution Only
+
 **Solution**: Enable "Allow manual execution" in webhook trigger
 
 ### Issue 3: Wrong Data Structure
+
 **Solution**: Update the data structure in the webhook trigger
 
 ### Issue 4: Plan Limitations
+
 **Solution**: Upgrade Make.com plan or contact support
 
 ### Issue 5: Webhook URL Mismatch
+
 **Solution**: Ensure the URL in Make.com matches your environment variable
 
 ## Verification Steps
@@ -149,6 +156,7 @@ If the issue persists:
 ## Expected Behavior
 
 When working correctly:
+
 - ✅ Webhook receives data automatically
 - ✅ Scenario executes immediately
 - ✅ No manual intervention required

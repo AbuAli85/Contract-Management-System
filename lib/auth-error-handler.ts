@@ -17,7 +17,7 @@ export class AuthErrorHandler {
     return {
       success: false,
       error: message,
-      code
+      code,
     }
   }
 
@@ -25,23 +25,23 @@ export class AuthErrorHandler {
     return {
       success: true,
       data,
-      message
+      message,
     }
   }
 
   static handleValidationError(field: string, message: string): AuthErrorResponse {
-    return this.createError(`${field}: ${message}`, 'VALIDATION_ERROR')
+    return this.createError(`${field}: ${message}`, "VALIDATION_ERROR")
   }
 
   static handleAuthError(error: any): AuthErrorResponse {
     if (error?.message) {
-      return this.createError(error.message, 'AUTH_ERROR')
+      return this.createError(error.message, "AUTH_ERROR")
     }
-    return this.createError('Authentication failed', 'AUTH_ERROR')
+    return this.createError("Authentication failed", "AUTH_ERROR")
   }
 
   static handleGenericError(error: any): AuthErrorResponse {
-    console.error('Auth error:', error)
-    return this.createError('Internal server error', 'INTERNAL_ERROR')
+    console.error("Auth error:", error)
+    return this.createError("Internal server error", "INTERNAL_ERROR")
   }
-} 
+}

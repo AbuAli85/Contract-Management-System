@@ -7,6 +7,7 @@ The User Management System provides comprehensive user administration capabiliti
 ## Features
 
 ### ✅ **Core Features**
+
 - **User CRUD Operations** - Create, Read, Update, Delete users
 - **Role-Based Access Control** - Admin, Manager, User, Viewer roles
 - **Granular Permissions** - 17+ specific permissions across 4 categories
@@ -18,6 +19,7 @@ The User Management System provides comprehensive user administration capabiliti
 - **Security** - Row Level Security (RLS) policies
 
 ### 🔐 **Permission Categories**
+
 1. **User Management** (5 permissions)
    - View, Create, Edit, Delete, Bulk Actions
 2. **Contract Management** (5 permissions)
@@ -46,6 +48,7 @@ Execute the SQL schema in `database/schema.sql`:
 ### 2. Default Admin User
 
 The schema creates a default admin user:
+
 - **Email**: `admin@example.com`
 - **Role**: `admin`
 - **Status**: `active`
@@ -56,14 +59,18 @@ The schema creates a default admin user:
 ## API Endpoints
 
 ### GET `/api/users`
+
 Fetch all users with optional filtering:
+
 ```javascript
 // Query parameters
 ?role=admin&status=active&department=Engineering&search=john
 ```
 
 ### POST `/api/users`
+
 Create a new user:
+
 ```javascript
 {
   "email": "user@example.com",
@@ -78,7 +85,9 @@ Create a new user:
 ```
 
 ### PUT `/api/users`
+
 Update an existing user:
+
 ```javascript
 {
   "userId": "user-uuid",
@@ -89,11 +98,13 @@ Update an existing user:
 ```
 
 ### DELETE `/api/users?id=user-uuid`
+
 Delete a user (cannot delete self).
 
 ## User Roles & Permissions
 
 ### Role Hierarchy
+
 1. **Admin** - Full system access
 2. **Manager** - User management + contract approval
 3. **User** - Basic contract operations
@@ -101,12 +112,12 @@ Delete a user (cannot delete self).
 
 ### Default Role Permissions
 
-| Role | User Management | Contract Management | Dashboard | System |
-|------|----------------|-------------------|-----------|---------|
-| **Admin** | All (5) | All (5) | All (3) | All (4) |
+| Role        | User Management    | Contract Management         | Dashboard                | System        |
+| ----------- | ------------------ | --------------------------- | ------------------------ | ------------- |
+| **Admin**   | All (5)            | All (5)                     | All (3)                  | All (4)       |
 | **Manager** | View, Create, Edit | View, Create, Edit, Approve | View, Analytics, Reports | View Settings |
-| **User** | None | View, Create, Edit | View Dashboard | None |
-| **Viewer** | None | View Only | View Dashboard | None |
+| **User**    | None               | View, Create, Edit          | View Dashboard           | None          |
+| **Viewer**  | None               | View Only                   | View Dashboard           | None          |
 
 ## Usage Guide
 
@@ -169,18 +180,22 @@ Navigate to: `http://localhost:3000/en/dashboard/users`
 ## Security Features
 
 ### Row Level Security (RLS)
+
 - Users can only view their own data
 - Admins and authorized users can view all data
 - Permission-based access control for all operations
 
 ### Activity Logging
+
 All user management actions are logged:
+
 - User creation, updates, deletions
 - Permission changes
 - Login attempts
 - Bulk operations
 
 ### Permission Validation
+
 - Server-side permission checking
 - Role-based access control
 - Granular permission system
@@ -188,13 +203,16 @@ All user management actions are logged:
 ## API Integration
 
 ### Frontend Integration
+
 The user management system integrates with:
+
 - Next.js 13+ App Router
 - Supabase for authentication and database
 - TypeScript for type safety
 - Tailwind CSS for styling
 
 ### Authentication
+
 - Uses Supabase Auth
 - JWT token validation
 - Session management
@@ -219,16 +237,19 @@ The user management system integrates with:
 ### Database Queries
 
 Check user permissions:
+
 ```sql
 SELECT email, role, permissions FROM users WHERE id = 'user-uuid';
 ```
 
 View activity logs:
+
 ```sql
 SELECT * FROM user_activity_log WHERE user_id = 'user-uuid' ORDER BY created_at DESC;
 ```
 
 Get user statistics:
+
 ```sql
 SELECT * FROM user_statistics;
 ```
@@ -236,6 +257,7 @@ SELECT * FROM user_statistics;
 ## Production Considerations
 
 ### Security
+
 1. **Change default admin password**
 2. **Enable HTTPS**
 3. **Set up proper CORS policies**
@@ -243,12 +265,14 @@ SELECT * FROM user_statistics;
 5. **Regular security audits**
 
 ### Performance
+
 1. **Database indexing** (already included)
 2. **Caching strategies**
 3. **Pagination for large datasets**
 4. **Optimize queries**
 
 ### Monitoring
+
 1. **Activity log monitoring**
 2. **Error tracking**
 3. **Performance monitoring**
@@ -257,6 +281,7 @@ SELECT * FROM user_statistics;
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section
 2. Review database logs
 3. Check browser console for errors
@@ -271,4 +296,4 @@ For issues or questions:
 - [ ] API rate limiting
 - [ ] User import/export
 - [ ] Custom permission creation
-- [ ] User session management 
+- [ ] User session management

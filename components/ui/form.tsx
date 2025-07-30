@@ -52,7 +52,7 @@ const useFormField = () => {
   }
 
   // Check if we're on the client side and have a form context
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Return safe defaults for SSR
     return {
       id: itemContext.id,
@@ -61,7 +61,7 @@ const useFormField = () => {
       formDescriptionId: `${itemContext.id}-form-item-description`,
       formMessageId: `${itemContext.id}-form-item-message`,
       error: undefined,
-      formState: { errors: {} }
+      formState: { errors: {} },
     }
   }
 
@@ -86,7 +86,7 @@ const useFormField = () => {
       formDescriptionId: `${itemContext.id}-form-item-description`,
       formMessageId: `${itemContext.id}-form-item-message`,
       error: undefined,
-      formState: { errors: {} }
+      formState: { errors: {} },
     }
   }
 }

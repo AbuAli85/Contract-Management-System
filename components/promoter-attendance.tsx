@@ -1,19 +1,45 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Calendar, CalendarDays, Clock, CheckCircle, XCircle, AlertCircle, Plus, Edit, Trash2, Calendar as CalendarIcon, FileText } from 'lucide-react'
-import { PromoterAttendanceLog, PromoterLeaveRequest } from '@/lib/types'
-import { toast } from 'sonner'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns'
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Calendar,
+  CalendarDays,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Plus,
+  Edit,
+  Trash2,
+  Calendar as CalendarIcon,
+  FileText,
+} from "lucide-react"
+import { PromoterAttendanceLog, PromoterLeaveRequest } from "@/lib/types"
+import { toast } from "sonner"
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from "date-fns"
 
 interface PromoterAttendanceProps {
   promoterId: string
@@ -21,7 +47,7 @@ interface PromoterAttendanceProps {
 }
 
 export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendanceProps) {
-  const [activeTab, setActiveTab] = useState('calendar')
+  const [activeTab, setActiveTab] = useState("calendar")
   const [attendanceLogs, setAttendanceLogs] = useState<PromoterAttendanceLog[]>([])
   const [leaveRequests, setLeaveRequests] = useState<PromoterLeaveRequest[]>([])
   const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false)
@@ -31,19 +57,19 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   // Attendance form
   const [attendanceForm, setAttendanceForm] = useState({
-    date: '',
-    check_in_time: '',
-    check_out_time: '',
-    status: 'present',
-    notes: ''
+    date: "",
+    check_in_time: "",
+    check_out_time: "",
+    status: "present",
+    notes: "",
   })
 
   // Leave request form
   const [leaveRequestForm, setLeaveRequestForm] = useState({
-    leave_type: '',
-    start_date: '',
-    end_date: '',
-    reason: ''
+    leave_type: "",
+    start_date: "",
+    end_date: "",
+    reason: "",
   })
 
   // Fetch attendance data
@@ -53,12 +79,12 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   const fetchAttendanceData = async () => {
     try {
-      const startDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
-      const endDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd')
+      const startDate = format(startOfMonth(currentMonth), "yyyy-MM-dd")
+      const endDate = format(endOfMonth(currentMonth), "yyyy-MM-dd")
 
       // Fetch attendance logs
       const attendanceResponse = await fetch(
-        `/api/promoters/${promoterId}/attendance?start_date=${startDate}&end_date=${endDate}`
+        `/api/promoters/${promoterId}/attendance?start_date=${startDate}&end_date=${endDate}`,
       )
       if (attendanceResponse.ok) {
         const attendanceData = await attendanceResponse.json()
@@ -72,7 +98,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
         setLeaveRequests(leaveData)
       }
     } catch (error) {
-      console.error('Error fetching attendance data:', error)
+      console.error("Error fetching attendance data:", error)
     }
   }
 
@@ -80,46 +106,56 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
   const handleAttendanceSubmit = async () => {
     try {
       const url = `/api/promoters/${promoterId}/attendance`
-      const method = editingItem ? 'PUT' : 'POST'
+      const method = editingItem ? "PUT" : "POST"
       const body = editingItem ? { id: editingItem.id, ...attendanceForm } : attendanceForm
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       })
 
       if (response.ok) {
         const newAttendance = await response.json()
         if (editingItem) {
-          setAttendanceLogs(attendanceLogs.map(a => a.id === editingItem.id ? newAttendance : a))
+          setAttendanceLogs(
+            attendanceLogs.map((a) => (a.id === editingItem.id ? newAttendance : a)),
+          )
         } else {
           setAttendanceLogs([...attendanceLogs, newAttendance])
         }
-        setAttendanceForm({ date: '', check_in_time: '', check_out_time: '', status: 'present', notes: '' })
+        setAttendanceForm({
+          date: "",
+          check_in_time: "",
+          check_out_time: "",
+          status: "present",
+          notes: "",
+        })
         setEditingItem(null)
         setIsAttendanceDialogOpen(false)
-        toast.success(editingItem ? 'Attendance updated successfully' : 'Attendance added successfully')
+        toast.success(
+          editingItem ? "Attendance updated successfully" : "Attendance added successfully",
+        )
       }
     } catch (error) {
-      toast.error('Failed to save attendance')
+      toast.error("Failed to save attendance")
     }
   }
 
   const handleAttendanceDelete = async (attendanceId: string) => {
     try {
       const response = await fetch(`/api/promoters/${promoterId}/attendance`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: attendanceId })
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: attendanceId }),
       })
 
       if (response.ok) {
-        setAttendanceLogs(attendanceLogs.filter(a => a.id !== attendanceId))
-        toast.success('Attendance deleted successfully')
+        setAttendanceLogs(attendanceLogs.filter((a) => a.id !== attendanceId))
+        toast.success("Attendance deleted successfully")
       }
     } catch (error) {
-      toast.error('Failed to delete attendance')
+      toast.error("Failed to delete attendance")
     }
   }
 
@@ -127,66 +163,70 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
   const handleLeaveRequestSubmit = async () => {
     try {
       const url = `/api/promoters/${promoterId}/leave-requests`
-      const method = editingItem ? 'PUT' : 'POST'
+      const method = editingItem ? "PUT" : "POST"
       const body = editingItem ? { id: editingItem.id, ...leaveRequestForm } : leaveRequestForm
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       })
 
       if (response.ok) {
         const newLeaveRequest = await response.json()
         if (editingItem) {
-          setLeaveRequests(leaveRequests.map(l => l.id === editingItem.id ? newLeaveRequest : l))
+          setLeaveRequests(
+            leaveRequests.map((l) => (l.id === editingItem.id ? newLeaveRequest : l)),
+          )
         } else {
           setLeaveRequests([...leaveRequests, newLeaveRequest])
         }
-        setLeaveRequestForm({ leave_type: '', start_date: '', end_date: '', reason: '' })
+        setLeaveRequestForm({ leave_type: "", start_date: "", end_date: "", reason: "" })
         setEditingItem(null)
         setIsLeaveRequestDialogOpen(false)
-        toast.success(editingItem ? 'Leave request updated successfully' : 'Leave request added successfully')
+        toast.success(
+          editingItem ? "Leave request updated successfully" : "Leave request added successfully",
+        )
       }
     } catch (error) {
-      toast.error('Failed to save leave request')
+      toast.error("Failed to save leave request")
     }
   }
 
   const handleLeaveRequestDelete = async (leaveRequestId: string) => {
     try {
       const response = await fetch(`/api/promoters/${promoterId}/leave-requests`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: leaveRequestId })
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: leaveRequestId }),
       })
 
       if (response.ok) {
-        setLeaveRequests(leaveRequests.filter(l => l.id !== leaveRequestId))
-        toast.success('Leave request deleted successfully')
+        setLeaveRequests(leaveRequests.filter((l) => l.id !== leaveRequestId))
+        toast.success("Leave request deleted successfully")
       }
     } catch (error) {
-      toast.error('Failed to delete leave request')
+      toast.error("Failed to delete leave request")
     }
   }
 
   const openEditDialog = (item: any, type: string) => {
     setEditingItem(item)
-    if (type === 'attendance') {
+    if (type === "attendance") {
       setAttendanceForm({
         date: item.date,
-        check_in_time: item.check_in_time || '',
-        check_out_time: item.check_out_time || '',
+        check_in_time: item.check_in_time || "",
+        check_out_time: item.check_out_time || "",
         status: item.status,
-        notes: item.notes || ''
+        notes: item.notes || "",
       })
       setIsAttendanceDialogOpen(true)
-    } else if (type === 'leave') {
+    } else if (type === "leave") {
       setLeaveRequestForm({
         leave_type: item.leave_type,
         start_date: item.start_date,
         end_date: item.end_date,
-        reason: item.reason || ''
+        reason: item.reason || "",
       })
       setIsLeaveRequestDialogOpen(true)
     }
@@ -194,24 +234,22 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   // Calendar helpers
   const getAttendanceForDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd')
-    return attendanceLogs.find(log => log.date === dateStr)
+    const dateStr = format(date, "yyyy-MM-dd")
+    return attendanceLogs.find((log) => log.date === dateStr)
   }
 
   const getLeaveRequestForDate = (date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd')
-    return leaveRequests.find(leave => 
-      leave.start_date <= dateStr && leave.end_date >= dateStr
-    )
+    const dateStr = format(date, "yyyy-MM-dd")
+    return leaveRequests.find((leave) => leave.start_date <= dateStr && leave.end_date >= dateStr)
   }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'present':
+      case "present":
         return <CheckCircle className="h-4 w-4 text-green-500" />
-      case 'absent':
+      case "absent":
         return <XCircle className="h-4 w-4 text-red-500" />
-      case 'late':
+      case "late":
         return <AlertCircle className="h-4 w-4 text-yellow-500" />
       default:
         return <Clock className="h-4 w-4 text-gray-500" />
@@ -220,13 +258,13 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'present':
+      case "present":
         return <Badge variant="default">Present</Badge>
-      case 'absent':
+      case "absent":
         return <Badge variant="destructive">Absent</Badge>
-      case 'late':
+      case "late":
         return <Badge variant="secondary">Late</Badge>
-      case 'half-day':
+      case "half-day":
         return <Badge variant="outline">Half Day</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -235,11 +273,11 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   const getLeaveStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
+      case "pending":
         return <Badge variant="secondary">Pending</Badge>
-      case 'approved':
+      case "approved":
         return <Badge variant="default">Approved</Badge>
-      case 'rejected':
+      case "rejected":
         return <Badge variant="destructive">Rejected</Badge>
       default:
         return <Badge variant="outline">{status}</Badge>
@@ -248,14 +286,16 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
   const calendarDays = eachDayOfInterval({
     start: startOfMonth(currentMonth),
-    end: endOfMonth(currentMonth)
+    end: endOfMonth(currentMonth),
   })
 
   if (!isAdmin) {
     return (
       <Card>
         <CardContent className="p-6">
-          <p className="text-muted-foreground text-center">Attendance management is restricted to administrators.</p>
+          <p className="text-center text-muted-foreground">
+            Attendance management is restricted to administrators.
+          </p>
         </CardContent>
       </Card>
     )
@@ -272,23 +312,27 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
         {/* Calendar Tab */}
         <TabsContent value="calendar" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Attendance Calendar</h3>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                onClick={() =>
+                  setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+                }
               >
                 Previous
               </Button>
               <span className="px-4 py-2 text-sm font-medium">
-                {format(currentMonth, 'MMMM yyyy')}
+                {format(currentMonth, "MMMM yyyy")}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                onClick={() =>
+                  setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+                }
               >
                 Next
               </Button>
@@ -298,45 +342,48 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
           <Card>
             <CardContent className="p-4">
               <div className="grid grid-cols-7 gap-1">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                  <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                  <div
+                    key={day}
+                    className="p-2 text-center text-sm font-medium text-muted-foreground"
+                  >
                     {day}
                   </div>
                 ))}
-                {calendarDays.map(day => {
+                {calendarDays.map((day) => {
                   const attendance = getAttendanceForDate(day)
                   const leaveRequest = getLeaveRequestForDate(day)
                   const isToday = isSameDay(day, new Date())
-                  
+
                   return (
                     <div
                       key={day.toISOString()}
-                      className={`p-2 min-h-[80px] border rounded-lg cursor-pointer hover:bg-muted/50 ${
-                        isToday ? 'bg-blue-50 border-blue-200' : ''
+                      className={`min-h-[80px] cursor-pointer rounded-lg border p-2 hover:bg-muted/50 ${
+                        isToday ? "border-blue-200 bg-blue-50" : ""
                       }`}
                       onClick={() => {
                         if (attendance) {
-                          openEditDialog(attendance, 'attendance')
+                          openEditDialog(attendance, "attendance")
                         } else {
                           setAttendanceForm({
-                            date: format(day, 'yyyy-MM-dd'),
-                            check_in_time: '',
-                            check_out_time: '',
-                            status: 'present',
-                            notes: ''
+                            date: format(day, "yyyy-MM-dd"),
+                            check_in_time: "",
+                            check_out_time: "",
+                            status: "present",
+                            notes: "",
                           })
                           setEditingItem(null)
                           setIsAttendanceDialogOpen(true)
                         }
                       }}
                     >
-                      <div className="text-sm font-medium">{format(day, 'd')}</div>
+                      <div className="text-sm font-medium">{format(day, "d")}</div>
                       {attendance && (
                         <div className="mt-1">
                           {getStatusIcon(attendance.status)}
                           {attendance.check_in_time && (
                             <div className="text-xs text-muted-foreground">
-                              {format(parseISO(attendance.check_in_time), 'HH:mm')}
+                              {format(parseISO(attendance.check_in_time), "HH:mm")}
                             </div>
                           )}
                         </div>
@@ -359,7 +406,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
         {/* Attendance Logs Tab */}
         <TabsContent value="logs" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Attendance Logs</h3>
             <Dialog open={isAttendanceDialogOpen} onOpenChange={setIsAttendanceDialogOpen}>
               <DialogTrigger asChild>
@@ -370,7 +417,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editingItem ? 'Edit Attendance' : 'Add Attendance'}</DialogTitle>
+                  <DialogTitle>{editingItem ? "Edit Attendance" : "Add Attendance"}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
@@ -379,7 +426,9 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                       id="date"
                       type="date"
                       value={attendanceForm.date}
-                      onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })}
+                      onChange={(e) =>
+                        setAttendanceForm({ ...attendanceForm, date: e.target.value })
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -389,7 +438,9 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                         id="check_in"
                         type="time"
                         value={attendanceForm.check_in_time}
-                        onChange={(e) => setAttendanceForm({ ...attendanceForm, check_in_time: e.target.value })}
+                        onChange={(e) =>
+                          setAttendanceForm({ ...attendanceForm, check_in_time: e.target.value })
+                        }
                       />
                     </div>
                     <div>
@@ -398,13 +449,20 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                         id="check_out"
                         type="time"
                         value={attendanceForm.check_out_time}
-                        onChange={(e) => setAttendanceForm({ ...attendanceForm, check_out_time: e.target.value })}
+                        onChange={(e) =>
+                          setAttendanceForm({ ...attendanceForm, check_out_time: e.target.value })
+                        }
                       />
                     </div>
                   </div>
                   <div>
                     <Label htmlFor="status">Status</Label>
-                    <Select value={attendanceForm.status} onValueChange={(value) => setAttendanceForm({ ...attendanceForm, status: value })}>
+                    <Select
+                      value={attendanceForm.status}
+                      onValueChange={(value) =>
+                        setAttendanceForm({ ...attendanceForm, status: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -421,23 +479,32 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                     <Textarea
                       id="notes"
                       value={attendanceForm.notes}
-                      onChange={(e) => setAttendanceForm({ ...attendanceForm, notes: e.target.value })}
+                      onChange={(e) =>
+                        setAttendanceForm({ ...attendanceForm, notes: e.target.value })
+                      }
                       placeholder="Additional notes..."
                       rows={2}
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => {
-                    setIsAttendanceDialogOpen(false)
-                    setEditingItem(null)
-                    setAttendanceForm({ date: '', check_in_time: '', check_out_time: '', status: 'present', notes: '' })
-                  }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsAttendanceDialogOpen(false)
+                      setEditingItem(null)
+                      setAttendanceForm({
+                        date: "",
+                        check_in_time: "",
+                        check_out_time: "",
+                        status: "present",
+                        notes: "",
+                      })
+                    }}
+                  >
                     Cancel
                   </Button>
-                  <Button onClick={handleAttendanceSubmit}>
-                    {editingItem ? 'Update' : 'Add'}
-                  </Button>
+                  <Button onClick={handleAttendanceSubmit}>{editingItem ? "Update" : "Add"}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -447,26 +514,28 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
             {attendanceLogs.map((log) => (
               <Card key={log.id}>
                 <CardContent className="p-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       {getStatusIcon(log.status)}
                       <div>
-                        <p className="font-medium">{format(parseISO(log.date), 'EEEE, MMMM d, yyyy')}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <p className="font-medium">
+                          {format(parseISO(log.date), "EEEE, MMMM d, yyyy")}
+                        </p>
+                        <div className="mt-1 flex items-center gap-2">
                           {getStatusBadge(log.status)}
                           {log.check_in_time && (
                             <span className="text-sm text-muted-foreground">
-                              In: {format(parseISO(log.check_in_time), 'HH:mm')}
+                              In: {format(parseISO(log.check_in_time), "HH:mm")}
                             </span>
                           )}
                           {log.check_out_time && (
                             <span className="text-sm text-muted-foreground">
-                              Out: {format(parseISO(log.check_out_time), 'HH:mm')}
+                              Out: {format(parseISO(log.check_out_time), "HH:mm")}
                             </span>
                           )}
                         </div>
                         {log.notes && (
-                          <p className="text-sm text-muted-foreground mt-1">{log.notes}</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{log.notes}</p>
                         )}
                       </div>
                     </div>
@@ -474,7 +543,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openEditDialog(log, 'attendance')}
+                        onClick={() => openEditDialog(log, "attendance")}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -493,7 +562,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
             {attendanceLogs.length === 0 && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <CalendarDays className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">No attendance logs found.</p>
                 </CardContent>
               </Card>
@@ -503,7 +572,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
 
         {/* Leave Requests Tab */}
         <TabsContent value="leave" className="space-y-4">
-          <div className="flex justify-between items-center">
+          <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Leave Requests</h3>
             <Dialog open={isLeaveRequestDialogOpen} onOpenChange={setIsLeaveRequestDialogOpen}>
               <DialogTrigger asChild>
@@ -514,12 +583,19 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{editingItem ? 'Edit Leave Request' : 'Add Leave Request'}</DialogTitle>
+                  <DialogTitle>
+                    {editingItem ? "Edit Leave Request" : "Add Leave Request"}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="leave-type">Leave Type</Label>
-                    <Select value={leaveRequestForm.leave_type} onValueChange={(value) => setLeaveRequestForm({ ...leaveRequestForm, leave_type: value })}>
+                    <Select
+                      value={leaveRequestForm.leave_type}
+                      onValueChange={(value) =>
+                        setLeaveRequestForm({ ...leaveRequestForm, leave_type: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select leave type" />
                       </SelectTrigger>
@@ -538,7 +614,9 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                         id="start-date"
                         type="date"
                         value={leaveRequestForm.start_date}
-                        onChange={(e) => setLeaveRequestForm({ ...leaveRequestForm, start_date: e.target.value })}
+                        onChange={(e) =>
+                          setLeaveRequestForm({ ...leaveRequestForm, start_date: e.target.value })
+                        }
                       />
                     </div>
                     <div>
@@ -547,7 +625,9 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                         id="end-date"
                         type="date"
                         value={leaveRequestForm.end_date}
-                        onChange={(e) => setLeaveRequestForm({ ...leaveRequestForm, end_date: e.target.value })}
+                        onChange={(e) =>
+                          setLeaveRequestForm({ ...leaveRequestForm, end_date: e.target.value })
+                        }
                       />
                     </div>
                   </div>
@@ -556,22 +636,32 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                     <Textarea
                       id="reason"
                       value={leaveRequestForm.reason}
-                      onChange={(e) => setLeaveRequestForm({ ...leaveRequestForm, reason: e.target.value })}
+                      onChange={(e) =>
+                        setLeaveRequestForm({ ...leaveRequestForm, reason: e.target.value })
+                      }
                       placeholder="Reason for leave request..."
                       rows={3}
                     />
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => {
-                    setIsLeaveRequestDialogOpen(false)
-                    setEditingItem(null)
-                    setLeaveRequestForm({ leave_type: '', start_date: '', end_date: '', reason: '' })
-                  }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsLeaveRequestDialogOpen(false)
+                      setEditingItem(null)
+                      setLeaveRequestForm({
+                        leave_type: "",
+                        start_date: "",
+                        end_date: "",
+                        reason: "",
+                      })
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button onClick={handleLeaveRequestSubmit}>
-                    {editingItem ? 'Update' : 'Add'}
+                    {editingItem ? "Update" : "Add"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -582,22 +672,22 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
             {leaveRequests.map((leave) => (
               <Card key={leave.id}>
                 <CardContent className="p-4">
-                  <div className="flex justify-between items-start">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="mb-2 flex items-center gap-2">
                         <CalendarIcon className="h-4 w-4 text-blue-500" />
                         <h4 className="font-semibold capitalize">{leave.leave_type} Leave</h4>
                         {getLeaveStatusBadge(leave.status)}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {format(parseISO(leave.start_date), 'MMM d, yyyy')} - {format(parseISO(leave.end_date), 'MMM d, yyyy')}
+                      <p className="mb-2 text-sm text-muted-foreground">
+                        {format(parseISO(leave.start_date), "MMM d, yyyy")} -{" "}
+                        {format(parseISO(leave.end_date), "MMM d, yyyy")}
                       </p>
-                      {leave.reason && (
-                        <p className="text-sm">{leave.reason}</p>
-                      )}
+                      {leave.reason && <p className="text-sm">{leave.reason}</p>}
                       {leave.approved_at && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {leave.status === 'approved' ? 'Approved' : 'Rejected'} on {format(parseISO(leave.approved_at), 'MMM d, yyyy')}
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {leave.status === "approved" ? "Approved" : "Rejected"} on{" "}
+                          {format(parseISO(leave.approved_at), "MMM d, yyyy")}
                         </p>
                       )}
                     </div>
@@ -605,7 +695,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => openEditDialog(leave, 'leave')}
+                        onClick={() => openEditDialog(leave, "leave")}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -624,7 +714,7 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
             {leaveRequests.length === 0 && (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <CalendarIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
                   <p className="text-muted-foreground">No leave requests found.</p>
                 </CardContent>
               </Card>
@@ -634,4 +724,4 @@ export function PromoterAttendance({ promoterId, isAdmin }: PromoterAttendancePr
       </Tabs>
     </div>
   )
-} 
+}

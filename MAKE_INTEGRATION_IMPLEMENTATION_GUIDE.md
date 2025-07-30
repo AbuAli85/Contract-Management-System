@@ -1,11 +1,13 @@
 # Make.com Integration Implementation Guide
 
 ## Overview
+
 This guide provides step-by-step instructions for implementing the enhanced Make.com integration for contract generation in your Contract Management System.
 
 ## Prerequisites
 
 ### 1. Make.com Account Setup
+
 - Active Make.com account with appropriate plan
 - Access to create and manage scenarios
 - API connections configured for:
@@ -15,6 +17,7 @@ This guide provides step-by-step instructions for implementing the enhanced Make
   - HTTP requests
 
 ### 2. Database Preparation
+
 Run the following SQL script to prepare your database:
 
 ```sql
@@ -27,7 +30,7 @@ ALTER TABLE contracts ADD COLUMN IF NOT EXISTS last_generation_attempt TIMESTAMP
 
 -- Update status constraint to include 'failed' status
 ALTER TABLE contracts DROP CONSTRAINT IF EXISTS contracts_status_check;
-ALTER TABLE contracts ADD CONSTRAINT contracts_status_check 
+ALTER TABLE contracts ADD CONSTRAINT contracts_status_check
     CHECK (status IN ('draft', 'pending', 'processing', 'active', 'expired', 'generated', 'soon-to-expire', 'approved', 'rejected', 'failed'));
 
 -- Add indexes for performance
@@ -54,6 +57,7 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 ### Step 2: API Connections Configuration
 
 #### Google Drive Connection
+
 1. Create a new Google Drive connection
 2. Use service account credentials for restricted access
 3. Grant access to specific folders:
@@ -61,11 +65,13 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
    - Generated contracts: `1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP`
 
 #### Google Docs Connection
+
 1. Create a new Google Docs connection
 2. Use the same service account as Google Drive
 3. Ensure access to template document: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 
 #### Supabase Connection
+
 1. Create a new Supabase connection
 2. Use the service role key for database operations
 3. Configure storage bucket access for 'contracts' bucket
@@ -81,6 +87,7 @@ SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 Ensure your Google Docs template has the correct placeholders:
 
 #### Text Placeholders
+
 - `ref_number` - Contract number
 - `first_party_name_en` - First party name (English)
 - `first_party_name_ar` - First party name (Arabic)
@@ -95,6 +102,7 @@ Ensure your Google Docs template has the correct placeholders:
 - `contract_end_date` - Contract end date (DD-MM-YYYY)
 
 #### Image Placeholders
+
 - `ID_CARD_IMAGE` - ID card image placeholder
 - `PASSPORT_IMAGE` - Passport image placeholder
 
@@ -177,6 +185,7 @@ Monitor and optimize:
 
 **Symptoms**: Images not appearing in generated PDF
 **Solutions**:
+
 - Verify image URLs are accessible
 - Check Google Drive permissions
 - Ensure image format is supported (JPG, PNG)
@@ -186,6 +195,7 @@ Monitor and optimize:
 
 **Symptoms**: Placeholders not replaced
 **Solutions**:
+
 - Verify placeholder names match exactly
 - Check template document permissions
 - Ensure text replacement format is correct
@@ -195,6 +205,7 @@ Monitor and optimize:
 
 **Symptoms**: Status not updated in database
 **Solutions**:
+
 - Verify API keys are correct
 - Check database permissions
 - Ensure contract exists and is current
@@ -204,6 +215,7 @@ Monitor and optimize:
 
 **Symptoms**: No response or incorrect response
 **Solutions**:
+
 - Check webhook URL configuration
 - Verify response format
 - Ensure proper HTTP status codes
@@ -250,13 +262,14 @@ const imageSettings = {
   maxWidth: 1920,
   maxHeight: 1080,
   quality: 0.8,
-  format: 'JPEG'
-};
+  format: "JPEG",
+}
 ```
 
 ### 2. Parallel Processing
 
 Enable parallel execution where possible:
+
 - Image downloads can run in parallel
 - Database operations can be optimized
 - File uploads can be batched
@@ -264,6 +277,7 @@ Enable parallel execution where possible:
 ### 3. Caching Strategy
 
 Implement caching for:
+
 - Template documents
 - Frequently accessed data
 - API responses
@@ -321,4 +335,4 @@ Implement caching for:
 
 ---
 
-*This guide should be updated regularly as the integration evolves. Keep track of any changes and update documentation accordingly.* 
+_This guide should be updated regularly as the integration evolves. Keep track of any changes and update documentation accordingly._

@@ -16,32 +16,40 @@ const fileSchema = createOptionalFileSchema(
 const dateOptionalNullableSchema = z.any().optional().nullable()
 
 // Enhanced validation schemas
-const emailSchema = z.string()
+const emailSchema = z
+  .string()
   .min(1, "Email address is required")
   .email("Please enter a valid email address")
   .toLowerCase()
   .trim()
 
-const phoneSchema = z.string()
+const phoneSchema = z
+  .string()
   .min(1, "Phone number is required")
   .regex(
     /^(\+?[1-9]\d{1,14}|[0-9]{10,15})$/,
-    "Please enter a valid phone number (10-15 digits, optionally starting with +)"
+    "Please enter a valid phone number (10-15 digits, optionally starting with +)",
   )
-  .transform(val => val.replace(/\s+/g, '')) // Remove spaces
+  .transform((val) => val.replace(/\s+/g, "")) // Remove spaces
 
-const nationalitySchema = z.string()
+const nationalitySchema = z
+  .string()
   .min(1, "Nationality is required")
   .min(2, "Nationality must be at least 2 characters")
   .max(50, "Nationality must be less than 50 characters")
 
-const firstNameSchema = z.string()
+const firstNameSchema = z
+  .string()
   .min(1, "First name is required")
   .min(2, "First name must be at least 2 characters")
   .max(50, "First name must be less than 50 characters")
-  .regex(/^[a-zA-Z\s\-']+$/, "First name can only contain letters, spaces, hyphens, and apostrophes")
+  .regex(
+    /^[a-zA-Z\s\-']+$/,
+    "First name can only contain letters, spaces, hyphens, and apostrophes",
+  )
 
-const lastNameSchema = z.string()
+const lastNameSchema = z
+  .string()
   .min(1, "Last name is required")
   .min(2, "Last name must be at least 2 characters")
   .max(50, "Last name must be less than 50 characters")
@@ -61,7 +69,7 @@ export const promoterStatuses = z.enum([
   "contractor",
   "temporary",
   "training",
-  "other"
+  "other",
 ])
 export type PromoterStatus = z.infer<typeof promoterStatuses>
 
@@ -72,7 +80,7 @@ export const promoterProfileSchema = z.object({
   nationality: nationalitySchema,
   email: emailSchema,
   mobile_number: phoneSchema,
-  
+
   // Existing fields with enhanced validation
   name_en: z.string().min(1, "Name (English) is required."),
   name_ar: z.string().min(1, "Name (Arabic) is required."),

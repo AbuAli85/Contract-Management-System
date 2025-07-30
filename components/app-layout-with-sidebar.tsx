@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect } from 'react'
-import { Sidebar } from '@/components/sidebar'
-import { MobileMenuButton } from '@/components/mobile-menu-button'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { useParams, usePathname } from 'next/navigation'
+import React, { useState, useEffect } from "react"
+import { Sidebar } from "@/components/sidebar"
+import { MobileMenuButton } from "@/components/mobile-menu-button"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useParams, usePathname } from "next/navigation"
 
 interface AppLayoutWithSidebarProps {
   children: React.ReactNode
@@ -18,11 +18,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const params = useParams()
   const pathname = usePathname()
   const locale = params.locale as string
-  
+
   // Check if we're on the landing page (root route) or auth pages
   useEffect(() => {
     const isLanding = pathname === `/${locale}`
-    const isAuthPage = pathname.includes('/auth/') || pathname.includes('/login') || pathname.includes('/signup')
+    const isAuthPage =
+      pathname.includes("/auth/") || pathname.includes("/login") || pathname.includes("/signup")
     setIsLandingPage(isLanding || isAuthPage)
   }, [pathname, locale])
 
@@ -33,7 +34,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         setForceRender(true)
       }
     }, 1000) // Reduced to 1 second for faster rendering
-    
+
     return () => clearTimeout(timer)
   }, [loading, mounted])
 
@@ -42,10 +43,10 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
   // Only log when there are issues (disabled for now)
   // if (!user && mounted && !loading) {
-  //   console.log('🧭 AppLayoutWithSidebar: No user after auth complete', { 
-  //     user: !!user, 
-  //     loading, 
-  //     mounted, 
+  //   console.log('🧭 AppLayoutWithSidebar: No user after auth complete', {
+  //     user: !!user,
+  //     loading,
+  //     mounted,
   //     pathname
   //   })
   // }
@@ -54,29 +55,19 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile menu button - only show if not landing page */}
       {!isLandingPage && (
-        <div className="md:hidden fixed top-4 left-4 z-50">
-          <MobileMenuButton 
-            isOpen={sidebarOpen} 
-            onToggle={() => setSidebarOpen(!sidebarOpen)} 
-          />
+        <div className="fixed left-4 top-4 z-50 md:hidden">
+          <MobileMenuButton isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         </div>
       )}
 
       {/* Sidebar - only show if not landing page */}
-      {!isLandingPage && (
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-        />
-      )}
-      
-      
+      {!isLandingPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
 
       {/* Main content */}
-      <div className={`min-h-screen ${!isLandingPage ? 'md:ml-64' : ''}`}>
+      <div className={`min-h-screen ${!isLandingPage ? "md:ml-64" : ""}`}>
         {/* Top header - only show if not landing page */}
         {!isLandingPage && (
-          <header className="bg-white shadow-sm border-b border-gray-200">
+          <header className="border-b border-gray-200 bg-white shadow-sm">
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
@@ -90,7 +81,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                       <span>Welcome, {user.email}</span>
                     </div>
                   )}
-                  <a 
+                  <a
                     href={`/${locale}/auth/logout`}
                     className="text-sm text-red-600 hover:text-red-800"
                   >
@@ -102,14 +93,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </header>
         )}
 
-                 {/* Page content */}
-         <main className="p-6">
-           {/* Render children */}
-           <div className="children-container">
-             {children}
-           </div>
-         </main>
+        {/* Page content */}
+        <main className="p-6">
+          {/* Render children */}
+          <div className="children-container">{children}</div>
+        </main>
       </div>
     </div>
   )
-} 
+}

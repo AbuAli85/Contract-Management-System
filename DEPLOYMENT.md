@@ -5,12 +5,14 @@
 ### Option 1: Vercel (Recommended - Easiest)
 
 #### Prerequisites:
+
 - GitHub account
 - Vercel account (free at [vercel.com](https://vercel.com))
 
 #### Steps:
 
 1. **Push to GitHub** (if not already done):
+
    ```bash
    git add .
    git commit -m "Ready for deployment"
@@ -31,6 +33,7 @@
    - Click "Deploy" - Vercel will build and deploy automatically
 
 #### Alternative: Deploy via CLI
+
 ```bash
 # Install Vercel CLI globally
 npm i -g vercel
@@ -45,6 +48,7 @@ vercel --prod
 ### Option 2: Netlify
 
 #### Steps:
+
 1. **Push to GitHub**
 2. **Connect to Netlify**:
    - Go to [netlify.com](https://netlify.com)
@@ -62,6 +66,7 @@ vercel --prod
 ### Option 3: Railway
 
 #### Steps:
+
 1. **Push to GitHub**
 2. **Connect to Railway**:
    - Go to [railway.app](https://railway.app)
@@ -77,6 +82,7 @@ vercel --prod
 ### Option 4: DigitalOcean App Platform
 
 #### Steps:
+
 1. **Push to GitHub**
 2. **Create App**:
    - Go to DigitalOcean App Platform
@@ -95,6 +101,7 @@ vercel --prod
 ## Environment Variables Setup
 
 ### Required Variables:
+
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -125,12 +132,14 @@ SMTP_PASS=your_smtp_password
 ## Database Setup
 
 ### Supabase Setup:
+
 1. **Create Supabase Project**:
    - Go to [supabase.com](https://supabase.com)
    - Create new project
    - Note down URL and keys
 
 2. **Run Database Scripts**:
+
    ```bash
    # Run the database setup
    pnpm run db:setup
@@ -192,6 +201,7 @@ SMTP_PASS=your_smtp_password
    - Test webhook endpoints
 
 ### Support:
+
 - Check deployment platform documentation
 - Review application logs
 - Test locally with production environment variables
@@ -216,17 +226,21 @@ SMTP_PASS=your_smtp_password
 ## Cost Optimization
 
 ### Vercel:
+
 - Free tier: 100GB bandwidth/month
 - Pro: $20/month for more resources
 
 ### Netlify:
+
 - Free tier: 100GB bandwidth/month
 - Pro: $19/month for more features
 
 ### Railway:
+
 - Free tier: $5 credit/month
 - Pay-as-you-go pricing
 
 ### DigitalOcean:
+
 - App Platform: $5/month minimum
-- Pay for resources used 
+- Pay for resources used

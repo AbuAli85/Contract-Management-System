@@ -1,30 +1,44 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useToastHelpers } from '@/components/toast-notifications'
-import { usePermissions } from '@/hooks/use-permissions'
-import { 
-  Shield, 
-  Users, 
-  UserPlus, 
-  Edit, 
-  Trash2, 
-  CheckCircle, 
-  XCircle, 
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useToastHelpers } from "@/components/toast-notifications"
+import { usePermissions } from "@/hooks/use-permissions"
+import {
+  Shield,
+  Users,
+  UserPlus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
   Clock,
   Eye,
   Loader2,
   Plus,
-  Settings
-} from 'lucide-react'
+  Settings,
+} from "lucide-react"
 
 interface Role {
   id: string
@@ -56,9 +70,9 @@ export default function RolesAndPermissionsPage() {
   const [editDialog, setEditDialog] = useState(false)
   const [createDialog, setCreateDialog] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    permissions: [] as string[]
+    name: "",
+    description: "",
+    permissions: [] as string[],
   })
 
   // Check permissions
@@ -68,7 +82,8 @@ export default function RolesAndPermissionsPage() {
         <Alert>
           <XCircle className="h-4 w-4" />
           <AlertDescription>
-            You don't have permission to access roles and permissions. Please contact an administrator.
+            You don't have permission to access roles and permissions. Please contact an
+            administrator.
           </AlertDescription>
         </Alert>
       </div>
@@ -79,13 +94,13 @@ export default function RolesAndPermissionsPage() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch roles
-      const rolesResponse = await fetch('/api/roles')
+      const rolesResponse = await fetch("/api/roles")
       const rolesData = await rolesResponse.json()
 
       // Fetch permissions
-      const permissionsResponse = await fetch('/api/permissions')
+      const permissionsResponse = await fetch("/api/permissions")
       const permissionsData = await permissionsResponse.json()
 
       if (rolesData.success) {
@@ -96,7 +111,7 @@ export default function RolesAndPermissionsPage() {
         setPermissions(permissionsData.permissions)
       }
     } catch (err) {
-      error('Error fetching data', 'An unexpected error occurred')
+      error("Error fetching data", "An unexpected error occurred")
     } finally {
       setLoading(false)
     }
@@ -109,24 +124,24 @@ export default function RolesAndPermissionsPage() {
   // Handle role creation
   const handleCreateRole = async () => {
     try {
-      const response = await fetch('/api/roles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      const response = await fetch("/api/roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role created successfully')
+        success("Role created successfully")
         setCreateDialog(false)
-        setFormData({ name: '', description: '', permissions: [] })
+        setFormData({ name: "", description: "", permissions: [] })
         fetchData()
       } else {
-        error('Failed to create role', data.error)
+        error("Failed to create role", data.error)
       }
     } catch (err) {
-      error('Error creating role', 'An unexpected error occurred')
+      error("Error creating role", "An unexpected error occurred")
     }
   }
 
@@ -136,64 +151,67 @@ export default function RolesAndPermissionsPage() {
 
     try {
       const response = await fetch(`/api/roles/${selectedRole.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role updated successfully')
+        success("Role updated successfully")
         setEditDialog(false)
         setSelectedRole(null)
-        setFormData({ name: '', description: '', permissions: [] })
+        setFormData({ name: "", description: "", permissions: [] })
         fetchData()
       } else {
-        error('Failed to update role', data.error)
+        error("Failed to update role", data.error)
       }
     } catch (err) {
-      error('Error updating role', 'An unexpected error occurred')
+      error("Error updating role", "An unexpected error occurred")
     }
   }
 
   // Handle role deletion
   const handleDeleteRole = async (roleId: string) => {
-    if (!confirm('Are you sure you want to delete this role? This action cannot be undone.')) {
+    if (!confirm("Are you sure you want to delete this role? This action cannot be undone.")) {
       return
     }
 
     try {
       const response = await fetch(`/api/roles/${roleId}`, {
-        method: 'DELETE'
+        method: "DELETE",
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role deleted successfully')
+        success("Role deleted successfully")
         fetchData()
       } else {
-        error('Failed to delete role', data.error)
+        error("Failed to delete role", data.error)
       }
     } catch (err) {
-      error('Error deleting role', 'An unexpected error occurred')
+      error("Error deleting role", "An unexpected error occurred")
     }
   }
 
   // Group permissions by category
-  const groupedPermissions = permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = []
-    }
-    acc[permission.category].push(permission)
-    return acc
-  }, {} as Record<string, Permission[]>)
+  const groupedPermissions = permissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.category]) {
+        acc[permission.category] = []
+      }
+      acc[permission.category].push(permission)
+      return acc
+    },
+    {} as Record<string, Permission[]>,
+  )
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <Loader2 className="animate-spin mr-2" /> Loading roles and permissions...
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="mr-2 animate-spin" /> Loading roles and permissions...
       </div>
     )
   }
@@ -209,23 +227,21 @@ export default function RolesAndPermissionsPage() {
           </p>
         </div>
         <Button onClick={() => setCreateDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           Create Role
         </Button>
       </div>
 
       {/* Roles Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {roles.map((role) => (
-          <Card key={role.id} className="hover:shadow-md transition-shadow">
+          <Card key={role.id} className="transition-shadow hover:shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Shield className="h-5 w-5 text-primary" />
                   <CardTitle className="text-lg">{role.name}</CardTitle>
-                  {role.is_system && (
-                    <Badge variant="secondary">System</Badge>
-                  )}
+                  {role.is_system && <Badge variant="secondary">System</Badge>}
                 </div>
                 <div className="flex items-center gap-1">
                   <Button
@@ -236,7 +252,7 @@ export default function RolesAndPermissionsPage() {
                       setFormData({
                         name: role.name,
                         description: role.description,
-                        permissions: role.permissions
+                        permissions: role.permissions,
                       })
                       setEditDialog(true)
                     }}
@@ -244,11 +260,7 @@ export default function RolesAndPermissionsPage() {
                     <Edit className="h-4 w-4" />
                   </Button>
                   {!role.is_system && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteRole(role.id)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteRole(role.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
@@ -267,7 +279,7 @@ export default function RolesAndPermissionsPage() {
                   <span className="font-medium">{role.permissions.length}</span>
                 </div>
                 <div className="pt-2">
-                  <div className="text-sm text-muted-foreground mb-2">Key Permissions:</div>
+                  <div className="mb-2 text-sm text-muted-foreground">Key Permissions:</div>
                   <div className="flex flex-wrap gap-1">
                     {role.permissions.slice(0, 3).map((permission) => (
                       <Badge key={permission} variant="outline" className="text-xs">
@@ -292,9 +304,7 @@ export default function RolesAndPermissionsPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Create New Role</DialogTitle>
-            <DialogDescription>
-              Create a new role and assign permissions to it.
-            </DialogDescription>
+            <DialogDescription>Create a new role and assign permissions to it.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -317,10 +327,10 @@ export default function RolesAndPermissionsPage() {
             </div>
             <div>
               <Label>Permissions</Label>
-              <div className="space-y-3 max-h-60 overflow-y-auto border rounded-md p-3">
+              <div className="max-h-60 space-y-3 overflow-y-auto rounded-md border p-3">
                 {Object.entries(groupedPermissions).map(([category, perms]) => (
                   <div key={category}>
-                    <h4 className="font-medium text-sm mb-2">{category}</h4>
+                    <h4 className="mb-2 text-sm font-medium">{category}</h4>
                     <div className="space-y-2">
                       {perms.map((permission) => (
                         <label key={permission.id} className="flex items-center space-x-2">
@@ -331,12 +341,14 @@ export default function RolesAndPermissionsPage() {
                               if (e.target.checked) {
                                 setFormData({
                                   ...formData,
-                                  permissions: [...formData.permissions, permission.id]
+                                  permissions: [...formData.permissions, permission.id],
                                 })
                               } else {
                                 setFormData({
                                   ...formData,
-                                  permissions: formData.permissions.filter(p => p !== permission.id)
+                                  permissions: formData.permissions.filter(
+                                    (p) => p !== permission.id,
+                                  ),
                                 })
                               }
                             }}
@@ -354,9 +366,7 @@ export default function RolesAndPermissionsPage() {
             <Button variant="outline" onClick={() => setCreateDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreateRole}>
-              Create Role
-            </Button>
+            <Button onClick={handleCreateRole}>Create Role</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -366,9 +376,7 @@ export default function RolesAndPermissionsPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit Role</DialogTitle>
-            <DialogDescription>
-              Modify the role and its permissions.
-            </DialogDescription>
+            <DialogDescription>Modify the role and its permissions.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -391,10 +399,10 @@ export default function RolesAndPermissionsPage() {
             </div>
             <div>
               <Label>Permissions</Label>
-              <div className="space-y-3 max-h-60 overflow-y-auto border rounded-md p-3">
+              <div className="max-h-60 space-y-3 overflow-y-auto rounded-md border p-3">
                 {Object.entries(groupedPermissions).map(([category, perms]) => (
                   <div key={category}>
-                    <h4 className="font-medium text-sm mb-2">{category}</h4>
+                    <h4 className="mb-2 text-sm font-medium">{category}</h4>
                     <div className="space-y-2">
                       {perms.map((permission) => (
                         <label key={permission.id} className="flex items-center space-x-2">
@@ -405,12 +413,14 @@ export default function RolesAndPermissionsPage() {
                               if (e.target.checked) {
                                 setFormData({
                                   ...formData,
-                                  permissions: [...formData.permissions, permission.id]
+                                  permissions: [...formData.permissions, permission.id],
                                 })
                               } else {
                                 setFormData({
                                   ...formData,
-                                  permissions: formData.permissions.filter(p => p !== permission.id)
+                                  permissions: formData.permissions.filter(
+                                    (p) => p !== permission.id,
+                                  ),
                                 })
                               }
                             }}
@@ -428,9 +438,7 @@ export default function RolesAndPermissionsPage() {
             <Button variant="outline" onClick={() => setEditDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateRole}>
-              Update Role
-            </Button>
+            <Button onClick={handleUpdateRole}>Update Role</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -439,4 +447,4 @@ export default function RolesAndPermissionsPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

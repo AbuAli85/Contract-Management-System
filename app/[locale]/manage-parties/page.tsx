@@ -67,7 +67,7 @@ import {
   Shield,
   Eye,
   Building2,
-  Briefcase
+  Briefcase,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO, differenceInDays } from "date-fns"
@@ -76,7 +76,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface PartyWithContractCount extends Party {
-  contract_count?: number;
+  contract_count?: number
 }
 
 // Enhanced Party interface
@@ -114,7 +114,9 @@ export default function ManagePartiesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [documentFilter, setDocumentFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"name" | "cr_expiry" | "license_expiry" | "contracts">("name")
+  const [sortBy, setSortBy] = useState<"name" | "cr_expiry" | "license_expiry" | "contracts">(
+    "name",
+  )
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showStats, setShowStats] = useState(true)
@@ -125,11 +127,11 @@ export default function ManagePartiesPage() {
 
   const fetchPartiesWithContractCount = useCallback(async () => {
     if (isMountedRef.current) setIsLoading(true)
-    
+
     try {
       // Get supabase client
       const supabase = getSupabaseClient()
-      
+
       // Fetch parties
       const { data: partiesData, error: partiesError } = await supabase
         .from("parties")
@@ -151,7 +153,7 @@ export default function ManagePartiesPage() {
         (partiesData || []).map(async (party) => {
           try {
             const supabase = getSupabaseClient()
-            
+
             const { count: contractCount, error: contractError } = await supabase
               .from("contracts")
               .select("*", { count: "exact", head: true })
@@ -164,16 +166,16 @@ export default function ManagePartiesPage() {
 
             return {
               ...party,
-              contract_count: contractCount || 0
+              contract_count: contractCount || 0,
             }
           } catch (error) {
             console.warn(`Error processing party ${party.id}:`, error)
             return {
               ...party,
-              contract_count: 0
+              contract_count: 0,
             }
           }
-        })
+        }),
       )
 
       if (isMountedRef.current) {
@@ -196,16 +198,19 @@ export default function ManagePartiesPage() {
     isMountedRef.current = true
     fetchPartiesWithContractCount()
 
-    const refreshInterval = setInterval(() => {
-      if (isMountedRef.current && !isLoading) {
-        setIsRefreshing(true)
-        fetchPartiesWithContractCount().finally(() => {
-          if (isMountedRef.current) {
-            setIsRefreshing(false)
-          }
-        })
-      }
-    }, 5 * 60 * 1000) // Refresh every 5 minutes
+    const refreshInterval = setInterval(
+      () => {
+        if (isMountedRef.current && !isLoading) {
+          setIsRefreshing(true)
+          fetchPartiesWithContractCount().finally(() => {
+            if (isMountedRef.current) {
+              setIsRefreshing(false)
+            }
+          })
+        }
+      },
+      5 * 60 * 1000,
+    ) // Refresh every 5 minutes
 
     return () => {
       isMountedRef.current = false
@@ -218,9 +223,11 @@ export default function ManagePartiesPage() {
     applyFilters()
   }, [parties, searchTerm, statusFilter, typeFilter, documentFilter, sortBy, sortOrder])
 
-
   // Helper functions for enhanced party data
-  const getDocumentStatusType = (daysUntilExpiry: number | null, dateString: string | null): "valid" | "expiring" | "expired" | "missing" => {
+  const getDocumentStatusType = (
+    daysUntilExpiry: number | null,
+    dateString: string | null,
+  ): "valid" | "expiring" | "expired" | "missing" => {
     if (!dateString) return "missing"
     if (daysUntilExpiry === null) return "missing"
     if (daysUntilExpiry < 0) return "expired"
@@ -229,19 +236,24 @@ export default function ManagePartiesPage() {
   }
 
   const getOverallStatus = (party: Party): "active" | "warning" | "critical" | "inactive" => {
-    if (!party.status || party.status === "Inactive" || party.status === "Suspended") return "inactive"
-    
-    const crExpiry = party.cr_expiry_date ? differenceInDays(parseISO(party.cr_expiry_date), new Date()) : null
-    const licenseExpiry = party.license_expiry_date ? differenceInDays(parseISO(party.license_expiry_date), new Date()) : null
-    
+    if (!party.status || party.status === "Inactive" || party.status === "Suspended")
+      return "inactive"
+
+    const crExpiry = party.cr_expiry_date
+      ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
+      : null
+    const licenseExpiry = party.license_expiry_date
+      ? differenceInDays(parseISO(party.license_expiry_date), new Date())
+      : null
+
     if ((crExpiry !== null && crExpiry < 0) || (licenseExpiry !== null && licenseExpiry < 0)) {
       return "critical"
     }
-    
+
     if ((crExpiry !== null && crExpiry <= 30) || (licenseExpiry !== null && licenseExpiry <= 30)) {
       return "warning"
     }
-    
+
     return "active"
   }
 
@@ -252,15 +264,18 @@ export default function ManagePartiesPage() {
       return
     }
 
-    const filtered = parties.filter(party => {
+    const filtered = parties.filter((party) => {
       // Search filter - enhanced to include more fields
-      const searchMatch = !searchTerm || 
+      const searchMatch =
+        !searchTerm ||
         party.name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
         party.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
         party.crn.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (party.role && party.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (party.contact_person && party.contact_person.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (party.contact_email && party.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (party.contact_person &&
+          party.contact_person.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (party.contact_email &&
+          party.contact_email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (party.notes && party.notes.toLowerCase().includes(searchTerm.toLowerCase()))
 
       // Status filter
@@ -273,8 +288,8 @@ export default function ManagePartiesPage() {
     })
 
     // Convert to enhanced parties for display
-    const enhancedFiltered: EnhancedParty[] = filtered.map(party => {
-      const crExpiryDays = party.cr_expiry_date 
+    const enhancedFiltered: EnhancedParty[] = filtered.map((party) => {
+      const crExpiryDays = party.cr_expiry_date
         ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
         : null
 
@@ -293,11 +308,16 @@ export default function ManagePartiesPage() {
     })
 
     // Apply document filter to enhanced data
-    const finalFiltered = enhancedFiltered.filter(party => {
-      const documentMatch = documentFilter === "all" ||
-        (documentFilter === "expiring" && (party.cr_status === "expiring" || party.license_status === "expiring")) ||
-        (documentFilter === "expired" && (party.cr_status === "expired" || party.license_status === "expired")) ||
-        (documentFilter === "valid" && party.cr_status === "valid" && party.license_status === "valid")
+    const finalFiltered = enhancedFiltered.filter((party) => {
+      const documentMatch =
+        documentFilter === "all" ||
+        (documentFilter === "expiring" &&
+          (party.cr_status === "expiring" || party.license_status === "expiring")) ||
+        (documentFilter === "expired" &&
+          (party.cr_status === "expired" || party.license_status === "expired")) ||
+        (documentFilter === "valid" &&
+          party.cr_status === "valid" &&
+          party.license_status === "valid")
 
       return documentMatch
     })
@@ -305,7 +325,7 @@ export default function ManagePartiesPage() {
     // Apply sorting
     const sorted = [...finalFiltered].sort((a, b) => {
       let aValue: any, bValue: any
-      
+
       switch (sortBy) {
         case "name":
           aValue = a.name_en.toLowerCase()
@@ -343,15 +363,15 @@ export default function ManagePartiesPage() {
   // Calculate statistics
   const stats = useMemo((): PartyStats => {
     const total = filteredParties.length
-    const active = filteredParties.filter(p => p.status === "Active").length
-    const inactive = filteredParties.filter(p => p.status === "Inactive").length
-    const suspended = filteredParties.filter(p => p.status === "Suspended").length
-    const expiring = filteredParties.filter(p => p.overall_status === "warning").length
-    const expired = filteredParties.filter(p => p.overall_status === "critical").length
-    const employers = filteredParties.filter(p => p.type === "Employer").length
-    const clients = filteredParties.filter(p => p.type === "Client").length
+    const active = filteredParties.filter((p) => p.status === "Active").length
+    const inactive = filteredParties.filter((p) => p.status === "Inactive").length
+    const suspended = filteredParties.filter((p) => p.status === "Suspended").length
+    const expiring = filteredParties.filter((p) => p.overall_status === "warning").length
+    const expired = filteredParties.filter((p) => p.overall_status === "critical").length
+    const employers = filteredParties.filter((p) => p.type === "Employer").length
+    const clients = filteredParties.filter((p) => p.type === "Client").length
     const totalContracts = filteredParties.reduce((sum, p) => sum + (p.contract_count || 0), 0)
-    
+
     return {
       total,
       active,
@@ -387,18 +407,15 @@ export default function ManagePartiesPage() {
     setBulkActionLoading(true)
     try {
       const supabase = getSupabaseClient()
-      
-      const { error } = await supabase
-        .from("parties")
-        .delete()
-        .in("id", selectedParties)
+
+      const { error } = await supabase.from("parties").delete().in("id", selectedParties)
 
       if (error) throw error
 
       toast({
         title: "Success",
         description: `Deleted ${selectedParties.length} parties`,
-        variant: "default"
+        variant: "default",
       })
 
       setSelectedParties([])
@@ -408,7 +425,7 @@ export default function ManagePartiesPage() {
       toast({
         title: "Error",
         description: "Failed to delete parties",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setBulkActionLoading(false)
@@ -422,7 +439,7 @@ export default function ManagePartiesPage() {
       toast({
         title: "Refreshed",
         description: "Party data has been updated",
-        variant: "default"
+        variant: "default",
       })
     } finally {
       setIsRefreshing(false)
@@ -432,51 +449,55 @@ export default function ManagePartiesPage() {
   const handleExportCSV = async () => {
     setIsExporting(true)
     try {
-      const csvData = filteredParties.map(party => ({
-        'Name (EN)': party.name_en,
-        'Name (AR)': party.name_ar,
-        'CRN': party.crn,
-        'Type': party.type || 'N/A',
-        'Role': party.role || 'N/A',
-        'Status': party.status || 'N/A',
-        'CR Status': party.cr_status,
-        'CR Expiry': party.cr_expiry_date || 'N/A',
-        'License Status': party.license_status,
-        'License Expiry': party.license_expiry_date || 'N/A',
-        'Contact Person': party.contact_person || 'N/A',
-        'Contact Email': party.contact_email || 'N/A',
-        'Contact Phone': party.contact_phone || 'N/A',
-        'Address (EN)': party.address_en || 'N/A',
-        'Tax Number': party.tax_number || 'N/A',
-        'License Number': party.license_number || 'N/A',
-        'Active Contracts': party.contract_count || 0,
-        'Overall Status': party.overall_status,
-        'Created At': party.created_at ? format(parseISO(party.created_at), 'yyyy-MM-dd') : 'N/A',
-        'Notes': party.notes || ''
+      const csvData = filteredParties.map((party) => ({
+        "Name (EN)": party.name_en,
+        "Name (AR)": party.name_ar,
+        CRN: party.crn,
+        Type: party.type || "N/A",
+        Role: party.role || "N/A",
+        Status: party.status || "N/A",
+        "CR Status": party.cr_status,
+        "CR Expiry": party.cr_expiry_date || "N/A",
+        "License Status": party.license_status,
+        "License Expiry": party.license_expiry_date || "N/A",
+        "Contact Person": party.contact_person || "N/A",
+        "Contact Email": party.contact_email || "N/A",
+        "Contact Phone": party.contact_phone || "N/A",
+        "Address (EN)": party.address_en || "N/A",
+        "Tax Number": party.tax_number || "N/A",
+        "License Number": party.license_number || "N/A",
+        "Active Contracts": party.contract_count || 0,
+        "Overall Status": party.overall_status,
+        "Created At": party.created_at ? format(parseISO(party.created_at), "yyyy-MM-dd") : "N/A",
+        Notes: party.notes || "",
       }))
 
       const csvContent = [
-        Object.keys(csvData[0] || {}).join(','),
-        ...csvData.map(row => Object.values(row).map(val => `"${val}"`).join(','))
-      ].join('\n')
+        Object.keys(csvData[0] || {}).join(","),
+        ...csvData.map((row) =>
+          Object.values(row)
+            .map((val) => `"${val}"`)
+            .join(","),
+        ),
+      ].join("\n")
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
       link.href = URL.createObjectURL(blob)
-      link.download = `parties-export-${format(new Date(), 'yyyy-MM-dd')}.csv`
+      link.download = `parties-export-${format(new Date(), "yyyy-MM-dd")}.csv`
       link.click()
 
       toast({
         title: "Export Complete",
         description: `Exported ${filteredParties.length} parties to CSV`,
-        variant: "default"
+        variant: "default",
       })
     } catch (error) {
       console.error("Export error:", error)
       toast({
         title: "Export Failed",
         description: "Failed to export party data",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsExporting(false)
@@ -487,26 +508,45 @@ export default function ManagePartiesPage() {
     if (selectedParties.length === filteredParties.length) {
       setSelectedParties([])
     } else {
-      setSelectedParties(filteredParties.map(p => p.id))
+      setSelectedParties(filteredParties.map((p) => p.id))
     }
   }
 
   const toggleSelectParty = (partyId: string) => {
-    setSelectedParties(prev => 
-      prev.includes(partyId)
-        ? prev.filter(id => id !== partyId)
-        : [...prev, partyId]
+    setSelectedParties((prev) =>
+      prev.includes(partyId) ? prev.filter((id) => id !== partyId) : [...prev, partyId],
     )
   }
 
   const getStatusBadge = (status: string | null | undefined) => {
     switch (status) {
       case "Active":
-        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Active</Badge>
+        return (
+          <Badge
+            variant="default"
+            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+          >
+            Active
+          </Badge>
+        )
       case "Inactive":
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">Inactive</Badge>
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"
+          >
+            Inactive
+          </Badge>
+        )
       case "Suspended":
-        return <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Suspended</Badge>
+        return (
+          <Badge
+            variant="destructive"
+            className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+          >
+            Suspended
+          </Badge>
+        )
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
@@ -515,11 +555,32 @@ export default function ManagePartiesPage() {
   const getTypeBadge = (type: string | null | undefined) => {
     switch (type) {
       case "Employer":
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">Employer</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+          >
+            Employer
+          </Badge>
+        )
       case "Client":
-        return <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">Client</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+          >
+            Client
+          </Badge>
+        )
       case "Generic":
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">Generic</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+          >
+            Generic
+          </Badge>
+        )
       default:
         return <Badge variant="outline">Unknown</Badge>
     }
@@ -527,19 +588,27 @@ export default function ManagePartiesPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "active": return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "warning": return <AlertTriangle className="h-4 w-4 text-yellow-500" />
-      case "critical": return <XCircle className="h-4 w-4 text-red-500" />
-      default: return <Clock className="h-4 w-4 text-gray-500" />
+      case "active":
+        return <CheckCircle className="h-4 w-4 text-green-500" />
+      case "warning":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+      case "critical":
+        return <XCircle className="h-4 w-4 text-red-500" />
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />
     }
   }
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "active": return "default"
-      case "warning": return "secondary"
-      case "critical": return "destructive"
-      default: return "outline"
+      case "active":
+        return "default"
+      case "warning":
+        return "secondary"
+      case "critical":
+        return "destructive"
+      default:
+        return "outline"
     }
   }
 
@@ -552,7 +621,7 @@ export default function ManagePartiesPage() {
         tooltip: "Expiry date not set",
       }
     }
-    
+
     const date = parseISO(expiryDate)
     const today = new Date()
     const daysUntilExpiry = differenceInDays(date, today)
@@ -621,9 +690,7 @@ export default function ManagePartiesPage() {
             <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">
               Manage Parties
             </h1>
-            {isRefreshing && (
-              <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-            )}
+            {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
           </div>
           <div className="flex gap-2">
             <Button
@@ -658,7 +725,9 @@ export default function ManagePartiesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
-                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">{stats.total}</p>
+                    <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                      {stats.total}
+                    </p>
                   </div>
                   <Building2 className="h-8 w-8 text-blue-500" />
                 </div>
@@ -670,7 +739,9 @@ export default function ManagePartiesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-green-600 dark:text-green-400">Active</p>
-                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">{stats.active}</p>
+                    <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                      {stats.active}
+                    </p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-green-500" />
                 </div>
@@ -681,8 +752,12 @@ export default function ManagePartiesPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Expiring</p>
-                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{stats.expiring_documents}</p>
+                    <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">
+                      Expiring
+                    </p>
+                    <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+                      {stats.expiring_documents}
+                    </p>
                   </div>
                   <AlertTriangle className="h-8 w-8 text-yellow-500" />
                 </div>
@@ -694,7 +769,9 @@ export default function ManagePartiesPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
-                    <p className="text-2xl font-bold text-red-900 dark:text-red-100">{stats.expired_documents}</p>
+                    <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+                      {stats.expired_documents}
+                    </p>
                   </div>
                   <XCircle className="h-8 w-8 text-red-500" />
                 </div>
@@ -705,8 +782,12 @@ export default function ManagePartiesPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Contracts</p>
-                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">{stats.total_contracts}</p>
+                    <p className="text-sm font-medium text-purple-600 dark:text-purple-400">
+                      Contracts
+                    </p>
+                    <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                      {stats.total_contracts}
+                    </p>
                   </div>
                   <Briefcase className="h-8 w-8 text-purple-500" />
                 </div>
@@ -741,11 +822,7 @@ export default function ManagePartiesPage() {
                     </>
                   )}
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowStats(!showStats)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowStats(!showStats)}>
                   <Activity className="mr-2 h-4 w-4" />
                   {showStats ? "Hide" : "Show"} Stats
                 </Button>
@@ -756,7 +833,9 @@ export default function ManagePartiesPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
               {/* Search Input */}
               <div className="sm:col-span-2">
-                <Label htmlFor="search" className="sr-only">Search</Label>
+                <Label htmlFor="search" className="sr-only">
+                  Search
+                </Label>
                 <div className="relative">
                   <Input
                     id="search"
@@ -844,7 +923,7 @@ export default function ManagePartiesPage() {
                 <span className="text-sm font-medium">
                   {selectedParties.length} party(ies) selected
                 </span>
-                <div className="flex gap-2 ml-auto">
+                <div className="ml-auto flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
@@ -889,10 +968,9 @@ export default function ManagePartiesPage() {
             </CardHeader>
             <CardContent>
               <CardDescription className="text-lg">
-                {parties.length === 0 
+                {parties.length === 0
                   ? "Get started by adding your first party. Click the 'Add New Party' button above."
-                  : "No parties match your current filters. Try adjusting your search criteria."
-                }
+                  : "No parties match your current filters. Try adjusting your search criteria."}
               </CardDescription>
             </CardContent>
           </Card>
@@ -903,8 +981,8 @@ export default function ManagePartiesPage() {
                 <div>
                   <CardTitle className="text-xl">Party Directory</CardTitle>
                   <CardDescription>
-                    View, add, or edit party details, documents, and contract status.
-                    Showing {filteredParties.length} of {parties.length} parties.
+                    View, add, or edit party details, documents, and contract status. Showing{" "}
+                    {filteredParties.length} of {parties.length} parties.
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -931,7 +1009,10 @@ export default function ManagePartiesPage() {
                     <TableRow>
                       <TableHead className="w-12 px-4 py-3">
                         <Checkbox
-                          checked={selectedParties.length === filteredParties.length && filteredParties.length > 0}
+                          checked={
+                            selectedParties.length === filteredParties.length &&
+                            filteredParties.length > 0
+                          }
                           onCheckedChange={toggleSelectAll}
                           aria-label="Select all parties"
                         />
@@ -964,13 +1045,13 @@ export default function ManagePartiesPage() {
                       const crStatus = getDocumentStatus(party.cr_expiry_date)
                       const licenseStatus = getDocumentStatus(party.license_expiry_date)
                       const isSelected = selectedParties.includes(party.id)
-                      
+
                       return (
                         <TableRow
                           key={party.id}
                           className={cn(
-                            "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors",
-                            isSelected && "bg-blue-50 dark:bg-blue-950/20"
+                            "transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50",
+                            isSelected && "bg-blue-50 dark:bg-blue-950/20",
                           )}
                         >
                           <TableCell className="px-4 py-3">
@@ -983,22 +1064,22 @@ export default function ManagePartiesPage() {
                           <TableCell className="px-4 py-3">
                             <div className="flex items-center gap-3">
                               <div className="flex-shrink-0">
-                                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 text-sm font-semibold text-white">
                                   {party.name_en.charAt(0).toUpperCase()}
                                 </div>
                               </div>
                               <div className="min-w-0 flex-1">
-                                <div className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                                <div className="truncate font-medium text-slate-900 dark:text-slate-100">
                                   {party.name_en}
                                 </div>
-                                <div className="text-sm text-muted-foreground truncate" dir="rtl">
+                                <div className="truncate text-sm text-muted-foreground" dir="rtl">
                                   {party.name_ar}
                                 </div>
-                                <div className="text-xs text-slate-500 dark:text-slate-400 truncate font-mono">
+                                <div className="truncate font-mono text-xs text-slate-500 dark:text-slate-400">
                                   CRN: {party.crn}
                                 </div>
                                 {party.role && (
-                                  <div className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                                  <div className="truncate text-xs text-slate-400 dark:text-slate-500">
                                     Role: {party.role}
                                   </div>
                                 )}
@@ -1016,17 +1097,16 @@ export default function ManagePartiesPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="flex flex-col items-center">
-                                    <crStatus.Icon
-                                      className={`h-5 w-5 ${crStatus.colorClass}`}
-                                    />
+                                    <crStatus.Icon className={`h-5 w-5 ${crStatus.colorClass}`} />
                                     <span className={`mt-1 text-xs ${crStatus.colorClass}`}>
                                       {crStatus.text}
                                     </span>
-                                    {party.days_until_cr_expiry !== undefined && party.days_until_cr_expiry <= 30 && (
-                                      <span className="text-xs text-amber-600 font-medium mt-0.5">
-                                        {party.days_until_cr_expiry}d left
-                                      </span>
-                                    )}
+                                    {party.days_until_cr_expiry !== undefined &&
+                                      party.days_until_cr_expiry <= 30 && (
+                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                          {party.days_until_cr_expiry}d left
+                                        </span>
+                                      )}
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -1046,11 +1126,12 @@ export default function ManagePartiesPage() {
                                     <span className={`mt-1 text-xs ${licenseStatus.colorClass}`}>
                                       {licenseStatus.text}
                                     </span>
-                                    {party.days_until_license_expiry !== undefined && party.days_until_license_expiry <= 30 && (
-                                      <span className="text-xs text-amber-600 font-medium mt-0.5">
-                                        {party.days_until_license_expiry}d left
-                                      </span>
-                                    )}
+                                    {party.days_until_license_expiry !== undefined &&
+                                      party.days_until_license_expiry <= 30 && (
+                                        <span className="mt-0.5 text-xs font-medium text-amber-600">
+                                          {party.days_until_license_expiry}d left
+                                        </span>
+                                      )}
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -1084,9 +1165,7 @@ export default function ManagePartiesPage() {
                           <TableCell className="px-4 py-3 text-center">
                             <div className="flex flex-col items-center gap-1">
                               <Badge
-                                variant={
-                                  (party.contract_count || 0) > 0 ? "default" : "secondary"
-                                }
+                                variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
                                 className={
                                   (party.contract_count || 0) > 0
                                     ? "border-green-300 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
@@ -1105,10 +1184,10 @@ export default function ManagePartiesPage() {
                           </TableCell>
                           <TableCell className="px-4 py-3 text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                asChild 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
                                 className="text-xs"
                                 disabled={!party.id}
                               >
@@ -1144,7 +1223,7 @@ export default function ManagePartiesPage() {
                                     </Link>
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     className="text-red-600"
                                     onClick={() => {
                                       setSelectedParties([party.id])
@@ -1173,29 +1252,29 @@ export default function ManagePartiesPage() {
               const crStatus = getDocumentStatus(party.cr_expiry_date)
               const licenseStatus = getDocumentStatus(party.license_expiry_date)
               const isSelected = selectedParties.includes(party.id)
-              
+
               return (
-                <Card 
-                  key={party.id} 
+                <Card
+                  key={party.id}
                   className={cn(
-                    "relative hover:shadow-lg transition-shadow duration-200",
-                    isSelected && "ring-2 ring-primary ring-offset-2"
+                    "relative transition-shadow duration-200 hover:shadow-lg",
+                    isSelected && "ring-2 ring-primary ring-offset-2",
                   )}
                 >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center text-white font-semibold">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-blue-600 font-semibold text-white">
                           {party.name_en.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          <h3 className="truncate font-semibold text-slate-900 dark:text-slate-100">
                             {party.name_en}
                           </h3>
-                          <p className="text-sm text-muted-foreground truncate" dir="rtl">
+                          <p className="truncate text-sm text-muted-foreground" dir="rtl">
                             {party.name_ar}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                          <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
                             CRN: {party.crn}
                           </p>
                         </div>
@@ -1238,31 +1317,33 @@ export default function ManagePartiesPage() {
                     {/* Document Status */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">CR Status</div>
+                        <div className="mb-1 text-xs text-muted-foreground">CR Status</div>
                         <div className="flex flex-col items-center">
                           <crStatus.Icon className={`h-6 w-6 ${crStatus.colorClass}`} />
                           <span className={`text-xs ${crStatus.colorClass} mt-1`}>
                             {crStatus.text}
                           </span>
-                          {party.days_until_cr_expiry !== undefined && party.days_until_cr_expiry <= 30 && (
-                            <span className="text-xs text-amber-600 font-medium">
-                              {party.days_until_cr_expiry}d left
-                            </span>
-                          )}
+                          {party.days_until_cr_expiry !== undefined &&
+                            party.days_until_cr_expiry <= 30 && (
+                              <span className="text-xs font-medium text-amber-600">
+                                {party.days_until_cr_expiry}d left
+                              </span>
+                            )}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">License</div>
+                        <div className="mb-1 text-xs text-muted-foreground">License</div>
                         <div className="flex flex-col items-center">
                           <licenseStatus.Icon className={`h-6 w-6 ${licenseStatus.colorClass}`} />
                           <span className={`text-xs ${licenseStatus.colorClass} mt-1`}>
                             {licenseStatus.text}
                           </span>
-                          {party.days_until_license_expiry !== undefined && party.days_until_license_expiry <= 30 && (
-                            <span className="text-xs text-amber-600 font-medium">
-                              {party.days_until_license_expiry}d left
-                            </span>
-                          )}
+                          {party.days_until_license_expiry !== undefined &&
+                            party.days_until_license_expiry <= 30 && (
+                              <span className="text-xs font-medium text-amber-600">
+                                {party.days_until_license_expiry}d left
+                              </span>
+                            )}
                         </div>
                       </div>
                     </div>
@@ -1296,7 +1377,7 @@ export default function ManagePartiesPage() {
 
                     {/* Contract Status */}
                     <div className="text-center">
-                      <div className="text-xs text-muted-foreground mb-2">Active Contracts</div>
+                      <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
                       <Badge
                         variant={(party.contract_count || 0) > 0 ? "default" : "secondary"}
                         className="text-sm"
@@ -1308,12 +1389,7 @@ export default function ManagePartiesPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2 pt-2">
-                      <Button 
-                        asChild 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                      >
+                      <Button asChild variant="outline" size="sm" className="flex-1">
                         <Link href={`/manage-parties/${party.id}`}>
                           <Eye className="mr-1 h-4 w-4" /> View
                         </Link>
@@ -1339,4 +1415,4 @@ export default function ManagePartiesPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"

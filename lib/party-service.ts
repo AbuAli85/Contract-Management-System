@@ -1,5 +1,11 @@
 import { getSupabaseClient } from "@/lib/supabase"
-import type { Party, Contact, PartySearchParams, BulkPartyOperation, PartyExportParams } from "@/lib/schemas/party"
+import type {
+  Party,
+  Contact,
+  PartySearchParams,
+  BulkPartyOperation,
+  PartyExportParams,
+} from "@/lib/schemas/party"
 
 // Retry configuration
 const RETRY_CONFIG = {
@@ -12,7 +18,7 @@ const RETRY_CONFIG = {
 async function withRetry<T>(
   operation: () => Promise<T>,
   maxAttempts: number = RETRY_CONFIG.maxAttempts,
-  baseDelay: number = RETRY_CONFIG.baseDelay
+  baseDelay: number = RETRY_CONFIG.baseDelay,
 ): Promise<T> {
   let lastError: Error
 
@@ -37,7 +43,7 @@ async function withRetry<T>(
       const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), RETRY_CONFIG.maxDelay)
       console.warn(`Retry attempt ${attempt}/${maxAttempts} after ${delay}ms due to:`, error)
 
-      await new Promise(resolve => setTimeout(resolve, delay))
+      await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 
@@ -48,26 +54,27 @@ async function withRetry<T>(
 function isRetryableError(error: any): boolean {
   if (!error) return false
 
-  const message = error.message?.toLowerCase() || ''
-  const code = error.code?.toString() || ''
+  const message = error.message?.toLowerCase() || ""
+  const code = error.code?.toString() || ""
 
   // Network errors
-  if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+  if (message.includes("network") || message.includes("fetch") || message.includes("connection")) {
     return true
   }
 
   // Timeout errors
-  if (message.includes('timeout') || message.includes('timed out')) {
+  if (message.includes("timeout") || message.includes("timed out")) {
     return true
   }
 
   // HTTP 5xx errors (server errors)
-  if (code.startsWith('5')) {
+  if (code.startsWith("5")) {
     return true
   }
 
   // Supabase specific retryable errors
-  if (code === 'PGRST301' || code === 'PGRST302') { // Rate limiting
+  if (code === "PGRST301" || code === "PGRST302") {
+    // Rate limiting
     return true
   }
 
@@ -75,9 +82,7 @@ function isRetryableError(error: any): boolean {
 }
 
 // Fetch parties with pagination and search
-export async function fetchPartiesWithPagination(
-  params: PartySearchParams
-): Promise<{
+export async function fetchPartiesWithPagination(params: PartySearchParams): Promise<{
   data: Party[]
   total: number
   page: number
@@ -87,16 +92,17 @@ export async function fetchPartiesWithPagination(
 }> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    let query = supabase
-      .from('parties')
-      .select('*', { count: 'exact' })
+
+    let query = supabase.from("parties").select("*", { count: "exact" })
 
     // Apply search filter
     if (params.searchText && params.searchText.trim()) {
-      const { data: searchResults, error: searchError } = await supabase.rpc('search_parties_with_contacts', {
-        search_text: params.searchText.trim()
-      })
+      const { data: searchResults, error: searchError } = await supabase.rpc(
+        "search_parties_with_contacts",
+        {
+          search_text: params.searchText.trim(),
+        },
+      )
 
       if (searchError) {
         throw new Error(`Error searching parties: ${searchError.message}`)
@@ -104,7 +110,7 @@ export async function fetchPartiesWithPagination(
 
       if (searchResults && searchResults.length > 0) {
         const partyIds = searchResults.map((r: any) => r.id)
-        query = query.in('id', partyIds)
+        query = query.in("id", partyIds)
       } else {
         // No search results, return empty
         return {
@@ -113,30 +119,28 @@ export async function fetchPartiesWithPagination(
           page: params.page,
           limit: params.limit,
           hasNext: false,
-          hasPrev: false
+          hasPrev: false,
         }
       }
     }
 
     // Apply type filter
-    if (params.type && params.type !== 'all') {
-      query = query.eq('type', params.type)
+    if (params.type && params.type !== "all") {
+      query = query.eq("type", params.type)
     }
 
     // Apply status filter
-    if (params.status && params.status !== 'all') {
-      query = query.eq('status', params.status)
+    if (params.status && params.status !== "all") {
+      query = query.eq("status", params.status)
     }
 
     // Apply pagination
     const offset = (params.page - 1) * params.limit
-    query = query
-      .order('created_at', { ascending: false })
-      .range(offset, offset + params.limit - 1)
+    query = query.order("created_at", { ascending: false }).range(offset, offset + params.limit - 1)
 
     const { data, error, count } = await query
 
-  if (error) {
+    if (error) {
       throw new Error(`Error fetching parties: ${error.message}`)
     }
 
@@ -150,7 +154,7 @@ export async function fetchPartiesWithPagination(
       page: params.page,
       limit: params.limit,
       hasNext,
-      hasPrev
+      hasPrev,
     }
   })
 }
@@ -159,29 +163,31 @@ export async function fetchPartiesWithPagination(
 export async function searchParties(searchText: string): Promise<Party[]> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { data, error } = await supabase.rpc('search_parties_with_contacts', {
-      search_text: searchText.trim()
+
+    const { data, error } = await supabase.rpc("search_parties_with_contacts", {
+      search_text: searchText.trim(),
     })
 
-  if (error) {
-    throw new Error(`Error searching parties: ${error.message}`)
-  }
+    if (error) {
+      throw new Error(`Error searching parties: ${error.message}`)
+    }
 
-  return data || []
+    return data || []
   })
 }
 
 // Fetch party by ID with contacts
-export async function fetchPartyWithContacts(partyId: string): Promise<Party & { contacts: Contact[] }> {
+export async function fetchPartyWithContacts(
+  partyId: string,
+): Promise<Party & { contacts: Contact[] }> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
+
     // Fetch party
     const { data: party, error: partyError } = await supabase
-      .from('parties')
-      .select('*')
-      .eq('id', partyId)
+      .from("parties")
+      .select("*")
+      .eq("id", partyId)
       .single()
 
     if (partyError) {
@@ -190,11 +196,11 @@ export async function fetchPartyWithContacts(partyId: string): Promise<Party & {
 
     // Fetch contacts
     const { data: contacts, error: contactsError } = await supabase
-      .from('contacts')
-      .select('*')
-      .eq('party_id', partyId)
-      .order('is_primary', { ascending: false })
-      .order('name_en', { ascending: true })
+      .from("contacts")
+      .select("*")
+      .eq("party_id", partyId)
+      .order("is_primary", { ascending: false })
+      .order("name_en", { ascending: true })
 
     if (contactsError) {
       throw new Error(`Error fetching contacts: ${contactsError.message}`)
@@ -202,7 +208,7 @@ export async function fetchPartyWithContacts(partyId: string): Promise<Party & {
 
     return {
       ...party,
-      contacts: contacts || []
+      contacts: contacts || [],
     }
   })
 }
@@ -211,13 +217,13 @@ export async function fetchPartyWithContacts(partyId: string): Promise<Party & {
 export async function saveParty(partyData: Partial<Party>): Promise<Party> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
+
     if (partyData.id) {
       // Update existing party
       const { data, error } = await supabase
-        .from('parties')
+        .from("parties")
         .update(partyData)
-        .eq('id', partyData.id)
+        .eq("id", partyData.id)
         .select()
         .single()
 
@@ -228,11 +234,7 @@ export async function saveParty(partyData: Partial<Party>): Promise<Party> {
       return data
     } else {
       // Create new party
-      const { data, error } = await supabase
-        .from('parties')
-        .insert(partyData)
-        .select()
-        .single()
+      const { data, error } = await supabase.from("parties").insert(partyData).select().single()
 
       if (error) {
         throw new Error(`Error creating party: ${error.message}`)
@@ -247,13 +249,13 @@ export async function saveParty(partyData: Partial<Party>): Promise<Party> {
 export async function saveContact(contactData: Partial<Contact>): Promise<Contact> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
+
     if (contactData.id) {
       // Update existing contact
       const { data, error } = await supabase
-        .from('contacts')
+        .from("contacts")
         .update(contactData)
-        .eq('id', contactData.id)
+        .eq("id", contactData.id)
         .select()
         .single()
 
@@ -264,11 +266,7 @@ export async function saveContact(contactData: Partial<Contact>): Promise<Contac
       return data
     } else {
       // Create new contact
-      const { data, error } = await supabase
-        .from('contacts')
-        .insert(contactData)
-        .select()
-        .single()
+      const { data, error } = await supabase.from("contacts").insert(contactData).select().single()
 
       if (error) {
         throw new Error(`Error creating contact: ${error.message}`)
@@ -283,11 +281,8 @@ export async function saveContact(contactData: Partial<Contact>): Promise<Contac
 export async function deleteParty(partyId: string): Promise<void> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { error } = await supabase
-      .from('parties')
-      .delete()
-      .eq('id', partyId)
+
+    const { error } = await supabase.from("parties").delete().eq("id", partyId)
 
     if (error) {
       throw new Error(`Error deleting party: ${error.message}`)
@@ -296,7 +291,10 @@ export async function deleteParty(partyId: string): Promise<void> {
 }
 
 // Bulk delete parties
-export async function bulkDeleteParties(partyIds: string[], userId: string): Promise<{
+export async function bulkDeleteParties(
+  partyIds: string[],
+  userId: string,
+): Promise<{
   success: boolean
   deleted: number
   errors: string[]
@@ -304,12 +302,12 @@ export async function bulkDeleteParties(partyIds: string[], userId: string): Pro
 }> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { data, error } = await supabase.functions.invoke('delete-parties', {
+
+    const { data, error } = await supabase.functions.invoke("delete-parties", {
       body: {
         partyIds,
-        userId
-      }
+        userId,
+      },
     })
 
     if (error) {
@@ -323,38 +321,38 @@ export async function bulkDeleteParties(partyIds: string[], userId: string): Pro
 // Export parties to CSV
 export async function exportPartiesToCSV(
   partyIds?: string[],
-  includeContacts: boolean = true
+  includeContacts: boolean = true,
 ): Promise<string> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    let query = supabase.from('parties').select('*')
-    
+
+    let query = supabase.from("parties").select("*")
+
     if (partyIds && partyIds.length > 0) {
-      query = query.in('id', partyIds)
+      query = query.in("id", partyIds)
     }
 
-    const { data: parties, error } = await query.order('name_en', { ascending: true })
+    const { data: parties, error } = await query.order("name_en", { ascending: true })
 
     if (error) {
       throw new Error(`Error fetching parties for export: ${error.message}`)
     }
 
     if (!parties || parties.length === 0) {
-      return 'No parties found to export'
+      return "No parties found to export"
     }
 
     // Fetch contacts if requested
     let contacts: Contact[] = []
     if (includeContacts) {
-      const partyIds = parties.map(p => p.id)
+      const partyIds = parties.map((p) => p.id)
       const { data: contactsData, error: contactsError } = await supabase
-        .from('contacts')
-        .select('*')
-        .in('party_id', partyIds)
+        .from("contacts")
+        .select("*")
+        .in("party_id", partyIds)
 
       if (contactsError) {
-        console.warn('Error fetching contacts for export:', contactsError.message)
+        console.warn("Error fetching contacts for export:", contactsError.message)
       } else {
         contacts = contactsData || []
       }
@@ -362,89 +360,89 @@ export async function exportPartiesToCSV(
 
     // Convert to CSV
     const csvHeaders = [
-      'Party ID',
-      'English Name',
-      'Arabic Name',
-      'CRN',
-      'Type',
-      'Status',
-      'Contact Person',
-      'Contact Email',
-      'Contact Phone',
-      'English Address',
-      'Arabic Address',
-      'Tax Number',
-      'License Number',
-      'CR Expiry Date',
-      'License Expiry Date',
-      'Notes',
-      'Created At'
+      "Party ID",
+      "English Name",
+      "Arabic Name",
+      "CRN",
+      "Type",
+      "Status",
+      "Contact Person",
+      "Contact Email",
+      "Contact Phone",
+      "English Address",
+      "Arabic Address",
+      "Tax Number",
+      "License Number",
+      "CR Expiry Date",
+      "License Expiry Date",
+      "Notes",
+      "Created At",
     ]
 
     if (includeContacts) {
       csvHeaders.push(
-        'Contact ID',
-        'Contact English Name',
-        'Contact Arabic Name',
-        'Contact Email',
-        'Contact Phone',
-        'Contact Mobile',
-        'Contact Position',
-        'Contact Department',
-        'Is Primary Contact',
-        'Contact Notes'
+        "Contact ID",
+        "Contact English Name",
+        "Contact Arabic Name",
+        "Contact Email",
+        "Contact Phone",
+        "Contact Mobile",
+        "Contact Position",
+        "Contact Department",
+        "Is Primary Contact",
+        "Contact Notes",
       )
     }
 
-    let csvContent = csvHeaders.join(',') + '\n'
+    let csvContent = csvHeaders.join(",") + "\n"
 
-    parties.forEach(party => {
+    parties.forEach((party) => {
       const partyRow = [
         party.id,
-        `"${party.name_en || ''}"`,
-        `"${party.name_ar || ''}"`,
-        party.crn || '',
-        party.type || '',
-        party.status || '',
-        `"${party.contact_person || ''}"`,
-        party.contact_email || '',
-        party.contact_phone || '',
-        `"${party.address_en || ''}"`,
-        `"${party.address_ar || ''}"`,
-        party.tax_number || '',
-        party.license_number || '',
-        party.cr_expiry_date || '',
-        party.license_expiry_date || '',
-        `"${party.notes || ''}"`,
-        party.created_at || ''
+        `"${party.name_en || ""}"`,
+        `"${party.name_ar || ""}"`,
+        party.crn || "",
+        party.type || "",
+        party.status || "",
+        `"${party.contact_person || ""}"`,
+        party.contact_email || "",
+        party.contact_phone || "",
+        `"${party.address_en || ""}"`,
+        `"${party.address_ar || ""}"`,
+        party.tax_number || "",
+        party.license_number || "",
+        party.cr_expiry_date || "",
+        party.license_expiry_date || "",
+        `"${party.notes || ""}"`,
+        party.created_at || "",
       ]
 
       if (includeContacts) {
-        const partyContacts = contacts.filter(c => c.party_id === party.id)
-        
+        const partyContacts = contacts.filter((c) => c.party_id === party.id)
+
         if (partyContacts.length > 0) {
-          partyContacts.forEach(contact => {
+          partyContacts.forEach((contact) => {
             const contactRow = [
               contact.id,
-              `"${contact.name_en || ''}"`,
-              `"${contact.name_ar || ''}"`,
-              contact.email || '',
-              contact.phone || '',
-              contact.mobile || '',
-              `"${contact.position || ''}"`,
-              `"${contact.department || ''}"`,
-              contact.is_primary ? 'Yes' : 'No',
-              `"${contact.notes || ''}"`
+              `"${contact.name_en || ""}"`,
+              `"${contact.name_ar || ""}"`,
+              contact.email || "",
+              contact.phone || "",
+              contact.mobile || "",
+              `"${contact.position || ""}"`,
+              `"${contact.department || ""}"`,
+              contact.is_primary ? "Yes" : "No",
+              `"${contact.notes || ""}"`,
             ]
-            csvContent += [...partyRow, ...contactRow].join(',') + '\n'
+            csvContent += [...partyRow, ...contactRow].join(",") + "\n"
           })
         } else {
           // Add empty contact fields
-          const emptyContactRow = Array(10).fill('')
-          csvContent += [...partyRow, ...emptyContactRow].join(',') + '\n'
+          const emptyContactRow = Array(10).fill("")
+          csvContent += [...partyRow, ...emptyContactRow].join(",") + "\n"
         }
       } else {
-        csvContent += partyRow.join(',') + '\n'
+        csvContent += partyRow.join(",") + "\n"
       }
     })
 
@@ -466,37 +464,43 @@ export async function getPartyStatistics(): Promise<{
 }> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { data, error } = await supabase.rpc('get_party_statistics')
+
+    const { data, error } = await supabase.rpc("get_party_statistics")
 
     if (error) {
       throw new Error(`Error fetching party statistics: ${error.message}`)
     }
 
-    return data || {
-      total: 0,
-      active: 0,
-      inactive: 0,
-      suspended: 0,
-      employers: 0,
-      clients: 0,
-      generic: 0,
-      expiring_documents: 0,
-      expired_documents: 0
-    }
+    return (
+      data || {
+        total: 0,
+        active: 0,
+        inactive: 0,
+        suspended: 0,
+        employers: 0,
+        clients: 0,
+        generic: 0,
+        expiring_documents: 0,
+        expired_documents: 0,
+      }
+    )
   })
 }
 
 // Get parties with expiring documents
-export async function getPartiesWithExpiringDocuments(daysThreshold: number = 30): Promise<Party[]> {
+export async function getPartiesWithExpiringDocuments(
+  daysThreshold: number = 30,
+): Promise<Party[]> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
+
     const { data, error } = await supabase
-      .from('parties')
-      .select('*')
-      .or(`cr_expiry_date.lte.${new Date(Date.now() + daysThreshold * 24 * 60 * 60 * 1000).toISOString()},license_expiry_date.lte.${new Date(Date.now() + daysThreshold * 24 * 60 * 60 * 1000).toISOString()}`)
-      .order('cr_expiry_date', { ascending: true })
+      .from("parties")
+      .select("*")
+      .or(
+        `cr_expiry_date.lte.${new Date(Date.now() + daysThreshold * 24 * 60 * 60 * 1000).toISOString()},license_expiry_date.lte.${new Date(Date.now() + daysThreshold * 24 * 60 * 60 * 1000).toISOString()}`,
+      )
+      .order("cr_expiry_date", { ascending: true })
 
     if (error) {
       throw new Error(`Error fetching parties with expiring documents: ${error.message}`)
@@ -510,11 +514,8 @@ export async function getPartiesWithExpiringDocuments(daysThreshold: number = 30
 export async function updatePartyStatus(partyId: string, status: string): Promise<void> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { error } = await supabase
-      .from('parties')
-      .update({ status })
-      .eq('id', partyId)
+
+    const { error } = await supabase.from("parties").update({ status }).eq("id", partyId)
 
     if (error) {
       throw new Error(`Error updating party status: ${error.message}`)
@@ -526,11 +527,8 @@ export async function updatePartyStatus(partyId: string, status: string): Promis
 export async function bulkUpdatePartyStatus(partyIds: string[], status: string): Promise<void> {
   return withRetry(async () => {
     const supabase = getSupabaseClient()
-    
-    const { error } = await supabase
-      .from('parties')
-      .update({ status })
-      .in('id', partyIds)
+
+    const { error } = await supabase.from("parties").update({ status }).in("id", partyIds)
 
     if (error) {
       throw new Error(`Error bulk updating party statuses: ${error.message}`)

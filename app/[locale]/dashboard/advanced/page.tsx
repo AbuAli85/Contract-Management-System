@@ -6,11 +6,11 @@ import { RealTimeCollaborationHub } from "@/components/collaboration/real-time-c
 import { AdvancedSecurityCenter } from "@/components/security/advanced-security-center"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  BarChart3, 
-  Brain, 
-  Workflow, 
-  MessageSquare, 
+import {
+  BarChart3,
+  Brain,
+  Workflow,
+  MessageSquare,
   Shield,
   Zap,
   TrendingUp,
@@ -21,7 +21,7 @@ import {
   DollarSign,
   Clock,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
 } from "lucide-react"
 
 export default function AdvancedDashboardPage() {
@@ -52,9 +52,7 @@ export default function AdvancedDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
 
@@ -65,9 +63,7 @@ export default function AdvancedDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">18</div>
-            <p className="text-xs text-muted-foreground">
-              3 pending approvals
-            </p>
+            <p className="text-xs text-muted-foreground">3 pending approvals</p>
           </CardContent>
         </Card>
 
@@ -78,9 +74,7 @@ export default function AdvancedDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">
-              23 new recommendations
-            </p>
+            <p className="text-xs text-muted-foreground">23 new recommendations</p>
           </CardContent>
         </Card>
 
@@ -91,9 +85,7 @@ export default function AdvancedDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">94%</div>
-            <p className="text-xs text-muted-foreground">
-              +2% improvement
-            </p>
+            <p className="text-xs text-muted-foreground">+2% improvement</p>
           </CardContent>
         </Card>
       </div>
@@ -124,86 +116,96 @@ export default function AdvancedDashboardPage() {
         </TabsList>
 
         <TabsContent value="analytics" className="space-y-4">
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading advanced analytics...</p>
+          <Suspense
+            fallback={
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="mx-auto mb-4 h-8 w-8 animate-pulse" />
+                      <p className="text-muted-foreground">Loading advanced analytics...</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
+                </CardContent>
+              </Card>
+            }
+          >
             <AdvancedAnalyticsDashboard />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="ai" className="space-y-4">
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <Brain className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading AI intelligence...</p>
+          <Suspense
+            fallback={
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <Brain className="mx-auto mb-4 h-8 w-8 animate-pulse" />
+                      <p className="text-muted-foreground">Loading AI intelligence...</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
+                </CardContent>
+              </Card>
+            }
+          >
             <ContractIntelligence contractId="sample-contract-123" />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="workflow" className="space-y-4">
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <Workflow className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading workflow engine...</p>
+          <Suspense
+            fallback={
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <Workflow className="mx-auto mb-4 h-8 w-8 animate-pulse" />
+                      <p className="text-muted-foreground">Loading workflow engine...</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
+                </CardContent>
+              </Card>
+            }
+          >
             <AdvancedWorkflowEngine />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="collaboration" className="space-y-4">
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <MessageSquare className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading collaboration hub...</p>
+          <Suspense
+            fallback={
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <MessageSquare className="mx-auto mb-4 h-8 w-8 animate-pulse" />
+                      <p className="text-muted-foreground">Loading collaboration hub...</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
+                </CardContent>
+              </Card>
+            }
+          >
             <RealTimeCollaborationHub contractId="sample-contract-123" />
           </Suspense>
         </TabsContent>
 
         <TabsContent value="security" className="space-y-4">
-          <Suspense fallback={
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <Shield className="h-8 w-8 animate-pulse mx-auto mb-4" />
-                    <p className="text-muted-foreground">Loading security center...</p>
+          <Suspense
+            fallback={
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-center">
+                    <div className="text-center">
+                      <Shield className="mx-auto mb-4 h-8 w-8 animate-pulse" />
+                      <p className="text-muted-foreground">Loading security center...</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
+                </CardContent>
+              </Card>
+            }
+          >
             <AdvancedSecurityCenter />
           </Suspense>
         </TabsContent>
@@ -240,4 +242,4 @@ export default function AdvancedDashboardPage() {
       </Card>
     </div>
   )
-} 
+}

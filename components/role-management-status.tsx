@@ -1,15 +1,15 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { RefreshCw, Shield, User, Crown, CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
-import { usePermissions } from '@/hooks/use-permissions'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { useToast } from '@/hooks/use-toast'
-import { RoleRefreshButton } from './role-refresh-button'
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { RefreshCw, Shield, User, Crown, CheckCircle, XCircle, AlertTriangle } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useToast } from "@/hooks/use-toast"
+import { RoleRefreshButton } from "./role-refresh-button"
 
 interface RoleManagementStatusProps {
   compact?: boolean
@@ -17,10 +17,10 @@ interface RoleManagementStatusProps {
   className?: string
 }
 
-export function RoleManagementStatus({ 
-  compact = false, 
+export function RoleManagementStatus({
+  compact = false,
   showPermissions = false,
-  className = ''
+  className = "",
 }: RoleManagementStatusProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const permissions = usePermissions()
@@ -29,11 +29,11 @@ export function RoleManagementStatus({
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Crown className="h-4 w-4 text-yellow-500" />
-      case 'manager':
+      case "manager":
         return <Shield className="h-4 w-4 text-blue-500" />
-      case 'user':
+      case "user":
         return <User className="h-4 w-4 text-green-500" />
       default:
         return <User className="h-4 w-4 text-gray-500" />
@@ -73,11 +73,7 @@ export function RoleManagementStatus({
             </div>
             <div className="flex items-center gap-2">
               <RoleRefreshButton variant="outline" size="sm" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsExpanded(true)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setIsExpanded(true)}>
                 Details
               </Button>
             </div>
@@ -100,32 +96,34 @@ export function RoleManagementStatus({
           </div>
           <div className="flex items-center gap-2">
             <RoleRefreshButton variant="outline" size="sm" />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setIsExpanded(false)}>
               Collapse
             </Button>
           </div>
         </div>
-        <CardDescription>
-          Detailed role and permission information
-        </CardDescription>
+        <CardDescription>Detailed role and permission information</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* User Information */}
         <div className="space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-medium">
             <User className="h-4 w-4" />
             User Information
           </h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
-            <div>User ID: <Badge variant="outline">{user?.id?.substring(0, 8)}...</Badge></div>
-            <div>Email: <Badge variant="outline">{user?.email}</Badge></div>
-            <div>Current Role: <Badge variant="default">{permissions.role}</Badge></div>
-            <div>Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge></div>
+            <div>
+              User ID: <Badge variant="outline">{user?.id?.substring(0, 8)}...</Badge>
+            </div>
+            <div>
+              Email: <Badge variant="outline">{user?.email}</Badge>
+            </div>
+            <div>
+              Current Role: <Badge variant="default">{permissions.role}</Badge>
+            </div>
+            <div>
+              Roles Count: <Badge variant="outline">{permissions.roles.length}</Badge>
+            </div>
           </div>
         </div>
 
@@ -172,22 +170,18 @@ export function RoleManagementStatus({
               variant="outline"
               size="sm"
               onClick={() => {
-                if (typeof window !== 'undefined') {
+                if (typeof window !== "undefined") {
                   localStorage.clear()
                   toast({
-                    title: 'Cache Cleared',
-                    description: 'Browser cache has been cleared. Please refresh the page.',
+                    title: "Cache Cleared",
+                    description: "Browser cache has been cleared. Please refresh the page.",
                   })
                 }
               }}
             >
               Clear Cache
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-            >
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               Refresh Page
             </Button>
           </div>
@@ -196,17 +190,17 @@ export function RoleManagementStatus({
         {/* Status Information */}
         <Separator />
         <div className="space-y-2">
-          <h4 className="font-medium flex items-center gap-2">
+          <h4 className="flex items-center gap-2 font-medium">
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
             Status Information
           </h4>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <div>Loading: {permissions.isLoading ? 'Yes' : 'No'}</div>
-            <div>Initialized: {permissions.isLoading ? 'No' : 'Yes'}</div>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div>Loading: {permissions.isLoading ? "Yes" : "No"}</div>
+            <div>Initialized: {permissions.isLoading ? "No" : "Yes"}</div>
             <div>Timestamp: {new Date().toLocaleString()}</div>
           </div>
         </div>
       </CardContent>
     </Card>
   )
-} 
+}

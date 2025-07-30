@@ -5,16 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { 
-  Bell, 
-  CheckCircle, 
-  AlertTriangle, 
-  Info, 
+import {
+  Bell,
+  CheckCircle,
+  AlertTriangle,
+  Info,
   XCircle,
   Settings,
   Trash2,
   Archive,
-  Loader2
+  Loader2,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -40,15 +40,15 @@ export default function DashboardNotificationsPage() {
   const fetchNotifications = async () => {
     try {
       const response = await fetch(`/api/notifications?unread_only=${showUnreadOnly}`)
-      
+
       if (!response.ok) {
-        throw new Error('Failed to fetch notifications')
+        throw new Error("Failed to fetch notifications")
       }
-      
+
       const data = await response.json()
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch notifications')
+        throw new Error(data.error || "Failed to fetch notifications")
       }
 
       setNotifications(data.data || [])
@@ -57,7 +57,7 @@ export default function DashboardNotificationsPage() {
       toast({
         title: "Error",
         description: "Failed to load notifications",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -66,40 +66,36 @@ export default function DashboardNotificationsPage() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const response = await fetch('/api/notifications', {
-        method: 'PATCH',
+      const response = await fetch("/api/notifications", {
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           notification_id: notificationId,
-          read: true
-        })
+          read: true,
+        }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to mark notification as read')
+        throw new Error("Failed to mark notification as read")
       }
 
       // Update local state
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId 
-            ? { ...n, is_read: true }
-            : n
-        )
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)),
       )
 
       toast({
         title: "Success",
-        description: "Notification marked as read"
+        description: "Notification marked as read",
       })
     } catch (error) {
       console.error("Error marking notification as read:", error)
       toast({
         title: "Error",
         description: "Failed to mark notification as read",
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
@@ -122,13 +118,25 @@ export default function DashboardNotificationsPage() {
   const getNotificationBadge = (type: string | null) => {
     switch (type) {
       case "success":
-        return <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Success
+          </Badge>
+        )
       case "warning":
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800">Warning</Badge>
+        return (
+          <Badge variant="default" className="bg-yellow-100 text-yellow-800">
+            Warning
+          </Badge>
+        )
       case "error":
         return <Badge variant="destructive">Error</Badge>
       case "info":
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">Info</Badge>
+        return (
+          <Badge variant="default" className="bg-blue-100 text-blue-800">
+            Info
+          </Badge>
+        )
       default:
         return <Badge variant="secondary">Notification</Badge>
     }
@@ -138,7 +146,7 @@ export default function DashboardNotificationsPage() {
     const date = new Date(timestamp)
     const now = new Date()
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-    
+
     if (diffInMinutes < 1) return "Just now"
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`
@@ -158,9 +166,7 @@ export default function DashboardNotificationsPage() {
       {/* Page Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Notifications</h1>
-        <p className="text-muted-foreground">
-          Manage system notifications and alerts
-        </p>
+        <p className="text-muted-foreground">Manage system notifications and alerts</p>
       </div>
 
       {/* Filters */}
@@ -173,11 +179,7 @@ export default function DashboardNotificationsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2">
-            <Switch
-              id="unread-only"
-              checked={showUnreadOnly}
-              onCheckedChange={setShowUnreadOnly}
-            />
+            <Switch id="unread-only" checked={showUnreadOnly} onCheckedChange={setShowUnreadOnly} />
             <label htmlFor="unread-only" className="text-sm font-medium">
               Show unread notifications only
             </label>
@@ -193,12 +195,7 @@ export default function DashboardNotificationsPage() {
               <Bell className="h-5 w-5" />
               Notifications
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchNotifications}
-              disabled={loading}
-            >
+            <Button variant="outline" size="sm" onClick={fetchNotifications} disabled={loading}>
               <Archive className="mr-2 h-4 w-4" />
               Refresh
             </Button>
@@ -206,8 +203,8 @@ export default function DashboardNotificationsPage() {
         </CardHeader>
         <CardContent>
           {notifications.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <div className="py-8 text-center">
+              <Bell className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">
                 {showUnreadOnly ? "No unread notifications" : "No notifications found"}
               </p>
@@ -217,14 +214,14 @@ export default function DashboardNotificationsPage() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`flex items-start space-x-4 p-4 rounded-lg border ${
-                    notification.is_read ? 'bg-muted/50' : 'bg-background'
+                  className={`flex items-start space-x-4 rounded-lg border p-4 ${
+                    notification.is_read ? "bg-muted/50" : "bg-background"
                   }`}
                 >
                   <div className="flex-shrink-0">
                     {getNotificationIcon(notification.type || null)}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <h4 className="text-sm font-medium">
@@ -247,9 +244,7 @@ export default function DashboardNotificationsPage() {
                         )}
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {notification.message}
-                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
                   </div>
                 </div>
               ))}

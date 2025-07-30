@@ -8,19 +8,19 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { 
-  Shield, 
-  Key, 
-  Eye, 
-  EyeOff, 
-  Smartphone, 
-  CheckCircle, 
+import {
+  Shield,
+  Key,
+  Eye,
+  EyeOff,
+  Smartphone,
+  CheckCircle,
   AlertTriangle,
   Lock,
   Unlock,
   Clock,
   Globe,
-  UserCheck
+  UserCheck,
 } from "lucide-react"
 
 export default function ProfileSecurityPage() {
@@ -39,7 +39,7 @@ export default function ProfileSecurityPage() {
     mfaEnabled: false,
     activeSessions: 2,
     lastLogin: "2024-01-15 10:30:00",
-    loginLocation: "New York, NY"
+    loginLocation: "New York, NY",
   }
 
   const getPasswordStrengthColor = (strength: string) => {
@@ -74,14 +74,15 @@ export default function ProfileSecurityPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Key className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">Password Strength</span>
               </div>
               <Badge className={getPasswordStrengthColor(securityStatus.passwordStrength)}>
-                {securityStatus.passwordStrength.charAt(0).toUpperCase() + securityStatus.passwordStrength.slice(1)}
+                {securityStatus.passwordStrength.charAt(0).toUpperCase() +
+                  securityStatus.passwordStrength.slice(1)}
               </Badge>
             </div>
             <div className="space-y-2">
@@ -201,9 +202,7 @@ export default function ProfileSecurityPage() {
             <Smartphone className="h-5 w-5" />
             Two-Factor Authentication
           </CardTitle>
-          <CardDescription>
-            Add an extra layer of security to your account
-          </CardDescription>
+          <CardDescription>Add an extra layer of security to your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -213,14 +212,11 @@ export default function ProfileSecurityPage() {
                 Use an authenticator app for additional security
               </p>
             </div>
-            <Switch 
-              checked={mfaEnabled} 
-              onCheckedChange={setMfaEnabled}
-            />
+            <Switch checked={mfaEnabled} onCheckedChange={setMfaEnabled} />
           </div>
-          
+
           {mfaEnabled && (
-            <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+            <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
               <div className="space-y-2">
                 <Label htmlFor="mfaCode">Verification Code</Label>
                 <Input
@@ -233,15 +229,18 @@ export default function ProfileSecurityPage() {
               </div>
               <div className="flex gap-2">
                 <Button size="sm">Verify</Button>
-                <Button variant="outline" size="sm">Setup Authenticator</Button>
+                <Button variant="outline" size="sm">
+                  Setup Authenticator
+                </Button>
               </div>
             </div>
           )}
-          
+
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Two-factor authentication adds an extra layer of security by requiring a verification code in addition to your password.
+              Two-factor authentication adds an extra layer of security by requiring a verification
+              code in addition to your password.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -254,45 +253,43 @@ export default function ProfileSecurityPage() {
             <Globe className="h-5 w-5" />
             Active Sessions
           </CardTitle>
-          <CardDescription>
-            Manage your active login sessions across devices
-          </CardDescription>
+          <CardDescription>Manage your active login sessions across devices</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-100">
+                <div className="rounded-lg bg-blue-100 p-2">
                   <Globe className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
                   <p className="font-medium">Chrome on Windows</p>
-                                     <p className="text-sm text-muted-foreground">
-                     {securityStatus.loginLocation} • {securityStatus.lastLogin}
-                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    {securityStatus.loginLocation} • {securityStatus.lastLogin}
+                  </p>
                 </div>
               </div>
               <Badge variant="default" className="bg-green-100 text-green-800">
                 Current
               </Badge>
             </div>
-            
-            <div className="flex items-center justify-between p-3 border rounded-lg">
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-gray-100">
+                <div className="rounded-lg bg-gray-100 p-2">
                   <Smartphone className="h-4 w-4 text-gray-600" />
                 </div>
                 <div>
                   <p className="font-medium">Mobile App</p>
-                  <p className="text-sm text-muted-foreground">
-                    iPhone • 2024-01-14 15:20:00
-                  </p>
+                  <p className="text-sm text-muted-foreground">iPhone • 2024-01-14 15:20:00</p>
                 </div>
               </div>
-              <Button variant="outline" size="sm">Revoke</Button>
+              <Button variant="outline" size="sm">
+                Revoke
+              </Button>
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             <Button variant="outline">Revoke All Sessions</Button>
             <Button variant="outline">View All Sessions</Button>
@@ -310,18 +307,19 @@ export default function ProfileSecurityPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="flex items-start gap-3 p-3 border rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
               <div>
                 <p className="font-medium">Use a strong password</p>
                 <p className="text-sm text-muted-foreground">
-                  Your password should be at least 8 characters long and include a mix of letters, numbers, and symbols.
+                  Your password should be at least 8 characters long and include a mix of letters,
+                  numbers, and symbols.
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-start gap-3 p-3 border rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 text-yellow-600" />
               <div>
                 <p className="font-medium">Enable two-factor authentication</p>
                 <p className="text-sm text-muted-foreground">
@@ -329,9 +327,9 @@ export default function ProfileSecurityPage() {
                 </p>
               </div>
             </div>
-            
-            <div className="flex items-start gap-3 p-3 border rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+
+            <div className="flex items-start gap-3 rounded-lg border p-3">
+              <CheckCircle className="mt-0.5 h-5 w-5 text-green-600" />
               <div>
                 <p className="font-medium">Regular password updates</p>
                 <p className="text-sm text-muted-foreground">
@@ -344,4 +342,4 @@ export default function ProfileSecurityPage() {
       </Card>
     </div>
   )
-} 
+}

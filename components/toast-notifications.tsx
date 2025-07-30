@@ -1,12 +1,12 @@
-'use client'
+"use client"
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, createContext, useContext, ReactNode } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info'
+export type ToastType = "success" | "error" | "warning" | "info"
 
 export interface Toast {
   id: string
@@ -22,7 +22,7 @@ export interface Toast {
 
 interface ToastContextType {
   toasts: Toast[]
-  addToast: (toast: Omit<Toast, 'id'>) => void
+  addToast: (toast: Omit<Toast, "id">) => void
   removeToast: (id: string) => void
   clearToasts: () => void
 }
@@ -32,11 +32,11 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined)
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
-  const addToast = (toast: Omit<Toast, 'id'>) => {
+  const addToast = (toast: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substr(2, 9)
     const newToast = { ...toast, id }
-    
-    setToasts(prev => [...prev, newToast])
+
+    setToasts((prev) => [...prev, newToast])
 
     // Auto-remove toast after duration
     if (toast.duration !== 0) {
@@ -47,7 +47,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
+    setToasts((prev) => prev.filter((toast) => toast.id !== id))
   }
 
   const clearToasts = () => {
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 export function useToast() {
   const context = useContext(ToastContext)
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider')
+    throw new Error("useToast must be used within a ToastProvider")
   }
   return context
 }
@@ -76,7 +76,7 @@ function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+    <div className="fixed right-4 top-4 z-50 max-w-sm space-y-2">
       {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
       ))}
@@ -105,37 +105,37 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
 
   const getToastStyles = (type: ToastType) => {
     switch (type) {
-      case 'success':
+      case "success":
         return {
-          bg: 'bg-green-50 border-green-200',
+          bg: "bg-green-50 border-green-200",
           icon: CheckCircle,
-          iconColor: 'text-green-600',
-          titleColor: 'text-green-900',
-          messageColor: 'text-green-700'
+          iconColor: "text-green-600",
+          titleColor: "text-green-900",
+          messageColor: "text-green-700",
         }
-      case 'error':
+      case "error":
         return {
-          bg: 'bg-red-50 border-red-200',
+          bg: "bg-red-50 border-red-200",
           icon: AlertCircle,
-          iconColor: 'text-red-600',
-          titleColor: 'text-red-900',
-          messageColor: 'text-red-700'
+          iconColor: "text-red-600",
+          titleColor: "text-red-900",
+          messageColor: "text-red-700",
         }
-      case 'warning':
+      case "warning":
         return {
-          bg: 'bg-yellow-50 border-yellow-200',
+          bg: "bg-yellow-50 border-yellow-200",
           icon: AlertTriangle,
-          iconColor: 'text-yellow-600',
-          titleColor: 'text-yellow-900',
-          messageColor: 'text-yellow-700'
+          iconColor: "text-yellow-600",
+          titleColor: "text-yellow-900",
+          messageColor: "text-yellow-700",
         }
-      case 'info':
+      case "info":
         return {
-          bg: 'bg-blue-50 border-blue-200',
+          bg: "bg-blue-50 border-blue-200",
           icon: Info,
-          iconColor: 'text-blue-600',
-          titleColor: 'text-blue-900',
-          messageColor: 'text-blue-700'
+          iconColor: "text-blue-600",
+          titleColor: "text-blue-900",
+          messageColor: "text-blue-700",
         }
     }
   }
@@ -146,41 +146,37 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
   return (
     <Card
       className={cn(
-        'border shadow-lg transition-all duration-300 ease-in-out',
+        "border shadow-lg transition-all duration-300 ease-in-out",
         styles.bg,
-        isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
       )}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <Icon className={cn('h-5 w-5 mt-0.5 flex-shrink-0', styles.iconColor)} />
-          
-          <div className="flex-1 min-w-0">
-            <h4 className={cn('font-medium text-sm', styles.titleColor)}>
-              {toast.title}
-            </h4>
+          <Icon className={cn("mt-0.5 h-5 w-5 flex-shrink-0", styles.iconColor)} />
+
+          <div className="min-w-0 flex-1">
+            <h4 className={cn("text-sm font-medium", styles.titleColor)}>{toast.title}</h4>
             {toast.message && (
-              <p className={cn('text-sm mt-1', styles.messageColor)}>
-                {toast.message}
-              </p>
+              <p className={cn("mt-1 text-sm", styles.messageColor)}>{toast.message}</p>
             )}
             {toast.action && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toast.action.onClick}
-                className={cn('mt-2 h-6 px-2 text-xs', styles.titleColor)}
+                className={cn("mt-2 h-6 px-2 text-xs", styles.titleColor)}
               >
                 {toast.action.label}
               </Button>
             )}
           </div>
-          
+
           <Button
             variant="ghost"
             size="sm"
             onClick={handleRemove}
-            className="h-6 w-6 p-0 flex-shrink-0 hover:bg-black/5"
+            className="h-6 w-6 flex-shrink-0 p-0 hover:bg-black/5"
           >
             <X className="h-3 w-3" />
           </Button>
@@ -196,16 +192,16 @@ export function useToastHelpers() {
 
   return {
     success: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: 'success', title, message, ...options })
+      addToast({ type: "success", title, message, ...options })
     },
     error: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: 'error', title, message, ...options })
+      addToast({ type: "error", title, message, ...options })
     },
     warning: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: 'warning', title, message, ...options })
+      addToast({ type: "warning", title, message, ...options })
     },
     info: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: 'info', title, message, ...options })
-    }
+      addToast({ type: "info", title, message, ...options })
+    },
   }
-} 
+}

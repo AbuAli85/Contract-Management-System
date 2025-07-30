@@ -1,12 +1,12 @@
-import { 
-  fetchPromotersWithPagination, 
-  getPromoterCVData, 
-  fetchPromotersAnalytics, 
-  getPromoterPerformanceStats, 
-  exportPromotersToCSV, 
-  importPromotersFromCSV 
-} from '@/lib/promoter-service';
-import { promoterProfileSchema } from '@/lib/promoter-profile-schema';
+import {
+  fetchPromotersWithPagination,
+  getPromoterCVData,
+  fetchPromotersAnalytics,
+  getPromoterPerformanceStats,
+  exportPromotersToCSV,
+  importPromotersFromCSV,
+} from "@/lib/promoter-service"
+import { promoterProfileSchema } from "@/lib/promoter-profile-schema"
 
 // Mock Supabase client
 const mockSupabaseClient = {
@@ -34,274 +34,270 @@ const mockSupabaseClient = {
     then: jest.fn().mockResolvedValue({ data: [], error: null }),
   })),
   rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
-};
+}
 
-jest.mock('@/lib/supabase/client', () => ({
+jest.mock("@/lib/supabase/client", () => ({
   createClient: () => mockSupabaseClient,
-}));
+}))
 
-describe('Promoter Service - Comprehensive Unit Tests', () => {
+describe("Promoter Service - Comprehensive Unit Tests", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-  });
+    jest.clearAllMocks()
+  })
 
-  describe('fetchPromotersWithPagination', () => {
-    it('should fetch promoters with pagination successfully', async () => {
+  describe("fetchPromotersWithPagination", () => {
+    it("should fetch promoters with pagination successfully", async () => {
       const mockPromoters = [
-        { id: 1, first_name: 'John', last_name: 'Doe', email: 'john@example.com' },
-        { id: 2, first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com' },
-      ];
+        { id: 1, first_name: "John", last_name: "Doe", email: "john@example.com" },
+        { id: 2, first_name: "Jane", last_name: "Smith", email: "jane@example.com" },
+      ]
 
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
         range: jest.fn().mockReturnThis(),
         then: jest.fn().mockResolvedValue({ data: mockPromoters, error: null }),
-      });
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10);
+      const result = await fetchPromotersWithPagination(1, 10)
 
-      expect(result.data).toEqual(mockPromoters);
-      expect(result.error).toBeNull();
-    });
+      expect(result.data).toEqual(mockPromoters)
+      expect(result.error).toBeNull()
+    })
 
-    it('should handle pagination edge cases', async () => {
+    it("should handle pagination edge cases", async () => {
       // Test with zero page
-      await fetchPromotersWithPagination(0, 10);
-      expect(mockSupabaseClient.from).toHaveBeenCalled();
+      await fetchPromotersWithPagination(0, 10)
+      expect(mockSupabaseClient.from).toHaveBeenCalled()
 
       // Test with negative page
-      await fetchPromotersWithPagination(-1, 10);
-      expect(mockSupabaseClient.from).toHaveBeenCalled();
+      await fetchPromotersWithPagination(-1, 10)
+      expect(mockSupabaseClient.from).toHaveBeenCalled()
 
       // Test with zero limit
-      await fetchPromotersWithPagination(1, 0);
-      expect(mockSupabaseClient.from).toHaveBeenCalled();
-    });
+      await fetchPromotersWithPagination(1, 0)
+      expect(mockSupabaseClient.from).toHaveBeenCalled()
+    })
 
-    it('should handle database errors gracefully', async () => {
-      const mockError = { message: 'Database connection failed' };
+    it("should handle database errors gracefully", async () => {
+      const mockError = { message: "Database connection failed" }
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
         range: jest.fn().mockReturnThis(),
         then: jest.fn().mockResolvedValue({ data: null, error: mockError }),
-      });
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10);
+      const result = await fetchPromotersWithPagination(1, 10)
 
-      expect(result.data).toBeNull();
-      expect(result.error).toEqual(mockError);
-    });
+      expect(result.data).toBeNull()
+      expect(result.error).toEqual(mockError)
+    })
 
-    it('should handle network failures with retry logic', async () => {
-      let callCount = 0;
+    it("should handle network failures with retry logic", async () => {
+      let callCount = 0
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
         range: jest.fn().mockReturnThis(),
         then: jest.fn().mockImplementation(() => {
-          callCount++;
+          callCount++
           if (callCount < 3) {
-            return Promise.reject(new Error('Network error'));
+            return Promise.reject(new Error("Network error"))
           }
-          return Promise.resolve({ data: [], error: null });
+          return Promise.resolve({ data: [], error: null })
         }),
-      });
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10);
+      const result = await fetchPromotersWithPagination(1, 10)
 
-      expect(callCount).toBe(3);
-      expect(result.data).toEqual([]);
-      expect(result.error).toBeNull();
-    });
+      expect(callCount).toBe(3)
+      expect(result.data).toEqual([])
+      expect(result.error).toBeNull()
+    })
 
-    it('should enforce RLS policies', async () => {
-      const mockUser = { id: 'user123' };
+    it("should enforce RLS policies", async () => {
+      const mockUser = { id: "user123" }
       const mockPromoters = [
-        { id: 1, user_id: 'user123', first_name: 'John' },
-        { id: 2, user_id: 'other123', first_name: 'Jane' },
-      ];
+        { id: 1, user_id: "user123", first_name: "John" },
+        { id: 2, user_id: "other123", first_name: "Jane" },
+      ]
 
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         order: jest.fn().mockReturnThis(),
         range: jest.fn().mockReturnThis(),
-        then: jest.fn().mockResolvedValue({ 
-          data: mockPromoters.filter(p => p.user_id === mockUser.id), 
-          error: null 
+        then: jest.fn().mockResolvedValue({
+          data: mockPromoters.filter((p) => p.user_id === mockUser.id),
+          error: null,
         }),
-      });
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10, mockUser.id);
+      const result = await fetchPromotersWithPagination(1, 10, mockUser.id)
 
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0].user_id).toBe('user123');
-    });
-  });
+      expect(result.data).toHaveLength(1)
+      expect(result.data[0].user_id).toBe("user123")
+    })
+  })
 
-  describe('Data Validation', () => {
-    it('should validate promoter profile data', () => {
+  describe("Data Validation", () => {
+    it("should validate promoter profile data", () => {
       const validProfile = {
-        first_name: 'John',
-        last_name: 'Doe',
-        email: 'john@example.com',
-        phone: '+1234567890',
-        nationality: 'US',
-      };
+        first_name: "John",
+        last_name: "Doe",
+        email: "john@example.com",
+        phone: "+1234567890",
+        nationality: "US",
+      }
 
-      const result = promoterProfileSchema.safeParse(validProfile);
-      expect(result.success).toBe(true);
-    });
+      const result = promoterProfileSchema.safeParse(validProfile)
+      expect(result.success).toBe(true)
+    })
 
-    it('should reject invalid email addresses', () => {
+    it("should reject invalid email addresses", () => {
       const invalidEmails = [
-        'invalid-email',
-        '@domain.com',
-        'user@',
-        'user.domain.com',
-        '',
+        "invalid-email",
+        "@domain.com",
+        "user@",
+        "user.domain.com",
+        "",
         null,
         undefined,
-      ];
+      ]
 
-      invalidEmails.forEach(email => {
+      invalidEmails.forEach((email) => {
         const profile = {
-          first_name: 'John',
-          last_name: 'Doe',
+          first_name: "John",
+          last_name: "Doe",
           email,
-          phone: '+1234567890',
-          nationality: 'US',
-        };
+          phone: "+1234567890",
+          nationality: "US",
+        }
 
-        const result = promoterProfileSchema.safeParse(profile);
-        expect(result.success).toBe(false);
-      });
-    });
+        const result = promoterProfileSchema.safeParse(profile)
+        expect(result.success).toBe(false)
+      })
+    })
 
-    it('should reject invalid phone numbers', () => {
-      const invalidPhones = [
-        '123',
-        'not-a-phone',
-        '',
-        null,
-        undefined,
-      ];
+    it("should reject invalid phone numbers", () => {
+      const invalidPhones = ["123", "not-a-phone", "", null, undefined]
 
-      invalidPhones.forEach(phone => {
+      invalidPhones.forEach((phone) => {
         const profile = {
-          first_name: 'John',
-          last_name: 'Doe',
-          email: 'john@example.com',
+          first_name: "John",
+          last_name: "Doe",
+          email: "john@example.com",
           phone,
-          nationality: 'US',
-        };
+          nationality: "US",
+        }
 
-        const result = promoterProfileSchema.safeParse(profile);
-        expect(result.success).toBe(false);
-      });
-    });
+        const result = promoterProfileSchema.safeParse(profile)
+        expect(result.success).toBe(false)
+      })
+    })
 
-    it('should reject empty required fields', () => {
-      const emptyFields = ['', '   ', null, undefined];
+    it("should reject empty required fields", () => {
+      const emptyFields = ["", "   ", null, undefined]
 
-      emptyFields.forEach(value => {
+      emptyFields.forEach((value) => {
         const profile = {
           first_name: value,
-          last_name: 'Doe',
-          email: 'john@example.com',
-          phone: '+1234567890',
-          nationality: 'US',
-        };
+          last_name: "Doe",
+          email: "john@example.com",
+          phone: "+1234567890",
+          nationality: "US",
+        }
 
-        const result = promoterProfileSchema.safeParse(profile);
-        expect(result.success).toBe(false);
-      });
-    });
-  });
+        const result = promoterProfileSchema.safeParse(profile)
+        expect(result.success).toBe(false)
+      })
+    })
+  })
 
-  describe('Error Handling and Edge Cases', () => {
-    it('should handle network timeouts', async () => {
+  describe("Error Handling and Edge Cases", () => {
+    it("should handle network timeouts", async () => {
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         then: jest.fn().mockImplementation(() => {
           return new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Request timeout')), 100);
-          });
+            setTimeout(() => reject(new Error("Request timeout")), 100)
+          })
         }),
-      });
+      })
 
-      await expect(fetchPromotersWithPagination(1, 10)).rejects.toThrow('Request timeout');
-    });
+      await expect(fetchPromotersWithPagination(1, 10)).rejects.toThrow("Request timeout")
+    })
 
-    it('should handle concurrent requests', async () => {
-      let concurrentCalls = 0;
+    it("should handle concurrent requests", async () => {
+      let concurrentCalls = 0
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         then: jest.fn().mockImplementation(async () => {
-          concurrentCalls++;
-          await new Promise(resolve => setTimeout(resolve, 50));
-          return { data: [], error: null };
+          concurrentCalls++
+          await new Promise((resolve) => setTimeout(resolve, 50))
+          return { data: [], error: null }
         }),
-      });
+      })
 
-      const promises = Array(5).fill(null).map(() => fetchPromotersWithPagination(1, 10));
-      await Promise.all(promises);
+      const promises = Array(5)
+        .fill(null)
+        .map(() => fetchPromotersWithPagination(1, 10))
+      await Promise.all(promises)
 
-      expect(concurrentCalls).toBe(5);
-    });
+      expect(concurrentCalls).toBe(5)
+    })
 
-    it('should handle malformed database responses', async () => {
+    it("should handle malformed database responses", async () => {
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
-        then: jest.fn().mockResolvedValue({ data: 'not-an-array', error: null }),
-      });
+        then: jest.fn().mockResolvedValue({ data: "not-an-array", error: null }),
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10);
+      const result = await fetchPromotersWithPagination(1, 10)
 
-      expect(result.error).toBeTruthy();
-    });
+      expect(result.error).toBeTruthy()
+    })
 
-    it('should handle null database responses', async () => {
+    it("should handle null database responses", async () => {
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         then: jest.fn().mockResolvedValue(null),
-      });
+      })
 
-      const result = await fetchPromotersWithPagination(1, 10);
+      const result = await fetchPromotersWithPagination(1, 10)
 
-      expect(result.error).toBeTruthy();
-    });
-  });
+      expect(result.error).toBeTruthy()
+    })
+  })
 
-  describe('Security and Access Control', () => {
-    it('should prevent SQL injection attempts', async () => {
-      const maliciousInput = "'; DROP TABLE promoters; --";
-      
+  describe("Security and Access Control", () => {
+    it("should prevent SQL injection attempts", async () => {
+      const maliciousInput = "'; DROP TABLE promoters; --"
+
       mockSupabaseClient.from.mockReturnValue({
         select: jest.fn().mockReturnThis(),
         eq: jest.fn().mockReturnThis(),
         then: jest.fn().mockResolvedValue({ data: [], error: null }),
-      });
+      })
 
-      await fetchPromotersWithPagination(1, 10);
+      await fetchPromotersWithPagination(1, 10)
 
-      expect(mockSupabaseClient.from).toHaveBeenCalledWith('promoters');
-    });
+      expect(mockSupabaseClient.from).toHaveBeenCalledWith("promoters")
+    })
 
-    it('should enforce data access permissions', async () => {
-      const mockUser = { id: 'user123', role: 'user' };
-      const mockAdmin = { id: 'admin123', role: 'admin' };
+    it("should enforce data access permissions", async () => {
+      const mockUser = { id: "user123", role: "user" }
+      const mockAdmin = { id: "admin123", role: "admin" }
 
-      const canAccessAllData = (user: any) => user.role === 'admin';
-      const canAccessOwnData = (user: any, resourceUserId: string) => 
-        user.id === resourceUserId || user.role === 'admin';
+      const canAccessAllData = (user: any) => user.role === "admin"
+      const canAccessOwnData = (user: any, resourceUserId: string) =>
+        user.id === resourceUserId || user.role === "admin"
 
-      expect(canAccessAllData(mockAdmin)).toBe(true);
-      expect(canAccessAllData(mockUser)).toBe(false);
-      expect(canAccessOwnData(mockUser, 'user123')).toBe(true);
-      expect(canAccessOwnData(mockUser, 'other123')).toBe(false);
-    });
-  });
-});
+      expect(canAccessAllData(mockAdmin)).toBe(true)
+      expect(canAccessAllData(mockUser)).toBe(false)
+      expect(canAccessOwnData(mockUser, "user123")).toBe(true)
+      expect(canAccessOwnData(mockUser, "other123")).toBe(false)
+    })
+  })
+})

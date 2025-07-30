@@ -14,13 +14,13 @@ interface SafeImageProps {
   fallback?: React.ReactNode
 }
 
-export function SafeImage({ 
-  src, 
-  alt, 
-  width = 40, 
-  height = 40, 
+export function SafeImage({
+  src,
+  alt,
+  width = 40,
+  height = 40,
   className,
-  fallback
+  fallback,
 }: SafeImageProps) {
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -28,11 +28,11 @@ export function SafeImage({
   // If no src or image failed to load, show fallback
   if (!src || imageError) {
     return (
-      <div 
+      <div
         className={cn(
-          "flex items-center justify-center bg-muted rounded-full",
+          "flex items-center justify-center rounded-full bg-muted",
           width && height ? `w-[${width}px] h-[${height}px]` : "",
-          className
+          className,
         )}
       >
         {fallback || <User className="h-1/2 w-1/2 text-muted-foreground" />}
@@ -41,8 +41,8 @@ export function SafeImage({
   }
 
   // Check if the src is a Supabase URL
-  const isSupabaseUrl = src.includes('supabase.co')
-  
+  const isSupabaseUrl = src.includes("supabase.co")
+
   // For Supabase URLs, use regular img tag to avoid Next.js configuration issues
   if (isSupabaseUrl) {
     return (
@@ -54,16 +54,14 @@ export function SafeImage({
           width={width}
           height={height}
           className={cn(
-            "object-cover transition-opacity duration-200 rounded-full",
-            isLoading ? "opacity-0" : "opacity-100"
+            "rounded-full object-cover transition-opacity duration-200",
+            isLoading ? "opacity-0" : "opacity-100",
           )}
           onError={() => setImageError(true)}
           onLoad={() => setIsLoading(false)}
         />
         {isLoading && (
-          <div 
-            className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse rounded-full"
-          >
+          <div className="absolute inset-0 flex animate-pulse items-center justify-center rounded-full bg-muted">
             <User className="h-1/2 w-1/2 text-muted-foreground" />
           </div>
         )}
@@ -81,16 +79,14 @@ export function SafeImage({
         height={height}
         className={cn(
           "object-cover transition-opacity duration-200",
-          isLoading ? "opacity-0" : "opacity-100"
+          isLoading ? "opacity-0" : "opacity-100",
         )}
         onError={() => setImageError(true)}
         onLoad={() => setIsLoading(false)}
         priority={false}
       />
       {isLoading && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse"
-        >
+        <div className="absolute inset-0 flex animate-pulse items-center justify-center bg-muted">
           <User className="h-1/2 w-1/2 text-muted-foreground" />
         </div>
       )}

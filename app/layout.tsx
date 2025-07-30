@@ -4,8 +4,8 @@ import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
-import { NextIntlClientProvider } from 'next-intl'
-import { getMessages } from 'next-intl/server'
+import { NextIntlClientProvider } from "next-intl"
+import { getMessages } from "next-intl/server"
 
 const fontInter = Inter({
   subsets: ["latin"],
@@ -18,21 +18,17 @@ const fontLexend = Lexend({
 })
 
 // Build timestamp for cache busting - simplified approach
-const buildTimestamp = { buildId: process.env.BUILD_ID || 'dev' }
+const buildTimestamp = { buildId: process.env.BUILD_ID || "dev" }
 
 export const metadata: Metadata = {
   title: "Contract Management System",
   description: `Professional contract management and generation system (Build: ${buildTimestamp.buildId})`,
 }
 
-export default async function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Get messages for the default locale
   const messages = await getMessages()
-  
+
   return (
     <html lang="en">
       <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>

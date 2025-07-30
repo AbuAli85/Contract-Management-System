@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { usePathname } from "next/navigation"
+
 import { usePermissions } from "@/hooks/use-permissions"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { useAuth } from "@/src/components/auth/simple-auth-provider"
@@ -18,104 +18,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import {
-  User,
-  Settings,
-  LogOut,
-  Bell,
-  Search,
-  Plus,
-  FilePlus,
-  Users,
-  Building2,
-  BarChart3,
-  Shield,
-  Package2,
-  Menu,
-  ChevronDown,
-  Crown,
-  UserCheck,
-  UserCog,
-  UserPlus,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Star,
-  Mail,
-  MessageSquare,
-  TrendingUp,
-  ArrowUpDown,
-  Filter,
-  Calendar,
-  Download,
-  Upload,
-  RefreshCw,
-  HelpCircle,
-  Info,
-  Zap,
-  Target,
-  Award,
-  Trophy,
-  Medal,
-  Gem,
-  Diamond,
-  Sparkles,
-  Rocket,
-  Plane,
-  Car,
-  Bike,
-  Heart,
-  Smile,
-  Frown,
-  Meh,
-  ThumbsUp,
-  ThumbsDown,
-  Hand,
-  Eye,
-  EyeOff,
-  Lock,
-  Unlock,
-  Key,
-  Wifi,
-  WifiOff,
-  Signal,
-  SignalHigh,
-  SignalMedium,
-  SignalLow,
-  Battery,
-  BatteryFull,
-  BatteryCharging,
-  Power,
-  PowerOff,
-  Volume2,
-  Volume1,
-  VolumeX,
-  Mic,
-  MicOff,
-  Video,
-  VideoOff,
-  Camera,
-  CameraOff,
-  Loader2,
-  Image,
-  ImageOff,
-  File,
-  FileEdit,
-  Folder,
-  FolderOpen,
-  FolderPlus,
-  FolderMinus,
-  FolderX,
-  FolderCheck,
-  FolderSearch,
-  FolderEdit,
-  Sun,
-  Moon,
-} from "lucide-react"
+import { User, Bell, FilePlus, Building2, BarChart3, Shield, Crown, UserCheck, WifiOff, SignalHigh, SignalMedium, SignalLow, BatteryFull, BatteryCharging, Power, PowerOff, Volume1, VolumeX, MicOff, VideoOff, CameraOff, Loader2, ImageOff, FileEdit, FolderOpen, FolderPlus, FolderMinus, FolderX, FolderCheck, FolderSearch, FolderEdit, Sun, Moon,  } from 'lucide-react'
 import { useTheme } from "next-themes"
-import { useRouter } from "next/navigation"
 
 interface HeaderProps {
   onSidebarToggle?: () => void
@@ -128,17 +32,22 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
-  
+
   // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  const locale =
+    pathname && pathname.startsWith("/en/")
+      ? "en"
+      : pathname && pathname.startsWith("/ar/")
+        ? "ar"
+        : "en"
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Crown className="h-3 w-3 text-yellow-500" />
-      case 'manager':
+      case "manager":
         return <UserCheck className="h-3 w-3 text-blue-500" />
-      case 'user':
+      case "user":
         return <User className="h-3 w-3 text-green-500" />
       default:
         return <User className="h-3 w-3 text-gray-500" />
@@ -147,11 +56,11 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return "default" as const
-      case 'manager':
+      case "manager":
         return "secondary" as const
-      case 'user':
+      case "user":
         return "outline" as const
       default:
         return "outline" as const
@@ -163,52 +72,53 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
       label: "New Contract",
       icon: FilePlus,
       href: `/${locale}/generate-contract`,
-      permission: "contract:create"
+      permission: "contract:create",
     },
     {
       label: "Add Promoter",
       icon: UserPlus,
       href: `/${locale}/manage-promoters`,
-      permission: "promoter:create"
+      permission: "promoter:create",
     },
     {
       label: "Add Party",
       icon: Building2,
       href: `/${locale}/manage-parties`,
-      permission: "party:create"
+      permission: "party:create",
     },
     {
       label: "Analytics",
       icon: BarChart3,
       href: `/${locale}/dashboard/analytics`,
-      permission: "system:analytics"
-    }
-  ].filter(action => permissions.can(action.permission as any))
+      permission: "system:analytics",
+    },
+  ].filter((action) => permissions.can(action.permission as any))
 
   const handleRefreshRole = async () => {
     try {
-      console.log('🔄 Refreshing role from header...')
-      console.log('Current role in header:', permissions.role)
-      
+      console.log("🔄 Refreshing role from header...")
+      console.log("Current role in header:", permissions.role)
+
       const updatedRole = await permissions.forceRefresh()
-      
-      console.log('✅ Role refresh completed from header, new role:', updatedRole)
-      
+
+      console.log("✅ Role refresh completed from header, new role:", updatedRole)
+
       // Show success message
-      alert(`Role refreshed successfully!\n\nNew role: ${updatedRole}\n\nPlease check if the UI has updated.`)
-      
+      alert(
+        `Role refreshed successfully!\n\nNew role: ${updatedRole}\n\nPlease check if the UI has updated.`,
+      )
     } catch (error) {
-      console.error('❌ Role refresh failed:', error)
-      alert('Role refresh failed - check console for details')
+      console.error("❌ Role refresh failed:", error)
+      alert("Role refresh failed - check console for details")
     }
   }
 
   const handleLogout = async () => {
     try {
       await signOut()
-      router.push('/login')
+      router.push("/login")
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error("Logout error:", error)
     }
   }
 
@@ -228,10 +138,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
           variant="ghost"
           size="sm"
           onClick={onSidebarToggle}
-          className={cn(
-            "transition-all",
-            isSidebarCollapsed ? "rotate-180" : ""
-          )}
+          className={cn("transition-all", isSidebarCollapsed ? "rotate-180" : "")}
         >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle sidebar</span>
@@ -239,7 +146,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
       </div>
 
       {/* Search Bar */}
-      <div className="flex-1 max-w-md">
+      <div className="max-w-md flex-1">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -251,7 +158,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
       </div>
 
       {/* Quick Actions */}
-      <div className="hidden md:flex items-center gap-2">
+      <div className="hidden items-center gap-2 md:flex">
         {quickActions.slice(0, 2).map((action) => (
           <PermissionGuard key={action.label} action={action.permission as any}>
             <Button variant="ghost" size="sm" asChild>
@@ -280,9 +187,9 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
         <PermissionGuard action="system:notifications">
           <Button variant="ghost" size="sm" className="relative">
             <Bell className="h-4 w-4" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 text-xs"
+            <Badge
+              variant="destructive"
+              className="absolute -right-1 -top-1 h-4 w-4 rounded-full p-0 text-xs"
             >
               3
             </Badge>
@@ -304,13 +211,9 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">
-                  {user?.email || 'User'}
-                </p>
-                <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
+                <p className="text-sm font-medium leading-none">{user?.email || "User"}</p>
+                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                <div className="mt-1 flex items-center gap-1">
                   {getRoleIcon(permissions.role)}
                   <Badge variant={getRoleBadgeVariant(permissions.role)} className="text-xs">
                     {permissions.role.charAt(0).toUpperCase() + permissions.role.slice(1)}
@@ -324,59 +227,59 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            
+
             <DropdownMenuItem asChild>
               <a href={`/${locale}/dashboard/profile`} className="flex items-center">
-                <User className="h-4 w-4 mr-2" />
+                <User className="mr-2 h-4 w-4" />
                 Profile
               </a>
             </DropdownMenuItem>
-            
+
             <PermissionGuard action="system:settings">
               <DropdownMenuItem asChild>
                 <a href={`/${locale}/dashboard/settings`} className="flex items-center">
-                  <Settings className="h-4 w-4 mr-2" />
+                  <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </a>
               </DropdownMenuItem>
             </PermissionGuard>
-            
+
             <PermissionGuard action="system:analytics">
               <DropdownMenuItem asChild>
                 <a href={`/${locale}/dashboard/analytics`} className="flex items-center">
-                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <BarChart3 className="mr-2 h-4 w-4" />
                   Analytics
                 </a>
               </DropdownMenuItem>
             </PermissionGuard>
-            
+
             <PermissionGuard action="system:audit_logs">
               <DropdownMenuItem asChild>
                 <a href="/dashboard/audit" className="flex items-center">
-                  <Shield className="h-4 w-4 mr-2" />
+                  <Shield className="mr-2 h-4 w-4" />
                   Audit Logs
                 </a>
               </DropdownMenuItem>
             </PermissionGuard>
-            
+
             <DropdownMenuSeparator />
-            
+
             <DropdownMenuItem asChild>
               <a href="/help" className="flex items-center">
-                <HelpCircle className="h-4 w-4 mr-2" />
+                <HelpCircle className="mr-2 h-4 w-4" />
                 Help & Support
               </a>
             </DropdownMenuItem>
-            
+
             <DropdownMenuSeparator />
-            
+
             <DropdownMenuItem onClick={handleRefreshRole} disabled={permissions.isLoading}>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              {permissions.isLoading ? 'Refreshing...' : 'Refresh Role'}
+              <RefreshCw className="mr-2 h-4 w-4" />
+              {permissions.isLoading ? "Refreshing..." : "Refresh Role"}
             </DropdownMenuItem>
-            
+
             <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -387,4 +290,4 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
 }
 
 // Permission Guard component (re-export from use-permissions)
-import { PermissionGuard } from "@/hooks/use-permissions" 
+import { PermissionGuard } from "@/hooks/use-permissions"

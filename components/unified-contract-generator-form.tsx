@@ -28,22 +28,16 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { 
-  Loader2, 
-  AlertTriangle, 
+import {
+  Loader2,
+  AlertTriangle,
   FileText,
   Settings,
   Sparkles,
@@ -58,19 +52,19 @@ import {
   contractGeneratorSchema,
   type ContractGeneratorFormData,
   CONTRACT_FORM_SECTIONS,
-  getRequiredFields
+  getRequiredFields,
 } from "@/lib/schema-generator"
 import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
-import { 
-  JOB_TITLES, 
-  CURRENCIES, 
-  WORK_LOCATIONS,
-  DEPARTMENTS,
-} from "@/constants/contract-options"
-import { createContract, updateContract, ContractInsert, generateContractWithMakecom } from "@/app/actions/contracts"
+import { JOB_TITLES, CURRENCIES, WORK_LOCATIONS, DEPARTMENTS } from "@/constants/contract-options"
+import {
+  createContract,
+  updateContract,
+  ContractInsert,
+  generateContractWithMakecom,
+} from "@/app/actions/contracts"
 
 interface UnifiedContractGeneratorFormProps {
   /** Existing contract when editing; new contract if undefined. */
@@ -80,7 +74,7 @@ interface UnifiedContractGeneratorFormProps {
   /** Show advanced fields by default */
   showAdvanced?: boolean
   /** Mode: 'simple' for basic form, 'advanced' for full features */
-  mode?: 'simple' | 'advanced'
+  mode?: "simple" | "advanced"
   /** Auto-redirect after successful submission */
   autoRedirect?: boolean
 }
@@ -88,14 +82,14 @@ interface UnifiedContractGeneratorFormProps {
 const sectionVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } }
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 }
 
 export default function UnifiedContractGeneratorForm({
   contract,
   onFormSubmit,
   showAdvanced = false,
-  mode = 'advanced',
+  mode = "advanced",
   autoRedirect = true,
 }: UnifiedContractGeneratorFormProps) {
   // Register this form to disable auto-refresh during form interactions
@@ -111,20 +105,11 @@ export default function UnifiedContractGeneratorForm({
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
   // Load parties & promoters
-  const {
-    data: clientParties,
-    isLoading: isLoadingClientParties,
-  } = useParties("Client")
-  
-  const {
-    data: employerParties,
-    isLoading: isLoadingEmployerParties,
-  } = useParties("Employer")
-  
-  const {
-    data: promoters,
-    isLoading: isLoadingPromoters,
-  } = usePromoters()
+  const { data: clientParties, isLoading: isLoadingClientParties } = useParties("Client")
+
+  const { data: employerParties, isLoading: isLoadingEmployerParties } = useParties("Employer")
+
+  const { data: promoters, isLoading: isLoadingPromoters } = usePromoters()
 
   // Form setup with enhanced defaults
   const form = useForm<ContractGeneratorFormData>({
@@ -134,8 +119,12 @@ export default function UnifiedContractGeneratorForm({
       first_party_id: contract?.first_party_id || "",
       second_party_id: contract?.second_party_id || "",
       promoter_id: contract?.promoter_id || "",
-      contract_start_date: contract?.contract_start_date ? new Date(contract.contract_start_date) : undefined,
-      contract_end_date: contract?.contract_end_date ? new Date(contract.contract_end_date) : undefined,
+      contract_start_date: contract?.contract_start_date
+        ? new Date(contract.contract_start_date)
+        : undefined,
+      contract_end_date: contract?.contract_end_date
+        ? new Date(contract.contract_end_date)
+        : undefined,
       email: contract?.email || "",
       job_title: contract?.job_title || "",
       work_location: contract?.work_location || "",
@@ -179,7 +168,7 @@ export default function UnifiedContractGeneratorForm({
   // Calculate form completion progress
   const formProgress = useMemo(() => {
     const requiredFields = getRequiredFields()
-    const completedFields = requiredFields.filter(field => {
+    const completedFields = requiredFields.filter((field) => {
       const value = form.getValues(field as keyof ContractGeneratorFormData)
       return value !== undefined && value !== null && value !== ""
     }).length
@@ -189,24 +178,24 @@ export default function UnifiedContractGeneratorForm({
   // Calculate contract duration and insights
   const contractInsights = useMemo(() => {
     if (!watchedStartDate || !watchedEndDate) return null
-    
+
     const duration = differenceInDays(watchedEndDate, watchedStartDate)
     const totalCompensation = (watchedSalary || 0) + (watchedAllowances || 0)
-    
+
     return {
       duration,
       durationText: duration === 1 ? "1 day" : `${duration} days`,
       isShortTerm: duration <= 90,
       isLongTerm: duration >= 365,
       totalCompensation,
-      monthlyRate: totalCompensation > 0 ? totalCompensation : null
+      monthlyRate: totalCompensation > 0 ? totalCompensation : null,
     }
   }, [watchedStartDate, watchedEndDate, watchedSalary, watchedAllowances])
 
   // Auto-fill promoter data when selected
   useEffect(() => {
     if (watchedPromoterId && promoters) {
-      const selectedPromoter = promoters.find(p => p.id.toString() === watchedPromoterId)
+      const selectedPromoter = promoters.find((p) => p.id.toString() === watchedPromoterId)
       if (selectedPromoter) {
         setSelectedPromoter(selectedPromoter)
         // Auto-fill email if not already set
@@ -232,17 +221,17 @@ export default function UnifiedContractGeneratorForm({
       } else {
         // Generate new contract with Make.com integration
         return await generateContractWithMakecom({
-          first_party_id: data.first_party_id || '',
-          second_party_id: data.second_party_id || '',
-          promoter_id: data.promoter_id || '',
+          first_party_id: data.first_party_id || "",
+          second_party_id: data.second_party_id || "",
+          promoter_id: data.promoter_id || "",
           contract_start_date: data.contract_start_date!,
           contract_end_date: data.contract_end_date,
-          email: data.email || '',
-          job_title: data.job_title || '',
-          work_location: data.work_location || '',
-          department: data.department || '',
-          contract_type: data.contract_type || '',
-          currency: data.currency || 'OMR',
+          email: data.email || "",
+          job_title: data.job_title || "",
+          work_location: data.work_location || "",
+          department: data.department || "",
+          contract_type: data.contract_type || "",
+          currency: data.currency || "OMR",
           basic_salary: data.basic_salary,
           allowances: data.allowances,
           special_terms: data.special_terms,
@@ -257,17 +246,17 @@ export default function UnifiedContractGeneratorForm({
         const makecomResult = result as any // Type assertion for Make.com result
         const message = makecomResult.message || "Contract created successfully!"
         toast.success(message)
-        
+
         // Show additional info if available
         if (makecomResult.google_drive_url) {
           toast.info("Contract sent to Google Drive for processing")
         }
-        if (makecomResult.status === 'processing') {
+        if (makecomResult.status === "processing") {
           toast.info("Contract is being processed by Make.com")
         }
       }
-      
-      queryClient.invalidateQueries({ queryKey: ['contracts'] })
+
+      queryClient.invalidateQueries({ queryKey: ["contracts"] })
       onFormSubmit?.()
       if (autoRedirect) {
         router.push("/contracts")
@@ -278,7 +267,7 @@ export default function UnifiedContractGeneratorForm({
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred."
       setValidationErrors([errorMessage])
       toast.error(errorMessage)
-    }
+    },
   })
 
   const onSubmit = (data: ContractGeneratorFormData) => {
@@ -302,23 +291,27 @@ export default function UnifiedContractGeneratorForm({
   const getInputStateClasses = (fieldName: keyof ContractGeneratorFormData) => {
     const hasError = form.formState.errors[fieldName]
     const isTouched = form.formState.touchedFields[fieldName]
-    
+
     if (hasError) return "border-red-500 focus:border-red-500"
     if (isTouched) return "border-green-500 focus:border-green-500"
     return ""
   }
 
   // Loading states
-  const isLoading = isLoadingClientParties || isLoadingEmployerParties || isLoadingPromoters || submitMutation.isPending
+  const isLoading =
+    isLoadingClientParties ||
+    isLoadingEmployerParties ||
+    isLoadingPromoters ||
+    submitMutation.isPending
 
   // Simple mode form
-  if (mode === 'simple') {
+  if (mode === "simple") {
     return (
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:p-8">
-        <h1 className="text-2xl font-bold mb-6">
+      <div className="mx-auto max-w-2xl p-4 sm:p-6 lg:p-8">
+        <h1 className="mb-6 text-2xl font-bold">
           {contract ? "Edit Contract" : "Generate New Contract"}
         </h1>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -338,7 +331,7 @@ export default function UnifiedContractGeneratorForm({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="second_party_id"
@@ -356,7 +349,7 @@ export default function UnifiedContractGeneratorForm({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="promoter_id"
@@ -374,7 +367,7 @@ export default function UnifiedContractGeneratorForm({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="contract_start_date"
@@ -382,16 +375,13 @@ export default function UnifiedContractGeneratorForm({
                 <FormItem>
                   <FormLabel>Start Date</FormLabel>
                   <FormControl>
-                    <DatePickerWithManualInput
-                      date={field.value}
-                      setDate={field.onChange}
-                    />
+                    <DatePickerWithManualInput date={field.value} setDate={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="contract_end_date"
@@ -399,16 +389,13 @@ export default function UnifiedContractGeneratorForm({
                 <FormItem>
                   <FormLabel>End Date</FormLabel>
                   <FormControl>
-                    <DatePickerWithManualInput
-                      date={field.value}
-                      setDate={field.onChange}
-                    />
+                    <DatePickerWithManualInput date={field.value} setDate={field.onChange} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="basic_salary"
@@ -420,14 +407,16 @@ export default function UnifiedContractGeneratorForm({
                       type="number"
                       placeholder="Enter contract value"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        field.onChange(e.target.value ? Number(e.target.value) : undefined)
+                      }
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="job_title"
@@ -441,7 +430,7 @@ export default function UnifiedContractGeneratorForm({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="work_location"
@@ -456,11 +445,7 @@ export default function UnifiedContractGeneratorForm({
               )}
             />
 
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -481,18 +466,20 @@ export default function UnifiedContractGeneratorForm({
 
   // Advanced mode form
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div className="mx-auto max-w-4xl p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
               {contract ? "Edit Contract" : "Generate New Contract"}
             </h1>
-            <p className="text-gray-600 mt-2">
-              {contract ? "Update contract details and settings" : "Create a comprehensive contract with advanced features"}
+            <p className="mt-2 text-gray-600">
+              {contract
+                ? "Update contract details and settings"
+                : "Create a comprehensive contract with advanced features"}
             </p>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
               <Switch
@@ -507,7 +494,7 @@ export default function UnifiedContractGeneratorForm({
 
         {/* Progress Bar */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Form Completion</span>
             <span className="text-sm text-gray-500">{formProgress}%</span>
           </div>
@@ -516,19 +503,23 @@ export default function UnifiedContractGeneratorForm({
 
         {/* Contract Insights */}
         {contractInsights && (
-          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <Card className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardContent className="p-4">
               <div className="flex items-center gap-4">
                 <Calculator className="h-5 w-5 text-blue-600" />
                 <div className="flex-1">
                   <h3 className="font-semibold text-blue-900">Contract Insights</h3>
-                  <div className="flex gap-4 mt-1 text-sm text-blue-700">
+                  <div className="mt-1 flex gap-4 text-sm text-blue-700">
                     <span>Duration: {contractInsights.durationText}</span>
                     {contractInsights.totalCompensation > 0 && (
                       <span>Total: {contractInsights.totalCompensation} OMR</span>
                     )}
                     <Badge variant={contractInsights.isShortTerm ? "secondary" : "default"}>
-                      {contractInsights.isShortTerm ? "Short Term" : contractInsights.isLongTerm ? "Long Term" : "Medium Term"}
+                      {contractInsights.isShortTerm
+                        ? "Short Term"
+                        : contractInsights.isLongTerm
+                          ? "Long Term"
+                          : "Medium Term"}
                     </Badge>
                   </div>
                 </div>
@@ -553,12 +544,10 @@ export default function UnifiedContractGeneratorForm({
                   <Users className="h-5 w-5" />
                   Basic Information
                 </CardTitle>
-                <CardDescription>
-                  Essential contract details and parties involved
-                </CardDescription>
+                <CardDescription>Essential contract details and parties involved</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="first_party_id"
@@ -576,7 +565,7 @@ export default function UnifiedContractGeneratorForm({
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="second_party_id"
@@ -614,7 +603,7 @@ export default function UnifiedContractGeneratorForm({
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="contract_start_date"
@@ -622,16 +611,13 @@ export default function UnifiedContractGeneratorForm({
                       <FormItem>
                         <FormLabel>Start Date</FormLabel>
                         <FormControl>
-                          <DatePickerWithManualInput
-                            date={field.value}
-                            setDate={field.onChange}
-                          />
+                          <DatePickerWithManualInput date={field.value} setDate={field.onChange} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="contract_end_date"
@@ -639,10 +625,7 @@ export default function UnifiedContractGeneratorForm({
                       <FormItem>
                         <FormLabel>End Date</FormLabel>
                         <FormControl>
-                          <DatePickerWithManualInput
-                            date={field.value}
-                            setDate={field.onChange}
-                          />
+                          <DatePickerWithManualInput date={field.value} setDate={field.onChange} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -659,12 +642,10 @@ export default function UnifiedContractGeneratorForm({
                   <Briefcase className="h-5 w-5" />
                   Employment Details
                 </CardTitle>
-                <CardDescription>
-                  Job specifications and compensation details
-                </CardDescription>
+                <CardDescription>Job specifications and compensation details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="job_title"
@@ -689,7 +670,7 @@ export default function UnifiedContractGeneratorForm({
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="department"
@@ -714,7 +695,7 @@ export default function UnifiedContractGeneratorForm({
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="work_location"
@@ -732,7 +713,7 @@ export default function UnifiedContractGeneratorForm({
                                   <div className="flex flex-col">
                                     <span className="font-medium">{location.label}</span>
                                     {location.description && (
-                                      <span className="text-xs text-muted-foreground mt-0.5">
+                                      <span className="mt-0.5 text-xs text-muted-foreground">
                                         {location.description}
                                       </span>
                                     )}
@@ -748,7 +729,7 @@ export default function UnifiedContractGeneratorForm({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="basic_salary"
@@ -760,14 +741,16 @@ export default function UnifiedContractGeneratorForm({
                             type="number"
                             placeholder="0.00"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? Number(e.target.value) : undefined)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="allowances"
@@ -779,14 +762,16 @@ export default function UnifiedContractGeneratorForm({
                             type="number"
                             placeholder="0.00"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? Number(e.target.value) : undefined)
+                            }
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="currency"
@@ -830,12 +815,10 @@ export default function UnifiedContractGeneratorForm({
                         <Settings className="h-5 w-5" />
                         Advanced Settings
                       </CardTitle>
-                      <CardDescription>
-                        Additional contract terms and conditions
-                      </CardDescription>
+                      <CardDescription>Additional contract terms and conditions</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                         <FormField
                           control={form.control}
                           name="probation_period_months"
@@ -847,14 +830,18 @@ export default function UnifiedContractGeneratorForm({
                                   type="number"
                                   placeholder="3"
                                   {...field}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                  onChange={(e) =>
+                                    field.onChange(
+                                      e.target.value ? Number(e.target.value) : undefined,
+                                    )
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="notice_period_days"
@@ -866,14 +853,18 @@ export default function UnifiedContractGeneratorForm({
                                   type="number"
                                   placeholder="30"
                                   {...field}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                  onChange={(e) =>
+                                    field.onChange(
+                                      e.target.value ? Number(e.target.value) : undefined,
+                                    )
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={form.control}
                           name="working_hours_per_week"
@@ -885,7 +876,11 @@ export default function UnifiedContractGeneratorForm({
                                   type="number"
                                   placeholder="40"
                                   {...field}
-                                  onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                                  onChange={(e) =>
+                                    field.onChange(
+                                      e.target.value ? Number(e.target.value) : undefined,
+                                    )
+                                  }
                                 />
                               </FormControl>
                               <FormMessage />
@@ -923,7 +918,7 @@ export default function UnifiedContractGeneratorForm({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                <ul className="list-disc list-inside">
+                <ul className="list-inside list-disc">
                   {validationErrors.map((error, index) => (
                     <li key={index}>{error}</li>
                   ))}
@@ -934,18 +929,10 @@ export default function UnifiedContractGeneratorForm({
 
           {/* Submit Button */}
           <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
+            <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading}
-              className="min-w-[200px]"
-            >
+            <Button type="submit" disabled={isLoading} className="min-w-[200px]">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -963,4 +950,4 @@ export default function UnifiedContractGeneratorForm({
       </Form>
     </div>
   )
-} 
+}

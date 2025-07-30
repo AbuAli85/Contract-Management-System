@@ -1,15 +1,9 @@
-"use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+"use client"
+import { useState, useEffect, useMemo, useCallback } from "react"
 
 // Force dynamic rendering to avoid build-time Supabase issues
-export const dynamic = 'force-dynamic'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+export const dynamic = "force-dynamic"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -17,91 +11,99 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Download } from "lucide-react";
-import { getSupabaseClient } from "@/lib/supabase";
-import { format } from "date-fns";
-import clsx from "clsx";
+} from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Loader2,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Download,
+} from "lucide-react"
+import { getSupabaseClient } from "@/lib/supabase"
+import { format } from "date-fns"
+import clsx from "clsx"
 
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 
 interface AuditLogItem {
-  id: string;
-  user_id?: string | null;
-  action: string | null;
-  entity_type: string | null;
-  entity_id: string;
-  details?: any;
-  created_at: string | null;
-  user_email?: string | null;
-  ip_address?: string | null;
-  timestamp: string | null;
+  id: string
+  user_id?: string | null
+  action: string | null
+  entity_type: string | null
+  entity_id: string
+  details?: any
+  created_at: string | null
+  user_email?: string | null
+  ip_address?: string | null
+  timestamp: string | null
 }
 
 // Define a type for the payload from Supabase
 interface AuditLogPayload {
   new: {
-    id: number;
-    user_id?: string | null;
-    action: string | null;
-    entity_type: string | null;
-    entity_id: number;
-    details?: any;
-    created_at: string | null;
-  };
+    id: number
+    user_id?: string | null
+    action: string | null
+    entity_type: string | null
+    entity_id: number
+    details?: any
+    created_at: string | null
+  }
 }
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLogItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortKey, setSortKey] = useState<keyof AuditLogItem>("created_at");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
-  const [error, setError] = useState<string | null>(null);
+  const [logs, setLogs] = useState<AuditLogItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortKey, setSortKey] = useState<keyof AuditLogItem>("created_at")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0])
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch logs
   const fetchAuditLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const supabase = getSupabaseClient();
+      const supabase = getSupabaseClient()
       const { data, error } = await supabase
         .from("audit_logs")
         .select("id, user_id, action, entity_type, entity_id, details, created_at")
-        .order(sortKey, { ascending: sortDirection === "asc" });
-      if (error) throw error;
-      
+        .order(sortKey, { ascending: sortDirection === "asc" })
+      if (error) throw error
+
       // Transform the data to add compatibility fields
-      const transformedData = (data || []).map(log => ({
+      const transformedData = (data || []).map((log) => ({
         ...log,
         id: log.id.toString(), // Convert number to string
-        entity_id: log.entity_id?.toString() || '', // Convert number to string
+        entity_id: log.entity_id?.toString() || "", // Convert number to string
         user_email: log.user_id || null, // For compatibility
         ip_address: null, // Column doesn't exist in schema
-        timestamp: log.created_at // Map created_at to timestamp
-      }));
-      
-      setLogs(transformedData);
+        timestamp: log.created_at, // Map created_at to timestamp
+      }))
+
+      setLogs(transformedData)
     } catch (err: any) {
-      setError(err.message);
-      setLogs([]);
+      setError(err.message)
+      setLogs([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, [sortKey, sortDirection]);
+  }, [sortKey, sortDirection])
 
   // Fetch logs when sort changes
   useEffect(() => {
-    fetchAuditLogs();
-  }, [fetchAuditLogs]);
+    fetchAuditLogs()
+  }, [fetchAuditLogs])
 
   // Real-time subscription (once)
   useEffect(() => {
-    const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient()
     const channel = supabase
       .channel("public:audit_logs:feed")
       .on(
@@ -116,74 +118,73 @@ export default function AuditLogsPage() {
             user_email: payload.new.user_id || null,
             ip_address: null, // Column doesn't exist in schema
             timestamp: payload.new.created_at, // Map created_at to timestamp
-          };
-          setLogs((prev) => [newLog, ...prev]);
-        }
+          }
+          setLogs((prev) => [newLog, ...prev])
+        },
       )
-      .subscribe();
+      .subscribe()
     return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      supabase.removeChannel(channel)
+    }
+  }, [])
 
   // Filtering, sorting, and pagination
   const filteredLogs = useMemo(() => {
-    let filtered = logs;
+    let filtered = logs
     if (searchTerm) {
       filtered = filtered.filter(
         (log) =>
           (log.user_email || "System").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (log.action && log.action.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.entity_type && log.entity_type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (log.entity_id && log.entity_id.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (log.entity_id &&
+            log.entity_id.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.details &&
             typeof log.details === "string" &&
             log.details.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (log.details &&
             typeof log.details === "object" &&
-            JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+            JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase())),
+      )
     }
     // Sort
     filtered = [...filtered].sort((a, b) => {
-      let valA = a[sortKey];
-      let valB = b[sortKey];
+      let valA = a[sortKey]
+      let valB = b[sortKey]
       if (sortKey === "created_at" || sortKey === "timestamp") {
-        valA = valA ? new Date(valA as string).getTime() : 0;
-        valB = valB ? new Date(valB as string).getTime() : 0;
+        valA = valA ? new Date(valA as string).getTime() : 0
+        valB = valB ? new Date(valB as string).getTime() : 0
       }
       if (typeof valA === "string" && typeof valB === "string") {
-        return sortDirection === "asc"
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
+        return sortDirection === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA)
       }
       if (typeof valA === "number" && typeof valB === "number") {
-        return sortDirection === "asc" ? valA - valB : valB - valA;
+        return sortDirection === "asc" ? valA - valB : valB - valA
       }
-      return 0;
-    });
-    return filtered;
-  }, [logs, searchTerm, sortKey, sortDirection]);
+      return 0
+    })
+    return filtered
+  }, [logs, searchTerm, sortKey, sortDirection])
 
-  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / pageSize))
   const paginatedLogs = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredLogs.slice(start, start + pageSize);
-  }, [filteredLogs, page, pageSize]);
+    const start = (page - 1) * pageSize
+    return filteredLogs.slice(start, start + pageSize)
+  }, [filteredLogs, page, pageSize])
 
   // Sorting
   const handleSort = (key: keyof AuditLogItem) => {
     if (sortKey === key) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
     } else {
-      setSortKey(key);
-      setSortDirection("asc");
+      setSortKey(key)
+      setSortDirection("asc")
     }
-  };
+  }
 
   // Export to CSV
   const exportCSV = () => {
-    const headers = ["Timestamp", "User", "Action", "Entity Type", "Entity ID", "Details"];
+    const headers = ["Timestamp", "User", "Action", "Entity Type", "Entity ID", "Details"]
     const rows = filteredLogs.map((log) => [
       log.timestamp || "",
       log.user_email || "System",
@@ -191,32 +192,29 @@ export default function AuditLogsPage() {
       log.entity_type || "",
       log.entity_id || "",
       typeof log.details === "object" ? JSON.stringify(log.details) : log.details || "",
-    ]);
-    const csv =
-      [headers, ...rows]
-        .map((row) =>
-          row
-            .map((cell) =>
-              typeof cell === "string" && cell.includes(",")
-                ? `"${cell.replace(/"/g, '""')}"`
-                : cell
-            )
-            .join(",")
-        )
-        .join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "audit_logs.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+    ])
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((cell) =>
+            typeof cell === "string" && cell.includes(",") ? `"${cell.replace(/"/g, '""')}"` : cell,
+          )
+          .join(","),
+      )
+      .join("\n")
+    const blob = new Blob([csv], { type: "text/csv" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "audit_logs.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
   // Reset page on filter/search/page size change
   useEffect(() => {
-    setPage(1);
-  }, [searchTerm, pageSize]);
+    setPage(1)
+  }, [searchTerm, pageSize])
 
   return (
     <Card>
@@ -227,7 +225,7 @@ export default function AuditLogsPage() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="relative w-full md:w-96">
             <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -238,11 +236,11 @@ export default function AuditLogsPage() {
               aria-label="Search audit logs"
             />
           </div>
-          <div className="flex gap-2 items-center">
+          <div className="flex items-center gap-2">
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className="border rounded px-2 py-1"
+              className="rounded border px-2 py-1"
               aria-label="Page size"
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
@@ -252,7 +250,7 @@ export default function AuditLogsPage() {
               ))}
             </select>
             <Button variant="outline" onClick={exportCSV} aria-label="Export CSV">
-              <Download className="h-4 w-4 mr-1" /> Export CSV
+              <Download className="mr-1 h-4 w-4" /> Export CSV
             </Button>
           </div>
         </div>
@@ -263,44 +261,116 @@ export default function AuditLogsPage() {
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("created_at")}
-                  aria-sort={sortKey === "created_at" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "created_at"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  Timestamp {sortKey === "created_at" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  Timestamp{" "}
+                  {sortKey === "created_at" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("user_id")}
-                  aria-sort={sortKey === "user_id" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "user_id"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  User {sortKey === "user_id" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  User{" "}
+                  {sortKey === "user_id" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("action")}
-                  aria-sort={sortKey === "action" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "action"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  Action {sortKey === "action" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  Action{" "}
+                  {sortKey === "action" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("entity_type")}
-                  aria-sort={sortKey === "entity_type" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "entity_type"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  Entity Type {sortKey === "entity_type" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  Entity Type{" "}
+                  {sortKey === "entity_type" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("entity_id")}
-                  aria-sort={sortKey === "entity_id" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "entity_id"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  Entity ID {sortKey === "entity_id" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  Entity ID{" "}
+                  {sortKey === "entity_id" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer"
                   onClick={() => handleSort("details")}
-                  aria-sort={sortKey === "details" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
+                  aria-sort={
+                    sortKey === "details"
+                      ? sortDirection === "asc"
+                        ? "ascending"
+                        : "descending"
+                      : undefined
+                  }
                 >
-                  Details {sortKey === "details" && (sortDirection === "asc" ? <ChevronUp className="inline h-4 w-4" /> : <ChevronDown className="inline h-4 w-4" />)}
+                  Details{" "}
+                  {sortKey === "details" &&
+                    (sortDirection === "asc" ? (
+                      <ChevronUp className="inline h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="inline h-4 w-4" />
+                    ))}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -314,14 +384,16 @@ export default function AuditLogsPage() {
               ) : paginatedLogs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center">
-                    <span className="text-4xl mb-2">🗒️</span>
+                    <span className="mb-2 text-4xl">🗒️</span>
                     <div>No logs found matching your criteria.</div>
                   </TableCell>
                 </TableRow>
               ) : (
                 paginatedLogs.map((log) => (
-                  <TableRow key={log.id} className="hover:bg-blue-50 transition">
-                    <TableCell>{log.timestamp ? format(new Date(log.timestamp), 'yyyy-MM-dd HH:mm:ss') : "-"}</TableCell>
+                  <TableRow key={log.id} className="transition hover:bg-blue-50">
+                    <TableCell>
+                      {log.timestamp ? format(new Date(log.timestamp), "yyyy-MM-dd HH:mm:ss") : "-"}
+                    </TableCell>
                     <TableCell>{log.user_email || "System"}</TableCell>
                     <TableCell>{log.action}</TableCell>
                     <TableCell>{log.entity_type || "-"}</TableCell>
@@ -339,7 +411,7 @@ export default function AuditLogsPage() {
         </div>
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center gap-2 mt-4">
+          <div className="mt-4 flex items-center justify-between gap-2">
             <Button
               size="sm"
               variant="outline"
@@ -363,15 +435,15 @@ export default function AuditLogsPage() {
             </Button>
           </div>
         )}
-        <div className="text-sm text-muted-foreground mt-2">
+        <div className="mt-2 text-sm text-muted-foreground">
           Showing {paginatedLogs.length} of {filteredLogs.length} logs
         </div>
         {error && (
-          <div className="text-red-600 mt-2" role="alert">
+          <div className="mt-2 text-red-600" role="alert">
             {error}
           </div>
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

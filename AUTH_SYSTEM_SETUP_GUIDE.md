@@ -33,6 +33,7 @@ node scripts/setup-auth-system.js
 ```
 
 This script will:
+
 - ✅ Create database tables (if they don't exist)
 - ✅ Apply RLS policies
 - ✅ Create initial admin user
@@ -43,18 +44,23 @@ This script will:
 If you prefer to set up the database manually:
 
 #### Step 1: Run Database Schema
+
 In your Supabase SQL editor, run:
+
 ```sql
 -- Copy and paste the contents of database/schema.sql
 ```
 
 #### Step 2: Apply RLS Policies
+
 Run the RLS policies:
+
 ```sql
 -- Copy and paste the contents of auth/sql/rls-policies.sql
 ```
 
 #### Step 3: Create Admin User
+
 ```sql
 -- Create admin user manually
 INSERT INTO auth.users (
@@ -140,6 +146,7 @@ node scripts/test-auth.js
 ### Debug Page
 
 Access the debug page at `/debug-auth` to:
+
 - Inspect authentication state
 - Test role and permission functions
 - View session information
@@ -148,18 +155,21 @@ Access the debug page at `/debug-auth` to:
 ## 🔒 Security Checklist
 
 ### Database Security
+
 - ✅ RLS policies applied
 - ✅ User isolation enforced
 - ✅ Role-based access implemented
 - ✅ Audit logging enabled
 
 ### Application Security
+
 - ✅ Environment variables secured
 - ✅ HTTPS enforced
 - ✅ Session management implemented
 - ✅ Input validation in place
 
 ### OAuth Security
+
 - ✅ OAuth providers configured
 - ✅ Redirect URLs secured
 - ✅ Client secrets protected
@@ -169,12 +179,14 @@ Access the debug page at `/debug-auth` to:
 ### Common Issues
 
 1. **"Table doesn't exist" errors**:
+
    ```bash
    # Run the database schema
    node scripts/setup-auth-system.js
    ```
 
 2. **RLS policy errors**:
+
    ```bash
    # Check if RLS is enabled
    ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -213,15 +225,15 @@ DEBUG=* node scripts/setup-auth-system.js
 
 ```typescript
 const {
-  user,           // Current user object
-  profile,        // User profile data
-  roles,          // User roles array
-  loading,        // Loading state
-  signIn,         // Login function
-  signUp,         // Registration function
-  signOut,        // Logout function
-  hasRole,        // Role checking function
-  hasPermission   // Permission checking function
+  user, // Current user object
+  profile, // User profile data
+  roles, // User roles array
+  loading, // Loading state
+  signIn, // Login function
+  signUp, // Registration function
+  signOut, // Logout function
+  hasRole, // Role checking function
+  hasPermission, // Permission checking function
 } = useAuth()
 ```
 
@@ -254,6 +266,7 @@ const {
    - Review OAuth usage
 
 2. **Update Dependencies**:
+
    ```bash
    npm update @supabase/supabase-js
    npm update @supabase/ssr
@@ -297,4 +310,4 @@ Once setup is complete, you should have:
 - ✅ Secure session handling
 - ✅ Comprehensive testing
 
-Your authentication system is now ready for production use! 
+Your authentication system is now ready for production use!

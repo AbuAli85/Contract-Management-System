@@ -1,17 +1,17 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
+import { z } from "zod"
 
 // Force dynamic rendering for this API route
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 // Validation schema for party data
 const partySchema = z.object({
-  name_en: z.string().min(1, 'English name is required'),
-  name_ar: z.string().min(1, 'Arabic name is required'),
-  crn: z.string().min(1, 'CRN is required'),
-  type: z.enum(['Employer', 'Client', 'Generic']).default('Generic'),
+  name_en: z.string().min(1, "English name is required"),
+  name_ar: z.string().min(1, "Arabic name is required"),
+  crn: z.string().min(1, "CRN is required"),
+  type: z.enum(["Employer", "Client", "Generic"]).default("Generic"),
   role: z.string().optional(),
   cr_expiry_date: z.string().optional(),
   contact_person: z.string().optional(),
@@ -22,14 +22,14 @@ const partySchema = z.object({
   tax_number: z.string().optional(),
   license_number: z.string().optional(),
   license_expiry_date: z.string().optional(),
-  status: z.enum(['Active', 'Inactive', 'Suspended']).default('Active'),
+  status: z.enum(["Active", "Inactive", "Suspended"]).default("Active"),
   notes: z.string().optional(),
 })
 
 export async function GET() {
   try {
     const cookieStore = await cookies()
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -41,7 +41,18 @@ export async function GET() {
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(name, value, options as { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'strict' | 'lax' | 'none' })
+                cookieStore.set(
+                  name,
+                  value,
+                  options as {
+                    path?: string
+                    domain?: string
+                    maxAge?: number
+                    secure?: boolean
+                    httpOnly?: boolean
+                    sameSite?: "strict" | "lax" | "none"
+                  },
+                )
               })
             } catch {
               // The `setAll` method was called from a Server Component.
@@ -50,20 +61,24 @@ export async function GET() {
             }
           },
         },
-      }
+      },
     )
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Fetch parties from the database with related data
     const { data: parties, error } = await supabase
-      .from('parties')
-      .select(`
+      .from("parties")
+      .select(
+        `
         *,
         contracts_as_first_party:contracts!contracts_first_party_id_fkey(
           id,
@@ -79,38 +94,41 @@ export async function GET() {
           contract_start_date,
           contract_end_date
         )
-      `)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .order("created_at", { ascending: false })
 
     if (error) {
-      console.error('Error fetching parties:', error)
-      return NextResponse.json({ error: 'Failed to fetch parties' }, { status: 500 })
+      console.error("Error fetching parties:", error)
+      return NextResponse.json({ error: "Failed to fetch parties" }, { status: 500 })
     }
 
     // Transform data to include contract counts
-    const partiesWithCounts = parties?.map(party => ({
+    const partiesWithCounts = parties?.map((party) => ({
       ...party,
-      total_contracts: (party.contracts_as_first_party?.length || 0) + (party.contracts_as_second_party?.length || 0),
+      total_contracts:
+        (party.contracts_as_first_party?.length || 0) +
+        (party.contracts_as_second_party?.length || 0),
       active_contracts: [
-        ...(party.contracts_as_first_party?.filter((c: any) => c.status === 'active') || []),
-        ...(party.contracts_as_second_party?.filter((c: any) => c.status === 'active') || [])
-      ].length
+        ...(party.contracts_as_first_party?.filter((c: any) => c.status === "active") || []),
+        ...(party.contracts_as_second_party?.filter((c: any) => c.status === "active") || []),
+      ].length,
     }))
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      parties: partiesWithCounts || [] 
+      parties: partiesWithCounts || [],
     })
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
   try {
     const cookieStore = await cookies()
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -122,7 +140,18 @@ export async function POST(request: Request) {
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(name, value, options as { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'strict' | 'lax' | 'none' })
+                cookieStore.set(
+                  name,
+                  value,
+                  options as {
+                    path?: string
+                    domain?: string
+                    maxAge?: number
+                    secure?: boolean
+                    httpOnly?: boolean
+                    sameSite?: "strict" | "lax" | "none"
+                  },
+                )
               })
             } catch {
               // The `setAll` method was called from a Server Component.
@@ -131,14 +160,17 @@ export async function POST(request: Request) {
             }
           },
         },
-      }
+      },
     )
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Parse and validate request body
@@ -148,37 +180,43 @@ export async function POST(request: Request) {
     // Add owner_id field
     const partyData = {
       ...validatedData,
-      owner_id: session.user.id
+      owner_id: session.user.id,
     }
 
     // Insert party into database
     const { data: party, error } = await supabase
-      .from('parties')
+      .from("parties")
       .insert([partyData])
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating party:', error)
-      return NextResponse.json({ 
-        error: 'Failed to create party',
-        details: error.message 
-      }, { status: 500 })
+      console.error("Error creating party:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to create party",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      party 
+      party,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation error',
-        details: error.issues 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.issues,
+        },
+        { status: 400 },
+      )
     }
-    
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-} 
+}

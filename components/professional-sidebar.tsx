@@ -2,92 +2,13 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+
 import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import {
-  Home,
-  BarChart3,
-  FileText,
-  FilePlus,
-  Users,
-  UserPlus,
-  UserCheck,
-  User,
-  Bell,
-  Shield,
-  Settings,
-  LogOut,
-  Moon,
-  Sun,
-  PanelLeft,
-  Package2,
-  Building2,
-  UserCog,
-  ClipboardList,
-  FileSpreadsheet,
-  Database,
-  Activity,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Edit,
-  Trash2,
-  Download,
-  Upload,
-  Search,
-  Filter,
-  Calendar,
-  Clock,
-  Star,
-  Mail,
-  MessageSquare,
-  TrendingUp,
-  ArrowUpDown,
-  ChevronUp,
-  ChevronDown,
-  Menu,
-  X,
-  Briefcase,
-  FileCheck,
-  FileX,
-  FileSearch,
-  FileEdit,
-  HelpCircle,
-  ChevronRight,
-  Layers,
-  Zap,
-  Target,
-  PieChart,
-  BarChart,
-  LineChart,
-  Database as DatabaseIcon,
-  Server,
-  Key,
-  Lock,
-  Unlock,
-  Eye,
-  EyeOff,
-  Globe,
-  MapPin,
-  Phone,
-  Mail as MailIcon,
-  CreditCard,
-  Wallet,
-  Receipt,
-  Calculator,
-  Clipboard,
-  BookOpen,
-  Bookmark,
-  Tag,
-  Hash,
-  Hash as HashIcon,
-  Hash as HashIcon2,
-} from "lucide-react"
+import { Home, BarChart3, FilePlus, UserCheck, User, Bell, Shield, Moon, Sun, Building2, Briefcase, FileCheck, FileX, FileSearch, FileEdit,  } from 'lucide-react'
 import { useTheme } from "next-themes"
 import type { Action } from "@/lib/permissions"
 
@@ -99,7 +20,7 @@ interface NavItem {
   permission?: Action
   badge?: string
   badgeVariant?: "default" | "secondary" | "destructive" | "outline"
-  children?: Omit<NavItem, 'children'>[]
+  children?: Omit<NavItem, "children">[]
 }
 
 interface SidebarProps {
@@ -112,10 +33,15 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
   const pathname = usePathname()
   const permissions = usePermissions()
   const [mounted, setMounted] = useState(false)
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard']))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["dashboard"]))
 
   // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  const locale =
+    pathname && pathname.startsWith("/en/")
+      ? "en"
+      : pathname && pathname.startsWith("/ar/")
+        ? "ar"
+        : "en"
 
   useEffect(() => {
     setMounted(true)
@@ -137,7 +63,7 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       label: "Dashboard",
       labelAr: "لوحة التحكم",
       icon: Home,
-      permission: "system:analytics"
+      permission: "system:analytics",
     },
     {
       href: `/${locale}/dashboard/analytics`,
@@ -146,14 +72,14 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       icon: BarChart3,
       permission: "system:analytics",
       badge: "New",
-      badgeVariant: "secondary"
+      badgeVariant: "secondary",
     },
     {
       href: `/${locale}/contracts`,
       label: "Contracts",
       labelAr: "العقود",
       icon: FileText,
-      permission: "contract:read"
+      permission: "contract:read",
     },
     {
       href: `/${locale}/generate-contract`,
@@ -162,7 +88,7 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       icon: FilePlus,
       permission: "contract:create",
       badge: "AI",
-      badgeVariant: "default"
+      badgeVariant: "default",
     },
     {
       href: `/${locale}/dashboard/approvals`,
@@ -171,28 +97,28 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       icon: FileCheck,
       permission: "contract:approve",
       badge: "New",
-      badgeVariant: "default"
+      badgeVariant: "default",
     },
     {
       href: `/${locale}/manage-promoters`,
       label: "Promoters",
       labelAr: "الوسطاء",
       icon: Users,
-      permission: "promoter:read"
+      permission: "promoter:read",
     },
     {
       href: `/${locale}/manage-parties`,
       label: "Parties",
       labelAr: "الأطراف",
       icon: Building2,
-      permission: "party:read"
+      permission: "party:read",
     },
     {
       href: `/${locale}/dashboard/user-management`,
       label: "User Management",
       labelAr: "إدارة المستخدمين",
       icon: UserCog,
-      permission: "user:read"
+      permission: "user:read",
     },
     {
       href: `/${locale}/dashboard/user-approvals`,
@@ -201,40 +127,40 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
       icon: UserCheck,
       permission: "user:create",
       badge: "New",
-      badgeVariant: "secondary"
+      badgeVariant: "secondary",
     },
     {
       href: `/${locale}/dashboard/roles`,
       label: "Roles & Permissions",
       labelAr: "الأدوار والصلاحيات",
       icon: Shield,
-      permission: "user:read"
+      permission: "user:read",
     },
     {
       href: `/${locale}/dashboard/audit`,
       label: "Audit Logs",
       labelAr: "سجلات التدقيق",
       icon: Activity,
-      permission: "system:audit_logs"
+      permission: "system:audit_logs",
     },
     {
       href: `/${locale}/dashboard/notifications`,
       label: "Notifications",
       labelAr: "الإشعارات",
       icon: Bell,
-      permission: "system:notifications"
+      permission: "system:notifications",
     },
     {
       href: `/${locale}/dashboard/settings`,
       label: "Settings",
       labelAr: "الإعدادات",
       icon: Settings,
-      permission: "system:settings"
-    }
+      permission: "system:settings",
+    },
   ]
 
   const isActive = (href: string) => {
-    return pathname === href || (pathname && pathname.startsWith(href + '/'))
+    return pathname === href || (pathname && pathname.startsWith(href + "/"))
   }
 
   const hasPermission = (permission?: Action) => {
@@ -242,17 +168,17 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
     return permissions.can(permission)
   }
 
-  const filteredItems = navigationItems.filter(item => hasPermission(item.permission))
+  const filteredItems = navigationItems.filter((item) => hasPermission(item.permission))
 
   if (!mounted) {
     return (
-      <div className="flex h-screen w-64 flex-col bg-background border-r">
+      <div className="flex h-screen w-64 flex-col border-r bg-background">
         <div className="flex h-14 items-center border-b px-4">
-          <div className="h-8 w-8 animate-pulse bg-muted rounded" />
+          <div className="h-8 w-8 animate-pulse rounded bg-muted" />
         </div>
         <div className="flex-1 space-y-2 p-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse bg-muted rounded" />
+            <div key={i} className="h-10 animate-pulse rounded bg-muted" />
           ))}
         </div>
       </div>
@@ -260,14 +186,16 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
   }
 
   return (
-    <div className={cn(
-      "flex h-screen flex-col bg-background border-r transition-all duration-300",
-      isCollapsed ? "w-16" : "w-64"
-    )}>
+    <div
+      className={cn(
+        "flex h-screen flex-col border-r bg-background transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64",
+      )}
+    >
       {/* Header */}
       <div className="flex h-14 items-center border-b px-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <FileText className="h-5 w-5 text-primary-foreground" />
           </div>
           {!isCollapsed && (
@@ -278,12 +206,7 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
           )}
         </div>
         {onToggle && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="ml-auto h-8 w-8 p-0"
-          >
+          <Button variant="ghost" size="sm" onClick={onToggle} className="ml-auto h-8 w-8 p-0">
             <PanelLeft className="h-4 w-4" />
           </Button>
         )}
@@ -295,25 +218,25 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
           {filteredItems.map((item) => {
             const Icon = item.icon
             const isItemActive = isActive(item.href)
-            
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
-                  isItemActive
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground"
+                  isItemActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
                 )}
               >
-                <Icon className={cn(
-                  "h-4 w-4 transition-colors",
-                  isItemActive ? "text-primary" : "text-muted-foreground"
-                )} />
+                <Icon
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    isItemActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                />
                 {!isCollapsed && (
                   <>
-                    <span className="flex-1">{locale === 'ar' ? item.labelAr : item.label}</span>
+                    <span className="flex-1">{locale === "ar" ? item.labelAr : item.label}</span>
                     {item.badge && (
                       <Badge variant={item.badgeVariant || "secondary"} className="text-xs">
                         {item.badge}
@@ -338,13 +261,9 @@ export function ProfessionalSidebar({ isCollapsed = false, onToggle }: SidebarPr
           >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
-          {!isCollapsed && (
-            <div className="flex-1 text-xs text-muted-foreground">
-              Role: Admin
-            </div>
-          )}
+          {!isCollapsed && <div className="flex-1 text-xs text-muted-foreground">Role: Admin</div>}
         </div>
       </div>
     </div>
   )
-} 
+}

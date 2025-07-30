@@ -74,7 +74,7 @@ export function AuthStatusDebug() {
         <div className="flex items-center gap-2">
           <Badge variant="default">Authenticated</Badge>
         </div>
-        
+
         <div className="space-y-2">
           <div className="text-sm">
             <span className="font-medium">Email:</span> {user.email}
@@ -82,31 +82,27 @@ export function AuthStatusDebug() {
           {profile && (
             <>
               <div className="text-sm">
-                <span className="font-medium">Name:</span> {profile.full_name || 'N/A'}
+                <span className="font-medium">Name:</span> {profile.full_name || "N/A"}
               </div>
               <div className="text-sm">
                 <span className="font-medium">Role:</span> {profile.role}
               </div>
               <div className="text-sm">
-                <span className="font-medium">Created:</span> {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'N/A'}
+                <span className="font-medium">Created:</span>{" "}
+                {profile.created_at ? new Date(profile.created_at).toLocaleDateString() : "N/A"}
               </div>
             </>
           )}
           <div className="text-sm">
-            <span className="font-medium">Roles:</span> {roles.join(', ') || 'None'}
+            <span className="font-medium">Roles:</span> {roles.join(", ") || "None"}
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => signOut()}
-          className="w-full"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={() => signOut()} className="w-full">
+          <LogOut className="mr-2 h-4 w-4" />
           Sign Out
         </Button>
       </CardContent>
     </Card>
   )
-} 
+}

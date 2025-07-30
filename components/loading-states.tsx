@@ -1,25 +1,25 @@
-'use client'
+"use client"
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Loader2, FileText, Users, Building2, BarChart3 } from 'lucide-react'
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Loader2, FileText, Users, Building2, BarChart3 } from "lucide-react"
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg"
   text?: string
   className?: string
 }
 
-export function LoadingSpinner({ size = 'md', text, className = '' }: LoadingSpinnerProps) {
+export function LoadingSpinner({ size = "md", text, className = "" }: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12'
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   }
 
   return (
     <div className={`flex flex-col items-center justify-center p-8 ${className}`}>
-      <Loader2 className={`${sizeClasses[size]} animate-spin text-primary mb-4`} />
+      <Loader2 className={`${sizeClasses[size]} mb-4 animate-spin text-primary`} />
       {text && <p className="text-sm text-muted-foreground">{text}</p>}
     </div>
   )
@@ -35,7 +35,7 @@ export function PageLoading() {
             <Skeleton className="h-8 w-64" />
             <Skeleton className="h-4 w-96" />
           </div>
-          
+
           {/* Content skeleton */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -64,7 +64,7 @@ export function TableLoading({ rows = 5, columns = 4 }: { rows?: number; columns
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-10 w-32" />
       </div>
-      
+
       {/* Table skeleton */}
       <Card>
         <CardContent className="p-0">
@@ -77,7 +77,7 @@ export function TableLoading({ rows = 5, columns = 4 }: { rows?: number; columns
                 ))}
               </div>
             </div>
-            
+
             {/* Table rows */}
             {Array.from({ length: rows }).map((_, rowIndex) => (
               <div key={rowIndex} className="border-b last:border-b-0">
@@ -103,14 +103,14 @@ export function DashboardLoading() {
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-96" />
       </div>
-      
+
       {/* Stats cards skeleton */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: FileText, label: 'Total Contracts' },
-          { icon: Users, label: 'Promoters' },
-          { icon: Building2, label: 'Parties' },
-          { icon: BarChart3, label: 'Analytics' }
+          { icon: FileText, label: "Total Contracts" },
+          { icon: Users, label: "Promoters" },
+          { icon: Building2, label: "Parties" },
+          { icon: BarChart3, label: "Analytics" },
         ].map((stat, i) => (
           <Card key={i}>
             <CardContent className="p-6">
@@ -126,14 +126,14 @@ export function DashboardLoading() {
           </Card>
         ))}
       </div>
-      
+
       {/* Feature cards skeleton */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-5 w-16" />
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -165,7 +165,7 @@ export function FormLoading() {
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-4 w-64" />
       </div>
-      
+
       {/* Form fields */}
       <div className="space-y-4">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -175,7 +175,7 @@ export function FormLoading() {
           </div>
         ))}
       </div>
-      
+
       {/* Form actions */}
       <div className="flex gap-4">
         <Skeleton className="h-10 w-24" />
@@ -213,11 +213,11 @@ export function SidebarLoading() {
   return (
     <div className="space-y-4 p-4">
       {/* Logo */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="mb-6 flex items-center gap-2">
         <Skeleton className="h-8 w-8" />
         <Skeleton className="h-6 w-32" />
       </div>
-      
+
       {/* Navigation items */}
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">
@@ -227,4 +227,4 @@ export function SidebarLoading() {
       ))}
     </div>
   )
-} 
+}

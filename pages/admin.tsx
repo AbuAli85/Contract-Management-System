@@ -1,5 +1,5 @@
-import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { useRouter } from "next/router"
+import { useEffect, useState } from "react"
 
 export default function AdminPage() {
   const router = useRouter()
@@ -9,27 +9,27 @@ export default function AdminPage() {
     // Check authentication and role on client side
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/check-session')
+        const response = await fetch("/api/auth/check-session")
         const data = await response.json()
-        
+
         if (!data.success || !data.hasSession) {
-          router.replace('/auth/login')
+          router.replace("/auth/login")
           return
         }
 
         // Check if user has admin role
-        const roleResponse = await fetch('/api/auth/get-user-role')
+        const roleResponse = await fetch("/api/auth/get-user-role")
         const roleData = await roleResponse.json()
-        
-        if (!roleData.success || roleData.role !== 'admin') {
-          router.replace('/not-authorized')
+
+        if (!roleData.success || roleData.role !== "admin") {
+          router.replace("/not-authorized")
           return
         }
 
         setIsLoading(false)
       } catch (error) {
-        console.error('Auth check failed:', error)
-        router.replace('/auth/login')
+        console.error("Auth check failed:", error)
+        router.replace("/auth/login")
       }
     }
 
@@ -38,4 +38,4 @@ export default function AdminPage() {
 
   if (isLoading) return <div>Loading...</div>
   return <div>Welcome, admin!</div>
-} 
+}

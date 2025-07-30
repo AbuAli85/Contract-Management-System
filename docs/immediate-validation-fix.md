@@ -1,9 +1,11 @@
 # 🚨 IMMEDIATE FIX: Make.com Validation Errors
 
 ## The Problem
+
 **Error:** `Data is INVALID because of the error: [Validation failed for 2 parameter(s).]]`
 
 ## The Solution
+
 The 2 failing parameters are almost certainly the **image URL fields**. Here's the exact fix:
 
 ### Step 1: Check Your Google Docs Module Configuration
@@ -11,12 +13,14 @@ The 2 failing parameters are almost certainly the **image URL fields**. Here's t
 In your Make.com scenario, go to the Google Docs module and look for these fields:
 
 **Current (probably wrong):**
+
 ```
 ID_CARD_IMAGE: {{14.value.promoter_id_card_url}}
 PASSPORT_IMAGE: {{14.value.promoter_passport_url}}
 ```
 
 **Correct mapping:**
+
 ```
 ID_CARD_IMAGE: {{promoter_id_card_url}}
 PASSPORT_IMAGE: {{promoter_passport_url}}
@@ -25,6 +29,7 @@ PASSPORT_IMAGE: {{promoter_passport_url}}
 ### Step 2: Why This Fix Works
 
 Based on the webhook code analysis, the response structure is:
+
 ```json
 {
   "promoter_id_card_url": "https://supabase-url...",
@@ -42,6 +47,7 @@ Based on the webhook code analysis, the response structure is:
 If the correct field mapping still fails, test with hardcoded URLs to isolate the problem:
 
 **Temporarily use these working URLs:**
+
 - **ID_CARD_IMAGE**: `https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_id_cards/1736025061969_id-card.jpg`
 - **PASSPORT_IMAGE**: `https://vcjhdguxbmlqtzzllkki.supabase.co/storage/v1/object/public/promoter-documents/promoter_passports/1736025062016_passport.jpg`
 
@@ -51,24 +57,28 @@ If hardcoded URLs fail → Problem is template or permissions
 ### Step 4: Common Field Mapping Mistakes
 
 ❌ **Using iterator syntax when not needed:**
+
 - `{{14.value.promoter_id_card_url}}`
 - `{{data.promoter_id_card_url}}`
 
 ✅ **Correct direct mapping:**
+
 - `{{promoter_id_card_url}}`
 - `{{promoter_passport_url}}`
 
 ### Step 5: Verify Your Google Docs Template
 
 Make sure your Google Docs template has:
+
 1. **Image placeholders** (not just text)
-2. **Correct Alt text:** 
+2. **Correct Alt text:**
    - First image Alt text: `ID_CARD_IMAGE`
    - Second image Alt text: `PASSPORT_IMAGE`
 
 ### Step 6: Quick Verification
 
 After making the field mapping changes:
+
 1. Run your Make.com scenario
 2. Check if validation errors are gone
 3. Verify the document generates with images
@@ -84,6 +94,7 @@ After making the field mapping changes:
 ## Summary
 
 **Most likely fix:** Change your Google Docs module fields from:
+
 - `{{14.value.promoter_id_card_url}}` → `{{promoter_id_card_url}}`
 - `{{14.value.promoter_passport_url}}` → `{{promoter_passport_url}}`
 

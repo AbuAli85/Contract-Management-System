@@ -25,7 +25,7 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
   const [formData, setFormData] = useState<ChangePasswordFormData>({
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   })
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -56,7 +56,9 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
     }
 
     if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.newPassword)) {
-      setError("New password must contain at least one uppercase letter, one lowercase letter, and one number")
+      setError(
+        "New password must contain at least one uppercase letter, one lowercase letter, and one number",
+      )
       return false
     }
 
@@ -77,7 +79,7 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
@@ -86,15 +88,15 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
     setError(null)
 
     try {
-      const response = await fetch('/api/users/change-password', {
-        method: 'POST',
+      const response = await fetch("/api/users/change-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           currentPassword: formData.currentPassword,
           newPassword: formData.newPassword,
-          userId: userId // Optional, for admin changing other user's password
+          userId: userId, // Optional, for admin changing other user's password
         }),
       })
 
@@ -104,9 +106,10 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
         setSuccess(true)
         toast({
           title: "Password changed successfully",
-          description: "Your password has been updated. Please log in again with your new password.",
+          description:
+            "Your password has been updated. Please log in again with your new password.",
         })
-        
+
         // Reset form after a short delay
         setTimeout(() => {
           resetForm()
@@ -127,7 +130,7 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
     setFormData({
       currentPassword: "",
       newPassword: "",
-      confirmPassword: ""
+      confirmPassword: "",
     })
     setError(null)
     setSuccess(false)
@@ -146,8 +149,8 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
               Password Changed Successfully
             </DialogTitle>
           </DialogHeader>
-          <div className="text-center py-4">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+          <div className="py-4 text-center">
+            <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-500" />
             <p className="text-sm text-muted-foreground">
               Your password has been updated successfully. You will be redirected shortly.
             </p>
@@ -158,12 +161,15 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
   }
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      if (!newOpen) {
-        resetForm()
-      }
-      onOpenChange(newOpen)
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          resetForm()
+        }
+        onOpenChange(newOpen)
+      }}
+    >
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -255,9 +261,9 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
           </div>
 
           {/* Password Requirements */}
-          <div className="bg-muted p-3 rounded-md">
-            <p className="text-xs font-medium mb-2">Password Requirements:</p>
-            <ul className="text-xs text-muted-foreground space-y-1">
+          <div className="rounded-md bg-muted p-3">
+            <p className="mb-2 text-xs font-medium">Password Requirements:</p>
+            <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• At least 8 characters long</li>
               <li>• Contains at least one uppercase letter</li>
               <li>• Contains at least one lowercase letter</li>
@@ -279,12 +285,12 @@ export function ChangePasswordForm({ open, onOpenChange, userId }: ChangePasswor
             <Button type="submit" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Changing Password...
                 </>
               ) : (
                 <>
-                  <Lock className="h-4 w-4 mr-2" />
+                  <Lock className="mr-2 h-4 w-4" />
                   Change Password
                 </>
               )}

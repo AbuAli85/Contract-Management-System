@@ -1,23 +1,23 @@
-'use client'
+"use client"
 
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Button } from '@/components/ui/button'
-import { Github } from 'lucide-react'
-import { useState } from 'react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Button } from "@/components/ui/button"
+import { Github } from "lucide-react"
+import { useState } from "react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function OAuthButtons() {
   const { signInWithProvider } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handleOAuthSignIn = async (provider: 'github' | 'google') => {
+  const handleOAuthSignIn = async (provider: "github" | "google") => {
     setError(null)
     setLoading(provider)
-    
+
     try {
       const { success, error: oauthError } = await signInWithProvider(provider)
-      
+
       if (!success) {
         console.error(`OAuth sign in error (${provider}):`, oauthError)
         setError(oauthError || `${provider} sign in failed`)
@@ -37,24 +37,24 @@ export function OAuthButtons() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
+
       <Button
         type="button"
         variant="outline"
         className="w-full"
-        onClick={() => handleOAuthSignIn('github')}
+        onClick={() => handleOAuthSignIn("github")}
         disabled={!!loading}
         aria-label="Sign in with GitHub"
       >
         <Github className="mr-2 h-4 w-4" />
-        {loading === 'github' ? 'Connecting...' : 'Continue with GitHub'}
+        {loading === "github" ? "Connecting..." : "Continue with GitHub"}
       </Button>
-      
+
       <Button
         type="button"
         variant="outline"
         className="w-full"
-        onClick={() => handleOAuthSignIn('google')}
+        onClick={() => handleOAuthSignIn("google")}
         disabled={!!loading}
         aria-label="Sign in with Google"
       >
@@ -76,8 +76,8 @@ export function OAuthButtons() {
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        {loading === 'google' ? 'Connecting...' : 'Continue with Google'}
+        {loading === "google" ? "Connecting..." : "Continue with Google"}
       </Button>
     </div>
   )
-} 
+}

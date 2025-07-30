@@ -9,22 +9,24 @@
 ## ✅ **Solution Applied**
 
 ### **Original (Broken) Code:**
+
 ```javascript
 "name": "{{replaceAll(replaceAll(lower(1.contract_number); \"[^a-z0-9_-]\"; \"\"); ; \"_\")}}-{{replaceAll(replaceAll(lower(1.promoter_name_en); \"[^a-z0-9_-]\"; \"\"); ; \"_\")}}.pdf"
 ```
 
 ### **Fixed Code:**
+
 ```javascript
 "name": "{{lower(1.contract_number).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}-{{lower(1.promoter_name_en).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}.pdf"
 ```
 
 ## 🔄 **What Changed**
 
-| ❌ **Before (Broken)** | ✅ **After (Fixed)** |
-|------------------------|---------------------|
+| ❌ **Before (Broken)**                      | ✅ **After (Fixed)**                 |
+| ------------------------------------------- | ------------------------------------ |
 | `replaceAll(...; "pattern"; "replacement")` | `replace(/pattern/g, "replacement")` |
-| Uses semicolon syntax | Uses comma syntax |
-| Not supported by Make.com | Fully compatible |
+| Uses semicolon syntax                       | Uses comma syntax                    |
+| Not supported by Make.com                   | Fully compatible                     |
 
 ## 📋 **How to Apply the Fix**
 
@@ -43,6 +45,7 @@
 ## 🧪 **Expected Results**
 
 After applying this fix:
+
 - ✅ **No more Google Docs errors**
 - ✅ **No more filter errors** (already fixed in webhook)
 - ✅ **Clean, properly formatted document names**
@@ -60,6 +63,7 @@ The fix replaces Make.com incompatible functions with supported alternatives:
 ## 📞 **Support**
 
 If you encounter any issues:
+
 1. **Check connections** are properly configured
 2. **Verify webhook URL** is correct
 3. **Test with simple data** first

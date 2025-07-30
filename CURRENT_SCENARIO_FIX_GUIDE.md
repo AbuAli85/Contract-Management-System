@@ -1,14 +1,17 @@
 # Current Scenario Fix Guide - Step by Step
 
 ## 🎯 Overview
+
 This guide will help you fix the critical issues in your current Make.com scenario without needing to import a new one. We'll make targeted fixes to resolve the image processing, data consistency, and security issues.
 
 ## 🚨 Critical Issue #1: Image Processing (Module 6)
 
 ### Problem
+
 The Google Docs template is using original URLs instead of uploaded Google Drive URLs.
 
 ### Fix Steps
+
 1. **Open Make.com** and navigate to your scenario
 2. **Click on Module 6** (Google Docs Template)
 3. **Click "Edit"** on the module
@@ -17,14 +20,15 @@ The Google Docs template is using original URLs instead of uploaded Google Drive
 
 ```json
 {
-    "kix.d0m033g2v22b-t.0": "{{if(4.id; \"https://drive.google.com/uc?export=view&id=\" + 4.id; \"\")}}",
-    "kix.hofhbp84rfny-t.0": "{{if(5.id; \"https://drive.google.com/uc?export=view&id=\" + 5.id; \"\")}}"
+  "kix.d0m033g2v22b-t.0": "{{if(4.id; \"https://drive.google.com/uc?export=view&id=\" + 4.id; \"\")}}",
+  "kix.hofhbp84rfny-t.0": "{{if(5.id; \"https://drive.google.com/uc?export=view&id=\" + 5.id; \"\")}}"
 }
 ```
 
 6. **Click "OK"** to save the changes
 
 ### What This Fixes
+
 - Images will now appear correctly in generated PDFs
 - Uses the actual uploaded Google Drive file IDs
 - Handles cases where images fail to upload
@@ -32,11 +36,13 @@ The Google Docs template is using original URLs instead of uploaded Google Drive
 ## 🔐 Critical Issue #2: API Keys Security (Modules 2 & 21)
 
 ### Problem
+
 API keys are hardcoded in the scenario configuration.
 
 ### Fix Steps
 
 #### Step 2a: Create Environment Variables
+
 1. **Go to Make.com Settings** → **Environment Variables**
 2. **Click "Add Variable"**
 3. **Add these variables**:
@@ -45,11 +51,12 @@ API keys are hardcoded in the scenario configuration.
 Name: SUPABASE_ANON_KEY
 Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZGp4emh1amV0dG9jb3NzenFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkzMTkxMDYsImV4cCI6MjA2NDg5NTEwNn0.6VGbocKFVLNX_MCIOwFtdEssMk6wd_UQ5yNT1CfV6BA
 
-Name: SUPABASE_SERVICE_KEY  
+Name: SUPABASE_SERVICE_KEY
 Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrZGp4emh1amV0dG9jb3NzenFsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTMxOTEwNiwiZXhwIjoyMDY0ODk1MTA2fQ.dAf5W8m9Q8FGlLY19Lo2x8JYSfq3RuFMAsHaPcH3F7A
 ```
 
 #### Step 2b: Update Module 2
+
 1. **Click on Module 2** (HTTP GET)
 2. **Click "Edit"**
 3. **Find the "Headers" section**
@@ -58,6 +65,7 @@ Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVr
 6. **Click "OK"** to save
 
 #### Step 2c: Update Module 21
+
 1. **Click on Module 21** (HTTP PATCH)
 2. **Click "Edit"**
 3. **Find the "Headers" section**
@@ -68,11 +76,13 @@ Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVr
 ## 🔄 Critical Issue #3: Data References (Modules 20, 21, 22)
 
 ### Problem
+
 Inconsistent data references using `{{14.value.contract_number}}` instead of `{{1.contract_number}}`.
 
 ### Fix Steps
 
 #### Step 3a: Fix Module 20 (Supabase Upload)
+
 1. **Click on Module 20** (Supabase Upload)
 2. **Click "Edit"**
 3. **Find the "File Name" field**
@@ -81,6 +91,7 @@ Inconsistent data references using `{{14.value.contract_number}}` instead of `{{
 6. **Click "OK"** to save
 
 #### Step 3b: Fix Module 21 (Database Update)
+
 1. **Click on Module 21** (HTTP PATCH)
 2. **Click "Edit"**
 3. **Find the "URL" field**
@@ -89,6 +100,7 @@ Inconsistent data references using `{{14.value.contract_number}}` instead of `{{
 6. **Click "OK"** to save
 
 #### Step 3c: Fix Module 22 (Webhook Response)
+
 1. **Click on Module 22** (Webhook Response)
 2. **Click "Edit"**
 3. **Find the "Body" field**
@@ -98,6 +110,7 @@ Inconsistent data references using `{{14.value.contract_number}}` instead of `{{
 ## 🧪 Testing Your Fixes
 
 ### Test 1: Basic Functionality
+
 ```bash
 curl -X POST https://hook.eu2.make.com/2640726 \
   -H "Content-Type: application/json" \
@@ -112,6 +125,7 @@ curl -X POST https://hook.eu2.make.com/2640726 \
 ```
 
 ### Test 2: With Images
+
 ```bash
 curl -X POST https://hook.eu2.make.com/2640726 \
   -H "Content-Type: application/json" \
@@ -142,16 +156,19 @@ After making the fixes, verify:
 ## 🔍 Troubleshooting
 
 ### If Images Still Don't Appear
+
 1. **Check Module 4 and 5**: Ensure they're successfully uploading to Google Drive
 2. **Verify Google Drive permissions**: Ensure the service account has access
 3. **Check the image URLs**: Test the generated URLs manually
 
 ### If Database Updates Fail
+
 1. **Verify environment variables**: Check they're set correctly
 2. **Test API keys**: Try a manual API call with the keys
 3. **Check contract exists**: Ensure the contract number exists in database
 
 ### If File Names Are Wrong
+
 1. **Check data flow**: Verify `{{1.contract_number}}` has the expected value
 2. **Test webhook input**: Ensure the webhook is receiving correct data
 3. **Check module order**: Ensure data is flowing correctly through modules
@@ -176,4 +193,4 @@ After applying these fixes:
 
 ---
 
-*This guide focuses on fixing the critical issues in your current scenario. Once these are working, consider implementing the full improved scenario for better error handling and reliability.* 
+_This guide focuses on fixing the critical issues in your current scenario. Once these are working, consider implementing the full improved scenario for better error handling and reliability._

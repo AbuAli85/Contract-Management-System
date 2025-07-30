@@ -5,6 +5,7 @@ A modern, secure contract management platform built with Next.js, Supabase, and 
 ## 🚀 Features
 
 ### Enhanced Authentication System
+
 - **Automatic Session Refresh**: Seamless session management with automatic token refresh
 - **Memory Leak Prevention**: Proper cleanup of subscriptions and timers
 - **Centralized Error Handling**: User-friendly error messages with toast notifications
@@ -13,6 +14,7 @@ A modern, secure contract management platform built with Next.js, Supabase, and 
 - **Automated Reminders**: Email notifications for session expiry
 
 ### Core Features
+
 - Multi-role authentication (Admin, Client, Provider)
 - Contract generation and management
 - Party and promoter management
@@ -32,7 +34,8 @@ A modern, secure contract management platform built with Next.js, Supabase, and 
 ## 📦 Installation
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm 8+
 - Supabase account
 - Vercel account (for deployment)
@@ -40,22 +43,26 @@ A modern, secure contract management platform built with Next.js, Supabase, and 
 ### Local Development
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-username/contract-management-system.git
    cd contract-management-system
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env.local
    ```
-   
+
    Fill in your environment variables:
+
    ```env
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -64,13 +71,14 @@ A modern, secure contract management platform built with Next.js, Supabase, and 
    ```
 
 4. **Set up Supabase**
+
    ```bash
    # Install Supabase CLI
    npm install -g supabase
-   
+
    # Link to your project
    supabase link --project-ref your-project-ref
-   
+
    # Run migrations
    npm run db:migrate
    ```
@@ -146,6 +154,7 @@ vercel --prod
 ## 🧪 Testing
 
 ### Run Tests
+
 ```bash
 # Unit tests
 npm run test
@@ -161,7 +170,9 @@ npm run test:e2e
 ```
 
 ### Test Coverage
+
 The project includes comprehensive test coverage for:
+
 - Authentication system
 - Session management
 - Error handling
@@ -172,13 +183,13 @@ The project includes comprehensive test coverage for:
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Yes |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | Yes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | Yes |
-| `FRONTEND_URL` | Frontend URL for email links | Yes |
-| `SENTRY_DSN` | Sentry error tracking (optional) | No |
+| Variable                        | Description                      | Required |
+| ------------------------------- | -------------------------------- | -------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL             | Yes      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key           | Yes      |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key        | Yes      |
+| `FRONTEND_URL`                  | Frontend URL for email links     | Yes      |
+| `SENTRY_DSN`                    | Sentry error tracking (optional) | No       |
 
 ### Database Migrations
 
@@ -197,6 +208,7 @@ The project includes comprehensive database migrations:
 ## 📊 Monitoring
 
 ### Session Analytics
+
 ```sql
 -- Get reminder statistics
 SELECT * FROM get_reminder_statistics(7);
@@ -206,6 +218,7 @@ SELECT * FROM recent_session_reminders;
 ```
 
 ### Error Monitoring
+
 - Auth errors are logged with context
 - Error boundaries capture JS errors
 - Session refresh failures are tracked
@@ -214,12 +227,14 @@ SELECT * FROM recent_session_reminders;
 ## 🔒 Security
 
 ### Authentication Security
+
 - **Session Management**: Automatic refresh with retry logic
 - **Token Security**: Secure handling and validation
 - **RLS Policies**: Row-level security on all user data
 - **Error Handling**: No sensitive information in error messages
 
 ### Database Security
+
 - **Row-Level Security**: Users can only access their own data
 - **Admin Access**: Role-based permissions for administrators
 - **Audit Logging**: Comprehensive logging of all operations
@@ -228,12 +243,14 @@ SELECT * FROM recent_session_reminders;
 ## 🚀 Performance
 
 ### Optimizations
+
 - **Code Splitting**: Automatic code splitting with Next.js
 - **Image Optimization**: Next.js Image component
 - **Caching**: Strategic caching for auth data
 - **Memory Management**: Proper cleanup of subscriptions
 
 ### Monitoring
+
 - **Bundle Analysis**: Built-in bundle analysis
 - **Performance Metrics**: Core Web Vitals tracking
 - **Error Tracking**: Comprehensive error monitoring
@@ -248,6 +265,7 @@ SELECT * FROM recent_session_reminders;
 5. Open a Pull Request
 
 ### Development Guidelines
+
 - Follow TypeScript best practices
 - Write comprehensive tests
 - Use conventional commit messages
@@ -260,6 +278,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support and questions:
+
 - Create an issue on GitHub
 - Check the [documentation](docs/)
 - Review the [troubleshooting guide](docs/TROUBLESHOOTING.md)
@@ -267,6 +286,7 @@ For support and questions:
 ## 🔄 Changelog
 
 ### v0.1.0 - Enhanced Authentication System
+
 - ✅ Automatic session refresh with retry logic
 - ✅ Memory leak prevention and cleanup
 - ✅ Centralized error handling with user-friendly messages

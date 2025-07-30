@@ -1,9 +1,11 @@
 # Google Docs Image Access Fix
 
 ## 🚨 **Current Error**
+
 "Invalid requests[12].replaceImage: There was a problem retrieving the image"
 
 ## 🔍 **Root Cause**
+
 Google Drive images are not publicly accessible to the Google Docs API.
 
 ## ✅ **SOLUTION 1: Fix Image Permissions (Recommended)**
@@ -13,22 +15,26 @@ Google Drive images are not publicly accessible to the Google Docs API.
 **Modules to Update:** ID 4 (ID Card Upload) and ID 5 (Passport Upload)
 
 **Current Settings:**
+
 - Images uploaded to private folder
 - Not publicly accessible
 
 **Required Changes:**
+
 1. **Make folder publicly accessible**, OR
 2. **Update image URLs to use proper sharing format**
 
 ### **Quick Fix - Update Image URLs in Google Docs Module**
 
 **Current URLs:**
+
 ```
 https://drive.google.com/uc?id={{4.id}}
 https://drive.google.com/uc?id={{5.id}}
 ```
 
 **Fixed URLs (with export parameter):**
+
 ```
 https://drive.google.com/uc?export=view&id={{4.id}}
 https://drive.google.com/uc?export=view&id={{5.id}}
@@ -39,6 +45,7 @@ https://drive.google.com/uc?export=view&id={{5.id}}
 If images often fail, use conditional logic to only include images when they exist:
 
 **Safe Image URLs:**
+
 ```
 {{if(4.id != ""; "https://drive.google.com/uc?export=view&id=" + 4.id; "")}}
 {{if(5.id != ""; "https://drive.google.com/uc?export=view&id=" + 5.id; "")}}
@@ -88,6 +95,7 @@ For testing purposes, temporarily remove image replacements:
 ## ✅ **Expected Results**
 
 After fixing:
+
 - ✅ Images load properly in generated documents
 - ✅ No more "problem retrieving image" errors
 - ✅ Complete document generation

@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const withNextIntl = require('next-intl/plugin')('./i18n.cjs')
+const withNextIntl = require("next-intl/plugin")("./i18n.cjs")
 
 const nextConfig = {
   experimental: {
@@ -12,8 +12,8 @@ const nextConfig = {
   },
   // Environment variables for Vercel Analytics
   env: {
-    VERCEL_ANALYTICS_DEBUG: 'false',
-    _next_intl_trailing_slash: 'false',
+    VERCEL_ANALYTICS_DEBUG: "false",
+    _next_intl_trailing_slash: "false",
   },
   // Add cache-busting and deployment optimizations
   generateBuildId: async () => {
@@ -24,20 +24,20 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/_next/static/(.*)',
+        source: "/_next/static/(.*)",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
           },
         ],
       },
       {
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
           },
         ],
       },
@@ -54,29 +54,26 @@ const nextConfig = {
 
     // Ensure proper module resolution
     config.resolve.extensionAlias = {
-      '.js': ['.js', '.ts', '.tsx'],
-      '.jsx': ['.jsx', '.tsx'],
+      ".js": [".js", ".ts", ".tsx"],
+      ".jsx": [".jsx", ".tsx"],
     }
 
     // Add better error handling for module resolution
-    config.resolve.modules = [
-      'node_modules',
-      ...(config.resolve.modules || [])
-    ]
+    config.resolve.modules = ["node_modules", ...(config.resolve.modules || [])]
 
     // Handle webpack module resolution issues
     config.module.rules.push({
       test: /\.(js|jsx|ts|tsx)$/,
       resolve: {
-        fullySpecified: false
-      }
+        fullySpecified: false,
+      },
     })
 
     // Add fallback for missing modules
     config.plugins.push(
-      new (require('webpack')).IgnorePlugin({
+      new (require("webpack").IgnorePlugin)({
         resourceRegExp: /^\.\/8728\.js$/,
-      })
+      }),
     )
 
     return config
@@ -85,7 +82,7 @@ const nextConfig = {
   compress: true,
   // Optimize images
   images: {
-    formats: ['image/webp', 'image/avif'],
+    formats: ["image/webp", "image/avif"],
   },
   // Disable type checking during build to avoid issues
   typescript: {

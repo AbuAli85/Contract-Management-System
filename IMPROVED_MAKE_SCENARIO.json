@@ -1,618 +1,618 @@
 {
-    "name": "Contract Generation - Enhanced with Error Handling",
-    "flow": [
-        {
-            "id": 1,
-            "module": "gateway:CustomWebHook",
-            "version": 1,
-            "parameters": {
-                "hook": 2640726,
-                "maxResults": 1
-            },
-            "mapper": {},
-            "metadata": {
-                "designer": {
-                    "x": 0,
-                    "y": 0
-                },
-                "interface": [
-                    {
-                        "name": "contract_id",
-                        "type": "text"
-                    },
-                    {
-                        "name": "first_party_name_en",
-                        "type": "text"
-                    },
-                    {
-                        "name": "first_party_name_ar",
-                        "type": "text"
-                    },
-                    {
-                        "name": "first_party_crn",
-                        "type": "text"
-                    },
-                    {
-                        "name": "second_party_name_en",
-                        "type": "text"
-                    },
-                    {
-                        "name": "second_party_name_ar",
-                        "type": "text"
-                    },
-                    {
-                        "name": "second_party_crn",
-                        "type": "text"
-                    },
-                    {
-                        "name": "promoter_name_en",
-                        "type": "text"
-                    },
-                    {
-                        "name": "promoter_name_ar",
-                        "type": "text"
-                    },
-                    {
-                        "name": "job_title",
-                        "type": "text"
-                    },
-                    {
-                        "name": "work_location",
-                        "type": "text"
-                    },
-                    {
-                        "name": "email",
-                        "type": "text"
-                    },
-                    {
-                        "name": "start_date",
-                        "type": "text"
-                    },
-                    {
-                        "name": "end_date",
-                        "type": "text"
-                    },
-                    {
-                        "name": "contract_number",
-                        "type": "text"
-                    },
-                    {
-                        "name": "id_card_number",
-                        "type": "text"
-                    },
-                    {
-                        "name": "promoter_id_card_url",
-                        "type": "text"
-                    },
-                    {
-                        "name": "promoter_passport_url",
-                        "type": "text"
-                    },
-                    {
-                        "name": "pdf_url",
-                        "type": "text"
-                    }
-                ]
-            }
-        },
-        {
-            "id": 2,
-            "module": "http:ActionSendDataBasicAuth",
-            "version": 3,
-            "parameters": {
-                "key": 92343,
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "mapper": {
-                "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts",
-                "method": "get",
-                "qs": [
-                    {
-                        "name": "contract_number",
-                        "value": "eq.{{1.contract_number}}"
-                    },
-                    {
-                        "name": "select",
-                        "value": "*"
-                    },
-                    {
-                        "name": "is_current",
-                        "value": "eq.true"
-                    }
-                ],
-                "headers": [
-                    {
-                        "name": "apikey",
-                        "value": "{{$env.SUPABASE_ANON_KEY}}"
-                    },
-                    {
-                        "name": "Authorization",
-                        "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
-                    }
-                ],
-                "timeout": "30",
-                "gzip": true,
-                "parseResponse": true
-            },
-            "metadata": {
-                "designer": {
-                    "x": 300,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 3,
-            "module": "builtin:BasicFeeder",
-            "version": 1,
-            "parameters": {},
-            "filter": {
-                "name": "Contract Data Exists",
-                "conditions": [
-                    [
-                        {
-                            "a": "length({{2.data}})",
-                            "o": "greater",
-                            "b": "0"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "array": "{{2.data}}"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 600,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 4,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "filter": {
-                "name": "ID Card URL Valid",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{1.promoter_id_card_url}}",
-                            "o": "exist"
-                        },
-                        {
-                            "a": "{{1.promoter_id_card_url}}",
-                            "b": "null",
-                            "o": "text:notequal"
-                        },
-                        {
-                            "a": "{{length(trim(1.promoter_id_card_url))}}",
-                            "b": "0",
-                            "o": "number:greater"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "url": "{{1.promoter_id_card_url}}",
-                "method": "get",
-                "timeout": "30",
-                "gzip": true,
-                "parseResponse": false,
-                "followRedirect": true
-            },
-            "metadata": {
-                "designer": {
-                    "x": 900,
-                    "y": -150
-                }
-            }
-        },
-        {
-            "id": 5,
-            "module": "google-drive:uploadAFile",
-            "version": 4,
-            "parameters": {
-                "__IMTCONN__": 8815148
-            },
-            "filter": {
-                "name": "ID Card Download Success",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{4.statusCode}}",
-                            "b": "200",
-                            "o": "text:equal"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "data": "{{4.data}}",
-                "select": "map",
-                "convert": false,
-                "filename": "id_card_{{1.contract_number}}_{{formatDate(now; \"YYYY-MM-DD\")}}.jpg",
-                "folderId": "1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1200,
-                    "y": -150
-                }
-            }
-        },
-        {
-            "id": 6,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "filter": {
-                "name": "Passport URL Valid",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{1.promoter_passport_url}}",
-                            "o": "exist"
-                        },
-                        {
-                            "a": "{{1.promoter_passport_url}}",
-                            "b": "null",
-                            "o": "text:notequal"
-                        },
-                        {
-                            "a": "{{length(trim(1.promoter_passport_url))}}",
-                            "b": "0",
-                            "o": "number:greater"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "url": "{{1.promoter_passport_url}}",
-                "method": "get",
-                "timeout": "30",
-                "gzip": true,
-                "parseResponse": false,
-                "followRedirect": true
-            },
-            "metadata": {
-                "designer": {
-                    "x": 900,
-                    "y": 150
-                }
-            }
-        },
-        {
-            "id": 7,
-            "module": "google-drive:uploadAFile",
-            "version": 4,
-            "parameters": {
-                "__IMTCONN__": 8815148
-            },
-            "filter": {
-                "name": "Passport Download Success",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{6.statusCode}}",
-                            "b": "200",
-                            "o": "text:equal"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "data": "{{6.data}}",
-                "select": "map",
-                "convert": false,
-                "filename": "passport_{{1.contract_number}}_{{formatDate(now; \"YYYY-MM-DD\")}}.jpg",
-                "folderId": "1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1200,
-                    "y": 150
-                }
-            }
-        },
-        {
-            "id": 8,
-            "module": "google-docs:createADocumentFromTemplate",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8511693
-            },
-            "mapper": {
-                "select": "map",
-                "name": "{{lower(1.contract_number).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}-{{lower(1.promoter_name_en).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}",
-                "destination": "drive",
-                "document": "1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
-                "requests": [
-                    {
-                        "text": "ref_number",
-                        "replaceText": "{{1.contract_number}}"
-                    },
-                    {
-                        "text": "first_party_name_en",
-                        "replaceText": "{{1.first_party_name_en}}"
-                    },
-                    {
-                        "text": "first_party_name_ar",
-                        "replaceText": "{{1.first_party_name_ar}}"
-                    },
-                    {
-                        "text": "first_party_crn",
-                        "replaceText": "{{1.first_party_crn}}"
-                    },
-                    {
-                        "text": "second_party_name_en",
-                        "replaceText": "{{1.second_party_name_en}}"
-                    },
-                    {
-                        "text": "second_party_name_ar",
-                        "replaceText": "{{1.second_party_name_ar}}"
-                    },
-                    {
-                        "text": "second_party_crn",
-                        "replaceText": "{{1.second_party_crn}}"
-                    },
-                    {
-                        "text": "promoter_name_en",
-                        "replaceText": "{{1.promoter_name_en}}"
-                    },
-                    {
-                        "text": "promoter_name_ar",
-                        "replaceText": "{{1.promoter_name_ar}}"
-                    },
-                    {
-                        "text": "id_card_number",
-                        "replaceText": "{{1.id_card_number}}"
-                    },
-                    {
-                        "text": "contract_start_date",
-                        "replaceText": "{{formatDate(1.start_date; \"DD-MM-YYYY\")}}"
-                    },
-                    {
-                        "text": "contract_end_date",
-                        "replaceText": "{{formatDate(1.end_date; \"DD-MM-YYYY\")}}"
-                    }
-                ],
-                "imageReplacement": [
-                    {
-                        "imageObjectId": "ID_CARD_IMAGE",
-                        "url": "{{if(5.id; \"https://drive.google.com/uc?export=view&id=\" + 5.id; \"\")}}"
-                    },
-                    {
-                        "imageObjectId": "PASSPORT_IMAGE",
-                        "url": "{{if(7.id; \"https://drive.google.com/uc?export=view&id=\" + 7.id; \"\")}}"
-                    }
-                ],
-                "folderId": "1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1500,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 9,
-            "module": "google-docs:exportADocument",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8511693
-            },
-            "mapper": {
-                "document": "{{8.id}}",
-                "mimeType": "application/pdf",
-                "destination": "drive"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 1800,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 10,
-            "module": "supabase:uploadAFile",
-            "version": 1,
-            "parameters": {
-                "__IMTCONN__": 8908761
-            },
-            "mapper": {
-                "upsert": true,
-                "bucketID": "contracts",
-                "file_data": "{{9.data}}",
-                "file_name": "{{3.value.contract_number}}-{{3.value.promoter_name_en}}.pdf"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2100,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 11,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "mapper": {
-                "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts?contract_number=eq.{{3.value.contract_number}}&is_current=eq.true",
-                "data": "{\n  \"pdf_url\": \"https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{10.file_name}}\",\n  \"status\": \"generated\",\n  \"google_drive_url\": \"{{8.webViewLink}}\",\n  \"makecom_webhook_response\": \"Success\",\n  \"last_generation_attempt\": \"{{now}}\"\n}",
-                "method": "patch",
-                "headers": [
-                    {
-                        "name": "apikey",
-                        "value": "{{$env.SUPABASE_ANON_KEY}}"
-                    },
-                    {
-                        "name": "Authorization",
-                        "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
-                    },
-                    {
-                        "name": "Content-Type",
-                        "value": "application/json"
-                    },
-                    {
-                        "name": "Prefer",
-                        "value": "return=representation"
-                    }
-                ],
-                "bodyType": "raw",
-                "contentType": "application/json",
-                "parseResponse": true
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2400,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 12,
-            "module": "gateway:WebhookRespond",
-            "version": 1,
-            "parameters": {},
-            "mapper": {
-                "body": "{\n    \"success\": true,\n    \"pdf_url\": \"https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{10.file_name}}\",\n    \"contract_id\": \"{{3.value.contract_number}}\",\n    \"google_drive_url\": \"{{8.webViewLink}}\",\n    \"images_processed\": {\n        \"id_card\": {{if(5.id; true; false)}},\n        \"passport\": {{if(7.id; true; false)}}\n    },\n    \"execution_time\": \"{{now}}\"\n}",
-                "status": "200",
-                "headers": [
-                    {
-                        "name": "Content-Type",
-                        "value": "application/json"
-                    }
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2700,
-                    "y": 0
-                }
-            }
-        },
-        {
-            "id": 13,
-            "module": "http:ActionSendData",
-            "version": 3,
-            "parameters": {
-                "handleErrors": true,
-                "useNewZLibDeCompress": true
-            },
-            "filter": {
-                "name": "Error Handler",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{aggregate.sum(2.errorCode; 4.errorCode; 6.errorCode; 8.errorCode; 9.errorCode; 10.errorCode; 11.errorCode)}}",
-                            "o": "greater",
-                            "b": "0"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts?contract_number=eq.{{1.contract_number}}&is_current=eq.true",
-                "data": "{\n  \"status\": \"failed\",\n  \"error_message\": \"Contract generation failed. Check Make.com logs for details.\",\n  \"makecom_webhook_response\": \"Failed\",\n  \"last_generation_attempt\": \"{{now}}\",\n  \"generation_attempts\": \"{{aggregate.sum(3.value.generation_attempts; 1)}}\"\n}",
-                "method": "patch",
-                "headers": [
-                    {
-                        "name": "apikey",
-                        "value": "{{$env.SUPABASE_ANON_KEY}}"
-                    },
-                    {
-                        "name": "Authorization",
-                        "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
-                    },
-                    {
-                        "name": "Content-Type",
-                        "value": "application/json"
-                    }
-                ],
-                "bodyType": "raw",
-                "contentType": "application/json"
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2400,
-                    "y": 200
-                }
-            }
-        },
-        {
-            "id": 14,
-            "module": "gateway:WebhookRespond",
-            "version": 1,
-            "parameters": {},
-            "filter": {
-                "name": "Error Response",
-                "conditions": [
-                    [
-                        {
-                            "a": "{{aggregate.sum(2.errorCode; 4.errorCode; 6.errorCode; 8.errorCode; 9.errorCode; 10.errorCode; 11.errorCode)}}",
-                            "o": "greater",
-                            "b": "0"
-                        }
-                    ]
-                ]
-            },
-            "mapper": {
-                "body": "{\n    \"success\": false,\n    \"error\": \"Contract generation failed\",\n    \"contract_id\": \"{{1.contract_number}}\",\n    \"details\": \"Check Make.com execution logs for more information\",\n    \"execution_time\": \"{{now}}\"\n}",
-                "status": "500",
-                "headers": [
-                    {
-                        "name": "Content-Type",
-                        "value": "application/json"
-                    }
-                ]
-            },
-            "metadata": {
-                "designer": {
-                    "x": 2700,
-                    "y": 200
-                }
-            }
-        }
-    ],
-    "metadata": {
-        "instant": true,
-        "version": 1,
-        "scenario": {
-            "roundtrips": 1,
-            "maxErrors": 3,
-            "autoCommit": true,
-            "autoCommitTriggerLast": true,
-            "sequential": false,
-            "slots": null,
-            "confidential": false,
-            "dataloss": false,
-            "dlq": true,
-            "freshVariables": false
-        },
+  "name": "Contract Generation - Enhanced with Error Handling",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 2640726,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
         "designer": {
-            "orphans": []
+          "x": 0,
+          "y": 0
         },
-        "zone": "eu2.make.com",
-        "notes": [
-            "Enhanced version with improved error handling and image processing",
-            "Uses environment variables for API keys",
-            "Includes comprehensive error logging and database updates",
-            "Fixed image replacement logic for Google Docs template"
+        "interface": [
+          {
+            "name": "contract_id",
+            "type": "text"
+          },
+          {
+            "name": "first_party_name_en",
+            "type": "text"
+          },
+          {
+            "name": "first_party_name_ar",
+            "type": "text"
+          },
+          {
+            "name": "first_party_crn",
+            "type": "text"
+          },
+          {
+            "name": "second_party_name_en",
+            "type": "text"
+          },
+          {
+            "name": "second_party_name_ar",
+            "type": "text"
+          },
+          {
+            "name": "second_party_crn",
+            "type": "text"
+          },
+          {
+            "name": "promoter_name_en",
+            "type": "text"
+          },
+          {
+            "name": "promoter_name_ar",
+            "type": "text"
+          },
+          {
+            "name": "job_title",
+            "type": "text"
+          },
+          {
+            "name": "work_location",
+            "type": "text"
+          },
+          {
+            "name": "email",
+            "type": "text"
+          },
+          {
+            "name": "start_date",
+            "type": "text"
+          },
+          {
+            "name": "end_date",
+            "type": "text"
+          },
+          {
+            "name": "contract_number",
+            "type": "text"
+          },
+          {
+            "name": "id_card_number",
+            "type": "text"
+          },
+          {
+            "name": "promoter_id_card_url",
+            "type": "text"
+          },
+          {
+            "name": "promoter_passport_url",
+            "type": "text"
+          },
+          {
+            "name": "pdf_url",
+            "type": "text"
+          }
         ]
+      }
+    },
+    {
+      "id": 2,
+      "module": "http:ActionSendDataBasicAuth",
+      "version": 3,
+      "parameters": {
+        "key": 92343,
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts",
+        "method": "get",
+        "qs": [
+          {
+            "name": "contract_number",
+            "value": "eq.{{1.contract_number}}"
+          },
+          {
+            "name": "select",
+            "value": "*"
+          },
+          {
+            "name": "is_current",
+            "value": "eq.true"
+          }
+        ],
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "{{$env.SUPABASE_ANON_KEY}}"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
+          }
+        ],
+        "timeout": "30",
+        "gzip": true,
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 3,
+      "module": "builtin:BasicFeeder",
+      "version": 1,
+      "parameters": {},
+      "filter": {
+        "name": "Contract Data Exists",
+        "conditions": [
+          [
+            {
+              "a": "length({{2.data}})",
+              "o": "greater",
+              "b": "0"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "array": "{{2.data}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 4,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "filter": {
+        "name": "ID Card URL Valid",
+        "conditions": [
+          [
+            {
+              "a": "{{1.promoter_id_card_url}}",
+              "o": "exist"
+            },
+            {
+              "a": "{{1.promoter_id_card_url}}",
+              "b": "null",
+              "o": "text:notequal"
+            },
+            {
+              "a": "{{length(trim(1.promoter_id_card_url))}}",
+              "b": "0",
+              "o": "number:greater"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "url": "{{1.promoter_id_card_url}}",
+        "method": "get",
+        "timeout": "30",
+        "gzip": true,
+        "parseResponse": false,
+        "followRedirect": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": -150
+        }
+      }
+    },
+    {
+      "id": 5,
+      "module": "google-drive:uploadAFile",
+      "version": 4,
+      "parameters": {
+        "__IMTCONN__": 8815148
+      },
+      "filter": {
+        "name": "ID Card Download Success",
+        "conditions": [
+          [
+            {
+              "a": "{{4.statusCode}}",
+              "b": "200",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "data": "{{4.data}}",
+        "select": "map",
+        "convert": false,
+        "filename": "id_card_{{1.contract_number}}_{{formatDate(now; \"YYYY-MM-DD\")}}.jpg",
+        "folderId": "1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": -150
+        }
+      }
+    },
+    {
+      "id": 6,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "filter": {
+        "name": "Passport URL Valid",
+        "conditions": [
+          [
+            {
+              "a": "{{1.promoter_passport_url}}",
+              "o": "exist"
+            },
+            {
+              "a": "{{1.promoter_passport_url}}",
+              "b": "null",
+              "o": "text:notequal"
+            },
+            {
+              "a": "{{length(trim(1.promoter_passport_url))}}",
+              "b": "0",
+              "o": "number:greater"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "url": "{{1.promoter_passport_url}}",
+        "method": "get",
+        "timeout": "30",
+        "gzip": true,
+        "parseResponse": false,
+        "followRedirect": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 150
+        }
+      }
+    },
+    {
+      "id": 7,
+      "module": "google-drive:uploadAFile",
+      "version": 4,
+      "parameters": {
+        "__IMTCONN__": 8815148
+      },
+      "filter": {
+        "name": "Passport Download Success",
+        "conditions": [
+          [
+            {
+              "a": "{{6.statusCode}}",
+              "b": "200",
+              "o": "text:equal"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "data": "{{6.data}}",
+        "select": "map",
+        "convert": false,
+        "filename": "passport_{{1.contract_number}}_{{formatDate(now; \"YYYY-MM-DD\")}}.jpg",
+        "folderId": "1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 150
+        }
+      }
+    },
+    {
+      "id": 8,
+      "module": "google-docs:createADocumentFromTemplate",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "select": "map",
+        "name": "{{lower(1.contract_number).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}-{{lower(1.promoter_name_en).replace(/[^a-z0-9_-]/g, \"\").replace(/ /g, \"_\")}}",
+        "destination": "drive",
+        "document": "1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
+        "requests": [
+          {
+            "text": "ref_number",
+            "replaceText": "{{1.contract_number}}"
+          },
+          {
+            "text": "first_party_name_en",
+            "replaceText": "{{1.first_party_name_en}}"
+          },
+          {
+            "text": "first_party_name_ar",
+            "replaceText": "{{1.first_party_name_ar}}"
+          },
+          {
+            "text": "first_party_crn",
+            "replaceText": "{{1.first_party_crn}}"
+          },
+          {
+            "text": "second_party_name_en",
+            "replaceText": "{{1.second_party_name_en}}"
+          },
+          {
+            "text": "second_party_name_ar",
+            "replaceText": "{{1.second_party_name_ar}}"
+          },
+          {
+            "text": "second_party_crn",
+            "replaceText": "{{1.second_party_crn}}"
+          },
+          {
+            "text": "promoter_name_en",
+            "replaceText": "{{1.promoter_name_en}}"
+          },
+          {
+            "text": "promoter_name_ar",
+            "replaceText": "{{1.promoter_name_ar}}"
+          },
+          {
+            "text": "id_card_number",
+            "replaceText": "{{1.id_card_number}}"
+          },
+          {
+            "text": "contract_start_date",
+            "replaceText": "{{formatDate(1.start_date; \"DD-MM-YYYY\")}}"
+          },
+          {
+            "text": "contract_end_date",
+            "replaceText": "{{formatDate(1.end_date; \"DD-MM-YYYY\")}}"
+          }
+        ],
+        "imageReplacement": [
+          {
+            "imageObjectId": "ID_CARD_IMAGE",
+            "url": "{{if(5.id; \"https://drive.google.com/uc?export=view&id=\" + 5.id; \"\")}}"
+          },
+          {
+            "imageObjectId": "PASSPORT_IMAGE",
+            "url": "{{if(7.id; \"https://drive.google.com/uc?export=view&id=\" + 7.id; \"\")}}"
+          }
+        ],
+        "folderId": "1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 9,
+      "module": "google-docs:exportADocument",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "document": "{{8.id}}",
+        "mimeType": "application/pdf",
+        "destination": "drive"
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 10,
+      "module": "supabase:uploadAFile",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8908761
+      },
+      "mapper": {
+        "upsert": true,
+        "bucketID": "contracts",
+        "file_data": "{{9.data}}",
+        "file_name": "{{3.value.contract_number}}-{{3.value.promoter_name_en}}.pdf"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2100,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 11,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts?contract_number=eq.{{3.value.contract_number}}&is_current=eq.true",
+        "data": "{\n  \"pdf_url\": \"https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{10.file_name}}\",\n  \"status\": \"generated\",\n  \"google_drive_url\": \"{{8.webViewLink}}\",\n  \"makecom_webhook_response\": \"Success\",\n  \"last_generation_attempt\": \"{{now}}\"\n}",
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "{{$env.SUPABASE_ANON_KEY}}"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Prefer",
+            "value": "return=representation"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "parseResponse": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 12,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "body": "{\n    \"success\": true,\n    \"pdf_url\": \"https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/contracts/{{10.file_name}}\",\n    \"contract_id\": \"{{3.value.contract_number}}\",\n    \"google_drive_url\": \"{{8.webViewLink}}\",\n    \"images_processed\": {\n        \"id_card\": {{if(5.id; true; false)}},\n        \"passport\": {{if(7.id; true; false)}}\n    },\n    \"execution_time\": \"{{now}}\"\n}",
+        "status": "200",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": 13,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "filter": {
+        "name": "Error Handler",
+        "conditions": [
+          [
+            {
+              "a": "{{aggregate.sum(2.errorCode; 4.errorCode; 6.errorCode; 8.errorCode; 9.errorCode; 10.errorCode; 11.errorCode)}}",
+              "o": "greater",
+              "b": "0"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "url": "https://ekdjxzhujettocosgzql.supabase.co/rest/v1/contracts?contract_number=eq.{{1.contract_number}}&is_current=eq.true",
+        "data": "{\n  \"status\": \"failed\",\n  \"error_message\": \"Contract generation failed. Check Make.com logs for details.\",\n  \"makecom_webhook_response\": \"Failed\",\n  \"last_generation_attempt\": \"{{now}}\",\n  \"generation_attempts\": \"{{aggregate.sum(3.value.generation_attempts; 1)}}\"\n}",
+        "method": "patch",
+        "headers": [
+          {
+            "name": "apikey",
+            "value": "{{$env.SUPABASE_ANON_KEY}}"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{$env.SUPABASE_SERVICE_KEY}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "bodyType": "raw",
+        "contentType": "application/json"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2400,
+          "y": 200
+        }
+      }
+    },
+    {
+      "id": 14,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "filter": {
+        "name": "Error Response",
+        "conditions": [
+          [
+            {
+              "a": "{{aggregate.sum(2.errorCode; 4.errorCode; 6.errorCode; 8.errorCode; 9.errorCode; 10.errorCode; 11.errorCode)}}",
+              "o": "greater",
+              "b": "0"
+            }
+          ]
+        ]
+      },
+      "mapper": {
+        "body": "{\n    \"success\": false,\n    \"error\": \"Contract generation failed\",\n    \"contract_id\": \"{{1.contract_number}}\",\n    \"details\": \"Check Make.com execution logs for more information\",\n    \"execution_time\": \"{{now}}\"\n}",
+        "status": "500",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 200
+        }
+      }
     }
-} 
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "eu2.make.com",
+    "notes": [
+      "Enhanced version with improved error handling and image processing",
+      "Uses environment variables for API keys",
+      "Includes comprehensive error logging and database updates",
+      "Fixed image replacement logic for Google Docs template"
+    ]
+  }
+}

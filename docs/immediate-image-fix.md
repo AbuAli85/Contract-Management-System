@@ -1,11 +1,13 @@
 # IMMEDIATE FIX: Google Docs Template Image Placeholders
 
 ## 🚨 **Current Error**
+
 ```
 [400] Invalid requests[12].replaceImage: The object with ID ID_CARD_IMAGE could not be found.
 ```
 
 ## 🎯 **Root Cause**
+
 - Your Google Docs template doesn't have image placeholders with IDs: `ID_CARD_IMAGE` and `PASSPORT_IMAGE`
 - Make.com is trying to replace images that don't exist in the template
 - The template needs to be set up with proper image objects
@@ -13,11 +15,13 @@
 ## ✅ **SOLUTION 1: Fix Google Docs Template (Required)**
 
 ### **Step 1: Open Your Google Docs Template**
+
 1. Go to Google Docs
 2. Open template ID: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 3. This is your contract template that needs image placeholders
 
 ### **Step 2: Add Image Placeholders**
+
 1. **Insert** → **Image** → **Upload from computer** (use any placeholder image)
 2. **Right-click** on the inserted image
 3. **Select** "Alt text"
@@ -25,6 +29,7 @@
 5. **Repeat** for second image with Alt text: `PASSPORT_IMAGE`
 
 ### **Step 3: Alternative - Use Drawings**
+
 1. **Insert** → **Drawing** → **New**
 2. **Insert** → **Image** in the drawing
 3. **Save and close** the drawing
@@ -44,6 +49,7 @@
 ## ✅ **SOLUTION 3: How to Set Up Template Images**
 
 ### **Method 1: Using Alt Text (Recommended)**
+
 1. **Open** your Google Docs template: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 2. **Add placeholder images** where you want ID card and passport
 3. **Right-click** each image → **Alt text**
@@ -53,18 +59,21 @@
 5. **Save** the template
 
 ### **Method 2: Using Image Replacement API**
+
 The images need to be inserted as objects in Google Docs with specific object IDs that Match what your Make.com scenario expects.
 
 ## 📋 **Quick Test Steps**
 
 ### **Immediate Fix (Remove Images):**
+
 1. **Open** Google Docs module in Make.com
-2. **Scroll to** "Images Replacement" section  
+2. **Scroll to** "Images Replacement" section
 3. **Delete** both image replacement entries
 4. **Save** module
 5. **Run** scenario - should work without images
 
 ### **Then Add Images Back:**
+
 1. **Fix** the Google Docs template with proper image placeholders
 2. **Add** image replacements back to Make.com module
 3. **Test** full scenario with images
@@ -78,8 +87,9 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 **Open your template**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 
 **Add image placeholders:**
+
 1. **Position cursor** where you want the ID card image
-2. **Insert** → **Image** → **Upload from computer** 
+2. **Insert** → **Image** → **Upload from computer**
 3. **Upload any placeholder image** (you can use a sample ID card image)
 4. **Right-click** the inserted image
 5. **Click** "Alt text"
@@ -87,6 +97,7 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 7. **Click** "Apply"
 
 **Repeat for passport:**
+
 1. **Position cursor** where you want the passport image
 2. **Insert** → **Image** → **Upload from computer**
 3. **Upload any placeholder image** (sample passport)
@@ -99,6 +110,7 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 **Update your Google Drive upload modules (4 & 5):**
 
 **Add this to both Module 4 and Module 5 mappers:**
+
 ```json
 "permissions": [
   {
@@ -111,10 +123,11 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 ### **Step 3: Add Images Back to Make.com**
 
 **In your Google Docs module, add back:**
+
 - **Image Object ID**: `ID_CARD_IMAGE`
 - **Image URL**: `https://drive.google.com/uc?export=view&id={{4.id}}`
 
-- **Image Object ID**: `PASSPORT_IMAGE` 
+- **Image Object ID**: `PASSPORT_IMAGE`
 - **Image URL**: `https://drive.google.com/uc?export=view&id={{5.id}}`
 
 ### **Step 4: Test Full Scenario**
@@ -127,8 +140,9 @@ Great! The scenario works without images, which means all Make.com JavaScript er
 ## 🚀 **Expected Results**
 
 After these fixes:
+
 - ✅ **Text replacements working** (already confirmed)
-- ✅ **Images loading properly** 
+- ✅ **Images loading properly**
 - ✅ **Professional contracts** with ID card and passport photos
 - ✅ **Complete automation** without errors
 
@@ -137,6 +151,7 @@ After these fixes:
 If Google Drive images still cause issues, try using Supabase URLs directly:
 
 **In Google Docs module, use:**
+
 - **ID_CARD_IMAGE URL**: `{{1.promoter_id_card_url}}`
 - **PASSPORT_IMAGE URL**: `{{1.promoter_passport_url}}`
 

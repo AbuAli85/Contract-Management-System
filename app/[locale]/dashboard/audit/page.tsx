@@ -6,25 +6,25 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table"
-import { 
-  Shield, 
-  Search, 
-  Filter, 
-  Download, 
+import {
+  Shield,
+  Search,
+  Filter,
+  Download,
   Calendar,
   User,
   FileText,
   Users,
   Building2,
-  Loader2
+  Loader2,
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
@@ -55,16 +55,16 @@ export default function DashboardAuditPage() {
 
   const fetchAuditLogs = async () => {
     try {
-      const response = await fetch('/api/audit-logs')
-      
+      const response = await fetch("/api/audit-logs")
+
       if (!response.ok) {
-        throw new Error('Failed to fetch audit logs')
+        throw new Error("Failed to fetch audit logs")
       }
-      
+
       const data = await response.json()
-      
+
       if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch audit logs')
+        throw new Error(data.error || "Failed to fetch audit logs")
       }
 
       setAuditLogs(data.data || [])
@@ -73,22 +73,23 @@ export default function DashboardAuditPage() {
       toast({
         title: "Error",
         description: "Failed to load audit logs",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
   }
 
-  const filteredLogs = auditLogs.filter(log => 
-    log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    log.ip_address?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredLogs = auditLogs.filter(
+    (log) =>
+      log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.user?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.ip_address?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const getActionIcon = (action: string | null) => {
     if (!action) return <Shield className="h-4 w-4" />
-    
+
     if (action.includes("Contract")) return <FileText className="h-4 w-4" />
     if (action.includes("User")) return <User className="h-4 w-4" />
     if (action.includes("Login")) return <Shield className="h-4 w-4" />
@@ -98,11 +99,15 @@ export default function DashboardAuditPage() {
 
   const getStatusBadge = (action: string | null) => {
     if (!action) return <Badge variant="secondary">Unknown</Badge>
-    
+
     if (action.includes("Failed")) {
       return <Badge variant="destructive">Failed</Badge>
     }
-    return <Badge variant="default" className="bg-green-100 text-green-800">Success</Badge>
+    return (
+      <Badge variant="default" className="bg-green-100 text-green-800">
+        Success
+      </Badge>
+    )
   }
 
   const formatTimestamp = (timestamp: string) => {
@@ -123,9 +128,7 @@ export default function DashboardAuditPage() {
       {/* Page Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Audit Logs</h1>
-        <p className="text-muted-foreground">
-          View system audit logs and activity tracking
-        </p>
+        <p className="text-muted-foreground">View system audit logs and activity tracking</p>
       </div>
 
       {/* Search and Filters */}
@@ -166,9 +169,7 @@ export default function DashboardAuditPage() {
                 <Shield className="h-5 w-5" />
                 Audit Logs
               </CardTitle>
-              <CardDescription>
-                System activity and user actions
-              </CardDescription>
+              <CardDescription>System activity and user actions</CardDescription>
             </div>
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
@@ -178,8 +179,8 @@ export default function DashboardAuditPage() {
         </CardHeader>
         <CardContent>
           {filteredLogs.length === 0 ? (
-            <div className="text-center py-8">
-              <Shield className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <div className="py-8 text-center">
+              <Shield className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">
                 {searchTerm ? "No audit logs match your search" : "No audit logs found"}
               </p>
@@ -205,21 +206,15 @@ export default function DashboardAuditPage() {
                         <span className="font-medium">{log.action || "Unknown Action"}</span>
                       </div>
                     </TableCell>
+                    <TableCell>{log.user?.full_name || log.user_id || "Unknown User"}</TableCell>
                     <TableCell>
-                      {log.user?.full_name || log.user_id || "Unknown User"}
+                      {log.entity_type
+                        ? `${log.entity_type}${log.entity_id ? ` #${log.entity_id}` : ""}`
+                        : "N/A"}
                     </TableCell>
-                    <TableCell>
-                      {log.entity_type ? `${log.entity_type}${log.entity_id ? ` #${log.entity_id}` : ''}` : "N/A"}
-                    </TableCell>
-                    <TableCell>
-                      {log.ip_address || "Unknown"}
-                    </TableCell>
-                    <TableCell>
-                      {formatTimestamp(log.created_at)}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(log.action || null)}
-                    </TableCell>
+                    <TableCell>{log.ip_address || "Unknown"}</TableCell>
+                    <TableCell>{formatTimestamp(log.created_at)}</TableCell>
+                    <TableCell>{getStatusBadge(log.action || null)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

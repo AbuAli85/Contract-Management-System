@@ -13,11 +13,13 @@ This guide will help you set up and run both the frontend and backend automatica
 ### Option 1: Automated Setup (Recommended)
 
 **Windows PowerShell:**
+
 ```powershell
 .\dev-start.ps1
 ```
 
 **Windows Command Prompt:**
+
 ```cmd
 start-dev.bat
 ```
@@ -25,17 +27,20 @@ start-dev.bat
 ### Option 2: Manual Setup
 
 1. **Install dependencies:**
+
    ```bash
    pnpm install
    ```
 
 2. **Setup environment:**
+
    ```bash
    cp env.example .env.local
    # Edit .env.local with your actual values
    ```
 
 3. **Setup database:**
+
    ```bash
    pnpm run db:setup
    ```
@@ -47,21 +52,21 @@ start-dev.bat
 
 ## 🛠️ Available Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm run dev` | 🚀 Start basic development server |
-| `pnpm run dev:turbo` | ⚡ Start development server with Turbo |
-| `pnpm run dev:debug` | 🐛 Start with debugging enabled |
-| `pnpm run dev:full` | 🔧 Setup database + start development |
-| `pnpm run dev:all` | 🎯 Development server + tests in watch mode |
-| `pnpm run test` | 🧪 Run tests once |
-| `pnpm run test:watch` | 🔄 Run tests in watch mode |
-| `pnpm run lint` | 🔍 Check code quality |
-| `pnpm run lint:fix` | 🔧 Fix linting issues |
-| `pnpm run db:setup` | 🗄️ Setup database tables |
-| `pnpm run db:test` | 🧪 Test database connection |
-| `pnpm run webhook:test` | 🌐 Test webhook integrations |
-| `pnpm run build` | 🏗️ Build for production |
+| Script                  | Description                                 |
+| ----------------------- | ------------------------------------------- |
+| `pnpm run dev`          | 🚀 Start basic development server           |
+| `pnpm run dev:turbo`    | ⚡ Start development server with Turbo      |
+| `pnpm run dev:debug`    | 🐛 Start with debugging enabled             |
+| `pnpm run dev:full`     | 🔧 Setup database + start development       |
+| `pnpm run dev:all`      | 🎯 Development server + tests in watch mode |
+| `pnpm run test`         | 🧪 Run tests once                           |
+| `pnpm run test:watch`   | 🔄 Run tests in watch mode                  |
+| `pnpm run lint`         | 🔍 Check code quality                       |
+| `pnpm run lint:fix`     | 🔧 Fix linting issues                       |
+| `pnpm run db:setup`     | 🗄️ Setup database tables                    |
+| `pnpm run db:test`      | 🧪 Test database connection                 |
+| `pnpm run webhook:test` | 🌐 Test webhook integrations                |
+| `pnpm run build`        | 🏗️ Build for production                     |
 
 ## 🎯 VS Code Integration
 
@@ -91,6 +96,7 @@ start-dev.bat
 This is a **Next.js Full-Stack Application** that includes:
 
 ### Frontend (Client-Side)
+
 - **Framework:** Next.js 15 with React 19
 - **Styling:** Tailwind CSS + shadcn/ui components
 - **State Management:** TanStack Query (React Query)
@@ -98,6 +104,7 @@ This is a **Next.js Full-Stack Application** that includes:
 - **Forms:** React Hook Form + Zod validation
 
 ### Backend (API Routes)
+
 - **API Framework:** Next.js API Routes
 - **Database:** Supabase (PostgreSQL)
 - **Authentication:** Supabase Auth
@@ -106,6 +113,7 @@ This is a **Next.js Full-Stack Application** that includes:
 - **Real-time:** Supabase Realtime
 
 ### Key Integrations
+
 - **Make.com:** Automated PDF generation and Slack notifications
 - **Supabase:** Database, authentication, real-time updates
 - **Google Drive:** Document storage and templates
@@ -115,13 +123,13 @@ This is a **Next.js Full-Stack Application** that includes:
 
 When running locally:
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Frontend** | http://localhost:3000 | Main application |
-| **API** | http://localhost:3000/api | REST API endpoints |
-| **Settings** | http://localhost:3000/en/dashboard/settings | Integration settings |
-| **Webhooks** | http://localhost:3000/api/webhook/makecom | Webhook endpoint |
-| **Test Webhooks** | http://localhost:3000/api/test-webhooks | Webhook testing |
+| Service           | URL                                         | Description          |
+| ----------------- | ------------------------------------------- | -------------------- |
+| **Frontend**      | http://localhost:3000                       | Main application     |
+| **API**           | http://localhost:3000/api                   | REST API endpoints   |
+| **Settings**      | http://localhost:3000/en/dashboard/settings | Integration settings |
+| **Webhooks**      | http://localhost:3000/api/webhook/makecom   | Webhook endpoint     |
+| **Test Webhooks** | http://localhost:3000/api/test-webhooks     | Webhook testing      |
 
 ## 🔧 Configuration
 
@@ -147,6 +155,7 @@ GOOGLE_DOCS_TEMPLATE_ID=your_template_id
 ### Database Setup
 
 The application automatically sets up database tables when you run:
+
 ```bash
 pnpm run db:setup
 ```
@@ -154,18 +163,21 @@ pnpm run db:setup
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 pnpm run test           # Run once
 pnpm run test:watch     # Watch mode
 ```
 
 ### Integration Tests
+
 ```bash
 pnpm run webhook:test   # Test webhooks
 pnpm run db:test        # Test database
 ```
 
 ### Manual Testing
+
 - Visit http://localhost:3000/en/dashboard/settings
 - Go to "Integrations" tab
 - Click "Test Webhooks" button
@@ -173,6 +185,7 @@ pnpm run db:test        # Test database
 ## 📝 Development Workflow
 
 1. **Start Development:**
+
    ```bash
    pnpm run dev:all
    ```
@@ -200,6 +213,7 @@ pnpm run db:test        # Test database
 ### Common Issues
 
 **Port 3000 already in use:**
+
 ```bash
 # Find and kill the process
 netstat -ano | findstr :3000
@@ -207,18 +221,21 @@ taskkill /PID <PID> /F
 ```
 
 **Environment variables not loading:**
+
 ```bash
 # Restart the development server
 # Make sure .env.local exists and has correct values
 ```
 
 **Database connection issues:**
+
 ```bash
 pnpm run db:test
 # Check your Supabase credentials
 ```
 
 **Webhook testing fails:**
+
 ```bash
 pnpm run webhook:test
 # Check your Make.com webhook URLs

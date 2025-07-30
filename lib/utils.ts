@@ -31,7 +31,11 @@ export function createOptionalFileSchema(
         !file ||
         (isBrowser
           ? file instanceof File && file.size <= maxFileSize
-          : typeof file === "object" && file !== null && "size" in file && typeof file.size === "number" && file.size <= maxFileSize),
+          : typeof file === "object" &&
+            file !== null &&
+            "size" in file &&
+            typeof file.size === "number" &&
+            file.size <= maxFileSize),
       sizeMessage,
     )
     .refine(
@@ -39,24 +43,28 @@ export function createOptionalFileSchema(
         !file ||
         (isBrowser
           ? file instanceof File && acceptedTypes.includes(file.type)
-          : typeof file === "object" && file !== null && "type" in file && typeof file.type === "string" && acceptedTypes.includes(file.type)),
+          : typeof file === "object" &&
+            file !== null &&
+            "type" in file &&
+            typeof file.type === "string" &&
+            acceptedTypes.includes(file.type)),
       typeMessage,
     )
     .optional()
     .nullable()
 }
 
-export function getPartyDetails(parties: { role: string; }[]) {
-    const employer = parties.find(p => p.role === 'employer');
-    const employee = parties.find(p => p.role === 'employee');
-    const promoter = parties.find(p => p.role === 'promoter');
-    return {employer, employee, promoter};
+export function getPartyDetails(parties: { role: string }[]) {
+  const employer = parties.find((p) => p.role === "employer")
+  const employee = parties.find((p) => p.role === "employee")
+  const promoter = parties.find((p) => p.role === "promoter")
+  return { employer, employee, promoter }
 }
 
 export function calculateDuration(startDate: string, endDate: string): string {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffInMs = end.getTime() - start.getTime();
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-    return `${diffInDays} days`;
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+  const diffInMs = end.getTime() - start.getTime()
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+  return `${diffInDays} days`
 }

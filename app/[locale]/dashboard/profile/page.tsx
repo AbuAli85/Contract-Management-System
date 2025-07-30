@@ -10,9 +10,7 @@ export default function DashboardProfilePage() {
       {/* Page Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your account settings and preferences
-        </p>
+        <p className="text-muted-foreground">Manage your account settings and preferences</p>
       </div>
 
       {/* Profile Content */}
@@ -22,9 +20,7 @@ export default function DashboardProfilePage() {
             <User className="h-5 w-5" />
             User Profile
           </CardTitle>
-          <CardDescription>
-            Update your account information and security settings
-          </CardDescription>
+          <CardDescription>Update your account information and security settings</CardDescription>
         </CardHeader>
         <CardContent>
           <UserProfile />
@@ -32,4 +28,4 @@ export default function DashboardProfilePage() {
       </Card>
     </div>
   )
-} 
+}

@@ -1,46 +1,46 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Loader2 } from 'lucide-react'
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Loader2 } from "lucide-react"
 
 export default function LogoutPage() {
   const { signOut } = useAuth()
   const router = useRouter()
-  const [status, setStatus] = useState<'logging-out' | 'error'>('logging-out')
+  const [status, setStatus] = useState<"logging-out" | "error">("logging-out")
 
   useEffect(() => {
     const handleLogout = async () => {
       try {
-        console.log('🔐 Logout: Starting logout process...')
-        
+        console.log("🔐 Logout: Starting logout process...")
+
         // Get current locale from URL
-        const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
-        const locale = pathname.split('/')[1] || 'en'
-        
+        const pathname = typeof window !== "undefined" ? window.location.pathname : ""
+        const locale = pathname.split("/")[1] || "en"
+
         // Call signOut
         await signOut()
-        
-        console.log('🔐 Logout: Successfully logged out')
-        
+
+        console.log("🔐 Logout: Successfully logged out")
+
         // Clear any remaining client-side state
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           // Clear localStorage if any auth data is stored there
-          localStorage.removeItem('supabase.auth.token')
+          localStorage.removeItem("supabase.auth.token")
           sessionStorage.clear()
         }
-        
+
         // Redirect to localized login page
         router.push(`/${locale}/auth/login`)
       } catch (error) {
-        console.error('🔐 Logout: Unexpected error:', error)
-        setStatus('error')
-        
+        console.error("🔐 Logout: Unexpected error:", error)
+        setStatus("error")
+
         // Get locale and redirect to login
-        const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
-        const locale = pathname.split('/')[1] || 'en'
-        
+        const pathname = typeof window !== "undefined" ? window.location.pathname : ""
+        const locale = pathname.split("/")[1] || "en"
+
         setTimeout(() => {
           router.push(`/${locale}/auth/login`)
         }, 3000)
@@ -53,16 +53,16 @@ export default function LogoutPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="text-center">
-        {status === 'logging-out' ? (
+        {status === "logging-out" ? (
           <>
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-            <h1 className="text-2xl font-bold mb-4">Logging out...</h1>
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+            <h1 className="mb-4 text-2xl font-bold">Logging out...</h1>
             <p className="text-gray-600">Please wait while we sign you out.</p>
           </>
         ) : (
           <>
-            <div className="h-8 w-8 mx-auto mb-4 text-red-600">⚠️</div>
-            <h1 className="text-2xl font-bold mb-4 text-red-600">Logout Error</h1>
+            <div className="mx-auto mb-4 h-8 w-8 text-red-600">⚠️</div>
+            <h1 className="mb-4 text-2xl font-bold text-red-600">Logout Error</h1>
             <p className="text-gray-600">Redirecting to login page...</p>
           </>
         )}
@@ -72,4 +72,4 @@ export default function LogoutPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

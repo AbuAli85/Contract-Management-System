@@ -7,11 +7,13 @@ const fetchParties = async (partyType?: "Employer" | "Client"): Promise<Party[]>
   const supabaseClient = getSupabaseClient()
   let query = supabaseClient
     .from("parties")
-    .select(`
+    .select(
+      `
       id, name_en, name_ar, crn, type, role, cr_expiry_date,
       contact_person, contact_email, contact_phone, address_en, address_ar,
       tax_number, license_number, license_expiry_date, status, notes
-    `)
+    `,
+    )
     .order("name_en", { ascending: true })
 
   if (partyType) {

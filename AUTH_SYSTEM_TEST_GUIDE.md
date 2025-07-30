@@ -9,12 +9,14 @@ This guide will help you manually test all aspects of the authentication system 
 ## 📋 **PRE-TEST CHECKLIST**
 
 ### ✅ **Environment Setup**
+
 - [ ] `.env` file exists with Supabase credentials
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` is configured
 - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` is configured
 - [ ] Development server is running (`npm run dev` or `pnpm dev`)
 
 ### ✅ **Database Setup**
+
 - [ ] Supabase project is active
 - [ ] Database tables exist (contracts, users, etc.)
 - [ ] Row Level Security (RLS) policies are configured
@@ -24,15 +26,17 @@ This guide will help you manually test all aspects of the authentication system 
 ## 🧪 **TEST 1: BASIC AUTHENTICATION FLOW**
 
 ### **Step 1: Access Login Page**
+
 ```
 URL: http://localhost:3000/en/login
 Expected: Login form loads without errors
 ```
 
 ### **Step 2: Test Login with Valid Credentials**
+
 ```
 Action: Enter valid email and password
-Expected: 
+Expected:
 - Login successful
 - Redirect to dashboard
 - Console shows: "🔐 Login Debug - Login successful"
@@ -40,6 +44,7 @@ Expected:
 ```
 
 ### **Step 3: Verify Session Establishment**
+
 ```
 Action: Check browser console after login
 Expected Logs:
@@ -60,6 +65,7 @@ Expected Logs:
 ## 🧪 **TEST 2: SESSION PERSISTENCE**
 
 ### **Step 1: Verify Session Storage**
+
 ```
 Action: After login, check browser storage
 Expected:
@@ -69,6 +75,7 @@ Expected:
 ```
 
 ### **Step 2: Test Page Refresh**
+
 ```
 Action: Refresh the dashboard page
 Expected:
@@ -78,6 +85,7 @@ Expected:
 ```
 
 ### **Step 3: Test Browser Tab**
+
 ```
 Action: Open dashboard in new tab
 Expected:
@@ -91,6 +99,7 @@ Expected:
 ## 🧪 **TEST 3: API AUTHENTICATION**
 
 ### **Step 1: Test API Calls**
+
 ```
 Action: Navigate to dashboard (which calls /api/contracts)
 Expected API Logs:
@@ -104,6 +113,7 @@ Expected API Logs:
 ```
 
 ### **Step 2: Test Direct API Access**
+
 ```
 Action: Visit http://localhost:3000/api/contracts directly
 Expected:
@@ -116,6 +126,7 @@ Expected:
 ## 🧪 **TEST 4: AUTHENTICATION STATE MANAGEMENT**
 
 ### **Step 1: Check Auth Provider**
+
 ```
 Action: After login, check React DevTools
 Expected:
@@ -125,6 +136,7 @@ Expected:
 ```
 
 ### **Step 2: Test Auth Context**
+
 ```
 Action: Use useAuth() hook in components
 Expected:
@@ -138,6 +150,7 @@ Expected:
 ## 🧪 **TEST 5: LOGOUT FUNCTIONALITY**
 
 ### **Step 1: Test Logout**
+
 ```
 Action: Click logout or call signOut()
 Expected:
@@ -148,6 +161,7 @@ Expected:
 ```
 
 ### **Step 2: Verify Post-Logout State**
+
 ```
 Action: After logout, try to access dashboard
 Expected:
@@ -161,6 +175,7 @@ Expected:
 ## 🧪 **TEST 6: ERROR HANDLING**
 
 ### **Step 1: Test Invalid Login**
+
 ```
 Action: Try login with wrong credentials
 Expected:
@@ -170,6 +185,7 @@ Expected:
 ```
 
 ### **Step 2: Test Network Issues**
+
 ```
 Action: Disconnect internet and try login
 Expected:
@@ -182,6 +198,7 @@ Expected:
 ## 🧪 **TEST 7: SESSION EXPIRATION**
 
 ### **Step 1: Test Token Refresh**
+
 ```
 Action: Wait for token to expire (or simulate)
 Expected:
@@ -191,6 +208,7 @@ Expected:
 ```
 
 ### **Step 2: Test Expired Session**
+
 ```
 Action: Manually expire session in browser
 Expected:
@@ -203,6 +221,7 @@ Expected:
 ## 📊 **TEST RESULTS SUMMARY**
 
 ### **✅ PASSED TESTS**
+
 - [ ] Basic login/logout flow
 - [ ] Session establishment
 - [ ] Session persistence
@@ -212,6 +231,7 @@ Expected:
 - [ ] Session expiration
 
 ### **❌ FAILED TESTS**
+
 - [ ] List any failed tests here
 - [ ] Note specific error messages
 - [ ] Document unexpected behavior
@@ -221,6 +241,7 @@ Expected:
 ## 🔧 **TROUBLESHOOTING COMMON ISSUES**
 
 ### **Issue: Session Not Established**
+
 ```
 Symptoms:
 - Login successful but no session
@@ -235,6 +256,7 @@ Solutions:
 ```
 
 ### **Issue: Infinite Redirect Loop**
+
 ```
 Symptoms:
 - Page keeps redirecting between login and dashboard
@@ -248,6 +270,7 @@ Solutions:
 ```
 
 ### **Issue: API Authentication Fails**
+
 ```
 Symptoms:
 - Dashboard loads but no data
@@ -266,6 +289,7 @@ Solutions:
 ## 🎯 **FINAL VERIFICATION**
 
 ### **Complete Auth System Checklist**
+
 - [ ] ✅ Login works with valid credentials
 - [ ] ✅ Session establishes and persists
 - [ ] ✅ API calls work with authentication
@@ -278,13 +302,15 @@ Solutions:
 - [ ] ✅ Session shared across browser tabs
 
 ### **🎉 AUTH SYSTEM STATUS**
+
 If all tests pass: **AUTHENTICATION SYSTEM IS FULLY WORKING** ✅
 If any tests fail: **NEEDS FURTHER INVESTIGATION** ⚠️
 
 ---
 
 ## 📝 **NOTES**
+
 - Keep this guide for future testing
 - Update with any new auth features
 - Document any specific issues found
-- Use this for regression testing after changes 
+- Use this for regression testing after changes

@@ -1,23 +1,21 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { useRBAC } from '@/src/components/auth/rbac-provider'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Switch } from '@/components/ui/switch'
+import { useState } from "react"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { useRBAC } from "@/src/components/auth/rbac-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
 
 export function UserProfile() {
   const { user } = useAuth()
   const { hasRole } = useRBAC()
 
-
-
   return (
-    <Card className="w-full max-w-3xl mx-auto">
+    <Card className="mx-auto w-full max-w-3xl">
       <CardHeader>
         <CardTitle>Profile Settings</CardTitle>
         <CardDescription>Manage your account settings and security preferences</CardDescription>
@@ -27,7 +25,7 @@ export function UserProfile() {
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
-            {hasRole('admin') && <TabsTrigger value="admin">Admin</TabsTrigger>}
+            {hasRole("admin") && <TabsTrigger value="admin">Admin</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="general">
@@ -48,7 +46,7 @@ export function UserProfile() {
             </div>
           </TabsContent>
 
-                      {hasRole('admin') && (
+          {hasRole("admin") && (
             <TabsContent value="admin">
               <div className="space-y-4">
                 <h4 className="font-medium">Administrative Controls</h4>
@@ -57,8 +55,6 @@ export function UserProfile() {
             </TabsContent>
           )}
         </Tabs>
-
-
       </CardContent>
     </Card>
   )

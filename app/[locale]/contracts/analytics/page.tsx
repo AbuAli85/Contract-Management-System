@@ -1,44 +1,50 @@
 // app/[locale]/contracts/analytics/page.tsx
 // Contract Analytics Dashboard
 
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { DatePicker } from '@/components/ui/date-picker'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   LineChart,
   Line,
   PieChart,
   Pie,
-  Cell
-} from 'recharts'
-import { 
-  TrendingUp, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+  Cell,
+} from "recharts"
+import {
+  TrendingUp,
+  FileText,
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   Download,
   RefreshCw,
   Calendar,
   Users,
-  DollarSign
-} from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useToast } from '@/hooks/use-toast'
+  DollarSign,
+} from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface ContractAnalytics {
   submissionsOverTime: Array<{
@@ -81,14 +87,14 @@ export default function ContractAnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    endDate: new Date()
+    endDate: new Date(),
   })
-  const [selectedPeriod, setSelectedPeriod] = useState('30')
+  const [selectedPeriod, setSelectedPeriod] = useState("30")
   const { toast } = useToast()
   const supabase = createClient()
 
   // Color palette for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
   useEffect(() => {
     fetchAnalytics()
@@ -98,23 +104,27 @@ export default function ContractAnalyticsPage() {
     setLoading(true)
     try {
       // Fetch submissions over time
-      const { data: submissionsData, error: submissionsError } = await supabase
-        .rpc('get_contract_submissions_over_time', {
-          start_date: dateRange.startDate.toISOString().split('T')[0],
-          end_date: dateRange.endDate.toISOString().split('T')[0]
-        })
+      const { data: submissionsData, error: submissionsError } = await supabase.rpc(
+        "get_contract_submissions_over_time",
+        {
+          start_date: dateRange.startDate.toISOString().split("T")[0],
+          end_date: dateRange.endDate.toISOString().split("T")[0],
+        },
+      )
 
       if (submissionsError) throw submissionsError
 
       // Fetch approval times
-      const { data: approvalData, error: approvalError } = await supabase
-        .rpc('get_average_approval_time')
+      const { data: approvalData, error: approvalError } = await supabase.rpc(
+        "get_average_approval_time",
+      )
 
       if (approvalError) throw approvalError
 
       // Fetch contracts requiring attention
-      const { data: attentionData, error: attentionError } = await supabase
-        .rpc('get_contracts_requiring_attention')
+      const { data: attentionData, error: attentionError } = await supabase.rpc(
+        "get_contracts_requiring_attention",
+      )
 
       if (attentionError) throw attentionError
 
@@ -125,15 +135,14 @@ export default function ContractAnalyticsPage() {
         submissionsOverTime: submissionsData || [],
         approvalTimes: approvalData || [],
         contractsRequiringAttention: attentionData || [],
-        summary
+        summary,
       })
-
     } catch (error) {
-      console.error('Failed to fetch analytics:', error)
+      console.error("Failed to fetch analytics:", error)
       toast({
         title: "Analytics Error",
         description: "Failed to load contract analytics data.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -141,17 +150,19 @@ export default function ContractAnalyticsPage() {
   }
 
   const calculateSummary = (submissions: any[], approvals: any[], attention: any[]) => {
-    const totalSubmissions = submissions.reduce((sum, day) => 
-      sum + day.submissions + day.approvals + day.rejections + day.pending, 0
+    const totalSubmissions = submissions.reduce(
+      (sum, day) => sum + day.submissions + day.approvals + day.rejections + day.pending,
+      0,
     )
-    
+
     const totalPending = submissions.reduce((sum, day) => sum + day.pending, 0)
     const totalApproved = submissions.reduce((sum, day) => sum + day.approvals, 0)
     const totalRejected = submissions.reduce((sum, day) => sum + day.rejections, 0)
-    
-    const avgApprovalTime = approvals.length > 0 
-      ? approvals.reduce((sum, type) => sum + type.avg_approval_hours, 0) / approvals.length
-      : 0
+
+    const avgApprovalTime =
+      approvals.length > 0
+        ? approvals.reduce((sum, type) => sum + type.avg_approval_hours, 0) / approvals.length
+        : 0
 
     return {
       totalContracts: totalSubmissions,
@@ -159,7 +170,7 @@ export default function ContractAnalyticsPage() {
       approvedContracts: totalApproved,
       rejectedContracts: totalRejected,
       avgApprovalTime: Math.round(avgApprovalTime * 100) / 100,
-      contractsNeedingAttention: attention.length
+      contractsNeedingAttention: attention.length,
     }
   }
 
@@ -167,24 +178,24 @@ export default function ContractAnalyticsPage() {
     setSelectedPeriod(period)
     const endDate = new Date()
     const startDate = new Date()
-    
+
     switch (period) {
-      case '7':
+      case "7":
         startDate.setDate(endDate.getDate() - 7)
         break
-      case '30':
+      case "30":
         startDate.setDate(endDate.getDate() - 30)
         break
-      case '90':
+      case "90":
         startDate.setDate(endDate.getDate() - 90)
         break
-      case '365':
+      case "365":
         startDate.setDate(endDate.getDate() - 365)
         break
       default:
         startDate.setDate(endDate.getDate() - 30)
     }
-    
+
     setDateRange({ startDate, endDate })
   }
 
@@ -193,35 +204,35 @@ export default function ContractAnalyticsPage() {
 
     try {
       const csvData = [
-        ['Date', 'Submissions', 'Approvals', 'Rejections', 'Pending'],
-        ...analytics.submissionsOverTime.map(day => [
+        ["Date", "Submissions", "Approvals", "Rejections", "Pending"],
+        ...analytics.submissionsOverTime.map((day) => [
           day.date,
           day.submissions,
           day.approvals,
           day.rejections,
-          day.pending
-        ])
+          day.pending,
+        ]),
       ]
 
-      const csvContent = csvData.map(row => row.join(',')).join('\n')
-      const blob = new Blob([csvContent], { type: 'text/csv' })
+      const csvContent = csvData.map((row) => row.join(",")).join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv" })
       const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
+      const link = document.createElement("a")
       link.href = url
-      link.download = `contract_analytics_${new Date().toISOString().split('T')[0]}.csv`
+      link.download = `contract_analytics_${new Date().toISOString().split("T")[0]}.csv`
       link.click()
       window.URL.revokeObjectURL(url)
 
       toast({
         title: "Export Successful",
         description: "Analytics data has been exported to CSV.",
-        variant: "default"
+        variant: "default",
       })
     } catch (error) {
       toast({
         title: "Export Failed",
         description: "Failed to export analytics data.",
-        variant: "destructive"
+        variant: "destructive",
       })
     }
   }
@@ -229,7 +240,7 @@ export default function ContractAnalyticsPage() {
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
+        <div className="flex h-64 items-center justify-center">
           <RefreshCw className="h-8 w-8 animate-spin" />
         </div>
       </div>
@@ -240,8 +251,8 @@ export default function ContractAnalyticsPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="text-center">
-          <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No Analytics Data</h2>
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h2 className="mb-2 text-xl font-semibold">No Analytics Data</h2>
           <p className="text-muted-foreground">Unable to load contract analytics data.</p>
         </div>
       </div>
@@ -249,7 +260,7 @@ export default function ContractAnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto space-y-6 p-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -271,14 +282,14 @@ export default function ContractAnalyticsPage() {
             </SelectContent>
           </Select>
           <Button onClick={exportAnalytics} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
@@ -286,9 +297,7 @@ export default function ContractAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.summary.totalContracts}</div>
-            <p className="text-xs text-muted-foreground">
-              All time contracts
-            </p>
+            <p className="text-xs text-muted-foreground">All time contracts</p>
           </CardContent>
         </Card>
 
@@ -299,9 +308,7 @@ export default function ContractAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.summary.pendingContracts}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting review
-            </p>
+            <p className="text-xs text-muted-foreground">Awaiting review</p>
           </CardContent>
         </Card>
 
@@ -312,9 +319,7 @@ export default function ContractAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.summary.avgApprovalTime}h</div>
-            <p className="text-xs text-muted-foreground">
-              Average processing time
-            </p>
+            <p className="text-xs text-muted-foreground">Average processing time</p>
           </CardContent>
         </Card>
 
@@ -325,22 +330,18 @@ export default function ContractAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.summary.contractsNeedingAttention}</div>
-            <p className="text-xs text-muted-foreground">
-              Require immediate action
-            </p>
+            <p className="text-xs text-muted-foreground">Require immediate action</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Submissions Over Time */}
         <Card>
           <CardHeader>
             <CardTitle>Contract Submissions Over Time</CardTitle>
-            <CardDescription>
-              Daily contract submissions, approvals, and rejections
-            </CardDescription>
+            <CardDescription>Daily contract submissions, approvals, and rejections</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -363,9 +364,7 @@ export default function ContractAnalyticsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Approval Times by Contract Type</CardTitle>
-            <CardDescription>
-              Average approval time for different contract types
-            </CardDescription>
+            <CardDescription>Average approval time for different contract types</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -386,25 +385,26 @@ export default function ContractAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Contracts Requiring Attention</CardTitle>
-          <CardDescription>
-            Contracts that need immediate review or escalation
-          </CardDescription>
+          <CardDescription>Contracts that need immediate review or escalation</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {analytics.contractsRequiringAttention.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="py-8 text-center text-muted-foreground">
                 No contracts currently require attention
               </div>
             ) : (
               analytics.contractsRequiringAttention.map((contract) => (
-                <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div
+                  key={contract.id}
+                  className="flex items-center justify-between rounded-lg border p-4"
+                >
                   <div className="flex items-center gap-4">
                     <div>
                       <div className="font-medium">{contract.contract_number}</div>
                       <div className="text-sm text-muted-foreground">{contract.job_title}</div>
                     </div>
-                    <Badge variant={contract.priority === 'high' ? 'destructive' : 'default'}>
+                    <Badge variant={contract.priority === "high" ? "destructive" : "default"}>
                       {contract.priority}
                     </Badge>
                   </div>
@@ -432,18 +432,24 @@ export default function ContractAnalyticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Contract Status Distribution</CardTitle>
-          <CardDescription>
-            Current status of all contracts
-          </CardDescription>
+          <CardDescription>Current status of all contracts</CardDescription>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={[
-                  { name: 'Approved', value: analytics.summary.approvedContracts, color: '#00C49F' },
-                  { name: 'Pending', value: analytics.summary.pendingContracts, color: '#FFBB28' },
-                  { name: 'Rejected', value: analytics.summary.rejectedContracts, color: '#FF8042' }
+                  {
+                    name: "Approved",
+                    value: analytics.summary.approvedContracts,
+                    color: "#00C49F",
+                  },
+                  { name: "Pending", value: analytics.summary.pendingContracts, color: "#FFBB28" },
+                  {
+                    name: "Rejected",
+                    value: analytics.summary.rejectedContracts,
+                    color: "#FF8042",
+                  },
                 ]}
                 cx="50%"
                 cy="50%"
@@ -454,9 +460,17 @@ export default function ContractAnalyticsPage() {
                 dataKey="value"
               >
                 {[
-                  { name: 'Approved', value: analytics.summary.approvedContracts, color: '#00C49F' },
-                  { name: 'Pending', value: analytics.summary.pendingContracts, color: '#FFBB28' },
-                  { name: 'Rejected', value: analytics.summary.rejectedContracts, color: '#FF8042' }
+                  {
+                    name: "Approved",
+                    value: analytics.summary.approvedContracts,
+                    color: "#00C49F",
+                  },
+                  { name: "Pending", value: analytics.summary.pendingContracts, color: "#FFBB28" },
+                  {
+                    name: "Rejected",
+                    value: analytics.summary.rejectedContracts,
+                    color: "#FF8042",
+                  },
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}

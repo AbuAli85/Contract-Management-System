@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth } from './simple-auth-provider'
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
+import { useAuth } from "./simple-auth-provider"
 
 // Define the Role type
-export type Role = 'admin' | 'manager' | 'user'
+export type Role = "admin" | "manager" | "user"
 
 // RBAC Context Type
 interface RBACContextType {
@@ -32,7 +32,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true)
-      
+
       // Try to get roles from profile first
       if (profile?.role) {
         setUserRoles([profile.role as Role])
@@ -41,10 +41,10 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fallback: fetch roles from API
-      const response = await fetch('/api/get-user-role', {
-        method: 'GET',
+      const response = await fetch("/api/get-user-role", {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       })
 
@@ -53,15 +53,15 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         if (data.role) {
           setUserRoles([data.role as Role])
         } else {
-          setUserRoles(['user'])
+          setUserRoles(["user"])
         }
       } else {
         // Default to user role if API fails
-        setUserRoles(['user'])
+        setUserRoles(["user"])
       }
     } catch (error) {
-      console.error('Error loading user roles:', error)
-      setUserRoles(['user'])
+      console.error("Error loading user roles:", error)
+      setUserRoles(["user"])
     } finally {
       setIsLoading(false)
     }
@@ -89,18 +89,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     updateRoleDirectly,
   }
 
-  return (
-    <RBACContext.Provider value={value}>
-      {children}
-    </RBACContext.Provider>
-  )
+  return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>
 }
 
 // Hook to use RBAC context
 export function useRBAC() {
   const context = useContext(RBACContext)
   if (context === undefined) {
-    throw new Error('useRBAC must be used within a RBACProvider')
+    throw new Error("useRBAC must be used within a RBACProvider")
   }
   return context
-} 
+}

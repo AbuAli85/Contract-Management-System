@@ -14,7 +14,9 @@ export function useRealtimeParties() {
 
   useRealtimeTable("parties", fetchParties)
 
-  useEffect(() => { fetchParties() }, [fetchParties])
+  useEffect(() => {
+    fetchParties()
+  }, [fetchParties])
 
   return parties
 }

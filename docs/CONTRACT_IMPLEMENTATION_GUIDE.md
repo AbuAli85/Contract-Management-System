@@ -8,18 +8,18 @@
 import EnhancedContractGeneratorForm from '@/components/enhanced-contract-generator-form'
 
 // Basic usage
-<EnhancedContractGeneratorForm 
+<EnhancedContractGeneratorForm
   onFormSubmit={() => router.push('/contracts')}
 />
 
 // With advanced features enabled
-<EnhancedContractGeneratorForm 
+<EnhancedContractGeneratorForm
   showAdvanced={true}
   onFormSubmit={handleSuccess}
 />
 
 // For editing existing contracts
-<EnhancedContractGeneratorForm 
+<EnhancedContractGeneratorForm
   contract={existingContract}
   onFormSubmit={() => setIsEditing(false)}
 />
@@ -28,11 +28,11 @@ import EnhancedContractGeneratorForm from '@/components/enhanced-contract-genera
 ### Using Contract Utilities
 
 ```tsx
-import { 
-  analyzeContractDuration, 
+import {
+  analyzeContractDuration,
   validateContractData,
-  exportContractsToCSV 
-} from '@/lib/contract-utils'
+  exportContractsToCSV,
+} from "@/lib/contract-utils"
 
 // Analyze contract duration
 const durationAnalysis = analyzeContractDuration(startDate, endDate)
@@ -41,13 +41,13 @@ console.log(durationAnalysis.category) // "short-term" | "medium-term" | "long-t
 // Validate form data
 const validation = validateContractData(formData)
 if (!validation.isValid) {
-  console.log('Errors:', validation.errors)
-  console.log('Missing:', validation.missingFields)
+  console.log("Errors:", validation.errors)
+  console.log("Missing:", validation.missingFields)
 }
 
 // Export contracts to CSV
 const csvData = exportContractsToCSV(contracts)
-downloadCSV(csvData, 'contracts-export.csv')
+downloadCSV(csvData, "contracts-export.csv")
 ```
 
 ## 🔧 Configuration
@@ -62,13 +62,16 @@ export const contractGeneratorSchema = z
     // Add new fields
     custom_field: z.string().min(1, "Custom field is required"),
   })
-  .refine((data) => {
-    // Add custom business rules
-    return data.custom_field !== 'invalid_value'
-  }, {
-    message: "Custom validation message",
-    path: ["custom_field"],
-  })
+  .refine(
+    (data) => {
+      // Add custom business rules
+      return data.custom_field !== "invalid_value"
+    },
+    {
+      message: "Custom validation message",
+      path: ["custom_field"],
+    },
+  )
 ```
 
 ### Form Sections
@@ -82,8 +85,8 @@ export const CONTRACT_FORM_SECTIONS: FormSection[] = [
     title: "Custom Section",
     description: "Your custom section description",
     required: false,
-    fields: ["custom_field"]
-  }
+    fields: ["custom_field"],
+  },
 ]
 ```
 
@@ -95,7 +98,7 @@ In your page component:
 
 ```tsx
 const [useEnhancedForm, setUseEnhancedForm] = useState(
-  process.env.NEXT_PUBLIC_USE_ENHANCED_FORM === 'true'
+  process.env.NEXT_PUBLIC_USE_ENHANCED_FORM === "true",
 )
 ```
 
@@ -119,33 +122,33 @@ NEXT_PUBLIC_DEFAULT_PROBATION_MONTHS=3
 ### Form Validation Testing
 
 ```typescript
-import { contractGeneratorSchema } from '@/lib/schema-generator'
+import { contractGeneratorSchema } from "@/lib/schema-generator"
 
-describe('Contract Form Validation', () => {
-  it('should validate required fields', () => {
+describe("Contract Form Validation", () => {
+  it("should validate required fields", () => {
     const result = contractGeneratorSchema.safeParse({
       first_party_id: undefined,
       // ... other fields
     })
-    
+
     expect(result.success).toBe(false)
     expect(result.error?.issues).toContainEqual(
       expect.objectContaining({
-        message: "Please select Party A (Client)."
-      })
+        message: "Please select Party A (Client).",
+      }),
     )
   })
-  
-  it('should validate date ranges', () => {
-    const startDate = new Date('2024-01-01')
-    const endDate = new Date('2023-12-31') // Invalid: before start
-    
+
+  it("should validate date ranges", () => {
+    const startDate = new Date("2024-01-01")
+    const endDate = new Date("2023-12-31") // Invalid: before start
+
     const result = contractGeneratorSchema.safeParse({
       contract_start_date: startDate,
       contract_end_date: endDate,
       // ... other required fields
     })
-    
+
     expect(result.success).toBe(false)
   })
 })
@@ -154,21 +157,21 @@ describe('Contract Form Validation', () => {
 ### Component Testing
 
 ```tsx
-import { render, screen, fireEvent } from '@testing-library/react'
-import EnhancedContractGeneratorForm from '@/components/enhanced-contract-generator-form'
+import { render, screen, fireEvent } from "@testing-library/react"
+import EnhancedContractGeneratorForm from "@/components/enhanced-contract-generator-form"
 
-describe('Enhanced Contract Form', () => {
-  it('should render all sections', () => {
+describe("Enhanced Contract Form", () => {
+  it("should render all sections", () => {
     render(<EnhancedContractGeneratorForm />)
-    
-    expect(screen.getByText('Contracting Parties')).toBeInTheDocument()
-    expect(screen.getByText('Promoter Information')).toBeInTheDocument()
-    expect(screen.getByText('Contract Period')).toBeInTheDocument()
+
+    expect(screen.getByText("Contracting Parties")).toBeInTheDocument()
+    expect(screen.getByText("Promoter Information")).toBeInTheDocument()
+    expect(screen.getByText("Contract Period")).toBeInTheDocument()
   })
-  
-  it('should show progress indicator', () => {
+
+  it("should show progress indicator", () => {
     render(<EnhancedContractGeneratorForm />)
-    
+
     expect(screen.getByText(/% Complete/)).toBeInTheDocument()
   })
 })
@@ -179,32 +182,34 @@ describe('Enhanced Contract Form', () => {
 ### Common Issues
 
 1. **Schema Validation Errors**
+
    ```typescript
    // Enable debug mode
    const result = contractGeneratorSchema.safeParse(data)
    if (!result.success) {
-     console.log('Validation errors:', result.error.issues)
+     console.log("Validation errors:", result.error.issues)
    }
    ```
 
 2. **Form State Issues**
+
    ```typescript
    // Debug form state
-   console.log('Form values:', form.getValues())
-   console.log('Form errors:', form.formState.errors)
-   console.log('Form dirty fields:', form.formState.dirtyFields)
+   console.log("Form values:", form.getValues())
+   console.log("Form errors:", form.formState.errors)
+   console.log("Form dirty fields:", form.formState.dirtyFields)
    ```
 
 3. **API Integration**
    ```typescript
    // Add request/response logging
    const saveContract = async (data) => {
-     console.log('Sending contract data:', data)
-     const response = await fetch('/api/contracts', {
-       method: 'POST',
-       body: JSON.stringify(data)
+     console.log("Sending contract data:", data)
+     const response = await fetch("/api/contracts", {
+       method: "POST",
+       body: JSON.stringify(data),
      })
-     console.log('API response:', await response.json())
+     console.log("API response:", await response.json())
    }
    ```
 
@@ -213,6 +218,7 @@ describe('Enhanced Contract Form', () => {
 ### Responsive Breakpoints
 
 The enhanced form is optimized for:
+
 - **Mobile**: Single column layout, larger touch targets
 - **Tablet**: Two-column layout for efficiency
 - **Desktop**: Full multi-column layout with advanced features
@@ -238,14 +244,14 @@ const validation = contractGeneratorSchema.safeParse(formData)
 export async function POST(request: NextRequest) {
   const body = await request.json()
   const validation = contractGeneratorSchema.safeParse(body)
-  
+
   if (!validation.success) {
     return NextResponse.json(
       { error: "Invalid form data", details: validation.error.issues },
-      { status: 400 }
+      { status: 400 },
     )
   }
-  
+
   // Process valid data...
 }
 ```
@@ -270,19 +276,19 @@ const sanitizedData = {
 ```typescript
 // Track form progress
 const trackFormProgress = (sectionId: string, completeness: number) => {
-  analytics.track('contract_form_progress', {
+  analytics.track("contract_form_progress", {
     section: sectionId,
     completion_percentage: completeness,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 }
 
 // Track form submission
 const trackFormSubmission = (success: boolean, errors?: string[]) => {
-  analytics.track('contract_form_submission', {
+  analytics.track("contract_form_submission", {
     success,
     errors: errors?.length || 0,
-    submission_time: Date.now() - formStartTime
+    submission_time: Date.now() - formStartTime,
   })
 }
 ```
@@ -295,7 +301,7 @@ const formLoadStart = performance.now()
 
 useEffect(() => {
   const loadTime = performance.now() - formLoadStart
-  analytics.track('contract_form_load_time', { duration: loadTime })
+  analytics.track("contract_form_load_time", { duration: loadTime })
 }, [])
 ```
 
@@ -314,7 +320,7 @@ const customTheme = {
   error: 'bg-red-600 text-white'
 }
 
-<EnhancedContractGeneratorForm 
+<EnhancedContractGeneratorForm
   className="custom-form-styles"
   theme={customTheme}
 />

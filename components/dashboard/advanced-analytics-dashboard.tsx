@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  Clock, 
-  Users, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Clock,
+  Users,
   FileText,
   Target,
   Activity,
@@ -28,15 +28,15 @@ import {
   Award,
   Star,
   TrendingUpIcon,
-  TrendingDownIcon
+  TrendingDownIcon,
 } from "lucide-react"
-import { 
-  LineChart as RechartsLineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart as RechartsLineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -44,7 +44,7 @@ import {
   Pie,
   Cell,
   AreaChart,
-  Area
+  Area,
 } from "recharts"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
@@ -60,7 +60,7 @@ interface AdvancedAnalyticsData {
   monthlyGrowth: number
   averageProcessingTime: number
   successRate: number
-  
+
   // Performance Metrics
   contractsThisMonth: number
   contractsLastMonth: number
@@ -74,16 +74,16 @@ interface AdvancedAnalyticsData {
     contracts: number
     revenue: number
   }>
-  
+
   // Predictive Analytics
   predictedGrowth: number
   riskIndicators: Array<{
     type: string
-    severity: 'low' | 'medium' | 'high'
+    severity: "low" | "medium" | "high"
     description: string
     impact: number
   }>
-  
+
   // Business Intelligence
   monthlyTrends: Array<{
     month: string
@@ -91,7 +91,7 @@ interface AdvancedAnalyticsData {
     revenue: number
     growth: number
   }>
-  
+
   // Operational Metrics
   systemHealth: number
   averageResponseTime: number
@@ -99,12 +99,12 @@ interface AdvancedAnalyticsData {
   efficiencyScore: number
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D']
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"]
 
 export function AdvancedAnalyticsDashboard() {
   const [analytics, setAnalytics] = useState<AdvancedAnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d')
+  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d" | "1y">("30d")
   const { toast } = useToast()
 
   useEffect(() => {
@@ -115,12 +115,12 @@ export function AdvancedAnalyticsDashboard() {
     setLoading(true)
     try {
       const supabase = getSupabaseClient()
-      
+
       // Fetch comprehensive analytics data
       const { data: contracts, error: contractsError } = await supabase
-        .from('contracts')
-        .select('*')
-      
+        .from("contracts")
+        .select("*")
+
       if (contractsError) throw contractsError
 
       // Calculate advanced metrics
@@ -128,54 +128,56 @@ export function AdvancedAnalyticsDashboard() {
       const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
       const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
 
-      const contractsThisMonth = contracts.filter(c => 
-        c.created_at && new Date(c.created_at) >= thisMonth
+      const contractsThisMonth = contracts.filter(
+        (c) => c.created_at && new Date(c.created_at) >= thisMonth,
       ).length
 
-      const contractsLastMonth = contracts.filter(c => 
-        c.created_at && new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth
+      const contractsLastMonth = contracts.filter(
+        (c) =>
+          c.created_at && new Date(c.created_at) >= lastMonth && new Date(c.created_at) < thisMonth,
       ).length
 
       const totalRevenue = contracts.reduce((sum, c) => sum + (c.contract_value || 0), 0)
       const revenueThisMonth = contractsThisMonth * 5000 // Mock calculation
       const revenueLastMonth = contractsLastMonth * 5000
 
-      const monthlyGrowth = contractsLastMonth > 0 
-        ? ((contractsThisMonth - contractsLastMonth) / contractsLastMonth) * 100 
-        : 0
+      const monthlyGrowth =
+        contractsLastMonth > 0
+          ? ((contractsThisMonth - contractsLastMonth) / contractsLastMonth) * 100
+          : 0
 
       // Calculate predictive analytics
       const predictedGrowth = monthlyGrowth * 1.1 // Simple prediction model
-      
+
       const riskIndicators = [
         {
-          type: 'Contract Expiration',
-          severity: 'medium' as const,
-          description: '15 contracts expiring in next 30 days',
-          impact: 15
+          type: "Contract Expiration",
+          severity: "medium" as const,
+          description: "15 contracts expiring in next 30 days",
+          impact: 15,
         },
         {
-          type: 'Processing Delays',
-          severity: 'low' as const,
-          description: 'Average processing time increased by 2 days',
-          impact: 8
-        }
+          type: "Processing Delays",
+          severity: "low" as const,
+          description: "Average processing time increased by 2 days",
+          impact: 8,
+        },
       ]
 
       // Generate monthly trends
       const monthlyTrends = generateMonthlyTrends(contracts, timeRange)
 
       // Calculate performance metrics
-      const activeContracts = contracts.filter(c => c.status === 'active').length
-      const completedContracts = contracts.filter(c => c.status === 'completed').length
+      const activeContracts = contracts.filter((c) => c.status === "active").length
+      const completedContracts = contracts.filter((c) => c.status === "completed").length
       const successRate = contracts.length > 0 ? (completedContracts / contracts.length) * 100 : 0
 
       const analyticsData: AdvancedAnalyticsData = {
         totalContracts: contracts.length,
         activeContracts,
-        pendingContracts: contracts.filter(c => c.status === 'pending').length,
+        pendingContracts: contracts.filter((c) => c.status === "pending").length,
         completedContracts,
-        failedContracts: contracts.filter(c => c.status === 'failed').length,
+        failedContracts: contracts.filter((c) => c.status === "failed").length,
         totalRevenue,
         monthlyGrowth,
         averageProcessingTime: 3.2, // Mock data
@@ -186,9 +188,9 @@ export function AdvancedAnalyticsDashboard() {
         revenueLastMonth,
         averageContractValue: contracts.length > 0 ? totalRevenue / contracts.length : 0,
         topPerformers: [
-          { id: '1', name: 'Sarah Johnson', performance: 98, contracts: 45, revenue: 225000 },
-          { id: '2', name: 'Mike Chen', performance: 95, contracts: 42, revenue: 210000 },
-          { id: '3', name: 'Emma Davis', performance: 92, contracts: 38, revenue: 190000 }
+          { id: "1", name: "Sarah Johnson", performance: 98, contracts: 45, revenue: 225000 },
+          { id: "2", name: "Mike Chen", performance: 95, contracts: 42, revenue: 210000 },
+          { id: "3", name: "Emma Davis", performance: 92, contracts: 38, revenue: 190000 },
         ],
         predictedGrowth,
         riskIndicators,
@@ -196,16 +198,16 @@ export function AdvancedAnalyticsDashboard() {
         systemHealth: 98,
         averageResponseTime: 1.2,
         userSatisfaction: 4.6,
-        efficiencyScore: 87
+        efficiencyScore: 87,
       }
 
       setAnalytics(analyticsData)
     } catch (error) {
-      console.error('Error fetching advanced analytics:', error)
+      console.error("Error fetching advanced analytics:", error)
       toast({
         title: "Error",
         description: "Failed to load analytics data",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -213,26 +215,47 @@ export function AdvancedAnalyticsDashboard() {
   }
 
   const generateMonthlyTrends = (contracts: any[], range: string) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ]
     const trends = months.map((month, index) => ({
       month,
       contracts: Math.floor(Math.random() * 50) + 20,
       revenue: Math.floor(Math.random() * 250000) + 100000,
-      growth: Math.floor(Math.random() * 30) - 10
+      growth: Math.floor(Math.random() * 30) - 10,
     }))
     return trends
   }
 
   const getGrowthIcon = (value: number) => {
-    return value >= 0 ? <TrendingUpIcon className="h-4 w-4 text-green-500" /> : <TrendingDownIcon className="h-4 w-4 text-red-500" />
+    return value >= 0 ? (
+      <TrendingUpIcon className="h-4 w-4 text-green-500" />
+    ) : (
+      <TrendingDownIcon className="h-4 w-4 text-red-500" />
+    )
   }
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'low': return 'bg-green-100 text-green-800 border-green-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200"
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
     }
   }
 
@@ -243,12 +266,12 @@ export function AdvancedAnalyticsDashboard() {
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-                <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-4 animate-pulse rounded bg-gray-200" />
               </CardHeader>
               <CardContent>
-                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse mb-2" />
-                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+                <div className="mb-2 h-8 w-16 animate-pulse rounded bg-gray-200" />
+                <div className="h-3 w-32 animate-pulse rounded bg-gray-200" />
               </CardContent>
             </Card>
           ))}
@@ -279,7 +302,7 @@ export function AdvancedAnalyticsDashboard() {
             </TabsList>
           </Tabs>
           <Button variant="outline" size="sm" onClick={fetchAdvancedAnalytics}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
         </div>
@@ -378,10 +401,10 @@ export function AdvancedAnalyticsDashboard() {
                   <RechartsPieChart>
                     <Pie
                       data={[
-                        { name: 'Active', value: analytics.activeContracts },
-                        { name: 'Pending', value: analytics.pendingContracts },
-                        { name: 'Completed', value: analytics.completedContracts },
-                        { name: 'Failed', value: analytics.failedContracts }
+                        { name: "Active", value: analytics.activeContracts },
+                        { name: "Pending", value: analytics.pendingContracts },
+                        { name: "Completed", value: analytics.completedContracts },
+                        { name: "Failed", value: analytics.failedContracts },
                       ]}
                       cx="50%"
                       cy="50%"
@@ -454,13 +477,16 @@ export function AdvancedAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {analytics.riskIndicators.map((risk, index) => (
-                    <div key={index} className={`p-3 rounded-lg border ${getSeverityColor(risk.severity)}`}>
+                    <div
+                      key={index}
+                      className={`rounded-lg border p-3 ${getSeverityColor(risk.severity)}`}
+                    >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{risk.type}</span>
                         <Badge variant="outline">{risk.severity}</Badge>
                       </div>
-                      <p className="text-sm mt-1">{risk.description}</p>
-                      <div className="text-xs mt-2">Impact: {risk.impact}%</div>
+                      <p className="mt-1 text-sm">{risk.description}</p>
+                      <div className="mt-2 text-xs">Impact: {risk.impact}%</div>
                     </div>
                   ))}
                 </div>
@@ -480,7 +506,7 @@ export function AdvancedAnalyticsDashboard() {
                   <div className="text-4xl font-bold text-green-600">
                     +{analytics.predictedGrowth.toFixed(1)}%
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">
+                  <p className="mt-2 text-sm text-muted-foreground">
                     Predicted growth for next quarter
                   </p>
                   <div className="mt-4 space-y-2">
@@ -512,9 +538,12 @@ export function AdvancedAnalyticsDashboard() {
               <CardContent>
                 <div className="space-y-4">
                   {analytics.topPerformers.map((performer, index) => (
-                    <div key={performer.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={performer.id}
+                      className="flex items-center justify-between rounded-lg border p-3"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-sm font-bold">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-white">
                           {index + 1}
                         </div>
                         <div>
@@ -562,8 +591,8 @@ export function AdvancedAnalyticsDashboard() {
                             key={i}
                             className={`h-4 w-4 ${
                               i < Math.floor(analytics.userSatisfaction)
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-300'
+                                ? "fill-current text-yellow-400"
+                                : "text-gray-300"
                             }`}
                           />
                         ))}
@@ -586,4 +615,4 @@ export function AdvancedAnalyticsDashboard() {
       </Tabs>
     </div>
   )
-} 
+}

@@ -60,7 +60,7 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
     .order("created_at", { ascending: false })
 
   // If the new schema fails, try the old schema (employer_id, client_id)
-  if (error && error.message.includes('foreign key')) {
+  if (error && error.message.includes("foreign key")) {
     devLog("New schema failed, trying old schema...")
     const { data: oldData, error: oldError } = await supabaseClient
       .from("contracts")
@@ -73,7 +73,7 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
       `,
       )
       .order("created_at", { ascending: false })
-    
+
     if (oldError) {
       devLog("Both schemas failed:", oldError)
       throw new Error(oldError.message)
@@ -87,13 +87,13 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
     devLog("Error fetching contracts:", error)
     throw new Error(error.message)
   }
-  
+
   // Debug: Log the fetched data to see what we're getting
   devLog("📊 Fetched contracts data:", data)
   if (data && data.length > 0) {
     devLog("📊 Sample contract structure:", data[0])
   }
-  
+
   // In fetchContracts, after fetching data, map to provide fallbacks for required fields
   if (data) {
     data = data.map((contract: any) => ({
@@ -103,14 +103,14 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
         name_en: "",
         name_ar: "",
         crn: "",
-        type: null as "Employer" | "Client" | "Generic" | null
+        type: null as "Employer" | "Client" | "Generic" | null,
       },
       second_party: contract.second_party ?? {
         id: "",
         name_en: "",
         name_ar: "",
         crn: "",
-        type: null as "Employer" | "Client" | "Generic" | null
+        type: null as "Employer" | "Client" | "Generic" | null,
       },
       promoters: contract.promoters ?? {
         id: "",
@@ -119,11 +119,11 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
         id_card_number: "",
         id_card_url: null,
         passport_url: null,
-        status: null
-      }
+        status: null,
+      },
     }))
   }
-  
+
   return (data as ContractWithRelations[]) || []
 }
 
@@ -168,10 +168,14 @@ export const useContracts = () => {
         const supabaseClient = getSupabaseClient()
         const newChannel = supabaseClient
           .channel("public-contracts-realtime")
-          .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, (payload) => {
-            devLog("Realtime contract change received!", payload)
-            queryClient.invalidateQueries({ queryKey: queryKey })
-          })
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "contracts" },
+            (payload) => {
+              devLog("Realtime contract change received!", payload)
+              queryClient.invalidateQueries({ queryKey: queryKey })
+            },
+          )
           .subscribe((status, err) => {
             if (status === "SUBSCRIBED") {
               devLog("Subscribed to contracts channel!")
@@ -180,14 +184,18 @@ export const useContracts = () => {
             if (status === "CHANNEL_ERROR") {
               const message = err?.message ?? "Unknown channel error"
               devLog(`Contracts channel error (${status}): ${message}`)
-              
+
               // Check if it's an authentication error
-              if (message.includes("JWT") || message.includes("auth") || message.includes("permission")) {
+              if (
+                message.includes("JWT") ||
+                message.includes("auth") ||
+                message.includes("permission")
+              ) {
                 devLog("Authentication error detected for contracts, will retry after auth check")
                 // Don't retry immediately, let the auth state change handler deal with it
                 return
               }
-                
+
               // Retry connection if we haven't exceeded max retries
               if (retryCount < maxRetries) {
                 retryCount++
@@ -205,11 +213,13 @@ export const useContracts = () => {
             }
             if (status === "TIMED_OUT") {
               devLog(`Subscription timed out (${status})`)
-                
+
               // Retry connection if we haven't exceeded max retries
               if (retryCount < maxRetries) {
                 retryCount++
-                devLog(`Retrying contracts subscription after timeout (${retryCount}/${maxRetries})...`)
+                devLog(
+                  `Retrying contracts subscription after timeout (${retryCount}/${maxRetries})...`,
+                )
                 retryTimeout = setTimeout(() => {
                   if (channel) {
                     const supabaseClient = getSupabaseClient()

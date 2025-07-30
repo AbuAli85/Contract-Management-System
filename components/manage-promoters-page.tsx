@@ -381,9 +381,9 @@ export default function ManagePromotersPage() {
                                 passHref
                                 legacyBehavior
                               >
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
+                                <Button
+                                  variant="outline"
+                                  size="sm"
                                   className="text-xs"
                                   disabled={!promoter.id}
                                 >

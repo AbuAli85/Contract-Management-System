@@ -7,7 +7,7 @@ export function useIsMobile() {
 
   React.useEffect(() => {
     // Only run in browser environment
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return
     }
 

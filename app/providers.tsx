@@ -10,8 +10,6 @@ import { RBACProvider } from "@/src/components/auth/rbac-provider"
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
 
-
-
 function ProvidersContent({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -28,9 +26,7 @@ function ProvidersContent({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <SimpleAuthProvider>
-        <RBACProvider>
-          {children}
-        </RBACProvider>
+        <RBACProvider>{children}</RBACProvider>
       </SimpleAuthProvider>
       {/* {isDev && <ReactQueryDevtools initialIsOpen={false} />} */}
     </QueryClientProvider>

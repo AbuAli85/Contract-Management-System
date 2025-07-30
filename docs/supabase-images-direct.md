@@ -7,6 +7,7 @@ Since your images are already stored in Supabase, let's skip the Google Drive co
 ## ✅ **STEP 1: Fix Google Docs Template**
 
 ### **Add Image Placeholders to Template:**
+
 1. **Open**: `https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit`
 2. **Insert** → **Image** → **Upload from computer** (any placeholder image)
 3. **Right-click** image → **Alt text** → Type: `ID_CARD_IMAGE`
@@ -16,27 +17,33 @@ Since your images are already stored in Supabase, let's skip the Google Drive co
 ## ✅ **STEP 2: Update Make.com Google Docs Module**
 
 ### **Remove Google Drive Dependencies:**
+
 1. **Open** Google Docs module in Make.com
 2. **Update Image URLs to:**
 
 **ID Card Image:**
+
 - **Image Object ID**: `ID_CARD_IMAGE`
 - **Image URL**: `{{1.promoter_id_card_url}}`
 
 **Passport Image:**
+
 - **Image Object ID**: `PASSPORT_IMAGE`
 - **Image URL**: `{{1.promoter_passport_url}}`
 
 ## ✅ **STEP 3: Simplify Scenario (Optional)**
 
 ### **Remove Unnecessary Modules:**
+
 Since we're using Supabase images directly, you can **optionally remove**:
+
 - **Module 30**: HTTP download ID card
-- **Module 31**: HTTP download passport  
+- **Module 31**: HTTP download passport
 - **Module 4**: Google Drive upload ID card
 - **Module 5**: Google Drive upload passport
 
 **Benefits:**
+
 - ✅ **Faster execution** - No downloads/uploads
 - ✅ **Fewer failure points** - Direct image access
 - ✅ **Simpler workflow** - Webhook → Database → Google Docs
@@ -60,12 +67,14 @@ Since we're using Supabase images directly, you can **optionally remove**:
 ### **Ensure Images Are Publicly Accessible:**
 
 **Check Supabase Storage Settings:**
+
 1. **Go to** Supabase Dashboard
 2. **Storage** → Your bucket
 3. **Verify** public access is enabled
 4. **Test** image URLs in browser
 
 **Typical Supabase URL Format:**
+
 ```
 https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file.jpg
 ```
@@ -73,17 +82,20 @@ https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file
 ## 🧪 **Testing Steps**
 
 ### **Step 1: Test Image Access**
+
 1. **Copy** a Supabase image URL from your webhook data
 2. **Paste** in browser
 3. **Verify** image loads without authentication
 
 ### **Step 2: Test Template**
+
 1. **Fix** template with image placeholders (Step 1 above)
 2. **Update** Make.com image URLs to Supabase (Step 2 above)
 3. **Run** scenario
 4. **Check** generated document has images
 
 ### **Step 3: Verify Full Workflow**
+
 1. **Generate** a contract through your app
 2. **Check** Make.com execution
 3. **Verify** PDF has both images and text
@@ -92,6 +104,7 @@ https://your-project.supabase.co/storage/v1/object/public/bucket-name/image-file
 ## 🎉 **Expected Results**
 
 After this fix:
+
 - ✅ **Direct image access** from Supabase
 - ✅ **No Google Drive complexity**
 - ✅ **Faster execution** - fewer modules
@@ -104,10 +117,8 @@ After this fix:
 
 1. **CORS Issues**: Supabase might block Google Docs API
    - **Solution**: Enable CORS for Google APIs in Supabase
-   
 2. **Authentication**: Images might require auth headers
    - **Solution**: Make bucket/images fully public
-   
 3. **URL Format**: Google Docs might need specific format
    - **Solution**: Try different Supabase URL formats
 

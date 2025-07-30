@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -27,13 +26,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
@@ -41,64 +34,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Loader2, 
-  AlertTriangle, 
-  FileText,
-  Settings,
-  Sparkles,
-  Calculator,
-  Users,
-  Briefcase,
-  Brain,
-  Zap,
-  Shield,
-  Target,
-  TrendingUp,
-  Star,
-  Award,
-  Globe,
-  Lock,
-  Eye,
-  Download,
-  RefreshCw,
-  Plus,
-  Search,
-  Filter,
-  Clock,
-  BarChart3,
-  Activity,
-  Bell,
-  BookOpen,
-  Building,
-  CreditCard,
-  FileCheck,
-  Gavel,
-  Lightbulb,
-  MapPin,
-  Monitor,
-  Palette,
-  Phone,
-  PieChart,
-  Settings2,
-  Smartphone,
-  Tablet,
-  Truck,
-  Wifi,
-  Workflow,
-  CheckCircle,
-  Info,
-  DollarSign,
-  Calendar,
-  UserCheck,
-  FileSearch,
-  Database,
-  Network,
-  Server,
-  Key,
-  Fingerprint,
-  AlertCircle
-} from "lucide-react"
+import { Loader2, Briefcase, Brain, Shield, BarChart3, Bell, Building, FileCheck, Gavel, Lightbulb, Monitor, Palette, Workflow, DollarSign, UserCheck, FileSearch,  } from 'lucide-react'
 
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
@@ -113,32 +49,32 @@ import {
   contractGeneratorSchema,
   type ContractGeneratorFormData,
   CONTRACT_FORM_SECTIONS,
-  getRequiredFields
+  getRequiredFields,
 } from "@/lib/schema-generator"
 import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter, Party } from "@/lib/types"
-import { 
-  JOB_TITLES, 
-  CURRENCIES, 
+import {
+  JOB_TITLES,
+  CURRENCIES,
   WORK_LOCATIONS,
   DEPARTMENTS,
-  CONTRACT_TYPES
+  CONTRACT_TYPES,
 } from "@/constants/contract-options"
-import { 
-  createContract, 
-  updateContract, 
-  ContractInsert, 
-  generateContractWithMakecom 
+import {
+  createContract,
+  updateContract,
+  ContractInsert,
+  generateContractWithMakecom,
 } from "@/app/actions/contracts"
-import { 
-  analyzeContractDuration, 
+import {
+  analyzeContractDuration,
   validateContractData,
   formatDuration,
   getContractTypeRecommendations,
   calculateSalaryRecommendations,
-  checkComplianceIssues
+  checkComplianceIssues,
 } from "@/lib/contract-utils"
 
 interface EnhancedContractFormProps {
@@ -158,26 +94,26 @@ interface FormSection {
 }
 
 interface ContractInsight {
-  type: 'success' | 'warning' | 'info' | 'error'
+  type: "success" | "warning" | "info" | "error"
   title: string
   description: string
   action?: string
-  priority: 'low' | 'medium' | 'high'
+  priority: "low" | "medium" | "high"
 }
 
 interface SmartRecommendation {
   category: string
   title: string
   description: string
-  impact: 'low' | 'medium' | 'high'
+  impact: "low" | "medium" | "high"
   implementation: string
   estimatedSavings?: string
 }
 
-export default function EnhancedContractForm({ 
-  onSuccess, 
-  onError, 
-  contract 
+export default function EnhancedContractForm({
+  onSuccess,
+  onError,
+  contract,
 }: EnhancedContractFormProps) {
   const [activeSection, setActiveSection] = useState(0)
   const [showAdvancedFields, setShowAdvancedFields] = useState(false)
@@ -188,7 +124,7 @@ export default function EnhancedContractForm({
   const [formProgress, setFormProgress] = useState({
     completed: 0,
     total: 0,
-    percentage: 0
+    percentage: 0,
   })
 
   const queryClient = useQueryClient()
@@ -199,8 +135,8 @@ export default function EnhancedContractForm({
   const { data: promoters, isLoading: isLoadingPromoters } = usePromoters()
 
   // Filter parties by type
-  const clientParties = parties?.filter(party => party.type === 'Client') || []
-  const employerParties = parties?.filter(party => party.type === 'Employer') || []
+  const clientParties = parties?.filter((party) => party.type === "Client") || []
+  const employerParties = parties?.filter((party) => party.type === "Employer") || []
 
   // Form setup
   const form = useForm<ContractGeneratorFormData>({
@@ -210,8 +146,12 @@ export default function EnhancedContractForm({
       first_party_id: contract?.first_party_id || "",
       second_party_id: contract?.second_party_id || "",
       promoter_id: contract?.promoter_id || "",
-      contract_start_date: contract?.contract_start_date ? parseISO(contract.contract_start_date) : undefined,
-      contract_end_date: contract?.contract_end_date ? parseISO(contract.contract_end_date) : undefined,
+      contract_start_date: contract?.contract_start_date
+        ? parseISO(contract.contract_start_date)
+        : undefined,
+      contract_end_date: contract?.contract_end_date
+        ? parseISO(contract.contract_end_date)
+        : undefined,
       email: contract?.email || "",
       job_title: contract?.job_title || "",
       work_location: contract?.work_location || "",
@@ -224,7 +164,7 @@ export default function EnhancedContractForm({
       notice_period_days: 30,
       working_hours_per_week: 40,
       special_terms: contract?.special_terms || "",
-    }
+    },
   })
 
   // Watch form values for real-time analysis
@@ -237,59 +177,59 @@ export default function EnhancedContractForm({
   // Form sections
   const sections: FormSection[] = [
     {
-      id: 'parties',
-      title: 'Contracting Parties',
-      description: 'Select the parties involved in the contract',
+      id: "parties",
+      title: "Contracting Parties",
+      description: "Select the parties involved in the contract",
       icon: Users,
       required: true,
       completed: false,
-      fields: ['first_party_id', 'second_party_id']
+      fields: ["first_party_id", "second_party_id"],
     },
     {
-      id: 'promoter',
-      title: 'Promoter Information',
-      description: 'Select the promoter for this contract',
+      id: "promoter",
+      title: "Promoter Information",
+      description: "Select the promoter for this contract",
       icon: UserCheck,
       required: true,
       completed: false,
-      fields: ['promoter_id']
+      fields: ["promoter_id"],
     },
     {
-      id: 'period',
-      title: 'Contract Period',
-      description: 'Define the contract start and end dates',
+      id: "period",
+      title: "Contract Period",
+      description: "Define the contract start and end dates",
       icon: Calendar,
       required: true,
       completed: false,
-      fields: ['contract_start_date', 'contract_end_date']
+      fields: ["contract_start_date", "contract_end_date"],
     },
     {
-      id: 'employment',
-      title: 'Employment Details',
-      description: 'Job title, department, and work location',
+      id: "employment",
+      title: "Employment Details",
+      description: "Job title, department, and work location",
       icon: Briefcase,
       required: false,
       completed: false,
-      fields: ['job_title', 'department', 'work_location']
+      fields: ["job_title", "department", "work_location"],
     },
     {
-      id: 'compensation',
-      title: 'Compensation',
-      description: 'Salary, allowances, and benefits',
+      id: "compensation",
+      title: "Compensation",
+      description: "Salary, allowances, and benefits",
       icon: DollarSign,
       required: false,
       completed: false,
-      fields: ['basic_salary', 'allowances', 'currency']
+      fields: ["basic_salary", "allowances", "currency"],
     },
     {
-      id: 'terms',
-      title: 'Additional Terms',
-      description: 'Special terms and conditions',
+      id: "terms",
+      title: "Additional Terms",
+      description: "Special terms and conditions",
       icon: FileText,
       required: false,
       completed: false,
-      fields: ['special_terms']
-    }
+      fields: ["special_terms"],
+    },
   ]
 
   // Real-time analysis
@@ -306,49 +246,52 @@ export default function EnhancedContractForm({
       const duration = differenceInDays(watchedEndDate, watchedStartDate)
       if (duration < 30) {
         newInsights.push({
-          type: 'warning',
-          title: 'Short Contract Duration',
+          type: "warning",
+          title: "Short Contract Duration",
           description: `Contract duration is ${duration} days. Consider longer terms for stability.`,
-          priority: 'medium'
+          priority: "medium",
         })
       } else if (duration > 365) {
         newInsights.push({
-          type: 'success',
-          title: 'Long-term Contract',
+          type: "success",
+          title: "Long-term Contract",
           description: `Contract duration is ${duration} days. Good for stability.`,
-          priority: 'low'
+          priority: "low",
         })
       }
     }
 
     // Analyze contract type
     if (watchedContractType) {
-      const typeConfig = CONTRACT_TYPES.find(t => t.value === watchedContractType)
+      const typeConfig = CONTRACT_TYPES.find((t) => t.value === watchedContractType)
       if (typeConfig) {
         newInsights.push({
-          type: 'info',
+          type: "info",
           title: `${typeConfig.label} Contract`,
-          description: typeConfig.description || 'Professional contract template selected.',
-          priority: 'medium'
+          description: typeConfig.description || "Professional contract template selected.",
+          priority: "medium",
         })
       }
     }
 
     // Analyze salary
     if (watchedSalary && watchedSalary > 0) {
-      const salaryRecommendations = calculateSalaryRecommendations(watchedSalary, watchedContractType)
+      const salaryRecommendations = calculateSalaryRecommendations(
+        watchedSalary,
+        watchedContractType,
+      )
       newRecommendations.push(...salaryRecommendations)
     }
 
     // Compliance check
     const complianceIssues = checkComplianceIssues(watchedValues)
     if (complianceIssues.length > 0) {
-      complianceIssues.forEach(issue => {
+      complianceIssues.forEach((issue) => {
         newInsights.push({
-          type: 'error',
-          title: 'Compliance Issue',
+          type: "error",
+          title: "Compliance Issue",
           description: issue,
-          priority: 'high'
+          priority: "high",
         })
       })
     }
@@ -358,116 +301,118 @@ export default function EnhancedContractForm({
   }
 
   // Helper function to calculate salary recommendations
-  const calculateSalaryRecommendations = (salary: number, contractType?: string): SmartRecommendation[] => {
+  const calculateSalaryRecommendations = (
+    salary: number,
+    contractType?: string,
+  ): SmartRecommendation[] => {
     const recommendations: SmartRecommendation[] = []
-    
+
     try {
       // Basic salary analysis
       if (salary < 30000) {
         recommendations.push({
-          category: 'compensation',
-          title: 'Consider Salary Increase',
-          description: 'Current salary is below market average for this role.',
-          impact: 'medium',
-          implementation: 'Review market rates and consider adjustment.',
-          estimatedSavings: 'N/A'
+          category: "compensation",
+          title: "Consider Salary Increase",
+          description: "Current salary is below market average for this role.",
+          impact: "medium",
+          implementation: "Review market rates and consider adjustment.",
+          estimatedSavings: "N/A",
         })
       } else if (salary > 100000) {
         recommendations.push({
-          category: 'compensation',
-          title: 'Competitive Salary',
-          description: 'Salary is competitive for this position.',
-          impact: 'low',
-          implementation: 'Maintain current compensation structure.',
-          estimatedSavings: 'N/A'
+          category: "compensation",
+          title: "Competitive Salary",
+          description: "Salary is competitive for this position.",
+          impact: "low",
+          implementation: "Maintain current compensation structure.",
+          estimatedSavings: "N/A",
         })
       }
 
       // Contract type specific recommendations
-      if (contractType === 'full-time-permanent') {
+      if (contractType === "full-time-permanent") {
         recommendations.push({
-          category: 'benefits',
-          title: 'Full Benefits Package',
-          description: 'Consider comprehensive benefits for permanent employees.',
-          impact: 'high',
-          implementation: 'Include health insurance, retirement plans, and PTO.',
-          estimatedSavings: '15-20% of salary'
+          category: "benefits",
+          title: "Full Benefits Package",
+          description: "Consider comprehensive benefits for permanent employees.",
+          impact: "high",
+          implementation: "Include health insurance, retirement plans, and PTO.",
+          estimatedSavings: "15-20% of salary",
         })
-      } else if (contractType === 'part-time') {
+      } else if (contractType === "part-time") {
         recommendations.push({
-          category: 'benefits',
-          title: 'Pro-rated Benefits',
-          description: 'Adjust benefits package for part-time employment.',
-          impact: 'medium',
-          implementation: 'Pro-rate benefits based on hours worked.',
-          estimatedSavings: '10-15% of salary'
+          category: "benefits",
+          title: "Pro-rated Benefits",
+          description: "Adjust benefits package for part-time employment.",
+          impact: "medium",
+          implementation: "Pro-rate benefits based on hours worked.",
+          estimatedSavings: "10-15% of salary",
         })
       }
     } catch (error) {
-      console.warn('Error calculating salary recommendations:', error)
+      console.warn("Error calculating salary recommendations:", error)
     }
-    
+
     return recommendations
   }
 
   // Helper function to check compliance issues
   const checkComplianceIssues = (formData: any): string[] => {
     const issues: string[] = []
-    
+
     try {
       // Check required fields
       if (!formData.contract_start_date) {
-        issues.push('Contract start date is required')
+        issues.push("Contract start date is required")
       }
-      
+
       if (!formData.contract_end_date) {
-        issues.push('Contract end date is required')
+        issues.push("Contract end date is required")
       }
-      
+
       if (!formData.employee_name) {
-        issues.push('Employee name is required')
+        issues.push("Employee name is required")
       }
-      
+
       if (!formData.employer_name) {
-        issues.push('Employer name is required')
+        issues.push("Employer name is required")
       }
 
       // Check date logic
       if (formData.contract_start_date && formData.contract_end_date) {
         const startDate = new Date(formData.contract_start_date)
         const endDate = new Date(formData.contract_end_date)
-        
+
         if (startDate >= endDate) {
-          issues.push('Contract end date must be after start date')
+          issues.push("Contract end date must be after start date")
         }
-        
+
         if (startDate < new Date()) {
-          issues.push('Contract start date cannot be in the past')
+          issues.push("Contract start date cannot be in the past")
         }
       }
 
       // Check salary
       if (formData.basic_salary && formData.basic_salary <= 0) {
-        issues.push('Basic salary must be greater than zero')
+        issues.push("Basic salary must be greater than zero")
       }
 
       // Check contract type specific requirements
-      if (formData.contract_type === 'full-time-permanent' && !formData.department) {
-        issues.push('Department is required for full-time permanent contracts')
+      if (formData.contract_type === "full-time-permanent" && !formData.department) {
+        issues.push("Department is required for full-time permanent contracts")
       }
-      
     } catch (error) {
-      console.warn('Error checking compliance issues:', error)
-      issues.push('Error validating form data')
+      console.warn("Error checking compliance issues:", error)
+      issues.push("Error validating form data")
     }
-    
+
     return issues
   }
 
   // Update form progress
   useEffect(() => {
-    const completedSections = sections.filter(section => {
-      return section.fields.every(field => {
+    const completedSections = sections.filter((section) => {
+      return section.fields.every((field) => {
         const value = form.getValues(field as keyof ContractGeneratorFormData)
         return value && value !== ""
       })
@@ -476,7 +421,7 @@ export default function EnhancedContractForm({
     setFormProgress({
       completed: completedSections,
       total: sections.length,
-      percentage: Math.round((completedSections / sections.length) * 100)
+      percentage: Math.round((completedSections / sections.length) * 100),
     })
   }, [watchedValues])
 
@@ -484,27 +429,27 @@ export default function EnhancedContractForm({
   const createMutation = useMutation({
     mutationFn: createContract,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] })
+      queryClient.invalidateQueries({ queryKey: ["contracts"] })
       toast.success("Contract created successfully!")
       onSuccess?.()
     },
     onError: (error) => {
       toast.error("Failed to create contract")
       onError?.(error)
-    }
+    },
   })
 
   const updateMutation = useMutation({
     mutationFn: updateContract,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['contracts'] })
+      queryClient.invalidateQueries({ queryKey: ["contracts"] })
       toast.success("Contract updated successfully!")
       onSuccess?.()
     },
     onError: (error) => {
       toast.error("Failed to update contract")
       onError?.(error)
-    }
+    },
   })
 
   const generateMutation = useMutation({
@@ -512,13 +457,13 @@ export default function EnhancedContractForm({
     onSuccess: (data) => {
       toast.success("Contract generated successfully!")
       if (data?.pdfUrl) {
-        window.open(data.pdfUrl, '_blank')
+        window.open(data.pdfUrl, "_blank")
       }
     },
     onError: (error) => {
       toast.error("Failed to generate contract")
       onError?.(error)
-    }
+    },
   })
 
   const onSubmit = async (data: ContractGeneratorFormData) => {
@@ -529,7 +474,7 @@ export default function EnhancedContractForm({
         await createMutation.mutateAsync(data)
       }
     } catch (error) {
-      console.error('Form submission error:', error)
+      console.error("Form submission error:", error)
     }
   }
 
@@ -538,11 +483,12 @@ export default function EnhancedContractForm({
     try {
       await generateMutation.mutateAsync(data)
     } catch (error) {
-      console.error('Contract generation error:', error)
+      console.error("Contract generation error:", error)
     }
   }
 
-  const isLoading = createMutation.isPending || updateMutation.isPending || generateMutation.isPending
+  const isLoading =
+    createMutation.isPending || updateMutation.isPending || generateMutation.isPending
 
   return (
     <div className="space-y-6">
@@ -553,7 +499,7 @@ export default function EnhancedContractForm({
             <div>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="h-5 w-5" />
-                {contract ? 'Edit Contract' : 'Create New Contract'}
+                {contract ? "Edit Contract" : "Create New Contract"}
               </CardTitle>
               <CardDescription>
                 Professional contract generation with AI-powered insights
@@ -565,23 +511,19 @@ export default function EnhancedContractForm({
                 size="sm"
                 onClick={() => setShowAIInsights(!showAIInsights)}
               >
-                <Brain className="h-4 w-4 mr-2" />
-                {showAIInsights ? 'Hide' : 'Show'} AI
+                <Brain className="mr-2 h-4 w-4" />
+                {showAIInsights ? "Hide" : "Show"} AI
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowPreview(!showPreview)}
-              >
-                <Eye className="h-4 w-4 mr-2" />
+              <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)}>
+                <Eye className="mr-2 h-4 w-4" />
                 Preview
               </Button>
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium">Form Progress</span>
               <span className="text-sm text-muted-foreground">
                 {formProgress.completed} of {formProgress.total} sections completed
@@ -594,7 +536,7 @@ export default function EnhancedContractForm({
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Contracting Parties */}
@@ -604,9 +546,7 @@ export default function EnhancedContractForm({
                     <Users className="h-5 w-5" />
                     Contracting Parties
                   </CardTitle>
-                  <CardDescription>
-                    Select the parties involved in this contract
-                  </CardDescription>
+                  <CardDescription>Select the parties involved in this contract</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -619,7 +559,9 @@ export default function EnhancedContractForm({
                           <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger disabled={isLoading}>
-                                <SelectValue placeholder={isLoading ? "Loading..." : "Select Client"} />
+                                <SelectValue
+                                  placeholder={isLoading ? "Loading..." : "Select Client"}
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -644,7 +586,9 @@ export default function EnhancedContractForm({
                           <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger disabled={isLoading}>
-                                <SelectValue placeholder={isLoading ? "Loading..." : "Select Employer"} />
+                                <SelectValue
+                                  placeholder={isLoading ? "Loading..." : "Select Employer"}
+                                />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -670,9 +614,7 @@ export default function EnhancedContractForm({
                     <UserCheck className="h-5 w-5" />
                     Promoter Information
                   </CardTitle>
-                  <CardDescription>
-                    Select the promoter for this contract
-                  </CardDescription>
+                  <CardDescription>Select the promoter for this contract</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -684,7 +626,9 @@ export default function EnhancedContractForm({
                         <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger disabled={isLoading}>
-                              <SelectValue placeholder={isLoading ? "Loading..." : "Select Promoter"} />
+                              <SelectValue
+                                placeholder={isLoading ? "Loading..." : "Select Promoter"}
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -709,9 +653,7 @@ export default function EnhancedContractForm({
                     <Calendar className="h-5 w-5" />
                     Contract Period
                   </CardTitle>
-                  <CardDescription>
-                    Define the contract start and end dates
-                  </CardDescription>
+                  <CardDescription>Define the contract start and end dates</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -769,9 +711,7 @@ export default function EnhancedContractForm({
                     <Briefcase className="h-5 w-5" />
                     Employment Details
                   </CardTitle>
-                  <CardDescription>
-                    Job title, department, and work location
-                  </CardDescription>
+                  <CardDescription>Job title, department, and work location</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -860,9 +800,7 @@ export default function EnhancedContractForm({
                     <DollarSign className="h-5 w-5" />
                     Compensation
                   </CardTitle>
-                  <CardDescription>
-                    Salary, allowances, and benefits
-                  </CardDescription>
+                  <CardDescription>Salary, allowances, and benefits</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 md:grid-cols-3">
@@ -936,10 +874,10 @@ export default function EnhancedContractForm({
                   {watchedSalary && watchedSalary > 0 && (
                     <SalaryCalculator
                       initialSalary={watchedSalary}
-                      initialCurrency={form.watch('currency') || 'OMR'}
+                      initialCurrency={form.watch("currency") || "OMR"}
                       onSalaryChange={(total, currency) => {
-                        form.setValue('basic_salary', total)
-                        form.setValue('currency', currency)
+                        form.setValue("basic_salary", total)
+                        form.setValue("currency", currency)
                       }}
                     />
                   )}
@@ -953,9 +891,7 @@ export default function EnhancedContractForm({
                     <FileText className="h-5 w-5" />
                     Contract Type
                   </CardTitle>
-                  <CardDescription>
-                    Select the type of employment contract
-                  </CardDescription>
+                  <CardDescription>Select the type of employment contract</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -978,9 +914,7 @@ export default function EnhancedContractForm({
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          Choose the type of employment contract
-                        </FormDescription>
+                        <FormDescription>Choose the type of employment contract</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -995,9 +929,7 @@ export default function EnhancedContractForm({
                     <FileText className="h-5 w-5" />
                     Additional Terms
                   </CardTitle>
-                  <CardDescription>
-                    Special terms and conditions
-                  </CardDescription>
+                  <CardDescription>Special terms and conditions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <FormField
@@ -1023,21 +955,17 @@ export default function EnhancedContractForm({
 
               {/* Action Buttons */}
               <div className="flex gap-4">
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex-1"
-                >
+                <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Saving...
                     </>
                   ) : (
-                    'Save Contract'
+                    "Save Contract"
                   )}
                 </Button>
-                
+
                 <Button
                   type="button"
                   variant="outline"
@@ -1046,12 +974,12 @@ export default function EnhancedContractForm({
                 >
                   {generateMutation.isPending ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4 mr-2" />
+                      <Download className="mr-2 h-4 w-4" />
                       Generate PDF
                     </>
                   )}
@@ -1071,25 +999,35 @@ export default function EnhancedContractForm({
                   <Brain className="h-5 w-5 text-purple-500" />
                   AI Insights
                 </CardTitle>
-                <CardDescription>
-                  Smart analysis and recommendations
-                </CardDescription>
+                <CardDescription>Smart analysis and recommendations</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {insights.map((insight, index) => (
-                  <div key={index} className={`p-3 rounded-lg border ${
-                    insight.type === 'success' ? 'border-green-200 bg-green-50' :
-                    insight.type === 'warning' ? 'border-yellow-200 bg-yellow-50' :
-                    insight.type === 'error' ? 'border-red-200 bg-red-50' :
-                    'border-blue-200 bg-blue-50'
-                  }`}>
+                  <div
+                    key={index}
+                    className={`rounded-lg border p-3 ${
+                      insight.type === "success"
+                        ? "border-green-200 bg-green-50"
+                        : insight.type === "warning"
+                          ? "border-yellow-200 bg-yellow-50"
+                          : insight.type === "error"
+                            ? "border-red-200 bg-red-50"
+                            : "border-blue-200 bg-blue-50"
+                    }`}
+                  >
                     <div className="flex items-start gap-2">
-                      {insight.type === 'success' && <CheckCircle className="h-4 w-4 text-green-600 mt-0.5" />}
-                      {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />}
-                      {insight.type === 'error' && <AlertCircle className="h-4 w-4 text-red-600 mt-0.5" />}
-                      {insight.type === 'info' && <Info className="h-4 w-4 text-blue-600 mt-0.5" />}
+                      {insight.type === "success" && (
+                        <CheckCircle className="mt-0.5 h-4 w-4 text-green-600" />
+                      )}
+                      {insight.type === "warning" && (
+                        <AlertTriangle className="mt-0.5 h-4 w-4 text-yellow-600" />
+                      )}
+                      {insight.type === "error" && (
+                        <AlertCircle className="mt-0.5 h-4 w-4 text-red-600" />
+                      )}
+                      {insight.type === "info" && <Info className="mt-0.5 h-4 w-4 text-blue-600" />}
                       <div className="flex-1">
-                        <div className="font-medium text-sm">{insight.title}</div>
+                        <div className="text-sm font-medium">{insight.title}</div>
                         <div className="text-xs text-muted-foreground">{insight.description}</div>
                       </div>
                       <Badge variant="outline" className="text-xs">
@@ -1110,27 +1048,23 @@ export default function EnhancedContractForm({
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
                   Smart Recommendations
                 </CardTitle>
-                <CardDescription>
-                  AI-powered suggestions for optimization
-                </CardDescription>
+                <CardDescription>AI-powered suggestions for optimization</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {recommendations.map((rec, index) => (
-                  <div key={index} className="p-3 border rounded-lg">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="font-medium text-sm">{rec.title}</div>
+                  <div key={index} className="rounded-lg border p-3">
+                    <div className="mb-2 flex items-start justify-between">
+                      <div className="text-sm font-medium">{rec.title}</div>
                       <Badge variant="outline" className="text-xs">
                         {rec.impact}
                       </Badge>
                     </div>
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {rec.description}
-                    </div>
+                    <div className="mb-2 text-xs text-muted-foreground">{rec.description}</div>
                     <div className="text-xs">
                       <strong>Implementation:</strong> {rec.implementation}
                     </div>
                     {rec.estimatedSavings && (
-                      <div className="text-xs text-green-600 mt-1">
+                      <div className="mt-1 text-xs text-green-600">
                         💰 Estimated savings: {rec.estimatedSavings}
                       </div>
                     )}
@@ -1147,9 +1081,7 @@ export default function EnhancedContractForm({
                 <Shield className="h-5 w-5 text-blue-500" />
                 Compliance Checker
               </CardTitle>
-              <CardDescription>
-                Legal and regulatory compliance
-              </CardDescription>
+              <CardDescription>Legal and regulatory compliance</CardDescription>
             </CardHeader>
             <CardContent>
               <ComplianceChecker contractData={watchedValues} />
@@ -1170,4 +1102,4 @@ export default function EnhancedContractForm({
       )}
     </div>
   )
-} 
+}

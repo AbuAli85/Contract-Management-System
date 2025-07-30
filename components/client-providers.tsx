@@ -12,4 +12,4 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
   )
 }
 
-export { ClientProviders as QueryClientProviderWrapper };
+export { ClientProviders as QueryClientProviderWrapper }

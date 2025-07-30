@@ -1,38 +1,30 @@
-'use client'
+"use client"
 
-import AdminDashboard from '@/components/dashboard/AdminDashboard'
-import PromoterDashboard from '@/components/dashboard/PromoterDashboard'
-import PromoterOnboardingForm from '@/components/onboarding/PromoterOnboardingForm'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { 
-  Users, 
-  FileText, 
-  BarChart3,
-  Plus,
-  ArrowRight,
-  Eye,
-  Star
-} from 'lucide-react'
+import AdminDashboard from "@/components/dashboard/AdminDashboard"
+import PromoterDashboard from "@/components/dashboard/PromoterDashboard"
+import PromoterOnboardingForm from "@/components/onboarding/PromoterOnboardingForm"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Users, FileText, BarChart3, Plus, ArrowRight, Eye, Star } from "lucide-react"
 
 export default function DemoPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="text-center space-y-4">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="space-y-4 text-center">
           <h1 className="text-4xl font-bold text-gray-900">
             🚀 Contract Management System - UI Demo
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Experience the beautiful new UI/UX transformation. This demo showcases the professional, 
+          <p className="mx-auto max-w-3xl text-xl text-gray-600">
+            Experience the beautiful new UI/UX transformation. This demo showcases the professional,
             modern interface that replaces the old basic CRM system.
           </p>
           <div className="flex items-center justify-center gap-4">
             <Badge variant="default" className="text-sm">
-              <Star className="h-3 w-3 mr-1" />
+              <Star className="mr-1 h-3 w-3" />
               New Design
             </Badge>
             <Badge variant="secondary" className="text-sm">
@@ -69,11 +61,12 @@ export default function DemoPage() {
                   Admin Dashboard Preview
                 </CardTitle>
                 <CardDescription>
-                  Beautiful admin dashboard with KPI cards, attendance heatmap, and real-time metrics
+                  Beautiful admin dashboard with KPI cards, attendance heatmap, and real-time
+                  metrics
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-lg border">
                   <AdminDashboard />
                 </div>
               </CardContent>
@@ -92,7 +85,7 @@ export default function DemoPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-lg border">
                   <PromoterDashboard />
                 </div>
               </CardContent>
@@ -107,11 +100,12 @@ export default function DemoPage() {
                   Onboarding Form Preview
                 </CardTitle>
                 <CardDescription>
-                  Multi-step onboarding wizard with file upload, requirements checklist, and progress tracking
+                  Multi-step onboarding wizard with file upload, requirements checklist, and
+                  progress tracking
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-hidden rounded-lg border">
                   <PromoterOnboardingForm />
                 </div>
               </CardContent>
@@ -128,7 +122,7 @@ export default function DemoPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-red-600">❌ Old Interface Problems</h3>
                 <ul className="space-y-2 text-sm text-gray-600">
@@ -154,7 +148,7 @@ export default function DemoPage() {
                   </li>
                 </ul>
               </div>
-              
+
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-green-600">✅ New Interface Solutions</h3>
                 <ul className="space-y-2 text-sm text-gray-600">
@@ -185,14 +179,14 @@ export default function DemoPage() {
         </Card>
 
         {/* Call to Action */}
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Ready to Experience the Full System?</CardTitle>
             <CardDescription>
               Log in to access the complete Contract Management System with all features
             </CardDescription>
           </CardHeader>
-          <CardContent className="text-center space-y-4">
+          <CardContent className="space-y-4 text-center">
             <div className="flex items-center justify-center gap-4">
               <Button asChild size="lg">
                 <a href="/en/login">
@@ -207,12 +201,10 @@ export default function DemoPage() {
                 </a>
               </Button>
             </div>
-            <p className="text-sm text-gray-600">
-              Demo credentials available for testing
-            </p>
+            <p className="text-sm text-gray-600">Demo credentials available for testing</p>
           </CardContent>
         </Card>
       </div>
     </div>
   )
-} 
+}

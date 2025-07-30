@@ -3,20 +3,26 @@
 import { useState } from "react"
 import { WORK_LOCATIONS, getWorkLocationDescription } from "@/constants/contract-options"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
 // Force dynamic rendering to prevent SSR issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export default function TestWorkLocationsPage() {
   const [selectedLocation, setSelectedLocation] = useState<string>("")
 
   return (
     <div className="container mx-auto py-8">
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="mx-auto max-w-4xl space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Work Locations Test</h1>
+          <h1 className="mb-2 text-3xl font-bold">Work Locations Test</h1>
           <p className="text-muted-foreground">
             Test the enhanced Work Location dropdown with descriptions
           </p>
@@ -28,7 +34,7 @@ export default function TestWorkLocationsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-2 block">Select Work Location</label>
+              <label className="mb-2 block text-sm font-medium">Select Work Location</label>
               <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a work location..." />
@@ -39,7 +45,7 @@ export default function TestWorkLocationsPage() {
                       <div className="flex flex-col">
                         <span className="font-medium">{location.label}</span>
                         {location.description && (
-                          <span className="text-xs text-muted-foreground mt-0.5">
+                          <span className="mt-0.5 text-xs text-muted-foreground">
                             {location.description}
                           </span>
                         )}
@@ -51,8 +57,8 @@ export default function TestWorkLocationsPage() {
             </div>
 
             {selectedLocation && (
-              <div className="p-4 bg-muted rounded-lg">
-                <h3 className="font-semibold mb-2">Selected Location:</h3>
+              <div className="rounded-lg bg-muted p-4">
+                <h3 className="mb-2 font-semibold">Selected Location:</h3>
                 <div className="space-y-2">
                   <div>
                     <span className="font-medium">Value: </span>
@@ -79,13 +85,11 @@ export default function TestWorkLocationsPage() {
             <CardTitle>All Work Locations</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {WORK_LOCATIONS.map((location) => (
-                <div key={location.value} className="p-3 border rounded-lg">
+                <div key={location.value} className="rounded-lg border p-3">
                   <div className="font-medium">{location.label}</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    {location.description}
-                  </div>
+                  <div className="mt-1 text-sm text-muted-foreground">{location.description}</div>
                   <Badge variant="secondary" className="mt-2 text-xs">
                     {location.value}
                   </Badge>
@@ -102,8 +106,8 @@ export default function TestWorkLocationsPage() {
 // Helper function to get option label
 const getOptionLabel = (
   options: readonly { value: string; label: string; description?: string }[],
-  value: string
+  value: string,
 ): string => {
-  const option = options.find(opt => opt.value === value)
+  const option = options.find((opt) => opt.value === value)
   return option?.label || value
-} 
+}

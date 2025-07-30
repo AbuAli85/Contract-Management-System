@@ -1,38 +1,52 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
+import { z } from "zod"
 
 // Validation schema for promoter updates
 const promoterUpdateSchema = z.object({
-  name_en: z.string().min(1, 'English name is required').optional(),
-  name_ar: z.string().min(1, 'Arabic name is required').optional(),
-  id_card_number: z.string().min(1, 'ID card number is required').optional(),
+  name_en: z.string().min(1, "English name is required").optional(),
+  name_ar: z.string().min(1, "Arabic name is required").optional(),
+  id_card_number: z.string().min(1, "ID card number is required").optional(),
   id_card_url: z.string().optional(),
   passport_url: z.string().optional(),
   passport_number: z.string().optional(),
   mobile_number: z.string().optional(),
   profile_picture_url: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated', 'pending_approval', 'retired', 'probation', 'resigned', 'contractor', 'temporary', 'training', 'other']).optional(),
+  status: z
+    .enum([
+      "active",
+      "inactive",
+      "suspended",
+      "holiday",
+      "on_leave",
+      "terminated",
+      "pending_approval",
+      "retired",
+      "probation",
+      "resigned",
+      "contractor",
+      "temporary",
+      "training",
+      "other",
+    ])
+    .optional(),
   phone: z.string().optional(),
   email: z.string().email().optional(),
   nationality: z.string().optional(),
   date_of_birth: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
+  gender: z.enum(["male", "female", "other"]).optional(),
   address: z.string().optional(),
   emergency_contact: z.string().optional(),
   emergency_phone: z.string().optional(),
   notes: z.string().optional(),
 })
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const cookieStore = await cookies()
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -44,7 +58,18 @@ export async function GET(
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(name, value, options as { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'strict' | 'lax' | 'none' })
+                cookieStore.set(
+                  name,
+                  value,
+                  options as {
+                    path?: string
+                    domain?: string
+                    maxAge?: number
+                    secure?: boolean
+                    httpOnly?: boolean
+                    sameSite?: "strict" | "lax" | "none"
+                  },
+                )
               })
             } catch {
               // The `setAll` method was called from a Server Component.
@@ -53,20 +78,24 @@ export async function GET(
             }
           },
         },
-      }
+      },
     )
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Fetch promoter with related data
     const { data: promoter, error } = await supabase
-      .from('promoters')
-      .select(`
+      .from("promoters")
+      .select(
+        `
         *,
         contracts:contracts!contracts_promoter_id_fkey(
           id,
@@ -79,36 +108,34 @@ export async function GET(
           first_party:parties!contracts_first_party_id_fkey(name_en, name_ar),
           second_party:parties!contracts_second_party_id_fkey(name_en, name_ar)
         )
-      `)
-      .eq('id', id)
+      `,
+      )
+      .eq("id", id)
       .single()
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Promoter not found' }, { status: 404 })
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "Promoter not found" }, { status: 404 })
       }
-      console.error('Error fetching promoter:', error)
-      return NextResponse.json({ error: 'Failed to fetch promoter' }, { status: 500 })
+      console.error("Error fetching promoter:", error)
+      return NextResponse.json({ error: "Failed to fetch promoter" }, { status: 500 })
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      promoter 
+      promoter,
     })
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const cookieStore = await cookies()
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -120,7 +147,18 @@ export async function PUT(
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(name, value, options as { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'strict' | 'lax' | 'none' })
+                cookieStore.set(
+                  name,
+                  value,
+                  options as {
+                    path?: string
+                    domain?: string
+                    maxAge?: number
+                    secure?: boolean
+                    httpOnly?: boolean
+                    sameSite?: "strict" | "lax" | "none"
+                  },
+                )
               })
             } catch {
               // The `setAll` method was called from a Server Component.
@@ -129,24 +167,27 @@ export async function PUT(
             }
           },
         },
-      }
+      },
     )
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Check if user is admin
     const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
       .single()
-    if (!userProfile || userProfile.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
+    if (!userProfile || userProfile.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 })
     }
 
     // Parse and validate request body
@@ -155,61 +196,64 @@ export async function PUT(
 
     // Update promoter in database
     const { data: promoter, error } = await supabase
-      .from('promoters')
+      .from("promoters")
       .update({
         ...validatedData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Promoter not found' }, { status: 404 })
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "Promoter not found" }, { status: 404 })
       }
-      console.error('Error updating promoter:', error)
-      return NextResponse.json({ 
-        error: 'Failed to update promoter',
-        details: error.message 
-      }, { status: 500 })
+      console.error("Error updating promoter:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to update promoter",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
     // After successful update, create audit log
-    await supabase.from('audit_logs').insert({
+    await supabase.from("audit_logs").insert({
       user_id: session.user.id,
-      action: 'update',
-      table_name: 'promoters',
+      action: "update",
+      table_name: "promoters",
       record_id: id,
       new_values: validatedData,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      promoter 
+      promoter,
     })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ 
-        error: 'Validation error',
-        details: error.issues 
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Validation error",
+          details: error.issues,
+        },
+        { status: 400 },
+      )
     }
-    
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const cookieStore = await cookies()
-    
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -221,7 +265,18 @@ export async function DELETE(
           setAll(cookiesToSet) {
             try {
               cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(name, value, options as { path?: string; domain?: string; maxAge?: number; secure?: boolean; httpOnly?: boolean; sameSite?: 'strict' | 'lax' | 'none' })
+                cookieStore.set(
+                  name,
+                  value,
+                  options as {
+                    path?: string
+                    domain?: string
+                    maxAge?: number
+                    secure?: boolean
+                    httpOnly?: boolean
+                    sameSite?: "strict" | "lax" | "none"
+                  },
+                )
               })
             } catch {
               // The `setAll` method was called from a Server Component.
@@ -230,77 +285,83 @@ export async function DELETE(
             }
           },
         },
-      }
+      },
     )
 
     // Get user session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession()
+
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     // Check if user is admin
     const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
       .single()
-    if (!userProfile || userProfile.role !== 'admin') {
-      return NextResponse.json({ error: 'Forbidden: Admins only' }, { status: 403 })
+    if (!userProfile || userProfile.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 })
     }
 
     // Check if promoter has active contracts
     const { data: activeContracts, error: contractsError } = await supabase
-      .from('contracts')
-      .select('id')
-      .eq('promoter_id', id)
-      .eq('status', 'active')
+      .from("contracts")
+      .select("id")
+      .eq("promoter_id", id)
+      .eq("status", "active")
 
     if (contractsError) {
-      console.error('Error checking contracts:', contractsError)
-      return NextResponse.json({ error: 'Failed to check contracts' }, { status: 500 })
+      console.error("Error checking contracts:", contractsError)
+      return NextResponse.json({ error: "Failed to check contracts" }, { status: 500 })
     }
 
     if (activeContracts && activeContracts.length > 0) {
-      return NextResponse.json({ 
-        error: 'Cannot delete promoter with active contracts',
-        activeContractsCount: activeContracts.length
-      }, { status: 400 })
+      return NextResponse.json(
+        {
+          error: "Cannot delete promoter with active contracts",
+          activeContractsCount: activeContracts.length,
+        },
+        { status: 400 },
+      )
     }
 
     // Delete promoter
-    const { error } = await supabase
-      .from('promoters')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("promoters").delete().eq("id", id)
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Promoter not found' }, { status: 404 })
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "Promoter not found" }, { status: 404 })
       }
-      console.error('Error deleting promoter:', error)
-      return NextResponse.json({ 
-        error: 'Failed to delete promoter',
-        details: error.message 
-      }, { status: 500 })
+      console.error("Error deleting promoter:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to delete promoter",
+          details: error.message,
+        },
+        { status: 500 },
+      )
     }
 
     // After successful delete, create audit log
-    await supabase.from('audit_logs').insert({
+    await supabase.from("audit_logs").insert({
       user_id: session.user.id,
-      action: 'delete',
-      table_name: 'promoters',
+      action: "delete",
+      table_name: "promoters",
       record_id: id,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Promoter deleted successfully' 
+      message: "Promoter deleted successfully",
     })
   } catch (error) {
-    console.error('API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error("API error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-} 
+}

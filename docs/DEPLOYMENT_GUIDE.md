@@ -55,6 +55,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 ### Pipeline Jobs
 
 #### 1. Validate Job
+
 - **Purpose**: Pre-deployment validation and quality checks
 - **Tasks**:
   - Code linting (`pnpm run lint`)
@@ -64,6 +65,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Failure Action**: Pipeline stops if any check fails
 
 #### 2. Migrate Job
+
 - **Purpose**: Deploy database migrations safely
 - **Tasks**:
   - Setup Supabase CLI
@@ -72,6 +74,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Dependencies**: Requires `validate` job to succeed
 
 #### 3. Build and Test Job
+
 - **Purpose**: Build application and run integration tests
 - **Tasks**:
   - Integration tests (`pnpm run test:integration`)
@@ -80,6 +83,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Dependencies**: Requires `validate` and `migrate` jobs
 
 #### 4. E2E Tests Job
+
 - **Purpose**: End-to-end testing of the application
 - **Tasks**:
   - Start application server
@@ -88,6 +92,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Dependencies**: Requires `build-and-test` job
 
 #### 5. Deployment Jobs
+
 - **Preview Deployment**: For pull requests
 - **Staging Deployment**: For `develop` branch
 - **Production Deployment**: For `main` branch
@@ -97,12 +102,14 @@ Our enhanced CI/CD pipeline consists of the following stages:
 ### Environment Types
 
 #### 1. Development Environment
+
 - **Purpose**: Local development and testing
 - **Configuration**: `.env.local` file
 - **Database**: Local Supabase instance or development project
 - **Access**: Developers only
 
 #### 2. Preview Environment
+
 - **Purpose**: Testing pull requests before merge
 - **Configuration**: Vercel preview environment variables
 - **Database**: Shared test database
@@ -110,6 +117,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Auto-deployment**: On every PR
 
 #### 3. Staging Environment
+
 - **Purpose**: Pre-production testing and validation
 - **Configuration**: Vercel staging environment variables
 - **Database**: Staging database (separate from production)
@@ -117,6 +125,7 @@ Our enhanced CI/CD pipeline consists of the following stages:
 - **Auto-deployment**: On `develop` branch pushes
 
 #### 4. Production Environment
+
 - **Purpose**: Live application for end users
 - **Configuration**: Vercel production environment variables
 - **Database**: Production database
@@ -347,4 +356,4 @@ For deployment-related issues:
 
 ---
 
-*Last updated: January 2025*
+_Last updated: January 2025_

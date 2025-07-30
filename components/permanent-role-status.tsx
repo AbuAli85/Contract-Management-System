@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import { useRBAC } from '@/src/components/auth/rbac-provider'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Crown, User, Loader2, CheckCircle, XCircle } from 'lucide-react'
+import { useRBAC } from "@/src/components/auth/rbac-provider"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Crown, User, Loader2, CheckCircle, XCircle } from "lucide-react"
 
 export function PermanentRoleStatus() {
   const { user } = useAuth()
@@ -30,9 +30,9 @@ export function PermanentRoleStatus() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case 'admin':
+      case "admin":
         return <Crown className="h-3 w-3" />
-      case 'manager':
+      case "manager":
         return <User className="h-3 w-3" />
       default:
         return <User className="h-3 w-3" />
@@ -41,12 +41,12 @@ export function PermanentRoleStatus() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300'
-      case 'manager':
-        return 'bg-blue-100 text-blue-800 border-blue-300'
+      case "admin":
+        return "bg-yellow-100 text-yellow-800 border-yellow-300"
+      case "manager":
+        return "bg-blue-100 text-blue-800 border-blue-300"
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300'
+        return "bg-gray-100 text-gray-800 border-gray-300"
     }
   }
 
@@ -63,10 +63,10 @@ export function PermanentRoleStatus() {
           <span className="text-sm font-medium">User:</span>
           <span className="text-sm text-muted-foreground">{user.email}</span>
         </div>
-        
+
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">User ID:</span>
-          <span className="text-sm text-muted-foreground font-mono">{user.id}</span>
+          <span className="font-mono text-sm text-muted-foreground">{user.id}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -82,7 +82,7 @@ export function PermanentRoleStatus() {
               {permanentRole}
             </Badge>
           ) : (
-            <Badge className="flex items-center gap-1 bg-gray-100 text-gray-800 border-gray-300">
+            <Badge className="flex items-center gap-1 border-gray-300 bg-gray-100 text-gray-800">
               <User className="h-3 w-3" />
               No Role
             </Badge>
@@ -125,17 +125,16 @@ export function PermanentRoleStatus() {
 
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium">Storage Key:</span>
-          <span className="text-sm text-muted-foreground font-mono">
-            permanent_role_{user.id}
-          </span>
+          <span className="font-mono text-sm text-muted-foreground">permanent_role_{user.id}</span>
         </div>
 
-        <div className="pt-2 border-t">
+        <div className="border-t pt-2">
           <p className="text-xs text-muted-foreground">
-            This role is stored permanently in localStorage and persists across all sessions and page refreshes.
+            This role is stored permanently in localStorage and persists across all sessions and
+            page refreshes.
           </p>
         </div>
       </CardContent>
     </Card>
   )
-} 
+}

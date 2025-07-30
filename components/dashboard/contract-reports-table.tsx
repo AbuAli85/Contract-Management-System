@@ -64,24 +64,32 @@ export default function ContractReportsTable() {
            job_title,
            first_party:parties!first_party_id(name_en),
            second_party:parties!second_party_id(name_en),
-           promoter:promoters!promoter_id(name_en)`
+           promoter:promoters!promoter_id(name_en)`,
         )
-        .order(sortKey === 'start_date' ? 'contract_start_date' : sortKey === 'end_date' ? 'contract_end_date' : sortKey || "contract_start_date", { ascending: sortDirection === "asc" })
+        .order(
+          sortKey === "start_date"
+            ? "contract_start_date"
+            : sortKey === "end_date"
+              ? "contract_end_date"
+              : sortKey || "contract_start_date",
+          { ascending: sortDirection === "asc" },
+        )
 
       if (error) throw error
-      
+
       // Map the data to match ContractReportItem structure
-      const mappedData = data?.map(contract => ({
-        id: contract.id,
-        contract_id: contract.id, // Using id as contract_id since contract_number doesn't exist
-        promoter_name: contract.promoter?.name_en || '',
-        employer_name: contract.second_party?.name_en || '', // Party B (Employer)
-        client_name: contract.first_party?.name_en || '', // Party A (Client)
-        start_date: contract.contract_start_date,
-        end_date: contract.contract_end_date,
-        status: contract.status
-      })) || []
-      
+      const mappedData =
+        data?.map((contract) => ({
+          id: contract.id,
+          contract_id: contract.id, // Using id as contract_id since contract_number doesn't exist
+          promoter_name: contract.promoter?.name_en || "",
+          employer_name: contract.second_party?.name_en || "", // Party B (Employer)
+          client_name: contract.first_party?.name_en || "", // Party A (Client)
+          start_date: contract.contract_start_date,
+          end_date: contract.contract_end_date,
+          status: contract.status,
+        })) || []
+
       setContracts(mappedData as ContractReportItem[])
     } catch (error: any) {
       console.error("Error fetching contracts:", error)

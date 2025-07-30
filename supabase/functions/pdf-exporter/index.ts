@@ -2,7 +2,7 @@
 // Self-contained PDF generation using Puppeteer
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 import puppeteer from "https://deno.land/x/puppeteer@16.2.0/mod.ts"
 
 interface PDFExportRequest {
@@ -10,7 +10,7 @@ interface PDFExportRequest {
   contractType?: string
   templateData: Record<string, any>
   options?: {
-    format?: 'A4' | 'Letter' | 'Legal'
+    format?: "A4" | "Letter" | "Legal"
     margin?: {
       top?: string
       right?: string
@@ -34,13 +34,13 @@ interface PDFExportResult {
 
 serve(async (req) => {
   // Handle CORS
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
       headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      }
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     })
   }
 
@@ -53,51 +53,54 @@ serve(async (req) => {
 
     // Validate request
     if (!contractId || !templateData) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Contract ID and template data are required'
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Contract ID and template data are required",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        },
+      )
     }
 
-    console.log('🔄 Starting PDF generation for contract:', contractId)
+    console.log("🔄 Starting PDF generation for contract:", contractId)
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Generate PDF
     const pdfResult = await generatePDF(contractId, templateData, options)
-    
+
     if (!pdfResult.success) {
       return new Response(JSON.stringify(pdfResult), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       })
     }
 
     // Upload PDF to Supabase Storage
     const uploadResult = await uploadPDFToStorage(supabase, contractId, pdfResult.pdfBuffer!)
-    
+
     if (!uploadResult.success) {
       return new Response(JSON.stringify(uploadResult), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json" },
       })
     }
 
     // Update contract with PDF URL
     await supabase
-      .from('contracts')
+      .from("contracts")
       .update({
         pdf_url: uploadResult.pdfUrl,
-        export_method: 'puppeteer',
-        exported_at: new Date().toISOString()
+        export_method: "puppeteer",
+        exported_at: new Date().toISOString(),
       })
-      .eq('id', contractId)
+      .eq("id", contractId)
 
     // Log successful export
     await logPDFExport(supabase, {
@@ -105,81 +108,83 @@ serve(async (req) => {
       success: true,
       processingTime: Date.now() - startTime,
       fileSize: pdfResult.fileSize,
-      exportMethod: 'puppeteer'
+      exportMethod: "puppeteer",
     })
 
     const result: PDFExportResult = {
       success: true,
       pdfUrl: uploadResult.pdfUrl,
       processingTime: Date.now() - startTime,
-      fileSize: pdfResult.fileSize
+      fileSize: pdfResult.fileSize,
     }
 
-    console.log('✅ PDF generation completed:', result)
+    console.log("✅ PDF generation completed:", result)
 
     return new Response(JSON.stringify(result), {
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
     })
-
   } catch (error) {
-    console.error('❌ PDF generation error:', error)
-    
+    console.error("❌ PDF generation error:", error)
+
     const processingTime = Date.now() - startTime
-    
+
     // Log failed export
     try {
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
       const supabase = createClient(supabaseUrl, supabaseServiceKey)
-      
+
       await logPDFExport(supabase, {
-        contractId: 'unknown',
+        contractId: "unknown",
         success: false,
         error: error.message,
-        processingTime
+        processingTime,
       })
     } catch (logError) {
-      console.error('Failed to log PDF export:', logError)
+      console.error("Failed to log PDF export:", logError)
     }
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: error.message,
-      processingTime
-    }), {
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    })
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        processingTime,
+      }),
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
+    )
   }
 })
 
 async function generatePDF(
-  contractId: string, 
-  templateData: Record<string, any>, 
-  options: any
+  contractId: string,
+  templateData: Record<string, any>,
+  options: any,
 ): Promise<{ success: boolean; pdfBuffer?: Uint8Array; error?: string; fileSize?: number }> {
   try {
-    console.log('📄 Generating PDF with Puppeteer...')
+    console.log("📄 Generating PDF with Puppeteer...")
 
     // Launch browser
     const browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ]
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+        "--disable-gpu",
+      ],
     })
 
     const page = await browser.newPage()
@@ -189,42 +194,41 @@ async function generatePDF(
 
     // Generate HTML content
     const htmlContent = generateContractHTML(templateData, options)
-    
+
     // Set content
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' })
+    await page.setContent(htmlContent, { waitUntil: "networkidle0" })
 
     // Configure PDF options
     const pdfOptions = {
-      format: options.format || 'A4',
+      format: options.format || "A4",
       margin: {
-        top: options.margin?.top || '20mm',
-        right: options.margin?.right || '20mm',
-        bottom: options.margin?.bottom || '20mm',
-        left: options.margin?.left || '20mm'
+        top: options.margin?.top || "20mm",
+        right: options.margin?.right || "20mm",
+        bottom: options.margin?.bottom || "20mm",
+        left: options.margin?.left || "20mm",
       },
       printBackground: options.printBackground !== false,
       preferCSSPageSize: options.preferCSSPageSize !== false,
-      landscape: options.landscape || false
+      landscape: options.landscape || false,
     }
 
     // Generate PDF
     const pdfBuffer = await page.pdf(pdfOptions)
-    
+
     await browser.close()
 
-    console.log('✅ PDF generated successfully, size:', pdfBuffer.length, 'bytes')
+    console.log("✅ PDF generated successfully, size:", pdfBuffer.length, "bytes")
 
     return {
       success: true,
       pdfBuffer,
-      fileSize: pdfBuffer.length
+      fileSize: pdfBuffer.length,
     }
-
   } catch (error) {
-    console.error('❌ PDF generation failed:', error)
+    console.error("❌ PDF generation failed:", error)
     return {
       success: false,
-      error: error.message
+      error: error.message,
     }
   }
 }
@@ -246,7 +250,7 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
     contract_end_date,
     basic_salary,
     currency,
-    special_terms
+    special_terms,
   } = templateData
 
   return `
@@ -258,8 +262,8 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
     <title>Contract - ${contract_number}</title>
     <style>
         @page {
-            size: ${options.format || 'A4'};
-            margin: ${options.margin?.top || '20mm'} ${options.margin?.right || '20mm'} ${options.margin?.bottom || '20mm'} ${options.margin?.left || '20mm'};
+            size: ${options.format || "A4"};
+            margin: ${options.margin?.top || "20mm"} ${options.margin?.right || "20mm"} ${options.margin?.bottom || "20mm"} ${options.margin?.left || "20mm"};
         }
         
         body {
@@ -377,18 +381,18 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
         <div class="party-info">
             <div class="party">
                 <div class="party-name">First Party (Client)</div>
-                <div class="party-name-arabic">${first_party_name_ar || ''}</div>
+                <div class="party-name-arabic">${first_party_name_ar || ""}</div>
                 <div class="field">
                     <span class="field-label">Name:</span>
-                    <span class="field-value">${first_party_name_en || ''}</span>
+                    <span class="field-value">${first_party_name_en || ""}</span>
                 </div>
             </div>
             <div class="party">
                 <div class="party-name">Second Party (Employer)</div>
-                <div class="party-name-arabic">${second_party_name_ar || ''}</div>
+                <div class="party-name-arabic">${second_party_name_ar || ""}</div>
                 <div class="field">
                     <span class="field-label">Name:</span>
-                    <span class="field-value">${second_party_name_en || ''}</span>
+                    <span class="field-value">${second_party_name_en || ""}</span>
                 </div>
             </div>
         </div>
@@ -398,11 +402,11 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
         <div class="section-title">EMPLOYEE INFORMATION</div>
         <div class="field">
             <span class="field-label">Name:</span>
-            <span class="field-value">${promoter_name_en || ''}</span>
+            <span class="field-value">${promoter_name_en || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">Name (Arabic):</span>
-            <span class="field-value">${promoter_name_ar || ''}</span>
+            <span class="field-value">${promoter_name_ar || ""}</span>
         </div>
     </div>
 
@@ -410,36 +414,40 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
         <div class="section-title">CONTRACT DETAILS</div>
         <div class="field">
             <span class="field-label">Job Title:</span>
-            <span class="field-value">${job_title || ''}</span>
+            <span class="field-value">${job_title || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">Department:</span>
-            <span class="field-value">${department || ''}</span>
+            <span class="field-value">${department || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">Work Location:</span>
-            <span class="field-value">${work_location || ''}</span>
+            <span class="field-value">${work_location || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">Start Date:</span>
-            <span class="field-value">${contract_start_date || ''}</span>
+            <span class="field-value">${contract_start_date || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">End Date:</span>
-            <span class="field-value">${contract_end_date || ''}</span>
+            <span class="field-value">${contract_end_date || ""}</span>
         </div>
         <div class="field">
             <span class="field-label">Basic Salary:</span>
-            <span class="field-value">${basic_salary || ''} ${currency || ''}</span>
+            <span class="field-value">${basic_salary || ""} ${currency || ""}</span>
         </div>
     </div>
 
-    ${special_terms ? `
+    ${
+      special_terms
+        ? `
     <div class="section">
         <div class="section-title">SPECIAL TERMS</div>
         <div class="field-value">${special_terms}</div>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
     <div class="signature-section">
         <div class="section-title">SIGNATURES</div>
@@ -468,23 +476,23 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
 }
 
 async function uploadPDFToStorage(
-  supabase: any, 
-  contractId: string, 
-  pdfBuffer: Uint8Array
+  supabase: any,
+  contractId: string,
+  pdfBuffer: Uint8Array,
 ): Promise<{ success: boolean; pdfUrl?: string; error?: string }> {
   try {
-    console.log('📤 Uploading PDF to Supabase Storage...')
+    console.log("📤 Uploading PDF to Supabase Storage...")
 
     // Generate filename
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
     const filename = `contracts/${contractId}/contract_${timestamp}.pdf`
 
     // Upload to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('contracts')
+      .from("contracts")
       .upload(filename, pdfBuffer, {
-        contentType: 'application/pdf',
-        cacheControl: '3600'
+        contentType: "application/pdf",
+        cacheControl: "3600",
       })
 
     if (uploadError) {
@@ -492,39 +500,34 @@ async function uploadPDFToStorage(
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('contracts')
-      .getPublicUrl(filename)
+    const { data: urlData } = supabase.storage.from("contracts").getPublicUrl(filename)
 
-    console.log('✅ PDF uploaded successfully:', urlData.publicUrl)
+    console.log("✅ PDF uploaded successfully:", urlData.publicUrl)
 
     return {
       success: true,
-      pdfUrl: urlData.publicUrl
+      pdfUrl: urlData.publicUrl,
     }
-
   } catch (error) {
-    console.error('❌ PDF upload failed:', error)
+    console.error("❌ PDF upload failed:", error)
     return {
       success: false,
-      error: error.message
+      error: error.message,
     }
   }
 }
 
 async function logPDFExport(supabase: any, data: any): Promise<void> {
   try {
-    await supabase
-      .from('contract_export_logs')
-      .insert({
-        contract_id: data.contractId,
-        success: data.success,
-        export_method: data.exportMethod || 'puppeteer',
-        error_message: data.error,
-        processing_time_ms: data.processingTime,
-        created_at: new Date().toISOString()
-      })
+    await supabase.from("contract_export_logs").insert({
+      contract_id: data.contractId,
+      success: data.success,
+      export_method: data.exportMethod || "puppeteer",
+      error_message: data.error,
+      processing_time_ms: data.processingTime,
+      created_at: new Date().toISOString(),
+    })
   } catch (error) {
-    console.error('Failed to log PDF export:', error)
+    console.error("Failed to log PDF export:", error)
   }
 }

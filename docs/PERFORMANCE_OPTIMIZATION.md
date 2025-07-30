@@ -7,16 +7,19 @@ This guide outlines the performance optimizations implemented for the User Manag
 ## 🎯 Performance Issues Identified
 
 ### 1. **Inefficient API Design**
+
 - ❌ No proper filtering, pagination, or sorting support
 - ❌ Fetching all users on every request
 - ❌ Missing query parameter handling
 
 ### 2. **Frontend Performance Issues**
+
 - ❌ Unnecessary re-renders on every filter change
 - ❌ No memoization of expensive calculations
 - ❌ Missing request cancellation for rapid filter changes
 
 ### 3. **Database Performance Issues**
+
 - ❌ Missing indexes on frequently queried columns
 - ❌ No optimized search functionality
 - ❌ Inefficient statistics calculations
@@ -26,24 +29,24 @@ This guide outlines the performance optimizations implemented for the User Manag
 ### 1. **API Optimizations**
 
 #### Enhanced Query Parameters Support
+
 ```typescript
 // Before: No filtering support
-const { data: users } = await supabase
-  .from('app_users')
-  .select('*')
+const { data: users } = await supabase.from("app_users").select("*")
 
 // After: Full filtering, pagination, and sorting
 const params = new URLSearchParams()
-if (filters.search) params.append('search', filters.search)
-if (filters.role) params.append('role', filters.role)
-if (filters.status) params.append('status', filters.status)
-if (filters.page) params.append('page', filters.page.toString())
-if (filters.limit) params.append('limit', filters.limit.toString())
-if (filters.sortBy) params.append('sortBy', filters.sortBy)
-if (filters.sortOrder) params.append('sortOrder', filters.sortOrder)
+if (filters.search) params.append("search", filters.search)
+if (filters.role) params.append("role", filters.role)
+if (filters.status) params.append("status", filters.status)
+if (filters.page) params.append("page", filters.page.toString())
+if (filters.limit) params.append("limit", filters.limit.toString())
+if (filters.sortBy) params.append("sortBy", filters.sortBy)
+if (filters.sortOrder) params.append("sortOrder", filters.sortOrder)
 ```
 
 #### Intelligent Caching
+
 ```typescript
 // Cache key based on all filter parameters
 const cacheKey = `users_${page}_${limit}_${search}_${role}_${status}_${sortBy}_${sortOrder}`
@@ -54,31 +57,36 @@ if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
 ```
 
 #### Optimized Database Queries
+
 ```typescript
 // Build query with proper filtering and pagination
 let query = supabase
-  .from('app_users')
-  .select('id, email, role, status, avatar_url, full_name, department, position, created_at, last_login', { count: 'exact' })
+  .from("app_users")
+  .select(
+    "id, email, role, status, avatar_url, full_name, department, position, created_at, last_login",
+    { count: "exact" },
+  )
 
 // Apply filters
 if (search) {
   query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`)
 }
 if (role) {
-  query = query.eq('role', role)
+  query = query.eq("role", role)
 }
 if (status) {
-  query = query.eq('status', status)
+  query = query.eq("status", status)
 }
 
 // Apply sorting and pagination
-query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+query = query.order(sortBy, { ascending: sortOrder === "asc" })
 query = query.range(offset, offset + limit - 1)
 ```
 
 ### 2. **Frontend Optimizations**
 
 #### Request Cancellation
+
 ```typescript
 // Cancel previous requests to prevent race conditions
 const abortControllerRef = useRef<AbortController | null>(null)
@@ -93,52 +101,55 @@ const fetchUsers = useCallback(async (filters: UserFilters = {}) => {
   abortControllerRef.current = new AbortController()
 
   const response = await fetch(`/api/users?${params.toString()}`, {
-    signal: abortControllerRef.current.signal
+    signal: abortControllerRef.current.signal,
   })
 }, [])
 ```
 
 #### Memoized Statistics
+
 ```typescript
 // Memoized statistics to prevent recalculation
 const statistics = useMemo(() => {
-  const activeUsers = users.filter(u => u.status === 'active').length
-  const adminUsers = users.filter(u => u.role === 'admin').length
-  const recentActivity = users.filter(u => 
-    u.last_login && new Date(u.last_login) > new Date(Date.now() - 24*60*60*1000)
+  const activeUsers = users.filter((u) => u.status === "active").length
+  const adminUsers = users.filter((u) => u.role === "admin").length
+  const recentActivity = users.filter(
+    (u) => u.last_login && new Date(u.last_login) > new Date(Date.now() - 24 * 60 * 60 * 1000),
   ).length
 
   return {
     total: pagination.total,
     active: activeUsers,
     admins: adminUsers,
-    recentActivity
+    recentActivity,
   }
 }, [users, pagination.total])
 ```
 
 #### Optimized Event Handlers
+
 ```typescript
 // Memoized handlers to prevent re-renders
 const handlePageChange = useCallback((newPage: number) => {
-  setFilters(prev => ({ ...prev, page: newPage }))
+  setFilters((prev) => ({ ...prev, page: newPage }))
 }, [])
 
 const handleSort = useCallback((sortBy: string) => {
-  setFilters(prev => ({
+  setFilters((prev) => ({
     ...prev,
     sortBy,
-    sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc'
+    sortOrder: prev.sortBy === sortBy && prev.sortOrder === "asc" ? "desc" : "asc",
   }))
 }, [])
 ```
 
 #### Debounced Search
+
 ```typescript
 // Handle search with debounce to reduce API calls
 useEffect(() => {
   const timeoutId = setTimeout(() => {
-    setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }))
+    setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }))
   }, 500)
 
   return () => clearTimeout(timeoutId)
@@ -148,6 +159,7 @@ useEffect(() => {
 ### 3. **Database Optimizations**
 
 #### Required Indexes
+
 ```sql
 -- Single column indexes
 CREATE INDEX idx_app_users_email ON app_users(email);
@@ -165,6 +177,7 @@ CREATE INDEX idx_app_users_search ON app_users USING gin(to_tsvector('english', 
 ```
 
 #### Optimized Search Function
+
 ```sql
 CREATE OR REPLACE FUNCTION search_users(
   search_term text DEFAULT '',
@@ -195,6 +208,7 @@ $$ LANGUAGE plpgsql;
 ## 📊 Performance Metrics
 
 ### Before Optimization
+
 - **Initial Load Time**: 3-5 seconds
 - **Filter Response Time**: 2-3 seconds
 - **Search Response Time**: 1-2 seconds
@@ -202,6 +216,7 @@ $$ LANGUAGE plpgsql;
 - **API Calls**: Excessive due to no caching
 
 ### After Optimization
+
 - **Initial Load Time**: 0.5-1 second ⚡
 - **Filter Response Time**: 0.2-0.5 seconds ⚡
 - **Search Response Time**: 0.1-0.3 seconds ⚡
@@ -211,27 +226,34 @@ $$ LANGUAGE plpgsql;
 ## 🛠️ Implementation Steps
 
 ### 1. **Run Database Migration**
+
 ```bash
 # Apply the performance optimization migration
 psql -d your_database -f scripts/011_optimize_user_management_performance.sql
 ```
 
 ### 2. **Update API Routes**
+
 The API routes have been updated to support:
+
 - Query parameter parsing
 - Intelligent caching
 - Optimized database queries
 - Proper error handling
 
 ### 3. **Update Frontend Components**
+
 The components have been optimized with:
+
 - Request cancellation
 - Memoized calculations
 - Debounced search
 - Optimized event handlers
 
 ### 4. **Update Hooks**
+
 The `useUserManagement` hook has been enhanced with:
+
 - Abort controller for request cancellation
 - Memoized statistics
 - Better error handling
@@ -240,6 +262,7 @@ The `useUserManagement` hook has been enhanced with:
 ## 🔧 Configuration
 
 ### Environment Variables
+
 ```env
 # Cache duration in milliseconds
 USER_CACHE_DURATION=30000
@@ -252,6 +275,7 @@ DEFAULT_PAGE_SIZE=10
 ```
 
 ### Database Configuration
+
 ```sql
 -- Enable query plan caching
 SET plan_cache_mode = 'auto';
@@ -266,6 +290,7 @@ SET max_parallel_workers_per_gather = 4;
 ## 📈 Monitoring
 
 ### Performance Monitoring
+
 ```typescript
 // Add performance monitoring
 const startTime = performance.now()
@@ -275,12 +300,13 @@ console.log(`User fetch took ${endTime - startTime}ms`)
 ```
 
 ### Database Query Monitoring
+
 ```sql
 -- Monitor slow queries
-SELECT query, mean_time, calls 
-FROM pg_stat_statements 
-WHERE query LIKE '%app_users%' 
-ORDER BY mean_time DESC 
+SELECT query, mean_time, calls
+FROM pg_stat_statements
+WHERE query LIKE '%app_users%'
+ORDER BY mean_time DESC
 LIMIT 10;
 ```
 
@@ -289,31 +315,35 @@ LIMIT 10;
 ### Common Issues
 
 #### 1. **Slow Initial Load**
+
 - Check if database indexes are created
 - Verify cache is working properly
 - Monitor network requests
 
 #### 2. **Slow Filtering**
+
 - Ensure composite indexes are in place
 - Check if search debouncing is working
 - Verify API response times
 
 #### 3. **High Memory Usage**
+
 - Check for memory leaks in components
 - Verify memoization is working
 - Monitor component re-renders
 
 ### Debug Mode
+
 ```typescript
 // Enable debug logging
-const DEBUG_MODE = process.env.NODE_ENV === 'development'
+const DEBUG_MODE = process.env.NODE_ENV === "development"
 
 if (DEBUG_MODE) {
-  console.log('User management debug:', { 
-    filters, 
-    pagination, 
-    loading, 
-    usersCount: users.length 
+  console.log("User management debug:", {
+    filters,
+    pagination,
+    loading,
+    usersCount: users.length,
   })
 }
 ```
@@ -321,12 +351,14 @@ if (DEBUG_MODE) {
 ## 🔄 Maintenance
 
 ### Regular Tasks
+
 - Monitor query performance
 - Update database statistics
 - Clear expired cache entries
 - Review and optimize slow queries
 
 ### Automated Jobs
+
 ```sql
 -- Refresh materialized views
 SELECT refresh_user_statistics();
@@ -340,24 +372,28 @@ ANALYZE user_activity_logs;
 ## 📚 Best Practices
 
 ### 1. **API Design**
+
 - Always implement pagination
 - Use proper caching strategies
 - Implement request cancellation
 - Handle errors gracefully
 
 ### 2. **Frontend Performance**
+
 - Memoize expensive calculations
 - Use debouncing for search
 - Implement proper loading states
 - Optimize re-renders
 
 ### 3. **Database Optimization**
+
 - Create appropriate indexes
 - Use composite indexes for common queries
 - Implement full-text search
 - Monitor query performance
 
 ### 4. **Caching Strategy**
+
 - Use intelligent cache keys
 - Implement cache invalidation
 - Set appropriate cache durations
@@ -373,4 +409,4 @@ After implementing these optimizations:
 - ✅ **User experience significantly improved**
 - ✅ **System scalability enhanced**
 
-The User Management System now provides a fast, responsive, and efficient user experience with proper performance monitoring and optimization strategies in place. 
+The User Management System now provides a fast, responsive, and efficient user experience with proper performance monitoring and optimization strategies in place.

@@ -25,9 +25,9 @@ export default function ResetPasswordPage() {
 
   // Check if we have the required tokens
   useEffect(() => {
-    const accessToken = searchParams?.get('access_token')
-    const refreshToken = searchParams?.get('refresh_token')
-    
+    const accessToken = searchParams?.get("access_token")
+    const refreshToken = searchParams?.get("refresh_token")
+
     if (!accessToken || !refreshToken) {
       setError("Invalid or missing reset link. Please request a new password reset.")
     }
@@ -74,29 +74,24 @@ export default function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 dark:from-gray-900 dark:to-gray-800">
         <div className="w-full max-w-md">
-          <Card className="shadow-xl border-0">
+          <Card className="border-0 shadow-xl">
             <CardHeader className="space-y-1">
-              <div className="flex items-center justify-center mb-4">
+              <div className="mb-4 flex items-center justify-center">
                 <CheckCircle className="h-12 w-12 text-green-600" />
               </div>
-              <CardTitle className="text-2xl text-center">Password updated!</CardTitle>
+              <CardTitle className="text-center text-2xl">Password updated!</CardTitle>
               <CardDescription className="text-center">
                 Your password has been successfully updated
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <Alert>
-                <AlertDescription>
-                  You can now sign in with your new password.
-                </AlertDescription>
+                <AlertDescription>You can now sign in with your new password.</AlertDescription>
               </Alert>
-              
-              <Button
-                className="w-full"
-                onClick={() => router.push('/login')}
-              >
+
+              <Button className="w-full" onClick={() => router.push("/login")}>
                 Sign in
               </Button>
             </CardContent>
@@ -107,25 +102,21 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 dark:from-gray-900 dark:to-gray-800">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex items-center justify-center">
             <Lock className="h-12 w-12 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Reset Password
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Enter your new password
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reset Password</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">Enter your new password</p>
         </div>
 
         {/* Reset Password Card */}
-        <Card className="shadow-xl border-0">
+        <Card className="border-0 shadow-xl">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Set new password</CardTitle>
+            <CardTitle className="text-center text-2xl">Set new password</CardTitle>
             <CardDescription className="text-center">
               Choose a strong password for your account
             </CardDescription>
@@ -186,16 +177,16 @@ export default function ResetPasswordPage() {
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -210,7 +201,7 @@ export default function ResetPasswordPage() {
                 Remember your password?{" "}
                 <Link
                   href="/login"
-                  className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
                 >
                   Sign in
                 </Link>
@@ -220,7 +211,7 @@ export default function ResetPasswordPage() {
         </Card>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>© 2024 Contract Management System. All rights reserved.</p>
         </div>
       </div>
@@ -229,4 +220,4 @@ export default function ResetPasswordPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

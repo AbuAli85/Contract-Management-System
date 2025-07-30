@@ -1,12 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useRef } from "react"
-import { getSupabaseClient, createRealtimeChannel, subscribeToChannel, handleRealtimeError } from "@/lib/supabase"
+import {
+  getSupabaseClient,
+  createRealtimeChannel,
+  subscribeToChannel,
+  handleRealtimeError,
+} from "@/lib/supabase"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/src/components/auth/simple-auth-provider"
 import { useFormContext } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
-import type { RealtimeChannel } from '@supabase/supabase-js'
+import type { RealtimeChannel } from "@supabase/supabase-js"
 
 const fetchPromoters = async (): Promise<Promoter[]> => {
   const supabaseClient = getSupabaseClient()
@@ -94,15 +99,17 @@ export const usePromoters = (enableRealtime: boolean = true) => {
           }
           if (status === "CHANNEL_ERROR") {
             const errorType = handleRealtimeError(err, "promoters")
-            devLog(`Promoters channel error (${status}): ${err?.message ?? "Unknown error"} - Type: ${errorType}`)
-            
+            devLog(
+              `Promoters channel error (${status}): ${err?.message ?? "Unknown error"} - Type: ${errorType}`,
+            )
+
             // Check if it's an authentication error
             if (errorType === "AUTH_ERROR") {
               devLog("Authentication error detected, will retry after auth check")
               // Don't retry immediately, let the auth state change handler deal with it
               return
             }
-              
+
             // Retry connection if we haven't exceeded max retries
             if (retryCount < maxRetries) {
               retryCount++
@@ -118,11 +125,13 @@ export const usePromoters = (enableRealtime: boolean = true) => {
           }
           if (status === "TIMED_OUT") {
             devLog(`Subscription timed out (${status})`)
-            
+
             // Retry connection if we haven't exceeded max retries
             if (retryCount < maxRetries) {
               retryCount++
-              devLog(`Retrying promoters subscription after timeout (${retryCount}/${maxRetries})...`)
+              devLog(
+                `Retrying promoters subscription after timeout (${retryCount}/${maxRetries})...`,
+              )
               retryTimeoutRef.current = setTimeout(() => {
                 isSubscribed = false
                 setupSubscription()
@@ -149,7 +158,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
         clearTimeout(retryTimeoutRef.current)
         retryTimeoutRef.current = null
       }
-      
+
       // Clean up channel
       isSubscribed = false
       if (channelRef.current) {

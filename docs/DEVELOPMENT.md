@@ -70,8 +70,8 @@ interface ButtonProps {
 
 export function Button({ variant = 'primary', children, onClick }: ButtonProps) {
   return (
-    <button 
-      className={`btn btn-${variant}`} 
+    <button
+      className={`btn btn-${variant}`}
       onClick={onClick}
     >
       {children}
@@ -147,26 +147,23 @@ import type { CreateUserRequest } from "@/lib/types/api"
 export async function POST(request: NextRequest) {
   try {
     const body: CreateUserRequest = await request.json()
-    
+
     // Validate request
     const validation = validateCreateUserRequest(body)
     if (!validation.isValid) {
       return NextResponse.json(
         { message: "Validation failed", errors: validation.errors },
-        { status: 400 }
+        { status: 400 },
       )
     }
-    
+
     // Process request
     // ...
-    
+
     return NextResponse.json({ message: "Success" }, { status: 201 })
   } catch (error) {
     console.error("API Error:", error)
-    return NextResponse.json(
-      { message: "Internal server error" },
-      { status: 500 }
-    )
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
   }
 }
 ```
@@ -193,7 +190,7 @@ interface DataTableProps<T> {
 export function DataTable<T>({ data, columns, loading, error }: DataTableProps<T>) {
   if (loading) return <LoadingSpinner />
   if (error) return <ErrorMessage message={error} />
-  
+
   return (
     <Table>
       {/* Table implementation */}
@@ -221,11 +218,11 @@ describe('Button', () => {
     render(<Button>Click me</Button>)
     expect(screen.getByText('Click me')).toBeInTheDocument()
   })
-  
+
   it('calls onClick when clicked', () => {
     const handleClick = jest.fn()
     render(<Button onClick={handleClick}>Click me</Button>)
-    
+
     fireEvent.click(screen.getByText('Click me'))
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
@@ -244,9 +241,9 @@ describe('Button', () => {
 
 ```typescript
 // hooks/use-realtime-contracts.ts
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Contract } from '@/lib/types'
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabase"
+import type { Contract } from "@/lib/types"
 
 export function useRealtimeContracts() {
   const [contracts, setContracts] = useState<Contract[]>([])
@@ -256,13 +253,12 @@ export function useRealtimeContracts() {
   useEffect(() => {
     // Initial fetch
     fetchContracts()
-    
+
     // Set up real-time subscription
     const channel = supabase
-      .channel('contracts')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'contracts' },
-        () => fetchContracts()
+      .channel("contracts")
+      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () =>
+        fetchContracts(),
       )
       .subscribe()
 
@@ -415,10 +411,10 @@ docs(readme): update installation instructions
 
 ```typescript
 // Use structured logging
-console.log('API Request:', {
-  method: 'POST',
-  endpoint: '/api/contracts',
-  data: requestBody
+console.log("API Request:", {
+  method: "POST",
+  endpoint: "/api/contracts",
+  data: requestBody,
 })
 ```
 
@@ -444,4 +440,4 @@ console.log('API Request:', {
 4. Update documentation
 5. Submit pull requests
 
-For questions or issues, please create an issue in the repository. 
+For questions or issues, please create an issue in the repository.

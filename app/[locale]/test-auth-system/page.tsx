@@ -1,42 +1,46 @@
-'use client'
+"use client"
 
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
-import { usePermissions } from '@/hooks/use-permissions'
-import { useRBAC } from '@/src/components/auth/rbac-provider'
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle, XCircle, AlertTriangle, Loader2, RefreshCw, User, Shield, Settings } from "lucide-react"
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  User,
+  Shield,
+  Settings,
+} from "lucide-react"
 import { useState } from "react"
 
 export default function TestAuthSystemPage() {
-  const { 
-    user, 
-    profile, 
-    roles, 
-    loading, 
-    mounted, 
+  const {
+    user,
+    profile,
+    roles,
+    loading,
+    mounted,
     session,
     signIn,
     signOut,
     refreshSession,
-    forceRefreshRole
+    forceRefreshRole,
   } = useAuth()
-  
-  const { 
-    userRoles, 
-    hasRole, 
-    isLoading: rbacLoading,
-    refreshRoles 
-  } = useRBAC()
-  
-  const { 
-    role, 
-    roles: permissionRoles, 
+
+  const { userRoles, hasRole, isLoading: rbacLoading, refreshRoles } = useRBAC()
+
+  const {
+    role,
+    roles: permissionRoles,
     isLoading: permissionsLoading,
-    forceRefresh 
+    forceRefresh,
   } = usePermissions()
 
   // Get auth provider roles for comparison
@@ -55,56 +59,56 @@ export default function TestAuthSystemPage() {
 
   const runAuthTests = async () => {
     setIsRunningTests(true)
-    
+
     const results = {
       authProvider: false,
       rbacProvider: false,
       permissionsHook: false,
       sessionValid: false,
       profileLoaded: false,
-      rolesLoaded: false
+      rolesLoaded: false,
     }
 
     // Test 1: Auth Provider
     try {
       results.authProvider = !loading && mounted && user !== null
     } catch (error) {
-      console.error('Auth Provider test failed:', error)
+      console.error("Auth Provider test failed:", error)
     }
 
     // Test 2: RBAC Provider
     try {
       results.rbacProvider = !rbacLoading && userRoles.length > 0
     } catch (error) {
-      console.error('RBAC Provider test failed:', error)
+      console.error("RBAC Provider test failed:", error)
     }
 
     // Test 3: Permissions Hook
     try {
       results.permissionsHook = !permissionsLoading && role !== undefined
     } catch (error) {
-      console.error('Permissions Hook test failed:', error)
+      console.error("Permissions Hook test failed:", error)
     }
 
     // Test 4: Session Valid
     try {
       results.sessionValid = session !== null && session.user !== null
     } catch (error) {
-      console.error('Session test failed:', error)
+      console.error("Session test failed:", error)
     }
 
     // Test 5: Profile Loaded
     try {
       results.profileLoaded = profile !== null && profile.id !== undefined
     } catch (error) {
-      console.error('Profile test failed:', error)
+      console.error("Profile test failed:", error)
     }
 
     // Test 6: Roles Loaded
     try {
       results.rolesLoaded = roles.length > 0
     } catch (error) {
-      console.error('Roles test failed:', error)
+      console.error("Roles test failed:", error)
     }
 
     setTestResults(results)
@@ -113,15 +117,10 @@ export default function TestAuthSystemPage() {
 
   const handleRefreshAll = async () => {
     try {
-      await Promise.all([
-        refreshSession(),
-        refreshRoles(),
-        forceRefreshRole(),
-        forceRefresh()
-      ])
-      console.log('✅ All refresh operations completed')
+      await Promise.all([refreshSession(), refreshRoles(), forceRefreshRole(), forceRefresh()])
+      console.log("✅ All refresh operations completed")
     } catch (error) {
-      console.error('❌ Refresh operations failed:', error)
+      console.error("❌ Refresh operations failed:", error)
     }
   }
 
@@ -135,7 +134,9 @@ export default function TestAuthSystemPage() {
 
   const getStatusBadge = (status: boolean) => {
     return status ? (
-      <Badge variant="default" className="bg-green-500">PASS</Badge>
+      <Badge variant="default" className="bg-green-500">
+        PASS
+      </Badge>
     ) : (
       <Badge variant="destructive">FAIL</Badge>
     )
@@ -157,14 +158,12 @@ export default function TestAuthSystemPage() {
             <Settings className="h-5 w-5" />
             Test Controls
           </CardTitle>
-          <CardDescription>
-            Run tests and refresh authentication state
-          </CardDescription>
+          <CardDescription>Run tests and refresh authentication state</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4">
-            <Button 
-              onClick={runAuthTests} 
+            <Button
+              onClick={runAuthTests}
               disabled={isRunningTests}
               className="flex items-center gap-2"
             >
@@ -175,8 +174,8 @@ export default function TestAuthSystemPage() {
               )}
               Run All Tests
             </Button>
-            
-            <Button 
+
+            <Button
               onClick={handleRefreshAll}
               variant="outline"
               className="flex items-center gap-2"
@@ -196,18 +195,16 @@ export default function TestAuthSystemPage() {
               <CheckCircle className="h-5 w-5" />
               Test Results
             </CardTitle>
-            <CardDescription>
-              Results of authentication system tests
-            </CardDescription>
+            <CardDescription>Results of authentication system tests</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {Object.entries(testResults).map(([test, result]) => (
-                <div key={test} className="flex items-center justify-between p-3 border rounded-lg">
+                <div key={test} className="flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-3">
                     {getStatusIcon(result)}
                     <span className="font-medium capitalize">
-                      {test.replace(/([A-Z])/g, ' $1').trim()}
+                      {test.replace(/([A-Z])/g, " $1").trim()}
                     </span>
                   </div>
                   {getStatusBadge(result)}
@@ -225,9 +222,7 @@ export default function TestAuthSystemPage() {
             <User className="h-5 w-5" />
             Auth Provider Status
           </CardTitle>
-          <CardDescription>
-            Current state of the authentication provider
-          </CardDescription>
+          <CardDescription>Current state of the authentication provider</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -260,10 +255,16 @@ export default function TestAuthSystemPage() {
           {user && (
             <div className="space-y-2">
               <h4 className="font-medium">User Details:</h4>
-              <div className="text-sm space-y-1">
-                <div><strong>ID:</strong> {user.id}</div>
-                <div><strong>Email:</strong> {user.email}</div>
-                <div><strong>Email Verified:</strong> {user.email_confirmed_at ? "Yes" : "No"}</div>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <strong>ID:</strong> {user.id}
+                </div>
+                <div>
+                  <strong>Email:</strong> {user.email}
+                </div>
+                <div>
+                  <strong>Email Verified:</strong> {user.email_confirmed_at ? "Yes" : "No"}
+                </div>
               </div>
             </div>
           )}
@@ -271,11 +272,20 @@ export default function TestAuthSystemPage() {
           {profile && (
             <div className="space-y-2">
               <h4 className="font-medium">Profile Details:</h4>
-              <div className="text-sm space-y-1">
-                <div><strong>Full Name:</strong> {profile.full_name || "Not set"}</div>
-                <div><strong>Role:</strong> {profile.role}</div>
-                <div><strong>Created At:</strong> {profile.created_at ? new Date(profile.created_at).toLocaleString() : "Not set"}</div>
-                <div><strong>Avatar URL:</strong> {profile.avatar_url ? "Set" : "Not set"}</div>
+              <div className="space-y-1 text-sm">
+                <div>
+                  <strong>Full Name:</strong> {profile.full_name || "Not set"}
+                </div>
+                <div>
+                  <strong>Role:</strong> {profile.role}
+                </div>
+                <div>
+                  <strong>Created At:</strong>{" "}
+                  {profile.created_at ? new Date(profile.created_at).toLocaleString() : "Not set"}
+                </div>
+                <div>
+                  <strong>Avatar URL:</strong> {profile.avatar_url ? "Set" : "Not set"}
+                </div>
               </div>
             </div>
           )}
@@ -289,9 +299,7 @@ export default function TestAuthSystemPage() {
             <Shield className="h-5 w-5" />
             RBAC Provider Status
           </CardTitle>
-          <CardDescription>
-            Role-based access control provider state
-          </CardDescription>
+          <CardDescription>Role-based access control provider state</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -314,15 +322,15 @@ export default function TestAuthSystemPage() {
             <div className="grid grid-cols-3 gap-2">
               <div className="flex items-center gap-2">
                 <span className="text-sm">Admin:</span>
-                {getStatusIcon(hasRole('admin'))}
+                {getStatusIcon(hasRole("admin"))}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm">Manager:</span>
-                {getStatusIcon(hasRole('manager'))}
+                {getStatusIcon(hasRole("manager"))}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm">User:</span>
-                {getStatusIcon(hasRole('user'))}
+                {getStatusIcon(hasRole("user"))}
               </div>
             </div>
           </div>
@@ -347,9 +355,7 @@ export default function TestAuthSystemPage() {
             <Shield className="h-5 w-5" />
             Permissions Hook Status
           </CardTitle>
-          <CardDescription>
-            Permissions system state and capabilities
-          </CardDescription>
+          <CardDescription>Permissions system state and capabilities</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -372,19 +378,19 @@ export default function TestAuthSystemPage() {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="flex items-center gap-2">
                 <span>Contract Create:</span>
-                {getStatusIcon(permissionRoles.some(r => r === 'admin' || r === 'manager'))}
+                {getStatusIcon(permissionRoles.some((r) => r === "admin" || r === "manager"))}
               </div>
               <div className="flex items-center gap-2">
                 <span>User Management:</span>
-                {getStatusIcon(permissionRoles.some(r => r === 'admin'))}
+                {getStatusIcon(permissionRoles.some((r) => r === "admin"))}
               </div>
               <div className="flex items-center gap-2">
                 <span>Analytics Access:</span>
-                {getStatusIcon(permissionRoles.some(r => r === 'admin' || r === 'manager'))}
+                {getStatusIcon(permissionRoles.some((r) => r === "admin" || r === "manager"))}
               </div>
               <div className="flex items-center gap-2">
                 <span>System Settings:</span>
-                {getStatusIcon(permissionRoles.some(r => r === 'admin'))}
+                {getStatusIcon(permissionRoles.some((r) => r === "admin"))}
               </div>
             </div>
           </div>
@@ -396,7 +402,8 @@ export default function TestAuthSystemPage() {
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            No user is currently authenticated. Please log in to test the full authentication system.
+            No user is currently authenticated. Please log in to test the full authentication
+            system.
           </AlertDescription>
         </Alert>
       )}
@@ -405,41 +412,47 @@ export default function TestAuthSystemPage() {
       <Card>
         <CardHeader>
           <CardTitle>Debug Information</CardTitle>
-          <CardDescription>
-            Raw data for debugging purposes
-          </CardDescription>
+          <CardDescription>Raw data for debugging purposes</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium mb-2">Session Data:</h4>
-              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
+              <h4 className="mb-2 font-medium">Session Data:</h4>
+              <pre className="overflow-auto rounded bg-gray-100 p-2 text-xs">
                 {JSON.stringify(session, null, 2)}
               </pre>
             </div>
-            
+
             <div>
-              <h4 className="font-medium mb-2">Profile Data:</h4>
-              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
+              <h4 className="mb-2 font-medium">Profile Data:</h4>
+              <pre className="overflow-auto rounded bg-gray-100 p-2 text-xs">
                 {JSON.stringify(profile, null, 2)}
               </pre>
             </div>
-            
+
             <div>
-              <h4 className="font-medium mb-2">Roles Data:</h4>
-              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
-                {JSON.stringify({ 
-                  authRoles: authRoles, 
-                  rbacRoles: userRoles, 
-                  permissionRoles: permissionRoles,
-                  roleSync: {
-                    authProvider: authRoles,
-                    rbacProvider: userRoles,
-                    permissionsHook: permissionRoles,
-                    allSynced: authRoles.length > 0 && userRoles.length > 0 && permissionRoles.length > 0 && 
-                               authRoles[0] === userRoles[0] && userRoles[0] === permissionRoles[0]
-                  }
-                }, null, 2)}
+              <h4 className="mb-2 font-medium">Roles Data:</h4>
+              <pre className="overflow-auto rounded bg-gray-100 p-2 text-xs">
+                {JSON.stringify(
+                  {
+                    authRoles: authRoles,
+                    rbacRoles: userRoles,
+                    permissionRoles: permissionRoles,
+                    roleSync: {
+                      authProvider: authRoles,
+                      rbacProvider: userRoles,
+                      permissionsHook: permissionRoles,
+                      allSynced:
+                        authRoles.length > 0 &&
+                        userRoles.length > 0 &&
+                        permissionRoles.length > 0 &&
+                        authRoles[0] === userRoles[0] &&
+                        userRoles[0] === permissionRoles[0],
+                    },
+                  },
+                  null,
+                  2,
+                )}
               </pre>
             </div>
           </div>
@@ -450,4 +463,4 @@ export default function TestAuthSystemPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

@@ -7,6 +7,7 @@ This system provides automated contract generation using Make.com (formerly Inte
 ## 🏗️ Architecture
 
 ### Components
+
 1. **Contract Type Configuration** (`lib/contract-type-config.ts`)
 2. **Make.com Template Configuration** (`lib/makecom-template-config.ts`)
 3. **API Endpoints** (`app/api/contracts/makecom/generate/route.ts`)
@@ -14,6 +15,7 @@ This system provides automated contract generation using Make.com (formerly Inte
 5. **Webhook Integration** (`app/api/webhook/makecom/route.ts`)
 
 ### Workflow
+
 ```
 Contract Creation → Database Storage → Make.com Webhook → Google Docs → PDF Generation → Storage → Database Update
 ```
@@ -36,6 +38,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ### 2. Google Docs Template Setup
 
 #### Step 1: Create Google Docs Templates
+
 1. Create a new Google Doc for each contract type
 2. Add placeholders using the format: `{{placeholder_name}}`
 3. Copy the document ID from the URL
@@ -44,16 +47,19 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 #### Step 2: Available Placeholders
 
 **Employee Information:**
+
 - `{{employee_name_en}}` - Employee name in English
 - `{{employee_name_ar}}` - Employee name in Arabic
 - `{{employee_id_number}}` - Employee ID card number
 
 **Employer Information:**
+
 - `{{employer_name_en}}` - Company name in English
 - `{{employer_name_ar}}` - Company name in Arabic
 - `{{employer_crn}}` - Commercial registration number
 
 **Contract Details:**
+
 - `{{contract_number}}` - Unique contract identifier
 - `{{job_title}}` - Position title
 - `{{department}}` - Department/division
@@ -64,6 +70,7 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 - `{{work_location}}` - Primary work location
 
 **Example Google Docs Template:**
+
 ```
 EMPLOYMENT CONTRACT
 
@@ -90,6 +97,7 @@ WORK LOCATION: {{work_location}}
 ### 3. Make.com Scenario Setup
 
 #### Module 1: Webhook Trigger
+
 ```json
 {
   "webhook": {
@@ -101,6 +109,7 @@ WORK LOCATION: {{work_location}}
 ```
 
 #### Module 2: HTTP Request (Get Contract Data)
+
 ```json
 {
   "http": {
@@ -114,6 +123,7 @@ WORK LOCATION: {{work_location}}
 ```
 
 #### Module 3: Google Docs (Create from Template)
+
 ```json
 {
   "google_docs": {
@@ -132,6 +142,7 @@ WORK LOCATION: {{work_location}}
 ```
 
 #### Module 4: Google Docs (Export as PDF)
+
 ```json
 {
   "google_docs": {
@@ -143,6 +154,7 @@ WORK LOCATION: {{work_location}}
 ```
 
 #### Module 5: Supabase (Upload PDF)
+
 ```json
 {
   "supabase": {
@@ -155,6 +167,7 @@ WORK LOCATION: {{work_location}}
 ```
 
 #### Module 6: HTTP Request (Update Contract)
+
 ```json
 {
   "http": {
@@ -247,6 +260,7 @@ Update `lib/contract-type-config.ts`:
 ## 🔧 Make.com Functions Reference
 
 ### Safe Template Functions
+
 ```javascript
 // Text replacement (compatible with Make.com)
 {{field.replace(/ /g, "_")}}           // Replace spaces with underscores
@@ -267,6 +281,7 @@ Update `lib/contract-type-config.ts`:
 ```
 
 ### Avoid These Functions
+
 ❌ `replaceAll()` - Not supported in Make.com
 ❌ `includes()` - Use `indexOf() > -1` instead
 ❌ Arrow functions - Use regular functions
@@ -301,22 +316,22 @@ Update `lib/contract-type-config.ts`:
 
 ```javascript
 // Generate contract with Make.com
-const response = await fetch('/api/contracts/makecom/generate', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/contracts/makecom/generate", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    contractType: 'oman-unlimited-makecom',
+    contractType: "oman-unlimited-makecom",
     contractData: {
-      first_party_id: 'company-id',
-      second_party_id: 'employer-id', 
-      promoter_id: 'employee-id',
-      contract_start_date: '2025-01-01',
-      job_title: 'Software Engineer',
+      first_party_id: "company-id",
+      second_party_id: "employer-id",
+      promoter_id: "employee-id",
+      contract_start_date: "2025-01-01",
+      job_title: "Software Engineer",
       basic_salary: 2500,
-      currency: 'OMR'
+      currency: "OMR",
     },
-    triggerMakecom: true
-  })
+    triggerMakecom: true,
+  }),
 })
 ```
 
@@ -347,11 +362,13 @@ const response = await fetch('/api/contracts/makecom/generate', {
 ### Debugging Steps
 
 1. **Check API Response**
+
    ```bash
    curl -X GET "https://your-domain.com/api/contracts/makecom/generate?action=types"
    ```
 
 2. **Test Template Configuration**
+
    ```bash
    curl -X GET "https://your-domain.com/api/contracts/makecom/generate?action=template&type=oman-unlimited-makecom"
    ```
@@ -364,12 +381,14 @@ const response = await fetch('/api/contracts/makecom/generate', {
 ## 📊 Monitoring and Analytics
 
 ### Contract Generation Metrics
+
 - Success/failure rates
 - Processing times
 - Template usage statistics
 - Error patterns
 
 ### Make.com Monitoring
+
 - Webhook trigger frequency
 - Execution success rates
 - Error logs and debugging

@@ -18,8 +18,9 @@ Our testing strategy follows the testing pyramid approach:
 ```
 
 ### Distribution
+
 - **Unit Tests**: 70% of test effort
-- **Integration Tests**: 20% of test effort  
+- **Integration Tests**: 20% of test effort
 - **E2E Tests**: 10% of test effort
 
 ## Test Categories
@@ -29,6 +30,7 @@ Our testing strategy follows the testing pyramid approach:
 **Purpose**: Test individual functions, components, and utilities in isolation.
 
 **Coverage Areas**:
+
 - React components and hooks
 - Utility functions and helpers
 - Business logic and validators
@@ -40,12 +42,13 @@ Our testing strategy follows the testing pyramid approach:
 **Location**: `tests/` and `__tests__/` directories
 
 **Example**:
+
 ```typescript
-describe('Auth Provider', () => {
-  it('should handle auth state changes', async () => {
+describe("Auth Provider", () => {
+  it("should handle auth state changes", async () => {
     // Test implementation
-  });
-});
+  })
+})
 ```
 
 ### 2. Integration Tests
@@ -53,6 +56,7 @@ describe('Auth Provider', () => {
 **Purpose**: Test interactions between multiple components and external services.
 
 **Coverage Areas**:
+
 - API endpoints and server actions
 - Database interactions
 - Authentication flows
@@ -64,12 +68,13 @@ describe('Auth Provider', () => {
 **Location**: `tests/*.integration.test.tsx`
 
 **Example**:
+
 ```typescript
-describe('Promoter Management - Integration Tests', () => {
-  it('should complete full promoter lifecycle', async () => {
+describe("Promoter Management - Integration Tests", () => {
+  it("should complete full promoter lifecycle", async () => {
     // Test implementation
-  });
-});
+  })
+})
 ```
 
 ### 3. E2E Tests
@@ -77,6 +82,7 @@ describe('Promoter Management - Integration Tests', () => {
 **Purpose**: Test complete user journeys from start to finish.
 
 **Coverage Areas**:
+
 - Login/logout flows
 - Promoter management workflows
 - Contract generation and export
@@ -88,13 +94,14 @@ describe('Promoter Management - Integration Tests', () => {
 **Location**: `cypress/e2e/`
 
 **Example**:
+
 ```typescript
-describe('Authentication Flow', () => {
-  it('should successfully login with valid credentials', () => {
-    cy.login(Cypress.env('TEST_USER_EMAIL'), Cypress.env('TEST_USER_PASSWORD'));
+describe("Authentication Flow", () => {
+  it("should successfully login with valid credentials", () => {
+    cy.login(Cypress.env("TEST_USER_EMAIL"), Cypress.env("TEST_USER_PASSWORD"))
     // Test implementation
-  });
-});
+  })
+})
 ```
 
 ## Test Configuration
@@ -104,6 +111,7 @@ describe('Authentication Flow', () => {
 **File**: `jest.config.mjs`
 
 **Key Features**:
+
 - Coverage thresholds (80% minimum)
 - Module mapping for clean imports
 - Test environment setup
@@ -125,7 +133,7 @@ const config = {
     "lib/**/*.{ts,tsx}",
     // ... more patterns
   ],
-};
+}
 ```
 
 ### Cypress Configuration
@@ -133,6 +141,7 @@ const config = {
 **File**: `cypress.config.ts`
 
 **Key Features**:
+
 - Custom commands for common operations
 - Environment variable management
 - Screenshot and video capture
@@ -145,6 +154,7 @@ const config = {
 **Location**: `cypress/fixtures/`
 
 **Types**:
+
 - `test-promoters.csv` - Sample promoter data
 - `test-contracts.json` - Sample contract data
 - `test-users.json` - Test user accounts
@@ -154,6 +164,7 @@ const config = {
 **Approach**: Isolated test databases with fresh data for each test run.
 
 **Benefits**:
+
 - Predictable test results
 - No test interference
 - Fast test execution
@@ -163,11 +174,12 @@ const config = {
 **Strategy**: Automatic cleanup after each test suite.
 
 **Implementation**:
+
 ```typescript
 beforeEach(() => {
-  cy.clearTestData();
-  cy.seedTestData();
-});
+  cy.clearTestData()
+  cy.seedTestData()
+})
 ```
 
 ## Custom Commands
@@ -176,25 +188,25 @@ beforeEach(() => {
 
 ```typescript
 // Login with credentials
-cy.login(email, password);
+cy.login(email, password)
 
 // Logout
-cy.logout();
+cy.logout()
 
 // Check permissions
-cy.checkPermissions(['read', 'write']);
+cy.checkPermissions(["read", "write"])
 ```
 
 ### Data Management Commands
 
 ```typescript
 // Create test data
-cy.createTestPromoter();
-cy.createTestContract();
+cy.createTestPromoter()
+cy.createTestContract()
 
 // Clear test data
-cy.clearTestData();
-cy.seedTestData();
+cy.clearTestData()
+cy.seedTestData()
 ```
 
 ### Form Interaction Commands
@@ -202,17 +214,17 @@ cy.seedTestData();
 ```typescript
 // Fill form fields
 cy.fillForm({
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john@example.com'
-});
+  firstName: "John",
+  lastName: "Doe",
+  email: "john@example.com",
+})
 
 // Submit form
-cy.submitForm();
+cy.submitForm()
 
 // Verify success/error
-cy.verifySuccess('User created successfully');
-cy.verifyError('Email already exists');
+cy.verifySuccess("User created successfully")
+cy.verifyError("Email already exists")
 ```
 
 ## Coverage Reporting
@@ -230,11 +242,13 @@ pnpm run test:coverage:check
 ### CI/CD Integration
 
 **Codecov Integration**:
+
 - Automatic upload of coverage reports
 - PR comments with coverage changes
 - Coverage badges in README
 
 **Coverage Thresholds**:
+
 - **Lines**: 80%
 - **Functions**: 80%
 - **Branches**: 80%
@@ -247,11 +261,13 @@ pnpm run test:coverage:check
 **Purpose**: Verify Row Level Security policies are correctly enforced.
 
 **Implementation**:
+
 ```bash
 pnpm run supabase:test-rls
 ```
 
 **Coverage**:
+
 - User-specific data access
 - Role-based permissions
 - Admin access verification
@@ -260,6 +276,7 @@ pnpm run supabase:test-rls
 ### Vulnerability Scanning
 
 **Tools**:
+
 - `pnpm audit` - Dependency vulnerability scanning
 - Custom security tests for XSS prevention
 - SQL injection protection tests
@@ -271,6 +288,7 @@ pnpm run supabase:test-rls
 **Tools**: Custom performance test scripts
 
 **Metrics**:
+
 - Response times
 - Throughput
 - Memory usage
@@ -279,6 +297,7 @@ pnpm run supabase:test-rls
 ### E2E Performance
 
 **Cypress Performance**:
+
 - Page load times
 - API response times
 - User interaction responsiveness
@@ -288,6 +307,7 @@ pnpm run supabase:test-rls
 ### 1. Test Organization
 
 **Structure**:
+
 ```
 tests/
 ├── auth.test.tsx              # Unit tests
@@ -311,6 +331,7 @@ cypress/e2e/
 ### 3. Test Data
 
 **Principles**:
+
 - Use realistic but minimal test data
 - Avoid hardcoded values
 - Generate unique identifiers
@@ -319,6 +340,7 @@ cypress/e2e/
 ### 4. Assertions
 
 **Best Practices**:
+
 - Test one thing at a time
 - Use descriptive test names
 - Assert on behavior, not implementation
@@ -327,6 +349,7 @@ cypress/e2e/
 ### 5. Error Handling
 
 **Coverage**:
+
 - Network failures
 - Invalid inputs
 - Server errors
@@ -340,6 +363,7 @@ cypress/e2e/
 **File**: `.github/workflows/ci.yml`
 
 **Jobs**:
+
 1. **Unit Tests** - Fast feedback loop
 2. **Integration Tests** - Database and API testing
 3. **E2E Tests** - Full user journey validation
@@ -357,6 +381,7 @@ cypress/e2e/
 ### Failure Handling
 
 **Strategies**:
+
 - Fail fast on critical issues
 - Retry flaky tests
 - Detailed error reporting
@@ -367,16 +392,19 @@ cypress/e2e/
 ### Regular Tasks
 
 **Weekly**:
+
 - Review test coverage reports
 - Update test dependencies
 - Analyze flaky tests
 
 **Monthly**:
+
 - Review and update test data
 - Optimize slow tests
 - Update test documentation
 
 **Quarterly**:
+
 - Review testing strategy
 - Update testing tools
 - Performance optimization
@@ -384,12 +412,14 @@ cypress/e2e/
 ### Monitoring
 
 **Metrics**:
+
 - Test execution time
 - Coverage trends
 - Flaky test frequency
 - Test maintenance effort
 
 **Tools**:
+
 - GitHub Actions analytics
 - Codecov reports
 - Custom dashboards
@@ -399,16 +429,19 @@ cypress/e2e/
 ### Common Issues
 
 **Flaky Tests**:
+
 - Add retry logic
 - Improve test isolation
 - Use proper wait strategies
 
 **Slow Tests**:
+
 - Optimize database queries
 - Use test data factories
 - Parallel test execution
 
 **Coverage Gaps**:
+
 - Identify uncovered code paths
 - Add edge case tests
 - Review business logic coverage
@@ -416,6 +449,7 @@ cypress/e2e/
 ### Debugging
 
 **Local Development**:
+
 ```bash
 # Debug unit tests
 pnpm run test:unit --verbose
@@ -425,6 +459,7 @@ pnpm run test:e2e:open
 ```
 
 **CI Debugging**:
+
 - Check test artifacts
 - Review error logs
 - Use CI-specific debugging tools
@@ -456,6 +491,7 @@ pnpm run test:e2e:open
 ### Tools Evaluation
 
 **Considered Tools**:
+
 - Playwright (alternative to Cypress)
 - Storybook (component testing)
 - Percy (visual regression)

@@ -14,6 +14,7 @@ Since both Google Drive and Supabase URLs aren't working, we need to find the ro
 4. **Look for** the actual field names for images
 
 **Common possibilities:**
+
 - `{{1.promoter_id_card_url}}`
 - `{{1.id_card_url}}`
 - `{{1.promoter_id_card}}`
@@ -29,6 +30,7 @@ Since both Google Drive and Supabase URLs aren't working, we need to find the ro
 3. **Check** if it loads without login
 
 **If image doesn't load publicly:**
+
 - Supabase bucket needs public access
 - Google Docs API can't access private images
 
@@ -37,10 +39,12 @@ Since both Google Drive and Supabase URLs aren't working, we need to find the ro
 **Test with a hardcoded public image first:**
 
 **In Google Docs module, try:**
+
 - **ID_CARD_IMAGE URL**: `https://via.placeholder.com/300x200.png?text=ID+Card`
 - **PASSPORT_IMAGE URL**: `https://via.placeholder.com/300x200.png?text=Passport`
 
 **If this works:**
+
 - ✅ Template is correct
 - ✅ Google Docs API working
 - ❌ Issue is with your image URLs
@@ -62,10 +66,11 @@ promoter_passport_url: (promoter_passport_url || "").toString(),
 ### **Solution 1: Fix Supabase Public Access**
 
 **In Supabase Dashboard:**
+
 ```sql
 -- Make storage bucket public
-UPDATE storage.buckets 
-SET public = true 
+UPDATE storage.buckets
+SET public = true
 WHERE name = 'your-bucket-name';
 
 -- Check current policies
@@ -75,6 +80,7 @@ SELECT * FROM storage.policies WHERE bucket_id = 'your-bucket-name';
 ### **Solution 2: Use Different Image Hosting**
 
 **Upload test images to:**
+
 - **Imgur**: Free, public by default
 - **Cloudinary**: Professional image hosting
 - **AWS S3**: With public read permissions
@@ -82,6 +88,7 @@ SELECT * FROM storage.policies WHERE bucket_id = 'your-bucket-name';
 ### **Solution 3: Generate Without Images**
 
 **For now, remove images and focus on:**
+
 - ✅ Text replacements working
 - ✅ Document generation working
 - ✅ PDF export working
@@ -98,12 +105,14 @@ SELECT * FROM storage.policies WHERE bucket_id = 'your-bucket-name';
 
 **Great! You provided the actual URLs. Let's test these:**
 
-**ID Card URL:** 
+**ID Card URL:**
+
 ```
 https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449305348_HAFIZ_MUHAMMAD_BILAL_ID.png
 ```
 
 **Passport URL:**
+
 ```
 https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449604204_Hafiz_Bilal_Passport.png
 ```
@@ -111,6 +120,7 @@ https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-docum
 ## 🧪 **IMMEDIATE TESTS**
 
 ### **Test 1: Direct URL Access**
+
 1. **Open each URL** in an incognito browser window
 2. **Verify** both images load without authentication
 3. **Check** if they're truly public
@@ -118,6 +128,7 @@ https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-docum
 ### **Test 2: Use These Exact URLs in Make.com**
 
 **In your Google Docs module, try:**
+
 - **ID_CARD_IMAGE**: `https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449305348_HAFIZ_MUHAMMAD_BILAL_ID.png`
 - **PASSPORT_IMAGE**: `https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/1751449604204_Hafiz_Bilal_Passport.png`
 
@@ -127,20 +138,25 @@ https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-docum
 ### **Test 3: Compare with Webhook Fields**
 
 **Check your webhook output - do you see fields like:**
+
 - `promoter_id_card_url` with the ID card URL above?
 - `promoter_passport_url` with the passport URL above?
 
 ## 🔧 **LIKELY SOLUTIONS**
 
 ### **If URLs work but fields don't:**
+
 The webhook field names might be different. Check if your webhook sends:
+
 - `{{1.promoter_id_card_url}}`
 - `{{1.promoter_passport_url}}`
 - `{{14.value.promoter_id_card_url}}` (from the iterator)
 - `{{14.value.promoter_passport_url}}` (from the iterator)
 
 ### **If hardcoded URLs don't work:**
+
 Google Docs API might not support Supabase URLs due to:
+
 - CORS restrictions
 - Image format issues
 - URL structure incompatibility

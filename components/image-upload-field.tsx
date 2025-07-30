@@ -29,7 +29,7 @@ interface ImageUploadFieldProps {
   id?: string // To connect with FormLabel from parent
 }
 
-export { ImageUploadField };
+export { ImageUploadField }
 
 export default function ImageUploadField({
   field,
@@ -95,22 +95,31 @@ export default function ImageUploadField({
       >
         {displayPreviewUrl ? (
           // If the file is a PDF, show PDF icon and link
-          (typeof displayPreviewUrl === 'string' && displayPreviewUrl.endsWith('.pdf')) ? (
-            <a href={displayPreviewUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center">
-              <FileIcon className="h-12 w-12 text-gray-400 mb-2" />
+          typeof displayPreviewUrl === "string" && displayPreviewUrl.endsWith(".pdf") ? (
+            <a
+              href={displayPreviewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center justify-center"
+            >
+              <FileIcon className="mb-2 h-12 w-12 text-gray-400" />
               <span className="text-xs text-blue-600 underline">View PDF</span>
             </a>
           ) : (
             <SafeImage
               src={displayPreviewUrl || placeholderSrc}
               alt={`Preview`}
-              className="h-32 w-32 object-contain rounded"
+              className="h-32 w-32 rounded object-contain"
             />
           )
         ) : (
           <>
-            <UploadCloudIcon className="h-10 w-10 text-muted-foreground mb-2" />
-            <span className="text-xs text-muted-foreground">Click or drag file to upload<br/>(PNG, JPG, WEBP, PDF up to 5MB)</span>
+            <UploadCloudIcon className="mb-2 h-10 w-10 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">
+              Click or drag file to upload
+              <br />
+              (PNG, JPG, WEBP, PDF up to 5MB)
+            </span>
           </>
         )}
         <input
@@ -119,7 +128,7 @@ export default function ImageUploadField({
           name={field.name}
           type="file"
           accept="image/*,application/pdf"
-          className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
           disabled={disabled}
           onChange={handleFileChange}
           tabIndex={-1}
@@ -130,7 +139,7 @@ export default function ImageUploadField({
             type="button"
             size="icon"
             variant="ghost"
-            className="absolute top-2 right-2 z-10"
+            className="absolute right-2 top-2 z-10"
             onClick={(e) => {
               e.stopPropagation()
               handleRemoveImage()
@@ -141,9 +150,7 @@ export default function ImageUploadField({
           </Button>
         )}
       </div>
-      {fileName && (
-        <div className="text-xs text-muted-foreground text-center mt-1">{fileName}</div>
-      )}
+      {fileName && <div className="mt-1 text-center text-xs text-muted-foreground">{fileName}</div>}
     </div>
   )
 }

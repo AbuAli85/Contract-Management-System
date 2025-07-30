@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
-import React, { useState } from 'react'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
-import { useAuth } from '@/src/components/auth/simple-auth-provider'
+import React, { useState } from "react"
+import Link from "next/link"
+import { useParams } from "next/navigation"
+import { useAuth } from "@/src/components/auth/simple-auth-provider"
 
 interface SidebarProps {
   isOpen: boolean
@@ -14,97 +14,97 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const params = useParams()
   const locale = params.locale as string
   const { user, loading, mounted } = useAuth()
-  
+
   // Debug logging - only log when there are issues
   if (!user && mounted && !loading) {
-    console.log('🧭 Sidebar: No user available after auth complete', { isOpen, locale, loading, mounted })
+    console.log("🧭 Sidebar: No user available after auth complete", {
+      isOpen,
+      locale,
+      loading,
+      mounted,
+    })
   }
 
   const navigationItems = [
     {
-      title: 'Dashboard',
+      title: "Dashboard",
       href: `/${locale}/dashboard`,
-      icon: '📊',
-      description: 'Overview and analytics'
+      icon: "📊",
+      description: "Overview and analytics",
     },
     {
-      title: 'Generate Contract',
+      title: "Generate Contract",
       href: `/${locale}/generate-contract`,
-      icon: '📄',
-      description: 'Create new contracts'
+      icon: "📄",
+      description: "Create new contracts",
     },
     {
-      title: 'Contracts',
+      title: "Contracts",
       href: `/${locale}/contracts`,
-      icon: '📋',
-      description: 'View all contracts'
+      icon: "📋",
+      description: "View all contracts",
     },
     {
-      title: 'Manage Parties',
+      title: "Manage Parties",
       href: `/${locale}/manage-parties`,
-      icon: '👥',
-      description: 'Manage contract parties'
+      icon: "👥",
+      description: "Manage contract parties",
     },
     {
-      title: 'Manage Promoters',
+      title: "Manage Promoters",
       href: `/${locale}/manage-promoters`,
-      icon: '🎯',
-      description: 'Manage promoters'
+      icon: "🎯",
+      description: "Manage promoters",
     },
     {
-      title: 'Promoter Analysis',
+      title: "Promoter Analysis",
       href: `/${locale}/promoter-analysis`,
-      icon: '📈',
-      description: 'Analytics and reports'
+      icon: "📈",
+      description: "Analytics and reports",
     },
     {
-      title: 'User Management',
+      title: "User Management",
       href: `/${locale}/dashboard/users`,
-      icon: '👤',
-      description: 'Manage system users'
+      icon: "👤",
+      description: "Manage system users",
     },
     {
-      title: 'Settings',
+      title: "Settings",
       href: `/${locale}/dashboard/settings`,
-      icon: '⚙️',
-      description: 'System settings'
+      icon: "⚙️",
+      description: "System settings",
     },
     {
-      title: 'Notifications',
+      title: "Notifications",
       href: `/${locale}/dashboard/notifications`,
-      icon: '🔔',
-      description: 'View notifications'
+      icon: "🔔",
+      description: "View notifications",
     },
     {
-      title: 'Audit Logs',
+      title: "Audit Logs",
       href: `/${locale}/dashboard/audit`,
-      icon: '📝',
-      description: 'System audit logs'
-    }
+      icon: "📝",
+      description: "System audit logs",
+    },
   ]
 
   // Test pages removed - system is working properly
-  const testPages: Array<{title: string, href: string, icon: string, description: string}> = []
+  const testPages: Array<{ title: string; href: string; icon: string; description: string }> = []
 
   return (
     <>
       {/* Overlay */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={onClose}
-        />
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden" onClick={onClose} />
       )}
-      
+
       {/* Sidebar */}
-      <div className={`
-        fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:translate-x-0 md:static md:shadow-none
-      `}>
-        <div className="flex flex-col h-full">
+      <div
+        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"} md:static md:translate-x-0 md:shadow-none`}
+      >
+        <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200">
+          <div className="border-b border-gray-200 p-4">
             <Link href={`/${locale}`} className="flex items-center space-x-2">
               <span className="text-2xl">📋</span>
               <span className="text-xl font-bold text-gray-800">ContractGen</span>
@@ -119,17 +119,17 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
                 Main Navigation
               </h3>
-              
+
               {navigationItems.map((item) => (
                 <Link
                   key={item.title}
                   href={item.href}
-                  className="flex items-center space-x-3 px-3 py-2 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                  className="flex items-center space-x-3 rounded-lg px-3 py-2 text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
                   onClick={() => {
-                    console.log('🧭 Sidebar: Navigating to', item.href)
+                    console.log("🧭 Sidebar: Navigating to", item.href)
                     // Close sidebar on mobile after navigation
                     if (window.innerWidth < 768) {
                       onClose()
@@ -144,12 +144,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </Link>
               ))}
             </div>
-
-            
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="border-t border-gray-200 p-4">
             <div className="text-xs text-gray-500">
               <p>Contract Management System</p>
               <p>Version 1.0.0</p>
@@ -159,4 +157,4 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       </div>
     </>
   )
-} 
+}

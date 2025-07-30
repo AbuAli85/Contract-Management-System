@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 
 interface CSVPromoterData {
@@ -35,7 +35,7 @@ function validateEmail(email: string): boolean {
 
 function validatePhone(phone: string): boolean {
   const phoneRegex = /^(\+?[1-9]\d{1,14}|[0-9]{10,15})$/
-  return phoneRegex.test(phone.replace(/\s+/g, ''))
+  return phoneRegex.test(phone.replace(/\s+/g, ""))
 }
 
 function validateRequired(value: string): boolean {
@@ -44,43 +44,51 @@ function validateRequired(value: string): boolean {
 
 function validateStatus(status: string): boolean {
   const validStatuses = [
-    'active', 'inactive', 'suspended', 'holiday', 'on_leave', 
-    'terminated', 'pending_approval', 'retired', 'probation', 
-    'resigned', 'contractor', 'temporary', 'training', 'other'
+    "active",
+    "inactive",
+    "suspended",
+    "holiday",
+    "on_leave",
+    "terminated",
+    "pending_approval",
+    "retired",
+    "probation",
+    "resigned",
+    "contractor",
+    "temporary",
+    "training",
+    "other",
   ]
   return validStatuses.includes(status.toLowerCase())
 }
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Get the request body
     const { csvData, userId } = await req.json()
 
     if (!csvData || !Array.isArray(csvData)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid CSV data format' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return new Response(JSON.stringify({ error: "Invalid CSV data format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      })
     }
 
     const result: ImportResult = {
       success: false,
       imported: 0,
       errors: [],
-      total: csvData.length
+      total: csvData.length,
     }
 
     // Process each row
@@ -142,9 +150,9 @@ serve(async (req) => {
 
         // Check if promoter already exists
         const { data: existingPromoter } = await supabase
-          .from('promoters')
-          .select('id')
-          .eq('email', row.email.toLowerCase())
+          .from("promoters")
+          .select("id")
+          .eq("email", row.email.toLowerCase())
           .single()
 
         if (existingPromoter) {
@@ -159,7 +167,7 @@ serve(async (req) => {
           firstName: row.firstName,
           lastName: row.lastName,
           email: row.email.toLowerCase(),
-          mobile_number: row.mobile_number.replace(/\s+/g, ''),
+          mobile_number: row.mobile_number.replace(/\s+/g, ""),
           nationality: row.nationality,
           id_card_number: row.id_card_number,
           passport_number: row.passport_number || null,
@@ -167,12 +175,12 @@ serve(async (req) => {
           work_location: row.work_location || null,
           status: row.status.toLowerCase(),
           notes: row.notes || null,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         }
 
         // Insert promoter
         const { data: newPromoter, error: insertError } = await supabase
-          .from('promoters')
+          .from("promoters")
           .insert(promoterData)
           .select()
           .single()
@@ -183,21 +191,18 @@ serve(async (req) => {
         }
 
         // Log the import activity
-        await supabase
-          .from('system_activity_log')
-          .insert({
-            action: 'promoter_imported',
-            user_id: userId,
-            details: {
-              promoter_id: newPromoter.id,
-              promoter_name: promoterData.name_en,
-              source: 'csv_import'
-            },
-            created_at: new Date().toISOString()
-          })
+        await supabase.from("system_activity_log").insert({
+          action: "promoter_imported",
+          user_id: userId,
+          details: {
+            promoter_id: newPromoter.id,
+            promoter_name: promoterData.name_en,
+            source: "csv_import",
+          },
+          created_at: new Date().toISOString(),
+        })
 
         result.imported++
-
       } catch (error) {
         result.errors.push(`Row ${rowNumber}: Unexpected error - ${error.message}`)
       }
@@ -205,26 +210,22 @@ serve(async (req) => {
 
     result.success = result.imported > 0
 
-    return new Response(
-      JSON.stringify(result),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
-
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    })
   } catch (error) {
-    console.error('Error in import-promoters-csv:', error)
-    
+    console.error("Error in import-promoters-csv:", error)
+
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error.message 
+      JSON.stringify({
+        error: "Internal server error",
+        details: error.message,
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     )
   }
 })

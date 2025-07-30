@@ -7,12 +7,14 @@ I've implemented a comprehensive navigation system that dynamically shows all fe
 ## 🎯 Key Features
 
 ### ✅ **Dynamic Feature Display**
+
 - **Permission-Based Navigation**: Only shows features the user can access
 - **Role-Aware Interface**: Different navigation for Admin, Manager, and User roles
 - **Collapsible Sidebar**: Space-efficient navigation with expandable sections
 - **Mobile Responsive**: Full mobile support with slide-out navigation
 
 ### ✅ **Comprehensive Feature Access**
+
 - **All Features Visible**: Every system feature is accessible from the sidebar
 - **Quick Actions**: Fast access to common tasks in the header
 - **Search Functionality**: Global search across contracts, promoters, and parties
@@ -61,6 +63,7 @@ I've implemented a comprehensive navigation system that dynamically shows all fe
 ## 🎨 User Interface Features
 
 ### **Sidebar Navigation**
+
 - **Collapsible Design**: Toggle between full and icon-only view
 - **Section Organization**: Features grouped by functionality
 - **Permission Guards**: Only shows accessible features
@@ -68,6 +71,7 @@ I've implemented a comprehensive navigation system that dynamically shows all fe
 - **Bilingual Support**: Arabic and English labels
 
 ### **Header Features**
+
 - **Global Search**: Search across all content
 - **Quick Actions**: Fast access to common tasks
 - **Notifications**: Real-time notification center
@@ -75,6 +79,7 @@ I've implemented a comprehensive navigation system that dynamically shows all fe
 - **Theme Toggle**: Dark/light mode switching
 
 ### **Mobile Navigation**
+
 - **Slide-out Menu**: Touch-friendly mobile navigation
 - **Responsive Design**: Optimized for all screen sizes
 - **Touch Gestures**: Swipe to open/close navigation
@@ -83,19 +88,20 @@ I've implemented a comprehensive navigation system that dynamically shows all fe
 
 ### **Role-Based Access**
 
-| **Feature** | **Admin** | **Manager** | **User** |
-|-------------|-----------|-------------|----------|
-| **Dashboard** | ✅ Full | ✅ Full | ✅ Limited |
-| **Contract Generation** | ✅ | ✅ | ✅ |
-| **Contract Management** | ✅ | ✅ | ❌ |
-| **Promoter Management** | ✅ | ✅ | ❌ |
-| **Party Management** | ✅ | ✅ | ❌ |
-| **User Management** | ✅ | ❌ | ❌ |
-| **System Settings** | ✅ | ❌ | ❌ |
-| **Analytics** | ✅ | ✅ | ❌ |
-| **Audit Logs** | ✅ | ✅ | ❌ |
+| **Feature**             | **Admin** | **Manager** | **User**   |
+| ----------------------- | --------- | ----------- | ---------- |
+| **Dashboard**           | ✅ Full   | ✅ Full     | ✅ Limited |
+| **Contract Generation** | ✅        | ✅          | ✅         |
+| **Contract Management** | ✅        | ✅          | ❌         |
+| **Promoter Management** | ✅        | ✅          | ❌         |
+| **Party Management**    | ✅        | ✅          | ❌         |
+| **User Management**     | ✅        | ❌          | ❌         |
+| **System Settings**     | ✅        | ❌          | ❌         |
+| **Analytics**           | ✅        | ✅          | ❌         |
+| **Audit Logs**          | ✅        | ✅          | ❌         |
 
 ### **Dynamic Feature Cards**
+
 The dashboard displays feature cards based on user permissions:
 
 ```typescript
@@ -104,14 +110,12 @@ const featureCards = [
     title: "Generate Contract",
     permission: "contract:generate",
     icon: FilePlus,
-    href: "/generate-contract"
+    href: "/generate-contract",
   },
   // ... more features
 ]
 
-const filteredFeatures = featureCards.filter(feature => 
-  permissions.can(feature.permission)
-)
+const filteredFeatures = featureCards.filter((feature) => permissions.can(feature.permission))
 ```
 
 ## 🚀 Usage Examples
@@ -153,16 +157,19 @@ import { MobileSidebar } from "@/components/permission-aware-sidebar"
 ## 📱 Responsive Design
 
 ### **Desktop (1024px+)**
+
 - Full sidebar with text labels
 - Header with all quick actions
 - Collapsible sidebar option
 
 ### **Tablet (768px - 1023px)**
+
 - Collapsed sidebar by default
 - Reduced quick actions
 - Touch-friendly interface
 
 ### **Mobile (< 768px)**
+
 - Slide-out navigation
 - Minimal header
 - Full-screen mobile menu
@@ -170,6 +177,7 @@ import { MobileSidebar } from "@/components/permission-aware-sidebar"
 ## 🎨 Visual Design
 
 ### **Color Coding**
+
 - **Blue**: Contract-related features
 - **Green**: Promoter management
 - **Orange**: Party management
@@ -178,6 +186,7 @@ import { MobileSidebar } from "@/components/permission-aware-sidebar"
 - **Gray**: System administration
 
 ### **Icons and Badges**
+
 - **Feature Icons**: Lucide React icons for each feature
 - **Role Badges**: Visual role indicators
 - **Status Badges**: New features, updates, etc.
@@ -188,6 +197,7 @@ import { MobileSidebar } from "@/components/permission-aware-sidebar"
 ### **Adding New Features**
 
 1. **Add to Navigation Sections**:
+
 ```typescript
 const navigationSections = [
   {
@@ -197,34 +207,36 @@ const navigationSections = [
         href: "/new-feature",
         label: "New Feature",
         icon: NewIcon,
-        permission: "new:feature"
-      }
-    ]
-  }
+        permission: "new:feature",
+      },
+    ],
+  },
 ]
 ```
 
 2. **Add to Feature Cards**:
+
 ```typescript
 const featureCards = [
   {
     title: "New Feature",
     permission: "new:feature",
     icon: NewIcon,
-    href: "/new-feature"
-  }
+    href: "/new-feature",
+  },
 ]
 ```
 
 3. **Add to Quick Actions**:
+
 ```typescript
 const quickActions = [
   {
     label: "New Action",
     icon: NewIcon,
     href: "/new-action",
-    permission: "new:action"
-  }
+    permission: "new:action",
+  },
 ]
 ```
 
@@ -238,18 +250,21 @@ const quickActions = [
 ## 🎯 Benefits
 
 ### **User Experience**
+
 - **Easy Access**: All features visible and accessible
 - **Clean Interface**: Only relevant options shown
 - **Fast Navigation**: Quick access to common tasks
 - **Intuitive Design**: Familiar navigation patterns
 
 ### **Administration**
+
 - **Role Management**: Easy to assign and modify roles
 - **Permission Control**: Granular access control
 - **Audit Trail**: Track user navigation and actions
 - **Scalable**: Easy to add new features and permissions
 
 ### **Development**
+
 - **Reusable Components**: Modular navigation system
 - **Type Safety**: Full TypeScript support
 - **Performance**: Optimized rendering and loading
@@ -258,6 +273,7 @@ const quickActions = [
 ## 📋 Implementation Status
 
 ### ✅ **Completed**
+
 - [x] Permission-aware sidebar
 - [x] Responsive header with search
 - [x] Mobile navigation
@@ -268,12 +284,14 @@ const quickActions = [
 - [x] Quick actions
 
 ### 🔄 **In Progress**
+
 - [ ] Backend API protection
 - [ ] Database RLS policies
 - [ ] Audit logging
 - [ ] User management interface
 
 ### 📋 **Planned**
+
 - [ ] Advanced search functionality
 - [ ] Custom navigation preferences
 - [ ] Breadcrumb navigation
@@ -289,6 +307,6 @@ Your Contract Management System now has a **comprehensive, permission-aware navi
 ✅ **Provides quick access** to common tasks  
 ✅ **Works perfectly** on desktop, tablet, and mobile  
 ✅ **Supports multiple languages** (English and Arabic)  
-✅ **Integrates seamlessly** with the existing permission system  
+✅ **Integrates seamlessly** with the existing permission system
 
-**Every feature is now easily accessible through the sidebar and navbar!** 🚀 
+**Every feature is now easily accessible through the sidebar and navbar!** 🚀

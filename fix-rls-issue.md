@@ -1,7 +1,9 @@
 # Fix RLS (Row Level Security) Issue for User Management
 
 ## Problem
+
 You're getting this error when trying to add users:
+
 ```
 new row violates row-level security policy for table "app_users"
 ```
@@ -23,8 +25,8 @@ GRANT ALL ON app_users TO authenticated;
 GRANT USAGE ON SEQUENCE app_users_id_seq TO authenticated;
 
 -- Verify RLS is disabled
-SELECT schemaname, tablename, rowsecurity 
-FROM pg_tables 
+SELECT schemaname, tablename, rowsecurity
+FROM pg_tables
 WHERE tablename = 'app_users';
 ```
 
@@ -97,4 +99,4 @@ For production, you should:
 ✅ **Fallback error handling is in place**
 ✅ **UI is fully functional**
 
-The only issue is the RLS policies need to be configured in your Supabase database. 
+The only issue is the RLS policies need to be configured in your Supabase database.

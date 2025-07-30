@@ -3,16 +3,19 @@
 ## 🎯 **Current Issues Identified**
 
 ### **1. Wrong Webhook URL** ❌
+
 - **Problem**: `MAKE_WEBHOOK_URL` is set to placeholder: `YOUR_NEW_CONTRACT_GENERATION_WEBHOOK_ID`
 - **Result**: 404 Not Found errors
 - **Status**: ❌ **NEEDS FIX**
 
 ### **2. Placeholder Template IDs** ❌
+
 - **Problem**: All contract types have placeholder Google Docs template IDs
 - **Result**: System can't find actual templates
 - **Status**: ❌ **NEEDS FIX**
 
 ### **3. Missing Make.com Scenario** ❌
+
 - **Problem**: No Make.com scenario processes the webhook
 - **Result**: Nothing handles contract generation requests
 - **Status**: ❌ **NEEDS FIX**
@@ -22,6 +25,7 @@
 ### **Step 1: Create Google Docs Templates**
 
 #### **1.1 Create Employment Contract Template**
+
 1. **Go to**: https://docs.google.com/document/create
 2. **Create a new document** with this structure:
 
@@ -73,6 +77,7 @@ SPECIAL TERMS:
 4. **Document ID format**: `https://docs.google.com/document/d/[DOCUMENT_ID]/edit`
 
 #### **1.2 Create Service Contract Template**
+
 1. **Create another document** for service contracts
 2. **Use similar structure** but adapt for service agreements
 3. **Copy the Document ID**
@@ -80,12 +85,14 @@ SPECIAL TERMS:
 ### **Step 2: Set Up Make.com Scenario**
 
 #### **2.1 Create New Scenario**
+
 1. **Go to**: https://www.make.com/
 2. **Sign in** to your account
 3. **Click**: "Create a new scenario"
 4. **Name it**: "Contract Generation Workflow"
 
 #### **2.2 Add Webhook Trigger**
+
 1. **Add module**: "Webhooks" → "Custom webhook"
 2. **Configure**:
    - **URL**: Copy the webhook URL provided
@@ -94,6 +101,7 @@ SPECIAL TERMS:
 3. **Save** and copy the webhook URL
 
 #### **2.3 Add HTTP Request (Get Contract Data)**
+
 1. **Add module**: "HTTP" → "Make an HTTP request"
 2. **Configure**:
    - **URL**: `https://your-domain.com/api/webhook/makecom`
@@ -108,6 +116,7 @@ SPECIAL TERMS:
    ```
 
 #### **2.4 Add Google Docs (Create from Template)**
+
 1. **Add module**: "Google Docs" → "Create a document from template"
 2. **Configure**:
    - **Template ID**: `{{2.data.template_config.google_docs_template_id}}`
@@ -139,12 +148,14 @@ SPECIAL TERMS:
    ```
 
 #### **2.5 Add Google Docs (Export as PDF)**
+
 1. **Add module**: "Google Docs" → "Export a document"
 2. **Configure**:
    - **Document ID**: `{{3.document_id}}`
    - **Format**: PDF
 
 #### **2.6 Add Supabase (Upload PDF)**
+
 1. **Add module**: "Supabase" → "Upload a file"
 2. **Configure**:
    - **Connection**: Your Supabase connection
@@ -153,6 +164,7 @@ SPECIAL TERMS:
    - **File name**: `{{2.data.data.contract_number}}.pdf`
 
 #### **2.7 Add HTTP Request (Update Contract Status)**
+
 1. **Add module**: "HTTP" → "Make an HTTP request"
 2. **Configure**:
    - **URL**: `https://your-domain.com/api/contracts/generate`
@@ -168,6 +180,7 @@ SPECIAL TERMS:
    ```
 
 #### **2.8 Save and Activate**
+
 1. **Save** the scenario
 2. **Activate** it
 3. **Copy** the webhook URL
@@ -175,6 +188,7 @@ SPECIAL TERMS:
 ### **Step 3: Update Environment Variables**
 
 #### **3.1 Update .env.local**
+
 ```bash
 # Main contract generation webhook (NEW)
 MAKE_WEBHOOK_URL=https://hook.eu2.make.com/YOUR_NEW_CONTRACT_GENERATION_WEBHOOK_ID
@@ -191,16 +205,17 @@ GOOGLE_DRIVE_FOLDER_ID=your-google-drive-folder-id
 ### **Step 4: Update Contract Type Configuration**
 
 #### **4.1 Update Template IDs**
+
 Edit `lib/contract-type-config.ts`:
 
 ```typescript
 export const enhancedContractTypes: ContractTypeConfig[] = [
   {
-    id: 'full-time-permanent',
-    name: 'Full-Time Permanent Employment',
+    id: "full-time-permanent",
+    name: "Full-Time Permanent Employment",
     // ... other properties
-    makecomTemplateId: 'YOUR_ACTUAL_MAKECOM_TEMPLATE_ID',
-    googleDocsTemplateId: 'YOUR_ACTUAL_GOOGLE_DOCS_TEMPLATE_ID',
+    makecomTemplateId: "YOUR_ACTUAL_MAKECOM_TEMPLATE_ID",
+    googleDocsTemplateId: "YOUR_ACTUAL_GOOGLE_DOCS_TEMPLATE_ID",
     // ... rest of configuration
   },
   // ... other contract types
@@ -208,12 +223,14 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
 ```
 
 #### **4.2 Replace Placeholder IDs**
+
 - Replace `YOUR_ACTUAL_MAKECOM_TEMPLATE_ID` with your Make.com template ID
 - Replace `YOUR_ACTUAL_GOOGLE_DOCS_TEMPLATE_ID` with your Google Docs template ID
 
 ### **Step 5: Test the Integration**
 
 #### **5.1 Test Webhook**
+
 ```bash
 # Test the webhook directly
 curl -X POST https://hook.eu2.make.com/YOUR_NEW_CONTRACT_GENERATION_WEBHOOK_ID \
@@ -226,6 +243,7 @@ curl -X POST https://hook.eu2.make.com/YOUR_NEW_CONTRACT_GENERATION_WEBHOOK_ID \
 ```
 
 #### **5.2 Test Contract Generation**
+
 1. **Go to** your application
 2. **Generate a new contract**
 3. **Check** Make.com scenario execution
@@ -234,12 +252,14 @@ curl -X POST https://hook.eu2.make.com/YOUR_NEW_CONTRACT_GENERATION_WEBHOOK_ID \
 ### **Step 6: Troubleshooting**
 
 #### **6.1 Common Issues**
+
 - **404 Error**: Webhook URL is incorrect
 - **Template Not Found**: Google Docs template ID is wrong
 - **Authentication Error**: Google Docs API not configured
 - **Upload Failed**: Supabase connection issues
 
 #### **6.2 Debug Steps**
+
 1. **Check Make.com logs** for errors
 2. **Verify webhook URL** is correct
 3. **Test template ID** in Google Docs
@@ -277,4 +297,4 @@ After completing this setup:
 4. **Test the complete workflow**
 5. **Monitor logs** for any issues
 
-This will fix the template reading issues and enable proper Make.com integration with Google Docs templates! 
+This will fix the template reading issues and enable proper Make.com integration with Google Docs templates!

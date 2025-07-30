@@ -103,7 +103,7 @@ import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
 import type { DashboardAnalytics } from "@/lib/dashboard-types"
 
 // Force dynamic rendering to avoid build-time Supabase issues
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 interface FeatureCard {
   title: string
@@ -121,9 +121,14 @@ interface FeatureCard {
 export default function DashboardOverviewPage() {
   const permissions = usePermissions()
   const pathname = usePathname()
-  
+
   // Extract locale from pathname
-  const locale = pathname && pathname.startsWith('/en/') ? 'en' : pathname && pathname.startsWith('/ar/') ? 'ar' : 'en'
+  const locale =
+    pathname && pathname.startsWith("/en/")
+      ? "en"
+      : pathname && pathname.startsWith("/ar/")
+        ? "ar"
+        : "en"
 
   const featureCards: FeatureCard[] = [
     // Contract Management
@@ -137,7 +142,7 @@ export default function DashboardOverviewPage() {
       permission: "contract:create",
       badge: "New",
       badgeVariant: "default",
-      color: "text-blue-600"
+      color: "text-blue-600",
     },
     {
       title: "View Contracts",
@@ -147,7 +152,7 @@ export default function DashboardOverviewPage() {
       icon: FileText,
       href: `/${locale}/contracts`,
       permission: "contract:read",
-      color: "text-green-600"
+      color: "text-green-600",
     },
     {
       title: "Contract Management",
@@ -157,9 +162,9 @@ export default function DashboardOverviewPage() {
       icon: FileEdit,
       href: `/${locale}/contracts`,
       permission: "contract:update",
-      color: "text-purple-600"
+      color: "text-purple-600",
     },
-    
+
     // Promoter Management
     {
       title: "Manage Promoters",
@@ -169,7 +174,7 @@ export default function DashboardOverviewPage() {
       icon: Users,
       href: `/${locale}/manage-promoters`,
       permission: "promoter:read",
-      color: "text-orange-600"
+      color: "text-orange-600",
     },
     {
       title: "Promoter Analysis",
@@ -179,9 +184,9 @@ export default function DashboardOverviewPage() {
       icon: UserCheck,
       href: `/${locale}/promoter-analysis`,
       permission: "promoter:read",
-      color: "text-indigo-600"
+      color: "text-indigo-600",
     },
-    
+
     // Party Management
     {
       title: "Manage Parties",
@@ -191,9 +196,9 @@ export default function DashboardOverviewPage() {
       icon: Building2,
       href: `/${locale}/manage-parties`,
       permission: "party:read",
-      color: "text-red-600"
+      color: "text-red-600",
     },
-    
+
     // Analytics & Reports
     {
       title: "Analytics",
@@ -203,9 +208,9 @@ export default function DashboardOverviewPage() {
       icon: BarChart3,
       href: `/${locale}/dashboard/analytics`,
       permission: "system:analytics",
-      color: "text-teal-600"
+      color: "text-teal-600",
     },
-    
+
     // User Management
     {
       title: "User Management",
@@ -215,9 +220,9 @@ export default function DashboardOverviewPage() {
       icon: UserCog,
       href: `/${locale}/dashboard/users`,
       permission: "user:read",
-      color: "text-pink-600"
+      color: "text-pink-600",
     },
-    
+
     // System Administration
     {
       title: "Audit Logs",
@@ -227,7 +232,7 @@ export default function DashboardOverviewPage() {
       icon: Shield,
       href: `/${locale}/dashboard/audit`,
       permission: "system:audit_logs",
-      color: "text-gray-600"
+      color: "text-gray-600",
     },
     {
       title: "Settings",
@@ -237,7 +242,7 @@ export default function DashboardOverviewPage() {
       icon: Settings,
       href: `/${locale}/dashboard/settings`,
       permission: "system:settings",
-      color: "text-yellow-600"
+      color: "text-yellow-600",
     },
     {
       title: "Notifications",
@@ -247,9 +252,9 @@ export default function DashboardOverviewPage() {
       icon: Bell,
       href: `/${locale}/dashboard/notifications`,
       permission: "system:notifications",
-      color: "text-cyan-600"
+      color: "text-cyan-600",
     },
-    
+
     // User Profile & Help
     {
       title: "Profile",
@@ -259,7 +264,7 @@ export default function DashboardOverviewPage() {
       icon: User,
       href: `/${locale}/profile`,
       permission: "contract:read", // All authenticated users can access profile
-      color: "text-emerald-600"
+      color: "text-emerald-600",
     },
     {
       title: "Help & Support",
@@ -269,12 +274,12 @@ export default function DashboardOverviewPage() {
       icon: HelpCircle,
       href: "/help",
       permission: "contract:read", // All authenticated users can access help
-      color: "text-slate-600"
-    }
+      color: "text-slate-600",
+    },
   ]
 
-  const filteredFeatures = featureCards.filter(feature => 
-    permissions.can(feature.permission as any)
+  const filteredFeatures = featureCards.filter((feature) =>
+    permissions.can(feature.permission as any),
   )
 
   // TEMPORARY: Show all features for testing (remove this in production)
@@ -283,14 +288,14 @@ export default function DashboardOverviewPage() {
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin':
-        return { en: 'Administrator', ar: 'مدير النظام' }
-      case 'manager':
-        return { en: 'Manager', ar: 'مدير' }
-      case 'user':
-        return { en: 'User', ar: 'مستخدم' }
+      case "admin":
+        return { en: "Administrator", ar: "مدير النظام" }
+      case "manager":
+        return { en: "Manager", ar: "مدير" }
+      case "user":
+        return { en: "User", ar: "مستخدم" }
       default:
-        return { en: 'User', ar: 'مستخدم' }
+        return { en: "User", ar: "مستخدم" }
     }
   }
 
@@ -298,14 +303,14 @@ export default function DashboardOverviewPage() {
 
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
-  
+
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
         const data = await getDashboardAnalytics()
         setAnalytics(data)
       } catch (error) {
-        console.error('Failed to load analytics:', error)
+        console.error("Failed to load analytics:", error)
         // Set fallback data
         setAnalytics({
           total_contracts: 140,
@@ -331,13 +336,13 @@ export default function DashboardOverviewPage() {
           growth_percentage: 0,
           upcoming_expirations: 0,
           monthly_trends: [],
-          status_distribution: []
+          status_distribution: [],
         })
       } finally {
         setLoading(false)
       }
     }
-    
+
     loadAnalytics()
   }, [])
 
@@ -346,17 +351,16 @@ export default function DashboardOverviewPage() {
       <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">
-            {locale === 'ar' ? 'لوحة التحكم - نظرة عامة' : 'Dashboard Overview'}
+            {locale === "ar" ? "لوحة التحكم - نظرة عامة" : "Dashboard Overview"}
           </h1>
           <p className="text-muted-foreground">
-            {locale === 'ar' 
+            {locale === "ar"
               ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.ar}`
-              : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`
-            }
+              : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`}
           </p>
         </div>
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
           <span className="ml-2">Loading dashboard...</span>
         </div>
       </div>
@@ -368,13 +372,12 @@ export default function DashboardOverviewPage() {
       {/* Welcome Section */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          {locale === 'ar' ? 'لوحة التحكم - نظرة عامة' : 'Dashboard Overview'}
+          {locale === "ar" ? "لوحة التحكم - نظرة عامة" : "Dashboard Overview"}
         </h1>
         <p className="text-muted-foreground">
-          {locale === 'ar' 
+          {locale === "ar"
             ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.ar}`
-            : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`
-          }
+            : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`}
         </p>
       </div>
 
@@ -383,56 +386,56 @@ export default function DashboardOverviewPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {locale === 'ar' ? 'إجمالي العقود' : 'Total Contracts'}
+              {locale === "ar" ? "إجمالي العقود" : "Total Contracts"}
             </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics?.total_contracts || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+              {locale === "ar" ? "من الشهر الماضي" : "from last month"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {locale === 'ar' ? 'العقود النشطة' : 'Active Contracts'}
+              {locale === "ar" ? "العقود النشطة" : "Active Contracts"}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics?.active_contracts || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+              {locale === "ar" ? "من الشهر الماضي" : "from last month"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {locale === 'ar' ? 'المروجين' : 'Promoters'}
+              {locale === "ar" ? "المروجين" : "Promoters"}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics?.total_promoters || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+              {locale === "ar" ? "من الشهر الماضي" : "from last month"}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {locale === 'ar' ? 'الأطراف' : 'Parties'}
+              {locale === "ar" ? "الأطراف" : "Parties"}
             </CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics?.total_parties || 0}</div>
             <p className="text-xs text-muted-foreground">
-              {locale === 'ar' ? 'من الشهر الماضي' : 'from last month'}
+              {locale === "ar" ? "من الشهر الماضي" : "from last month"}
             </p>
           </CardContent>
         </Card>
@@ -442,40 +445,41 @@ export default function DashboardOverviewPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold tracking-tight">
-            {locale === 'ar' ? 'الميزات المتاحة' : 'Available Features'}
+            {locale === "ar" ? "الميزات المتاحة" : "Available Features"}
           </h2>
           <Badge variant="outline" className="text-sm">
-            {displayFeatures.length} {locale === 'ar' ? 'ميزة' : 'features'}
+            {displayFeatures.length} {locale === "ar" ? "ميزة" : "features"}
           </Badge>
         </div>
-        
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {displayFeatures.map((feature, index) => (
             <PermissionGuard key={index} action={feature.permission as any}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
+              <Card className="cursor-pointer transition-shadow hover:shadow-md">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <div className={cn("p-2 rounded-lg", feature.color?.replace('text-', 'bg-').replace('-600', '-100'))}>
+                    <div
+                      className={cn(
+                        "rounded-lg p-2",
+                        feature.color?.replace("text-", "bg-").replace("-600", "-100"),
+                      )}
+                    >
                       <feature.icon className={cn("h-6 w-6", feature.color)} />
                     </div>
                     {feature.badge && (
-                      <Badge variant={feature.badgeVariant || "secondary"}>
-                        {feature.badge}
-                      </Badge>
+                      <Badge variant={feature.badgeVariant || "secondary"}>{feature.badge}</Badge>
                     )}
                   </div>
                   <CardTitle className="text-lg">
-                    {locale === 'ar' ? feature.titleAr : feature.title}
+                    {locale === "ar" ? feature.titleAr : feature.title}
                   </CardTitle>
                   <CardDescription>
-                    {locale === 'ar' ? feature.descriptionAr : feature.description}
+                    {locale === "ar" ? feature.descriptionAr : feature.description}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="w-full">
-                    <a href={feature.href}>
-                      {locale === 'ar' ? 'فتح' : 'Open'}
-                    </a>
+                    <a href={feature.href}>{locale === "ar" ? "فتح" : "Open"}</a>
                   </Button>
                 </CardContent>
               </Card>
@@ -488,27 +492,32 @@ export default function DashboardOverviewPage() {
       <PermissionGuard action="system:analytics">
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">
-            {locale === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}
+            {locale === "ar" ? "النشاط الأخير" : "Recent Activity"}
           </h2>
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">
-                {locale === 'ar' ? 'آخر العمليات' : 'Latest Operations'}
+                {locale === "ar" ? "آخر العمليات" : "Latest Operations"}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {analytics?.recent_activity?.map((activity: any, index: number) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50">
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 rounded-lg p-3 hover:bg-muted/50"
+                  >
                     <div className="flex-1">
-                      <p className="font-medium">{activity.action} - {activity.resource}</p>
+                      <p className="font-medium">
+                        {activity.action} - {activity.resource}
+                      </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(activity.timestamp).toLocaleString()} • Status: {activity.status}
                       </p>
                     </div>
                   </div>
                 )) || (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="py-8 text-center text-muted-foreground">
                     No recent activity to display
                   </div>
                 )}
@@ -519,4 +528,4 @@ export default function DashboardOverviewPage() {
       </PermissionGuard>
     </div>
   )
-} 
+}

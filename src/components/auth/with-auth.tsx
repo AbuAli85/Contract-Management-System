@@ -1,12 +1,10 @@
-'use client'
+"use client"
 
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { useAuth } from './simple-auth-provider'
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { useAuth } from "./simple-auth-provider"
 
-export function withAuth<P extends object>(
-  WrappedComponent: React.ComponentType<P>
-) {
+export function withAuth<P extends object>(WrappedComponent: React.ComponentType<P>) {
   return function ProtectedRoute(props: P) {
     const { user, loading } = useAuth()
     const router = useRouter()
@@ -14,15 +12,15 @@ export function withAuth<P extends object>(
     useEffect(() => {
       if (!loading && !user) {
         // Only run in browser environment
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           // Get the current locale from the URL
-          const locale = window.location.pathname.split('/')[1]
+          const locale = window.location.pathname.split("/")[1]
           const isValidLocale = locale && locale.length === 2
 
           // Construct the login URL with the current locale
-          const loginPath = `/${isValidLocale ? locale : 'en'}/auth/login`
+          const loginPath = `/${isValidLocale ? locale : "en"}/auth/login`
           const redirectTo = window.location.href
-          
+
           // Redirect to login with the current URL as the redirect target
           router.push(`${loginPath}?redirectTo=${encodeURIComponent(redirectTo)}`)
         }

@@ -1,30 +1,44 @@
-'use client'
+"use client"
 
-import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
-import { AuthenticatedLayout } from '@/components/authenticated-layout'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { useToastHelpers } from '@/components/toast-notifications'
-import { usePermissions } from '@/hooks/use-permissions'
-import { 
-  Shield, 
-  Users, 
-  Eye, 
-  Settings, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Copy, 
-  Save, 
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useToastHelpers } from "@/components/toast-notifications"
+import { usePermissions } from "@/hooks/use-permissions"
+import {
+  Shield,
+  Users,
+  Eye,
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
+  Copy,
+  Save,
   RefreshCw,
   Lock,
   Unlock,
@@ -44,8 +58,8 @@ import {
   Crown,
   Briefcase,
   User,
-  Monitor
-} from 'lucide-react'
+  Monitor,
+} from "lucide-react"
 
 interface Role {
   id: string
@@ -79,7 +93,7 @@ interface User {
 
 export default function RolesAndPermissionsPage() {
   const pathname = usePathname()
-  const locale = pathname ? pathname.split('/')[1] || 'en' : 'en'
+  const locale = pathname ? pathname.split("/")[1] || "en" : "en"
   const { canManageUsers, canAssignRoles } = usePermissions()
   const { success, error, warning } = useToastHelpers()
 
@@ -92,53 +106,52 @@ export default function RolesAndPermissionsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterCategory, setFilterCategory] = useState("all")
   const [newRole, setNewRole] = useState({
-    name: '',
-    description: '',
-    permissions: [] as string[]
+    name: "",
+    description: "",
+    permissions: [] as string[],
   })
 
   // Fetch data
   const fetchData = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch roles, permissions, and users in parallel
       const [rolesRes, permissionsRes, usersRes] = await Promise.all([
-        fetch('/api/users/roles'),
-        fetch('/api/users/permissions'),
-        fetch('/api/users')
+        fetch("/api/users/roles"),
+        fetch("/api/users/permissions"),
+        fetch("/api/users"),
       ])
 
       const [rolesData, permissionsData, usersData] = await Promise.all([
         rolesRes.json(),
         permissionsRes.json(),
-        usersRes.json()
+        usersRes.json(),
       ])
 
       // Debug logging
-      console.log('Roles API response:', rolesData)
-      console.log('Permissions API response:', permissionsData)
-      console.log('Users API response:', usersData)
+      console.log("Roles API response:", rolesData)
+      console.log("Permissions API response:", permissionsData)
+      console.log("Users API response:", usersData)
 
       if (rolesData.success) setRoles(rolesData.roles)
       if (permissionsData.success) setPermissions(permissionsData.permissions)
-      
+
       // Fix: Handle users data properly - check for both possible response formats
       if (usersData.users) {
         setUsers(usersData.users)
       } else if (Array.isArray(usersData)) {
         setUsers(usersData)
       } else {
-        console.warn('Unexpected users data format:', usersData)
+        console.warn("Unexpected users data format:", usersData)
         setUsers([])
       }
-
     } catch (err) {
-      console.error('Error fetching data:', err)
-      error('Failed to fetch data', 'An error occurred while loading roles and permissions')
+      console.error("Error fetching data:", err)
+      error("Failed to fetch data", "An error occurred while loading roles and permissions")
     } finally {
       setLoading(false)
     }
@@ -151,10 +164,10 @@ export default function RolesAndPermissionsPage() {
   // Get role icon
   const getRoleIcon = (roleName: string) => {
     const icons: Record<string, any> = {
-      'admin': Crown,
-      'manager': Briefcase,
-      'user': User,
-      'viewer': Eye
+      admin: Crown,
+      manager: Briefcase,
+      user: User,
+      viewer: Eye,
     }
     return icons[roleName.toLowerCase()] || Users
   }
@@ -162,52 +175,56 @@ export default function RolesAndPermissionsPage() {
   // Get role color
   const getRoleColor = (roleName: string) => {
     const colors: Record<string, string> = {
-      'admin': 'bg-red-100 text-red-800 border-red-200',
-      'manager': 'bg-blue-100 text-blue-800 border-blue-200',
-      'user': 'bg-green-100 text-green-800 border-green-200',
-      'viewer': 'bg-gray-100 text-gray-800 border-gray-200'
+      admin: "bg-red-100 text-red-800 border-red-200",
+      manager: "bg-blue-100 text-blue-800 border-blue-200",
+      user: "bg-green-100 text-green-800 border-green-200",
+      viewer: "bg-gray-100 text-gray-800 border-gray-200",
     }
-    return colors[roleName.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-200'
+    return colors[roleName.toLowerCase()] || "bg-gray-100 text-gray-800 border-gray-200"
   }
 
   // Filter permissions by category
-  const filteredPermissions = permissions.filter(permission => {
-    const matchesSearch = permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         permission.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = filterCategory === 'all' || permission.category === filterCategory
+  const filteredPermissions = permissions.filter((permission) => {
+    const matchesSearch =
+      permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      permission.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = filterCategory === "all" || permission.category === filterCategory
     return matchesSearch && matchesCategory
   })
 
   // Group permissions by category
-  const permissionsByCategory = filteredPermissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = []
-    }
-    acc[permission.category].push(permission)
-    return acc
-  }, {} as Record<string, Permission[]>)
+  const permissionsByCategory = filteredPermissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.category]) {
+        acc[permission.category] = []
+      }
+      acc[permission.category].push(permission)
+      return acc
+    },
+    {} as Record<string, Permission[]>,
+  )
 
   // Create new role
   const handleCreateRole = async () => {
     try {
-      const response = await fetch('/api/users/roles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRole)
+      const response = await fetch("/api/users/roles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRole),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role created successfully', 'The new role has been created and is ready to use')
+        success("Role created successfully", "The new role has been created and is ready to use")
         setIsCreateDialogOpen(false)
-        setNewRole({ name: '', description: '', permissions: [] })
+        setNewRole({ name: "", description: "", permissions: [] })
         fetchData()
       } else {
-        error('Failed to create role', data.error)
+        error("Failed to create role", data.error)
       }
     } catch (err) {
-      error('Error creating role', 'An unexpected error occurred')
+      error("Error creating role", "An unexpected error occurred")
     }
   }
 
@@ -217,23 +234,23 @@ export default function RolesAndPermissionsPage() {
 
     try {
       const response = await fetch(`/api/users/roles/${editingRole.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingRole)
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingRole),
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role updated successfully', 'The role has been updated with new permissions')
+        success("Role updated successfully", "The role has been updated with new permissions")
         setIsEditDialogOpen(false)
         setEditingRole(null)
         fetchData()
       } else {
-        error('Failed to update role', data.error)
+        error("Failed to update role", data.error)
       }
     } catch (err) {
-      error('Error updating role', 'An unexpected error occurred')
+      error("Error updating role", "An unexpected error occurred")
     }
   }
 
@@ -243,21 +260,21 @@ export default function RolesAndPermissionsPage() {
 
     try {
       const response = await fetch(`/api/users/roles/${selectedRole.id}`, {
-        method: 'DELETE'
+        method: "DELETE",
       })
 
       const data = await response.json()
 
       if (data.success) {
-        success('Role deleted successfully', 'The role has been permanently deleted')
+        success("Role deleted successfully", "The role has been permanently deleted")
         setIsDeleteDialogOpen(false)
         setSelectedRole(null)
         fetchData()
       } else {
-        error('Failed to delete role', data.error)
+        error("Failed to delete role", data.error)
       }
     } catch (err) {
-      error('Error deleting role', 'An unexpected error occurred')
+      error("Error deleting role", "An unexpected error occurred")
     }
   }
 
@@ -265,7 +282,7 @@ export default function RolesAndPermissionsPage() {
   const togglePermission = (permissionId: string, rolePermissions: string[]) => {
     const isGranted = rolePermissions.includes(permissionId)
     if (isGranted) {
-      return rolePermissions.filter(p => p !== permissionId)
+      return rolePermissions.filter((p) => p !== permissionId)
     } else {
       return [...rolePermissions, permissionId]
     }
@@ -274,21 +291,23 @@ export default function RolesAndPermissionsPage() {
   // Export roles
   const exportRoles = () => {
     const csvContent = [
-      ['Role Name', 'Description', 'Permissions', 'User Count', 'Created At'],
-      ...roles.map(role => [
+      ["Role Name", "Description", "Permissions", "User Count", "Created At"],
+      ...roles.map((role) => [
         role.name,
         role.description,
-        role.permissions.join('; '),
+        role.permissions.join("; "),
         role.userCount.toString(),
-        new Date(role.createdAt).toLocaleDateString()
-      ])
-    ].map(row => row.join(',')).join('\n')
+        new Date(role.createdAt).toLocaleDateString(),
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n")
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const blob = new Blob([csvContent], { type: "text/csv" })
     const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = document.createElement("a")
     a.href = url
-    a.download = `roles-${new Date().toISOString().split('T')[0]}.csv`
+    a.download = `roles-${new Date().toISOString().split("T")[0]}.csv`
     a.click()
     window.URL.revokeObjectURL(url)
   }
@@ -301,9 +320,11 @@ export default function RolesAndPermissionsPage() {
           <Card>
             <CardContent className="p-6">
               <div className="text-center">
-                <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Access Denied</h3>
-                <p className="text-gray-600">You don't have permission to manage roles and permissions.</p>
+                <Lock className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h3 className="mb-2 text-lg font-semibold text-gray-900">Access Denied</h3>
+                <p className="text-gray-600">
+                  You don't have permission to manage roles and permissions.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -327,18 +348,18 @@ export default function RolesAndPermissionsPage() {
 
   return (
     <AuthenticatedLayout locale={locale}>
-      <div className="container mx-auto p-6 space-y-6">
+      <div className="container mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Roles & Permissions</h1>
-            <p className="text-gray-600 mt-2">
+            <p className="mt-2 text-gray-600">
               Manage user roles and system permissions with full administrative control
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Shield className="h-8 w-8 text-blue-600" />
-            <Badge variant="outline" className="text-lg px-3 py-1">
+            <Badge variant="outline" className="px-3 py-1 text-lg">
               {roles.length} Roles
             </Badge>
           </div>
@@ -348,15 +369,15 @@ export default function RolesAndPermissionsPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Role
             </Button>
             <Button onClick={exportRoles} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
             <Button onClick={fetchData} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
           </div>
@@ -373,17 +394,17 @@ export default function RolesAndPermissionsPage() {
 
           <TabsContent value="roles" className="space-y-6">
             {/* Roles Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
               {roles.map((role) => {
                 const IconComponent = getRoleIcon(role.name)
                 const roleColor = getRoleColor(role.name)
-                
+
                 return (
-                  <Card key={role.id} className="relative group hover:shadow-lg transition-shadow">
+                  <Card key={role.id} className="group relative transition-shadow hover:shadow-lg">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${roleColor}`}>
+                          <div className={`rounded-lg p-2 ${roleColor}`}>
                             <IconComponent className="h-5 w-5" />
                           </div>
                           <div>
@@ -394,7 +415,7 @@ export default function RolesAndPermissionsPage() {
                           </div>
                         </div>
                         {!role.isSystem && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="opacity-0 transition-opacity group-hover:opacity-100">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -420,9 +441,7 @@ export default function RolesAndPermissionsPage() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <CardDescription className="mb-3">
-                        {role.description}
-                      </CardDescription>
+                      <CardDescription className="mb-3">{role.description}</CardDescription>
                       <div className="space-y-2">
                         <div className="text-sm font-medium text-gray-700">
                           Permissions ({role.permissions.length})
@@ -463,7 +482,7 @@ export default function RolesAndPermissionsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="search">Search Permissions</Label>
                     <div className="relative">
@@ -509,11 +528,14 @@ export default function RolesAndPermissionsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                       {categoryPermissions.map((permission) => (
-                        <div key={permission.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div
+                          key={permission.id}
+                          className="flex items-center justify-between rounded-lg border p-3"
+                        >
                           <div>
-                            <div className="font-medium text-sm">{permission.name}</div>
+                            <div className="text-sm font-medium">{permission.name}</div>
                             <div className="text-xs text-gray-500">{permission.description}</div>
                           </div>
                           {permission.isSystem && (
@@ -547,7 +569,7 @@ export default function RolesAndPermissionsPage() {
                   id="roleName"
                   placeholder="Enter role name..."
                   value={newRole.name}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) => setNewRole((prev) => ({ ...prev, name: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
@@ -556,30 +578,30 @@ export default function RolesAndPermissionsPage() {
                   id="roleDescription"
                   placeholder="Describe the role's purpose..."
                   value={newRole.description}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) => setNewRole((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Permissions</Label>
-                <div className="max-h-60 overflow-y-auto space-y-2">
+                <div className="max-h-60 space-y-2 overflow-y-auto">
                   {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => (
                     <div key={category} className="space-y-2">
-                      <div className="font-medium text-sm text-gray-700">{category}</div>
+                      <div className="text-sm font-medium text-gray-700">{category}</div>
                       <div className="grid grid-cols-1 gap-2">
                         {categoryPermissions.map((permission) => (
                           <div key={permission.id} className="flex items-center space-x-2">
                             <Switch
                               checked={newRole.permissions.includes(permission.id)}
                               onCheckedChange={() => {
-                                setNewRole(prev => ({
+                                setNewRole((prev) => ({
                                   ...prev,
-                                  permissions: togglePermission(permission.id, prev.permissions)
+                                  permissions: togglePermission(permission.id, prev.permissions),
                                 }))
                               }}
                             />
                             <Label className="text-sm">
                               {permission.name}
-                              <span className="text-gray-500 ml-1">- {permission.description}</span>
+                              <span className="ml-1 text-gray-500">- {permission.description}</span>
                             </Label>
                           </div>
                         ))}
@@ -616,7 +638,9 @@ export default function RolesAndPermissionsPage() {
                   <Input
                     id="editRoleName"
                     value={editingRole.name}
-                    onChange={(e) => setEditingRole(prev => prev ? { ...prev, name: e.target.value } : null)}
+                    onChange={(e) =>
+                      setEditingRole((prev) => (prev ? { ...prev, name: e.target.value } : null))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -624,36 +648,51 @@ export default function RolesAndPermissionsPage() {
                   <Textarea
                     id="editRoleDescription"
                     value={editingRole.description}
-                    onChange={(e) => setEditingRole(prev => prev ? { ...prev, description: e.target.value } : null)}
+                    onChange={(e) =>
+                      setEditingRole((prev) =>
+                        prev ? { ...prev, description: e.target.value } : null,
+                      )
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Permissions</Label>
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {Object.entries(permissionsByCategory).map(([category, categoryPermissions]) => (
-                      <div key={category} className="space-y-2">
-                        <div className="font-medium text-sm text-gray-700">{category}</div>
-                        <div className="grid grid-cols-1 gap-2">
-                          {categoryPermissions.map((permission) => (
-                            <div key={permission.id} className="flex items-center space-x-2">
-                              <Switch
-                                checked={editingRole.permissions.includes(permission.id)}
-                                onCheckedChange={() => {
-                                  setEditingRole(prev => prev ? {
-                                    ...prev,
-                                    permissions: togglePermission(permission.id, prev.permissions)
-                                  } : null)
-                                }}
-                              />
-                              <Label className="text-sm">
-                                {permission.name}
-                                <span className="text-gray-500 ml-1">- {permission.description}</span>
-                              </Label>
-                            </div>
-                          ))}
+                  <div className="max-h-60 space-y-2 overflow-y-auto">
+                    {Object.entries(permissionsByCategory).map(
+                      ([category, categoryPermissions]) => (
+                        <div key={category} className="space-y-2">
+                          <div className="text-sm font-medium text-gray-700">{category}</div>
+                          <div className="grid grid-cols-1 gap-2">
+                            {categoryPermissions.map((permission) => (
+                              <div key={permission.id} className="flex items-center space-x-2">
+                                <Switch
+                                  checked={editingRole.permissions.includes(permission.id)}
+                                  onCheckedChange={() => {
+                                    setEditingRole((prev) =>
+                                      prev
+                                        ? {
+                                            ...prev,
+                                            permissions: togglePermission(
+                                              permission.id,
+                                              prev.permissions,
+                                            ),
+                                          }
+                                        : null,
+                                    )
+                                  }}
+                                />
+                                <Label className="text-sm">
+                                  {permission.name}
+                                  <span className="ml-1 text-gray-500">
+                                    - {permission.description}
+                                  </span>
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               </div>
@@ -675,13 +714,15 @@ export default function RolesAndPermissionsPage() {
             <DialogHeader>
               <DialogTitle>Delete Role</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the role "{selectedRole?.name}"? This action cannot be undone.
+                Are you sure you want to delete the role "{selectedRole?.name}"? This action cannot
+                be undone.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <div className="text-sm text-red-700">
-                <strong>Warning:</strong> This will affect {selectedRole?.userCount} users currently assigned to this role.
+                <strong>Warning:</strong> This will affect {selectedRole?.userCount} users currently
+                assigned to this role.
               </div>
             </div>
             <DialogFooter>
@@ -700,4 +741,4 @@ export default function RolesAndPermissionsPage() {
 }
 
 // Force dynamic rendering to prevent SSR issues with useAuth
-export const dynamic = 'force-dynamic' 
+export const dynamic = "force-dynamic"

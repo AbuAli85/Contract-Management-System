@@ -1,20 +1,20 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2 } from 'lucide-react'
-import { formatSignUpError, isNetworkError, isRateLimitError } from '@/lib/actions/cookie-actions'
-import { useToast } from '@/hooks/use-toast'
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2 } from "lucide-react"
+import { formatSignUpError, isNetworkError, isRateLimitError } from "@/lib/actions/cookie-actions"
+import { useToast } from "@/hooks/use-toast"
 
 export function SignUpForm() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -28,7 +28,7 @@ export function SignUpForm() {
     setSuccess(null)
 
     if (password !== confirmPassword) {
-      const errorMessage = 'Passwords do not match'
+      const errorMessage = "Passwords do not match"
       setError(errorMessage)
       toast({
         title: "Validation Error",
@@ -39,7 +39,7 @@ export function SignUpForm() {
     }
 
     if (password.length < 6) {
-      const errorMessage = 'Password must be at least 6 characters long'
+      const errorMessage = "Password must be at least 6 characters long"
       setError(errorMessage)
       toast({
         title: "Validation Error",
@@ -56,17 +56,17 @@ export function SignUpForm() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/en/auth/callback`
-        }
+          emailRedirectTo: `${window.location.origin}/en/auth/callback`,
+        },
       })
 
       if (error) {
         console.error("🔐 Signup Debug - Signup error:", error)
-        
+
         // Format error using centralized error handling
         const formattedError = formatSignUpError(error)
         setError(formattedError)
-        
+
         // Show toast notification based on error type
         if (isNetworkError(error)) {
           toast({
@@ -87,14 +87,15 @@ export function SignUpForm() {
             variant: "destructive",
           })
         }
-        
+
         return
       }
 
       if (data.user) {
-        const successMessage = 'Account created successfully! Please check your email to verify your account.'
+        const successMessage =
+          "Account created successfully! Please check your email to verify your account."
         setSuccess(successMessage)
-        
+
         toast({
           title: "Account Created",
           description: successMessage,
@@ -103,9 +104,9 @@ export function SignUpForm() {
       }
     } catch (err) {
       console.error("🔐 Signup Debug - Unexpected error:", err)
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+      const errorMessage = err instanceof Error ? err.message : "An error occurred"
       setError(errorMessage)
-      
+
       toast({
         title: "Unexpected Error",
         description: errorMessage,
@@ -123,7 +124,7 @@ export function SignUpForm() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      
+
       {success && (
         <Alert>
           <AlertDescription>{success}</AlertDescription>
@@ -142,7 +143,7 @@ export function SignUpForm() {
           disabled={loading}
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
@@ -155,7 +156,7 @@ export function SignUpForm() {
           disabled={loading}
         />
       </div>
-      
+
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirm Password</Label>
         <Input
@@ -168,7 +169,7 @@ export function SignUpForm() {
           disabled={loading}
         />
       </div>
-      
+
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? (
           <>
@@ -176,7 +177,7 @@ export function SignUpForm() {
             Creating account...
           </>
         ) : (
-          'Sign Up'
+          "Sign Up"
         )}
       </Button>
     </form>

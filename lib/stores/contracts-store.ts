@@ -16,7 +16,9 @@ interface ContractsStore {
   error: string | null
   isLoading: boolean
   fetchContracts: () => Promise<void>
-  generateContract: (contractData: Omit<Contract, "id" | "created_at" | "updated_at">) => Promise<void>
+  generateContract: (
+    contractData: Omit<Contract, "id" | "created_at" | "updated_at">,
+  ) => Promise<void>
   retryContract: (contractId: string) => Promise<void>
   clearError: () => void
   getContractById: (id: string) => Contract | undefined
@@ -38,20 +40,23 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     set({ isLoading: true })
     try {
       const supabaseClient = getSupabaseClient()
-      const { data, error } = await supabaseClient.from("contracts").select("*").order("created_at", { ascending: false })
+      const { data, error } = await supabaseClient
+        .from("contracts")
+        .select("*")
+        .order("created_at", { ascending: false })
 
       if (error) throw error
 
       // Transform data to handle nullable fields
-      const transformedContracts = (data || []).map(contract => ({
+      const transformedContracts = (data || []).map((contract) => ({
         ...contract,
         created_at: contract.created_at || new Date().toISOString(),
         updated_at: contract.updated_at || null,
-        first_party_id: contract.first_party_id || '',
-        second_party_id: contract.second_party_id || '',
-        promoter_id: contract.promoter_id || '',
+        first_party_id: contract.first_party_id || "",
+        second_party_id: contract.second_party_id || "",
+        promoter_id: contract.promoter_id || "",
       }))
-      
+
       set({ contracts: transformedContracts, isLoading: false })
       get().updateStats()
     } catch (error) {
@@ -100,9 +105,9 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     const contracts = get().contracts
     const stats = {
       total: contracts.length,
-      pending: contracts.filter(c => c.status === "generating" || c.status === "pending").length,
-      completed: contracts.filter(c => c.status === "completed").length,
-      failed: contracts.filter(c => c.status === "failed").length,
+      pending: contracts.filter((c) => c.status === "generating" || c.status === "pending").length,
+      completed: contracts.filter((c) => c.status === "completed").length,
+      failed: contracts.filter((c) => c.status === "failed").length,
     }
     set({ stats })
   },
@@ -110,7 +115,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
   clearError: () => set({ error: null }),
 
   getContractById: (id: string) => {
-    return get().contracts.find(c => c.id === id)
+    return get().contracts.find((c) => c.id === id)
   },
 })
 

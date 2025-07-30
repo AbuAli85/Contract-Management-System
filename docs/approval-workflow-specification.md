@@ -10,38 +10,39 @@ To meet business and regulatory requirements, we need to implement a structured 
 
 ### Must-Have
 
-* **Draft Submission**: Users must be able to submit a drafted contract for review.
-* **Review Stages**: Support at least five sequential stages: Draft → Legal Review → HR Review → Final Approval → Signature → Active.
-* **Role-Based Access**: Define and enforce reviewer roles (`legal_reviewer`, `hr_reviewer`, `final_approver`, `signatory`).
-* **Approval Records**: Persist each approval decision and comments in an audit table (`contract_approvals`).
-* **Notifications**: Trigger email/Slack alerts for pending reviews and overdue tasks.
-* **Audit Trail**: Maintain a complete history of state changes, timestamps, and reviewer identities.
+- **Draft Submission**: Users must be able to submit a drafted contract for review.
+- **Review Stages**: Support at least five sequential stages: Draft → Legal Review → HR Review → Final Approval → Signature → Active.
+- **Role-Based Access**: Define and enforce reviewer roles (`legal_reviewer`, `hr_reviewer`, `final_approver`, `signatory`).
+- **Approval Records**: Persist each approval decision and comments in an audit table (`contract_approvals`).
+- **Notifications**: Trigger email/Slack alerts for pending reviews and overdue tasks.
+- **Audit Trail**: Maintain a complete history of state changes, timestamps, and reviewer identities.
 
 ### Should-Have
 
-* **Parallel Reviews**: Allow Legal and HR reviews to occur in parallel for efficiency.
-* **Conditional Routing**: Route to different reviewers based on contract type or contract value thresholds.
-* **Role Configurability**: Allow administrators to assign or change reviewer roles via the UI.
+- **Parallel Reviews**: Allow Legal and HR reviews to occur in parallel for efficiency.
+- **Conditional Routing**: Route to different reviewers based on contract type or contract value thresholds.
+- **Role Configurability**: Allow administrators to assign or change reviewer roles via the UI.
 
 ### Could-Have
 
-* **Escalation Rules**: Auto-escalate pending reviews after configurable timeouts.
-* **Batch Actions**: Let reviewers approve or reject multiple contracts at once.
+- **Escalation Rules**: Auto-escalate pending reviews after configurable timeouts.
+- **Batch Actions**: Let reviewers approve or reject multiple contracts at once.
 
 ### Won't-Have (for MVP)
 
-* Integration with external BPM engines (e.g., Camunda).
-* AI-driven risk scoring or clause suggestion.
-* Mobile-specific UI; desktop web only initially.
+- Integration with external BPM engines (e.g., Camunda).
+- AI-driven risk scoring or clause suggestion.
+- Mobile-specific UI; desktop web only initially.
 
 ## Method
 
 ### Database Schema Changes
 
 #### 1. Update `contracts` table
+
 ```sql
 -- Add approval workflow fields to existing contracts table
-ALTER TABLE contracts 
+ALTER TABLE contracts
 ADD COLUMN approval_status VARCHAR(50) DEFAULT 'draft' CHECK (approval_status IN ('draft', 'legal_review', 'hr_review', 'final_approval', 'signature', 'active', 'rejected')),
 ADD COLUMN current_reviewer_id UUID REFERENCES users(id),
 ADD COLUMN submitted_for_review_at TIMESTAMP WITH TIME ZONE,
@@ -56,6 +57,7 @@ CREATE INDEX idx_contracts_submitted_at ON contracts(submitted_for_review_at);
 ```
 
 #### 2. Create `contract_approvals` table
+
 ```sql
 CREATE TABLE contract_approvals (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -66,7 +68,7 @@ CREATE TABLE contract_approvals (
     comments TEXT,
     reviewed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Ensure one approval per reviewer per stage per contract
     UNIQUE(contract_id, reviewer_id, review_stage)
 );
@@ -78,6 +80,7 @@ CREATE INDEX idx_contract_approvals_stage ON contract_approvals(review_stage);
 ```
 
 #### 3. Create `reviewer_roles` table
+
 ```sql
 CREATE TABLE reviewer_roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -87,7 +90,7 @@ CREATE TABLE reviewer_roles (
     assigned_by UUID REFERENCES users(id),
     assigned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    
+
     -- Ensure one active role per user per type
     UNIQUE(user_id, role_type)
 );
@@ -99,6 +102,7 @@ CREATE INDEX idx_reviewer_roles_active ON reviewer_roles(is_active);
 ```
 
 #### 4. Create `workflow_config` table
+
 ```sql
 CREATE TABLE workflow_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -159,6 +163,7 @@ end note
 ### API Endpoints
 
 #### 1. Contract Submission
+
 ```typescript
 POST /api/contracts/{contractId}/submit-for-review
 {
@@ -182,6 +187,7 @@ Response:
 ```
 
 #### 2. Approval Actions
+
 ```typescript
 POST /api/contracts/{contractId}/approve
 {
@@ -200,6 +206,7 @@ Response:
 ```
 
 #### 3. Get Pending Reviews
+
 ```typescript
 GET /api/reviews/pending?role=legal_reviewer&status=active
 
@@ -219,6 +226,7 @@ Response:
 ```
 
 #### 4. Workflow Configuration
+
 ```typescript
 GET /api/workflow/config
 POST /api/workflow/config
@@ -241,12 +249,13 @@ PUT /api/workflow/config/{configId}
 ### Frontend Components
 
 #### 1. Contract Approval Dashboard
+
 ```typescript
 // components/approval/ApprovalDashboard.tsx
 interface ApprovalDashboardProps {
-  userRole: 'legal_reviewer' | 'hr_reviewer' | 'final_approver' | 'signatory';
-  pendingReviews: ContractReview[];
-  completedReviews: ContractReview[];
+  userRole: "legal_reviewer" | "hr_reviewer" | "final_approver" | "signatory"
+  pendingReviews: ContractReview[]
+  completedReviews: ContractReview[]
 }
 
 // Features:
@@ -257,14 +266,15 @@ interface ApprovalDashboardProps {
 ```
 
 #### 2. Contract Review Form
+
 ```typescript
 // components/approval/ContractReviewForm.tsx
 interface ContractReviewFormProps {
-  contractId: string;
-  reviewStage: string;
-  onApprove: (comments: string) => void;
-  onReject: (reason: string) => void;
-  onRequestChanges: (changes: string) => void;
+  contractId: string
+  reviewStage: string
+  onApprove: (comments: string) => void
+  onReject: (reason: string) => void
+  onRequestChanges: (changes: string) => void
 }
 
 // Features:
@@ -275,12 +285,13 @@ interface ContractReviewFormProps {
 ```
 
 #### 3. Workflow Status Tracker
+
 ```typescript
 // components/approval/WorkflowStatusTracker.tsx
 interface WorkflowStatusTrackerProps {
-  contractId: string;
-  currentStatus: string;
-  approvalHistory: ApprovalRecord[];
+  contractId: string
+  currentStatus: string
+  approvalHistory: ApprovalRecord[]
 }
 
 // Features:
@@ -293,37 +304,40 @@ interface WorkflowStatusTrackerProps {
 ### Notification System
 
 #### 1. Email Notifications
+
 ```typescript
 // lib/notifications/approval-notifications.ts
 export class ApprovalNotificationService {
-  static async notifyReviewer(contractId: string, reviewerId: string): Promise<void>;
-  static async notifyApprovalComplete(contractId: string): Promise<void>;
-  static async notifyEscalation(contractId: string, escalatedTo: string[]): Promise<void>;
-  static async notifyOverdue(contractId: string, reviewerId: string): Promise<void>;
+  static async notifyReviewer(contractId: string, reviewerId: string): Promise<void>
+  static async notifyApprovalComplete(contractId: string): Promise<void>
+  static async notifyEscalation(contractId: string, escalatedTo: string[]): Promise<void>
+  static async notifyOverdue(contractId: string, reviewerId: string): Promise<void>
 }
 ```
 
 #### 2. Slack Integration
+
 ```typescript
 // lib/notifications/slack-notifications.ts
 export class SlackApprovalNotifications {
-  static async sendReviewRequest(contract: Contract, reviewer: User): Promise<void>;
-  static async sendApprovalUpdate(contract: Contract, approval: ApprovalRecord): Promise<void>;
-  static async sendEscalationAlert(contract: Contract, daysOverdue: number): Promise<void>;
+  static async sendReviewRequest(contract: Contract, reviewer: User): Promise<void>
+  static async sendApprovalUpdate(contract: Contract, approval: ApprovalRecord): Promise<void>
+  static async sendEscalationAlert(contract: Contract, daysOverdue: number): Promise<void>
 }
 ```
 
 ### Security & Permissions
 
 #### 1. Row Level Security (RLS) Policies
+
 ```sql
 -- Contract visibility based on role
 CREATE POLICY "Users can view contracts they created or are reviewing" ON contracts
 FOR SELECT USING (
-  created_by = auth.uid() OR 
+  created_by = auth.uid() OR
   current_reviewer_id = auth.uid() OR
   EXISTS (
-    SELECT 1 FROM reviewer_roles 
+    SELECT 1 FROM reviewer_roles
     WHERE user_id = auth.uid() AND is_active = true
   )
 );
@@ -332,72 +346,79 @@ FOR SELECT USING (
 CREATE POLICY "Reviewers can approve contracts in their stage" ON contract_approvals
 FOR INSERT WITH CHECK (
   EXISTS (
-    SELECT 1 FROM reviewer_roles 
-    WHERE user_id = auth.uid() 
-    AND role_type = review_stage 
+    SELECT 1 FROM reviewer_roles
+    WHERE user_id = auth.uid()
+    AND role_type = review_stage
     AND is_active = true
   )
 );
 ```
 
 #### 2. Role-Based Access Control
+
 ```typescript
 // lib/auth/approval-permissions.ts
 export const APPROVAL_PERMISSIONS = {
-  legal_reviewer: ['view_contracts', 'approve_legal_review'],
-  hr_reviewer: ['view_contracts', 'approve_hr_review'],
-  final_approver: ['view_contracts', 'approve_final', 'override_approvals'],
-  signatory: ['view_contracts', 'sign_contracts'],
-  admin: ['view_contracts', 'manage_workflow', 'assign_reviewers']
-};
+  legal_reviewer: ["view_contracts", "approve_legal_review"],
+  hr_reviewer: ["view_contracts", "approve_hr_review"],
+  final_approver: ["view_contracts", "approve_final", "override_approvals"],
+  signatory: ["view_contracts", "sign_contracts"],
+  admin: ["view_contracts", "manage_workflow", "assign_reviewers"],
+}
 ```
 
 ### Testing Strategy
 
 #### 1. Unit Tests
+
 ```typescript
 // __tests__/approval-workflow.test.ts
-describe('Approval Workflow', () => {
-  test('should transition from draft to legal review');
-  test('should allow parallel legal and HR reviews');
-  test('should escalate overdue reviews');
-  test('should enforce role-based permissions');
-  test('should maintain audit trail');
-});
+describe("Approval Workflow", () => {
+  test("should transition from draft to legal review")
+  test("should allow parallel legal and HR reviews")
+  test("should escalate overdue reviews")
+  test("should enforce role-based permissions")
+  test("should maintain audit trail")
+})
 ```
 
 #### 2. Integration Tests
+
 ```typescript
 // __tests__/approval-api.test.ts
-describe('Approval API', () => {
-  test('POST /api/contracts/{id}/submit-for-review');
-  test('POST /api/contracts/{id}/approve');
-  test('GET /api/reviews/pending');
-  test('workflow state transitions');
-});
+describe("Approval API", () => {
+  test("POST /api/contracts/{id}/submit-for-review")
+  test("POST /api/contracts/{id}/approve")
+  test("GET /api/reviews/pending")
+  test("workflow state transitions")
+})
 ```
 
 ### Deployment Plan
 
 #### Phase 1: Database Migration (Week 1)
+
 1. Create new tables and indexes
 2. Migrate existing contracts to new schema
 3. Set up RLS policies
 4. Deploy database changes
 
 #### Phase 2: Backend Implementation (Week 2-3)
+
 1. Implement approval workflow service
 2. Create API endpoints
 3. Add notification system
 4. Implement role management
 
 #### Phase 3: Frontend Implementation (Week 4-5)
+
 1. Create approval dashboard
 2. Build review forms
 3. Add workflow status tracker
 4. Implement notifications UI
 
 #### Phase 4: Testing & Deployment (Week 6)
+
 1. Comprehensive testing
 2. User acceptance testing
 3. Production deployment
@@ -413,4 +434,4 @@ describe('Approval API', () => {
 
 ---
 
-*This specification provides a comprehensive foundation for implementing the approval workflow enhancement. The modular design allows for incremental deployment and future enhancements.* 
+_This specification provides a comprehensive foundation for implementing the approval workflow enhancement. The modular design allows for incremental deployment and future enhancements._

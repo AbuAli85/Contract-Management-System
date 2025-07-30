@@ -14,9 +14,7 @@ export default function DashboardSettingsPage() {
       {/* Page Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">
-          Configure system settings and preferences
-        </p>
+        <p className="text-muted-foreground">Configure system settings and preferences</p>
       </div>
 
       {/* Settings Content */}
@@ -44,9 +42,7 @@ export default function DashboardSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>General Settings</CardTitle>
-              <CardDescription>
-                Configure basic system settings
-              </CardDescription>
+              <CardDescription>Configure basic system settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -70,17 +66,13 @@ export default function DashboardSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
-              <CardDescription>
-                Configure how you receive notifications
-              </CardDescription>
+              <CardDescription>Configure how you receive notifications</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive notifications via email
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                 </div>
                 <Switch />
               </div>
@@ -96,9 +88,7 @@ export default function DashboardSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>System Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive system-wide alerts
-                  </p>
+                  <p className="text-sm text-muted-foreground">Receive system-wide alerts</p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -111,17 +101,13 @@ export default function DashboardSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
-              <CardDescription>
-                Manage your account security
-              </CardDescription>
+              <CardDescription>Manage your account security</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Two-Factor Authentication</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Add an extra layer of security
-                  </p>
+                  <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                 </div>
                 <Switch />
               </div>
@@ -143,25 +129,35 @@ export default function DashboardSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Appearance Settings</CardTitle>
-              <CardDescription>
-                Customize the look and feel of the application
-              </CardDescription>
+              <CardDescription>Customize the look and feel of the application</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Theme</Label>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Light</Button>
-                  <Button variant="outline" size="sm">Dark</Button>
-                  <Button variant="outline" size="sm">System</Button>
+                  <Button variant="outline" size="sm">
+                    Light
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Dark
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    System
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>Color Scheme</Label>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm">Blue</Button>
-                  <Button variant="outline" size="sm">Green</Button>
-                  <Button variant="outline" size="sm">Purple</Button>
+                  <Button variant="outline" size="sm">
+                    Blue
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Green
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    Purple
+                  </Button>
                 </div>
               </div>
               <Button>Save Appearance</Button>
@@ -171,4 +167,4 @@ export default function DashboardSettingsPage() {
       </Tabs>
     </div>
   )
-} 
+}
