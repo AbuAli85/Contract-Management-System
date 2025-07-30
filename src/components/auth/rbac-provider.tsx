@@ -2,24 +2,37 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { useAuth } from "@/lib/auth-service"
-import { createClient } from "@/lib/supabase/client"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 
 // Define the Role type
-export type Role = "admin" | "manager" | "user"
+type Role = "admin" | "user" | "manager" | "reviewer" | "promoter"
 
-// RBAC Context Type
+// Define the RBAC context type
 interface RBACContextType {
   userRoles: Role[]
   isLoading: boolean
+  hasRole: (role: Role) => boolean
+  hasAnyRole: (roles: Role[]) => boolean
+  hasAllRoles: (roles: Role[]) => boolean
   refreshRoles: () => Promise<void>
-  updateRoleDirectly: (role: Role) => void
 }
 
+// Create the RBAC context
 const RBACContext = createContext<RBACContextType | undefined>(undefined)
+
+// Custom hook to use RBAC context
+export const useRBAC = () => {
+  const context = useContext(RBACContext)
+  if (context === undefined) {
+    throw new Error("useRBAC must be used within a RBACProvider")
+  }
+  return context
+}
 
 // RBAC Provider Component
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
+  const supabase = useSupabaseClient()
   const [userRoles, setUserRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -33,18 +46,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      setIsLoading(true)
       console.log("🔐 RBAC: Loading roles for user:", user.email)
 
       // Method 1: Try direct Supabase client first (bypasses cookie issues)
       try {
-        console.log("🔐 RBAC: Trying direct Supabase client...")
-        const supabase = createClient()
-        
         if (!supabase) {
-          throw new Error("Failed to create Supabase client")
+          throw new Error("Failed to get Supabase client from context")
         }
-        
+
         // Check users table
         const { data: usersData, error: usersError } = await supabase
           .from("users")
@@ -53,7 +62,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!usersError && usersData?.role) {
-          console.log("✅ Role from direct Supabase client:", usersData.role)
+          console.log("✅ RBAC: Role from users table:", usersData.role)
           setUserRoles([usersData.role as Role])
           setIsLoading(false)
           return
@@ -67,7 +76,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!profilesError && profilesData?.role) {
-          console.log("✅ Role from profiles table:", profilesData.role)
+          console.log("✅ RBAC: Role from profiles table:", profilesData.role)
           setUserRoles([profilesData.role as Role])
           setIsLoading(false)
           return
@@ -81,13 +90,13 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .single()
 
         if (!appUsersError && appUsersData?.role) {
-          console.log("✅ Role from app_users table:", appUsersData.role)
+          console.log("✅ RBAC: Role from app_users table:", appUsersData.role)
           setUserRoles([appUsersData.role as Role])
           setIsLoading(false)
           return
         }
 
-        console.log("⚠️ No role found in database, using default")
+        console.log("⚠️ RBAC: No role found in database, using default")
         setUserRoles(["user"])
         setIsLoading(false)
         return
@@ -96,13 +105,6 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Method 2: Fallback to API route
-      console.log("🔐 RBAC: Fetching roles from API...")
-      
-      // Debug: Check if we're in browser and log cookies
-      if (typeof window !== "undefined") {
-        console.log("🔍 Available cookies:", document.cookie)
-      }
-      
       const response = await fetch("/api/get-user-role", {
         method: "GET",
         credentials: "include", // Include HttpOnly cookies
@@ -111,62 +113,57 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           "Content-Type": "application/json",
         },
       })
-      
-      console.log("🔐 RBAC: Response status:", response.status, response.ok)
 
       if (response.ok) {
         const data = await response.json()
-        if (data.role?.value) {
-          console.log("🔐 RBAC: Role from API:", data.role.value)
+        console.log("✅ RBAC: Role from API:", data.role?.value || "default")
+
+        if (data.success && data.role?.value) {
           setUserRoles([data.role.value as Role])
         } else {
-          console.log("🔐 RBAC: No role from API, using default")
+          console.log("⚠️ RBAC: No role in API response, using default")
           setUserRoles(["user"])
         }
       } else {
-        console.log("🔐 RBAC: API failed, using default role")
+        console.error("❌ RBAC: API request failed:", response.status, response.statusText)
+        console.log("⚠️ RBAC: API failed, using default role")
         setUserRoles(["user"])
       }
     } catch (error) {
-      console.error("🔐 RBAC: Error loading user roles:", error)
+      console.error("🔐 RBAC: Error loading roles:", error)
+      console.log("⚠️ RBAC: Error occurred, using default role")
       setUserRoles(["user"])
     } finally {
       setIsLoading(false)
     }
-  }, [user])
+  }, [user, supabase])
 
   // Refresh roles from server
   const refreshRoles = useCallback(async () => {
-    console.log("🔐 RBAC: Refreshing roles...")
+    setIsLoading(true)
     await loadUserRoles()
   }, [loadUserRoles])
-
-  // Update role directly (for immediate updates)
-  const updateRoleDirectly = useCallback((role: Role) => {
-    console.log("🔐 RBAC: Updating role directly to:", role)
-    setUserRoles([role])
-  }, [])
 
   // Load roles when user changes
   useEffect(() => {
     loadUserRoles()
   }, [loadUserRoles])
 
-  const value: RBACContextType = {
+  // Helper functions
+  const hasRole = useCallback((role: Role) => userRoles.includes(role), [userRoles])
+
+  const hasAnyRole = useCallback((roles: Role[]) => roles.some(role => userRoles.includes(role)), [userRoles])
+
+  const hasAllRoles = useCallback((roles: Role[]) => roles.every(role => userRoles.includes(role)), [userRoles])
+
+  const contextValue: RBACContextType = {
     userRoles,
     isLoading,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles,
     refreshRoles,
-    updateRoleDirectly,
   }
 
-  return <RBACContext.Provider value={value}>{children}</RBACContext.Provider>
-}
-
-// Hook to use RBAC context
-export function useRBAC() {
-  const context = useContext(RBACContext)
-  if (context === undefined) {
-    throw new Error("useRBAC must be used within a RBACProvider")
-  }
-  return context
+  return <RBACContext.Provider value={contextValue}>{children}</RBACContext.Provider>
 }

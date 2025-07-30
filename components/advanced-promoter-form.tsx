@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { createClient } from "@/lib/supabase/client"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { useToast } from "@/hooks/use-toast"
 import { useAutoSave } from "@/hooks/use-auto-save"
 import { AutoSaveIndicator } from "@/components/ui/auto-save-indicator"
@@ -412,6 +412,7 @@ export default function AdvancedPromoterForm({
   onFormSubmit,
   onCancel,
 }: AdvancedPromoterFormProps) {
+  const supabase = useSupabaseClient()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
@@ -432,7 +433,6 @@ export default function AdvancedPromoterForm({
       
       // Only save if we have a promoter to edit (edit mode)
       if (isEditMode && promoterToEdit?.id) {
-        const supabase = createClient()
         
         // Prepare data for update (exclude null values and images)
         const updateData = {
@@ -544,11 +544,6 @@ export default function AdvancedPromoterForm({
     setUploadProgress(0)
 
     try {
-      const supabase = createClient()
-
-      if (!supabase) {
-        throw new Error("Database connection not available")
-      }
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -659,14 +654,7 @@ export default function AdvancedPromoterForm({
     }, 20000) // Increased to 20 seconds
 
     try {
-      const supabase = createClient()
-
-      // Check if supabase client is available
-      if (!supabase) {
-        throw new Error("Database connection not available")
-      }
-
-      console.log("✅ Supabase client created successfully")
+      console.log("✅ Using Supabase client from context")
 
       // Filter form data to only include database fields
       const promoterData = {

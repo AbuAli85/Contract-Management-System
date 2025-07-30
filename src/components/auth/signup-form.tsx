@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,7 +19,7 @@ export function SignUpForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
