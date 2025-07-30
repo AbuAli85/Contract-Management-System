@@ -4,20 +4,33 @@ import { LoginForm } from '@/auth/forms/login-form'
 import { OAuthButtons } from '@/auth/forms/oauth-buttons'
 import { useAuth } from '@/src/components/auth/simple-auth-provider'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function LoginPage() {
   const { user, loading, mounted } = useAuth()
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const [redirectAttempted, setRedirectAttempted] = useState(false)
   const [oauthError, setOauthError] = useState<string | null>(null)
+  const hasRedirected = useRef(false)
 
   // Get current locale for links
   const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
   const locale = pathname.split('/')[1] || 'en'
+
+  // Handle redirect when user is authenticated
+  useEffect(() => {
+    if (user && !loading && mounted && !hasRedirected.current) {
+      // Check if we're already on the dashboard to prevent unnecessary redirects
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : ''
+      if (!currentPath.includes('/dashboard')) {
+        console.log('🔐 Login Page: User authenticated, redirecting to dashboard', { user: user.email })
+        hasRedirected.current = true
+        // Use window.location for more reliable redirect
+        window.location.href = `/${locale}/dashboard`
+      }
+    }
+  }, [user, loading, mounted, locale])
 
   // Check for OAuth errors in URL parameters
   useEffect(() => {
@@ -34,24 +47,6 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
-  // Only redirect if user is already logged in AND we're on the login page
-  useEffect(() => {
-    if (mounted && !loading && user && !redirectAttempted) {
-      // Only redirect if we're actually on the login page and not already on dashboard
-      if (pathname.includes('/auth/login') && !pathname.includes('/dashboard')) {
-        console.log('🔐 Login Page: User already authenticated, redirecting to dashboard')
-        setRedirectAttempted(true)
-        
-        // Use Next.js router for client-side navigation
-        const dashboardUrl = `/${locale}/dashboard`
-        console.log('🔐 Login Page: Redirecting to:', dashboardUrl)
-        
-        // Use router.push for client-side navigation
-        router.push(dashboardUrl)
-      }
-    }
-  }, [user, loading, mounted, locale, redirectAttempted, router, pathname])
-
   // Show loading while checking authentication
   if (loading || !mounted) {
     return (
@@ -64,22 +59,14 @@ export default function LoginPage() {
     )
   }
 
-  // If user is already logged in, show redirect message
-  if (user && pathname.includes('/auth/login')) {
+  // Show redirect message if user is authenticated
+  if (user && !loading && mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
-          <p className="text-sm text-gray-500 mt-2">
-            If you're not redirected automatically,{' '}
-            <button 
-              onClick={() => router.push(`/${locale}/dashboard`)} 
-              className="text-blue-600 hover:underline"
-            >
-              click here
-            </button>
-          </p>
+          <p className="text-sm text-gray-500 mt-2">Please wait...</p>
         </div>
       </div>
     )
