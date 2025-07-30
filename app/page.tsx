@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
 export default function Home() {
-  // Redirect to the default locale with trailing slash
-  redirect('/en/')
+  // Redirect to the default locale (works with or without trailing slash)
+  redirect('/en')
 }
