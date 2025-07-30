@@ -489,3 +489,19 @@ export async function executeWithErrorHandling<T>(
 
 // Export rate limiting configuration for use in middleware
 export { RATE_LIMIT_CONFIG, CONNECTION_POOL_CONFIG }
+
+// Export missing functions for deployment
+export const refreshSession = async () => {
+  const client = await createClientWithRefresh()
+  return client.auth.refreshSession()
+}
+
+export const isSessionExpired = async () => {
+  const client = await createClientWithRefresh()
+  return client.auth.isSessionExpired()
+}
+
+export const ensureValidSession = async () => {
+  const client = await createClientWithRefresh()
+  return client.auth.ensureValidSession()
+}
