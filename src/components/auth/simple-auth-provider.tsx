@@ -413,6 +413,3 @@ export function useAuth() {
 
 // Export AuthProvider for deployment
 export { SimpleAuthProvider as AuthProvider }
-
-// Also export SimpleAuthProvider directly for compatibility
-export { SimpleAuthProvider }
