@@ -70,6 +70,7 @@ interface PromoterStats {
 }
 
 export default function ComprehensivePromoterManagement() {
+  
   // State management
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
@@ -95,6 +96,8 @@ export default function ComprehensivePromoterManagement() {
   const permissions = usePermissions()
   const { isFormActive } = useFormContext()
   const isMountedRef = useRef(true)
+
+
 
   // Helper functions
   const getDocumentStatusType = (
@@ -141,7 +144,6 @@ export default function ComprehensivePromoterManagement() {
 
     try {
       const supabase = getSupabaseClient()
-      console.log("Fetching promoters...")
 
       // Fetch promoters with contract count
       const { data: promotersData, error: promotersError } = await supabase
@@ -149,31 +151,26 @@ export default function ComprehensivePromoterManagement() {
         .select("*")
         .order("name_en")
 
-      console.log("Promoters data:", promotersData)
-      console.log("Promoters error:", promotersError)
-
       if (promotersError) {
         console.error("Error fetching promoters:", promotersError)
-        setError("Failed to load promoters")
+        setError(`Failed to load promoters: ${promotersError.message}`)
         toast({
           title: "Error",
-          description: "Failed to load promoters",
+          description: `Failed to load promoters: ${promotersError.message}`,
           variant: "destructive",
         })
         return
       }
 
       if (!promotersData || promotersData.length === 0) {
-        console.log("No promoters found")
-        setPromoters([])
-        setFilteredPromoters([])
         if (isMountedRef.current) {
+          setPromoters([])
+          setFilteredPromoters([])
           setIsLoading(false)
+          setError("No promoters found in database")
         }
         return
       }
-
-      console.log(`Found ${promotersData.length} promoters`)
 
       // Fetch contract counts for each promoter with better error handling
       const enhancedData = await Promise.all(
@@ -219,13 +216,11 @@ export default function ComprehensivePromoterManagement() {
         })
       )
 
-      console.log("Enhanced data:", enhancedData)
-
       if (isMountedRef.current) {
         setPromoters(enhancedData)
         setFilteredPromoters(enhancedData)
         setError(null) // Clear any previous errors
-        console.log("Promoters state updated successfully")
+        setIsLoading(false)
       }
     } catch (error) {
       console.error("Error in fetchPromotersWithContractCount:", error)
@@ -238,7 +233,6 @@ export default function ComprehensivePromoterManagement() {
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false)
-        console.log("Loading state set to false")
       }
     }
   }, [toast])
@@ -404,24 +398,19 @@ export default function ComprehensivePromoterManagement() {
   const fetchBasicPromoters = useCallback(async () => {
     try {
       const supabase = getSupabaseClient()
-      console.log("Fetching basic promoters...")
 
       // Test connection first
       const { data: testData, error: testError } = await supabase
         .from("promoters")
         .select("count", { count: "exact", head: true })
 
-      console.log("Test connection result:", { testData, testError })
-
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
         .select("*")
         .order("name_en")
 
-      console.log("Basic promoters result:", { promotersData, promotersError })
-
       if (promotersError) {
-        console.error("Error fetching basic promoters:", promotersError)
+        console.error("🔄 fetchBasicPromoters: Error fetching basic promoters:", promotersError)
         toast({
           title: "Error",
           description: `Failed to load promoters: ${promotersError.message}`,
@@ -444,7 +433,6 @@ export default function ComprehensivePromoterManagement() {
           setFilteredPromoters(basicData)
           setError(null)
           setIsLoading(false)
-          console.log("Basic promoters loaded successfully")
           toast({
             title: "Success",
             description: `Loaded ${basicData.length} promoters`,
@@ -452,7 +440,6 @@ export default function ComprehensivePromoterManagement() {
           })
         }
       } else {
-        console.log("No promoters found in database")
         if (isMountedRef.current) {
           setPromoters([])
           setFilteredPromoters([])
@@ -461,7 +448,7 @@ export default function ComprehensivePromoterManagement() {
         }
       }
     } catch (error) {
-      console.error("Error in fetchBasicPromoters:", error)
+      console.error("🔄 fetchBasicPromoters: Error in fetchBasicPromoters:", error)
       toast({
         title: "Error",
         description: "Failed to connect to database",
@@ -574,7 +561,6 @@ export default function ComprehensivePromoterManagement() {
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (isLoading && isMountedRef.current) {
-        console.log("Loading timeout reached, setting loading to false")
         setIsLoading(false)
         setError("Loading timeout - please refresh the page")
       }
@@ -584,11 +570,13 @@ export default function ComprehensivePromoterManagement() {
       isMountedRef.current = false
       clearTimeout(timeout)
     }
-  }, [fetchPromotersWithContractCount, isLoading])
+  }, []) // Remove fetchPromotersWithContractCount from dependencies to prevent infinite loops
 
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
+
+        
         <div className="mx-auto max-w-screen-xl">
                      {/* Header */}
            <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
