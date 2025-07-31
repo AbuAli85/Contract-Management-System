@@ -27,7 +27,7 @@ interface PromoterFormProfessionalProps {
   onCancel?: () => void
 }
 
-function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps) {
+export default function PromoterFormProfessional(props: PromoterFormProfessionalProps) {
   const { promoterToEdit, onFormSubmit, onCancel } = props
   const { toast } = useToast()
   const isEditMode = Boolean(promoterToEdit)
@@ -35,6 +35,7 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
   const [activeTab, setActiveTab] = useState("personal")
   const [formProgress, setFormProgress] = useState(0)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [isClient, setIsClient] = useState(false)
 
   // Safe initialization with fallbacks
   const safeGetValue = (obj: any, key: string, defaultValue: string = "") => {
@@ -62,29 +63,52 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
 
   const [formData, setFormData] = useState({
     // Personal Information
-    full_name: safeGetValue(promoterToEdit, 'name_en'),
-    name_ar: safeGetValue(promoterToEdit, 'name_ar'),
-    email: safeGetValue(promoterToEdit, 'email'),
-    phone: safeGetValue(promoterToEdit, 'phone'),
-    mobile_number: safeGetValue(promoterToEdit, 'mobile_number'),
+    full_name: "",
+    name_ar: "",
+    email: "",
+    phone: "",
+    mobile_number: "",
     
     // Document Information
-    id_number: safeGetValue(promoterToEdit, 'id_card_number'),
-    passport_number: safeGetValue(promoterToEdit, 'passport_number'),
-    id_expiry_date: safeGetValue(promoterToEdit, 'id_card_expiry_date'),
-    passport_expiry_date: safeGetValue(promoterToEdit, 'passport_expiry_date'),
+    id_number: "",
+    passport_number: "",
+    id_expiry_date: "",
+    passport_expiry_date: "",
     
     // Status and Preferences
-    status: safeGetValue(promoterToEdit, 'status', 'active'),
+    status: "active",
     
     // Additional Information
-    notes: safeGetValue(promoterToEdit, 'notes'),
-    profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
+    notes: "",
+    profile_picture_url: "",
     
     // Notification settings
-    notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry'),
-    notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry'),
+    notify_days_before_id_expiry: 30,
+    notify_days_before_passport_expiry: 30,
   })
+
+  // Initialize form data after client-side hydration
+  useEffect(() => {
+    setIsClient(true)
+    if (promoterToEdit) {
+      setFormData({
+        full_name: safeGetValue(promoterToEdit, 'name_en'),
+        name_ar: safeGetValue(promoterToEdit, 'name_ar'),
+        email: safeGetValue(promoterToEdit, 'email'),
+        phone: safeGetValue(promoterToEdit, 'phone'),
+        mobile_number: safeGetValue(promoterToEdit, 'mobile_number'),
+        id_number: safeGetValue(promoterToEdit, 'id_card_number'),
+        passport_number: safeGetValue(promoterToEdit, 'passport_number'),
+        id_expiry_date: safeGetValue(promoterToEdit, 'id_card_expiry_date'),
+        passport_expiry_date: safeGetValue(promoterToEdit, 'passport_expiry_date'),
+        status: safeGetValue(promoterToEdit, 'status', 'active'),
+        notes: safeGetValue(promoterToEdit, 'notes'),
+        profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
+        notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry'),
+        notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry'),
+      })
+    }
+  }, [promoterToEdit])
 
   // Predefined lists for professional dropdowns
   const statusOptions = [
@@ -97,6 +121,8 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
 
   // Calculate form completion progress
   useEffect(() => {
+    if (!isClient) return
+    
     try {
       const requiredFields = ['full_name', 'email', 'id_number']
       const completedFields = requiredFields.filter(field => {
@@ -108,7 +134,7 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
     } catch (error) {
       setFormProgress(0)
     }
-  }, [formData])
+  }, [formData, isClient])
 
   const handleInputChange = (field: string, value: string) => {
     try {
@@ -249,6 +275,17 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading state during SSR
+  if (!isClient) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -599,25 +636,4 @@ function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps)
       </form>
     </div>
   )
-}
-
-// Client-side only wrapper
-export default function PromoterFormProfessional(props: PromoterFormProfessionalProps) {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  return <PromoterFormProfessionalComponent {...props} />
 } 
