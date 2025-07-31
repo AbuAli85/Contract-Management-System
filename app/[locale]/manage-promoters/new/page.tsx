@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, PlusCircle } from "lucide-react"
-import PromoterFormSimple from "@/components/promoter-form-simple"
+import PromoterFormProfessional from "@/components/promoter-form-professional"
 
 export default function AddNewPromoterPage() {
   const router = useRouter()
@@ -75,10 +75,10 @@ export default function AddNewPromoterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PromoterFormSimple 
-              onFormSubmit={handleFormSubmit}
-              onCancel={handleCancel}
-            />
+                              <PromoterFormProfessional 
+                    onFormSubmit={handleFormSubmit}
+                    onCancel={handleCancel}
+                  />
           </CardContent>
         </Card>
       </div>
