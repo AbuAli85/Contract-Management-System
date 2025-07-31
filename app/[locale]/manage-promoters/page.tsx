@@ -40,7 +40,7 @@ import {
   RefreshCw, Settings, Globe, CreditCard, Zap, Bell, Grid, List, Mail,
   PlusCircleIcon, ArrowLeftIcon, BriefcaseIcon, Filter, ArrowUpDown,
   ChevronUp, ChevronDown, Star, MessageSquare, Calendar, UserIcon,
-  FileTextIcon, EyeIcon, EditIcon
+  FileTextIcon, EyeIcon, EditIcon, Database
 } from "lucide-react"
 
 // Types and Utils
@@ -71,7 +71,6 @@ interface PromoterStats {
 }
 
 export default function ComprehensivePromoterManagement() {
-  
   // State management
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
@@ -98,6 +97,8 @@ export default function ComprehensivePromoterManagement() {
   const permissions = usePermissions()
   const { isFormActive } = useFormContext()
   const isMountedRef = useRef(true)
+
+  console.log("🔄 Component rendering - isLoading:", isLoading, "promoters:", promoters.length, "mounted:", isMountedRef.current)
 
 
 
@@ -140,10 +141,16 @@ export default function ComprehensivePromoterManagement() {
   // Enhanced data fetching with contract counts
   const fetchPromotersWithContractCount = useCallback(async () => {
     console.log("🔄 Starting fetchPromotersWithContractCount")
+    console.log("🔄 Current isLoading state:", isLoading)
+    console.log("🔄 isMountedRef.current:", isMountedRef.current)
     
     if (isMountedRef.current) {
+      console.log("🔄 Setting isLoading to true")
       setIsLoading(true)
       setError(null) // Clear any previous errors
+    } else {
+      console.log("🔄 Component not mounted, skipping fetch")
+      return
     }
 
     try {
@@ -183,12 +190,14 @@ export default function ComprehensivePromoterManagement() {
       console.log("🔄 Authenticated user:", user.email)
 
       // Fetch promoters with contract count
+      console.log("🔄 About to execute Supabase query")
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
         .select("*")
         .order("name_en")
 
       console.log("🔄 Promoters query result:", { data: promotersData, error: promotersError })
+      console.log("🔄 Promoters data length:", promotersData?.length || 0)
 
       if (promotersError) {
         console.error("Error fetching promoters:", promotersError)
@@ -609,6 +618,11 @@ export default function ComprehensivePromoterManagement() {
   // Load data on mount with timeout protection
   useEffect(() => {
     console.log("🔄 useEffect triggered - starting data load")
+    console.log("🔄 isMountedRef.current:", isMountedRef.current)
+    
+    // Set mounted to true when component mounts
+    isMountedRef.current = true
+    console.log("🔄 Set isMountedRef.current to true")
     
     const loadData = async () => {
       console.log("🔄 loadData function called")
@@ -631,7 +645,13 @@ export default function ComprehensivePromoterManagement() {
       }
     }
     
-    loadData()
+    // Only run if component is mounted
+    if (isMountedRef.current) {
+      console.log("🔄 Component is mounted, starting loadData")
+      loadData()
+    } else {
+      console.log("🔄 Component not mounted, skipping loadData")
+    }
     
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
@@ -643,10 +663,11 @@ export default function ComprehensivePromoterManagement() {
     }, 10000) // 10 second timeout
 
     return () => {
+      console.log("🔄 useEffect cleanup - setting isMountedRef to false")
       isMountedRef.current = false
       clearTimeout(timeout)
     }
-  }, [fetchPromotersWithContractCount, fetchBasicPromoters]) // Add dependencies
+  }, []) // Remove dependencies to prevent infinite re-renders
 
   return (
     <ProtectedRoute>
@@ -710,6 +731,16 @@ export default function ComprehensivePromoterManagement() {
                 Add New Promoter
               </Button>
               <Button
+                asChild
+                variant="outline"
+                size="sm"
+              >
+                <Link href="/promoter-details">
+                  <UserIcon className="mr-2 h-4 w-4" />
+                  View Profiles
+                </Link>
+              </Button>
+              <Button
                 onClick={fetchBasicPromoters}
                 variant="outline"
                 size="sm"
@@ -717,6 +748,114 @@ export default function ComprehensivePromoterManagement() {
               >
                 <Users className="mr-2 h-4 w-4" />
                 Debug Load
+              </Button>
+              <Button
+                onClick={async () => {
+                  console.log("🔄 Manual trigger of fetchPromotersWithContractCount")
+                  await fetchPromotersWithContractCount()
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Manually trigger main fetch"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Manual Fetch
+              </Button>
+              <Button
+                onClick={async () => {
+                  console.log("🔄 Manual trigger of useEffect logic")
+                  // Reset loading state
+                  setIsLoading(true)
+                  setError(null)
+                  
+                  try {
+                    console.log("🔄 Calling fetchPromotersWithContractCount")
+                    await fetchPromotersWithContractCount()
+                  } catch (error) {
+                    console.error("Manual fetch failed:", error)
+                    setIsLoading(false)
+                    setError("Manual fetch failed")
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Manually trigger useEffect logic"
+              >
+                <Zap className="mr-2 h-4 w-4" />
+                Trigger useEffect
+              </Button>
+              <Button
+                onClick={async () => {
+                  console.log("🔄 Testing direct database query")
+                  const supabase = getSupabaseClient()
+                  
+                  try {
+                    // Test simple query
+                    const { data, error } = await supabase
+                      .from("promoters")
+                      .select("*")
+                      .limit(5)
+                    
+                    console.log("🔄 Direct query result:", { data, error })
+                    
+                    if (error) {
+                      toast({
+                        title: "❌ Query Error",
+                        description: error.message,
+                        variant: "destructive",
+                      })
+                    } else {
+                      toast({
+                        title: "✅ Query Success",
+                        description: `Found ${data?.length || 0} promoters`,
+                      })
+                      
+                      // If we found data, set it directly
+                      if (data && data.length > 0) {
+                        console.log("🔄 Setting real data from direct query")
+                        
+                        // Enhance the data with calculated fields
+                        const enhancedData: EnhancedPromoter[] = data.map((promoter: any) => {
+                          const idExpiryDays = promoter.id_card_expiry_date 
+                            ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+                            : null
+
+                          const passportExpiryDays = promoter.passport_expiry_date
+                            ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+                            : null
+
+                          return {
+                            ...promoter,
+                            id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
+                            passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
+                            overall_status: getOverallStatus(promoter),
+                            days_until_id_expiry: idExpiryDays || undefined,
+                            days_until_passport_expiry: passportExpiryDays || undefined,
+                            active_contracts_count: 0
+                          }
+                        })
+                        
+                        console.log("🔄 Enhanced data:", enhancedData.length)
+                        setPromoters(enhancedData)
+                        setIsLoading(false)
+                        setError(null)
+                      }
+                    }
+                  } catch (error) {
+                    console.error("🔄 Direct query failed:", error)
+                    toast({
+                      title: "❌ Query Failed",
+                      description: "Check console for details",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Test direct database query"
+              >
+                <Database className="mr-2 h-4 w-4" />
+                Test DB Query
               </Button>
               <Button
                 onClick={async () => {
@@ -776,6 +915,7 @@ export default function ComprehensivePromoterManagement() {
                     promotersCount: promoters.length,
                     error
                   })
+                  console.log("🔧 Debug: Promoters data:", promoters)
                   toast({
                     title: "Current State",
                     description: `Loading: ${isLoading}, Promoters: ${promoters.length}, Error: ${error || 'None'}`,
@@ -787,6 +927,102 @@ export default function ComprehensivePromoterManagement() {
               >
                 <Activity className="mr-2 h-4 w-4" />
                 Debug State
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("🔧 Debug: Manually setting loading to false")
+                  setIsLoading(false)
+                  toast({
+                    title: "Manual State Change",
+                    description: "Set loading to false manually",
+                  })
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Manually set loading to false"
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Stop Loading
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("🔧 Debug: Setting test data")
+                  const testPromoter: EnhancedPromoter = {
+                    id: "test-1",
+                    name_en: "Test Promoter",
+                    name_ar: "مروج تجريبي",
+                    id_card_number: "TEST123",
+                    mobile_number: "+966501234567",
+                    passport_number: "TEST789",
+                    nationality: "Saudi",
+                    id_card_expiry_date: "2025-12-31",
+                    passport_expiry_date: "2025-12-31",
+                    notes: "Test data",
+                    status: "active",
+                    created_at: new Date().toISOString(),
+                    id_card_status: "valid",
+                    passport_status: "valid",
+                    overall_status: "active",
+                    active_contracts_count: 0
+                  }
+                  setPromoters([testPromoter])
+                  setIsLoading(false)
+                  setError(null)
+                  toast({
+                    title: "Test Data Set",
+                    description: "Added test promoter data",
+                  })
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Set test data"
+              >
+                <UserIcon className="mr-2 h-4 w-4" />
+                Test Data
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("🔧 Debug: Clearing data and trying to fetch real data")
+                  setPromoters([])
+                  setIsLoading(true)
+                  setError(null)
+                  
+                  // Try to fetch real data
+                  fetchPromotersWithContractCount().then(() => {
+                    console.log("🔧 Debug: Real data fetch completed")
+                  }).catch((error) => {
+                    console.error("🔧 Debug: Real data fetch failed:", error)
+                    setIsLoading(false)
+                    setError("Failed to fetch real data")
+                  })
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Clear and fetch real data"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Fetch Real Data
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("🔧 Debug: Checking filtered promoters")
+                  console.log("🔧 Debug: promoters:", promoters.length)
+                  console.log("🔧 Debug: filteredPromoters:", filteredPromoters.length)
+                  console.log("🔧 Debug: searchTerm:", searchTerm)
+                  console.log("🔧 Debug: filterStatus:", filterStatus)
+                  console.log("🔧 Debug: documentFilter:", documentFilter)
+                  
+                  toast({
+                    title: "Filter Debug",
+                    description: `Promoters: ${promoters.length}, Filtered: ${filteredPromoters.length}`,
+                  })
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Check filtered promoters"
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Debug Filters
               </Button>
               <Button
                 onClick={async () => {

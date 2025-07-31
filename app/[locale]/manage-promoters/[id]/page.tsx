@@ -28,6 +28,8 @@ import {
   EditIcon,
   ArrowLeft,
   Edit,
+  Plus,
+  Trash2,
 } from "lucide-react"
 import { format, parseISO, isPast } from "date-fns"
 import { getDocumentStatus } from "@/lib/document-status"
@@ -95,12 +97,79 @@ export default function PromoterDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [auditLogs, setAuditLogs] = useState<any[]>([])
-  const [activeTab, setActiveTab] = useState("overview")
+  const [activeTab, setActiveTab] = useState("personal")
   const [skills, setSkills] = useState<PromoterSkill[]>([])
   const [experience, setExperience] = useState<PromoterExperience[]>([])
   const [education, setEducation] = useState<PromoterEducation[]>([])
   const [documents, setDocuments] = useState<PromoterDocument[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const role = useUserRole()
+
+  async function handleDeletePromoter() {
+    if (!confirm('Are you sure you want to delete this promoter? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      const supabase = getSupabaseClient()
+      
+      // Delete related records first (if they exist)
+      await supabase.from('promoter_skills').delete().eq('promoter_id', promoterId)
+      await supabase.from('promoter_experience').delete().eq('promoter_id', promoterId)
+      await supabase.from('promoter_education').delete().eq('promoter_id', promoterId)
+      await supabase.from('promoter_documents').delete().eq('promoter_id', promoterId)
+      
+      // Delete the promoter
+      const { error } = await supabase
+        .from('promoters')
+        .delete()
+        .eq('id', promoterId)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Redirect to promoters list
+      router.push('/manage-promoters')
+    } catch (error) {
+      console.error('Error deleting promoter:', error)
+      alert('Failed to delete promoter. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  async function handleToggleStatus() {
+    if (!promoterDetails) return
+
+    setIsUpdatingStatus(true)
+    try {
+      const supabase = getSupabaseClient()
+      const newStatus = promoterDetails.status === 'active' ? 'inactive' : 'active'
+      
+      const { error } = await supabase
+        .from('promoters')
+        .update({ status: newStatus })
+        .eq('id', promoterId)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
+      // Update local state
+      setPromoterDetails(prev => prev ? { ...prev, status: newStatus } : null)
+      
+      // Show success message
+      alert(`Promoter status updated to ${newStatus}`)
+    } catch (error) {
+      console.error('Error updating promoter status:', error)
+      alert('Failed to update promoter status. Please try again.')
+    } finally {
+      setIsUpdatingStatus(false)
+    }
+  }
 
   useEffect(() => {
     if (!promoterId) return
@@ -198,6 +267,8 @@ export default function PromoterDetailPage() {
       }
     }
 
+
+
     fetchPromoterDetails()
     fetchAuditLogs()
     fetchCVData()
@@ -236,30 +307,138 @@ export default function PromoterDetailPage() {
             Back
           </Button>
           {role === "admin" && (
-            <Button onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
+            <>
+              <Button onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => router.push(`/manage-promoters/new`)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add New
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeletePromoter}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="mr-2 h-4 w-4" />
+                )}
+                Delete
+              </Button>
+            </>
           )}
         </div>
       </div>
 
+      {/* Quick Actions Section */}
+      {role === "admin" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BriefcaseIcon className="h-5 w-5" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>Common actions for this promoter</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Promoter
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push(`/generate-contract?promoter=${promoterId}`)}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Contract
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push(`/contracts?promoter=${promoterId}`)}
+              >
+                <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                View Contracts
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => router.push(`/promoter-analysis/${promoterId}`)}
+              >
+                <FileTextIcon className="mr-2 h-4 w-4" />
+                View Analytics
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleToggleStatus}
+                disabled={isUpdatingStatus}
+              >
+                {isUpdatingStatus ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Edit className="mr-2 h-4 w-4" />
+                )}
+                Toggle Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="cv-resume">CV/Resume</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="ranking">Ranking</TabsTrigger>
-          <TabsTrigger value="crm">CRM</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="personal">Personal</TabsTrigger>
+          <TabsTrigger value="professional">Professional</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Profile Overview Section */}
+        <TabsContent value="personal" className="space-y-6">
+          {/* Personal Information Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Profile Overview</CardTitle>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <UserCircle2Icon className="h-5 w-5" />
+                    Personal Information
+                  </CardTitle>
+                  <CardDescription>Basic personal details and contact information</CardDescription>
+                </div>
+                {role === "admin" && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Personal Info
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/promoters/${promoterId}/profile`)}
+                    >
+                      <UserCircle2Icon className="mr-2 h-4 w-4" />
+                      View Full Profile
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-start space-x-6">
@@ -280,44 +459,135 @@ export default function PromoterDetailPage() {
                       >
                         {promoterDetails?.status}
                       </Badge>
-                      {promoterDetails?.tags?.map((tag, index) => (
-                        <Badge key={index} variant="outline">
-                          {tag}
-                        </Badge>
-                      ))}
+                      {role === "admin" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleToggleStatus}
+                          disabled={isUpdatingStatus}
+                        >
+                          {isUpdatingStatus ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Edit className="mr-2 h-4 w-4" />
+                          )}
+                          Toggle Status
+                        </Button>
+                      )}
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <p>{promoterDetails?.email || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                      <p>{promoterDetails?.phone || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Mobile</p>
-                      <p>{promoterDetails?.mobile_number || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Address</p>
-                      <p>{promoterDetails?.address || "N/A"}</p>
-                    </div>
+                    <DetailItem label="Email" value={promoterDetails?.email} />
+                    <DetailItem label="Phone" value={promoterDetails?.phone} />
+                    <DetailItem label="Mobile" value={promoterDetails?.mobile_number} />
+                    <DetailItem label="Nationality" value={promoterDetails?.nationality} />
+                    <DetailItem label="Date of Birth" value={promoterDetails?.date_of_birth} />
+                    <DetailItem label="Gender" value={promoterDetails?.gender} />
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Contract Information Section */}
+          {/* Document Information Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BriefcaseIcon className="h-5 w-5" />
-                Contract Information
+                <FileTextIcon className="h-5 w-5" />
+                Document Information
               </CardTitle>
-              <CardDescription>Current and historical contract details</CardDescription>
+              <CardDescription>Identity documents and their status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">ID Card</span>
+                    <DocumentStatusBadge
+                      expiryDate={promoterDetails?.id_card_expiry_date}
+                      documentType="id_card"
+                    />
+                  </div>
+                  <DetailItem label="ID Number" value={promoterDetails?.id_card_number} />
+                  {promoterDetails?.id_card_expiry_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires: {format(parseISO(promoterDetails.id_card_expiry_date), "MMM dd, yyyy")}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Passport</span>
+                    <DocumentStatusBadge
+                      expiryDate={promoterDetails?.passport_expiry_date}
+                      documentType="passport"
+                    />
+                  </div>
+                  <DetailItem label="Passport Number" value={promoterDetails?.passport_number} />
+                  {promoterDetails?.passport_expiry_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires: {format(parseISO(promoterDetails.passport_expiry_date), "MMM dd, yyyy")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Personal Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Additional Personal Details</CardTitle>
+              <CardDescription>Other personal information and notes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DetailItem label="National ID" value={promoterDetails?.national_id} />
+                <DetailItem label="CRN" value={promoterDetails?.crn} />
+                <DetailItem label="Marital Status" value={promoterDetails?.marital_status} />
+                <DetailItem label="Notes" value={promoterDetails?.notes} />
+                <DetailItem 
+                  label="Created Date" 
+                  value={promoterDetails?.created_at ? format(parseISO(promoterDetails.created_at), "MMM dd, yyyy") : "N/A"} 
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="professional" className="space-y-6">
+          {/* Contract Information Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <BriefcaseIcon className="h-5 w-5" />
+                    Contract Information
+                  </CardTitle>
+                  <CardDescription>Current and historical contract details</CardDescription>
+                </div>
+                {role === "admin" && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/contracts?promoter=${promoterId}`)}
+                    >
+                      <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                      View All Contracts
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/generate-contract?promoter=${promoterId}`)}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      New Contract
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -365,49 +635,6 @@ export default function PromoterDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Document Status Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileTextIcon className="h-5 w-5" />
-                Document Status
-              </CardTitle>
-              <CardDescription>Current status of important documents</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">ID Card</span>
-                    <DocumentStatusBadge
-                      expiryDate={promoterDetails?.id_card_expiry_date}
-                      documentType="id_card"
-                    />
-                  </div>
-                  {promoterDetails?.id_card_expiry_date && (
-                    <p className="text-xs text-muted-foreground">
-                      Expires: {format(parseISO(promoterDetails.id_card_expiry_date), "MMM dd, yyyy")}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Passport</span>
-                    <DocumentStatusBadge
-                      expiryDate={promoterDetails?.passport_expiry_date}
-                      documentType="passport"
-                    />
-                  </div>
-                  {promoterDetails?.passport_expiry_date && (
-                    <p className="text-xs text-muted-foreground">
-                      Expires: {format(parseISO(promoterDetails.passport_expiry_date), "MMM dd, yyyy")}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Working Status Section */}
           <Card>
             <CardHeader>
@@ -441,29 +668,43 @@ export default function PromoterDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Additional Information Section */}
+          {/* Professional Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Additional Information</CardTitle>
-              <CardDescription>Other important details about the promoter</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Professional Information</CardTitle>
+                  <CardDescription>Job details and professional background</CardDescription>
+                </div>
+                {role === "admin" && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Professional Info
+                    </Button>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <DetailItem label="ID Card Number" value={promoterDetails?.id_card_number} />
-                <DetailItem label="Passport Number" value={promoterDetails?.passport_number} />
-                <DetailItem label="National ID" value={promoterDetails?.national_id} />
-                <DetailItem label="CRN" value={promoterDetails?.crn} />
-                <DetailItem label="Notes" value={promoterDetails?.notes} />
-                <DetailItem 
-                  label="Created Date" 
-                  value={promoterDetails?.created_at ? format(parseISO(promoterDetails.created_at), "MMM dd, yyyy") : "N/A"} 
-                />
+                <DetailItem label="Job Title" value={promoterDetails?.job_title} />
+                <DetailItem label="Company" value={promoterDetails?.company} />
+                <DetailItem label="Department" value={promoterDetails?.department} />
+                <DetailItem label="Specialization" value={promoterDetails?.specialization} />
+                <DetailItem label="Experience Years" value={promoterDetails?.experience_years} />
+                <DetailItem label="Education Level" value={promoterDetails?.education_level} />
+                <DetailItem label="University" value={promoterDetails?.university} />
+                <DetailItem label="Graduation Year" value={promoterDetails?.graduation_year} />
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        <TabsContent value="cv-resume" className="space-y-6">
+          {/* CV/Resume Section */}
           <PromoterCVResume
             promoterId={promoterId}
             skills={skills}
@@ -478,20 +719,109 @@ export default function PromoterDetailPage() {
           />
         </TabsContent>
 
-        <TabsContent value="attendance" className="space-y-6">
-          <PromoterAttendance promoterId={promoterId} isAdmin={role === "admin"} />
-        </TabsContent>
+        <TabsContent value="advanced" className="space-y-6">
+          {/* Attendance Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Attendance & Performance</CardTitle>
+              <CardDescription>Track attendance and performance metrics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PromoterAttendance promoterId={promoterId} isAdmin={role === "admin"} />
+            </CardContent>
+          </Card>
 
-        <TabsContent value="reports" className="space-y-6">
-          <PromoterReports promoterId={promoterId} isAdmin={role === "admin"} />
-        </TabsContent>
+          {/* Reports Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Reports & Analytics</CardTitle>
+                  <CardDescription>Detailed reports and performance analytics</CardDescription>
+                </div>
+                {role === "admin" && (
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => router.push(`/promoter-analysis/${promoterId}`)}
+                    >
+                      <ExternalLinkIcon className="mr-2 h-4 w-4" />
+                      View Analytics
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.print()}
+                    >
+                      <FileTextIcon className="mr-2 h-4 w-4" />
+                      Export Report
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <PromoterReports promoterId={promoterId} isAdmin={role === "admin"} />
+            </CardContent>
+          </Card>
 
-        <TabsContent value="ranking" className="space-y-6">
-          <PromoterRanking promoterId={promoterId} isAdmin={role === "admin"} />
-        </TabsContent>
+          {/* Ranking Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance Ranking</CardTitle>
+              <CardDescription>Performance rankings and comparisons</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PromoterRanking promoterId={promoterId} isAdmin={role === "admin"} />
+            </CardContent>
+          </Card>
 
-        <TabsContent value="crm" className="space-y-6">
-          <PromoterCRM promoterId={promoterId} isAdmin={role === "admin"} />
+          {/* CRM Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Relationship Management</CardTitle>
+              <CardDescription>CRM data and customer interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PromoterCRM promoterId={promoterId} isAdmin={role === "admin"} />
+            </CardContent>
+          </Card>
+
+          {/* Financial Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Financial Information</CardTitle>
+              <CardDescription>Banking and financial details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DetailItem label="Bank Name" value={promoterDetails?.bank_name} />
+                <DetailItem label="Account Number" value={promoterDetails?.account_number} />
+                <DetailItem label="IBAN" value={promoterDetails?.iban} />
+                <DetailItem label="SWIFT Code" value={promoterDetails?.swift_code} />
+                <DetailItem label="Tax ID" value={promoterDetails?.tax_id} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Skills & Certifications */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Skills & Certifications</CardTitle>
+              <CardDescription>Professional skills and certifications</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DetailItem label="Skills" value={promoterDetails?.skills} />
+                <DetailItem label="Certifications" value={promoterDetails?.certifications} />
+                <DetailItem label="Availability" value={promoterDetails?.availability} />
+                <DetailItem label="Preferred Language" value={promoterDetails?.preferred_language} />
+                <DetailItem label="Timezone" value={promoterDetails?.timezone} />
+                <DetailItem label="Special Requirements" value={promoterDetails?.special_requirements} />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
