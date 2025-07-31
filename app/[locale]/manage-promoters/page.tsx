@@ -150,6 +150,16 @@ export default function ComprehensivePromoterManagement() {
       const supabase = getSupabaseClient()
       console.log("🔄 Supabase client obtained")
 
+      // Check if we got a mock client
+      if (!supabase || typeof supabase.auth === 'undefined') {
+        console.error("No valid Supabase client available")
+        if (isMountedRef.current) {
+          setError("Database connection not available. Please check your environment variables.")
+          setIsLoading(false)
+        }
+        return
+      }
+
       // Test authentication first
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) {
@@ -182,18 +192,24 @@ export default function ComprehensivePromoterManagement() {
 
       if (promotersError) {
         console.error("Error fetching promoters:", promotersError)
-        setError(`Failed to load promoters: ${promotersError.message}`)
+        if (isMountedRef.current) {
+          setError(`Failed to load promoters: ${promotersError.message}`)
+          setIsLoading(false)
+        }
         return
       }
 
       if (!promotersData) {
         console.log("🔄 No promoters data returned")
-        setPromoters([])
+        if (isMountedRef.current) {
+          setPromoters([])
+          setIsLoading(false)
+        }
         return
       }
 
       // Enhance promoter data with calculated fields
-      const enhancedPromoters: EnhancedPromoter[] = promotersData.map(promoter => {
+      const enhancedPromoters: EnhancedPromoter[] = promotersData.map((promoter: any) => {
         const idExpiryDays = promoter.id_card_expiry_date 
           ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
           : null
@@ -216,8 +232,11 @@ export default function ComprehensivePromoterManagement() {
       console.log("🔄 Enhanced promoters:", enhancedPromoters.length)
 
       if (isMountedRef.current) {
+        console.log("🔄 Setting promoters and stopping loading...")
         setPromoters(enhancedPromoters)
         setError(null)
+        setIsLoading(false) // ✅ Explicitly set loading to false on success
+        console.log("🔄 Loading state should now be false")
       }
     } catch (error) {
       console.error("Error in fetchPromotersWithContractCount:", error)
@@ -265,6 +284,16 @@ export default function ComprehensivePromoterManagement() {
     
     return expiringAlerts + 1 // +1 for system notifications
   }, [promoters])
+
+  // Monitor loading state changes
+  useEffect(() => {
+    console.log("🔄 Loading state changed:", isLoading)
+  }, [isLoading])
+
+  // Monitor promoters state changes
+  useEffect(() => {
+    console.log("🔄 Promoters state changed:", promoters.length)
+  }, [promoters.length])
 
   // Filter and sort promoters
   useEffect(() => {
@@ -401,6 +430,16 @@ export default function ComprehensivePromoterManagement() {
       const supabase = getSupabaseClient()
       console.log("🔄 Supabase client obtained for fallback")
 
+      // Check if we got a mock client
+      if (!supabase || typeof supabase.auth === 'undefined') {
+        console.error("No valid Supabase client available for fallback")
+        if (isMountedRef.current) {
+          setError("Database connection not available. Please check your environment variables.")
+          setIsLoading(false)
+        }
+        return
+      }
+
       const { data: promotersData, error } = await supabase
         .from("promoters")
         .select("*")
@@ -412,6 +451,7 @@ export default function ComprehensivePromoterManagement() {
         console.error("Error in fallback fetch:", error)
         if (isMountedRef.current) {
           setError(`Failed to load promoters: ${error.message}`)
+          setIsLoading(false)
         }
         return
       }
@@ -420,12 +460,13 @@ export default function ComprehensivePromoterManagement() {
         console.log("🔄 No promoters data in fallback")
         if (isMountedRef.current) {
           setPromoters([])
+          setIsLoading(false)
         }
         return
       }
 
       // Basic enhancement without contract counts
-      const basicEnhancedPromoters: EnhancedPromoter[] = promotersData.map(promoter => {
+      const basicEnhancedPromoters: EnhancedPromoter[] = promotersData.map((promoter: any) => {
         const idExpiryDays = promoter.id_card_expiry_date 
           ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
           : null
@@ -448,8 +489,11 @@ export default function ComprehensivePromoterManagement() {
       console.log("🔄 Basic enhanced promoters:", basicEnhancedPromoters.length)
 
       if (isMountedRef.current) {
+        console.log("🔄 Setting basic promoters and stopping loading...")
         setPromoters(basicEnhancedPromoters)
         setError(null)
+        setIsLoading(false) // ✅ Explicitly set loading to false on success
+        console.log("🔄 Loading state should now be false")
       }
     } catch (error) {
       console.error("Error in fetchBasicPromoters:", error)
@@ -621,7 +665,18 @@ export default function ComprehensivePromoterManagement() {
                {/* Debug info */}
                <div className="text-xs text-muted-foreground">
                  {isLoading ? "Loading promoters..." : `Loaded: ${promoters.length} promoters`}
-                 {error && <span className="text-red-500 ml-2">Error: {error}</span>}
+                 {error && (
+                   <div className="text-red-500 ml-2">
+                     <div>Error: {error}</div>
+                     <div className="text-xs">Check environment variables and database connection</div>
+                   </div>
+                 )}
+                 {!isLoading && !error && promoters.length === 0 && (
+                   <div className="text-yellow-500 ml-2">
+                     <div>No promoters found</div>
+                     <div className="text-xs">Try importing data or check database connection</div>
+                   </div>
+                 )}
                </div>
              </div>
             <div className="flex gap-2">
@@ -662,6 +717,76 @@ export default function ComprehensivePromoterManagement() {
               >
                 <Users className="mr-2 h-4 w-4" />
                 Debug Load
+              </Button>
+              <Button
+                onClick={async () => {
+                  const supabase = getSupabaseClient()
+                  console.log("🔧 Debug: Supabase client type:", typeof supabase)
+                  console.log("🔧 Debug: Supabase client:", supabase)
+                  console.log("🔧 Debug: Environment variables:", {
+                    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+                    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+                  })
+                  
+                  // Test the client
+                  if (supabase && supabase.auth) {
+                    try {
+                      const { data: { user }, error } = await supabase.auth.getUser()
+                      console.log("🔧 Debug: Auth test result:", { user: user?.email, error })
+                      
+                      if (user) {
+                        toast({
+                          title: "✅ Environment OK",
+                          description: `Authenticated as: ${user.email}`,
+                        })
+                      } else {
+                        toast({
+                          title: "⚠️ No User",
+                          description: "Client works but no user authenticated",
+                          variant: "destructive",
+                        })
+                      }
+                    } catch (error) {
+                      console.error("🔧 Debug: Auth test failed:", error)
+                      toast({
+                        title: "❌ Auth Test Failed",
+                        description: "Check your environment variables",
+                        variant: "destructive",
+                      })
+                    }
+                  } else {
+                    toast({
+                      title: "❌ No Valid Client",
+                      description: "Create .env.local with Supabase credentials",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Check environment and client"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Debug Env
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log("🔧 Debug: Current state:", {
+                    isLoading,
+                    promotersCount: promoters.length,
+                    error
+                  })
+                  toast({
+                    title: "Current State",
+                    description: `Loading: ${isLoading}, Promoters: ${promoters.length}, Error: ${error || 'None'}`,
+                  })
+                }}
+                variant="outline"
+                size="sm"
+                title="Debug: Check current state"
+              >
+                <Activity className="mr-2 h-4 w-4" />
+                Debug State
               </Button>
               <Button
                 onClick={async () => {
