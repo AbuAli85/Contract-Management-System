@@ -11,15 +11,10 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
 
 import { 
-  ArrowLeft, Save, User, Mail, Phone, MapPin, Calendar, FileText, 
-  Briefcase, GraduationCap, Award, Globe, Building, CreditCard,
-  Camera, Upload, Download, Eye, Edit3, Trash2, Plus, Star, X,
-  AlertTriangle, CheckCircle, Clock, Shield, Users, Target,
-  TrendingUp, BarChart3, Settings, Bell, FileCheck, UserCheck
+  Save, User, Phone, FileText, Settings, Star, X,
+  CheckCircle, Shield, Edit3, Plus
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
@@ -41,66 +36,50 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
   const [formProgress, setFormProgress] = useState(0)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  // Handle case where component is rendered during build time
-  if (typeof window === 'undefined') {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
+  // Safe initialization with fallbacks
+  const safeGetValue = (obj: any, key: string, defaultValue: string = "") => {
+    try {
+      const value = obj?.[key]
+      return value != null ? String(value) : defaultValue
+    } catch {
+      return defaultValue
+    }
   }
 
-  // Additional safety check for undefined promoterToEdit during build
-  if (!promoterToEdit && isEditMode) {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <p>Loading promoter data...</p>
-        </div>
-      </div>
-    )
+  const safeGetNumber = (obj: any, key: string, defaultValue: number = 30) => {
+    try {
+      const value = obj?.[key]
+      return value != null ? Number(value) : defaultValue
+    } catch {
+      return defaultValue
+    }
   }
 
   const [formData, setFormData] = useState({
     // Personal Information
-    full_name: (promoterToEdit?.name_en as string) || "",
-    name_en: (promoterToEdit?.name_en as string) || "",
-    name_ar: (promoterToEdit?.name_ar as string) || "",
-    email: (promoterToEdit?.email as string) || "",
-    phone: (promoterToEdit?.phone as string) || "",
-    mobile_number: (promoterToEdit?.mobile_number as string) || "",
+    full_name: safeGetValue(promoterToEdit, 'name_en'),
+    name_ar: safeGetValue(promoterToEdit, 'name_ar'),
+    email: safeGetValue(promoterToEdit, 'email'),
+    phone: safeGetValue(promoterToEdit, 'phone'),
+    mobile_number: safeGetValue(promoterToEdit, 'mobile_number'),
     
     // Document Information
-    id_number: (promoterToEdit?.id_card_number as string) || "",
-    passport_number: (promoterToEdit?.passport_number as string) || "",
-    id_expiry_date: (promoterToEdit?.id_card_expiry_date as string) || "",
-    passport_expiry_date: (promoterToEdit?.passport_expiry_date as string) || "",
+    id_number: safeGetValue(promoterToEdit, 'id_card_number'),
+    passport_number: safeGetValue(promoterToEdit, 'passport_number'),
+    id_expiry_date: safeGetValue(promoterToEdit, 'id_card_expiry_date'),
+    passport_expiry_date: safeGetValue(promoterToEdit, 'passport_expiry_date'),
     
     // Status and Preferences
-    status: (promoterToEdit?.status as string) || "active",
+    status: safeGetValue(promoterToEdit, 'status', 'active'),
     
     // Additional Information
-    notes: (promoterToEdit?.notes as string) || "",
-    profile_picture_url: (promoterToEdit?.profile_picture_url as string) || "",
+    notes: safeGetValue(promoterToEdit, 'notes'),
+    profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
     
     // Notification settings
-    notify_days_before_id_expiry: Number(promoterToEdit?.notify_days_before_id_expiry) || 30,
-    notify_days_before_passport_expiry: Number(promoterToEdit?.notify_days_before_passport_expiry) || 30,
+    notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry'),
+    notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry'),
   })
-
-  // Document upload state
-  const [uploadedDocuments, setUploadedDocuments] = useState({
-    id_document: (promoterToEdit?.id_card_url as string) || null,
-    passport_document: (promoterToEdit?.passport_url as string) || null,
-  })
-  const [uploading, setUploading] = useState(false)
-
-  // Advanced features state
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false)
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true)
-  const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
   // Predefined lists for professional dropdowns
   const statusOptions = [
@@ -113,53 +92,66 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
 
   // Calculate form completion progress
   useEffect(() => {
-    const requiredFields = ['full_name', 'email', 'id_number']
-    const completedFields = requiredFields.filter(field => {
-      const value = formData[field as keyof typeof formData]
-      return value && typeof value === 'string' && value.trim().length > 0
-    }).length
-    const progress = Math.round((completedFields / requiredFields.length) * 100)
-    setFormProgress(progress)
+    try {
+      const requiredFields = ['full_name', 'email', 'id_number']
+      const completedFields = requiredFields.filter(field => {
+        const value = formData[field as keyof typeof formData]
+        return value && typeof value === 'string' && value.trim().length > 0
+      }).length
+      const progress = Math.round((completedFields / requiredFields.length) * 100)
+      setFormProgress(progress)
+    } catch (error) {
+      setFormProgress(0)
+    }
   }, [formData])
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value || ""
-    }))
-    
-    // Clear validation error when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors(prev => ({
+    try {
+      setFormData(prev => ({
         ...prev,
-        [field]: ""
+        [field]: value || ""
       }))
+      
+      // Clear validation error when user starts typing
+      if (validationErrors[field]) {
+        setValidationErrors(prev => ({
+          ...prev,
+          [field]: ""
+        }))
+      }
+    } catch (error) {
+      console.error('Error updating form data:', error)
     }
   }
 
   const validateForm = () => {
-    const errors: Record<string, string> = {}
+    try {
+      const errors: Record<string, string> = {}
 
-    if (!formData.full_name || !formData.full_name.trim()) {
-      errors.full_name = "Full name is required"
+      if (!formData.full_name || !formData.full_name.trim()) {
+        errors.full_name = "Full name is required"
+      }
+
+      if (!formData.email || !formData.email.trim()) {
+        errors.email = "Email is required"
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        errors.email = "Please enter a valid email address"
+      }
+
+      if (!formData.id_number || !formData.id_number.trim()) {
+        errors.id_number = "ID card number is required"
+      }
+
+      if (formData.phone && formData.phone.trim() && !/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/\s/g, ''))) {
+        errors.phone = "Please enter a valid phone number"
+      }
+
+      setValidationErrors(errors)
+      return Object.keys(errors).length === 0
+    } catch (error) {
+      console.error('Validation error:', error)
+      return false
     }
-
-    if (!formData.email || !formData.email.trim()) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.id_number || !formData.id_number.trim()) {
-      errors.id_number = "ID card number is required"
-    }
-
-    if (formData.phone && formData.phone.trim() && !/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone.replace(/\s/g, ''))) {
-      errors.phone = "Please enter a valid phone number"
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -195,15 +187,13 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         status: formData.status || "active",
         notes: formData.notes || "",
         profile_picture_url: formData.profile_picture_url || "",
-        notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || "30"),
-        notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || "30"),
-        id_card_url: uploadedDocuments.id_document,
-        passport_url: uploadedDocuments.passport_document,
+        notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
+        notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
       }
 
       let result
       if (isEditMode && promoterToEdit) {
-        const idCardNumberChanged = formData.id_number !== promoterToEdit.id_card_number
+        const idCardNumberChanged = formData.id_number !== safeGetValue(promoterToEdit, 'id_card_number')
         
         if (idCardNumberChanged && formData.id_number) {
           const { data: existingPromoter, error: checkError } = await supabase
@@ -256,6 +246,17 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     }
   }
 
+  // Safe render check
+  if (typeof window === 'undefined') {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Professional Header */}
@@ -280,12 +281,6 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
             {isEditMode ? <Edit3 className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
             {isEditMode ? "Edit Mode" : "New Promoter"}
           </Badge>
-          {lastSaved && (
-            <Badge variant="outline" className="text-xs">
-              <Clock className="h-3 w-3 mr-1" />
-              Saved {lastSaved.toLocaleTimeString()}
-            </Badge>
-          )}
         </div>
       </div>
 
@@ -346,7 +341,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     </Label>
                     <Input
                       id="full_name"
-                      value={formData.full_name}
+                      value={formData.full_name || ""}
                       onChange={(e) => handleInputChange('full_name', e.target.value)}
                       placeholder="Enter full name in English"
                       className={validationErrors.full_name ? "border-red-500" : ""}
@@ -360,7 +355,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="name_ar">Full Name (Arabic)</Label>
                     <Input
                       id="name_ar"
-                      value={formData.name_ar}
+                      value={formData.name_ar || ""}
                       onChange={(e) => handleInputChange('name_ar', e.target.value)}
                       placeholder="Enter full name in Arabic"
                     />
@@ -374,7 +369,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Input
                       id="email"
                       type="email"
-                      value={formData.email}
+                      value={formData.email || ""}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="Enter email address"
                       className={validationErrors.email ? "border-red-500" : ""}
@@ -426,7 +421,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     </Label>
                     <Input
                       id="id_number"
-                      value={formData.id_number}
+                      value={formData.id_number || ""}
                       onChange={(e) => handleInputChange('id_number', e.target.value)}
                       placeholder="Enter ID card number"
                       className={validationErrors.id_number ? "border-red-500" : ""}
@@ -440,7 +435,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="passport_number">Passport Number</Label>
                     <Input
                       id="passport_number"
-                      value={formData.passport_number}
+                      value={formData.passport_number || ""}
                       onChange={(e) => handleInputChange('passport_number', e.target.value)}
                       placeholder="Enter passport number"
                     />
@@ -450,7 +445,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <DateInput
                       id="id_expiry_date"
                       label="ID Card Expiry Date"
-                      value={formData.id_expiry_date}
+                      value={formData.id_expiry_date || ""}
                       onChange={(value) => handleInputChange('id_expiry_date', value)}
                       placeholder="DD/MM/YYYY"
                     />
@@ -460,7 +455,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <DateInput
                       id="passport_expiry_date"
                       label="Passport Expiry Date"
-                      value={formData.passport_expiry_date}
+                      value={formData.passport_expiry_date || ""}
                       onChange={(value) => handleInputChange('passport_expiry_date', value)}
                       placeholder="DD/MM/YYYY"
                     />
@@ -486,7 +481,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="phone">Phone Number</Label>
                     <Input
                       id="phone"
-                      value={formData.phone}
+                      value={formData.phone || ""}
                       onChange={(e) => handleInputChange('phone', e.target.value)}
                       placeholder="Enter phone number"
                       className={validationErrors.phone ? "border-red-500" : ""}
@@ -500,7 +495,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="mobile_number">Mobile Number</Label>
                     <Input
                       id="mobile_number"
-                      value={formData.mobile_number}
+                      value={formData.mobile_number || ""}
                       onChange={(e) => handleInputChange('mobile_number', e.target.value)}
                       placeholder="Enter mobile number"
                     />
@@ -527,7 +522,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Input
                       id="notify_days_before_id_expiry"
                       type="number"
-                      value={formData.notify_days_before_id_expiry?.toString() || "30"}
+                      value={String(formData.notify_days_before_id_expiry || 30)}
                       onChange={(e) => handleInputChange('notify_days_before_id_expiry', e.target.value)}
                       placeholder="30"
                       min="1"
@@ -540,7 +535,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Input
                       id="notify_days_before_passport_expiry"
                       type="number"
-                      value={formData.notify_days_before_passport_expiry?.toString() || "30"}
+                      value={String(formData.notify_days_before_passport_expiry || 30)}
                       onChange={(e) => handleInputChange('notify_days_before_passport_expiry', e.target.value)}
                       placeholder="30"
                       min="1"
@@ -565,7 +560,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="notes">Notes</Label>
                     <Textarea
                       id="notes"
-                      value={formData.notes}
+                      value={formData.notes || ""}
                       onChange={(e) => handleInputChange('notes', e.target.value)}
                       placeholder="Enter any additional notes about this promoter"
                       rows={3}
@@ -576,7 +571,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Label htmlFor="profile_picture_url">Profile Picture URL</Label>
                     <Input
                       id="profile_picture_url"
-                      value={formData.profile_picture_url}
+                      value={formData.profile_picture_url || ""}
                       onChange={(e) => handleInputChange('profile_picture_url', e.target.value)}
                       placeholder="Enter profile picture URL"
                     />
