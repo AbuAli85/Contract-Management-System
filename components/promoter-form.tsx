@@ -37,7 +37,7 @@ export default function PromoterForm(props: PromoterFormProps) {
 
   const [formData, setFormData] = useState({
     // Personal Information
-    full_name: promoterToEdit?.full_name || "",
+    full_name: promoterToEdit?.name_en || "",
     name_en: promoterToEdit?.name_en || "",
     name_ar: promoterToEdit?.name_ar || "",
     email: promoterToEdit?.email || "",

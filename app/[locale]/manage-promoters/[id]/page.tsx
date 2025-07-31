@@ -130,13 +130,14 @@ export default function PromoterDetailPage() {
         .select(
           `
           *,
-          second_party:parties!inner(id, name_en, name_ar)
+          second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar)
         `,
         )
         .eq("promoter_id", promoterId)
 
       if (contractsError) {
-        setError(contractsError.message)
+        console.error("Error fetching contracts:", contractsError)
+        // Don't set error for contracts, just log it
       }
 
       setPromoterDetails({
@@ -309,7 +310,157 @@ export default function PromoterDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Existing sections... */}
+          {/* Contract Information Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BriefcaseIcon className="h-5 w-5" />
+                Contract Information
+              </CardTitle>
+              <CardDescription>Current and historical contract details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {promoterDetails?.contracts?.filter(c => c.status === "active").length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Active Contracts</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {promoterDetails?.contracts?.filter(c => c.status === "completed").length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Completed Contracts</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {promoterDetails?.contracts?.length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Total Contracts</div>
+                </div>
+              </div>
+              
+              {promoterDetails?.contracts && promoterDetails.contracts.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="mb-3 text-sm font-medium">Recent Contracts</h4>
+                  <div className="space-y-2">
+                    {promoterDetails.contracts.slice(0, 3).map((contract) => (
+                      <div key={contract.id} className="flex items-center justify-between rounded-lg border p-3">
+                        <div>
+                          <p className="font-medium">{contract.title || "Contract"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {contract.start_date && format(parseISO(contract.start_date), "MMM dd, yyyy")} - 
+                            {contract.end_date && format(parseISO(contract.end_date), "MMM dd, yyyy")}
+                          </p>
+                        </div>
+                        <Badge variant={contract.status === "active" ? "default" : "secondary"}>
+                          {contract.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Document Status Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileTextIcon className="h-5 w-5" />
+                Document Status
+              </CardTitle>
+              <CardDescription>Current status of important documents</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">ID Card</span>
+                    <DocumentStatusBadge
+                      expiryDate={promoterDetails?.id_card_expiry_date}
+                      documentType="id_card"
+                    />
+                  </div>
+                  {promoterDetails?.id_card_expiry_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires: {format(parseISO(promoterDetails.id_card_expiry_date), "MMM dd, yyyy")}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Passport</span>
+                    <DocumentStatusBadge
+                      expiryDate={promoterDetails?.passport_expiry_date}
+                      documentType="passport"
+                    />
+                  </div>
+                  {promoterDetails?.passport_expiry_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Expires: {format(parseISO(promoterDetails.passport_expiry_date), "MMM dd, yyyy")}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Working Status Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCircle2Icon className="h-5 w-5" />
+                Working Status
+              </CardTitle>
+              <CardDescription>Current availability and work status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <div className="text-center">
+                  <div className="text-lg font-semibold">
+                    {promoterDetails?.status === "active" ? "Available" : "Not Available"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Current Status</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold">
+                    {promoterDetails?.contracts?.filter(c => c.status === "active").length || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Current Assignments</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-semibold">
+                    {promoterDetails?.rating || "N/A"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Performance Rating</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Additional Information Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Additional Information</CardTitle>
+              <CardDescription>Other important details about the promoter</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DetailItem label="ID Card Number" value={promoterDetails?.id_card_number} />
+                <DetailItem label="Passport Number" value={promoterDetails?.passport_number} />
+                <DetailItem label="National ID" value={promoterDetails?.national_id} />
+                <DetailItem label="CRN" value={promoterDetails?.crn} />
+                <DetailItem label="Notes" value={promoterDetails?.notes} />
+                <DetailItem 
+                  label="Created Date" 
+                  value={promoterDetails?.created_at ? format(parseISO(promoterDetails.created_at), "MMM dd, yyyy") : "N/A"} 
+                />
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="cv-resume" className="space-y-6">
