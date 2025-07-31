@@ -1,336 +1,70 @@
-# 🚀 Deployment Guide - Contract Management System
+# Deployment Guide
 
-This guide will walk you through setting up automatic deployment to Vercel for the enhanced authentication system.
+## Environment Variables Setup
 
-## 📋 Prerequisites
+### For Vercel Deployment
 
-Before starting, ensure you have:
+To deploy this application to Vercel, you need to set up the following environment variables in your Vercel project settings:
 
-- ✅ GitHub repository with the enhanced authentication system
-- ✅ Vercel account (free tier available)
-- ✅ Supabase project with the required migrations applied
-- ✅ Node.js 18+ installed locally
+1. Go to your Vercel project dashboard
+2. Navigate to Settings > Environment Variables
+3. Add the following variables:
 
-## 🔧 Step 1: Vercel Project Setup
+#### Required Environment Variables
 
-### 1.1 Install Vercel CLI
-
-```bash
-npm install -g vercel
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### 1.2 Login to Vercel
+#### Optional Environment Variables
 
-```bash
-vercel login
+```
+NEXT_PUBLIC_APP_URL=your_app_url
+NEXT_PUBLIC_VERCEL_URL=your_vercel_url
 ```
 
-### 1.3 Link Your Project
+### For Local Development
 
-```bash
-# Navigate to your project directory
-cd contract-management-system
-
-# Link to Vercel
-vercel link
-```
-
-Follow the prompts to:
-
-- Select your Vercel account/team
-- Choose "Link to existing project" or "Create new project"
-- Set the project name (e.g., "contract-management-system")
-
-## 🔐 Step 2: Configure Environment Variables
-
-### 2.1 Get Your Vercel Project Info
-
-```bash
-vercel env ls
-```
-
-Note down your:
-
-- **Project ID** (e.g., `prj_abc123...`)
-- **Organization ID** (e.g., `team_xyz789...`)
-
-### 2.2 Set Environment Variables in Vercel
-
-```bash
-# Set Supabase configuration
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-vercel env add SUPABASE_SERVICE_ROLE_KEY
-
-# Set frontend URL
-vercel env add FRONTEND_URL
-
-# Optional: Set Sentry DSN for error tracking
-vercel env add SENTRY_DSN
-```
-
-**Example values:**
+Create a `.env.local` file in the root directory with the same variables:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-FRONTEND_URL=https://your-app.vercel.app
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-### 2.3 Verify Environment Variables
+### Getting Supabase Credentials
 
-```bash
-vercel env ls
-```
+1. Go to your Supabase project dashboard
+2. Navigate to Settings > API
+3. Copy the following values:
+   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
+   - **anon public** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **service_role secret** → `SUPABASE_SERVICE_ROLE_KEY`
 
-## 🔑 Step 3: Generate Vercel Token
+### Build Issues
 
-### 3.1 Create Vercel Token
+If you encounter build errors related to missing environment variables:
 
-1. Go to [Vercel Dashboard](https://vercel.com/account/tokens)
-2. Click "Create Token"
-3. Name it "GitHub Actions Deployment"
-4. Set expiration to "No expiration" (or choose a date)
-5. Copy the token (you won't see it again!)
+1. **During Development**: The app will use mock clients and show warnings
+2. **During Production Build**: Ensure all required environment variables are set in Vercel
+3. **Local Build**: Create `.env.local` file with all required variables
 
-## 🐙 Step 4: Configure GitHub Secrets
+### Troubleshooting
 
-### 4.1 Add Repository Secrets
+- **"Supabase URL or Anon Key is missing"**: Check that environment variables are properly set
+- **Build failures**: Ensure all environment variables are configured in Vercel
+- **Authentication issues**: Verify that Supabase project is properly configured with authentication
 
-Go to your GitHub repository → Settings → Secrets and variables → Actions
+### Database Setup
 
-Add these secrets:
+Before deploying, ensure your Supabase database has the required tables:
 
-| Secret Name                     | Value                                     | Description                  |
-| ------------------------------- | ----------------------------------------- | ---------------------------- |
-| `VERCEL_TOKEN`                  | `your_vercel_token`                       | Vercel API token from Step 3 |
-| `VERCEL_ORG_ID`                 | `team_xyz789...`                          | Your Vercel organization ID  |
-| `VERCEL_PROJECT_ID`             | `prj_abc123...`                           | Your Vercel project ID       |
-| `NEXT_PUBLIC_SUPABASE_URL`      | `https://your-project.supabase.co`        | Supabase project URL         |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` | Supabase anonymous key       |
-| `SUPABASE_SERVICE_ROLE_KEY`     | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` | Supabase service role key    |
-| `FRONTEND_URL`                  | `https://your-app.vercel.app`             | Your production frontend URL |
+1. `promoters` table
+2. `contracts` table  
+3. `parties` table
+4. `profiles` table
 
-## 🗄️ Step 5: Deploy Database Migrations
-
-### 5.1 Deploy Supabase Migrations
-
-```bash
-# Install Supabase CLI if not already installed
-npm install -g supabase
-
-# Link to your Supabase project
-supabase link --project-ref your-project-ref
-
-# Deploy migrations
-npm run db:migrate
-```
-
-### 5.2 Deploy Edge Functions
-
-```bash
-# Deploy the session expiry reminder function
-npm run functions:deploy
-```
-
-## 🚀 Step 6: Test Deployment
-
-### 6.1 Manual Test Deployment
-
-```bash
-# Deploy to preview
-vercel
-
-# Deploy to production
-vercel --prod
-```
-
-### 6.2 Verify Deployment
-
-1. Check your Vercel dashboard for the deployment
-2. Visit the deployed URL
-3. Test the authentication system:
-   - Sign up/login
-   - Session refresh
-   - Error handling
-   - Logout
-
-## 🔄 Step 7: Enable Automatic Deployment
-
-### 7.1 Push to Trigger Deployment
-
-```bash
-# Add your changes
-git add .
-
-# Commit with conventional commit message
-git commit -m "feat: enhanced authentication system ready for production"
-
-# Push to main branch to trigger automatic deployment
-git push origin main
-```
-
-### 7.2 Monitor GitHub Actions
-
-1. Go to your GitHub repository
-2. Click "Actions" tab
-3. Watch the deployment workflow run:
-   - ✅ Tests pass
-   - ✅ Build succeeds
-   - ✅ Deployment completes
-
-## 📊 Step 8: Post-Deployment Verification
-
-### 8.1 Health Checks
-
-```bash
-# Test the health endpoint
-curl https://your-app.vercel.app/api/health
-```
-
-### 8.2 Authentication Tests
-
-1. **Sign Up Flow**: Create a new account
-2. **Login Flow**: Sign in with existing account
-3. **Session Refresh**: Wait for automatic token refresh
-4. **Error Handling**: Test invalid credentials
-5. **Logout**: Verify proper cleanup
-
-### 8.3 Database Verification
-
-```sql
--- Check RLS policies are active
-SELECT schemaname, tablename, rowsecurity
-FROM pg_tables
-WHERE schemaname = 'public'
-AND tablename IN ('profiles', 'users', 'session_reminders');
-
--- Check session reminder cron job
-SELECT * FROM get_session_reminder_status();
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### 1. Build Failures
-
-```bash
-# Check build logs
-vercel logs
-
-# Test build locally
-npm run build
-```
-
-#### 2. Environment Variable Issues
-
-```bash
-# Verify environment variables
-vercel env ls
-
-# Check if variables are available in build
-echo $NEXT_PUBLIC_SUPABASE_URL
-```
-
-#### 3. Database Connection Issues
-
-```bash
-# Test Supabase connection
-npm run db:health-check
-
-# Verify migrations
-supabase db diff
-```
-
-#### 4. Authentication Issues
-
-- Check Supabase project settings
-- Verify RLS policies are applied
-- Test with Supabase dashboard
-
-### Debug Commands
-
-```bash
-# View deployment logs
-vercel logs
-
-# Check environment variables
-vercel env ls
-
-# Test local build
-npm run build
-
-# Run tests locally
-npm run test
-
-# Check database health
-npm run db:health-check
-```
-
-## 📈 Monitoring & Analytics
-
-### 8.1 Vercel Analytics
-
-- **Performance**: Core Web Vitals
-- **Errors**: Function errors and logs
-- **Usage**: Bandwidth and function calls
-
-### 8.2 Supabase Monitoring
-
-- **Database**: Query performance
-- **Auth**: Login attempts and failures
-- **Edge Functions**: Execution logs
-
-### 8.3 Custom Monitoring
-
-```sql
--- Check session reminder statistics
-SELECT * FROM get_reminder_statistics(7);
-
--- View recent auth activity
-SELECT * FROM recent_session_reminders;
-```
-
-## 🔒 Security Checklist
-
-### Pre-Deployment
-
-- [ ] Environment variables are secure
-- [ ] RLS policies are applied
-- [ ] No sensitive data in code
-- [ ] HTTPS is enforced
-- [ ] CORS is configured
-
-### Post-Deployment
-
-- [ ] Authentication works correctly
-- [ ] Session refresh is working
-- [ ] Error boundaries catch errors
-- [ ] Logout clears all data
-- [ ] No console errors
-
-## 🎉 Success!
-
-Your enhanced authentication system is now deployed and ready for production use!
-
-### Next Steps
-
-1. **Monitor**: Watch for any issues in the first few days
-2. **Scale**: Add more features as needed
-3. **Optimize**: Monitor performance and optimize
-4. **Backup**: Set up regular database backups
-
-### Support
-
-If you encounter any issues:
-
-1. Check the [troubleshooting section](#troubleshooting)
-2. Review the [documentation](docs/)
-3. Create an issue on GitHub
-4. Check Vercel and Supabase status pages
-
----
-
-**🚀 Your enhanced authentication system is now live and ready for users!**
+Run the migration scripts in the `supabase/migrations/` directory to set up your database schema.

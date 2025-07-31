@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr"
 import type { Database } from "@/types/supabase"
 import { devLog } from "@/lib/dev-log"
+import { validateEnvironment } from "@/lib/env-check"
 
 // Utility function to properly parse cookies with base64 values
 function parseCookieString(cookieString: string): Array<{ name: string; value: string }> {
@@ -21,18 +22,20 @@ let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = 
 
 // Lazy initialization function to avoid build-time errors
 function createSupabaseClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // Return null during SSR if environment variables are missing
-    if (typeof window === "undefined") {
+  const envCheck = validateEnvironment()
+  
+  if (!envCheck.isValid) {
+    if (envCheck.isBuildTime) {
+      console.warn("🔧 Build-time: Returning null for Supabase client")
       return null
     }
     throw new Error(
       "Supabase URL or Anon Key is missing. Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.",
     )
   }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
   // Only configure cookies if we're in a browser environment
   const cookieConfig =
@@ -164,9 +167,66 @@ export const createRealtimeChannel = (tableName: string, callback: (payload: unk
 // Utility function to safely get supabase client
 export const getSupabaseClient = () => {
   if (!supabase) {
+    // During build time or when environment variables are missing, return a mock client
+    if (typeof window === "undefined") {
+      console.warn("Supabase client not available during build. Using mock client.")
+      return createMockClient()
+    }
     throw new Error("Database connection not available")
   }
   return supabase
+}
+
+// Create a mock client for build-time
+const createMockClient = () => {
+  console.log("🔧 Main: Creating mock client for build-time")
+  
+  return {
+    auth: {
+      getSession: async () => ({ data: { session: null }, error: null }),
+      getUser: async () => ({ data: { user: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithPassword: async () => ({ data: null, error: { message: "Mock mode" } }),
+      signUp: async () => ({ data: null, error: { message: "Mock mode" } }),
+      signOut: async () => ({ error: null }),
+      signInWithOAuth: async () => ({ data: null, error: { message: "Mock mode" } }),
+      updateUser: async () => ({ data: null, error: { message: "Mock mode" } }),
+      refreshSession: async () => ({ data: { session: null, user: null }, error: { message: "Mock mode" } }),
+    },
+    from: (table: string) => ({
+      select: (columns: string = "*") => ({
+        eq: (column: string, value: any) => ({
+          single: async () => ({ data: null, error: { message: "Mock mode" } }),
+        }),
+        limit: (count: number) => ({
+          order: (column: string) => ({
+            then: async () => ({ data: [], error: null }),
+          }),
+        }),
+        order: (column: string) => ({
+          then: async () => ({ data: [], error: null }),
+        }),
+        then: async () => ({ data: [], error: null }),
+      }),
+      insert: (data: any) => ({
+        select: (columns: string = "*") => ({
+          then: async () => ({ data: null, error: { message: "Mock mode" } }),
+        }),
+      }),
+      update: (data: any) => ({
+        eq: (column: string, value: any) => ({
+          select: (columns: string = "*") => ({
+            then: async () => ({ data: null, error: { message: "Mock mode" } }),
+          }),
+        }),
+      }),
+      delete: () => ({
+        eq: (column: string, value: any) => ({
+          then: async () => ({ data: null, error: { message: "Mock mode" } }),
+        }),
+      }),
+    }),
+  } as any
 }
 
 // Utility function to safely subscribe to a channel
