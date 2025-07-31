@@ -27,7 +27,7 @@ interface PromoterFormProfessionalProps {
   onCancel?: () => void
 }
 
-export default function PromoterFormProfessional(props: PromoterFormProfessionalProps) {
+function PromoterFormProfessionalComponent(props: PromoterFormProfessionalProps) {
   const { promoterToEdit, onFormSubmit, onCancel } = props
   const { toast } = useToast()
   const isEditMode = Boolean(promoterToEdit)
@@ -39,8 +39,10 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
   // Safe initialization with fallbacks
   const safeGetValue = (obj: any, key: string, defaultValue: string = "") => {
     try {
-      const value = obj?.[key]
-      return value != null ? String(value) : defaultValue
+      if (!obj || typeof obj !== 'object') return defaultValue
+      const value = obj[key]
+      if (value == null || value === undefined) return defaultValue
+      return String(value)
     } catch {
       return defaultValue
     }
@@ -48,8 +50,11 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
 
   const safeGetNumber = (obj: any, key: string, defaultValue: number = 30) => {
     try {
-      const value = obj?.[key]
-      return value != null ? Number(value) : defaultValue
+      if (!obj || typeof obj !== 'object') return defaultValue
+      const value = obj[key]
+      if (value == null || value === undefined) return defaultValue
+      const num = Number(value)
+      return isNaN(num) ? defaultValue : num
     } catch {
       return defaultValue
     }
@@ -244,17 +249,6 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Safe render check
-  if (typeof window === 'undefined') {
-    return (
-      <div className="space-y-6">
-        <div className="text-center">
-          <p>Loading...</p>
-        </div>
-      </div>
-    )
   }
 
   return (
@@ -605,4 +599,25 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
       </form>
     </div>
   )
+}
+
+// Client-side only wrapper
+export default function PromoterFormProfessional(props: PromoterFormProfessionalProps) {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  if (!isClient) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <PromoterFormProfessionalComponent {...props} />
 } 
