@@ -10,7 +10,7 @@ import PromoterFormSimple from "@/components/promoter-form-simple"
 export default function AddNewPromoterPage() {
   const router = useRouter()
   const params = useParams()
-  const locale = params?.locale as string
+  const locale = (params?.locale as string) || "en"
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleFormSubmit = () => {
@@ -23,6 +23,19 @@ export default function AddNewPromoterPage() {
 
   const handleCancel = () => {
     router.push(`/${locale}/manage-promoters`)
+  }
+
+  // Handle case where locale is undefined during build
+  if (!locale) {
+    return (
+      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center">
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -72,3 +85,6 @@ export default function AddNewPromoterPage() {
     </div>
   )
 }
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = "force-dynamic"

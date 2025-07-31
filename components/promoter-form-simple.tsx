@@ -28,6 +28,17 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("personal")
 
+  // Handle case where component is rendered during build time
+  if (typeof window === 'undefined') {
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   const [formData, setFormData] = useState({
     // Personal Information (only fields that exist in database)
     full_name: promoterToEdit?.name_en || "",
@@ -75,28 +86,28 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
 
       // Map form data to database schema - only include fields that exist in the database
       const promoterData: any = {
-        name_en: formData.full_name,
-        name_ar: formData.name_ar,
-        id_card_number: formData.id_number,
-        passport_number: formData.passport_number,
-        mobile_number: formData.mobile_number,
-        id_card_expiry_date: formatDateForDatabase(formData.id_expiry_date),
-        passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date),
-        email: formData.email,
-        phone: formData.phone,
-        status: formData.status,
-        notes: formData.notes,
-        profile_picture_url: formData.profile_picture_url,
-        notify_days_before_id_expiry: formData.notify_days_before_id_expiry || 30,
-        notify_days_before_passport_expiry: formData.notify_days_before_passport_expiry || 30,
+        name_en: formData.full_name || "",
+        name_ar: formData.name_ar || "",
+        id_card_number: formData.id_number || "",
+        passport_number: formData.passport_number || "",
+        mobile_number: formData.mobile_number || "",
+        id_card_expiry_date: formData.id_expiry_date ? formatDateForDatabase(formData.id_expiry_date) : null,
+        passport_expiry_date: formData.passport_expiry_date ? formatDateForDatabase(formData.passport_expiry_date) : null,
+        email: formData.email || "",
+        phone: formData.phone || "",
+        status: formData.status || "active",
+        notes: formData.notes || "",
+        profile_picture_url: formData.profile_picture_url || "",
+        notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || "30"),
+        notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || "30"),
       }
 
       let result
-      if (isEditMode) {
+      if (isEditMode && promoterToEdit) {
         // Check if ID card number has changed
         const idCardNumberChanged = formData.id_number !== promoterToEdit.id_card_number
         
-        if (idCardNumberChanged) {
+        if (idCardNumberChanged && formData.id_number) {
           // Check if the new ID card number already exists for another promoter
           const { data: existingPromoter, error: checkError } = await supabase
             .from('promoters')
