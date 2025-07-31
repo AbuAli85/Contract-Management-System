@@ -6,6 +6,7 @@ import { useParams, usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { RecentPromoters } from "@/components/recent-promoters"
 import { 
   FileText, 
   Users, 
@@ -77,6 +78,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       href: `/${locale}/manage-promoters`,
       icon: Target,
       description: "Comprehensive promoter management",
+      badge: null
+    },
+    {
+      title: "Promoter Profiles",
+      href: `/${locale}/promoter-details`,
+      icon: User,
+      description: "View and manage promoter profiles",
       badge: null
     },
     {
@@ -216,6 +224,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </Link>
                 )
               })}
+            </div>
+
+            {/* Recent Promoters Section */}
+            <div className="mt-6">
+              <RecentPromoters limit={3} />
             </div>
           </nav>
 

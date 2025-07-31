@@ -48,7 +48,7 @@ export default function PromoterForm(props: PromoterFormProps) {
     marital_status: promoterToEdit?.marital_status || "",
     
     // Contact Information
-    address: promoterToEdit?.address || "",
+    // address: promoterToEdit?.address || "", // Removed - column doesn't exist in schema
     city: promoterToEdit?.city || "",
     state: promoterToEdit?.state || "",
     country: promoterToEdit?.country || "",
@@ -389,22 +389,27 @@ export default function PromoterForm(props: PromoterFormProps) {
       
 
 
-      // Map form data to database schema
+      // Map form data to database schema - only include fields that exist in the database
+      // Available fields in promoters table:
+      // - id, name_en, name_ar, id_card_number, id_card_url, passport_url
+      // - employer_id, outsourced_to_id, job_title, work_location
+      // - status, contract_valid_until, id_card_expiry_date, passport_expiry_date
+      // - notify_days_before_*, notes, created_at, email, phone
       const promoterData = {
         name_en: formData.full_name,
         name_ar: formData.name_ar,
         id_card_number: formData.id_number,
         id_card_expiry_date: formatDateForDatabase(formData.id_expiry_date),
-        passport_number: formData.passport_number,
-        passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date),
+        // passport_number: formData.passport_number, // Removed - column doesn't exist in schema
+        // passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date), // Removed - column doesn't exist in schema
         email: formData.email,
         phone: formData.phone,
-        address: formData.address,
+        // address: formData.address, // Removed - column doesn't exist in schema
         status: formData.status,
         notes: formData.notes,
-        id_document_url: uploadedDocuments.id_document?.url || null,
-        passport_document_url: uploadedDocuments.passport_document?.url || null,
-        updated_at: new Date().toISOString(),
+        // id_document_url: uploadedDocuments.id_document?.url || null, // Removed - column doesn't exist in schema
+        // passport_document_url: uploadedDocuments.passport_document?.url || null, // Removed - column doesn't exist in schema
+        // updated_at: new Date().toISOString(), // Removed - column doesn't exist in schema
       }
 
       let result
@@ -618,16 +623,7 @@ export default function PromoterForm(props: PromoterFormProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Full Address</Label>
-                  <Textarea
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Enter complete address"
-                    rows={3}
-                  />
-                </div>
+                {/* Address field removed - column doesn't exist in database schema */}
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
