@@ -92,6 +92,7 @@ export default function PromoterDetailPage() {
   const params = useParams()
   const router = useRouter()
   const promoterId = params?.id as string
+  const locale = params?.locale as string
 
   const [promoterDetails, setPromoterDetails] = useState<PromoterDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -132,7 +133,7 @@ export default function PromoterDetailPage() {
       }
 
       // Redirect to promoters list
-      router.push('/manage-promoters')
+      router.push(`/${locale}/manage-promoters`)
     } catch (error) {
       console.error('Error deleting promoter:', error)
       alert('Failed to delete promoter. Please try again.')
@@ -288,7 +289,7 @@ export default function PromoterDetailPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="mb-4 text-red-600">{error || "Promoter not found"}</p>
-          <Button onClick={() => router.push("/manage-promoters")}>Back to Promoters</Button>
+          <Button onClick={() => router.push(`/${locale}/manage-promoters`)}>Back to Promoters</Button>
         </div>
       </div>
     )
@@ -308,13 +309,13 @@ export default function PromoterDetailPage() {
           </Button>
           {role === "admin" && (
             <>
-              <Button onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}>
+              <Button onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}/edit`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => router.push(`/manage-promoters/new`)}
+                onClick={() => router.push(`/${locale}/manage-promoters/new`)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add New
@@ -351,7 +352,7 @@ export default function PromoterDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+                onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}/edit`)}
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Promoter
@@ -359,7 +360,7 @@ export default function PromoterDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => router.push(`/generate-contract?promoter=${promoterId}`)}
+                onClick={() => router.push(`/${locale}/generate-contract?promoter=${promoterId}`)}
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Create Contract
@@ -367,7 +368,7 @@ export default function PromoterDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => router.push(`/contracts?promoter=${promoterId}`)}
+                onClick={() => router.push(`/${locale}/contracts?promoter=${promoterId}`)}
               >
                 <ExternalLinkIcon className="mr-2 h-4 w-4" />
                 View Contracts
@@ -375,7 +376,7 @@ export default function PromoterDetailPage() {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => router.push(`/promoter-analysis/${promoterId}`)}
+                onClick={() => router.push(`/${locale}/promoter-analysis/${promoterId}`)}
               >
                 <FileTextIcon className="mr-2 h-4 w-4" />
                 View Analytics
@@ -423,7 +424,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+                      onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}/edit`)}
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit Personal Info
@@ -431,7 +432,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/promoters/${promoterId}/profile`)}
+                      onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}`)}
                     >
                       <UserCircle2Icon className="mr-2 h-4 w-4" />
                       View Full Profile
@@ -572,7 +573,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/contracts?promoter=${promoterId}`)}
+                      onClick={() => router.push(`/${locale}/contracts?promoter=${promoterId}`)}
                     >
                       <ExternalLinkIcon className="mr-2 h-4 w-4" />
                       View All Contracts
@@ -580,7 +581,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/generate-contract?promoter=${promoterId}`)}
+                      onClick={() => router.push(`/${locale}/generate-contract?promoter=${promoterId}`)}
                     >
                       <Plus className="mr-2 h-4 w-4" />
                       New Contract
@@ -681,7 +682,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/manage-promoters/${promoterId}/edit`)}
+                      onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}/edit`)}
                     >
                       <Edit className="mr-2 h-4 w-4" />
                       Edit Professional Info
@@ -744,7 +745,7 @@ export default function PromoterDetailPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/promoter-analysis/${promoterId}`)}
+                      onClick={() => router.push(`/${locale}/promoter-analysis/${promoterId}`)}
                     >
                       <ExternalLinkIcon className="mr-2 h-4 w-4" />
                       View Analytics
