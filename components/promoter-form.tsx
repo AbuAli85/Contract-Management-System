@@ -60,6 +60,54 @@ export default function PromoterForm(props: PromoterFormProps) {
     // Notification settings (only fields that exist in database)
     notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 30,
     notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 30,
+    
+    // Additional fields that might be used in the form
+    rating: promoterToEdit?.rating || 0,
+    availability: promoterToEdit?.availability || "available",
+    preferred_language: promoterToEdit?.preferred_language || "en",
+    timezone: promoterToEdit?.timezone || "",
+    special_requirements: promoterToEdit?.special_requirements || "",
+    
+    // Personal details
+    date_of_birth: promoterToEdit?.date_of_birth || "",
+    nationality: promoterToEdit?.nationality || "",
+    gender: promoterToEdit?.gender || "",
+    marital_status: promoterToEdit?.marital_status || "",
+    
+    // Address information
+    city: promoterToEdit?.city || "",
+    state: promoterToEdit?.state || "",
+    country: promoterToEdit?.country || "",
+    postal_code: promoterToEdit?.postal_code || "",
+    
+    // Emergency contact
+    emergency_contact: promoterToEdit?.emergency_contact || "",
+    emergency_phone: promoterToEdit?.emergency_phone || "",
+    
+    // Additional documents
+    visa_number: promoterToEdit?.visa_number || "",
+    visa_expiry_date: promoterToEdit?.visa_expiry_date || "",
+    work_permit_number: promoterToEdit?.work_permit_number || "",
+    work_permit_expiry_date: promoterToEdit?.work_permit_expiry_date || "",
+    
+    // Professional information
+    company: promoterToEdit?.company || "",
+    job_title: promoterToEdit?.job_title || "",
+    department: promoterToEdit?.department || "",
+    specialization: promoterToEdit?.specialization || "",
+    experience_years: promoterToEdit?.experience_years || "",
+    education_level: promoterToEdit?.education_level || "",
+    university: promoterToEdit?.university || "",
+    graduation_year: promoterToEdit?.graduation_year || "",
+    skills: promoterToEdit?.skills || "",
+    certifications: promoterToEdit?.certifications || "",
+    
+    // Financial information
+    bank_name: promoterToEdit?.bank_name || "",
+    account_number: promoterToEdit?.account_number || "",
+    iban: promoterToEdit?.iban || "",
+    swift_code: promoterToEdit?.swift_code || "",
+    tax_id: promoterToEdit?.tax_id || "",
   })
 
   // Document upload state
@@ -1226,7 +1274,7 @@ export default function PromoterForm(props: PromoterFormProps) {
                   
                   <div className="space-y-2">
                     <Label htmlFor="rating">Rating</Label>
-                    <Select value={formData.rating.toString()} onValueChange={(value) => handleInputChange('rating', value)}>
+                    <Select value={String(formData.rating || 0)} onValueChange={(value) => handleInputChange('rating', value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select rating" />
                       </SelectTrigger>

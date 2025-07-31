@@ -43,7 +43,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
       if (!obj || typeof obj !== 'object') return defaultValue
       const value = obj[key]
       if (value == null || value === undefined) return defaultValue
-      return String(value)
+      return String(value || "")
     } catch {
       return defaultValue
     }
@@ -124,6 +124,11 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     if (!isClient) return
     
     try {
+      if (!formData) {
+        setFormProgress(0)
+        return
+      }
+      
       const requiredFields = ['full_name', 'email', 'id_number']
       const completedFields = requiredFields.filter(field => {
         const value = formData[field as keyof typeof formData]
@@ -138,10 +143,13 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
 
   const handleInputChange = (field: string, value: string) => {
     try {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value || ""
-      }))
+      setFormData(prev => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          [field]: value || ""
+        }
+      })
       
       // Clear validation error when user starts typing
       if (validationErrors[field]) {
@@ -157,6 +165,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
 
   const validateForm = () => {
     try {
+      if (!formData) return false
+      
       const errors: Record<string, string> = {}
 
       if (!formData.full_name || !formData.full_name.trim()) {
@@ -188,6 +198,15 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (!formData) {
+      toast({
+        title: "Error",
+        description: "Form data is not initialized",
+        variant: "destructive",
+      })
+      return
+    }
+    
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -218,8 +237,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         status: formData.status || "active",
         notes: formData.notes || "",
         profile_picture_url: formData.profile_picture_url || "",
-        notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
-        notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
+        notify_days_before_id_expiry: parseInt(String((formData?.notify_days_before_id_expiry ?? 30) || 30)),
+        notify_days_before_passport_expiry: parseInt(String((formData?.notify_days_before_passport_expiry ?? 30) || 30)),
       }
 
       let result
@@ -277,8 +296,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     }
   }
 
-  // Show loading state during SSR
-  if (!isClient) {
+  // Show loading state during SSR or when formData is not initialized
+  if (!isClient || !formData) {
     return (
       <div className="space-y-6">
         <div className="text-center">
@@ -553,7 +572,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Input
                       id="notify_days_before_id_expiry"
                       type="number"
-                      value={String(formData.notify_days_before_id_expiry || 30)}
+                      value={String((formData?.notify_days_before_id_expiry ?? 30) || 30)}
                       onChange={(e) => handleInputChange('notify_days_before_id_expiry', e.target.value)}
                       placeholder="30"
                       min="1"
@@ -566,7 +585,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                     <Input
                       id="notify_days_before_passport_expiry"
                       type="number"
-                      value={String(formData.notify_days_before_passport_expiry || 30)}
+                      value={String((formData?.notify_days_before_passport_expiry ?? 30) || 30)}
                       onChange={(e) => handleInputChange('notify_days_before_passport_expiry', e.target.value)}
                       placeholder="30"
                       min="1"
