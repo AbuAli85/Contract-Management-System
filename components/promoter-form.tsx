@@ -386,8 +386,6 @@ export default function PromoterForm(props: PromoterFormProps) {
       if (!supabase) {
         throw new Error("Failed to create Supabase client")
       }
-      
-
 
       // Map form data to database schema - only include fields that exist in the database
       // Available fields in promoters table:
@@ -395,10 +393,9 @@ export default function PromoterForm(props: PromoterFormProps) {
       // - employer_id, outsourced_to_id, job_title, work_location
       // - status, contract_valid_until, id_card_expiry_date, passport_expiry_date
       // - notify_days_before_*, notes, created_at, email, phone
-      const promoterData = {
+      const promoterData: any = {
         name_en: formData.full_name,
         name_ar: formData.name_ar,
-        id_card_number: formData.id_number,
         id_card_expiry_date: formatDateForDatabase(formData.id_expiry_date),
         // passport_number: formData.passport_number, // Removed - column doesn't exist in schema
         // passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date), // Removed - column doesn't exist in schema
@@ -414,11 +411,39 @@ export default function PromoterForm(props: PromoterFormProps) {
 
       let result
       if (isEditMode) {
+        // Check if ID card number has changed
+        const idCardNumberChanged = formData.id_number !== promoterToEdit.id_card_number
+        
+        if (idCardNumberChanged) {
+          // Check if the new ID card number already exists for another promoter
+          const { data: existingPromoter, error: checkError } = await supabase
+            .from('promoters')
+            .select('id')
+            .eq('id_card_number', formData.id_number)
+            .neq('id', promoterToEdit.id) // Exclude current promoter
+            .single()
+
+          if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows returned
+            throw new Error(checkError.message)
+          }
+
+          if (existingPromoter) {
+            throw new Error(`ID card number ${formData.id_number} already exists for another promoter`)
+          }
+
+          // Add ID card number to update data only if it has changed
+          promoterData.id_card_number = formData.id_number
+        }
+        // If ID card number hasn't changed, don't include it in the update to avoid constraint issues
+
         result = await supabase
           .from('promoters')
           .update(promoterData)
           .eq('id', promoterToEdit.id)
       } else {
+        // For new promoters, always include the ID card number
+        promoterData.id_card_number = formData.id_number
+        
         result = await supabase
           .from('promoters')
           .insert([{ ...promoterData, created_at: new Date().toISOString() }])

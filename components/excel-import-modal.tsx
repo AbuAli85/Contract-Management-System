@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
@@ -32,15 +31,20 @@ interface PromoterData {
   name_en: string
   name_ar: string
   id_card_number: string
-  email?: string
-  phone?: string
   mobile_number?: string
   passport_number?: string
   nationality?: string
-  id_card_expiry_date?: string
-  passport_expiry_date?: string
+  id_card_expiry_date?: string | null
+  passport_expiry_date?: string | null
   notes?: string
   status?: string
+  employer_id?: string
+}
+
+interface Company {
+  id: string
+  name_en: string
+  name_ar: string
 }
 
 export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: ExcelImportModalProps) {
@@ -50,7 +54,49 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
   const [previewData, setPreviewData] = useState<PromoterData[]>([])
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [step, setStep] = useState<"upload" | "preview" | "import" | "complete">("upload")
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [companiesLoading, setCompaniesLoading] = useState(false)
   const { toast } = useToast()
+
+  // Fetch companies when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchCompanies()
+    }
+  }, [isOpen])
+
+  const fetchCompanies = useCallback(async () => {
+    setCompaniesLoading(true)
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) {
+        console.error("Supabase client not available")
+        return
+      }
+
+      const { data, error } = await supabase
+        .from("parties")
+        .select("id, name_en, name_ar")
+        .eq("type", "Employer")
+        .order("name_en")
+
+      if (error) {
+        console.error("Error fetching companies:", error)
+        toast({
+          title: "Error loading companies",
+          description: "Could not load company list for template",
+          variant: "destructive",
+        })
+        return
+      }
+
+      setCompanies(data || [])
+    } catch (error) {
+      console.error("Error fetching companies:", error)
+    } finally {
+      setCompaniesLoading(false)
+    }
+  }, [toast])
 
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0]
@@ -81,15 +127,25 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
     setProgress(0)
 
     try {
+      console.log("=== FILE PROCESSING DEBUG START ===")
+      console.log("Processing file:", selectedFile.name, "Size:", selectedFile.size)
+      
       const arrayBuffer = await selectedFile.arrayBuffer()
       const workbook = XLSX.read(arrayBuffer, { type: "array" })
+      
+      console.log("Workbook sheets:", workbook.SheetNames)
       
       // Get the first sheet
       const sheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[sheetName]
       
+      console.log("Processing sheet:", sheetName)
+      
       // Convert to JSON
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+      
+      console.log("Raw JSON data length:", jsonData.length)
+      console.log("Raw JSON data:", jsonData)
       
       if (jsonData.length < 2) {
         throw new Error("File must contain at least a header row and one data row")
@@ -99,34 +155,126 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
       const headers = jsonData[0] as string[]
       const dataRows = jsonData.slice(1) as any[][]
 
-             // Map headers to expected fields
-       const mappedData = dataRows.map((row, index) => {
-         const rowData: any = {}
-         headers.forEach((header, colIndex) => {
-           const value = row[colIndex]
-           if (value !== undefined && value !== null) {
-             rowData[header.trim()] = value
-           }
-         })
+      console.log("Headers:", headers)
+      console.log("Data rows count:", dataRows.length)
+      console.log("Data rows:", dataRows)
 
-         // Map to expected format with proper type conversion
-         return {
-           name_en: String(rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || ""),
-           name_ar: String(rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || ""),
-           id_card_number: String(rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || ""),
-           mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
-           passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
-           nationality: rowData["Nationality"] || "",
-           id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
-           passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
-           notes: rowData["Notes"] || rowData["Comments"] || "",
-           status: rowData["Status"] || "active"
-         }
-       }).filter(row => row.name_en && row.id_card_number) // Only include rows with required fields
+      // Map data to PromoterData interface
+      const mappedData: PromoterData[] = dataRows.map((row, index) => {
+        console.log(`Mapping row ${index + 1}:`, row)
+        
+        const formatDate = (dateString: string | null | undefined) => {
+          if (!dateString) return null
+          
+          const dateStr = String(dateString).trim()
+          if (!dateStr) return null
+          
+          console.log(`Formatting date: "${dateStr}"`)
+          
+          // Try dd-mm-yyyy format (with dashes)
+          if (dateStr.includes('-') && dateStr.length === 10) {
+            const parts = dateStr.split('-')
+            console.log(`Split by -: ${parts}`)
+            if (parts.length === 3) {
+              // Check if it's already in yyyy-mm-dd format
+              if (parts[0].length === 4) {
+                console.log(`Already in yyyy-mm-dd format: ${dateStr}`)
+                return dateStr
+              }
+              // Convert dd-mm-yyyy to yyyy-mm-dd
+              const day = parts[0].padStart(2, '0')
+              const month = parts[1].padStart(2, '0')
+              const year = parts[2]
+              const formattedDate = `${year}-${month}-${day}`
+              console.log(`Formatted dd-mm-yyyy: ${formattedDate}`)
+              return formattedDate
+            }
+          }
+          
+          // Try dd/mm/yyyy format
+          if (dateStr.includes('/')) {
+            const parts = dateStr.split('/')
+            console.log(`Split by /: ${parts}`)
+            if (parts.length === 3) {
+              const day = parts[0].padStart(2, '0')
+              const month = parts[1].padStart(2, '0')
+              const year = parts[2]
+              const formattedDate = `${year}-${month}-${day}`
+              console.log(`Formatted dd/mm/yyyy: ${formattedDate}`)
+              return formattedDate
+            }
+          }
+          
+          // Try dd.mm.yyyy format
+          if (dateStr.includes('.')) {
+            const parts = dateStr.split('.')
+            console.log(`Split by .: ${parts}`)
+            if (parts.length === 3) {
+              const day = parts[0].padStart(2, '0')
+              const month = parts[1].padStart(2, '0')
+              const year = parts[2]
+              const formattedDate = `${year}-${month}-${day}`
+              console.log(`Formatted dd.mm.yyyy: ${formattedDate}`)
+              return formattedDate
+            }
+          }
+          
+          console.log(`Could not format date: "${dateStr}"`)
+          return null
+        }
 
-      setPreviewData(mappedData.slice(0, 10)) // Show first 10 rows as preview
+        const mappedRow = {
+          name_en: String(row[0] || "").trim(),
+          name_ar: String(row[1] || "").trim(),
+          id_card_number: String(row[2] || "").trim(),
+          mobile_number: String(row[3] || "").trim(),
+          passport_number: String(row[4] || "").trim(),
+          nationality: String(row[5] || "").trim(),
+          id_card_expiry_date: formatDate(row[6]),
+          passport_expiry_date: formatDate(row[7]),
+          notes: String(row[8] || "").trim(),
+          status: String(row[9] || "active").trim(),
+          employer_id: String(row[10] || "").trim() || undefined
+        }
+        
+        console.log(`Mapped row ${index + 1}:`, mappedRow)
+        return mappedRow
+      })
+
+      console.log("Final mapped data:", mappedData)
+
+      // Filter out empty rows
+      const validData = mappedData.filter(row => {
+        const isValid = row.name_en && row.name_ar && row.id_card_number
+        console.log(`Row validation: ${row.name_en} - ${row.name_ar} - ${row.id_card_number} = ${isValid}`)
+        
+        // Additional validation for required fields
+        if (!row.name_en) {
+          console.log(`Row skipped: Missing English name`)
+          return false
+        }
+        if (!row.name_ar) {
+          console.log(`Row skipped: Missing Arabic name`)
+          return false
+        }
+        if (!row.id_card_number) {
+          console.log(`Row skipped: Missing ID card number`)
+          return false
+        }
+        
+        return isValid
+      })
+
+      console.log("Valid data count:", validData.length)
+      console.log("Valid data:", validData)
+
+      if (validData.length === 0) {
+        throw new Error("No valid promoter data found in the file")
+      }
+
+      console.log("=== FILE PROCESSING DEBUG END ===")
+      setPreviewData(validData)
       setStep("preview")
-      setProgress(100)
     } catch (error) {
       console.error("Error processing file:", error)
       toast({
@@ -136,473 +284,314 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
       })
     } finally {
       setIsProcessing(false)
+      setProgress(100)
     }
   }, [toast])
 
   const handleImport = useCallback(async () => {
-    if (!file) return
+    if (previewData.length === 0) {
+      toast({
+        title: "No data to import",
+        description: "Please upload a file with valid promoter data",
+        variant: "destructive",
+      })
+      return
+    }
 
     setIsProcessing(true)
     setProgress(0)
     setStep("import")
 
     try {
-      const arrayBuffer = await file.arrayBuffer()
-      const workbook = XLSX.read(arrayBuffer, { type: "array" })
-      const sheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[sheetName]
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
-      
-      const headers = jsonData[0] as string[]
-      const dataRows = jsonData.slice(1) as any[][]
-
-             const mappedData = dataRows.map((row, index) => {
-         const rowData: any = {}
-         headers.forEach((header, colIndex) => {
-           const value = row[colIndex]
-           if (value !== undefined && value !== null) {
-             rowData[header.trim()] = value
-           }
-         })
-
-         // Debug logging for the first few rows
-         if (index < 3) {
-           console.log(`Row ${index + 2} raw data:`, row)
-           console.log(`Row ${index + 2} mapped data:`, rowData)
-         }
-
-         const mappedRow = {
-           name_en: String(rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || ""),
-           name_ar: String(rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || ""),
-           id_card_number: String(rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || ""),
-           mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
-           passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
-           nationality: rowData["Nationality"] || "",
-           id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
-           passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
-           notes: rowData["Notes"] || rowData["Comments"] || "",
-           status: rowData["Status"] || "active"
-         }
-
-         // Debug logging for the first few rows
-         if (index < 3) {
-           console.log(`Row ${index + 2} final mapped data:`, mappedRow)
-         }
-
-         return mappedRow
-       }).filter(row => row.name_en && row.id_card_number)
-
       const supabase = getSupabaseClient()
       
-      // Check authentication status
+      if (!supabase) {
+        throw new Error("Database connection not available")
+      }
+
+      // Test authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError) {
-        console.error("Authentication error:", authError)
-        toast({
-          title: "Authentication Error",
-          description: "Please log in again to import promoters",
-          variant: "destructive",
-        })
-        return
+      if (authError || !user) {
+        throw new Error("Authentication required")
       }
-      
-      if (!user) {
-        console.error("No authenticated user")
-        toast({
-          title: "Authentication Required",
-          description: "Please log in to import promoters",
-          variant: "destructive",
-        })
-        return
-      }
-      
-      console.log("Authenticated user:", user.email)
-      
-      // Check user role and permissions
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single()
-      
-      if (profileError) {
-        console.error("Error fetching user profile:", profileError)
-      } else {
-        console.log("User role:", profileData?.role)
-      }
-      
-      // Test database connection and permissions
-      const { data: testData, error: testError } = await supabase
-        .from("promoters")
-        .select("id")
-        .limit(1)
-      
-      if (testError) {
-        console.error("Database connection test failed:", testError)
-        toast({
-          title: "Database Connection Error",
-          description: "Unable to connect to database. Please try again.",
-          variant: "destructive",
-        })
-        return
-      }
-      
-      console.log("Database connection test successful")
-      
+
+      console.log("=== IMPORT DEBUG START ===")
+      console.log("Starting import process for", previewData.length, "promoters")
+      console.log("Preview data:", previewData)
+
       let imported = 0
       let duplicates = 0
       const errors: string[] = []
+      let importedWithCompany = 0
 
-             for (let i = 0; i < mappedData.length; i++) {
-         const row = mappedData[i]
-         
-         try {
-           // Debug logging to see what data we're working with
-           console.log(`Processing row ${i + 2}:`, row)
-           
-           // Validate required fields
-           if (!row.name_en || !row.name_ar || !row.id_card_number) {
-             console.log(`Row ${i + 2} validation failed:`, {
-               name_en: row.name_en,
-               name_ar: row.name_ar,
-               id_card_number: row.id_card_number,
-               name_en_type: typeof row.name_en,
-               name_ar_type: typeof row.name_ar,
-               id_card_number_type: typeof row.id_card_number
-             })
-             errors.push(`Row ${i + 2}: Missing required fields (Name EN, Name AR, or ID Card Number)`)
-             continue
-           }
+      for (let i = 0; i < previewData.length; i++) {
+        const promoter = previewData[i]
+        
+        try {
+          console.log(`\n--- Processing row ${i + 2} ---`)
+          console.log("Promoter data:", promoter)
+          
+          // Check for existing promoter with same ID card number
+          const { data: existing, error: checkError } = await supabase
+            .from("promoters")
+            .select("id, employer_id")
+            .eq("id_card_number", promoter.id_card_number)
+            .single()
 
-                                // Validate and clean data with proper type checking
-            const cleanData = {
-              name_en: String(row.name_en || "").trim(),
-              name_ar: String(row.name_ar || "").trim(),
-              id_card_number: String(row.id_card_number || "").trim(),
-              mobile_number: row.mobile_number ? String(row.mobile_number).trim() : null,
-              passport_number: row.passport_number ? String(row.passport_number).trim() : null,
-              nationality: row.nationality ? String(row.nationality).trim() : null,
-              notes: row.notes ? String(row.notes).trim() : null,
-              status: row.status || "active"
-            }
+          if (checkError && checkError.code !== 'PGRST116') {
+            console.error(`Error checking existing promoter for row ${i + 2}:`, checkError)
+            errors.push(`Row ${i + 2}: Error checking existing promoter - ${checkError.message}`)
+            continue
+          }
 
-                     // Email validation removed since email field is not currently supported in database
-           // TODO: Re-enable email validation after running migration to add email field
-
-                     // Check for existing promoter with same ID
-           const { data: existing } = await supabase
-             .from("promoters")
-             .select("id")
-             .eq("id_card_number", cleanData.id_card_number)
-             .single()
-
-           if (existing) {
-             duplicates++
-             errors.push(`Row ${i + 2}: Duplicate ID card number - ${cleanData.id_card_number}`)
-             continue
-           }
-
-          // Helper function to format dates
-          const formatDate = (dateString: string | null | undefined) => {
-            if (!dateString) return null;
+          if (existing) {
+            console.log(`Row ${i + 2}: Existing promoter found - ${promoter.id_card_number}`)
             
-            try {
-              let date: Date;
+            // If promoter exists but has no company assignment, try to assign company
+            if (!existing.employer_id && promoter.employer_id && promoter.employer_id.trim()) {
+              console.log(`Row ${i + 2}: Attempting to assign company to existing promoter`)
               
-              // Handle various date formats
-              if (dateString.includes('/')) {
-                const parts = dateString.split('/');
-                if (parts.length === 3) {
-                  const day = parseInt(parts[0]);
-                  const month = parseInt(parts[1]) - 1; // Month is 0-indexed
-                  const year = parseInt(parts[2]);
-                  date = new Date(year, month, day);
+              // Validate company ID
+              const { data: companyData, error: companyError } = await supabase
+                .from("parties")
+                .select("id")
+                .eq("id", promoter.employer_id.trim())
+                .eq("type", "Employer")
+                .single()
+
+              if (!companyError && companyData) {
+                // Update existing promoter with company assignment
+                const { error: updateError } = await supabase
+                  .from("promoters")
+                  .update({ employer_id: promoter.employer_id.trim() })
+                  .eq("id", existing.id)
+
+                if (updateError) {
+                  console.error(`Row ${i + 2}: Failed to update promoter with company:`, updateError)
+                  errors.push(`Row ${i + 2}: Failed to assign company to existing promoter`)
                 } else {
-                  date = new Date(dateString);
-                }
-              } else if (dateString.includes('-')) {
-                // Handle YYYY-MM-DD format
-                date = new Date(dateString);
-              } else if (dateString.includes('.')) {
-                // Handle dd.mm.yyyy format
-                const parts = dateString.split('.');
-                if (parts.length === 3) {
-                  const day = parseInt(parts[0]);
-                  const month = parseInt(parts[1]) - 1;
-                  const year = parseInt(parts[2]);
-                  date = new Date(year, month, day);
-                } else {
-                  date = new Date(dateString);
+                  console.log(`Row ${i + 2}: Successfully assigned company to existing promoter`)
+                  imported++
+                  importedWithCompany++
                 }
               } else {
-                date = new Date(dateString);
+                console.log(`Row ${i + 2}: Invalid company ID for existing promoter - ${promoter.employer_id}`)
+                duplicates++
+                errors.push(`Row ${i + 2}: Promoter exists but invalid company ID provided`)
               }
-              
-              if (isNaN(date.getTime())) return null;
-              return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format for database
-            } catch (error) {
-              console.warn(`Invalid date format: ${dateString}`);
-              return null;
+            } else {
+              console.log(`Row ${i + 2}: Promoter already exists with company or no company provided`)
+              duplicates++
+              errors.push(`Row ${i + 2}: Promoter with ID card number ${promoter.id_card_number} already exists`)
             }
-          };
+            continue
+          }
 
-                     // Insert new promoter - only include fields that exist in the database
-           const insertData = {
-             name_en: cleanData.name_en,
-             name_ar: cleanData.name_ar,
-             id_card_number: cleanData.id_card_number,
-             mobile_number: cleanData.mobile_number,
-             passport_number: cleanData.passport_number,
-             nationality: cleanData.nationality,
-             id_card_expiry_date: formatDate(row.id_card_expiry_date),
-             passport_expiry_date: formatDate(row.passport_expiry_date),
-             notes: cleanData.notes,
-             status: cleanData.status,
-             created_at: new Date().toISOString()
-           }
+          // Validate company ID if provided
+          if (promoter.employer_id && promoter.employer_id.trim()) {
+            console.log(`Row ${i + 2}: Validating company ID: ${promoter.employer_id}`)
+            
+            const { data: companyData, error: companyError } = await supabase
+              .from("parties")
+              .select("id")
+              .eq("id", promoter.employer_id.trim())
+              .eq("type", "Employer")
+              .single()
 
-           // Debug logging for insert data
-           console.log(`Row ${i + 2} insert data:`, insertData)
-          
-          // Add email and phone only if they exist in the database (will be added by migration)
-          // For now, we'll skip them to avoid schema errors
-          // TODO: Uncomment these lines after running the migration
-          // if (cleanData.email) insertData.email = cleanData.email;
-          // if (cleanData.phone) insertData.phone = cleanData.phone;
-          
-                     console.log(`Inserting promoter data for row ${i + 2}:`, insertData)
-           
-           // Test the insert with more detailed error logging
-           const { data: insertDataResult, error: insertError } = await supabase
-             .from("promoters")
-             .insert([insertData])
-             .select()
+            if (companyError || !companyData) {
+              console.error(`Row ${i + 2}: Invalid company ID - ${promoter.employer_id}`)
+              // Instead of failing, just remove the invalid company ID
+              promoter.employer_id = undefined
+              console.log(`Row ${i + 2}: Removed invalid company ID, will import without company assignment`)
+            } else {
+              importedWithCompany++
+            }
+          }
+
+          // Prepare data for insertion (remove undefined values)
+          const insertData = {
+            name_en: promoter.name_en,
+            name_ar: promoter.name_ar,
+            id_card_number: promoter.id_card_number,
+            mobile_number: promoter.mobile_number || null,
+            passport_number: promoter.passport_number || null,
+            nationality: promoter.nationality || null,
+            id_card_expiry_date: promoter.id_card_expiry_date,
+            passport_expiry_date: promoter.passport_expiry_date,
+            notes: promoter.notes || null,
+            status: promoter.status || "active",
+            ...(promoter.employer_id && { employer_id: promoter.employer_id })
+          }
+
+          console.log(`Row ${i + 2}: Inserting data:`, insertData)
+
+          const { data: insertResult, error: insertError } = await supabase
+            .from("promoters")
+            .insert(insertData)
+            .select()
 
           if (insertError) {
-            console.error(`Row ${i + 2} insertion error:`, insertError)
-            console.error(`Row ${i + 2} error details:`, {
-              message: insertError.message,
-              details: insertError.details,
-              hint: insertError.hint,
-              code: insertError.code
-            })
+            console.error(`Row ${i + 2}: Insert error:`, insertError)
+            console.error(`Row ${i + 2}: Insert data that failed:`, insertData)
             
             // Provide more specific error messages
             let errorMessage = insertError.message
-            if (insertError.message.includes("schema cache")) {
-              errorMessage = "Database schema issue - please contact administrator"
-            } else if (insertError.message.includes("duplicate key")) {
-              errorMessage = "Duplicate ID card number already exists"
-            } else if (insertError.message.includes("not null")) {
-              errorMessage = "Required field missing or invalid"
-            } else if (insertError.message.includes("address")) {
-              errorMessage = "Address field not supported in database schema"
-            } else if (insertError.message.includes("permission")) {
-              errorMessage = "Permission denied - check your user role"
-            } else if (insertError.message.includes("RLS")) {
-              errorMessage = "Row Level Security policy violation"
-            } else if (insertError.message.includes("column") && insertError.message.includes("does not exist")) {
-              errorMessage = "Database column does not exist - schema mismatch"
+            if (insertError.code === '22008') {
+              errorMessage = `Invalid date format. Please use DD/MM/YYYY or DD-MM-YYYY format.`
+            } else if (insertError.code === '23505') {
+              errorMessage = `Duplicate entry. This promoter already exists.`
+            } else if (insertError.code === '23503') {
+              errorMessage = `Invalid company ID. Please check the company reference.`
             }
+            
             errors.push(`Row ${i + 2}: ${errorMessage}`)
           } else {
+            console.log(`Row ${i + 2}: Successfully imported:`, insertResult)
             imported++
-            console.log(`Successfully imported promoter: ${row.name_en}`)
-            console.log(`Insert result:`, insertDataResult)
           }
 
           // Update progress
-          setProgress(((i + 1) / mappedData.length) * 100)
+          setProgress(((i + 1) / previewData.length) * 100)
         } catch (error) {
+          console.error(`Error importing row ${i + 2}:`, error)
           errors.push(`Row ${i + 2}: ${error instanceof Error ? error.message : "Unknown error"}`)
         }
       }
 
-      const result: ImportResult = {
-        success: imported > 0,
-        message: `Import completed. ${imported} promoters imported, ${duplicates} duplicates skipped.`,
-        imported,
-        errors,
-        duplicates
-      }
-
-      setImportResult(result)
-      setStep("complete")
+      console.log(`=== IMPORT COMPLETED ===`)
+      console.log(`Total processed: ${previewData.length}`)
+      console.log(`Successfully imported: ${imported}`)
+      console.log(`Duplicates skipped: ${duplicates}`)
+      console.log(`Errors: ${errors.length}`)
+      console.log(`Promoters with company: ${importedWithCompany}`)
+      console.log(`Promoters without company: ${imported - importedWithCompany}`)
 
       if (imported > 0) {
         toast({
-          title: "Import successful",
-          description: `Imported ${imported} promoters successfully`,
-          variant: "default",
+          title: "Import completed",
+          description: `Successfully processed ${imported} promoters. ${importedWithCompany} with company assignment, ${imported - importedWithCompany} without company.`,
         })
         onImportComplete()
+      } else if (duplicates > 0) {
+        toast({
+          title: "Import completed",
+          description: `All promoters already exist in the database. ${duplicates} promoters were skipped as duplicates.`,
+        })
+        onImportComplete()
+      } else {
+        toast({
+          title: "Import failed",
+          description: "No promoters were processed. Please check the data and try again.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error("Import error:", error)
-      toast({
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "Failed to import data",
-        variant: "destructive",
+      setImportResult({
+        success: false,
+        message: error instanceof Error ? error.message : "Import failed",
+        imported: 0,
+        errors: [error instanceof Error ? error.message : "Unknown error"],
+        duplicates: 0
       })
     } finally {
       setIsProcessing(false)
+      setStep("complete")
     }
-  }, [file, toast, onImportComplete])
+  }, [previewData, onImportComplete, toast])
 
-  const downloadTemplate = useCallback(() => {
-    const templateData = [
-      {
-                 "Name (English)": "John Smith",
-         "Name (Arabic)": "جون سميث",
-         "ID Card Number": "1234567890",
-         "Mobile": "+966501234567",
-         "Passport Number": "A12345678",
-         "Nationality": "Saudi",
-         "ID Expiry Date": "31/12/2025",
-         "Passport Expiry Date": "30/06/2026",
-         "Notes": "Sample promoter",
-         "Status": "active"
-      },
-      {
-                 "Name (English)": "Jane Doe",
-         "Name (Arabic)": "جين دو",
-         "ID Card Number": "0987654321",
-         "Mobile": "+966509876543",
-         "Passport Number": "B87654321",
-         "Nationality": "American",
-         "ID Expiry Date": "15/08/2025",
-         "Passport Expiry Date": "20/03/2026",
-         "Notes": "Another sample promoter",
-         "Status": "active"
-      }
-    ]
-
-    const worksheet = XLSX.utils.json_to_sheet(templateData)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Promoters Template")
-    
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
-    const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
-    const url = URL.createObjectURL(blob)
-    
-    const link = document.createElement("a")
-    link.href = url
-    link.download = "promoters_template.xlsx"
-    link.click()
-    
-    URL.revokeObjectURL(url)
-  }, [])
-
-  const resetForm = useCallback(() => {
+  const handleClose = useCallback(() => {
     setFile(null)
     setPreviewData([])
     setImportResult(null)
     setStep("upload")
     setProgress(0)
-  }, [])
-
-  const handleClose = useCallback(() => {
-    resetForm()
     onClose()
-  }, [resetForm, onClose])
+  }, [onClose])
+
+  const downloadTemplate = useCallback(() => {
+    // Create template with company dropdown
+    const templateData = [
+      ["Name (EN)", "Name (AR)", "ID Card Number", "Mobile Number", "Passport Number", "Nationality", "ID Expiry Date", "Passport Expiry Date", "Notes", "Status", "Company ID"],
+      ["John Doe", "جون دو", "1234567890", "+966501234567", "A12345678", "Saudi", "15/08/2025", "20/03/2026", "Sample promoter", "active", ""]
+    ]
+
+    // Add company options as a separate sheet for reference
+    const companyOptions = [
+      ["Company ID", "Company Name (EN)", "Company Name (AR)"],
+      ...companies.map(company => [
+        company.id,
+        company.name_en || "",
+        company.name_ar || ""
+      ])
+    ]
+
+    const ws = XLSX.utils.aoa_to_sheet(templateData)
+    const wsCompanies = XLSX.utils.aoa_to_sheet(companyOptions)
+    
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Promoters Template")
+    XLSX.utils.book_append_sheet(wb, wsCompanies, "Companies Reference")
+    
+    const fileName = "promoters-template-with-companies.xlsx"
+    XLSX.writeFile(wb, fileName)
+  }, [companies])
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="h-5 w-5" />
             Import Promoters from Excel
           </DialogTitle>
-                     <DialogDescription>
-             Upload an Excel file to import promoter data. The file should contain columns for Name (English), Name (Arabic), ID Card Number, Mobile, Passport Number, Nationality, and other optional fields. Date fields support formats: dd/mm/yyyy, dd.mm.yyyy, or yyyy-mm-dd. Email and Phone fields are not currently supported.
-           </DialogDescription>
+          <DialogDescription>
+            Upload an Excel or CSV file to import promoter data. The file should include columns for name, ID card number, and other required fields. Company assignment is optional - promoters can be assigned to companies after import. Download the template to see the correct format with company options.
+          </DialogDescription>
         </DialogHeader>
 
         {step === "upload" && (
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  Download Template
-                </CardTitle>
+                <CardTitle>Step 1: Upload File</CardTitle>
                 <CardDescription>
-                  Download the Excel template to see the required format
-                </CardDescription>
-              </CardHeader>
-                             <CardContent>
-                 <div className="space-y-2">
-                   <Button onClick={downloadTemplate} variant="outline">
-                     <Download className="mr-2 h-4 w-4" />
-                     Download Template
-                   </Button>
-                   <Button 
-                     onClick={async () => {
-                       const supabase = getSupabaseClient()
-                       const { data: { user } } = await supabase.auth.getUser()
-                       console.log("Current user:", user?.email)
-                       
-                       const { data, error } = await supabase
-                         .from("promoters")
-                         .select("id")
-                         .limit(1)
-                       
-                       if (error) {
-                         console.error("Database test failed:", error)
-                         toast({
-                           title: "Database Test Failed",
-                           description: error.message,
-                           variant: "destructive",
-                         })
-                       } else {
-                         console.log("Database test successful:", data)
-                         toast({
-                           title: "Database Test Successful",
-                           description: "Connection to database is working",
-                           variant: "default",
-                         })
-                       }
-                     }} 
-                     variant="outline"
-                     size="sm"
-                   >
-                     Test Database Connection
-                   </Button>
-                 </div>
-               </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload File
-                </CardTitle>
-                <CardDescription>
-                  Select an Excel file (.xlsx, .xls) or CSV file to import
+                  Select an Excel (.xlsx, .xls) or CSV file containing promoter data
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="grid w-full max-w-sm items-center gap-1.5">
-                    <Label htmlFor="file">Excel File</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept=".xlsx,.xls,.csv"
-                      onChange={handleFileChange}
-                      disabled={isProcessing}
-                    />
+                  <div className="flex items-center gap-4">
+                    <Button onClick={downloadTemplate} variant="outline" disabled={companiesLoading}>
+                      <Download className="mr-2 h-4 w-4" />
+                      {companiesLoading ? "Loading Companies..." : "Download Template"}
+                    </Button>
+                    <Button onClick={() => document.getElementById('file-input')?.click()} disabled={isProcessing}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Choose File
+                    </Button>
                   </div>
+                  
+                  <input
+                    id="file-input"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  
+                  {file && (
+                    <div className="flex items-center gap-2 p-3 border rounded-md">
+                      <FileSpreadsheet className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm">{file.name}</span>
+                      <Badge variant="secondary">{file.size} bytes</Badge>
+                    </div>
+                  )}
                   
                   {isProcessing && (
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                        <span className="text-sm">Processing file...</span>
-                      </div>
-                      <Progress value={progress} className="w-full" />
+                      <Progress value={progress} />
+                      <p className="text-sm text-muted-foreground">Processing file...</p>
                     </div>
                   )}
                 </div>
@@ -613,101 +602,136 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
 
         {step === "preview" && (
           <div className="space-y-4">
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                Preview of the first 10 rows. Please review the data before importing.
-              </AlertDescription>
-            </Alert>
-
-            <div className="max-h-96 overflow-y-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="p-2 text-left">Name (EN)</th>
-                    <th className="p-2 text-left">Name (AR)</th>
-                    <th className="p-2 text-left">ID Number</th>
-                    <th className="p-2 text-left">Mobile</th>
-                    <th className="p-2 text-left">Passport</th>
-                    <th className="p-2 text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {previewData.map((row, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="p-2">{row.name_en}</td>
-                      <td className="p-2">{row.name_ar}</td>
-                      <td className="p-2">{row.id_card_number}</td>
-                      <td className="p-2">{row.mobile_number || "-"}</td>
-                      <td className="p-2">{row.passport_number || "-"}</td>
-                      <td className="p-2">
-                        <Badge variant={row.status === "active" ? "default" : "secondary"}>
-                          {row.status}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Step 2: Preview Data</CardTitle>
+                <CardDescription>
+                  Review the data before importing. {previewData.length} promoters found.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="max-h-96 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="p-2 text-left">Name (EN)</th>
+                        <th className="p-2 text-left">Name (AR)</th>
+                        <th className="p-2 text-left">ID Card</th>
+                        <th className="p-2 text-left">Mobile</th>
+                        <th className="p-2 text-left">Company</th>
+                        <th className="p-2 text-left">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewData.slice(0, 10).map((promoter, index) => (
+                        <tr key={index} className="border-b">
+                          <td className="p-2">{promoter.name_en}</td>
+                          <td className="p-2">{promoter.name_ar}</td>
+                          <td className="p-2">{promoter.id_card_number}</td>
+                          <td className="p-2">{promoter.mobile_number}</td>
+                          <td className="p-2">
+                            {promoter.employer_id ? (
+                              (() => {
+                                const company = companies.find(c => c.id === promoter.employer_id)
+                                return company ? (company.name_en || company.name_ar || company.id) : promoter.employer_id
+                              })()
+                            ) : (
+                              <span className="text-muted-foreground">Not assigned</span>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            <Badge variant={promoter.status === "active" ? "default" : "secondary"}>
+                              {promoter.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                      {previewData.length > 10 && (
+                        <tr>
+                          <td colSpan={6} className="p-2 text-center text-muted-foreground">
+                            ... and {previewData.length - 10} more rows
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {step === "import" && (
           <div className="space-y-4">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Importing promoters...</p>
-              <p className="text-sm text-muted-foreground">Please wait while we import the data</p>
-            </div>
-            <Progress value={progress} className="w-full" />
+            <Card>
+              <CardHeader>
+                <CardTitle>Step 3: Importing Data</CardTitle>
+                <CardDescription>
+                  Please wait while we import the promoter data...
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <Progress value={progress} />
+                  <p className="text-sm text-muted-foreground">
+                    Importing {previewData.length} promoters...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
         {step === "complete" && importResult && (
           <div className="space-y-4">
-            <Alert className={importResult.success ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}>
-              {importResult.success ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
-              ) : (
-                <XCircle className="h-4 w-4 text-red-600" />
-              )}
-              <AlertDescription className={importResult.success ? "text-green-800" : "text-red-800"}>
-                {importResult.message}
-              </AlertDescription>
-            </Alert>
-
-            {importResult.errors.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-red-600">Import Errors</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
-                    {importResult.errors.map((error, index) => (
-                      <div key={index} className="text-sm text-red-600 p-2 bg-red-50 rounded">
-                        {error}
-                      </div>
-                    ))}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {importResult.success ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  )}
+                  Import Complete
+                </CardTitle>
+                <CardDescription>
+                  {importResult.message}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-green-50 rounded-md">
+                      <div className="text-2xl font-bold text-green-600">{importResult.imported}</div>
+                      <div className="text-sm text-green-600">Imported</div>
+                    </div>
+                    <div className="text-center p-3 bg-yellow-50 rounded-md">
+                      <div className="text-2xl font-bold text-yellow-600">{importResult.duplicates}</div>
+                      <div className="text-sm text-yellow-600">Duplicates</div>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 rounded-md">
+                      <div className="text-2xl font-bold text-red-600">{importResult.errors.length}</div>
+                      <div className="text-sm text-red-600">Errors</div>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div className="p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{importResult.imported}</div>
-                <div className="text-sm text-green-600">Imported</div>
-              </div>
-              <div className="p-4 bg-yellow-50 rounded-lg">
-                <div className="text-2xl font-bold text-yellow-600">{importResult.duplicates}</div>
-                <div className="text-sm text-yellow-600">Duplicates</div>
-              </div>
-              <div className="p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{importResult.errors.length}</div>
-                <div className="text-sm text-red-600">Errors</div>
-              </div>
-            </div>
+                  
+                  {importResult.errors.length > 0 && (
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        <div className="max-h-32 overflow-y-auto">
+                          {importResult.errors.map((error, index) => (
+                            <div key={index} className="text-sm text-red-600">
+                              {error}
+                            </div>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -726,19 +750,21 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
                 Back
               </Button>
               <Button onClick={handleImport} disabled={isProcessing}>
-                Import Data
+                Import {previewData.length} Promoters
               </Button>
             </>
           )}
           
           {step === "complete" && (
             <>
-              <Button variant="outline" onClick={resetForm}>
-                Import Another File
-              </Button>
-              <Button onClick={handleClose}>
+              <Button variant="outline" onClick={handleClose}>
                 Close
               </Button>
+                             {(importResult?.imported || 0) > 0 && (
+                 <Button onClick={handleClose}>
+                   View Promoters
+                 </Button>
+               )}
             </>
           )}
         </DialogFooter>
