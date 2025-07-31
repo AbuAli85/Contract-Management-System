@@ -7,7 +7,7 @@ import type { Promoter } from "@/lib/types"
 import { ArrowLeftIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
-import PromoterFormSimple from "@/components/promoter-form-simple"
+import PromoterFormProfessional from "@/components/promoter-form-professional"
 
 export default function EditPromoterPage() {
   const params = useParams()
@@ -108,7 +108,7 @@ export default function EditPromoterPage() {
           </Button>
         </div>
 
-        <PromoterFormSimple
+        <PromoterFormProfessional
           promoterToEdit={promoter}
           onFormSubmit={handleFormSubmit}
           onCancel={handleCancel}
