@@ -1,53 +1,35 @@
 "use client"
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { format, parseISO, differenceInDays } from "date-fns"
-import * as XLSX from "xlsx"
+import Link from "next/link"
 
 // UI Components
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { SafeImage } from "@/components/ui/safe-image"
 import { cn } from "@/lib/utils"
-import { useFormContext } from "@/hooks/use-form-context"
-import { AutoRefreshIndicator } from "@/components/ui/auto-refresh-indicator"
 import ProtectedRoute from "@/components/protected-route"
 import ExcelImportModal from "@/components/excel-import-modal"
-import Link from "next/link"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 
 // Icons
 import {
-  Upload, Download, Search, MoreHorizontal, Eye, Edit3, Trash2, 
-  UserPlus, FileSpreadsheet, FileText, AlertTriangle, CheckCircle, 
-  XCircle, Clock, Users, TrendingUp, BarChart3, Activity, Loader2, 
-  RefreshCw, Settings, Globe, CreditCard, Zap, Bell, Grid, List, Mail,
-  PlusCircleIcon, ArrowLeftIcon, BriefcaseIcon, Filter, ArrowUpDown,
-  ChevronUp, ChevronDown, Star, MessageSquare, Calendar, UserIcon,
-  FileTextIcon, EyeIcon, EditIcon, Database
+  Search, MoreHorizontal, Eye, Edit3, Trash2, 
+  UserPlus, FileSpreadsheet, RefreshCw, ArrowLeftIcon,
+  PlusCircleIcon, BriefcaseIcon, UserIcon, Loader2,
+  CheckCircle, AlertTriangle, XCircle, Clock, Building
 } from "lucide-react"
 
 // Types and Utils
 import type { Promoter } from "@/lib/types"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
-import { usePermissions, PermissionGuard } from "@/hooks/use-permissions"
+import { usePermissions } from "@/hooks/use-permissions"
 
 // Enhanced Promoter Interface
 interface EnhancedPromoter extends Promoter {
@@ -57,6 +39,11 @@ interface EnhancedPromoter extends Promoter {
   days_until_id_expiry?: number
   days_until_passport_expiry?: number
   active_contracts_count?: number
+  employer?: {
+    id: string
+    name_en: string
+    name_ar: string
+  } | null
 }
 
 // Statistics interface
@@ -66,43 +53,51 @@ interface PromoterStats {
   expiring_documents: number
   expired_documents: number
   total_contracts: number
-  growth_rate: number
-  engagement_score: number
+  companies_count: number
 }
 
-export default function ComprehensivePromoterManagement() {
-  // State management
+export default function PromoterManagement() {
+  // Core state
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
   const [selectedPromoters, setSelectedPromoters] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentView, setCurrentView] = useState<"table" | "grid">("table")
-  const [autoRefresh, setAutoRefresh] = useState(false)
-  const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false)
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [documentFilter, setDocumentFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"name" | "id_expiry" | "passport_expiry" | "contracts">("name")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [showStats, setShowStats] = useState(true)
-  const [isExporting, setIsExporting] = useState(false)
-  const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [bulkActionLoading, setBulkActionLoading] = useState(false)
+
+  // Bulk actions state
+  const [showBulkCompanyModal, setShowBulkCompanyModal] = useState(false)
+  const [selectedCompanyForBulk, setSelectedCompanyForBulk] = useState("")
+
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterCompany, setFilterCompany] = useState("all")
+  const [filterDocument, setFilterDocument] = useState("all")
 
   // Hooks
   const router = useRouter()
   const { toast } = useToast()
   const permissions = usePermissions()
-  const { isFormActive } = useFormContext()
-  const isMountedRef = useRef(true)
-
-  console.log("🔄 Component rendering - isLoading:", isLoading, "promoters:", promoters.length, "mounted:", isMountedRef.current)
-
-
 
   // Helper functions
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return "N/A"
+    try {
+      const date = new Date(dateString)
+      if (isNaN(date.getTime())) return "Invalid Date"
+      return date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    } catch (error) {
+      return "Invalid Date"
+    }
+  }
+
   const getDocumentStatusType = (
     daysUntilExpiry: number | null,
     dateString: string | null,
@@ -138,86 +133,50 @@ export default function ComprehensivePromoterManagement() {
     return "active"
   }
 
-  // Enhanced data fetching with contract counts
-  const fetchPromotersWithContractCount = useCallback(async () => {
-    console.log("🔄 Starting fetchPromotersWithContractCount")
-    console.log("🔄 Current isLoading state:", isLoading)
-    console.log("🔄 isMountedRef.current:", isMountedRef.current)
-    
-    if (isMountedRef.current) {
-      console.log("🔄 Setting isLoading to true")
-      setIsLoading(true)
-      setError(null) // Clear any previous errors
-    } else {
-      console.log("🔄 Component not mounted, skipping fetch")
-      return
-    }
-
+  // Data fetching
+  const fetchPromoters = useCallback(async () => {
     try {
+      setIsLoading(true)
+      setError(null)
+
       const supabase = getSupabaseClient()
-      console.log("🔄 Supabase client obtained")
-
-      // Check if we got a mock client
-      if (!supabase || typeof supabase.auth === 'undefined') {
-        console.error("No valid Supabase client available")
-        if (isMountedRef.current) {
-          setError("Database connection not available. Please check your environment variables.")
-          setIsLoading(false)
-        }
-        return
+      
+      if (!supabase) {
+        throw new Error("Database connection not available")
       }
 
-      // Test authentication first
+      // Test authentication
       const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError) {
-        console.error("Authentication error:", authError)
-        if (isMountedRef.current) {
-          setError(`Authentication error: ${authError.message}`)
-          setIsLoading(false)
-        }
-        return
+      if (authError || !user) {
+        throw new Error("Authentication required")
       }
-      
-      if (!user) {
-        console.error("No authenticated user")
-        if (isMountedRef.current) {
-          setError("No authenticated user")
-          setIsLoading(false)
-        }
-        return
-      }
-      
-      console.log("🔄 Authenticated user:", user.email)
 
-      // Fetch promoters with contract count
-      console.log("🔄 About to execute Supabase query")
+
+
+      // Fetch promoters with company information using a join
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
-        .select("*")
+        .select(`
+          *,
+          employer:employer_id (
+            id,
+            name_en,
+            name_ar
+          )
+        `)
         .order("name_en")
-
-      console.log("🔄 Promoters query result:", { data: promotersData, error: promotersError })
-      console.log("🔄 Promoters data length:", promotersData?.length || 0)
 
       if (promotersError) {
         console.error("Error fetching promoters:", promotersError)
-        if (isMountedRef.current) {
-          setError(`Failed to load promoters: ${promotersError.message}`)
-          setIsLoading(false)
-        }
-        return
+        throw new Error(promotersError.message)
       }
 
       if (!promotersData) {
-        console.log("🔄 No promoters data returned")
-        if (isMountedRef.current) {
-          setPromoters([])
-          setIsLoading(false)
-        }
+        setPromoters([])
         return
       }
 
-      // Enhance promoter data with calculated fields
+      // Enhance promoter data
       const enhancedPromoters: EnhancedPromoter[] = promotersData.map((promoter: any) => {
         const idExpiryDays = promoter.id_card_expiry_date 
           ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
@@ -234,30 +193,139 @@ export default function ComprehensivePromoterManagement() {
           overall_status: getOverallStatus(promoter),
           days_until_id_expiry: idExpiryDays || undefined,
           days_until_passport_expiry: passportExpiryDays || undefined,
-          active_contracts_count: 0 // Default to 0 since we're not fetching contract counts
+          active_contracts_count: 0
         }
       })
 
-      console.log("🔄 Enhanced promoters:", enhancedPromoters.length)
 
-      if (isMountedRef.current) {
-        console.log("🔄 Setting promoters and stopping loading...")
+
         setPromoters(enhancedPromoters)
-        setError(null)
-        setIsLoading(false) // ✅ Explicitly set loading to false on success
-        console.log("🔄 Loading state should now be false")
-      }
     } catch (error) {
-      console.error("Error in fetchPromotersWithContractCount:", error)
-      if (isMountedRef.current) {
+      console.error("Error in fetchPromoters:", error)
         setError(error instanceof Error ? error.message : "Failed to load promoters")
-      }
     } finally {
-      if (isMountedRef.current) {
         setIsLoading(false)
-      }
     }
-  }, [isMountedRef])
+  }, [])
+
+  // Load data on mount
+  useEffect(() => {
+    fetchPromoters()
+  }, [fetchPromoters])
+
+  // Get unique companies for filter
+  const [employers, setEmployers] = useState<{ id: string; name_en: string; name_ar: string }[]>([])
+  const [employersLoading, setEmployersLoading] = useState(true)
+
+  // Fetch employers from parties table
+  const fetchEmployers = useCallback(async () => {
+    try {
+      setEmployersLoading(true)
+      const supabase = getSupabaseClient()
+      
+      if (!supabase) {
+        throw new Error("Database connection not available")
+      }
+
+      const { data: employersData, error } = await supabase
+        .from("parties")
+        .select("id, name_en, name_ar")
+        .eq("type", "Employer")
+        .order("name_en")
+
+      if (error) {
+        console.error("Error fetching employers:", error)
+        return
+      }
+
+
+
+      setEmployers(employersData || [])
+    } catch (error) {
+      console.error("Error fetching employers:", error)
+    } finally {
+      setEmployersLoading(false)
+    }
+  }, [])
+
+  // Load employers on mount
+  useEffect(() => {
+    fetchEmployers()
+  }, [fetchEmployers])
+
+  // Get unique companies for filter
+  const uniqueCompanies = useMemo(() => {
+    return employers.map(employer => ({
+      id: employer.id,
+      name: employer.name_en || employer.name_ar || employer.id
+    }))
+  }, [employers])
+
+
+
+  // Filter and sort promoters
+  useEffect(() => {
+    let filtered = promoters
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(promoter => {
+        const searchLower = searchTerm.toLowerCase()
+        
+        // Basic promoter fields
+        const nameMatch = 
+          promoter.name_en?.toLowerCase().includes(searchLower) ||
+          promoter.name_ar?.toLowerCase().includes(searchLower) ||
+          promoter.id_card_number?.toLowerCase().includes(searchLower) ||
+          promoter.passport_number?.toLowerCase().includes(searchLower)
+        
+        // Employer name search
+        const employerMatch = promoter.employer ? 
+          (promoter.employer.name_en?.toLowerCase().includes(searchLower) || 
+           promoter.employer.name_ar?.toLowerCase().includes(searchLower)) : false
+        
+        return nameMatch || employerMatch
+      })
+    }
+
+    // Status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(promoter => promoter.overall_status === filterStatus)
+    }
+
+    // Company filter
+    if (filterCompany !== "all") {
+      filtered = filtered.filter(promoter => promoter.employer_id === filterCompany)
+    }
+
+    // Document filter
+    if (filterDocument !== "all") {
+      filtered = filtered.filter(promoter => {
+        switch (filterDocument) {
+          case "id_valid":
+            return promoter.id_card_status === "valid"
+          case "id_expiring":
+            return promoter.id_card_status === "expiring"
+          case "id_expired":
+            return promoter.id_card_status === "expired"
+          case "id_missing":
+            return promoter.id_card_status === "missing"
+          case "passport_valid":
+            return promoter.passport_status === "valid"
+          case "passport_expiring":
+            return promoter.passport_status === "expiring"
+          case "passport_expired":
+            return promoter.passport_status === "expired"
+          case "passport_missing":
+            return promoter.passport_status === "missing"
+        default:
+            return true
+        }
+      })
+    }
+
+    setFilteredPromoters(filtered)
+  }, [promoters, searchTerm, filterStatus, filterCompany, filterDocument])
 
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
@@ -270,8 +338,7 @@ export default function ComprehensivePromoterManagement() {
       p.id_card_status === "expired" || p.passport_status === "expired"
     ).length
     const total_contracts = promoters.reduce((sum, p) => sum + (p.active_contracts_count || 0), 0)
-    const growth_rate = total > 0 ? ((active / total) * 100) : 0
-    const engagement_score = total > 0 ? ((total_contracts / total) * 100) : 0
+    const companies_count = uniqueCompanies.length
 
     return {
       total,
@@ -279,328 +346,106 @@ export default function ComprehensivePromoterManagement() {
       expiring_documents,
       expired_documents,
       total_contracts,
-      growth_rate,
-      engagement_score
+      companies_count
     }
-  }, [promoters])
+  }, [promoters, uniqueCompanies])
 
-  // Calculate notification count
-  const notificationCount = useMemo(() => {
-    const expiringAlerts = promoters.filter(p => 
-      (p.days_until_id_expiry !== undefined && p.days_until_id_expiry <= 30) ||
-      (p.days_until_passport_expiry !== undefined && p.days_until_passport_expiry <= 30)
-    ).length
-    
-    return expiringAlerts + 1 // +1 for system notifications
-  }, [promoters])
+  // Action handlers
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    await fetchPromoters()
+    setIsRefreshing(false)
+  }, [fetchPromoters])
 
-  // Monitor loading state changes
-  useEffect(() => {
-    console.log("🔄 Loading state changed:", isLoading)
-  }, [isLoading])
+  const handleAddNew = useCallback(() => {
+    router.push("/manage-promoters/new")
+  }, [router])
 
-  // Monitor promoters state changes
-  useEffect(() => {
-    console.log("🔄 Promoters state changed:", promoters.length)
-  }, [promoters.length])
+  const handleEdit = useCallback((promoter: Promoter) => {
+    router.push(`/manage-promoters/${promoter.id}/edit`)
+  }, [router])
 
-  // Filter and sort promoters
-  useEffect(() => {
-    let filtered = promoters
+  const handleView = useCallback((promoter: Promoter) => {
+    router.push(`/manage-promoters/${promoter.id}`)
+  }, [router])
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(promoter =>
-        promoter.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promoter.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promoter.id_card_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promoter.notes?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedPromoters.length === 0) {
+      toast({
+        title: "No promoters selected",
+        description: "Please select promoters to delete",
+        variant: "destructive"
+      })
+      return
     }
 
-    // Status filter
-    if (filterStatus !== "all") {
-      filtered = filtered.filter(promoter => promoter.overall_status === filterStatus)
+    if (!confirm(`Are you sure you want to delete ${selectedPromoters.length} promoter(s)?`)) {
+      return
     }
-
-    // Document filter
-    if (documentFilter !== "all") {
-      filtered = filtered.filter(promoter => 
-        promoter.id_card_status === documentFilter || promoter.passport_status === documentFilter
-      )
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      let aValue: any, bValue: any
-
-      switch (sortBy) {
-        case "name":
-          aValue = a.name_en || ""
-          bValue = b.name_en || ""
-          break
-        case "id_expiry":
-          aValue = a.days_until_id_expiry ?? Infinity
-          bValue = b.days_until_id_expiry ?? Infinity
-          break
-        case "passport_expiry":
-          aValue = a.days_until_passport_expiry ?? Infinity
-          bValue = b.days_until_passport_expiry ?? Infinity
-          break
-        case "contracts":
-          aValue = a.active_contracts_count || 0
-          bValue = b.active_contracts_count || 0
-          break
-        default:
-          aValue = a.name_en || ""
-          bValue = b.name_en || ""
-      }
-
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1
-      } else {
-        return aValue < bValue ? 1 : -1
-      }
-    })
-
-    setFilteredPromoters(filtered)
-  }, [promoters, searchTerm, filterStatus, documentFilter, sortBy, sortOrder])
-
-  // Event handlers
-  const handleAddNew = () => {
-    router.push("/en/manage-promoters/new")
-  }
-
-  const handleEdit = (promoter: Promoter) => {
-    router.push(`/en/manage-promoters/${promoter.id}/edit`)
-  }
-
-  const handleBulkDelete = async () => {
-    if (selectedPromoters.length === 0) return
 
     setBulkActionLoading(true)
     try {
       const supabase = getSupabaseClient()
-      const { error } = await supabase.from("promoters").delete().in("id", selectedPromoters)
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: `Deleted ${selectedPromoters.length} promoters`,
-        variant: "default",
-      })
+      
+      for (const promoterId of selectedPromoters) {
+        // Delete related records first
+        await supabase.from('promoter_skills').delete().eq('promoter_id', promoterId)
+        await supabase.from('promoter_experience').delete().eq('promoter_id', promoterId)
+        await supabase.from('promoter_education').delete().eq('promoter_id', promoterId)
+        await supabase.from('promoter_documents').delete().eq('promoter_id', promoterId)
+        
+        // Delete the promoter
+        await supabase.from('promoters').delete().eq('id', promoterId)
+      }
 
       setSelectedPromoters([])
-      fetchPromotersWithContractCount()
-    } catch (error) {
-      console.error("Error deleting promoters:", error)
+      await fetchPromoters()
+
       toast({
-        title: "Error",
-        description: "Failed to delete promoters",
-        variant: "destructive",
+        title: "Promoters deleted",
+        description: `Successfully deleted ${selectedPromoters.length} promoter(s)`
+      })
+    } catch (error) {
+      toast({
+        title: "Delete failed",
+        description: error instanceof Error ? error.message : "Failed to delete promoters",
+        variant: "destructive"
       })
     } finally {
       setBulkActionLoading(false)
     }
-  }
+  }, [selectedPromoters, fetchPromoters, toast])
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true)
-    try {
-      await fetchPromotersWithContractCount()
-      toast({
-        title: "Refreshed",
-        description: "Promoter data has been updated",
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Refresh failed:", error)
-      toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh promoter data",
-        variant: "destructive",
-      })
-    } finally {
-      setIsRefreshing(false)
-    }
-  }
-
-  // Fallback data fetching for basic promoter data
-  const fetchBasicPromoters = useCallback(async () => {
-    console.log("🔄 Starting fetchBasicPromoters (fallback)")
-    
-    if (isMountedRef.current) {
-      setIsLoading(true)
-      setError(null)
-    }
-
-    try {
-      const supabase = getSupabaseClient()
-      console.log("🔄 Supabase client obtained for fallback")
-
-      // Check if we got a mock client
-      if (!supabase || typeof supabase.auth === 'undefined') {
-        console.error("No valid Supabase client available for fallback")
-        if (isMountedRef.current) {
-          setError("Database connection not available. Please check your environment variables.")
-          setIsLoading(false)
-        }
-        return
-      }
-
-      const { data: promotersData, error } = await supabase
-        .from("promoters")
-        .select("*")
-        .order("name_en")
-
-      console.log("🔄 Fallback query result:", { data: promotersData, error })
-
-      if (error) {
-        console.error("Error in fallback fetch:", error)
-        if (isMountedRef.current) {
-          setError(`Failed to load promoters: ${error.message}`)
-          setIsLoading(false)
-        }
-        return
-      }
-
-      if (!promotersData) {
-        console.log("🔄 No promoters data in fallback")
-        if (isMountedRef.current) {
-          setPromoters([])
-          setIsLoading(false)
-        }
-        return
-      }
-
-      // Basic enhancement without contract counts
-      const basicEnhancedPromoters: EnhancedPromoter[] = promotersData.map((promoter: any) => {
-        const idExpiryDays = promoter.id_card_expiry_date 
-          ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
-          : null
-
-        const passportExpiryDays = promoter.passport_expiry_date
-          ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
-          : null
-
-        return {
-          ...promoter,
-          id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
-          passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
-          overall_status: getOverallStatus(promoter),
-          days_until_id_expiry: idExpiryDays || undefined,
-          days_until_passport_expiry: passportExpiryDays || undefined,
-          active_contracts_count: 0 // Default to 0 for fallback
-        }
-      })
-
-      console.log("🔄 Basic enhanced promoters:", basicEnhancedPromoters.length)
-
-      if (isMountedRef.current) {
-        console.log("🔄 Setting basic promoters and stopping loading...")
-        setPromoters(basicEnhancedPromoters)
-        setError(null)
-        setIsLoading(false) // ✅ Explicitly set loading to false on success
-        console.log("🔄 Loading state should now be false")
-      }
-    } catch (error) {
-      console.error("Error in fetchBasicPromoters:", error)
-      if (isMountedRef.current) {
-        setError(error instanceof Error ? error.message : "Failed to load promoters")
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false)
-      }
-    }
-  }, [isMountedRef])
-
-
-
-  const handleExport = async (promoterIds?: string[]) => {
-    setIsExporting(true)
-    try {
-      const dataToExport = promoterIds 
-        ? promoters.filter(p => promoterIds.includes(p.id))
-        : filteredPromoters
-
-      const exportData = dataToExport.map(promoter => ({
-        "Name (EN)": promoter.name_en,
-        "Name (AR)": promoter.name_ar,
-        "ID Card Number": promoter.id_card_number,
-        "Passport Number": promoter.passport_number || "",
-        "Mobile Number": promoter.mobile_number || "",
-        "Email": promoter.email || "",
-        "Phone": promoter.phone || "",
-        "ID Card Status": promoter.id_card_status,
-        "ID Card Expiry": promoter.id_card_expiry_date || "N/A",
-        "Passport Status": promoter.passport_status,
-        "Passport Expiry": promoter.passport_expiry_date || "N/A",
-        "Active Contracts": promoter.active_contracts_count || 0,
-        "Overall Status": promoter.overall_status,
-        "Created At": promoter.created_at
-          ? format(parseISO(promoter.created_at), "yyyy-MM-dd")
-          : "N/A",
-        "Notes": promoter.notes || "",
-      }))
-
-      const ws = XLSX.utils.json_to_sheet(exportData)
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, "Promoters")
-      
-      const fileName = `promoters-export-${format(new Date(), "yyyy-MM-dd")}.xlsx`
-      XLSX.writeFile(wb, fileName)
-
-      toast({
-        title: "Export Complete",
-        description: `Exported ${exportData.length} promoters to Excel`,
-        variant: "default",
-      })
-    } catch (error) {
-      console.error("Export error:", error)
-      toast({
-        title: "Export Failed",
-        description: "Failed to export promoter data",
-        variant: "destructive",
-      })
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
-  const toggleSelectAll = () => {
+  const toggleSelectAll = useCallback(() => {
     if (selectedPromoters.length === filteredPromoters.length) {
       setSelectedPromoters([])
     } else {
       setSelectedPromoters(filteredPromoters.map(p => p.id))
     }
-  }
+  }, [selectedPromoters.length, filteredPromoters])
 
-  const toggleSelectPromoter = (promoterId: string) => {
+  const toggleSelectPromoter = useCallback((promoterId: string) => {
     setSelectedPromoters(prev => 
       prev.includes(promoterId) 
         ? prev.filter(id => id !== promoterId)
         : [...prev, promoterId]
     )
-  }
+  }, [])
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = useCallback((status: string) => {
     switch (status) {
       case "active":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-4 w-4 text-green-600" />
       case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />
       case "critical":
-        return <XCircle className="h-4 w-4 text-red-500" />
-      case "inactive":
-        return <Clock className="h-4 w-4 text-gray-500" />
+        return <XCircle className="h-4 w-4 text-red-600" />
       default:
-        return <Clock className="h-4 w-4 text-gray-500" />
+        return <Clock className="h-4 w-4 text-gray-600" />
     }
-  }
+  }, [])
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = useCallback((status: string) => {
     switch (status) {
       case "active":
         return "default"
@@ -608,104 +453,98 @@ export default function ComprehensivePromoterManagement() {
         return "secondary"
       case "critical":
         return "destructive"
-      case "inactive":
-        return "outline"
       default:
         return "outline"
     }
+  }, [])
+
+  // Bulk company assignment
+  const handleBulkCompanyAssignment = useCallback(async () => {
+    if (!selectedCompanyForBulk || selectedPromoters.length === 0) {
+      toast({
+        title: "No selection",
+        description: "Please select a company and promoters to assign.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setBulkActionLoading(true)
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) throw new Error("Database connection not available")
+
+      const { error } = await supabase
+        .from("promoters")
+        .update({ employer_id: selectedCompanyForBulk })
+        .in("id", selectedPromoters)
+
+      if (error) {
+        throw error
+      }
+
+      toast({
+        title: "Company assigned",
+        description: `Successfully assigned ${selectedPromoters.length} promoters to the selected company.`,
+      })
+
+      // Refresh data and clear selection
+      setSelectedPromoters([])
+      setSelectedCompanyForBulk("")
+      setShowBulkCompanyModal(false)
+      fetchPromoters()
+    } catch (error) {
+      console.error("Error assigning company:", error)
+      toast({
+        title: "Assignment failed",
+        description: "Failed to assign company to promoters. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setBulkActionLoading(false)
+    }
+  }, [selectedPromoters, selectedCompanyForBulk, fetchPromoters, toast])
+
+
+
+  if (isLoading) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-background px-4 py-8">
+          <div className="mx-auto max-w-screen-xl">
+            <div className="flex items-center justify-center h-64">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-6 w-6 animate-spin" />
+                <span>Loading promoters...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ProtectedRoute>
+    )
   }
-
-  // Load data on mount with timeout protection
-  useEffect(() => {
-    console.log("🔄 useEffect triggered - starting data load")
-    console.log("🔄 isMountedRef.current:", isMountedRef.current)
-    
-    // Set mounted to true when component mounts
-    isMountedRef.current = true
-    console.log("🔄 Set isMountedRef.current to true")
-    
-    const loadData = async () => {
-      console.log("🔄 loadData function called")
-      try {
-        console.log("🔄 Calling fetchPromotersWithContractCount")
-        await fetchPromotersWithContractCount()
-      } catch (error) {
-        console.error("Main data fetching failed, trying fallback:", error)
-        // Try fallback method
-        try {
-          console.log("🔄 Calling fetchBasicPromoters as fallback")
-          await fetchBasicPromoters()
-        } catch (fallbackError) {
-          console.error("Fallback data fetching also failed:", fallbackError)
-          if (isMountedRef.current) {
-            setIsLoading(false)
-            setError("Failed to load promoters. Please check your connection and try again.")
-          }
-        }
-      }
-    }
-    
-    // Only run if component is mounted
-    if (isMountedRef.current) {
-      console.log("🔄 Component is mounted, starting loadData")
-      loadData()
-    } else {
-      console.log("🔄 Component not mounted, skipping loadData")
-    }
-    
-    // Add timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (isLoading && isMountedRef.current) {
-        console.log("🔄 Loading timeout reached")
-        setIsLoading(false)
-        setError("Loading timeout - please refresh the page")
-      }
-    }, 10000) // 10 second timeout
-
-    return () => {
-      console.log("🔄 useEffect cleanup - setting isMountedRef to false")
-      isMountedRef.current = false
-      clearTimeout(timeout)
-    }
-  }, []) // Remove dependencies to prevent infinite re-renders
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
-
-        
+      <div className="min-h-screen bg-background px-4 py-8">
         <div className="mx-auto max-w-screen-xl">
                      {/* Header */}
            <div className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-             <div className="flex items-center gap-4">
+            <div>
                <h1 className="text-3xl font-bold text-card-foreground">
-                 Comprehensive Promoter Management
+                Promoter Management
                </h1>
-               {isRefreshing && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
-               <AutoRefreshIndicator />
-               {/* Debug info */}
-               <div className="text-xs text-muted-foreground">
-                 {isLoading ? "Loading promoters..." : `Loaded: ${promoters.length} promoters`}
-                 {error && (
-                   <div className="text-red-500 ml-2">
-                     <div>Error: {error}</div>
-                     <div className="text-xs">Check environment variables and database connection</div>
-                   </div>
-                 )}
-                 {!isLoading && !error && promoters.length === 0 && (
-                   <div className="text-yellow-500 ml-2">
-                     <div>No promoters found</div>
-                     <div className="text-xs">Try importing data or check database connection</div>
-                   </div>
-                 )}
+              <p className="text-muted-foreground">
+                Manage and monitor your promoters
+              </p>
                </div>
-             </div>
+            
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
-                disabled={isRefreshing || isLoading}
+                disabled={isRefreshing}
               >
                 <RefreshCw className={cn("mr-2 h-4 w-4", isRefreshing && "animate-spin")} />
                 Refresh
@@ -723,679 +562,309 @@ export default function ComprehensivePromoterManagement() {
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                 Import Excel
               </Button>
-              <Button
-                onClick={handleAddNew}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <PlusCircleIcon className="mr-2 h-5 w-5" />
+              <Button onClick={handleAddNew}>
+                <PlusCircleIcon className="mr-2 h-4 w-4" />
                 Add New Promoter
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-              >
-                <Link href="/promoter-details">
-                  <UserIcon className="mr-2 h-4 w-4" />
-                  View Profiles
-                </Link>
-              </Button>
-              <Button
-                onClick={fetchBasicPromoters}
-                variant="outline"
-                size="sm"
-                title="Debug: Load basic promoter data"
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Debug Load
-              </Button>
-              <Button
-                onClick={async () => {
-                  console.log("🔄 Manual trigger of fetchPromotersWithContractCount")
-                  await fetchPromotersWithContractCount()
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Manually trigger main fetch"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Manual Fetch
-              </Button>
-              <Button
-                onClick={async () => {
-                  console.log("🔄 Manual trigger of useEffect logic")
-                  // Reset loading state
-                  setIsLoading(true)
-                  setError(null)
-                  
-                  try {
-                    console.log("🔄 Calling fetchPromotersWithContractCount")
-                    await fetchPromotersWithContractCount()
-                  } catch (error) {
-                    console.error("Manual fetch failed:", error)
-                    setIsLoading(false)
-                    setError("Manual fetch failed")
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Manually trigger useEffect logic"
-              >
-                <Zap className="mr-2 h-4 w-4" />
-                Trigger useEffect
-              </Button>
-              <Button
-                onClick={async () => {
-                  console.log("🔄 Testing direct database query")
-                  const supabase = getSupabaseClient()
-                  
-                  try {
-                    // Test simple query
-                    const { data, error } = await supabase
-                      .from("promoters")
-                      .select("*")
-                      .limit(5)
-                    
-                    console.log("🔄 Direct query result:", { data, error })
-                    
-                    if (error) {
-                      toast({
-                        title: "❌ Query Error",
-                        description: error.message,
-                        variant: "destructive",
-                      })
-                    } else {
-                      toast({
-                        title: "✅ Query Success",
-                        description: `Found ${data?.length || 0} promoters`,
-                      })
-                      
-                      // If we found data, set it directly
-                      if (data && data.length > 0) {
-                        console.log("🔄 Setting real data from direct query")
-                        
-                        // Enhance the data with calculated fields
-                        const enhancedData: EnhancedPromoter[] = data.map((promoter: any) => {
-                          const idExpiryDays = promoter.id_card_expiry_date 
-                            ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
-                            : null
-
-                          const passportExpiryDays = promoter.passport_expiry_date
-                            ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
-                            : null
-
-                          return {
-                            ...promoter,
-                            id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
-                            passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
-                            overall_status: getOverallStatus(promoter),
-                            days_until_id_expiry: idExpiryDays || undefined,
-                            days_until_passport_expiry: passportExpiryDays || undefined,
-                            active_contracts_count: 0
-                          }
-                        })
-                        
-                        console.log("🔄 Enhanced data:", enhancedData.length)
-                        setPromoters(enhancedData)
-                        setIsLoading(false)
-                        setError(null)
-                      }
-                    }
-                  } catch (error) {
-                    console.error("🔄 Direct query failed:", error)
-                    toast({
-                      title: "❌ Query Failed",
-                      description: "Check console for details",
-                      variant: "destructive",
-                    })
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Test direct database query"
-              >
-                <Database className="mr-2 h-4 w-4" />
-                Test DB Query
-              </Button>
-              <Button
-                onClick={async () => {
-                  const supabase = getSupabaseClient()
-                  console.log("🔧 Debug: Supabase client type:", typeof supabase)
-                  console.log("🔧 Debug: Supabase client:", supabase)
-                  console.log("🔧 Debug: Environment variables:", {
-                    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-                    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-                  })
-                  
-                  // Test the client
-                  if (supabase && supabase.auth) {
-                    try {
-                      const { data: { user }, error } = await supabase.auth.getUser()
-                      console.log("🔧 Debug: Auth test result:", { user: user?.email, error })
-                      
-                      if (user) {
-                        toast({
-                          title: "✅ Environment OK",
-                          description: `Authenticated as: ${user.email}`,
-                        })
-                      } else {
-                        toast({
-                          title: "⚠️ No User",
-                          description: "Client works but no user authenticated",
-                          variant: "destructive",
-                        })
-                      }
-                    } catch (error) {
-                      console.error("🔧 Debug: Auth test failed:", error)
-                      toast({
-                        title: "❌ Auth Test Failed",
-                        description: "Check your environment variables",
-                        variant: "destructive",
-                      })
-                    }
-                  } else {
-                    toast({
-                      title: "❌ No Valid Client",
-                      description: "Create .env.local with Supabase credentials",
-                      variant: "destructive",
-                    })
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Check environment and client"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Debug Env
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log("🔧 Debug: Current state:", {
-                    isLoading,
-                    promotersCount: promoters.length,
-                    error
-                  })
-                  console.log("🔧 Debug: Promoters data:", promoters)
-                  toast({
-                    title: "Current State",
-                    description: `Loading: ${isLoading}, Promoters: ${promoters.length}, Error: ${error || 'None'}`,
-                  })
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Check current state"
-              >
-                <Activity className="mr-2 h-4 w-4" />
-                Debug State
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log("🔧 Debug: Manually setting loading to false")
-                  setIsLoading(false)
-                  toast({
-                    title: "Manual State Change",
-                    description: "Set loading to false manually",
-                  })
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Manually set loading to false"
-              >
-                <XCircle className="mr-2 h-4 w-4" />
-                Stop Loading
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log("🔧 Debug: Setting test data")
-                  const testPromoter: EnhancedPromoter = {
-                    id: "test-1",
-                    name_en: "Test Promoter",
-                    name_ar: "مروج تجريبي",
-                    id_card_number: "TEST123",
-                    mobile_number: "+966501234567",
-                    passport_number: "TEST789",
-                    nationality: "Saudi",
-                    id_card_expiry_date: "2025-12-31",
-                    passport_expiry_date: "2025-12-31",
-                    notes: "Test data",
-                    status: "active",
-                    created_at: new Date().toISOString(),
-                    id_card_status: "valid",
-                    passport_status: "valid",
-                    overall_status: "active",
-                    active_contracts_count: 0
-                  }
-                  setPromoters([testPromoter])
-                  setIsLoading(false)
-                  setError(null)
-                  toast({
-                    title: "Test Data Set",
-                    description: "Added test promoter data",
-                  })
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Set test data"
-              >
-                <UserIcon className="mr-2 h-4 w-4" />
-                Test Data
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log("🔧 Debug: Clearing data and trying to fetch real data")
-                  setPromoters([])
-                  setIsLoading(true)
-                  setError(null)
-                  
-                  // Try to fetch real data
-                  fetchPromotersWithContractCount().then(() => {
-                    console.log("🔧 Debug: Real data fetch completed")
-                  }).catch((error) => {
-                    console.error("🔧 Debug: Real data fetch failed:", error)
-                    setIsLoading(false)
-                    setError("Failed to fetch real data")
-                  })
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Clear and fetch real data"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Fetch Real Data
-              </Button>
-              <Button
-                onClick={() => {
-                  console.log("🔧 Debug: Checking filtered promoters")
-                  console.log("🔧 Debug: promoters:", promoters.length)
-                  console.log("🔧 Debug: filteredPromoters:", filteredPromoters.length)
-                  console.log("🔧 Debug: searchTerm:", searchTerm)
-                  console.log("🔧 Debug: filterStatus:", filterStatus)
-                  console.log("🔧 Debug: documentFilter:", documentFilter)
-                  
-                  toast({
-                    title: "Filter Debug",
-                    description: `Promoters: ${promoters.length}, Filtered: ${filteredPromoters.length}`,
-                  })
-                }}
-                variant="outline"
-                size="sm"
-                title="Debug: Check filtered promoters"
-              >
-                <Filter className="mr-2 h-4 w-4" />
-                Debug Filters
-              </Button>
-              <Button
-                onClick={async () => {
-                  console.log("🔄 Test DB button clicked")
-                  const supabase = getSupabaseClient()
-                  
-                  // Test authentication first
-                  const { data: { user }, error: authError } = await supabase.auth.getUser()
-                  if (authError) {
-                    console.error("Auth test failed:", authError)
-                    toast({
-                      title: "Authentication Test Failed",
-                      description: authError.message,
-                      variant: "destructive",
-                    })
-                    return
-                  }
-                  
-                  console.log("🔄 Auth test successful, user:", user?.email)
-                  
-                  // Test database connection
-                  const { data, error } = await supabase
-                    .from("promoters")
-                    .select("id")
-                    .limit(1)
-                  
-                  if (error) {
-                    console.error("Database test failed:", error)
-                    toast({
-                      title: "Database Test Failed",
-                      description: error.message,
-                      variant: "destructive",
-                    })
-                  } else {
-                    console.log("Database test successful:", data)
-                    toast({
-                      title: "Database Test Successful",
-                      description: `Connection working. Found ${data?.length || 0} promoters`,
-                      variant: "default",
-                    })
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                title="Test database connection"
-              >
-                Test DB
               </Button>
             </div>
           </div>
 
-          {/* Statistics Dashboard */}
-          {showStats && (
-            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-7">
-              <Card className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+          {/* Error Display */}
+          {error && (
+            <Card className="mb-6 border-red-200 bg-red-50">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2 text-red-800">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="font-medium">Error: {error}</span>
+                </div>
+              <Button
+                variant="outline"
+                size="sm"
+                  onClick={handleRefresh}
+                  className="mt-2"
+              >
+                  Try Again
+              </Button>
+                </CardContent>
+              </Card>
+          )}
+
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-6">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="h-4 w-4 text-blue-600" />
                     <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total</p>
-                      <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                        {stats.total}
-                      </p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
+                    <p className="text-xs text-muted-foreground">Total Promoters</p>
                     </div>
-                    <Users className="h-8 w-8 text-blue-500" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
                     <div>
-                      <p className="text-sm font-medium text-green-600 dark:text-green-400">Active</p>
-                      <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                        {stats.active}
-                      </p>
+                    <p className="text-2xl font-bold">{stats.active}</p>
+                    <p className="text-xs text-muted-foreground">Active</p>
                     </div>
-                    <CheckCircle className="h-8 w-8 text-green-500" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-600 dark:text-yellow-400">Expiring</p>
-                      <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
-                        {stats.expiring_documents}
-                      </p>
+                    <p className="text-2xl font-bold">{stats.expiring_documents}</p>
+                    <p className="text-xs text-muted-foreground">Expiring</p>
                     </div>
-                    <AlertTriangle className="h-8 w-8 text-yellow-500" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-red-600" />
                     <div>
-                      <p className="text-sm font-medium text-red-600 dark:text-red-400">Expired</p>
-                      <p className="text-2xl font-bold text-red-900 dark:text-red-100">
-                        {stats.expired_documents}
-                      </p>
+                    <p className="text-2xl font-bold">{stats.expired_documents}</p>
+                    <p className="text-xs text-muted-foreground">Expired</p>
                     </div>
-                    <XCircle className="h-8 w-8 text-red-500" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <BriefcaseIcon className="h-4 w-4 text-purple-600" />
                     <div>
-                      <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Contracts</p>
-                      <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                        {stats.total_contracts}
-                      </p>
+                    <p className="text-2xl font-bold">{stats.total_contracts}</p>
+                    <p className="text-xs text-muted-foreground">Contracts</p>
                     </div>
-                    <BriefcaseIcon className="h-8 w-8 text-purple-500" />
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-950 dark:to-indigo-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
+            <Card>
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-indigo-600" />
                     <div>
-                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">Growth</p>
-                      <p className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
-                        {stats.growth_rate.toFixed(1)}%
-                      </p>
+                    <p className="text-2xl font-bold">{stats.companies_count}</p>
+                    <p className="text-xs text-muted-foreground">Companies</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-indigo-500" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-orange-600 dark:text-orange-400">Engagement</p>
-                      <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                        {stats.engagement_score.toFixed(1)}%
-                      </p>
-                    </div>
-                    <Activity className="h-8 w-8 text-orange-500" />
                   </div>
                 </CardContent>
               </Card>
             </div>
-          )}
 
-          {/* Controls */}
+
+
+          {/* Search and Filters */}
           <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
-                {/* Search */}
-                <div className="space-y-2">
-                  <Label>Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                {/* Search Bar */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex-1">
                     <Input
-                      placeholder="Search by name, ID, or notes..."
+                      placeholder="Search by name, ID, passport, or company..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="w-full"
                     />
                   </div>
+                  
+                  {selectedPromoters.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowBulkCompanyModal(true)}
+                        disabled={bulkActionLoading}
+                      >
+                        <Building className="mr-2 h-4 w-4" />
+                        Assign Company ({selectedPromoters.length})
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={bulkActionLoading}
+                      >
+                        {bulkActionLoading ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        Delete Selected ({selectedPromoters.length})
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
+                {/* Filter Options */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {/* Status Filter */}
-                <div className="space-y-2">
-                  <Label>Status Filter</Label>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Status</label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="active">Active</option>
+                      <option value="warning">Warning</option>
+                      <option value="critical">Critical</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                 </div>
 
-                {/* Document Filter */}
-                <div className="space-y-2">
-                  <Label>Document Filter</Label>
-                  <Select value={documentFilter} onValueChange={setDocumentFilter}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Documents" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Documents</SelectItem>
-                      <SelectItem value="valid">Valid</SelectItem>
-                      <SelectItem value="expiring">Expiring</SelectItem>
-                      <SelectItem value="expired">Expired</SelectItem>
-                      <SelectItem value="missing">Missing</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* Company Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Company</label>
+                    <select
+                      value={filterCompany}
+                      onChange={(e) => setFilterCompany(e.target.value)}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      disabled={employersLoading}
+                    >
+                      <option value="all">
+                        {employersLoading ? "Loading companies..." : "All Companies"}
+                      </option>
+                      {uniqueCompanies.map(company => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
+                    </select>
                 </div>
 
-                {/* Sort */}
-                <div className="space-y-2">
-                  <Label>Sort By</Label>
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="id_expiry">ID Expiry</SelectItem>
-                      <SelectItem value="passport_expiry">Passport Expiry</SelectItem>
-                      <SelectItem value="contracts">Contract Count</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {/* Document Filter */}
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Document Status</label>
+                    <select
+                      value={filterDocument}
+                      onChange={(e) => setFilterDocument(e.target.value)}
+                      className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    >
+                      <option value="all">All Documents</option>
+                      <optgroup label="ID Card">
+                        <option value="id_valid">ID - Valid</option>
+                        <option value="id_expiring">ID - Expiring</option>
+                        <option value="id_expired">ID - Expired</option>
+                        <option value="id_missing">ID - Missing</option>
+                      </optgroup>
+                      <optgroup label="Passport">
+                        <option value="passport_valid">Passport - Valid</option>
+                        <option value="passport_expiring">Passport - Expiring</option>
+                        <option value="passport_expired">Passport - Expired</option>
+                        <option value="passport_missing">Passport - Missing</option>
+                      </optgroup>
+                    </select>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant={currentView === "table" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentView("table")}
-                  >
-                    <List className="mr-1 h-3 w-3" />
-                    Table
-                  </Button>
-                  <Button
-                    variant={currentView === "grid" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentView("grid")}
-                  >
-                    <Grid className="mr-1 h-3 w-3" />
-                    Grid
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowStats(!showStats)}
-                  >
-                    {showStats ? "Hide" : "Show"} Stats
-                  </Button>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExport()}
-                    disabled={isExporting}
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    Export All
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsNotificationCenterOpen(true)}
-                    className="relative"
-                  >
-                    <Bell className="mr-1 h-3 w-3" />
-                    Notifications
-                    {notificationCount > 0 && (
-                      <Badge 
-                        variant="destructive" 
-                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                      >
-                        {notificationCount}
+                {/* Active Filters Display */}
+                {(filterStatus !== "all" || filterCompany !== "all" || filterDocument !== "all" || searchTerm) && (
+                  <div className="flex flex-wrap gap-2">
+                    {searchTerm && (
+                      <Badge variant="secondary" className="gap-1">
+                        Search: {searchTerm}
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
                       </Badge>
                     )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Bulk Actions Bar */}
-          {selectedPromoters.length > 0 && (
-            <Card className="mb-6 border-orange-200 bg-orange-50">
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Badge variant="secondary" className="bg-orange-100">
-                      {selectedPromoters.length} selected
+                    {filterStatus !== "all" && (
+                      <Badge variant="secondary" className="gap-1">
+                        Status: {filterStatus}
+                        <button
+                          onClick={() => setFilterStatus("all")}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )}
+                    {filterCompany !== "all" && (
+                      <Badge variant="secondary" className="gap-1">
+                        Company: {(() => {
+                          const employer = employers.find(e => e.id === filterCompany)
+                          return employer ? (employer.name_en || employer.name_ar || employer.id) : filterCompany
+                        })()}
+                        <button
+                          onClick={() => setFilterCompany("all")}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
+                      </Badge>
+                    )}
+                    {filterDocument !== "all" && (
+                      <Badge variant="secondary" className="gap-1">
+                        Document: {filterDocument.replace("_", " ")}
+                        <button
+                          onClick={() => setFilterDocument("all")}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          ×
+                        </button>
                     </Badge>
-                    <div className="text-sm text-muted-foreground">
-                      Bulk actions available for selected promoters
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleExport(selectedPromoters)}
-                      disabled={isExporting}
+                      onClick={() => {
+                        setSearchTerm("")
+                        setFilterStatus("all")
+                        setFilterCompany("all")
+                        setFilterDocument("all")
+                      }}
                     >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export Selected
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedPromoters([])}
-                    >
-                      Clear Selection
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleBulkDelete}
-                      disabled={bulkActionLoading}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Selected
+                      Clear All Filters
                     </Button>
                   </div>
+                )}
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Main Content */}
+          {/* Promoters Table */}
+          {filteredPromoters.length === 0 ? (
           <Card>
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                  <span className="ml-2">Loading promoters...</span>
-                </div>
-              ) : error ? (
-                <div className="flex flex-col items-center justify-center h-64 p-8">
-                  <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
-                  <h3 className="text-lg font-semibold text-red-600 mb-2">Error Loading Promoters</h3>
-                  <p className="text-sm text-muted-foreground text-center mb-4">{error}</p>
-                  <div className="flex gap-2">
-                    <Button onClick={handleRefresh} variant="outline">
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Try Again
-                    </Button>
-                    <Button onClick={fetchBasicPromoters} variant="outline">
-                      <Users className="mr-2 h-4 w-4" />
-                      Load Basic Data
-                    </Button>
-                  </div>
-                </div>
-              ) : filteredPromoters.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 p-8">
-                  <Users className="h-16 w-16 text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold text-muted-foreground mb-2">
-                    {searchTerm || filterStatus !== "all" || documentFilter !== "all" 
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <UserIcon className="h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">
+                  {searchTerm || filterStatus !== "all" 
                       ? "No promoters found" 
                       : "No promoters yet"}
                   </h3>
-                  <p className="text-sm text-muted-foreground text-center mb-4">
-                    {searchTerm || filterStatus !== "all" || documentFilter !== "all"
+                <p className="text-muted-foreground text-center mb-4">
+                  {searchTerm || filterStatus !== "all"
                       ? "Try adjusting your search or filter criteria"
                       : "Get started by adding your first promoter"}
                   </p>
-                  {!searchTerm && filterStatus === "all" && documentFilter === "all" && (
+                {!searchTerm && filterStatus === "all" && (
                     <Button onClick={handleAddNew}>
                       <PlusCircleIcon className="mr-2 h-4 w-4" />
                       Add First Promoter
                     </Button>
                   )}
-                </div>
-              ) : currentView === "table" ? (
-                <div className="p-6">
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -1406,8 +875,11 @@ export default function ComprehensivePromoterManagement() {
                           />
                         </TableHead>
                         <TableHead>Name</TableHead>
+                    <TableHead>Company</TableHead>
                         <TableHead>ID Card</TableHead>
                         <TableHead>Passport</TableHead>
+                        <TableHead>ID Expiry</TableHead>
+                        <TableHead>Passport Expiry</TableHead>
                         <TableHead>Contracts</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
@@ -1418,6 +890,12 @@ export default function ComprehensivePromoterManagement() {
                         const isSelected = selectedPromoters.includes(promoter.id)
                         return (
                           <TableRow key={promoter.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectPromoter(promoter.id)}
+                          />
+                        </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-3">
                                 <SafeImage
@@ -1432,6 +910,15 @@ export default function ComprehensivePromoterManagement() {
                                 </div>
                               </div>
                             </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {promoter.employer ? (
+                              promoter.employer.name_en || promoter.employer.name_ar || promoter.employer.id
+                            ) : (
+                              <span className="text-muted-foreground">Not assigned</span>
+                            )}
+                          </div>
+                        </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
                                 <Badge variant={promoter.id_card_status === "valid" ? "default" : "secondary"}>
@@ -1457,6 +944,16 @@ export default function ComprehensivePromoterManagement() {
                               </div>
                             </TableCell>
                             <TableCell>
+                              <div className="text-sm">
+                                {formatDate(promoter.id_card_expiry_date)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {formatDate(promoter.passport_expiry_date)}
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="flex items-center space-x-2">
                                 <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
                                 <span>{promoter.active_contracts_count || 0}</span>
@@ -1471,49 +968,21 @@ export default function ComprehensivePromoterManagement() {
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
+                          <div className="flex items-center justify-end gap-2">
                                 <Button
-                                  asChild
-                                  variant="outline"
+                              variant="ghost"
                                   size="sm"
+                              onClick={() => handleView(promoter)}
                                 >
-                                  <Link href={`/en/manage-promoters/${promoter.id}`}>
-                                    <EyeIcon className="mr-1 h-3 w-3" /> View
-                                  </Link>
+                              <Eye className="h-4 w-4" />
                                 </Button>
                                 <Button
-                                  variant="outline"
+                              variant="ghost"
                                   size="sm"
                                   onClick={() => handleEdit(promoter)}
                                 >
-                                  <EditIcon className="mr-1 h-3 w-3" /> Edit
+                              <Edit3 className="h-4 w-4" />
                                 </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/en/manage-promoters/${promoter.id}`}>
-                                        <EyeIcon className="mr-2 h-4 w-4" />
-                                        View Details
-                                      </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEdit(promoter)}>
-                                      <EditIcon className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-red-600">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1521,254 +990,75 @@ export default function ComprehensivePromoterManagement() {
                       })}
                     </TableBody>
                   </Table>
-                </div>
-              ) : (
-                <div className="p-6">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredPromoters.map((promoter) => {
-                      const isSelected = selectedPromoters.includes(promoter.id)
-                      return (
-                        <Card key={promoter.id} className="relative">
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <div className="flex items-center space-x-3">
-                                <SafeImage
-                                  src={promoter.profile_picture_url}
-                                  alt={promoter.name_en}
-                                  className="h-12 w-12 rounded-full"
-                                  fallback={<UserIcon className="h-12 w-12 rounded-full bg-muted p-2" />}
-                                />
-                                <div>
-                                  <div className="font-medium">{promoter.name_en}</div>
-                                  <div className="text-sm text-muted-foreground">{promoter.name_ar}</div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => toggleSelectPromoter(promoter.id)}
-                                />
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem asChild>
-                                      <Link href={`/en/manage-promoters/${promoter.id}`}>
-                                        <EyeIcon className="mr-2 h-4 w-4" />
-                                        View Details
-                                      </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEdit(promoter)}>
-                                      <EditIcon className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-red-600">
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      Delete
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            {/* Document Status */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="text-center">
-                                <div className="mb-1 text-xs text-muted-foreground">ID Card</div>
-                                <div className="flex flex-col items-center">
-                                  <Badge variant={promoter.id_card_status === "valid" ? "default" : "secondary"}>
-                                    {promoter.id_card_status}
-                                  </Badge>
-                                  {promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30 && (
-                                    <span className="text-xs font-medium text-amber-600">
-                                      {promoter.days_until_id_expiry}d left
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-center">
-                                <div className="mb-1 text-xs text-muted-foreground">Passport</div>
-                                <div className="flex flex-col items-center">
-                                  <Badge variant={promoter.passport_status === "valid" ? "default" : "secondary"}>
-                                    {promoter.passport_status}
-                                  </Badge>
-                                  {promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30 && (
-                                    <span className="text-xs font-medium text-amber-600">
-                                      {promoter.days_until_passport_expiry}d left
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Contract Status */}
-                            <div className="text-center">
-                              <div className="mb-2 text-xs text-muted-foreground">Active Contracts</div>
-                              <Badge
-                                variant={promoter.active_contracts_count && promoter.active_contracts_count > 0 ? "default" : "secondary"}
-                                className="text-sm"
-                              >
-                                <BriefcaseIcon className="mr-1.5 h-4 w-4" />
-                                {promoter.active_contracts_count || 0}
-                              </Badge>
-                            </div>
-
-                            {/* Overall Status */}
-                            <div className="flex items-center justify-center space-x-2">
-                              {getStatusIcon(promoter.overall_status)}
-                              <Badge variant={getStatusBadgeVariant(promoter.overall_status)}>
-                                {promoter.overall_status}
-                              </Badge>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex space-x-2 pt-2">
-                              <Button asChild variant="outline" size="sm" className="flex-1">
-                                <Link href={`/en/manage-promoters/${promoter.id}`}>
-                                  <EyeIcon className="mr-1 h-4 w-4" /> View
-                                </Link>
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(promoter)}
-                                className="flex-1"
-                              >
-                                <EditIcon className="mr-1 h-4 w-4" /> Edit
-                              </Button>
-                            </div>
-                          </CardContent>
                         </Card>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Notification Center */}
-          <Dialog open={isNotificationCenterOpen} onOpenChange={setIsNotificationCenterOpen}>
-            <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
-                  Notification Center
-                </DialogTitle>
-                <DialogDescription>
-                  Important alerts and system notifications
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="space-y-4 overflow-y-auto max-h-[60vh]">
-                {/* Document Expiry Alerts */}
-                <div className="space-y-2">
-                  <h4 className="font-medium text-red-600 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4" />
-                    Document Expiry Alerts
-                  </h4>
-                  {promoters
-                    .filter(p => 
-                      (p.days_until_id_expiry !== undefined && p.days_until_id_expiry <= 30) ||
-                      (p.days_until_passport_expiry !== undefined && p.days_until_passport_expiry <= 30)
-                    )
-                    .map(promoter => (
-                      <Card key={promoter.id} className="border-red-200 bg-red-50">
-                        <CardContent className="pt-3 pb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium">{promoter.name_en}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {promoter.days_until_id_expiry !== undefined && promoter.days_until_id_expiry <= 30 && 
-                                  `ID expires in ${promoter.days_until_id_expiry} days`}
-                                {promoter.days_until_passport_expiry !== undefined && promoter.days_until_passport_expiry <= 30 && 
-                                  `Passport expires in ${promoter.days_until_passport_expiry} days`}
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button size="sm" variant="outline">
-                                <Mail className="mr-1 h-3 w-3" />
-                                Notify
-                              </Button>
-                              <Button size="sm" asChild>
-                                <Link href={`/en/manage-promoters/${promoter.id}`}>
-                                  View
-                                </Link>
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  {promoters.filter(p => 
-                    (p.days_until_id_expiry !== undefined && p.days_until_id_expiry <= 30) ||
-                    (p.days_until_passport_expiry !== undefined && p.days_until_passport_expiry <= 30)
-                  ).length === 0 && (
-                    <Card className="border-green-200 bg-green-50">
-                      <CardContent className="pt-3 pb-3">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <p className="text-sm text-green-800">No expiring documents</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-
-                {/* System Notifications */}
-                <div className="space-y-2">
-                  <h4 className="font-medium text-blue-600 flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    System Updates
-                  </h4>
-                  <Card className="border-blue-200 bg-blue-50">
-                    <CardContent className="pt-3 pb-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">Database Sync Complete</p>
-                          <p className="text-sm text-muted-foreground">
-                            All promoter data has been synchronized successfully
-                          </p>
-                        </div>
-                        <Badge variant="outline" className="bg-blue-100">
-                          2 min ago
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsNotificationCenterOpen(false)}>
-                  Close
-                </Button>
-                <Button onClick={() => {
-                  toast({
-                    title: "Notifications cleared",
-                    description: "All notifications have been marked as read"
-                  })
-                }}>
-                  Mark All as Read
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          )}
 
           {/* Excel Import Modal */}
           <ExcelImportModal
             isOpen={isImportModalOpen}
             onClose={() => setIsImportModalOpen(false)}
             onImportComplete={() => {
-              fetchPromotersWithContractCount()
+              console.log("Import completed, refreshing promoters data...")
+              toast({
+                title: "Import completed",
+                description: "Refreshing promoter list...",
+              })
+              fetchPromoters()
               setIsImportModalOpen(false)
             }}
           />
+
+          {/* Bulk Company Assignment Modal */}
+          {showBulkCompanyModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                <h3 className="text-lg font-semibold mb-4">Assign Company to {selectedPromoters.length} Promoters</h3>
+                
+                <div className="mb-4">
+                  <label className="text-sm font-medium mb-2 block">Select Company</label>
+                  <select
+                    value={selectedCompanyForBulk}
+                    onChange={(e) => setSelectedCompanyForBulk(e.target.value)}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                    disabled={employersLoading}
+                  >
+                    <option value="">
+                      {employersLoading ? "Loading companies..." : "Select a company..."}
+                    </option>
+                    {uniqueCompanies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowBulkCompanyModal(false)
+                      setSelectedCompanyForBulk("")
+                    }}
+                    disabled={bulkActionLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleBulkCompanyAssignment}
+                    disabled={!selectedCompanyForBulk || bulkActionLoading}
+                  >
+                    {bulkActionLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Building className="mr-2 h-4 w-4" />
+                    )}
+                    Assign Company
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </ProtectedRoute>
