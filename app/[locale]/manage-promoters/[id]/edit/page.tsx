@@ -13,12 +13,23 @@ export default function EditPromoterPage() {
   const params = useParams()
   const router = useRouter()
   const promoterId = params?.id as string
-  const locale = params?.locale as string
+  const locale = (params?.locale as string) || "en"
 
   const [promoter, setPromoter] = useState<Promoter | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Handle case where locale is undefined during build
+  if (!locale) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <p>Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     if (!promoterId) return
@@ -106,3 +117,6 @@ export default function EditPromoterPage() {
     </div>
   )
 }
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = "force-dynamic"
