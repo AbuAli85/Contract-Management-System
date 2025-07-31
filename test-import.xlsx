@@ -1,0 +1,7 @@
+This is a placeholder for a test Excel file. The actual file would be created with Excel or similar software containing the following columns:
+
+Name (English), Name (Arabic), ID Card Number, Email, Phone, Mobile, Passport Number, Nationality, ID Expiry Date, Passport Expiry Date, Notes, Status
+
+Sample data:
+John Smith, جون سميث, 1234567890, john.smith@example.com, +966501234567, +966501234567, A12345678, Saudi, 2025-12-31, 2026-06-30, Sample promoter, active
+Jane Doe, جين دو, 0987654321, jane.doe@example.com, +966509876543, +966509876543, B87654321, American, 2025-08-15, 2026-03-20, Another sample promoter, active 
