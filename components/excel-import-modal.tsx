@@ -99,30 +99,30 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
       const headers = jsonData[0] as string[]
       const dataRows = jsonData.slice(1) as any[][]
 
-      // Map headers to expected fields
-      const mappedData = dataRows.map((row, index) => {
-        const rowData: any = {}
-        headers.forEach((header, colIndex) => {
-          const value = row[colIndex]
-          if (value !== undefined && value !== null) {
-            rowData[header.trim()] = value
-          }
-        })
+             // Map headers to expected fields
+       const mappedData = dataRows.map((row, index) => {
+         const rowData: any = {}
+         headers.forEach((header, colIndex) => {
+           const value = row[colIndex]
+           if (value !== undefined && value !== null) {
+             rowData[header.trim()] = value
+           }
+         })
 
-        // Map to expected format
-        return {
-          name_en: rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || "",
-          name_ar: rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || "",
-          id_card_number: rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || "",
-          mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
-          passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
-          nationality: rowData["Nationality"] || "",
-          id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
-          passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
-          notes: rowData["Notes"] || rowData["Comments"] || "",
-          status: rowData["Status"] || "active"
-        }
-      }).filter(row => row.name_en && row.id_card_number) // Only include rows with required fields
+         // Map to expected format with proper type conversion
+         return {
+           name_en: String(rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || ""),
+           name_ar: String(rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || ""),
+           id_card_number: String(rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || ""),
+           mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
+           passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
+           nationality: rowData["Nationality"] || "",
+           id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
+           passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
+           notes: rowData["Notes"] || rowData["Comments"] || "",
+           status: rowData["Status"] || "active"
+         }
+       }).filter(row => row.name_en && row.id_card_number) // Only include rows with required fields
 
       setPreviewData(mappedData.slice(0, 10)) // Show first 10 rows as preview
       setStep("preview")
@@ -156,28 +156,41 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
       const headers = jsonData[0] as string[]
       const dataRows = jsonData.slice(1) as any[][]
 
-      const mappedData = dataRows.map((row, index) => {
-        const rowData: any = {}
-        headers.forEach((header, colIndex) => {
-          const value = row[colIndex]
-          if (value !== undefined && value !== null) {
-            rowData[header.trim()] = value
-          }
-        })
+             const mappedData = dataRows.map((row, index) => {
+         const rowData: any = {}
+         headers.forEach((header, colIndex) => {
+           const value = row[colIndex]
+           if (value !== undefined && value !== null) {
+             rowData[header.trim()] = value
+           }
+         })
 
-        return {
-          name_en: rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || "",
-          name_ar: rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || "",
-          id_card_number: rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || "",
-          mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
-          passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
-          nationality: rowData["Nationality"] || "",
-          id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
-          passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
-          notes: rowData["Notes"] || rowData["Comments"] || "",
-          status: rowData["Status"] || "active"
-        }
-      }).filter(row => row.name_en && row.id_card_number)
+         // Debug logging for the first few rows
+         if (index < 3) {
+           console.log(`Row ${index + 2} raw data:`, row)
+           console.log(`Row ${index + 2} mapped data:`, rowData)
+         }
+
+         const mappedRow = {
+           name_en: String(rowData["Name (English)"] || rowData["Name_EN"] || rowData["Name"] || ""),
+           name_ar: String(rowData["Name (Arabic)"] || rowData["Name_AR"] || rowData["Arabic Name"] || ""),
+           id_card_number: String(rowData["ID Card Number"] || rowData["ID_Number"] || rowData["National ID"] || ""),
+           mobile_number: rowData["Mobile"] || rowData["Mobile Number"] || "",
+           passport_number: rowData["Passport Number"] || rowData["Passport_Number"] || "",
+           nationality: rowData["Nationality"] || "",
+           id_card_expiry_date: rowData["ID Expiry Date"] || rowData["ID_Expiry"] || "",
+           passport_expiry_date: rowData["Passport Expiry Date"] || rowData["Passport_Expiry"] || "",
+           notes: rowData["Notes"] || rowData["Comments"] || "",
+           status: rowData["Status"] || "active"
+         }
+
+         // Debug logging for the first few rows
+         if (index < 3) {
+           console.log(`Row ${index + 2} final mapped data:`, mappedRow)
+         }
+
+         return mappedRow
+       }).filter(row => row.name_en && row.id_card_number)
 
       const supabase = getSupabaseClient()
       
@@ -240,43 +253,54 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
       let duplicates = 0
       const errors: string[] = []
 
-      for (let i = 0; i < mappedData.length; i++) {
-        const row = mappedData[i]
-        
-        try {
-          // Validate required fields
-          if (!row.name_en || !row.name_ar || !row.id_card_number) {
-            errors.push(`Row ${i + 2}: Missing required fields (Name EN, Name AR, or ID Card Number)`)
-            continue
-          }
-
-                     // Validate and clean data
-           const cleanData = {
-             name_en: row.name_en.trim(),
-             name_ar: row.name_ar.trim(),
-             id_card_number: row.id_card_number.trim(),
-             mobile_number: row.mobile_number ? row.mobile_number.trim() : null,
-             passport_number: row.passport_number ? row.passport_number.trim() : null,
-             nationality: row.nationality ? row.nationality.trim() : null,
-             notes: row.notes ? row.notes.trim() : null,
-             status: row.status || "active"
+             for (let i = 0; i < mappedData.length; i++) {
+         const row = mappedData[i]
+         
+         try {
+           // Debug logging to see what data we're working with
+           console.log(`Processing row ${i + 2}:`, row)
+           
+           // Validate required fields
+           if (!row.name_en || !row.name_ar || !row.id_card_number) {
+             console.log(`Row ${i + 2} validation failed:`, {
+               name_en: row.name_en,
+               name_ar: row.name_ar,
+               id_card_number: row.id_card_number,
+               name_en_type: typeof row.name_en,
+               name_ar_type: typeof row.name_ar,
+               id_card_number_type: typeof row.id_card_number
+             })
+             errors.push(`Row ${i + 2}: Missing required fields (Name EN, Name AR, or ID Card Number)`)
+             continue
            }
+
+                                // Validate and clean data with proper type checking
+            const cleanData = {
+              name_en: String(row.name_en || "").trim(),
+              name_ar: String(row.name_ar || "").trim(),
+              id_card_number: String(row.id_card_number || "").trim(),
+              mobile_number: row.mobile_number ? String(row.mobile_number).trim() : null,
+              passport_number: row.passport_number ? String(row.passport_number).trim() : null,
+              nationality: row.nationality ? String(row.nationality).trim() : null,
+              notes: row.notes ? String(row.notes).trim() : null,
+              status: row.status || "active"
+            }
 
                      // Email validation removed since email field is not currently supported in database
            // TODO: Re-enable email validation after running migration to add email field
 
-          // Check for existing promoter with same ID
-          const { data: existing } = await supabase
-            .from("promoters")
-            .select("id")
-            .eq("id_card_number", row.id_card_number)
-            .single()
+                     // Check for existing promoter with same ID
+           const { data: existing } = await supabase
+             .from("promoters")
+             .select("id")
+             .eq("id_card_number", cleanData.id_card_number)
+             .single()
 
-          if (existing) {
-            duplicates++
-            errors.push(`Row ${i + 2}: Duplicate ID card number - ${row.id_card_number}`)
-            continue
-          }
+           if (existing) {
+             duplicates++
+             errors.push(`Row ${i + 2}: Duplicate ID card number - ${cleanData.id_card_number}`)
+             continue
+           }
 
           // Helper function to format dates
           const formatDate = (dateString: string | null | undefined) => {
@@ -322,20 +346,23 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
             }
           };
 
-          // Insert new promoter - only include fields that exist in the database
-          const insertData = {
-            name_en: cleanData.name_en,
-            name_ar: cleanData.name_ar,
-            id_card_number: cleanData.id_card_number,
-            mobile_number: cleanData.mobile_number,
-            passport_number: cleanData.passport_number,
-            nationality: cleanData.nationality,
-            id_card_expiry_date: formatDate(row.id_card_expiry_date),
-            passport_expiry_date: formatDate(row.passport_expiry_date),
-            notes: cleanData.notes,
-            status: cleanData.status,
-            created_at: new Date().toISOString()
-          }
+                     // Insert new promoter - only include fields that exist in the database
+           const insertData = {
+             name_en: cleanData.name_en,
+             name_ar: cleanData.name_ar,
+             id_card_number: cleanData.id_card_number,
+             mobile_number: cleanData.mobile_number,
+             passport_number: cleanData.passport_number,
+             nationality: cleanData.nationality,
+             id_card_expiry_date: formatDate(row.id_card_expiry_date),
+             passport_expiry_date: formatDate(row.passport_expiry_date),
+             notes: cleanData.notes,
+             status: cleanData.status,
+             created_at: new Date().toISOString()
+           }
+
+           // Debug logging for insert data
+           console.log(`Row ${i + 2} insert data:`, insertData)
           
           // Add email and phone only if they exist in the database (will be added by migration)
           // For now, we'll skip them to avoid schema errors

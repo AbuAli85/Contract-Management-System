@@ -154,13 +154,19 @@ export default function ComprehensivePromoterManagement() {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError) {
         console.error("Authentication error:", authError)
-        setError(`Authentication error: ${authError.message}`)
+        if (isMountedRef.current) {
+          setError(`Authentication error: ${authError.message}`)
+          setIsLoading(false)
+        }
         return
       }
       
       if (!user) {
         console.error("No authenticated user")
-        setError("No authenticated user")
+        if (isMountedRef.current) {
+          setError("No authenticated user")
+          setIsLoading(false)
+        }
         return
       }
       
@@ -223,7 +229,7 @@ export default function ComprehensivePromoterManagement() {
         setIsLoading(false)
       }
     }
-  }, [])
+  }, [isMountedRef])
 
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
@@ -455,7 +461,7 @@ export default function ComprehensivePromoterManagement() {
         setIsLoading(false)
       }
     }
-  }, [])
+  }, [isMountedRef])
 
 
 
@@ -558,16 +564,25 @@ export default function ComprehensivePromoterManagement() {
 
   // Load data on mount with timeout protection
   useEffect(() => {
+    console.log("🔄 useEffect triggered - starting data load")
+    
     const loadData = async () => {
+      console.log("🔄 loadData function called")
       try {
+        console.log("🔄 Calling fetchPromotersWithContractCount")
         await fetchPromotersWithContractCount()
       } catch (error) {
         console.error("Main data fetching failed, trying fallback:", error)
         // Try fallback method
         try {
+          console.log("🔄 Calling fetchBasicPromoters as fallback")
           await fetchBasicPromoters()
         } catch (fallbackError) {
           console.error("Fallback data fetching also failed:", fallbackError)
+          if (isMountedRef.current) {
+            setIsLoading(false)
+            setError("Failed to load promoters. Please check your connection and try again.")
+          }
         }
       }
     }
@@ -577,6 +592,7 @@ export default function ComprehensivePromoterManagement() {
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
       if (isLoading && isMountedRef.current) {
+        console.log("🔄 Loading timeout reached")
         setIsLoading(false)
         setError("Loading timeout - please refresh the page")
       }
@@ -586,7 +602,7 @@ export default function ComprehensivePromoterManagement() {
       isMountedRef.current = false
       clearTimeout(timeout)
     }
-  }, []) // Remove dependencies to prevent infinite loops
+  }, [fetchPromotersWithContractCount, fetchBasicPromoters]) // Add dependencies
 
   return (
     <ProtectedRoute>
@@ -604,7 +620,8 @@ export default function ComprehensivePromoterManagement() {
                <AutoRefreshIndicator />
                {/* Debug info */}
                <div className="text-xs text-muted-foreground">
-                 {isLoading ? "Loading..." : `Loaded: ${promoters.length} promoters`}
+                 {isLoading ? "Loading promoters..." : `Loaded: ${promoters.length} promoters`}
+                 {error && <span className="text-red-500 ml-2">Error: {error}</span>}
                </div>
              </div>
             <div className="flex gap-2">
@@ -648,7 +665,24 @@ export default function ComprehensivePromoterManagement() {
               </Button>
               <Button
                 onClick={async () => {
+                  console.log("🔄 Test DB button clicked")
                   const supabase = getSupabaseClient()
+                  
+                  // Test authentication first
+                  const { data: { user }, error: authError } = await supabase.auth.getUser()
+                  if (authError) {
+                    console.error("Auth test failed:", authError)
+                    toast({
+                      title: "Authentication Test Failed",
+                      description: authError.message,
+                      variant: "destructive",
+                    })
+                    return
+                  }
+                  
+                  console.log("🔄 Auth test successful, user:", user?.email)
+                  
+                  // Test database connection
                   const { data, error } = await supabase
                     .from("promoters")
                     .select("id")
@@ -665,7 +699,7 @@ export default function ComprehensivePromoterManagement() {
                     console.log("Database test successful:", data)
                     toast({
                       title: "Database Test Successful",
-                      description: "Connection to database is working",
+                      description: `Connection working. Found ${data?.length || 0} promoters`,
                       variant: "default",
                     })
                   }

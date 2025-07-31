@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-service"
-import { createClient } from "@/lib/supabase/client"
+import { getSupabaseClient } from "@/lib/supabase"
 import AdminDashboard from "@/components/dashboard/AdminDashboard"
 import PromoterDashboard from "@/components/dashboard/PromoterDashboard"
 
@@ -20,7 +20,7 @@ export default function CRMPage() {
         setError(null)
         console.log("Fetching promoters...")
 
-        const supabase = createClient()
+        const supabase = getSupabaseClient()
         const { data, error } = await supabase
           .from("promoters")
           .select("id")
