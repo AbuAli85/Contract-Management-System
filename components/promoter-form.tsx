@@ -36,66 +36,30 @@ export default function PromoterForm(props: PromoterFormProps) {
   const [activeTab, setActiveTab] = useState("personal")
 
   const [formData, setFormData] = useState({
-    // Personal Information
+    // Personal Information (only fields that exist in database)
     full_name: promoterToEdit?.name_en || "",
     name_en: promoterToEdit?.name_en || "",
     name_ar: promoterToEdit?.name_ar || "",
     email: promoterToEdit?.email || "",
     phone: promoterToEdit?.phone || "",
-    date_of_birth: promoterToEdit?.date_of_birth || "",
-    nationality: promoterToEdit?.nationality || "",
-    gender: promoterToEdit?.gender || "",
-    marital_status: promoterToEdit?.marital_status || "",
+    mobile_number: promoterToEdit?.mobile_number || "",
     
-    // Contact Information
-    // address: promoterToEdit?.address || "", // Removed - column doesn't exist in schema
-    city: promoterToEdit?.city || "",
-    state: promoterToEdit?.state || "",
-    country: promoterToEdit?.country || "",
-    postal_code: promoterToEdit?.postal_code || "",
-    emergency_contact: promoterToEdit?.emergency_contact || "",
-    emergency_phone: promoterToEdit?.emergency_phone || "",
-    
-    // Document Information
-    id_number: promoterToEdit?.id_number || "",
+    // Document Information (only fields that exist in database)
+    id_number: promoterToEdit?.id_card_number || "",
     passport_number: promoterToEdit?.passport_number || "",
-    id_expiry_date: promoterToEdit?.id_expiry_date || "",
+    id_expiry_date: promoterToEdit?.id_card_expiry_date || "",
     passport_expiry_date: promoterToEdit?.passport_expiry_date || "",
-    visa_number: promoterToEdit?.visa_number || "",
-    visa_expiry_date: promoterToEdit?.visa_expiry_date || "",
-    work_permit_number: promoterToEdit?.work_permit_number || "",
-    work_permit_expiry_date: promoterToEdit?.work_permit_expiry_date || "",
     
-    // Professional Information
-    company: promoterToEdit?.company || "",
-    job_title: promoterToEdit?.job_title || "",
-    department: promoterToEdit?.department || "",
-    specialization: promoterToEdit?.specialization || "",
-    experience_years: promoterToEdit?.experience_years || "",
-    skills: promoterToEdit?.skills || "",
-    certifications: promoterToEdit?.certifications || "",
-    education_level: promoterToEdit?.education_level || "",
-    university: promoterToEdit?.university || "",
-    graduation_year: promoterToEdit?.graduation_year || "",
-    
-    // Financial Information
-    bank_name: promoterToEdit?.bank_name || "",
-    account_number: promoterToEdit?.account_number || "",
-    iban: promoterToEdit?.iban || "",
-    swift_code: promoterToEdit?.swift_code || "",
-    tax_id: promoterToEdit?.tax_id || "",
-    
-    // Status and Preferences
+    // Status and Preferences (only fields that exist in database)
     status: promoterToEdit?.status || "active",
-    rating: promoterToEdit?.rating || 0,
-    availability: promoterToEdit?.availability || "available",
-    preferred_language: promoterToEdit?.preferred_language || "en",
-    timezone: promoterToEdit?.timezone || "",
     
-    // Additional Information
+    // Additional Information (only fields that exist in database)
     notes: promoterToEdit?.notes || "",
-    special_requirements: promoterToEdit?.special_requirements || "",
     profile_picture_url: promoterToEdit?.profile_picture_url || "",
+    
+    // Notification settings (only fields that exist in database)
+    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 30,
+    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 30,
   })
 
   // Document upload state
@@ -390,23 +354,24 @@ export default function PromoterForm(props: PromoterFormProps) {
       // Map form data to database schema - only include fields that exist in the database
       // Available fields in promoters table:
       // - id, name_en, name_ar, id_card_number, id_card_url, passport_url
-      // - employer_id, outsourced_to_id, job_title, work_location
-      // - status, contract_valid_until, id_card_expiry_date, passport_expiry_date
+      // - passport_number, mobile_number, profile_picture_url
+      // - status, id_card_expiry_date, passport_expiry_date
       // - notify_days_before_*, notes, created_at, email, phone
       const promoterData: any = {
         name_en: formData.full_name,
         name_ar: formData.name_ar,
+        id_card_number: formData.id_number,
+        passport_number: formData.passport_number,
+        mobile_number: formData.mobile_number,
         id_card_expiry_date: formatDateForDatabase(formData.id_expiry_date),
-        // passport_number: formData.passport_number, // Removed - column doesn't exist in schema
-        // passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date), // Removed - column doesn't exist in schema
+        passport_expiry_date: formatDateForDatabase(formData.passport_expiry_date),
         email: formData.email,
         phone: formData.phone,
-        // address: formData.address, // Removed - column doesn't exist in schema
         status: formData.status,
         notes: formData.notes,
-        // id_document_url: uploadedDocuments.id_document?.url || null, // Removed - column doesn't exist in schema
-        // passport_document_url: uploadedDocuments.passport_document?.url || null, // Removed - column doesn't exist in schema
-        // updated_at: new Date().toISOString(), // Removed - column doesn't exist in schema
+        profile_picture_url: formData.profile_picture_url,
+        notify_days_before_id_expiry: formData.notify_days_before_id_expiry || 30,
+        notify_days_before_passport_expiry: formData.notify_days_before_passport_expiry || 30,
       }
 
       let result

@@ -7,12 +7,13 @@ import type { Promoter } from "@/lib/types"
 import { ArrowLeftIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "@/hooks/use-toast"
-import PromoterForm from "@/components/promoter-form"
+import PromoterFormSimple from "@/components/promoter-form-simple"
 
 export default function EditPromoterPage() {
   const params = useParams()
   const router = useRouter()
   const promoterId = params?.id as string
+  const locale = params?.locale as string
 
   const [promoter, setPromoter] = useState<Promoter | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -51,11 +52,11 @@ export default function EditPromoterPage() {
       title: "Success",
       description: "Promoter updated successfully",
     })
-    router.push(`/en/manage-promoters/${promoterId}`)
+    router.push(`/${locale}/manage-promoters/${promoterId}`)
   }
 
   const handleCancel = () => {
-    router.push(`/en/manage-promoters/${promoterId}`)
+    router.push(`/${locale}/manage-promoters/${promoterId}`)
   }
 
   if (isLoading) {
@@ -72,7 +73,7 @@ export default function EditPromoterPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="mb-4 text-red-600">{error || "Promoter not found"}</p>
-          <Button onClick={() => router.push("/manage-promoters")}>
+          <Button onClick={() => router.push(`/${locale}/manage-promoters`)}>
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoters
           </Button>
@@ -88,7 +89,7 @@ export default function EditPromoterPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push(`/en/manage-promoters/${promoterId}`)}
+            onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}`)}
             className="text-muted-foreground hover:text-foreground"
           >
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
@@ -96,7 +97,7 @@ export default function EditPromoterPage() {
           </Button>
         </div>
 
-        <PromoterForm
+        <PromoterFormSimple
           promoterToEdit={promoter}
           onFormSubmit={handleFormSubmit}
           onCancel={handleCancel}

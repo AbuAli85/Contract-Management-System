@@ -1,26 +1,28 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, PlusCircle } from "lucide-react"
-import PromoterForm from "@/components/promoter-form"
+import PromoterFormSimple from "@/components/promoter-form-simple"
 
 export default function AddNewPromoterPage() {
   const router = useRouter()
+  const params = useParams()
+  const locale = params?.locale as string
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleFormSubmit = () => {
     setIsSubmitting(true)
     // Redirect back to promoters list after successful submission
     setTimeout(() => {
-      router.push("/manage-promoters")
+      router.push(`/${locale}/manage-promoters`)
     }, 1000)
   }
 
   const handleCancel = () => {
-    router.push("/manage-promoters")
+    router.push(`/${locale}/manage-promoters`)
   }
 
   return (
@@ -60,7 +62,7 @@ export default function AddNewPromoterPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <PromoterForm 
+            <PromoterFormSimple 
               onFormSubmit={handleFormSubmit}
               onCancel={handleCancel}
             />
