@@ -6,7 +6,9 @@ import createMiddleware from "next-intl/middleware"
 const intlMiddleware = createMiddleware({
   locales: ["en", "ar"],
   defaultLocale: "en",
-  localePrefix: "always"
+  localePrefix: "always",
+  // Add fallback configuration
+  localeDetection: true
 })
 
 export function middleware(request: NextRequest) {
@@ -35,7 +37,12 @@ export function middleware(request: NextRequest) {
 
   // Only apply i18n middleware to page routes (not API routes)
   try {
-    return intlMiddleware(request)
+    const response = intlMiddleware(request)
+    if (response) {
+      return response
+    }
+    // If no response from middleware, redirect to default locale
+    return NextResponse.redirect(new URL("/en", request.url))
   } catch (error) {
     console.error("Middleware error:", error)
     // Fallback to redirect to default locale
