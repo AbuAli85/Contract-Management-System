@@ -10,9 +10,10 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // Environment variables for Vercel Analytics
+  // Environment variables for Vercel Analytics and next-intl
   env: {
     VERCEL_ANALYTICS_DEBUG: "false",
+    _next_intl_trailing_slash: "false",
   },
   // Add cache-busting and deployment optimizations
   generateBuildId: async () => {

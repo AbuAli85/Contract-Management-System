@@ -3,7 +3,9 @@ import { getRequestConfig } from "next-intl/server"
 // Can be imported from a shared config
 const locales = ["en", "ar"]
 
-export default getRequestConfig(async ({ locale }) => {
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = await requestLocale
+  
   // Validate that the incoming `locale` parameter is valid
   if (!locale || !locales.includes(locale as any)) {
     console.error("Invalid locale:", locale)

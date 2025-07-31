@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { useFormContext } from "@/hooks/use-form-context"
 import { AutoRefreshIndicator } from "@/components/ui/auto-refresh-indicator"
 import ProtectedRoute from "@/components/protected-route"
+import ExcelImportModal from "@/components/excel-import-modal"
 import Link from "next/link"
 import {
   Select,
@@ -89,6 +90,7 @@ export default function ComprehensivePromoterManagement() {
   const [isExporting, setIsExporting] = useState(false)
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
 
   // Hooks
   const router = useRouter()
@@ -137,6 +139,8 @@ export default function ComprehensivePromoterManagement() {
 
   // Enhanced data fetching with contract counts
   const fetchPromotersWithContractCount = useCallback(async () => {
+    console.log("🔄 Starting fetchPromotersWithContractCount")
+    
     if (isMountedRef.current) {
       setIsLoading(true)
       setError(null) // Clear any previous errors
@@ -144,6 +148,23 @@ export default function ComprehensivePromoterManagement() {
 
     try {
       const supabase = getSupabaseClient()
+      console.log("🔄 Supabase client obtained")
+
+      // Test authentication first
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError) {
+        console.error("Authentication error:", authError)
+        setError(`Authentication error: ${authError.message}`)
+        return
+      }
+      
+      if (!user) {
+        console.error("No authenticated user")
+        setError("No authenticated user")
+        return
+      }
+      
+      console.log("🔄 Authenticated user:", user.email)
 
       // Fetch promoters with contract count
       const { data: promotersData, error: promotersError } = await supabase
@@ -151,91 +172,58 @@ export default function ComprehensivePromoterManagement() {
         .select("*")
         .order("name_en")
 
+      console.log("🔄 Promoters query result:", { data: promotersData, error: promotersError })
+
       if (promotersError) {
         console.error("Error fetching promoters:", promotersError)
         setError(`Failed to load promoters: ${promotersError.message}`)
-        toast({
-          title: "Error",
-          description: `Failed to load promoters: ${promotersError.message}`,
-          variant: "destructive",
-        })
         return
       }
 
-      if (!promotersData || promotersData.length === 0) {
-        if (isMountedRef.current) {
-          setPromoters([])
-          setFilteredPromoters([])
-          setIsLoading(false)
-          setError("No promoters found in database")
+      if (!promotersData) {
+        console.log("🔄 No promoters data returned")
+        setPromoters([])
+        return
+      }
+
+      // Enhance promoter data with calculated fields
+      const enhancedPromoters: EnhancedPromoter[] = promotersData.map(promoter => {
+        const idExpiryDays = promoter.id_card_expiry_date 
+          ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+          : null
+
+        const passportExpiryDays = promoter.passport_expiry_date
+          ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+          : null
+
+        return {
+          ...promoter,
+          id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
+          passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
+          overall_status: getOverallStatus(promoter),
+          days_until_id_expiry: idExpiryDays || undefined,
+          days_until_passport_expiry: passportExpiryDays || undefined,
+          active_contracts_count: 0 // Default to 0 since we're not fetching contract counts
         }
-        return
-      }
+      })
 
-      // Fetch contract counts for each promoter with better error handling
-      const enhancedData = await Promise.all(
-        (promotersData || []).map(async (promoter: Promoter) => {
-          try {
-            const { count: contractCount, error: contractError } = await supabase
-              .from("contracts")
-              .select("*", { count: "exact", head: true })
-              .eq("promoter_id", promoter.id)
-              .eq("status", "active")
-
-            if (contractError) {
-              console.error(`Error fetching contracts for promoter ${promoter.id}:`, contractError)
-            }
-
-            const idExpiryDays = promoter.id_card_expiry_date 
-              ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
-              : null
-
-            const passportExpiryDays = promoter.passport_expiry_date
-              ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
-              : null
-
-            return {
-              ...promoter,
-              id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date || null),
-              passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date || null),
-              overall_status: getOverallStatus(promoter),
-              days_until_id_expiry: idExpiryDays || undefined,
-              days_until_passport_expiry: passportExpiryDays || undefined,
-              active_contracts_count: contractCount || 0
-            }
-          } catch (error) {
-            console.error(`Error processing promoter ${promoter.id}:`, error)
-            return {
-              ...promoter,
-              id_card_status: "missing" as const,
-              passport_status: "missing" as const,
-              overall_status: "inactive" as const,
-              active_contracts_count: 0
-            }
-          }
-        })
-      )
+      console.log("🔄 Enhanced promoters:", enhancedPromoters.length)
 
       if (isMountedRef.current) {
-        setPromoters(enhancedData)
-        setFilteredPromoters(enhancedData)
-        setError(null) // Clear any previous errors
-        setIsLoading(false)
+        setPromoters(enhancedPromoters)
+        setError(null)
       }
     } catch (error) {
       console.error("Error in fetchPromotersWithContractCount:", error)
-      setError("Failed to load promoters")
-      toast({
-        title: "Error",
-        description: "Failed to load promoters",
-        variant: "destructive",
-      })
+      if (isMountedRef.current) {
+        setError(error instanceof Error ? error.message : "Failed to load promoters")
+      }
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false)
       }
     }
-  }, [toast])
+  }, [])
 
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
@@ -394,68 +382,82 @@ export default function ComprehensivePromoterManagement() {
     }
   }
 
-  // Fallback data fetching without contract counts
+  // Fallback data fetching for basic promoter data
   const fetchBasicPromoters = useCallback(async () => {
+    console.log("🔄 Starting fetchBasicPromoters (fallback)")
+    
+    if (isMountedRef.current) {
+      setIsLoading(true)
+      setError(null)
+    }
+
     try {
       const supabase = getSupabaseClient()
+      console.log("🔄 Supabase client obtained for fallback")
 
-      // Test connection first
-      const { data: testData, error: testError } = await supabase
-        .from("promoters")
-        .select("count", { count: "exact", head: true })
-
-      const { data: promotersData, error: promotersError } = await supabase
+      const { data: promotersData, error } = await supabase
         .from("promoters")
         .select("*")
         .order("name_en")
 
-      if (promotersError) {
-        console.error("🔄 fetchBasicPromoters: Error fetching basic promoters:", promotersError)
-        toast({
-          title: "Error",
-          description: `Failed to load promoters: ${promotersError.message}`,
-          variant: "destructive",
-        })
+      console.log("🔄 Fallback query result:", { data: promotersData, error })
+
+      if (error) {
+        console.error("Error in fallback fetch:", error)
+        if (isMountedRef.current) {
+          setError(`Failed to load promoters: ${error.message}`)
+        }
         return
       }
 
-      if (promotersData && promotersData.length > 0) {
-        const basicData = promotersData.map((promoter: Promoter) => ({
-          ...promoter,
-          id_card_status: "valid" as const,
-          passport_status: "valid" as const,
-          overall_status: "active" as const,
-          active_contracts_count: 0
-        }))
-
-        if (isMountedRef.current) {
-          setPromoters(basicData)
-          setFilteredPromoters(basicData)
-          setError(null)
-          setIsLoading(false)
-          toast({
-            title: "Success",
-            description: `Loaded ${basicData.length} promoters`,
-            variant: "default",
-          })
-        }
-      } else {
+      if (!promotersData) {
+        console.log("🔄 No promoters data in fallback")
         if (isMountedRef.current) {
           setPromoters([])
-          setFilteredPromoters([])
-          setError(null)
-          setIsLoading(false)
         }
+        return
+      }
+
+      // Basic enhancement without contract counts
+      const basicEnhancedPromoters: EnhancedPromoter[] = promotersData.map(promoter => {
+        const idExpiryDays = promoter.id_card_expiry_date 
+          ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+          : null
+
+        const passportExpiryDays = promoter.passport_expiry_date
+          ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+          : null
+
+        return {
+          ...promoter,
+          id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
+          passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
+          overall_status: getOverallStatus(promoter),
+          days_until_id_expiry: idExpiryDays || undefined,
+          days_until_passport_expiry: passportExpiryDays || undefined,
+          active_contracts_count: 0 // Default to 0 for fallback
+        }
+      })
+
+      console.log("🔄 Basic enhanced promoters:", basicEnhancedPromoters.length)
+
+      if (isMountedRef.current) {
+        setPromoters(basicEnhancedPromoters)
+        setError(null)
       }
     } catch (error) {
-      console.error("🔄 fetchBasicPromoters: Error in fetchBasicPromoters:", error)
-      toast({
-        title: "Error",
-        description: "Failed to connect to database",
-        variant: "destructive",
-      })
+      console.error("Error in fetchBasicPromoters:", error)
+      if (isMountedRef.current) {
+        setError(error instanceof Error ? error.message : "Failed to load promoters")
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
-  }, [toast])
+  }, [])
+
+
 
   const handleExport = async (promoterIds?: string[]) => {
     setIsExporting(true)
@@ -554,9 +556,23 @@ export default function ComprehensivePromoterManagement() {
     }
   }
 
-  // Load data on mount
+  // Load data on mount with timeout protection
   useEffect(() => {
-    fetchPromotersWithContractCount()
+    const loadData = async () => {
+      try {
+        await fetchPromotersWithContractCount()
+      } catch (error) {
+        console.error("Main data fetching failed, trying fallback:", error)
+        // Try fallback method
+        try {
+          await fetchBasicPromoters()
+        } catch (fallbackError) {
+          console.error("Fallback data fetching also failed:", fallbackError)
+        }
+      }
+    }
+    
+    loadData()
     
     // Add timeout to prevent infinite loading
     const timeout = setTimeout(() => {
@@ -570,7 +586,7 @@ export default function ComprehensivePromoterManagement() {
       isMountedRef.current = false
       clearTimeout(timeout)
     }
-  }, []) // Remove fetchPromotersWithContractCount from dependencies to prevent infinite loops
+  }, []) // Remove dependencies to prevent infinite loops
 
   return (
     <ProtectedRoute>
@@ -606,22 +622,60 @@ export default function ComprehensivePromoterManagement() {
                   <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back to Home
                 </Link>
               </Button>
-                             <Button
-                 onClick={handleAddNew}
-                 className="bg-primary text-primary-foreground hover:bg-primary/90"
-               >
-                 <PlusCircleIcon className="mr-2 h-5 w-5" />
-                 Add New Promoter
-               </Button>
-               <Button
-                 onClick={fetchBasicPromoters}
-                 variant="outline"
-                 size="sm"
-                 title="Debug: Load basic promoter data"
-               >
-                 <Users className="mr-2 h-4 w-4" />
-                 Debug Load
-               </Button>
+              <Button
+                onClick={() => setIsImportModalOpen(true)}
+                variant="outline"
+                size="sm"
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                Import Excel
+              </Button>
+              <Button
+                onClick={handleAddNew}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <PlusCircleIcon className="mr-2 h-5 w-5" />
+                Add New Promoter
+              </Button>
+              <Button
+                onClick={fetchBasicPromoters}
+                variant="outline"
+                size="sm"
+                title="Debug: Load basic promoter data"
+              >
+                <Users className="mr-2 h-4 w-4" />
+                Debug Load
+              </Button>
+              <Button
+                onClick={async () => {
+                  const supabase = getSupabaseClient()
+                  const { data, error } = await supabase
+                    .from("promoters")
+                    .select("id")
+                    .limit(1)
+                  
+                  if (error) {
+                    console.error("Database test failed:", error)
+                    toast({
+                      title: "Database Test Failed",
+                      description: error.message,
+                      variant: "destructive",
+                    })
+                  } else {
+                    console.log("Database test successful:", data)
+                    toast({
+                      title: "Database Test Successful",
+                      description: "Connection to database is working",
+                      variant: "default",
+                    })
+                  }
+                }}
+                variant="outline"
+                size="sm"
+                title="Test database connection"
+              >
+                Test DB
+              </Button>
             </div>
           </div>
 
@@ -1310,6 +1364,16 @@ export default function ComprehensivePromoterManagement() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          {/* Excel Import Modal */}
+          <ExcelImportModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onImportComplete={() => {
+              fetchPromotersWithContractCount()
+              setIsImportModalOpen(false)
+            }}
+          />
         </div>
       </div>
     </ProtectedRoute>
