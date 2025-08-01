@@ -581,10 +581,18 @@ export default function PromoterDetailPage() {
                       documentType="passport"
                     />
                   </div>
-                  <DetailItem label="Passport Number" value={promoterDetails?.passport_number} />
+                  <DetailItem 
+                    label="Passport Number" 
+                    value={promoterDetails?.passport_number || "Not provided"} 
+                  />
                   {promoterDetails?.passport_expiry_date && (
                     <p className="text-xs text-muted-foreground">
                       Expires: {format(parseISO(promoterDetails.passport_expiry_date), "MMM dd, yyyy")}
+                    </p>
+                  )}
+                  {!promoterDetails?.passport_url && !promoterDetails?.passport_number && (
+                    <p className="text-xs text-amber-600">
+                      ⚠️ No passport information available
                     </p>
                   )}
                   {promoterDetails?.passport_url && (
