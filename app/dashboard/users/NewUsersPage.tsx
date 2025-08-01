@@ -52,7 +52,6 @@ interface User {
   avatar_url?: string
   created_at: string
   last_login?: string
-  email_verified?: boolean
   phone?: string
   department?: string
   position?: string

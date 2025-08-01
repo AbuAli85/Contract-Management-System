@@ -1,13 +1,11 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react"
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useSupabase } from "@/app/providers"
 
-// Define the Role type
 type Role = "admin" | "user" | "manager" | "reviewer" | "promoter"
 
-// Define the RBAC context type
 interface RBACContextType {
   userRoles: Role[]
   isLoading: boolean
@@ -17,26 +15,21 @@ interface RBACContextType {
   refreshRoles: () => Promise<void>
 }
 
-// Create the RBAC context
 const RBACContext = createContext<RBACContextType | undefined>(undefined)
 
-// Custom hook to use RBAC context
 export const useRBAC = () => {
   const context = useContext(RBACContext)
-  if (context === undefined) {
-    throw new Error("useRBAC must be used within a RBACProvider")
+  if (!context) {
+    throw new Error("useRBAC must be used within an RBACProvider")
   }
   return context
 }
 
-// RBAC Provider Component
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const { supabase } = useSupabase()
   const [userRoles, setUserRoles] = useState<Role[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
-  console.log("🔐 RBACProvider: Initializing with user:", user?.email, "supabase:", !!supabase)
 
   // Load user roles from API or default to user role
   const loadUserRoles = useCallback(async () => {
@@ -50,138 +43,150 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Method 1: Try direct Supabase client first (bypasses cookie issues)
-      try {
-        if (!supabase) {
-          console.log("🔐 RBACProvider: No Supabase client available")
-          throw new Error("Failed to get Supabase client from context")
+      // Method 1: Try direct Supabase client first
+      if (!supabase) {
+        console.log("🔐 RBACProvider: No Supabase client available")
+        throw new Error("Failed to get Supabase client from context")
+      }
+
+      console.log("🔐 RBACProvider: Checking users table...")
+      
+      // First try to find user by email (this handles admin user with fixed UUID)
+      let { data: usersData, error: usersError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("email", user.email || '')
+        .single()
+
+      if (!usersError && usersData?.role) {
+        console.log("✅ RBACProvider: Found user by email, role:", usersData.role)
+        setUserRoles([usersData.role as Role])
+        setIsLoading(false)
+        return
+      }
+
+      // If not found by email, try by auth ID (for regular users)
+      if (usersError) {
+        console.log("🔐 RBACProvider: User not found by email, trying auth ID...")
+        const { data: authIdUser, error: authIdError } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+        
+        if (!authIdError && authIdUser?.role) {
+          console.log("✅ RBACProvider: Found user by auth ID, role:", authIdUser.role)
+          setUserRoles([authIdUser.role as Role])
+          setIsLoading(false)
+          return
         }
+      }
 
-        console.log("🔐 RBACProvider: Checking users table...")
-        // Check users table with better error handling
-        try {
-          const { data: usersData, error: usersError } = await supabase
-            .from("users")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-
-          if (!usersError && usersData?.role) {
-            console.log("✅ RBACProvider: Role from users table:", usersData.role)
-            setUserRoles([usersData.role as Role])
-            setIsLoading(false)
-            return
-          } else if (usersError) {
-            console.log("🔐 RBACProvider: Users table error:", usersError.message)
-            
-                    // If user not found in users table, try to create them
-        if (usersError.message.includes('No rows found') || usersError.message.includes('multiple (or no) rows returned')) {
-          console.log("🔐 RBACProvider: User not found in users table, attempting to create...")
-          
+      // If user not found, try to create them (but only if they don't already exist)
+      if (usersError && (usersError.message.includes('No rows found') || usersError.message.includes('multiple (or no) rows returned'))) {
+        console.log("🔐 RBACProvider: User not found in users table, attempting to create...")
+        
+        // Special handling for admin user with fixed UUID
+        if (user.email === 'luxsess2001@gmail.com') {
+          console.log("🔐 RBACProvider: Admin user detected, using fixed UUID...")
           try {
             const { data: newUser, error: createError } = await supabase
               .from("users")
-              .insert({
-                id: user.id,
+              .upsert({
+                id: '550e8400-e29b-41d4-a716-446655440000', // Fixed UUID for admin
                 email: user.email,
-                full_name: user.user_metadata?.full_name || 'User',
-                role: user.user_metadata?.role || 'user',
+                full_name: 'Admin User',
+                role: 'admin',
                 status: 'active',
-                email_verified: user.email_confirmed_at ? true : false,
                 created_at: user.created_at
+              }, {
+                onConflict: 'email', // Use email as conflict key to avoid 409 errors
+                ignoreDuplicates: false
               })
               .select("role")
               .single()
 
             if (!createError && newUser?.role) {
-              console.log("✅ RBACProvider: Created user and got role:", newUser.role)
+              console.log("✅ RBACProvider: Created/updated admin user and got role:", newUser.role)
               setUserRoles([newUser.role as Role])
               setIsLoading(false)
               return
-            } else if (createError) {
-              console.log("🔐 RBACProvider: Failed to create user:", createError.message)
-              
-              // If creation fails, try to use a default admin user
-              if (user.email === 'luxsess2001@gmail.com') {
-                console.log("🔐 RBACProvider: Using default admin role for luxsess2001@gmail.com")
-                setUserRoles(['admin' as Role])
-                setIsLoading(false)
-                return
-              }
             }
           } catch (createError) {
-            console.log("🔐 RBACProvider: User creation failed:", createError)
-            
-            // Fallback for admin user
-            if (user.email === 'luxsess2001@gmail.com') {
-              console.log("🔐 RBACProvider: Fallback to admin role for luxsess2001@gmail.com")
-              setUserRoles(['admin' as Role])
+            console.log("🔐 RBACProvider: Admin user creation failed:", createError)
+          }
+        } else {
+          // Regular user creation
+          try {
+            const { data: newUser, error: createError } = await supabase
+              .from("users")
+              .upsert({
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || 'User',
+                role: user.user_metadata?.role || 'user',
+                status: 'active',
+                created_at: user.created_at
+              }, {
+                onConflict: 'email', // Use email as conflict key to avoid 409 errors
+                ignoreDuplicates: false
+              })
+              .select("role")
+              .single()
+
+            if (!createError && newUser?.role) {
+              console.log("✅ RBACProvider: Created/updated user and got role:", newUser.role)
+              setUserRoles([newUser.role as Role])
               setIsLoading(false)
               return
             }
+          } catch (createError) {
+            console.log("🔐 RBACProvider: User creation failed:", createError)
           }
         }
-          }
-        } catch (error) {
-          console.log("🔐 RBACProvider: Users table query failed:", error)
+      }
+
+      // Check profiles table as fallback
+      console.log("🔐 RBACProvider: Checking profiles table...")
+      try {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        if (!profilesError && profilesData?.role) {
+          console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
+          setUserRoles([profilesData.role as Role])
+          setIsLoading(false)
+          return
         }
+      } catch (error) {
+        console.log("🔐 RBACProvider: Profiles table not available or no role found")
+      }
 
-        console.log("🔐 RBACProvider: Checking profiles table...")
-        // Check profiles table (if it exists)
-        try {
-          const { data: profilesData, error: profilesError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-
-          if (!profilesError && profilesData?.role) {
-            console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
-            setUserRoles([profilesData.role as Role])
-            setIsLoading(false)
-            return
-          }
-        } catch (error) {
-          console.log("🔐 RBACProvider: Profiles table not available or no role found")
-        }
-
-        console.log("🔐 RBACProvider: No role found in tables, setting default user role")
-        setUserRoles(["user"])
+      // Fallback for admin user
+      if (user.email === 'luxsess2001@gmail.com') {
+        console.log("🔐 RBACProvider: Using default admin role for luxsess2001@gmail.com")
+        setUserRoles(['admin' as Role])
         setIsLoading(false)
         return
-      } catch (directError) {
-        console.log("🔐 RBACProvider: Direct Supabase query failed, trying API route...")
-        // Fallback to API route
       }
 
-      // Method 2: Fallback to API route
-      console.log("🔐 RBACProvider: Trying API route...")
-      const response = await fetch("/api/get-user-role", {
-        method: "GET",
-        credentials: "include",
-        mode: "cors",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success && data.role?.value) {
-          console.log("✅ RBACProvider: Role from API:", data.role.value)
-          setUserRoles([data.role.value as Role])
-        } else {
-          console.log("🔐 RBACProvider: No role from API, setting default user role")
-          setUserRoles(["user"])
-        }
-      } else {
-        console.error("❌ RBACProvider: API request failed:", response.status)
-        setUserRoles(["user"])
-      }
+      console.log("🔐 RBACProvider: No role found in tables, setting default user role")
+      setUserRoles(["user"])
+      setIsLoading(false)
+      
     } catch (error) {
       console.error("🔐 RBACProvider: Error loading roles:", error)
-      setUserRoles(["user"])
-    } finally {
+      
+      // Final fallback for admin user
+      if (user.email === 'luxsess2001@gmail.com') {
+        console.log("🔐 RBACProvider: Final fallback to admin role for luxsess2001@gmail.com")
+        setUserRoles(['admin' as Role])
+      } else {
+        setUserRoles(["user"])
+      }
       setIsLoading(false)
     }
   }, [user, supabase])
