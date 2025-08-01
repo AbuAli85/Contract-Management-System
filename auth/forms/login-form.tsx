@@ -107,13 +107,30 @@ export function LoginForm() {
       console.log("🔐 Login Debug - Starting login process...")
       console.log("🔐 Login Debug - Email:", email)
 
-      // Use client-side authentication
+      // Use client-side authentication with enhanced error handling
+      console.log("🔐 Login Debug - Calling signIn function...")
       const { success: loginSuccess, error: clientError } = await signIn(email, password)
 
       if (!loginSuccess) {
         console.error("🔐 Login Debug - Client login failed:", clientError)
-        const errorMessage =
-          clientError || "Login failed. Please check your credentials and try again."
+        
+        // Enhanced error message handling
+        let errorMessage = "Login failed. Please check your credentials and try again."
+        
+        if (clientError) {
+          if (clientError.includes("Invalid login credentials")) {
+            errorMessage = "Invalid email or password. Please try again."
+          } else if (clientError.includes("Email not confirmed")) {
+            errorMessage = "Please check your email and confirm your account before signing in."
+          } else if (clientError.includes("Too many requests")) {
+            errorMessage = "Too many login attempts. Please wait a few minutes before trying again."
+          } else if (clientError.includes("User not found")) {
+            errorMessage = "No account found with this email address."
+          } else {
+            errorMessage = clientError
+          }
+        }
+        
         setError(errorMessage)
 
         // Show toast notification

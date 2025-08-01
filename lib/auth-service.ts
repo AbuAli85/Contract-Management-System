@@ -135,6 +135,7 @@ export function useAuth() {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
+      console.error("🔐 Auth Service: No Supabase client available")
       return { 
         success: false, 
         error: "Supabase client not available" 
@@ -142,10 +143,19 @@ export function useAuth() {
     }
 
     try {
+      console.log("🔐 Auth Service: Attempting sign in for:", email)
+      
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
+      
+      if (error) {
+        console.error("🔐 Auth Service: Sign in error:", error.message)
+        throw error
+      }
+      
+      console.log("🔐 Auth Service: Sign in successful for:", data.user?.email)
       return { success: true }
     } catch (error) {
+      console.error("🔐 Auth Service: Sign in failed:", error)
       return { 
         success: false, 
         error: error instanceof Error ? error.message : "Sign in failed" 
@@ -172,6 +182,43 @@ export function useAuth() {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : "OAuth sign in failed" 
+      }
+    }
+  }
+
+  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
+    if (!supabase) {
+      console.error("🔐 Auth Service: No Supabase client available")
+      return { 
+        success: false, 
+        error: "Supabase client not available" 
+      }
+    }
+
+    try {
+      console.log("🔐 Auth Service: Attempting sign up for:", email)
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: metadata || {},
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+      
+      if (error) {
+        console.error("🔐 Auth Service: Sign up error:", error.message)
+        throw error
+      }
+      
+      console.log("🔐 Auth Service: Sign up successful for:", data.user?.email)
+      return { success: true, data }
+    } catch (error) {
+      console.error("🔐 Auth Service: Sign up failed:", error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : "Sign up failed" 
       }
     }
   }
@@ -207,6 +254,7 @@ export function useAuth() {
     mounted: state.mounted,
     error: state.error,
     signIn,
+    signUp,
     signInWithProvider,
     signOut,
     isAuthenticated,

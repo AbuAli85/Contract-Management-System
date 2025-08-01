@@ -155,17 +155,10 @@ export default function PromoterManagement() {
 
 
 
-      // Fetch promoters with company information using a join
+      // Fetch promoters without join first to avoid relationship issues
       const { data: promotersData, error: promotersError } = await supabase
         .from("promoters")
-        .select(`
-          *,
-          employer:employer_id (
-            id,
-            name_en,
-            name_ar
-          )
-        `)
+        .select("*")
         .order("name_en")
 
       if (promotersError) {
@@ -178,26 +171,45 @@ export default function PromoterManagement() {
         return
       }
 
-      // Enhance promoter data
-      const enhancedPromoters: EnhancedPromoter[] = promotersData.map((promoter: any) => {
-        const idExpiryDays = promoter.id_card_expiry_date 
-          ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
-          : null
+      // Enhance promoter data with employer information
+      const enhancedPromoters: EnhancedPromoter[] = await Promise.all(
+        promotersData.map(async (promoter: any) => {
+          const idExpiryDays = promoter.id_card_expiry_date 
+            ? differenceInDays(parseISO(promoter.id_card_expiry_date), new Date())
+            : null
 
-        const passportExpiryDays = promoter.passport_expiry_date
-          ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
-          : null
+          const passportExpiryDays = promoter.passport_expiry_date
+            ? differenceInDays(parseISO(promoter.passport_expiry_date), new Date())
+            : null
 
-        return {
-          ...promoter,
-          id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
-          passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
-          overall_status: getOverallStatus(promoter),
-          days_until_id_expiry: idExpiryDays || undefined,
-          days_until_passport_expiry: passportExpiryDays || undefined,
-          active_contracts_count: 0
-        }
-      })
+          // Fetch employer information if employer_id exists
+          let employer = null
+          if (promoter.employer_id) {
+            try {
+              const { data: employerData } = await supabase
+                .from("parties")
+                .select("id, name_en, name_ar")
+                .eq("id", promoter.employer_id)
+                .single()
+              
+              employer = employerData
+            } catch (error) {
+              console.warn(`Failed to fetch employer for promoter ${promoter.id}:`, error)
+            }
+          }
+
+          return {
+            ...promoter,
+            id_card_status: getDocumentStatusType(idExpiryDays, promoter.id_card_expiry_date),
+            passport_status: getDocumentStatusType(passportExpiryDays, promoter.passport_expiry_date),
+            overall_status: getOverallStatus(promoter),
+            days_until_id_expiry: idExpiryDays || undefined,
+            days_until_passport_expiry: passportExpiryDays || undefined,
+            active_contracts_count: 0,
+            employer
+          }
+        })
+      )
 
 
 
