@@ -3,15 +3,16 @@ const fs = require('fs');
 const csv = require('csv-parser');
 require('dotenv').config();
 
-// Initialize Supabase client
+// Initialize Supabase client with service role key to bypass RLS
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Missing Supabase environment variables');
   console.log('Please make sure your .env file contains:');
   console.log('NEXT_PUBLIC_SUPABASE_URL=your_supabase_url');
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key');
+  console.log('SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (preferred)');
+  console.log('OR NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key');
   process.exit(1);
 }
 
@@ -55,49 +56,42 @@ async function importPartiesFromExport() {
             }
           };
 
+          // Parse active contracts to integer
+          const parseActiveContracts = (value) => {
+            if (!value || value === 'N/A') return 0;
+            const parsed = parseInt(value);
+            return isNaN(parsed) ? 0 : parsed;
+          };
+
           // Check if company already exists by name
           const { data: existingCompany } = await supabase
             .from('parties')
-            .select('id, name')
-            .eq('name', company['Name (EN)'])
+            .select('id, name_en')
+            .eq('name_en', company['Name (EN)'])
             .single();
 
-          // Create notes with employer role and CRN information
-          let notes = '';
-          if (company['Type'] === 'Employer') {
-            notes += 'Role: Employer. ';
-          }
-          if (company['CRN'] && company['CRN'] !== 'N/A') {
-            notes += `CRN: ${company['CRN']}. `;
-          }
-          if (company['Notes'] && company['Notes'] !== '') {
-            notes += company['Notes'];
-          }
-
-          // Map to actual database schema with correct type value and CRN
+          // Map to exact CSV structure
           const companyData = {
-            name: company['Name (EN)'] || '',
-            type: 'company', // Use 'company' as it's the only valid type
-            email: company['Contact Email'] || '',
-            phone: company['Contact Phone'] || '',
-            address: {
-              street: company['Address (EN)'] || '',
-              city: '',
-              state: '',
-              country: '',
-              postal_code: ''
-            },
-            tax_id: {
-              number: company['Tax Number'] || '',
-              type: 'tax'
-            },
-            registration_number: {
-              number: company['CRN'] || '',
-              type: 'CRN'
-            },
-            status: company['Status'] || 'Active',
+            name_en: company['Name (EN)'] || '',
+            name_ar: company['Name (AR)'] || '',
+            crn: company['CRN'] || '',
+            type: company['Type'] || '',
+            role: company['Role'] || '',
+            status: company['Status'] || '',
+            cr_status: company['CR Status'] || '',
+            cr_expiry: company['CR Expiry'] || '',
+            license_status: company['License Status'] || '',
+            license_expiry: company['License Expiry'] || '',
+            contact_person: company['Contact Person'] || '',
+            contact_email: company['Contact Email'] || '',
+            contact_phone: company['Contact Phone'] || '',
+            address_en: company['Address (EN)'] || '',
+            tax_number: company['Tax Number'] || '',
+            license_number: company['License Number'] || '',
+            active_contracts: parseActiveContracts(company['Active Contracts']),
+            overall_status: company['Overall Status'] || 'active',
             created_at: parseDate(company['Created At']) || new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            notes: company['Notes'] || ''
           };
 
           if (existingCompany) {
@@ -111,7 +105,7 @@ async function importPartiesFromExport() {
               console.error(`❌ Error updating company ${company['Name (EN)']}:`, error.message);
               failed++;
             } else {
-              console.log(`✅ Updated company: ${company['Name (EN)']} (CRN: ${company['CRN'] || 'N/A'}, Role: ${company['Type']})`);
+              console.log(`✅ Updated company: ${company['Name (EN)']} (Type: ${company['Type'] || 'N/A'}, CRN: ${company['CRN'] || 'N/A'}, Role: ${company['Role'] || 'N/A'})`);
               updated++;
             }
           } else {
@@ -124,7 +118,7 @@ async function importPartiesFromExport() {
               console.error(`❌ Error creating company ${company['Name (EN)']}:`, error.message);
               failed++;
             } else {
-              console.log(`✅ Created company: ${company['Name (EN)']} (CRN: ${company['CRN'] || 'N/A'}, Role: ${company['Type']})`);
+              console.log(`✅ Created company: ${company['Name (EN)']} (Type: ${company['Type'] || 'N/A'}, CRN: ${company['CRN'] || 'N/A'}, Role: ${company['Role'] || 'N/A'})`);
               created++;
             }
           }
@@ -145,14 +139,14 @@ async function importPartiesFromExport() {
         console.log('\n=== Sample Imported Companies ===');
         const { data: sampleCompanies } = await supabase
           .from('parties')
-          .select('name, type, status, email, registration_number')
+          .select('name_en, type, overall_status, contact_email, crn')
           .limit(5);
         
         if (sampleCompanies && sampleCompanies.length > 0) {
           sampleCompanies.forEach((company, index) => {
-            console.log(`  ${index + 1}. ${company.name} (${company.type}) - ${company.status}`);
-            if (company.registration_number && company.registration_number.number) {
-              console.log(`     CRN: ${company.registration_number.number}`);
+            console.log(`  ${index + 1}. ${company.name_en} (${company.type || 'N/A'}) - ${company.overall_status}`);
+            if (company.crn) {
+              console.log(`     CRN: ${company.crn}`);
             }
           });
         }
