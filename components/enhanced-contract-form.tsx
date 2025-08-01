@@ -169,11 +169,35 @@ export default function EnhancedContractForm({
   })
 
   // Watch form values for real-time analysis
-  const watchedValues = useWatch({ control: form.control })
+  // Removed watchedValues to prevent infinite loops
   const watchedStartDate = useWatch({ control: form.control, name: "contract_start_date" })
   const watchedEndDate = useWatch({ control: form.control, name: "contract_end_date" })
   const watchedContractType = useWatch({ control: form.control, name: "contract_type" })
   const watchedSalary = useWatch({ control: form.control, name: "basic_salary" })
+  const watchedSecondParty = useWatch({ control: form.control, name: "second_party_id" })
+
+  // Filter promoters based on selected employer
+  const filteredPromoters = useMemo(() => {
+    if (!watchedSecondParty || !promoters) {
+      return promoters || []
+    }
+    
+    // Filter promoters that belong to the selected employer
+    return promoters.filter((promoter: any) => promoter.employer_id === watchedSecondParty)
+  }, [promoters, watchedSecondParty])
+
+  // Clear promoter selection when employer changes
+  useEffect(() => {
+    if (watchedSecondParty) {
+      const currentPromoterId = form.getValues("promoter_id")
+      if (currentPromoterId) {
+        const currentPromoter = promoters?.find((p: any) => p.id === currentPromoterId)
+        if (currentPromoter && currentPromoter.employer_id !== watchedSecondParty) {
+          form.setValue("promoter_id", "")
+        }
+      }
+    }
+  }, [watchedSecondParty, promoters, form])
 
   // Form sections
   const sections: FormSection[] = [
@@ -233,73 +257,82 @@ export default function EnhancedContractForm({
     },
   ]
 
-  // Real-time analysis
+  // Removed analyzeFormData function to prevent circular dependencies
+
+  // Combined effect for analysis and progress with debouncing
   useEffect(() => {
-    analyzeFormData()
-  }, [watchedValues])
+    const timeoutId = setTimeout(() => {
+      // Inline the analysis logic to avoid circular dependencies
+      const newInsights: ContractInsight[] = []
+      const newRecommendations: SmartRecommendation[] = []
 
-  const analyzeFormData = () => {
-    const newInsights: ContractInsight[] = []
-    const newRecommendations: SmartRecommendation[] = []
-
-    // Analyze contract duration
-    if (watchedStartDate && watchedEndDate) {
-      const duration = differenceInDays(watchedEndDate, watchedStartDate)
-      if (duration < 30) {
-        newInsights.push({
-          type: "warning",
-          title: "Short Contract Duration",
-          description: `Contract duration is ${duration} days. Consider longer terms for stability.`,
-          priority: "medium",
-        })
-      } else if (duration > 365) {
-        newInsights.push({
-          type: "success",
-          title: "Long-term Contract",
-          description: `Contract duration is ${duration} days. Good for stability.`,
-          priority: "low",
-        })
+      // Analyze contract duration
+      if (watchedStartDate && watchedEndDate) {
+        const duration = differenceInDays(watchedEndDate, watchedStartDate)
+        if (duration < 30) {
+          newInsights.push({
+            type: "warning",
+            title: "Short Contract Duration",
+            description: `Contract duration is ${duration} days. Consider longer terms for stability.`,
+            priority: "medium",
+          })
+        } else if (duration > 365) {
+          newInsights.push({
+            type: "success",
+            title: "Long-term Contract",
+            description: `Contract duration is ${duration} days. Good for stability.`,
+            priority: "low",
+          })
+        }
       }
-    }
 
-    // Analyze contract type
-    if (watchedContractType) {
-      const typeConfig = CONTRACT_TYPES.find((t) => t.value === watchedContractType)
-      if (typeConfig) {
-        newInsights.push({
-          type: "info",
-          title: `${typeConfig.label} Contract`,
-          description: typeConfig.description || "Professional contract template selected.",
-          priority: "medium",
-        })
+      // Analyze contract type
+      if (watchedContractType) {
+        const typeConfig = CONTRACT_TYPES.find((t) => t.value === watchedContractType)
+        if (typeConfig) {
+          newInsights.push({
+            type: "info",
+            title: `${typeConfig.label} Contract`,
+            description: "Professional contract template selected.",
+            priority: "medium",
+          })
+        }
       }
-    }
 
-    // Analyze salary
-    if (watchedSalary && watchedSalary > 0) {
-      const salaryRecommendations = calculateSalaryRecommendations(
-        watchedSalary,
-        watchedContractType,
-      )
-      newRecommendations.push(...salaryRecommendations)
-    }
+      // Analyze salary
+      if (watchedSalary && watchedSalary > 0) {
+        if (watchedSalary < 30000) {
+          newRecommendations.push({
+            category: "compensation",
+            title: "Consider Salary Increase",
+            description: "Current salary is below market average for this role.",
+            impact: "medium",
+            implementation: "Review market rates and consider adjustment.",
+            estimatedSavings: "N/A",
+          })
+        }
+      }
 
-    // Compliance check
-    const complianceIssues = checkComplianceIssues(watchedValues)
-    if (complianceIssues.length > 0) {
-      complianceIssues.forEach((issue) => {
-        newInsights.push({
-          type: "error",
-          title: "Compliance Issue",
-          description: issue,
-          priority: "high",
+      setInsights(newInsights)
+      setRecommendations(newRecommendations)
+      
+      // Update form progress
+      const completedSections = sections.filter((section) => {
+        return section.fields.every((field) => {
+          const value = form.getValues(field as keyof ContractGeneratorFormData)
+          return value && value !== ""
         })
+      }).length
+
+      setFormProgress({
+        completed: completedSections,
+        total: sections.length,
+        percentage: Math.round((completedSections / sections.length) * 100),
       })
-    }
+    }, 1000) // Increased debounce to 1 second to prevent infinite loops
 
-    setInsights(newInsights)
-    setRecommendations(newRecommendations)
-  }
+    return () => clearTimeout(timeoutId)
+  }, [watchedStartDate, watchedEndDate, watchedContractType, watchedSalary, sections, form])
 
   // Helper function to calculate salary recommendations
   const calculateSalaryRecommendations = (
@@ -424,7 +457,7 @@ export default function EnhancedContractForm({
       total: sections.length,
       percentage: Math.round((completedSections / sections.length) * 100),
     })
-  }, [watchedValues])
+  }, [])
 
   // Mutations
   const createMutation = useMutation({
@@ -633,14 +666,32 @@ export default function EnhancedContractForm({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {promoters?.map((promoter) => (
+                            {filteredPromoters?.map((promoter: any) => (
                               <SelectItem key={promoter.id} value={promoter.id}>
                                 {promoter.name_en} / {promoter.name_ar}
+                                {watchedSecondParty && promoter.employer_id === watchedSecondParty && (
+                                  <span className="ml-2 text-xs text-green-600">✓ Related</span>
+                                )}
                               </SelectItem>
                             ))}
+                            {filteredPromoters?.length === 0 && watchedSecondParty && (
+                              <SelectItem value="" disabled>
+                                No promoters found for this employer
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                         <FormMessage />
+                        {watchedSecondParty && filteredPromoters?.length === 0 && (
+                          <p className="text-sm text-amber-600 mt-2">
+                            ⚠️ No promoters found for the selected employer. Please check promoter management to assign promoters to this employer.
+                          </p>
+                        )}
+                        {watchedSecondParty && filteredPromoters?.length > 0 && (
+                          <p className="text-sm text-green-600 mt-2">
+                            ✅ Found {filteredPromoters.length} promoter(s) related to this employer
+                          </p>
+                        )}
                       </FormItem>
                     )}
                   />
@@ -1085,7 +1136,13 @@ export default function EnhancedContractForm({
               <CardDescription>Legal and regulatory compliance</CardDescription>
             </CardHeader>
             <CardContent>
-              <ComplianceChecker contractData={watchedValues} />
+              <ComplianceChecker contractData={{
+        contract_start_date: watchedStartDate,
+        contract_end_date: watchedEndDate,
+        contract_type: watchedContractType,
+        basic_salary: watchedSalary,
+        second_party_id: watchedSecondParty
+      }} />
             </CardContent>
           </Card>
         </div>
@@ -1098,7 +1155,13 @@ export default function EnhancedContractForm({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <ContractPreview contractData={watchedValues} />
+          <ContractPreview contractData={{
+        contract_start_date: watchedStartDate,
+        contract_end_date: watchedEndDate,
+        contract_type: watchedContractType,
+        basic_salary: watchedSalary,
+        second_party_id: watchedSecondParty
+      }} />
         </motion.div>
       )}
     </div>

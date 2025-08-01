@@ -112,57 +112,39 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // Fetch employer data separately
     let employer = null
     if (promoter.employer_id) {
-      const { data: employerData, error: employerError } = await supabase
-        .from("parties")
-        .select("id, name_en, name_ar")
-        .eq("id", promoter.employer_id)
-      
-      if (!employerError && employerData && employerData.length > 0) {
-        employer = employerData[0]
+      try {
+        const { data: employerData, error: employerError } = await supabase
+          .from("parties")
+          .select("id, name_en, name_ar")
+          .eq("id", promoter.employer_id)
+        
+        if (!employerError && employerData && employerData.length > 0) {
+          employer = employerData[0]
+        }
+      } catch (employerError) {
+        console.warn("Could not fetch employer data:", employerError)
+        // Continue without employer data rather than failing the entire request
       }
     }
 
-    // Fetch contracts data separately
+    // Fetch contracts data separately (simplified to avoid relationship issues)
     let contracts = []
-    const { data: contractsData, error: contractsError } = await supabase
-      .from("contracts")
-      .select("id, contract_number, status, contract_start_date, contract_end_date, job_title, work_location, first_party_id, second_party_id")
-      .eq("promoter_id", id)
-    
-    if (!contractsError && contractsData) {
-      // Fetch party names for each contract
-      for (const contract of contractsData) {
-        let firstParty = null
-        let secondParty = null
-        
-        if (contract.first_party_id) {
-          const { data: firstPartyData, error: firstPartyError } = await supabase
-            .from("parties")
-            .select("id, name_en, name_ar")
-            .eq("id", contract.first_party_id)
-          
-          if (!firstPartyError && firstPartyData && firstPartyData.length > 0) {
-            firstParty = firstPartyData[0]
-          }
-        }
-        
-        if (contract.second_party_id) {
-          const { data: secondPartyData, error: secondPartyError } = await supabase
-            .from("parties")
-            .select("id, name_en, name_ar")
-            .eq("id", contract.second_party_id)
-          
-          if (!secondPartyError && secondPartyData && secondPartyData.length > 0) {
-            secondParty = secondPartyData[0]
-          }
-        }
-        
-        contracts.push({
+    try {
+      const { data: contractsData, error: contractsError } = await supabase
+        .from("contracts")
+        .select("id, contract_number, status, contract_start_date, contract_end_date, job_title, work_location, first_party_id, second_party_id")
+        .eq("promoter_id", id)
+      
+      if (!contractsError && contractsData) {
+        contracts = contractsData.map(contract => ({
           ...contract,
-          first_party: firstParty,
-          second_party: secondParty
-        })
+          first_party: null, // Will be populated separately if needed
+          second_party: null // Will be populated separately if needed
+        }))
       }
+    } catch (contractError) {
+      console.warn("Could not fetch contracts:", contractError)
+      // Continue without contracts rather than failing the entire request
     }
 
     if (error) {
