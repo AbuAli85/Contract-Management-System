@@ -163,9 +163,21 @@ export default function DocumentUpload({
 
     } catch (error) {
       console.error('Error uploading document:', error)
+      
+      let errorMessage = "Failed to upload document"
+      if (error instanceof Error) {
+        if (error.message.includes('bucket') || error.message.includes('storage')) {
+          errorMessage = "Storage bucket not configured. Please contact administrator to set up document storage."
+        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+          errorMessage = "Permission denied. Please check your access rights."
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload document",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {

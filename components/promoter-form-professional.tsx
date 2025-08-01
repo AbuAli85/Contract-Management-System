@@ -463,9 +463,21 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
       onFormSubmit()
     } catch (error) {
       console.error('Error saving promoter:', error)
+      
+      let errorMessage = "Failed to save promoter"
+      if (error instanceof Error) {
+        if (error.message.includes('column') && error.message.includes('does not exist')) {
+          errorMessage = "Database schema is not up to date. Please contact administrator to apply database migrations."
+        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
+          errorMessage = "Permission denied. Please check your access rights."
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save promoter",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
