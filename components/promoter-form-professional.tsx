@@ -14,12 +14,13 @@ import { Progress } from "@/components/ui/progress"
 
 import { 
   Save, User, Phone, FileText, Settings, Star, X,
-  CheckCircle, Shield, Edit3, Plus, Building
+  CheckCircle, Shield, Edit3, Plus, Building, Upload, Eye, Download
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { formatDateForDatabase } from "@/lib/date-utils"
 import { DateInput } from "@/components/ui/date-input"
+import DocumentUpload from "@/components/document-upload"
 
 interface PromoterFormProfessionalProps {
   promoterToEdit?: any | null
@@ -38,6 +39,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
   const [isClient, setIsClient] = useState(false)
   const [employers, setEmployers] = useState<{ id: string; name_en: string; name_ar: string }[]>([])
   const [employersLoading, setEmployersLoading] = useState(false)
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false)
 
   // Safe initialization with fallbacks
   const safeGetValue = (obj: any, key: string, defaultValue: string = "") => {
@@ -121,16 +123,20 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     timezone: "",
     special_requirements: "",
     
-    // Additional Information
-    notes: "",
-    profile_picture_url: "",
-    
-    // Notification settings
-    notify_days_before_id_expiry: 30,
-    notify_days_before_passport_expiry: 30,
-    
-    // Employer assignment
-    employer_id: "",
+         // Additional Information
+     notes: "",
+     profile_picture_url: "",
+     
+     // Document URLs
+     id_card_url: "",
+     passport_url: "",
+     
+     // Notification settings
+     notify_days_before_id_expiry: 30,
+     notify_days_before_passport_expiry: 30,
+     
+     // Employer assignment
+     employer_id: "",
   })
 
   // Fetch employers for dropdown
@@ -217,11 +223,13 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         preferred_language: safeGetValue(promoterToEdit, 'preferred_language'),
         timezone: safeGetValue(promoterToEdit, 'timezone'),
         special_requirements: safeGetValue(promoterToEdit, 'special_requirements'),
-        notes: safeGetValue(promoterToEdit, 'notes'),
-        profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
-        notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 30),
-        notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', 30),
-        employer_id: safeGetValue(promoterToEdit, 'employer_id') || "none",
+                 notes: safeGetValue(promoterToEdit, 'notes'),
+         profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
+         id_card_url: safeGetValue(promoterToEdit, 'id_card_url'),
+         passport_url: safeGetValue(promoterToEdit, 'passport_url'),
+         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 30),
+         notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', 30),
+         employer_id: safeGetValue(promoterToEdit, 'employer_id') || "none",
       })
     }
   }, [promoterToEdit, fetchEmployers])
@@ -329,11 +337,13 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         passport_expiry_date: formData.passport_expiry_date ? formatDateForDatabase(formData.passport_expiry_date) : null,
         email: formData.email?.trim() || "",
         phone: formData.phone?.trim() || "",
-        status: formData.status || "active",
-        notes: formData.notes?.trim() || "",
-        profile_picture_url: formData.profile_picture_url?.trim() || "",
-        notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
-        notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
+                 status: formData.status || "active",
+         notes: formData.notes?.trim() || "",
+         profile_picture_url: formData.profile_picture_url?.trim() || "",
+         id_card_url: formData.id_card_url?.trim() || null,
+         passport_url: formData.passport_url?.trim() || null,
+         notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
+         notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
         
         // Personal Information
         date_of_birth: formData.date_of_birth ? formatDateForDatabase(formData.date_of_birth) : null,
@@ -613,12 +623,206 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                    
                    <div className="space-y-2">
                      <Label htmlFor="nationality">Nationality</Label>
-                     <Input
-                       id="nationality"
-                       value={formData.nationality}
-                       onChange={(e) => handleInputChange('nationality', e.target.value)}
-                       placeholder="Enter nationality"
-                     />
+                     <Select value={formData.nationality} onValueChange={(value) => handleInputChange('nationality', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select nationality" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="afghan">Afghan</SelectItem>
+                         <SelectItem value="albanian">Albanian</SelectItem>
+                         <SelectItem value="algerian">Algerian</SelectItem>
+                         <SelectItem value="american">American</SelectItem>
+                         <SelectItem value="andorran">Andorran</SelectItem>
+                         <SelectItem value="angolan">Angolan</SelectItem>
+                         <SelectItem value="antiguans">Antiguans</SelectItem>
+                         <SelectItem value="argentinean">Argentinean</SelectItem>
+                         <SelectItem value="armenian">Armenian</SelectItem>
+                         <SelectItem value="australian">Australian</SelectItem>
+                         <SelectItem value="austrian">Austrian</SelectItem>
+                         <SelectItem value="azerbaijani">Azerbaijani</SelectItem>
+                         <SelectItem value="bahamian">Bahamian</SelectItem>
+                         <SelectItem value="bahraini">Bahraini</SelectItem>
+                         <SelectItem value="bangladeshi">Bangladeshi</SelectItem>
+                         <SelectItem value="barbadian">Barbadian</SelectItem>
+                         <SelectItem value="barbudans">Barbudans</SelectItem>
+                         <SelectItem value="batswana">Batswana</SelectItem>
+                         <SelectItem value="belarusian">Belarusian</SelectItem>
+                         <SelectItem value="belgian">Belgian</SelectItem>
+                         <SelectItem value="belizean">Belizean</SelectItem>
+                         <SelectItem value="beninese">Beninese</SelectItem>
+                         <SelectItem value="bhutanese">Bhutanese</SelectItem>
+                         <SelectItem value="bolivian">Bolivian</SelectItem>
+                         <SelectItem value="bosnian">Bosnian</SelectItem>
+                         <SelectItem value="brazilian">Brazilian</SelectItem>
+                         <SelectItem value="british">British</SelectItem>
+                         <SelectItem value="bruneian">Bruneian</SelectItem>
+                         <SelectItem value="bulgarian">Bulgarian</SelectItem>
+                         <SelectItem value="burkinabe">Burkinabe</SelectItem>
+                         <SelectItem value="burmese">Burmese</SelectItem>
+                         <SelectItem value="burundian">Burundian</SelectItem>
+                         <SelectItem value="cambodian">Cambodian</SelectItem>
+                         <SelectItem value="cameroonian">Cameroonian</SelectItem>
+                         <SelectItem value="canadian">Canadian</SelectItem>
+                         <SelectItem value="cape verdean">Cape Verdean</SelectItem>
+                         <SelectItem value="central african">Central African</SelectItem>
+                         <SelectItem value="chadian">Chadian</SelectItem>
+                         <SelectItem value="chilean">Chilean</SelectItem>
+                         <SelectItem value="chinese">Chinese</SelectItem>
+                         <SelectItem value="colombian">Colombian</SelectItem>
+                         <SelectItem value="comoran">Comoran</SelectItem>
+                         <SelectItem value="congolese">Congolese</SelectItem>
+                         <SelectItem value="costa rican">Costa Rican</SelectItem>
+                         <SelectItem value="croatian">Croatian</SelectItem>
+                         <SelectItem value="cuban">Cuban</SelectItem>
+                         <SelectItem value="cypriot">Cypriot</SelectItem>
+                         <SelectItem value="czech">Czech</SelectItem>
+                         <SelectItem value="danish">Danish</SelectItem>
+                         <SelectItem value="djibouti">Djibouti</SelectItem>
+                         <SelectItem value="dominican">Dominican</SelectItem>
+                         <SelectItem value="dutch">Dutch</SelectItem>
+                         <SelectItem value="east timorese">East Timorese</SelectItem>
+                         <SelectItem value="ecuadorean">Ecuadorean</SelectItem>
+                         <SelectItem value="egyptian">Egyptian</SelectItem>
+                         <SelectItem value="emirian">Emirian</SelectItem>
+                         <SelectItem value="equatorial guinean">Equatorial Guinean</SelectItem>
+                         <SelectItem value="eritrean">Eritrean</SelectItem>
+                         <SelectItem value="estonian">Estonian</SelectItem>
+                         <SelectItem value="ethiopian">Ethiopian</SelectItem>
+                         <SelectItem value="fijian">Fijian</SelectItem>
+                         <SelectItem value="filipino">Filipino</SelectItem>
+                         <SelectItem value="finnish">Finnish</SelectItem>
+                         <SelectItem value="french">French</SelectItem>
+                         <SelectItem value="gabonese">Gabonese</SelectItem>
+                         <SelectItem value="gambian">Gambian</SelectItem>
+                         <SelectItem value="georgian">Georgian</SelectItem>
+                         <SelectItem value="german">German</SelectItem>
+                         <SelectItem value="ghanaian">Ghanaian</SelectItem>
+                         <SelectItem value="greek">Greek</SelectItem>
+                         <SelectItem value="grenadian">Grenadian</SelectItem>
+                         <SelectItem value="guatemalan">Guatemalan</SelectItem>
+                         <SelectItem value="guinea-bissauan">Guinea-Bissauan</SelectItem>
+                         <SelectItem value="guinean">Guinean</SelectItem>
+                         <SelectItem value="guyanese">Guyanese</SelectItem>
+                         <SelectItem value="haitian">Haitian</SelectItem>
+                         <SelectItem value="herzegovinian">Herzegovinian</SelectItem>
+                         <SelectItem value="honduran">Honduran</SelectItem>
+                         <SelectItem value="hungarian">Hungarian</SelectItem>
+                         <SelectItem value="icelander">Icelander</SelectItem>
+                         <SelectItem value="indian">Indian</SelectItem>
+                         <SelectItem value="indonesian">Indonesian</SelectItem>
+                         <SelectItem value="iranian">Iranian</SelectItem>
+                         <SelectItem value="iraqi">Iraqi</SelectItem>
+                         <SelectItem value="irish">Irish</SelectItem>
+                         <SelectItem value="israeli">Israeli</SelectItem>
+                         <SelectItem value="italian">Italian</SelectItem>
+                         <SelectItem value="ivorian">Ivorian</SelectItem>
+                         <SelectItem value="jamaican">Jamaican</SelectItem>
+                         <SelectItem value="japanese">Japanese</SelectItem>
+                         <SelectItem value="jordanian">Jordanian</SelectItem>
+                         <SelectItem value="kazakhstani">Kazakhstani</SelectItem>
+                         <SelectItem value="kenyan">Kenyan</SelectItem>
+                         <SelectItem value="kittian and nevisian">Kittian and Nevisian</SelectItem>
+                         <SelectItem value="kuwaiti">Kuwaiti</SelectItem>
+                         <SelectItem value="kyrgyz">Kyrgyz</SelectItem>
+                         <SelectItem value="laotian">Laotian</SelectItem>
+                         <SelectItem value="latvian">Latvian</SelectItem>
+                         <SelectItem value="lebanese">Lebanese</SelectItem>
+                         <SelectItem value="liberian">Liberian</SelectItem>
+                         <SelectItem value="libyan">Libyan</SelectItem>
+                         <SelectItem value="liechtensteiner">Liechtensteiner</SelectItem>
+                         <SelectItem value="lithuanian">Lithuanian</SelectItem>
+                         <SelectItem value="luxembourger">Luxembourger</SelectItem>
+                         <SelectItem value="macedonian">Macedonian</SelectItem>
+                         <SelectItem value="malagasy">Malagasy</SelectItem>
+                         <SelectItem value="malawian">Malawian</SelectItem>
+                         <SelectItem value="malaysian">Malaysian</SelectItem>
+                         <SelectItem value="maldivan">Maldivan</SelectItem>
+                         <SelectItem value="malian">Malian</SelectItem>
+                         <SelectItem value="maltese">Maltese</SelectItem>
+                         <SelectItem value="marshallese">Marshallese</SelectItem>
+                         <SelectItem value="mauritanian">Mauritanian</SelectItem>
+                         <SelectItem value="mauritian">Mauritian</SelectItem>
+                         <SelectItem value="mexican">Mexican</SelectItem>
+                         <SelectItem value="micronesian">Micronesian</SelectItem>
+                         <SelectItem value="moldovan">Moldovan</SelectItem>
+                         <SelectItem value="monacan">Monacan</SelectItem>
+                         <SelectItem value="mongolian">Mongolian</SelectItem>
+                         <SelectItem value="moroccan">Moroccan</SelectItem>
+                         <SelectItem value="mosotho">Mosotho</SelectItem>
+                         <SelectItem value="motswana">Motswana</SelectItem>
+                         <SelectItem value="mozambican">Mozambican</SelectItem>
+                         <SelectItem value="namibian">Namibian</SelectItem>
+                         <SelectItem value="nauruan">Nauruan</SelectItem>
+                         <SelectItem value="nepalese">Nepalese</SelectItem>
+                         <SelectItem value="new zealander">New Zealander</SelectItem>
+                         <SelectItem value="ni-vanuatu">Ni-Vanuatu</SelectItem>
+                         <SelectItem value="nicaraguan">Nicaraguan</SelectItem>
+                         <SelectItem value="nigerian">Nigerian</SelectItem>
+                         <SelectItem value="nigerien">Nigerien</SelectItem>
+                         <SelectItem value="north korean">North Korean</SelectItem>
+                         <SelectItem value="northern irish">Northern Irish</SelectItem>
+                         <SelectItem value="norwegian">Norwegian</SelectItem>
+                         <SelectItem value="omani">Omani</SelectItem>
+                         <SelectItem value="pakistani">Pakistani</SelectItem>
+                         <SelectItem value="palauan">Palauan</SelectItem>
+                         <SelectItem value="panamanian">Panamanian</SelectItem>
+                         <SelectItem value="papua new guinean">Papua New Guinean</SelectItem>
+                         <SelectItem value="paraguayan">Paraguayan</SelectItem>
+                         <SelectItem value="peruvian">Peruvian</SelectItem>
+                         <SelectItem value="polish">Polish</SelectItem>
+                         <SelectItem value="portuguese">Portuguese</SelectItem>
+                         <SelectItem value="qatari">Qatari</SelectItem>
+                         <SelectItem value="romanian">Romanian</SelectItem>
+                         <SelectItem value="russian">Russian</SelectItem>
+                         <SelectItem value="rwandan">Rwandan</SelectItem>
+                         <SelectItem value="saint lucian">Saint Lucian</SelectItem>
+                         <SelectItem value="salvadoran">Salvadoran</SelectItem>
+                         <SelectItem value="samoan">Samoan</SelectItem>
+                         <SelectItem value="san marinese">San Marinese</SelectItem>
+                         <SelectItem value="sao tomean">Sao Tomean</SelectItem>
+                         <SelectItem value="saudi">Saudi</SelectItem>
+                         <SelectItem value="scottish">Scottish</SelectItem>
+                         <SelectItem value="senegalese">Senegalese</SelectItem>
+                         <SelectItem value="serbian">Serbian</SelectItem>
+                         <SelectItem value="seychellois">Seychellois</SelectItem>
+                         <SelectItem value="sierra leonean">Sierra Leonean</SelectItem>
+                         <SelectItem value="singaporean">Singaporean</SelectItem>
+                         <SelectItem value="slovakian">Slovakian</SelectItem>
+                         <SelectItem value="slovenian">Slovenian</SelectItem>
+                         <SelectItem value="solomon islander">Solomon Islander</SelectItem>
+                         <SelectItem value="somali">Somali</SelectItem>
+                         <SelectItem value="south african">South African</SelectItem>
+                         <SelectItem value="south korean">South Korean</SelectItem>
+                         <SelectItem value="spanish">Spanish</SelectItem>
+                         <SelectItem value="sri lankan">Sri Lankan</SelectItem>
+                         <SelectItem value="sudanese">Sudanese</SelectItem>
+                         <SelectItem value="surinamer">Surinamer</SelectItem>
+                         <SelectItem value="swazi">Swazi</SelectItem>
+                         <SelectItem value="swedish">Swedish</SelectItem>
+                         <SelectItem value="swiss">Swiss</SelectItem>
+                         <SelectItem value="syrian">Syrian</SelectItem>
+                         <SelectItem value="taiwanese">Taiwanese</SelectItem>
+                         <SelectItem value="tajik">Tajik</SelectItem>
+                         <SelectItem value="tanzanian">Tanzanian</SelectItem>
+                         <SelectItem value="thai">Thai</SelectItem>
+                         <SelectItem value="togolese">Togolese</SelectItem>
+                         <SelectItem value="tongan">Tongan</SelectItem>
+                         <SelectItem value="trinidadian or tobagonian">Trinidadian or Tobagonian</SelectItem>
+                         <SelectItem value="tunisian">Tunisian</SelectItem>
+                         <SelectItem value="turkish">Turkish</SelectItem>
+                         <SelectItem value="tuvaluan">Tuvaluan</SelectItem>
+                         <SelectItem value="ugandan">Ugandan</SelectItem>
+                         <SelectItem value="ukrainian">Ukrainian</SelectItem>
+                         <SelectItem value="uruguayan">Uruguayan</SelectItem>
+                         <SelectItem value="uzbekistani">Uzbekistani</SelectItem>
+                         <SelectItem value="venezuelan">Venezuelan</SelectItem>
+                         <SelectItem value="vietnamese">Vietnamese</SelectItem>
+                         <SelectItem value="welsh">Welsh</SelectItem>
+                         <SelectItem value="yemenite">Yemenite</SelectItem>
+                         <SelectItem value="zambian">Zambian</SelectItem>
+                         <SelectItem value="zimbabwean">Zimbabwean</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
@@ -764,6 +968,128 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                        placeholder="DD/MM/YYYY"
                      />
                    </div>
+                 </div>
+                 
+                 {/* Document Upload Section */}
+                 <div className="mt-6 space-y-4">
+                   <div className="flex items-center justify-between">
+                     <h4 className="text-lg font-medium">Document Upload</h4>
+                     <Button 
+                       type="button"
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                     >
+                       <Upload className="mr-2 h-4 w-4" />
+                       {showDocumentUpload ? "Hide Upload" : "Upload Documents"}
+                     </Button>
+                   </div>
+                   
+                   {/* Display current documents */}
+                   {(formData.id_card_url || formData.passport_url) && (
+                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                       {formData.id_card_url && (
+                         <div className="p-4 border rounded-lg">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium">ID Card Document</h5>
+                             <div className="flex gap-2">
+                               <Button
+                                 type="button"
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => window.open(formData.id_card_url, '_blank')}
+                               >
+                                 <Eye className="mr-1 h-3 w-3" />
+                                 View
+                               </Button>
+                               <Button
+                                 type="button"
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => {
+                                   const link = document.createElement('a')
+                                   link.href = formData.id_card_url
+                                   link.download = 'id_card_document'
+                                   link.click()
+                                 }}
+                               >
+                                 <Download className="mr-1 h-3 w-3" />
+                                 Download
+                               </Button>
+                             </div>
+                           </div>
+                           <p className="text-sm text-muted-foreground">ID card document uploaded</p>
+                         </div>
+                       )}
+                       
+                       {formData.passport_url && (
+                         <div className="p-4 border rounded-lg">
+                           <div className="flex items-center justify-between mb-2">
+                             <h5 className="font-medium">Passport Document</h5>
+                             <div className="flex gap-2">
+                               <Button
+                                 type="button"
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => window.open(formData.passport_url, '_blank')}
+                               >
+                                 <Eye className="mr-1 h-3 w-3" />
+                                 View
+                               </Button>
+                               <Button
+                                 type="button"
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => {
+                                   const link = document.createElement('a')
+                                   link.href = formData.passport_url
+                                   link.download = 'passport_document'
+                                   link.click()
+                                 }}
+                               >
+                                 <Download className="mr-1 h-3 w-3" />
+                                 Download
+                               </Button>
+                             </div>
+                           </div>
+                           <p className="text-sm text-muted-foreground">Passport document uploaded</p>
+                         </div>
+                       )}
+                     </div>
+                   )}
+                   
+                   {showDocumentUpload && (
+                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                       <DocumentUpload
+                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
+                         documentType="id_card"
+                         currentUrl={formData.id_card_url}
+                         onUploadComplete={(url) => {
+                           // Update the form data with the new URL
+                           setFormData(prev => ({ ...prev, id_card_url: url }))
+                           setShowDocumentUpload(false)
+                         }}
+                         onDelete={() => {
+                           // Clear the URL from form data
+                           setFormData(prev => ({ ...prev, id_card_url: "" }))
+                         }}
+                       />
+                       <DocumentUpload
+                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
+                         documentType="passport"
+                         currentUrl={formData.passport_url}
+                         onUploadComplete={(url) => {
+                           // Update the form data with the new URL
+                           setFormData(prev => ({ ...prev, passport_url: url }))
+                           setShowDocumentUpload(false)
+                         }}
+                         onDelete={() => {
+                           // Clear the URL from form data
+                           setFormData(prev => ({ ...prev, passport_url: "" }))
+                         }}
+                       />
+                     </div>
+                   )}
                  </div>
                </CardContent>
             </Card>
@@ -922,12 +1248,56 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="space-y-2">
                      <Label htmlFor="job_title">Job Title</Label>
-                     <Input
-                       id="job_title"
-                       value={formData.job_title}
-                       onChange={(e) => handleInputChange('job_title', e.target.value)}
-                       placeholder="Enter job title"
-                     />
+                     <Select value={formData.job_title} onValueChange={(value) => handleInputChange('job_title', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select job title" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="accountant">Accountant</SelectItem>
+                         <SelectItem value="administrative_assistant">Administrative Assistant</SelectItem>
+                         <SelectItem value="analyst">Analyst</SelectItem>
+                         <SelectItem value="architect">Architect</SelectItem>
+                         <SelectItem value="assistant_manager">Assistant Manager</SelectItem>
+                         <SelectItem value="business_analyst">Business Analyst</SelectItem>
+                         <SelectItem value="cashier">Cashier</SelectItem>
+                         <SelectItem value="ceo">CEO</SelectItem>
+                         <SelectItem value="cfo">CFO</SelectItem>
+                         <SelectItem value="consultant">Consultant</SelectItem>
+                         <SelectItem value="coordinator">Coordinator</SelectItem>
+                         <SelectItem value="customer_service">Customer Service Representative</SelectItem>
+                         <SelectItem value="data_analyst">Data Analyst</SelectItem>
+                         <SelectItem value="designer">Designer</SelectItem>
+                         <SelectItem value="developer">Developer</SelectItem>
+                         <SelectItem value="director">Director</SelectItem>
+                         <SelectItem value="engineer">Engineer</SelectItem>
+                         <SelectItem value="executive">Executive</SelectItem>
+                         <SelectItem value="finance_manager">Finance Manager</SelectItem>
+                         <SelectItem value="graphic_designer">Graphic Designer</SelectItem>
+                         <SelectItem value="hr_manager">HR Manager</SelectItem>
+                         <SelectItem value="intern">Intern</SelectItem>
+                         <SelectItem value="it_manager">IT Manager</SelectItem>
+                         <SelectItem value="junior_developer">Junior Developer</SelectItem>
+                         <SelectItem value="lawyer">Lawyer</SelectItem>
+                         <SelectItem value="marketing_manager">Marketing Manager</SelectItem>
+                         <SelectItem value="nurse">Nurse</SelectItem>
+                         <SelectItem value="operations_manager">Operations Manager</SelectItem>
+                         <SelectItem value="project_manager">Project Manager</SelectItem>
+                         <SelectItem value="receptionist">Receptionist</SelectItem>
+                         <SelectItem value="researcher">Researcher</SelectItem>
+                         <SelectItem value="sales_manager">Sales Manager</SelectItem>
+                         <SelectItem value="sales_representative">Sales Representative</SelectItem>
+                         <SelectItem value="senior_developer">Senior Developer</SelectItem>
+                         <SelectItem value="software_engineer">Software Engineer</SelectItem>
+                         <SelectItem value="supervisor">Supervisor</SelectItem>
+                         <SelectItem value="teacher">Teacher</SelectItem>
+                         <SelectItem value="technician">Technician</SelectItem>
+                         <SelectItem value="trainee">Trainee</SelectItem>
+                         <SelectItem value="translator">Translator</SelectItem>
+                         <SelectItem value="web_developer">Web Developer</SelectItem>
+                         <SelectItem value="writer">Writer</SelectItem>
+                         <SelectItem value="other">Other</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
@@ -942,22 +1312,94 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                    
                    <div className="space-y-2">
                      <Label htmlFor="department">Department</Label>
-                     <Input
-                       id="department"
-                       value={formData.department}
-                       onChange={(e) => handleInputChange('department', e.target.value)}
-                       placeholder="Enter department"
-                     />
+                     <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select department" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="accounting">Accounting</SelectItem>
+                         <SelectItem value="administration">Administration</SelectItem>
+                         <SelectItem value="business_development">Business Development</SelectItem>
+                         <SelectItem value="customer_service">Customer Service</SelectItem>
+                         <SelectItem value="engineering">Engineering</SelectItem>
+                         <SelectItem value="finance">Finance</SelectItem>
+                         <SelectItem value="human_resources">Human Resources</SelectItem>
+                         <SelectItem value="information_technology">Information Technology</SelectItem>
+                         <SelectItem value="legal">Legal</SelectItem>
+                         <SelectItem value="marketing">Marketing</SelectItem>
+                         <SelectItem value="operations">Operations</SelectItem>
+                         <SelectItem value="product">Product</SelectItem>
+                         <SelectItem value="quality_assurance">Quality Assurance</SelectItem>
+                         <SelectItem value="research_and_development">Research & Development</SelectItem>
+                         <SelectItem value="sales">Sales</SelectItem>
+                         <SelectItem value="security">Security</SelectItem>
+                         <SelectItem value="supply_chain">Supply Chain</SelectItem>
+                         <SelectItem value="training">Training</SelectItem>
+                         <SelectItem value="other">Other</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
                      <Label htmlFor="specialization">Specialization</Label>
-                     <Input
-                       id="specialization"
-                       value={formData.specialization}
-                       onChange={(e) => handleInputChange('specialization', e.target.value)}
-                       placeholder="Enter specialization"
-                     />
+                     <Select value={formData.specialization} onValueChange={(value) => handleInputChange('specialization', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select specialization" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="accounting">Accounting</SelectItem>
+                         <SelectItem value="administration">Administration</SelectItem>
+                         <SelectItem value="advertising">Advertising</SelectItem>
+                         <SelectItem value="agriculture">Agriculture</SelectItem>
+                         <SelectItem value="architecture">Architecture</SelectItem>
+                         <SelectItem value="artificial_intelligence">Artificial Intelligence</SelectItem>
+                         <SelectItem value="banking">Banking</SelectItem>
+                         <SelectItem value="biotechnology">Biotechnology</SelectItem>
+                         <SelectItem value="business_analysis">Business Analysis</SelectItem>
+                         <SelectItem value="chemistry">Chemistry</SelectItem>
+                         <SelectItem value="civil_engineering">Civil Engineering</SelectItem>
+                         <SelectItem value="communications">Communications</SelectItem>
+                         <SelectItem value="computer_science">Computer Science</SelectItem>
+                         <SelectItem value="construction">Construction</SelectItem>
+                         <SelectItem value="consulting">Consulting</SelectItem>
+                         <SelectItem value="customer_service">Customer Service</SelectItem>
+                         <SelectItem value="data_science">Data Science</SelectItem>
+                         <SelectItem value="design">Design</SelectItem>
+                         <SelectItem value="economics">Economics</SelectItem>
+                         <SelectItem value="education">Education</SelectItem>
+                         <SelectItem value="electrical_engineering">Electrical Engineering</SelectItem>
+                         <SelectItem value="environmental_science">Environmental Science</SelectItem>
+                         <SelectItem value="finance">Finance</SelectItem>
+                         <SelectItem value="healthcare">Healthcare</SelectItem>
+                         <SelectItem value="human_resources">Human Resources</SelectItem>
+                         <SelectItem value="information_technology">Information Technology</SelectItem>
+                         <SelectItem value="journalism">Journalism</SelectItem>
+                         <SelectItem value="law">Law</SelectItem>
+                         <SelectItem value="logistics">Logistics</SelectItem>
+                         <SelectItem value="management">Management</SelectItem>
+                         <SelectItem value="marketing">Marketing</SelectItem>
+                         <SelectItem value="mathematics">Mathematics</SelectItem>
+                         <SelectItem value="mechanical_engineering">Mechanical Engineering</SelectItem>
+                         <SelectItem value="medicine">Medicine</SelectItem>
+                         <SelectItem value="nursing">Nursing</SelectItem>
+                         <SelectItem value="operations">Operations</SelectItem>
+                         <SelectItem value="pharmacy">Pharmacy</SelectItem>
+                         <SelectItem value="physics">Physics</SelectItem>
+                         <SelectItem value="psychology">Psychology</SelectItem>
+                         <SelectItem value="public_relations">Public Relations</SelectItem>
+                         <SelectItem value="real_estate">Real Estate</SelectItem>
+                         <SelectItem value="research">Research</SelectItem>
+                         <SelectItem value="sales">Sales</SelectItem>
+                         <SelectItem value="social_work">Social Work</SelectItem>
+                         <SelectItem value="software_development">Software Development</SelectItem>
+                         <SelectItem value="statistics">Statistics</SelectItem>
+                         <SelectItem value="supply_chain">Supply Chain</SelectItem>
+                         <SelectItem value="training">Training</SelectItem>
+                         <SelectItem value="tourism">Tourism</SelectItem>
+                         <SelectItem value="transportation">Transportation</SelectItem>
+                         <SelectItem value="other">Other</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
@@ -1068,22 +1510,73 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                    
                    <div className="space-y-2">
                      <Label htmlFor="preferred_language">Preferred Language</Label>
-                     <Input
-                       id="preferred_language"
-                       value={formData.preferred_language}
-                       onChange={(e) => handleInputChange('preferred_language', e.target.value)}
-                       placeholder="Enter preferred language"
-                     />
+                     <Select value={formData.preferred_language} onValueChange={(value) => handleInputChange('preferred_language', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select preferred language" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="arabic">Arabic</SelectItem>
+                         <SelectItem value="english">English</SelectItem>
+                         <SelectItem value="french">French</SelectItem>
+                         <SelectItem value="spanish">Spanish</SelectItem>
+                         <SelectItem value="german">German</SelectItem>
+                         <SelectItem value="italian">Italian</SelectItem>
+                         <SelectItem value="portuguese">Portuguese</SelectItem>
+                         <SelectItem value="russian">Russian</SelectItem>
+                         <SelectItem value="chinese">Chinese</SelectItem>
+                         <SelectItem value="japanese">Japanese</SelectItem>
+                         <SelectItem value="korean">Korean</SelectItem>
+                         <SelectItem value="hindi">Hindi</SelectItem>
+                         <SelectItem value="urdu">Urdu</SelectItem>
+                         <SelectItem value="turkish">Turkish</SelectItem>
+                         <SelectItem value="persian">Persian</SelectItem>
+                         <SelectItem value="hebrew">Hebrew</SelectItem>
+                         <SelectItem value="thai">Thai</SelectItem>
+                         <SelectItem value="vietnamese">Vietnamese</SelectItem>
+                         <SelectItem value="indonesian">Indonesian</SelectItem>
+                         <SelectItem value="malay">Malay</SelectItem>
+                         <SelectItem value="filipino">Filipino</SelectItem>
+                         <SelectItem value="swahili">Swahili</SelectItem>
+                         <SelectItem value="other">Other</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
                      <Label htmlFor="timezone">Timezone</Label>
-                     <Input
-                       id="timezone"
-                       value={formData.timezone}
-                       onChange={(e) => handleInputChange('timezone', e.target.value)}
-                       placeholder="Enter timezone (e.g., UTC+3)"
-                     />
+                     <Select value={formData.timezone} onValueChange={(value) => handleInputChange('timezone', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select timezone" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="UTC-12">UTC-12 (Baker Island)</SelectItem>
+                         <SelectItem value="UTC-11">UTC-11 (Samoa)</SelectItem>
+                         <SelectItem value="UTC-10">UTC-10 (Hawaii)</SelectItem>
+                         <SelectItem value="UTC-9">UTC-9 (Alaska)</SelectItem>
+                         <SelectItem value="UTC-8">UTC-8 (Pacific Time)</SelectItem>
+                         <SelectItem value="UTC-7">UTC-7 (Mountain Time)</SelectItem>
+                         <SelectItem value="UTC-6">UTC-6 (Central Time)</SelectItem>
+                         <SelectItem value="UTC-5">UTC-5 (Eastern Time)</SelectItem>
+                         <SelectItem value="UTC-4">UTC-4 (Atlantic Time)</SelectItem>
+                         <SelectItem value="UTC-3">UTC-3 (Brazil)</SelectItem>
+                         <SelectItem value="UTC-2">UTC-2 (South Georgia)</SelectItem>
+                         <SelectItem value="UTC-1">UTC-1 (Azores)</SelectItem>
+                         <SelectItem value="UTC+0">UTC+0 (London)</SelectItem>
+                         <SelectItem value="UTC+1">UTC+1 (Paris, Berlin)</SelectItem>
+                         <SelectItem value="UTC+2">UTC+2 (Cairo, Helsinki)</SelectItem>
+                         <SelectItem value="UTC+3">UTC+3 (Moscow, Riyadh)</SelectItem>
+                         <SelectItem value="UTC+4">UTC+4 (Dubai, Baku)</SelectItem>
+                         <SelectItem value="UTC+5">UTC+5 (Tashkent, Karachi)</SelectItem>
+                         <SelectItem value="UTC+5:30">UTC+5:30 (Mumbai, New Delhi)</SelectItem>
+                         <SelectItem value="UTC+6">UTC+6 (Dhaka, Almaty)</SelectItem>
+                         <SelectItem value="UTC+7">UTC+7 (Bangkok, Jakarta)</SelectItem>
+                         <SelectItem value="UTC+8">UTC+8 (Beijing, Singapore)</SelectItem>
+                         <SelectItem value="UTC+9">UTC+9 (Tokyo, Seoul)</SelectItem>
+                         <SelectItem value="UTC+10">UTC+10 (Sydney, Melbourne)</SelectItem>
+                         <SelectItem value="UTC+11">UTC+11 (Solomon Islands)</SelectItem>
+                         <SelectItem value="UTC+12">UTC+12 (New Zealand)</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
@@ -1117,12 +1610,40 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="space-y-2">
                      <Label htmlFor="bank_name">Bank Name</Label>
-                     <Input
-                       id="bank_name"
-                       value={formData.bank_name}
-                       onChange={(e) => handleInputChange('bank_name', e.target.value)}
-                       placeholder="Enter bank name"
-                     />
+                     <Select value={formData.bank_name} onValueChange={(value) => handleInputChange('bank_name', value)}>
+                       <SelectTrigger>
+                         <SelectValue placeholder="Select bank" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="al_ahli_bank">Al Ahli Bank</SelectItem>
+                         <SelectItem value="al_rajhi_bank">Al Rajhi Bank</SelectItem>
+                         <SelectItem value="arab_national_bank">Arab National Bank</SelectItem>
+                         <SelectItem value="bank_al_bilad">Bank Al Bilad</SelectItem>
+                         <SelectItem value="bank_aljazira">Bank Aljazira</SelectItem>
+                         <SelectItem value="bank_albilad">Bank Albilad</SelectItem>
+                         <SelectItem value="bank_muscat">Bank Muscat</SelectItem>
+                         <SelectItem value="banque_saudi_fransi">Banque Saudi Fransi</SelectItem>
+                         <SelectItem value="citibank">Citibank</SelectItem>
+                         <SelectItem value="emirates_nbd">Emirates NBD</SelectItem>
+                         <SelectItem value="first_abu_dhabi_bank">First Abu Dhabi Bank</SelectItem>
+                         <SelectItem value="gulf_bank">Gulf Bank</SelectItem>
+                         <SelectItem value="hsbc">HSBC</SelectItem>
+                         <SelectItem value="kuwait_finance_house">Kuwait Finance House</SelectItem>
+                         <SelectItem value="mashreq_bank">Mashreq Bank</SelectItem>
+                         <SelectItem value="national_bank_of_kuwait">National Bank of Kuwait</SelectItem>
+                         <SelectItem value="national_commercial_bank">National Commercial Bank</SelectItem>
+                         <SelectItem value="qatar_national_bank">Qatar National Bank</SelectItem>
+                         <SelectItem value="riyad_bank">Riyad Bank</SelectItem>
+                         <SelectItem value="samba_financial_group">Samba Financial Group</SelectItem>
+                         <SelectItem value="saudi_british_bank">Saudi British Bank</SelectItem>
+                         <SelectItem value="saudi_french_bank">Saudi French Bank</SelectItem>
+                         <SelectItem value="saudi_investment_bank">Saudi Investment Bank</SelectItem>
+                         <SelectItem value="saudi_national_bank">Saudi National Bank</SelectItem>
+                         <SelectItem value="standard_chartered">Standard Chartered</SelectItem>
+                         <SelectItem value="union_national_bank">Union National Bank</SelectItem>
+                         <SelectItem value="other">Other</SelectItem>
+                       </SelectContent>
+                     </Select>
                    </div>
                    
                    <div className="space-y-2">
