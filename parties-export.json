@@ -1,0 +1,15 @@
+[
+  {
+    "id": "519e8716-002b-4302-94e6-570239b76a91",
+    "name": "Sample Company Ltd",
+    "type": "company",
+    "email": "info@samplecompany.com",
+    "phone": "+1234567890",
+    "address": null,
+    "tax_id": null,
+    "registration_number": null,
+    "status": "active",
+    "created_at": "2025-08-01T14:28:36.821487+00:00",
+    "updated_at": "2025-08-01T14:28:36.821487+00:00"
+  }
+]
