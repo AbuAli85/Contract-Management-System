@@ -25,8 +25,8 @@ export function SafeImage({
   const [imageError, setImageError] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // If no src or image failed to load, show fallback
-  if (!src || imageError) {
+  // If no src, invalid URL, or image failed to load, show fallback
+  if (!src || imageError || !src.startsWith('http')) {
     return (
       <div
         className={cn(

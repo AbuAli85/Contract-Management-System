@@ -153,13 +153,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           .from("profiles")
           .select("role")
           .eq("id", user.id)
-          .single()
 
-        if (!profilesError && profilesData?.role) {
-          console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
-          setUserRoles([profilesData.role as Role])
+        if (!profilesError && profilesData && profilesData.length > 0 && profilesData[0]?.role) {
+          console.log("✅ RBACProvider: Role from profiles table:", profilesData[0].role)
+          setUserRoles([profilesData[0].role as Role])
           setIsLoading(false)
           return
+        } else {
+          console.log("🔐 RBACProvider: No role found in profiles table or table empty")
         }
       } catch (error) {
         console.log("🔐 RBACProvider: Profiles table not available or no role found")

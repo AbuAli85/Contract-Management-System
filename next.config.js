@@ -83,6 +83,23 @@ const nextConfig = {
   // Optimize images
   images: {
     formats: ["image/webp", "image/avif"],
+    domains: [
+      'example.com',
+      'images.unsplash.com',
+      'via.placeholder.com',
+      'picsum.photos',
+      'reootcngcptfogfozlmz.supabase.co'
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      }
+    ],
   },
   // Disable type checking during build to avoid issues
   typescript: {
