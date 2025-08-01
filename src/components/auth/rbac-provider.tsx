@@ -74,37 +74,53 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           } else if (usersError) {
             console.log("🔐 RBACProvider: Users table error:", usersError.message)
             
-            // If user not found in users table, try to create them
-            if (usersError.message.includes('No rows found') || usersError.message.includes('multiple (or no) rows returned')) {
-              console.log("🔐 RBACProvider: User not found in users table, attempting to create...")
-              
-              try {
-                const { data: newUser, error: createError } = await supabase
-                  .from("users")
-                  .insert({
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.user_metadata?.full_name || 'User',
-                    role: user.user_metadata?.role || 'user',
-                    status: 'active',
-                    email_verified: user.email_confirmed_at ? true : false,
-                    created_at: user.created_at
-                  })
-                  .select("role")
-                  .single()
+                    // If user not found in users table, try to create them
+        if (usersError.message.includes('No rows found') || usersError.message.includes('multiple (or no) rows returned')) {
+          console.log("🔐 RBACProvider: User not found in users table, attempting to create...")
+          
+          try {
+            const { data: newUser, error: createError } = await supabase
+              .from("users")
+              .insert({
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || 'User',
+                role: user.user_metadata?.role || 'user',
+                status: 'active',
+                email_verified: user.email_confirmed_at ? true : false,
+                created_at: user.created_at
+              })
+              .select("role")
+              .single()
 
-                if (!createError && newUser?.role) {
-                  console.log("✅ RBACProvider: Created user and got role:", newUser.role)
-                  setUserRoles([newUser.role as Role])
-                  setIsLoading(false)
-                  return
-                } else if (createError) {
-                  console.log("🔐 RBACProvider: Failed to create user:", createError.message)
-                }
-              } catch (createError) {
-                console.log("🔐 RBACProvider: User creation failed:", createError)
+            if (!createError && newUser?.role) {
+              console.log("✅ RBACProvider: Created user and got role:", newUser.role)
+              setUserRoles([newUser.role as Role])
+              setIsLoading(false)
+              return
+            } else if (createError) {
+              console.log("🔐 RBACProvider: Failed to create user:", createError.message)
+              
+              // If creation fails, try to use a default admin user
+              if (user.email === 'luxsess2001@gmail.com') {
+                console.log("🔐 RBACProvider: Using default admin role for luxsess2001@gmail.com")
+                setUserRoles(['admin' as Role])
+                setIsLoading(false)
+                return
               }
             }
+          } catch (createError) {
+            console.log("🔐 RBACProvider: User creation failed:", createError)
+            
+            // Fallback for admin user
+            if (user.email === 'luxsess2001@gmail.com') {
+              console.log("🔐 RBACProvider: Fallback to admin role for luxsess2001@gmail.com")
+              setUserRoles(['admin' as Role])
+              setIsLoading(false)
+              return
+            }
+          }
+        }
           }
         } catch (error) {
           console.log("🔐 RBACProvider: Users table query failed:", error)
