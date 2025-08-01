@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server"
 import { NextRequest } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: promoter_id } = await params
-    const cookieStore = await cookies()
     
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { /* ... */ } } }
-    )
+    const supabase = await createClient()
 
     // Get promoter to check if documents exist
     const { data: promoter, error: promoterError } = await supabase
@@ -63,13 +58,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   try {
     const { id: promoter_id } = await params
     const body = await req.json()
-    const cookieStore = await cookies()
     
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { /* ... */ } } }
-    )
+    const supabase = await createClient()
 
     // Validate required fields
     if (!body.document_type || !body.file_url) {
@@ -131,13 +121,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id: promoter_id } = await params
     const body = await req.json()
-    const cookieStore = await cookies()
     
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { /* ... */ } } }
-    )
+    const supabase = await createClient()
 
     if (!body.document_type || !body.file_url) {
       return NextResponse.json({ error: "Document type and file URL required" }, { status: 400 })
@@ -195,13 +180,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const { id: promoter_id } = await params
     const { document_type } = await req.json()
-    const cookieStore = await cookies()
     
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { cookies: { getAll() { return cookieStore.getAll() }, setAll(cookiesToSet) { /* ... */ } } }
-    )
+    const supabase = await createClient()
 
     if (!document_type) {
       return NextResponse.json({ error: "Document type required" }, { status: 400 })

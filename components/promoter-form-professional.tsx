@@ -1297,6 +1297,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                          <SelectItem value="receptionist">Receptionist</SelectItem>
                          <SelectItem value="researcher">Researcher</SelectItem>
                          <SelectItem value="sales_manager">Sales Manager</SelectItem>
+                         <SelectItem value="sales_promoter">Sales promoter</SelectItem>
                          <SelectItem value="sales_representative">Sales Representative</SelectItem>
                          <SelectItem value="senior_developer">Senior Developer</SelectItem>
                          <SelectItem value="software_engineer">Software Engineer</SelectItem>
