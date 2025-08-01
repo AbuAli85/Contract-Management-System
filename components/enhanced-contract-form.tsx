@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -34,7 +35,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Briefcase, Brain, Shield, BarChart3, Bell, Building, FileCheck, Gavel, Lightbulb, Monitor, Palette, Workflow, DollarSign, UserCheck, FileSearch,  } from 'lucide-react'
+import { Loader2, Briefcase, Brain, Shield, BarChart3, Bell, Building, FileCheck, Gavel, Lightbulb, Monitor, Palette, Workflow, DollarSign, UserCheck, FileSearch, Users, Calendar, FileText, Eye, Download, CheckCircle, AlertTriangle, AlertCircle, Info } from 'lucide-react'
 
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"

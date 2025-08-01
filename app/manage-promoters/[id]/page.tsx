@@ -41,7 +41,7 @@ export default async function PromoterDetailsPage({ params }: { params: Promise<
       <Card>
         <CardHeader className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div className="flex items-center space-x-4">
-            {promoter.profile_picture_url ? (
+            {promoter.profile_picture_url && promoter.profile_picture_url.startsWith('http') ? (
               <Image
                 src={promoter.profile_picture_url}
                 alt={promoter.name_en || "Promoter"}

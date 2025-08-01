@@ -94,26 +94,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Fetch promoter with related data
+    // Fetch promoter data (simplified to avoid relationship issues)
     const { data: promoter, error } = await supabase
       .from("promoters")
-      .select(
-        `
-        *,
-        employer:employer_id(name_en, name_ar),
-        contracts:contracts!contracts_promoter_id_fkey(
-          id,
-          contract_number,
-          status,
-          contract_start_date,
-          contract_end_date,
-          job_title,
-          work_location,
-          first_party:parties!contracts_first_party_id_fkey(name_en, name_ar),
-          second_party:parties!contracts_second_party_id_fkey(name_en, name_ar)
-        )
-      `,
-      )
+      .select("*")
       .eq("id", id)
       .single()
 
@@ -125,9 +109,77 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Failed to fetch promoter" }, { status: 500 })
     }
 
+    // Fetch employer data separately
+    let employer = null
+    if (promoter.employer_id) {
+      const { data: employerData, error: employerError } = await supabase
+        .from("parties")
+        .select("id, name_en, name_ar")
+        .eq("id", promoter.employer_id)
+      
+      if (!employerError && employerData && employerData.length > 0) {
+        employer = employerData[0]
+      }
+    }
+
+    // Fetch contracts data separately
+    let contracts = []
+    const { data: contractsData, error: contractsError } = await supabase
+      .from("contracts")
+      .select("id, contract_number, status, contract_start_date, contract_end_date, job_title, work_location, first_party_id, second_party_id")
+      .eq("promoter_id", id)
+    
+    if (!contractsError && contractsData) {
+      // Fetch party names for each contract
+      for (const contract of contractsData) {
+        let firstParty = null
+        let secondParty = null
+        
+        if (contract.first_party_id) {
+          const { data: firstPartyData, error: firstPartyError } = await supabase
+            .from("parties")
+            .select("id, name_en, name_ar")
+            .eq("id", contract.first_party_id)
+          
+          if (!firstPartyError && firstPartyData && firstPartyData.length > 0) {
+            firstParty = firstPartyData[0]
+          }
+        }
+        
+        if (contract.second_party_id) {
+          const { data: secondPartyData, error: secondPartyError } = await supabase
+            .from("parties")
+            .select("id, name_en, name_ar")
+            .eq("id", contract.second_party_id)
+          
+          if (!secondPartyError && secondPartyData && secondPartyData.length > 0) {
+            secondParty = secondPartyData[0]
+          }
+        }
+        
+        contracts.push({
+          ...contract,
+          first_party: firstParty,
+          second_party: secondParty
+        })
+      }
+    }
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        return NextResponse.json({ error: "Promoter not found" }, { status: 404 })
+      }
+      console.error("Error fetching promoter:", error)
+      return NextResponse.json({ error: "Failed to fetch promoter" }, { status: 500 })
+    }
+
     return NextResponse.json({
       success: true,
-      promoter,
+      promoter: {
+        ...promoter,
+        employer,
+        contracts
+      },
     })
   } catch (error) {
     console.error("API error:", error)

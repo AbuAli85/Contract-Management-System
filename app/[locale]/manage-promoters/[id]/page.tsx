@@ -187,7 +187,7 @@ export default function PromoterDetailPage() {
       const supabase = getSupabaseClient()
       const { data: promoterData, error: promoterError } = await supabase
         .from("promoters")
-        .select("*, promoter_tags:promoter_tags(tag:tags(name))")
+        .select("*")
         .eq("id", promoterId)
         .single()
 
@@ -197,8 +197,21 @@ export default function PromoterDetailPage() {
         return
       }
 
-      // Extract tags as array of strings
-      const tags = promoterData.promoter_tags?.map((pt: any) => pt.tag?.name).filter(Boolean) || []
+      // Get tags from promoter_tags table if it exists
+      let tags: string[] = []
+      try {
+        const { data: tagsData, error: tagsError } = await supabase
+          .from('promoter_tags')
+          .select('tag')
+          .eq('promoter_id', promoterId)
+        
+        if (!tagsError && tagsData) {
+          tags = tagsData.map(t => t.tag).filter(Boolean)
+        }
+      } catch (error) {
+        // If promoter_tags table doesn't exist, use empty array
+        console.log('promoter_tags table not available, using empty tags array')
+      }
 
       const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")

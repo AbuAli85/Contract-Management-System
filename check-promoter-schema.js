@@ -77,7 +77,7 @@ async function checkPromoterSchema() {
       passport_number: 'A123456789', // This field doesn't exist
       passport_url: 'https://example.com/passport.jpg', // This might not exist
       id_card_url: 'https://example.com/id.jpg', // This might not exist
-      profile_picture_url: 'https://example.com/profile.jpg' // This might not exist
+      profile_picture_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
     }
     
     console.log('Problematic update data:', problematicUpdate)

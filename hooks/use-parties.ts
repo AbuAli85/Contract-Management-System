@@ -9,9 +9,9 @@ const fetchParties = async (partyType?: "Employer" | "Client"): Promise<Party[]>
     .from("parties")
     .select(
       `
-      id, name_en, name_ar, crn, type, role, cr_expiry_date,
-      contact_person, contact_email, contact_phone, address_en, address_ar,
-      tax_number, license_number, license_expiry_date, status, notes
+      id, name_en, name_ar, crn, type, role, cr_expiry,
+      contact_person, contact_email, contact_phone, address_en,
+      tax_number, license_number, license_expiry, status, notes
     `,
     )
     .order("name_en", { ascending: true })

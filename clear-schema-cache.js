@@ -66,7 +66,7 @@ async function clearSchemaCache() {
           .from('promoters')
           .update({
             passport_number: 'A123456789',
-            profile_picture_url: 'https://example.com/profile.jpg',
+            profile_picture_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
             updated_at: new Date().toISOString()
           })
           .eq('id', testPromoter.id)
