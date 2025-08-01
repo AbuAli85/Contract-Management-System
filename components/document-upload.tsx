@@ -109,8 +109,9 @@ export default function DocumentUpload({
 
       // Create a unique filename
       const fileExt = file.name.split('.').pop()
-      const fileName = `${promoterId}_${documentType}_${Date.now()}.${fileExt}`
-      const filePath = `promoter-documents/${promoterId}/${fileName}`
+      const uploadId = promoterId === 'new' ? `temp_${Date.now()}` : promoterId
+      const fileName = `${uploadId}_${documentType}_${Date.now()}.${fileExt}`
+      const filePath = `promoter-documents/${uploadId}/${fileName}`
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
