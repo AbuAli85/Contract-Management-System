@@ -326,22 +326,20 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         throw new Error("Failed to create Supabase client")
       }
 
-      // Map form data to database schema - include all fields
+      // Map form data to database schema - include only existing fields
       const promoterData: any = {
         name_en: formData.full_name?.trim() || "",
         name_ar: formData.name_ar?.trim() || "",
         id_card_number: formData.id_number?.trim() || "",
-        passport_number: formData.passport_number?.trim() || "",
         mobile_number: formData.mobile_number?.trim() || "",
         id_card_expiry_date: formData.id_expiry_date ? formatDateForDatabase(formData.id_expiry_date) : null,
         passport_expiry_date: formData.passport_expiry_date ? formatDateForDatabase(formData.passport_expiry_date) : null,
         email: formData.email?.trim() || "",
         phone: formData.phone?.trim() || "",
-                 status: formData.status || "active",
-         notes: formData.notes?.trim() || "",
-         profile_picture_url: formData.profile_picture_url?.trim() || "",
-         id_card_url: formData.id_card_url?.trim() || null,
-         passport_url: formData.passport_url?.trim() || null,
+        status: formData.status || "active",
+        notes: formData.notes?.trim() || "",
+        id_card_url: formData.id_card_url?.trim() || null,
+        passport_url: formData.passport_url?.trim() || null,
          notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
          notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
         
