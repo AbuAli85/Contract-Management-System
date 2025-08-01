@@ -170,6 +170,10 @@ export default function DocumentUpload({
           errorMessage = "Storage bucket not configured. Please contact administrator to set up document storage."
         } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
           errorMessage = "Permission denied. Please check your access rights."
+        } else if (error.message.includes('row-level security') || error.message.includes('RLS')) {
+          errorMessage = "Access denied due to security policy. Please ensure you are properly authenticated."
+        } else if (error.message.includes('new row violates')) {
+          errorMessage = "Storage access denied. Please contact administrator to configure storage permissions."
         } else {
           errorMessage = error.message
         }

@@ -52,19 +52,24 @@ export function SignupForm() {
         status: "pending", // All new users start as pending
       }
 
-      const { error } = await signUp(email, password)
+      const { success, error, data } = await signUp(email, password, profile)
 
-      if (error) {
+      if (!success || error) {
         console.error("📝 Signup Debug - Signup error:", error)
-        setError(error)
+        setError(error || "Signup failed")
         setLoading(false)
         return
       }
 
       console.log("📝 Signup Debug - Signup successful")
       setSuccess(
-        "Account created successfully! Your account is pending approval. You will be notified once an administrator approves your account.",
+        "Account created successfully! Please check your email to confirm your account.",
       )
+      
+      // Redirect to login page after successful signup
+      setTimeout(() => {
+        router.push('/en/auth/login')
+      }, 3000)
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)
       setError("An unexpected error occurred")

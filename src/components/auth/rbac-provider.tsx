@@ -58,48 +58,43 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.log("🔐 RBACProvider: Checking users table...")
-        // Check users table
-        const { data: usersData, error: usersError } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", user.id)
-          .single()
+        // Check users table with better error handling
+        try {
+          const { data: usersData, error: usersError } = await supabase
+            .from("users")
+            .select("role")
+            .eq("id", user.id)
+            .single()
 
-        if (!usersError && usersData?.role) {
-          console.log("✅ RBACProvider: Role from users table:", usersData.role)
-          setUserRoles([usersData.role as Role])
-          setIsLoading(false)
-          return
+          if (!usersError && usersData?.role) {
+            console.log("✅ RBACProvider: Role from users table:", usersData.role)
+            setUserRoles([usersData.role as Role])
+            setIsLoading(false)
+            return
+          } else if (usersError) {
+            console.log("🔐 RBACProvider: Users table error:", usersError.message)
+          }
+        } catch (error) {
+          console.log("🔐 RBACProvider: Users table query failed:", error)
         }
 
         console.log("🔐 RBACProvider: Checking profiles table...")
-        // Check profiles table
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single()
+        // Check profiles table (if it exists)
+        try {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single()
 
-        if (!profilesError && profilesData?.role) {
-          console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
-          setUserRoles([profilesData.role as Role])
-          setIsLoading(false)
-          return
-        }
-
-        console.log("🔐 RBACProvider: Checking app_users table...")
-        // Check app_users table
-        const { data: appUsersData, error: appUsersError } = await supabase
-          .from("app_users")
-          .select("role")
-          .eq("id", user.id)
-          .single()
-
-        if (!appUsersError && appUsersData?.role) {
-          console.log("✅ RBACProvider: Role from app_users table:", appUsersData.role)
-          setUserRoles([appUsersData.role as Role])
-          setIsLoading(false)
-          return
+          if (!profilesError && profilesData?.role) {
+            console.log("✅ RBACProvider: Role from profiles table:", profilesData.role)
+            setUserRoles([profilesData.role as Role])
+            setIsLoading(false)
+            return
+          }
+        } catch (error) {
+          console.log("🔐 RBACProvider: Profiles table not available or no role found")
         }
 
         console.log("🔐 RBACProvider: No role found in tables, setting default user role")

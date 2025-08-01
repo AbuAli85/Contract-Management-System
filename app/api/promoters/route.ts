@@ -122,24 +122,10 @@ export async function GET() {
 
     console.log("User authenticated for promoters:", user.email)
 
-    // Fetch promoters from the database with related data
+    // Fetch promoters from the database without joins to avoid relationship issues
     const { data: promoters, error } = await supabase
       .from("promoters")
-      .select(
-        `
-        *,
-        employer:employer_id(name_en, name_ar),
-        contracts:contracts!contracts_promoter_id_fkey(
-          id,
-          contract_number,
-          status,
-          contract_start_date,
-          contract_end_date,
-          job_title,
-          work_location
-        )
-      `,
-      )
+      .select("*")
       .order("created_at", { ascending: false })
 
     if (error) {
