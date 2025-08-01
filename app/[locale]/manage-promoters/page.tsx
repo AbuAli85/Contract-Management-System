@@ -22,7 +22,8 @@ import {
   Search, MoreHorizontal, Eye, Edit3, Trash2, 
   UserPlus, FileSpreadsheet, RefreshCw, ArrowLeftIcon,
   PlusCircleIcon, BriefcaseIcon, UserIcon, Loader2,
-  CheckCircle, AlertTriangle, XCircle, Clock, Building
+  CheckCircle, AlertTriangle, XCircle, Clock, Building,
+  Download
 } from "lucide-react"
 
 // Types and Utils
@@ -66,6 +67,7 @@ export default function PromoterManagement() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Bulk actions state
   const [showBulkCompanyModal, setShowBulkCompanyModal] = useState(false)
@@ -357,6 +359,69 @@ export default function PromoterManagement() {
     setIsRefreshing(false)
   }, [fetchPromoters])
 
+  const handleExportCSV = useCallback(async () => {
+    setIsExporting(true)
+    try {
+      const csvData = filteredPromoters.map((promoter) => ({
+        "Name (EN)": promoter.name_en || "N/A",
+        "Name (AR)": promoter.name_ar || "N/A",
+        "ID Card Number": promoter.id_card_number || "N/A",
+        "Passport Number": promoter.passport_number || "N/A",
+        "Mobile": promoter.mobile_number || "N/A",
+        "Phone": promoter.phone || "N/A",
+        "Email": promoter.email || "N/A",
+        "Nationality": promoter.nationality || "N/A",
+        "Date of Birth": promoter.date_of_birth ? format(parseISO(promoter.date_of_birth), "yyyy-MM-dd") : "N/A",
+        "Gender": promoter.gender || "N/A",
+        "Address": promoter.address || "N/A",
+        "Emergency Contact": promoter.emergency_contact || "N/A",
+        "Emergency Phone": promoter.emergency_phone || "N/A",
+        "ID Card Status": promoter.id_card_status,
+        "ID Card Expiry": promoter.id_card_expiry_date ? format(parseISO(promoter.id_card_expiry_date), "yyyy-MM-dd") : "N/A",
+        "Passport Status": promoter.passport_status,
+        "Passport Expiry": promoter.passport_expiry_date ? format(parseISO(promoter.passport_expiry_date), "yyyy-MM-dd") : "N/A",
+        "Company": promoter.employer?.name_en || "N/A",
+        "Job Title": promoter.job_title || "N/A",
+        "Work Location": promoter.work_location || "N/A",
+        "Status": promoter.status || "N/A",
+        "Overall Status": promoter.overall_status,
+        "Active Contracts": promoter.active_contracts_count || 0,
+        "Notes": promoter.notes || "",
+        "Created At": promoter.created_at ? format(parseISO(promoter.created_at), "yyyy-MM-dd") : "N/A",
+      }))
+
+      const csvContent = [
+        Object.keys(csvData[0] || {}).join(","),
+        ...csvData.map((row) =>
+          Object.values(row)
+            .map((val) => `"${val}"`)
+            .join(","),
+        ),
+      ].join("\n")
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = `promoters-export-${format(new Date(), "yyyy-MM-dd")}.csv`
+      link.click()
+
+      toast({
+        title: "Export Complete",
+        description: `Exported ${filteredPromoters.length} promoters to CSV`,
+        variant: "default",
+      })
+    } catch (error) {
+      console.error("Export error:", error)
+      toast({
+        title: "Export Failed",
+        description: "Failed to export promoter data",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }, [filteredPromoters, toast])
+
   const handleAddNew = useCallback(() => {
     router.push("/manage-promoters/new")
   }, [router])
@@ -573,6 +638,19 @@ export default function PromoterManagement() {
               >
                 <FileSpreadsheet className="mr-2 h-4 w-4" />
                 Import Excel
+              </Button>
+              <Button
+                onClick={handleExportCSV}
+                variant="outline"
+                size="sm"
+                disabled={isExporting || filteredPromoters.length === 0}
+              >
+                {isExporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                Export CSV
               </Button>
               <Button onClick={handleAddNew}>
                 <PlusCircleIcon className="mr-2 h-4 w-4" />

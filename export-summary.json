@@ -1,0 +1,18 @@
+{
+  "exportDate": "2025-08-01T15:01:53.410Z",
+  "projectUrl": "https://reootcngcptfogfozlmz.supabase.co",
+  "dataSummary": {
+    "promoters": 0,
+    "parties": 1,
+    "contracts": 0,
+    "users": 0,
+    "auditLogs": 0
+  },
+  "files": [
+    "promoters-export.json",
+    "parties-export.json",
+    "contracts-export.json",
+    "users-export.json",
+    "audit-logs-export.json"
+  ]
+}
