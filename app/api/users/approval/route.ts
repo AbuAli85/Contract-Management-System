@@ -52,8 +52,7 @@ export async function GET(request: NextRequest) {
         department,
         position,
         phone,
-        created_at,
-        email_verified
+        created_at
       `,
       )
       .eq("status", "pending")

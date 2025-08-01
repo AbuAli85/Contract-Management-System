@@ -52,7 +52,6 @@ interface PendingUser {
   position: string | null
   phone: string | null
   created_at: string
-  email_verified: boolean
 }
 
 export default function UserApprovalsPage() {
