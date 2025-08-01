@@ -6,12 +6,13 @@ import { getSupabaseClient } from "@/lib/supabase"
 import type { Promoter } from "@/lib/types"
 import { ArrowLeftIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import PromoterFormProfessional from "@/components/promoter-form-professional"
 
 export default function EditPromoterPage() {
   const params = useParams()
   const router = useRouter()
+  const { toast } = useToast()
   const promoterId = params?.id as string
   const locale = (params?.locale as string) || "en"
 
@@ -38,21 +39,42 @@ export default function EditPromoterPage() {
       setIsLoading(true)
       setError(null)
 
-      const supabase = getSupabaseClient()
-      const { data, error } = await supabase
-        .from("promoters")
-        .select("*")
-        .eq("id", promoterId)
-        .single()
+      try {
+        const supabase = getSupabaseClient()
+        if (!supabase) {
+          throw new Error("Failed to initialize database connection")
+        }
 
-      if (error || !data) {
-        setError(error?.message || "Promoter not found.")
+        const { data, error } = await supabase
+          .from("promoters")
+          .select("*")
+          .eq("id", promoterId)
+          .single()
+
+        if (error) {
+          console.error("Database error:", error)
+          if (error.code === "PGRST116") {
+            setError("Promoter not found. The promoter may have been deleted or the ID is invalid.")
+          } else {
+            setError(`Database error: ${error.message}`)
+          }
+          setIsLoading(false)
+          return
+        }
+
+        if (!data) {
+          setError("Promoter not found. The promoter may have been deleted or the ID is invalid.")
+          setIsLoading(false)
+          return
+        }
+
+        setPromoter(data)
         setIsLoading(false)
-        return
+      } catch (err) {
+        console.error("Error fetching promoter:", err)
+        setError(err instanceof Error ? err.message : "An unexpected error occurred while loading the promoter.")
+        setIsLoading(false)
       }
-
-      setPromoter(data)
-      setIsLoading(false)
     }
 
     fetchPromoter()

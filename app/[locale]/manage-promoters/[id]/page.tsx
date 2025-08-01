@@ -30,6 +30,9 @@ import {
   Edit,
   Plus,
   Trash2,
+  Upload,
+  Eye,
+  Download,
 } from "lucide-react"
 import { format, parseISO, isPast } from "date-fns"
 import { getDocumentStatus } from "@/lib/document-status"
@@ -51,6 +54,7 @@ import { PromoterAttendance } from "@/components/promoter-attendance"
 import { PromoterReports } from "@/components/promoter-reports"
 import { PromoterRanking } from "@/components/promoter-ranking"
 import { PromoterCRM } from "@/components/promoter-crm"
+import DocumentUpload from "@/components/document-upload"
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -98,6 +102,7 @@ export default function PromoterDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false)
   const [activeTab, setActiveTab] = useState("personal")
   const [skills, setSkills] = useState<PromoterSkill[]>([])
   const [experience, setExperience] = useState<PromoterExperience[]>([])
@@ -493,11 +498,25 @@ export default function PromoterDetailPage() {
           {/* Document Information Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileTextIcon className="h-5 w-5" />
-                Document Information
-              </CardTitle>
-              <CardDescription>Identity documents and their status</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileTextIcon className="h-5 w-5" />
+                    Document Information
+                  </CardTitle>
+                  <CardDescription>Identity documents and their status</CardDescription>
+                </div>
+                {role === "admin" && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowDocumentUpload(!showDocumentUpload)}
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    {showDocumentUpload ? "Hide Upload" : "Upload Documents"}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -515,6 +534,31 @@ export default function PromoterDetailPage() {
                       Expires: {format(parseISO(promoterDetails.id_card_expiry_date), "MMM dd, yyyy")}
                     </p>
                   )}
+                  {promoterDetails?.id_card_url && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(promoterDetails.id_card_url, '_blank')}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View ID
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const link = document.createElement('a')
+                          link.href = promoterDetails.id_card_url!
+                          link.download = 'ID_Card_Document'
+                          link.click()
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -530,8 +574,66 @@ export default function PromoterDetailPage() {
                       Expires: {format(parseISO(promoterDetails.passport_expiry_date), "MMM dd, yyyy")}
                     </p>
                   )}
+                  {promoterDetails?.passport_url && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(promoterDetails.passport_url, '_blank')}
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Passport
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const link = document.createElement('a')
+                          link.href = promoterDetails.passport_url!
+                          link.download = 'Passport_Document'
+                          link.click()
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Document Upload Section */}
+              {showDocumentUpload && role === "admin" && (
+                <div className="mt-6 space-y-4">
+                  <Separator />
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <DocumentUpload
+                      promoterId={promoterId}
+                      documentType="id_card"
+                      currentUrl={promoterDetails?.id_card_url}
+                      onUploadComplete={(url) => {
+                        setPromoterDetails(prev => prev ? { ...prev, id_card_url: url } : null)
+                        setShowDocumentUpload(false)
+                      }}
+                      onDelete={() => {
+                        setPromoterDetails(prev => prev ? { ...prev, id_card_url: null } : null)
+                      }}
+                    />
+                    <DocumentUpload
+                      promoterId={promoterId}
+                      documentType="passport"
+                      currentUrl={promoterDetails?.passport_url}
+                      onUploadComplete={(url) => {
+                        setPromoterDetails(prev => prev ? { ...prev, passport_url: url } : null)
+                        setShowDocumentUpload(false)
+                      }}
+                      onDelete={() => {
+                        setPromoterDetails(prev => prev ? { ...prev, passport_url: null } : null)
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

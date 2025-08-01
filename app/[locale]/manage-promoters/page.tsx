@@ -369,52 +369,64 @@ export default function PromoterManagement() {
     router.push(`/manage-promoters/${promoter.id}`)
   }, [router])
 
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedPromoters.length === 0) {
-      toast({
-        title: "No promoters selected",
-        description: "Please select promoters to delete",
-        variant: "destructive"
-      })
+  const handleDelete = useCallback(async (promoter: Promoter) => {
+    if (!confirm(`Are you sure you want to delete promoter "${promoter.name_en}"?`)) {
       return
     }
 
-    if (!confirm(`Are you sure you want to delete ${selectedPromoters.length} promoter(s)?`)) {
-      return
-    }
-
-    setBulkActionLoading(true)
     try {
       const supabase = getSupabaseClient()
-      
-      for (const promoterId of selectedPromoters) {
-        // Delete related records first
-        await supabase.from('promoter_skills').delete().eq('promoter_id', promoterId)
-        await supabase.from('promoter_experience').delete().eq('promoter_id', promoterId)
-        await supabase.from('promoter_education').delete().eq('promoter_id', promoterId)
-        await supabase.from('promoter_documents').delete().eq('promoter_id', promoterId)
-        
-        // Delete the promoter
-        await supabase.from('promoters').delete().eq('id', promoterId)
+      if (!supabase) {
+        throw new Error("Database connection not available")
       }
 
-      setSelectedPromoters([])
+      // Check if promoter has active contracts
+      const { data: activeContracts, error: contractsError } = await supabase
+        .from("contracts")
+        .select("id")
+        .eq("promoter_id", promoter.id)
+        .eq("status", "active")
+
+      if (contractsError) {
+        throw new Error("Failed to check contracts")
+      }
+
+      if (activeContracts && activeContracts.length > 0) {
+        toast({
+          title: "Cannot delete promoter",
+          description: `This promoter has ${activeContracts.length} active contract(s). Please terminate the contracts first.`,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // Delete related records first
+      await supabase.from('promoter_skills').delete().eq('promoter_id', promoter.id)
+      await supabase.from('promoter_experience').delete().eq('promoter_id', promoter.id)
+      await supabase.from('promoter_education').delete().eq('promoter_id', promoter.id)
+      await supabase.from('promoter_documents').delete().eq('promoter_id', promoter.id)
+      
+      // Delete the promoter
+      const { error } = await supabase.from('promoters').delete().eq('id', promoter.id)
+
+      if (error) {
+        throw new Error(error.message)
+      }
+
       await fetchPromoters()
 
       toast({
-        title: "Promoters deleted",
-        description: `Successfully deleted ${selectedPromoters.length} promoter(s)`
+        title: "Promoter deleted",
+        description: `Successfully deleted promoter "${promoter.name_en}"`
       })
     } catch (error) {
       toast({
         title: "Delete failed",
-        description: error instanceof Error ? error.message : "Failed to delete promoters",
+        description: error instanceof Error ? error.message : "Failed to delete promoter",
         variant: "destructive"
       })
-    } finally {
-      setBulkActionLoading(false)
     }
-  }, [selectedPromoters, fetchPromoters, toast])
+  }, [fetchPromoters, toast])
 
   const toggleSelectAll = useCallback(() => {
     if (selectedPromoters.length === filteredPromoters.length) {
@@ -695,7 +707,14 @@ export default function PromoterManagement() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={handleBulkDelete}
+                        onClick={() => {
+                          selectedPromoters.forEach(id => {
+                            const promoter = promoters.find(p => p.id === id);
+                            if (promoter) {
+                              handleDelete(promoter);
+                            }
+                          });
+                        }}
                         disabled={bulkActionLoading}
                       >
                         {bulkActionLoading ? (
@@ -718,6 +737,7 @@ export default function PromoterManagement() {
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
                       className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      aria-label="Filter by status"
                     >
                       <option value="all">All Status</option>
                       <option value="active">Active</option>
@@ -735,6 +755,7 @@ export default function PromoterManagement() {
                       onChange={(e) => setFilterCompany(e.target.value)}
                       className="w-full px-3 py-2 border border-input rounded-md bg-background"
                       disabled={employersLoading}
+                      aria-label="Filter by company"
                     >
                       <option value="all">
                         {employersLoading ? "Loading companies..." : "All Companies"}
@@ -754,6 +775,7 @@ export default function PromoterManagement() {
                       value={filterDocument}
                       onChange={(e) => setFilterDocument(e.target.value)}
                       className="w-full px-3 py-2 border border-input rounded-md bg-background"
+                      aria-label="Filter by document status"
                     >
                       <option value="all">All Documents</option>
                       <optgroup label="ID Card">
@@ -983,6 +1005,13 @@ export default function PromoterManagement() {
                                 >
                               <Edit3 className="h-4 w-4" />
                                 </Button>
+                                <Button
+                              variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(promoter)}
+                                >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1021,6 +1050,7 @@ export default function PromoterManagement() {
                     onChange={(e) => setSelectedCompanyForBulk(e.target.value)}
                     className="w-full px-3 py-2 border border-input rounded-md bg-background"
                     disabled={employersLoading}
+                    aria-label="Select company for bulk assignment"
                   >
                     <option value="">
                       {employersLoading ? "Loading companies..." : "Select a company..."}

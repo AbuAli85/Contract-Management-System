@@ -79,8 +79,8 @@ export default function UserActivityPage() {
   const [filteredActivities, setFilteredActivities] = useState<UserActivity[]>([])
   const [filters, setFilters] = useState({
     search: "",
-    action: "",
-    resourceType: "",
+    action: "all",
+    resourceType: "all",
     dateRange: "7d",
   })
 
@@ -145,12 +145,12 @@ export default function UserActivityPage() {
     }
 
     // Action filter
-    if (filters.action) {
+    if (filters.action && filters.action !== "all") {
       filtered = filtered.filter((activity) => activity.action === filters.action)
     }
 
     // Resource type filter
-    if (filters.resourceType) {
+    if (filters.resourceType && filters.resourceType !== "all") {
       filtered = filtered.filter((activity) => activity.resource_type === filters.resourceType)
     }
 
@@ -299,7 +299,7 @@ export default function UserActivityPage() {
                     <SelectValue placeholder="All actions" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All actions</SelectItem>
+                                            <SelectItem value="all">All actions</SelectItem>
                     {uniqueActions.map((action) => (
                       <SelectItem key={action} value={action}>
                         {action}
@@ -321,7 +321,7 @@ export default function UserActivityPage() {
                     <SelectValue placeholder="All resources" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All resources</SelectItem>
+                                            <SelectItem value="all">All resources</SelectItem>
                     {uniqueResourceTypes.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type}
