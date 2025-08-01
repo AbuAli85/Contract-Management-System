@@ -43,6 +43,9 @@ const promoterSchema = z.object({
   emergency_contact: z.string().optional(),
   emergency_phone: z.string().optional(),
   notes: z.string().optional(),
+  employer_id: z.string().uuid().optional(),
+  notify_days_before_id_expiry: z.number().min(1).max(365).default(30),
+  notify_days_before_passport_expiry: z.number().min(1).max(365).default(30),
 })
 
 export async function GET() {
@@ -125,6 +128,7 @@ export async function GET() {
       .select(
         `
         *,
+        employer:employer_id(name_en, name_ar),
         contracts:contracts!contracts_promoter_id_fkey(
           id,
           contract_number,
@@ -209,6 +213,27 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validatedData = promoterSchema.parse(body)
 
+    // Check if ID card number already exists
+    if (validatedData.id_card_number) {
+      const { data: existingPromoter, error: checkError } = await supabase
+        .from("promoters")
+        .select("id")
+        .eq("id_card_number", validatedData.id_card_number)
+        .single()
+
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("Error checking ID card number:", checkError)
+        return NextResponse.json({ error: "Failed to validate ID card number" }, { status: 500 })
+      }
+
+      if (existingPromoter) {
+        return NextResponse.json(
+          { error: "ID card number already exists for another promoter" },
+          { status: 400 }
+        )
+      }
+    }
+
     // Add created_by field
     const promoterData = {
       ...validatedData,
@@ -231,6 +256,21 @@ export async function POST(request: Request) {
         },
         { status: 500 },
       )
+    }
+
+    // Create audit log
+    try {
+      await supabase.from("audit_logs").insert({
+        user_id: session.user.id,
+        action: "create",
+        table_name: "promoters",
+        record_id: promoter.id,
+        new_values: validatedData,
+        created_at: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.error("Error creating audit log:", auditError)
+      // Don't fail the request if audit logging fails
     }
 
     return NextResponse.json({

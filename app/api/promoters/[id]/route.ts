@@ -40,6 +40,9 @@ const promoterUpdateSchema = z.object({
   emergency_contact: z.string().optional(),
   emergency_phone: z.string().optional(),
   notes: z.string().optional(),
+  employer_id: z.string().uuid().optional(),
+  notify_days_before_id_expiry: z.number().min(1).max(365).optional(),
+  notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
 })
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -97,6 +100,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       .select(
         `
         *,
+        employer:employer_id(name_en, name_ar),
         contracts:contracts!contracts_promoter_id_fkey(
           id,
           contract_number,
@@ -180,19 +184,31 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user is admin
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-    if (!userProfile || userProfile.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 })
-    }
-
     // Parse and validate request body
     const body = await request.json()
     const validatedData = promoterUpdateSchema.parse(body)
+
+    // Check if ID card number is being updated and if it already exists
+    if (validatedData.id_card_number) {
+      const { data: existingPromoter, error: checkError } = await supabase
+        .from("promoters")
+        .select("id")
+        .eq("id_card_number", validatedData.id_card_number)
+        .neq("id", id)
+        .single()
+
+      if (checkError && checkError.code !== "PGRST116") {
+        console.error("Error checking ID card number:", checkError)
+        return NextResponse.json({ error: "Failed to validate ID card number" }, { status: 500 })
+      }
+
+      if (existingPromoter) {
+        return NextResponse.json(
+          { error: "ID card number already exists for another promoter" },
+          { status: 400 }
+        )
+      }
+    }
 
     // Update promoter in database
     const { data: promoter, error } = await supabase
@@ -220,14 +236,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // After successful update, create audit log
-    await supabase.from("audit_logs").insert({
-      user_id: session.user.id,
-      action: "update",
-      table_name: "promoters",
-      record_id: id,
-      new_values: validatedData,
-      created_at: new Date().toISOString(),
-    })
+    try {
+      await supabase.from("audit_logs").insert({
+        user_id: session.user.id,
+        action: "update",
+        table_name: "promoters",
+        record_id: id,
+        new_values: validatedData,
+        created_at: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.error("Error creating audit log:", auditError)
+      // Don't fail the request if audit logging fails
+    }
 
     return NextResponse.json({
       success: true,
@@ -298,14 +319,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user is admin
+    // Check if user has permission to delete (admin or manager)
     const { data: userProfile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", session.user.id)
       .single()
-    if (!userProfile || userProfile.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden: Admins only" }, { status: 403 })
+    
+    if (!userProfile || !["admin", "manager"].includes(userProfile.role)) {
+      return NextResponse.json({ error: "Forbidden: Insufficient permissions" }, { status: 403 })
     }
 
     // Check if promoter has active contracts
@@ -348,13 +370,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
 
     // After successful delete, create audit log
-    await supabase.from("audit_logs").insert({
-      user_id: session.user.id,
-      action: "delete",
-      table_name: "promoters",
-      record_id: id,
-      created_at: new Date().toISOString(),
-    })
+    try {
+      await supabase.from("audit_logs").insert({
+        user_id: session.user.id,
+        action: "delete",
+        table_name: "promoters",
+        record_id: id,
+        created_at: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.error("Error creating audit log:", auditError)
+      // Don't fail the request if audit logging fails
+    }
 
     return NextResponse.json({
       success: true,

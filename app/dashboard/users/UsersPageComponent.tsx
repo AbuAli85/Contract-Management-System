@@ -81,8 +81,8 @@ export default function UsersPageComponent() {
 
   // Filter and search states
   const [search, setSearch] = useState("")
-  const [roleFilter, setRoleFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState("")
+  const [roleFilter, setRoleFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
 
   // Pagination states
   const [page, setPage] = useState(1)
@@ -136,7 +136,7 @@ export default function UsersPageComponent() {
       }
 
       // Apply role filter
-      if (roleFilter && typeof roleFilter === "string") {
+      if (roleFilter && typeof roleFilter === "string" && roleFilter !== "all") {
         const roleResults = []
         for (let i = 0; i < result.length; i++) {
           const user = result[i]
@@ -148,7 +148,7 @@ export default function UsersPageComponent() {
       }
 
       // Apply status filter
-      if (statusFilter && typeof statusFilter === "string") {
+      if (statusFilter && typeof statusFilter === "string" && statusFilter !== "all") {
         const statusResults = []
         for (let i = 0; i < result.length; i++) {
           const user = result[i]
@@ -359,7 +359,7 @@ export default function UsersPageComponent() {
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All roles</SelectItem>
+                                    <SelectItem value="all">All roles</SelectItem>
             {ROLES.map((role) => (
               <SelectItem key={role} value={role}>
                 {role.charAt(0).toUpperCase() + role.slice(1)}
@@ -378,7 +378,7 @@ export default function UsersPageComponent() {
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
+                                    <SelectItem value="all">All statuses</SelectItem>
             {STATUS.map((status) => (
               <SelectItem key={status} value={status}>
                 {status.charAt(0).toUpperCase() + status.slice(1)}

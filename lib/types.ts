@@ -45,22 +45,62 @@ export interface Promoter {
   contract_valid_until?: string | null
   email?: string | null
   phone?: string | null
-  national_id?: string | null
-  crn?: string | null
-  address?: string | null
-  contact_person?: string | null
-  website?: string | null
-  city?: string | null
-  country?: string | null
-  profile_picture_url?: string | null
-  company?: string | null
-  name?: string
-  state?: string
-  zip_code?: string
-  bio?: string
-  passport_number?: string | null
   mobile_number?: string | null
   nationality?: string | null
+  profile_picture_url?: string | null
+  passport_number?: string | null
+  
+  // Personal Information
+  date_of_birth?: string | null
+  gender?: string | null
+  marital_status?: string | null
+  city?: string | null
+  state?: string | null
+  country?: string | null
+  postal_code?: string | null
+  emergency_contact?: string | null
+  emergency_phone?: string | null
+  
+  // Document Information
+  visa_number?: string | null
+  visa_expiry_date?: string | null
+  work_permit_number?: string | null
+  work_permit_expiry_date?: string | null
+  
+  // Professional Information
+  company?: string | null
+  department?: string | null
+  specialization?: string | null
+  experience_years?: number | null
+  education_level?: string | null
+  university?: string | null
+  graduation_year?: number | null
+  skills?: string | null
+  certifications?: string | null
+  
+  // Financial Information
+  bank_name?: string | null
+  account_number?: string | null
+  iban?: string | null
+  swift_code?: string | null
+  tax_id?: string | null
+  
+  // Preferences and Ratings
+  rating?: number | null
+  availability?: string | null
+  preferred_language?: string | null
+  timezone?: string | null
+  special_requirements?: string | null
+  
+  // Address Information
+  address?: string | null
+  national_id?: string | null
+  crn?: string | null
+  
+  // Legacy fields for backward compatibility
+  name?: string
+  zip_code?: string
+  bio?: string
   tags?: string[]
 }
 
