@@ -76,8 +76,18 @@ export default function UserApprovalsPage() {
           title: "Success",
           description: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`
         });
-        // Remove the user from pending list
+        // Remove the user from pending list immediately
         setPendingUsers(prev => prev.filter(user => user.id !== userId));
+        
+        // Trigger a custom event to notify other components
+        window.dispatchEvent(new CustomEvent('userApprovalChanged', { 
+          detail: { userId, action, newStatus } 
+        }));
+        
+        // Also refetch the pending users to ensure consistency
+        setTimeout(() => {
+          fetchPendingUsers();
+        }, 500);
       } else {
         const errorData = await response.json();
         console.error(`❌ Approval: API error:`, errorData);

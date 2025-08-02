@@ -20,8 +20,8 @@ interface User {
   email: string
   full_name?: string
   role: "admin" | "manager" | "user" | "viewer"
-  permissions?: string[]
   status?: string // Added to fix type error
+  // Note: permissions are derived from role, not stored separately
 }
 
 interface PermissionsManagerProps {
@@ -188,7 +188,8 @@ export default function PermissionsManager({
   useEffect(() => {
     if (user) {
       setRole(user.role)
-      setSelectedPermissions(new Set(user.permissions || ROLE_PERMISSIONS[user.role] || []))
+      // Permissions are always derived from role
+      setSelectedPermissions(new Set(ROLE_PERMISSIONS[user.role] || []))
     }
   }, [user])
 
@@ -236,8 +237,7 @@ export default function PermissionsManager({
         body: JSON.stringify({
           userId: user.id,
           role: role,
-          permissions: Array.from(selectedPermissions),
-          // Keep other user fields unchanged
+          // Note: Permissions are derived from role, not stored separately
           email: user.email,
           status: user.status || "active",
         }),
@@ -245,8 +245,8 @@ export default function PermissionsManager({
 
       if (response.ok) {
         toast({
-          title: "Permissions updated",
-          description: "User permissions have been updated successfully.",
+          title: "User role updated",
+          description: "User role and permissions have been updated successfully.",
         })
         onPermissionsUpdate()
         onOpenChange(false)
@@ -254,15 +254,15 @@ export default function PermissionsManager({
         const error = await response.json()
         toast({
           title: "Error",
-          description: error.error || "Failed to update permissions",
+          description: error.error || "Failed to update user role",
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error("Error updating permissions:", error)
+      console.error("Error updating user role:", error)
       toast({
         title: "Error",
-        description: "Failed to update permissions. Please try again.",
+        description: "Failed to update user role. Please try again.",
         variant: "destructive",
       })
     } finally {

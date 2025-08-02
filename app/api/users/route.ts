@@ -6,6 +6,12 @@ import { cookies } from "next/headers"
 // GET - Fetch all users
 export async function GET(request: NextRequest) {
   try {
+    // Parse query parameters for filtering
+    const { searchParams } = new URL(request.url)
+    const statusFilter = searchParams.get('status') // e.g., 'pending', 'active', 'inactive'
+    
+    console.log("🔍 API Users GET: Query parameters:", { statusFilter })
+
     // First try with session-based auth
     const supabase = await createServerComponentClient()
 
@@ -105,7 +111,7 @@ export async function GET(request: NextRequest) {
         // Only allow active admins or managers to view users
         if (profileData.role === "admin" && profileData.status === "active") {
           // Fetch all users from profiles table with safe field selection using admin client
-          const { data: profilesData, error: profilesError } = await adminSupabase
+          let profilesQuery = adminSupabase
             .from("profiles")
             .select(
               `
@@ -118,11 +124,24 @@ export async function GET(request: NextRequest) {
               updated_at
             `,
             )
+
+          // Apply status filter if provided
+          if (statusFilter && ['pending', 'active', 'inactive'].includes(statusFilter)) {
+            console.log("🔍 API Users: Applying status filter:", statusFilter)
+            profilesQuery = profilesQuery.eq('status', statusFilter)
+          }
+
+          const { data: profilesData, error: profilesError } = await profilesQuery
             .order("created_at", { ascending: false })
 
           users = profilesData
           error = profilesError
-          console.log("✅ API Users: Fetched users from profiles table:", users?.length || 0)
+          console.log("✅ API Users: Fetched users from profiles table:", users?.length || 0, statusFilter ? `(filtered by status: ${statusFilter})` : "")
+          
+          // Log the specific users returned when filtering by status
+          if (statusFilter && users) {
+            console.log("📋 API Users: Returned users:", users.map(u => ({ email: u.email, status: u.status, id: u.id })))
+          }
         }
       }
     } catch (profileTableError) {
