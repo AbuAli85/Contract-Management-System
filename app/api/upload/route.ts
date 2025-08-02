@@ -61,6 +61,13 @@ export async function POST(request: Request) {
     const passportNumber = formData.get("passportNumber") as string
     const documentType = formData.get("documentType") as string
 
+    // Debug: Log the values being used for filename generation
+    console.log('🔍 API Upload Debug - Values for filename:')
+    console.log('- promoterName:', promoterName)
+    console.log('- idCardNumber:', idCardNumber)
+    console.log('- passportNumber:', passportNumber)
+    console.log('- documentType:', documentType)
+
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
     }
@@ -107,7 +114,7 @@ export async function POST(request: Request) {
         .replace(/\s+/g, '_')             // Replace spaces with underscore
         .replace(/_+/g, '_')              // Replace multiple underscores with single
         .replace(/^_|_$/g, '')            // Remove leading/trailing underscores
-        .substring(0, 30)                 // Limit length to avoid too long filenames
+        .substring(0, 50)                 // Increased length limit for full names
     }
     
     // Create filename based on document type: {name_en}_{id_card_number/passport_number}.ext
@@ -123,10 +130,11 @@ export async function POST(request: Request) {
         : 'NO_PASSPORT'
     }
     
-    // Add a short timestamp suffix to prevent conflicts (only last 4 digits)
-    const shortTimestamp = Date.now().toString().slice(-4)
-    
-    const fileName = `${cleanPromoterName}_${documentNumber}_${shortTimestamp}.${fileExt}`
+    // User requested exact format: {name_en}_{document_number}.ext (no timestamp)
+    // For file conflicts, Supabase will handle with upsert: true
+    const fileName = `${cleanPromoterName}_${documentNumber}.${fileExt}`
+
+    console.log('🔍 API Generated filename:', fileName)
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer())

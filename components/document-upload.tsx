@@ -92,7 +92,7 @@ export default function DocumentUpload({
         .replace(/\s+/g, '_')             // Replace spaces with underscore
         .replace(/_+/g, '_')              // Replace multiple underscores with single
         .replace(/^_|_$/g, '')            // Remove leading/trailing underscores
-        .substring(0, 30)                 // Limit length to avoid too long filenames
+        .substring(0, 50)                 // Increased length limit for full names
     }
     
     // Create filename based on document type: {name_en}_{id_card_number/passport_number}.ext
@@ -108,10 +108,8 @@ export default function DocumentUpload({
         : 'NO_PASSPORT'
     }
     
-    // Add a short timestamp suffix to prevent conflicts (only last 4 digits)
-    const shortTimestamp = Date.now().toString().slice(-4)
-    
-    return `${cleanPromoterName}_${documentNumber}_${shortTimestamp}.${fileExt}`
+    // User requested exact format: {name_en}_{document_number}.ext (no timestamp)
+    return `${cleanPromoterName}_${documentNumber}.${fileExt}`
   }
 
   // Update uploadedDocument when currentUrl changes
@@ -182,6 +180,13 @@ export default function DocumentUpload({
       return
     }
 
+    // Debug: Log the values being used for filename generation
+    console.log('🔍 DocumentUpload Debug - Values for filename:')
+    console.log('- promoterName:', promoterName)
+    console.log('- idCardNumber:', idCardNumber)
+    console.log('- passportNumber:', passportNumber)
+    console.log('- documentType:', documentType)
+
     const validationError = validateFile(file)
     if (validationError) {
       toast({
@@ -212,7 +217,7 @@ export default function DocumentUpload({
       const fileName = createCleanFilename(file)
       const filePath = `${fileName}` // Store directly in bucket root for now
 
-      console.log('Uploading file:', fileName)
+      console.log('🔍 Generated filename:', fileName)
       console.log('Upload path:', filePath)
 
       // Simulate upload progress
