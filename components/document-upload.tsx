@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -43,6 +43,7 @@ export default function DocumentUpload({
   onDelete
 }: DocumentUploadProps) {
   const { toast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(
@@ -103,6 +104,12 @@ export default function DocumentUpload({
   }
 
   const handleFileUpload = useCallback(async (file: File) => {
+    // Prevent multiple simultaneous uploads
+    if (uploading) {
+      console.log('Upload already in progress, ignoring new upload request')
+      return
+    }
+
     const validationError = validateFile(file)
     if (validationError) {
       toast({
@@ -113,6 +120,7 @@ export default function DocumentUpload({
       return
     }
 
+    console.log('Starting file upload:', file.name, file.type, file.size)
     setUploading(true)
     setUploadProgress(0)
 
@@ -122,11 +130,19 @@ export default function DocumentUpload({
         throw new Error("Failed to create Supabase client")
       }
 
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop()
+      // Check if user is authenticated
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !session) {
+        throw new Error("You must be logged in to upload files")
+      }
+
+      // Create a unique filename with proper extension
+      const fileExt = file.name.split('.').pop()?.toLowerCase()
       const uploadId = promoterId === 'new' ? `temp_${Date.now()}` : promoterId
       const fileName = `${uploadId}_${documentType}_${Date.now()}.${fileExt}`
-      const filePath = `promoter-documents/${uploadId}/${fileName}`
+      const filePath = `${fileName}` // Store directly in bucket root for now
+
+      console.log('Uploading to path:', filePath)
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -139,18 +155,68 @@ export default function DocumentUpload({
         })
       }, 100)
 
-      // Upload file to Supabase Storage
+      // Upload file to Supabase Storage with explicit content type
       const { data, error } = await supabase.storage
         .from('promoter-documents')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: true, // Allow overwriting files
+          contentType: file.type // Explicitly set the content type
         })
 
       clearInterval(progressInterval)
 
       if (error) {
-        throw error
+        // If direct upload fails, try using the upload API route
+        console.log('Direct upload failed, trying API route...', error.message)
+        
+        try {
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('promoterId', promoterId)
+          formData.append('documentType', documentType)
+
+          console.log('Sending to API route...')
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Network error' }))
+            throw new Error(errorData.error || `Upload failed with status ${response.status}`)
+          }
+
+          const result = await response.json()
+          if (!result.success) {
+            throw new Error(result.error || 'Upload failed')
+          }
+
+          console.log('API upload successful:', result.url)
+          setUploadProgress(100)
+
+          const uploadedDoc: UploadedDocument = {
+            url: result.url,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            uploadedAt: new Date().toISOString()
+          }
+
+          setUploadedDocument(uploadedDoc)
+          onUploadComplete(result.url)
+
+          toast({
+            title: "Document uploaded successfully",
+            description: `${file.name} has been uploaded via secure API`,
+          })
+
+          return
+        } catch (apiError) {
+          console.error('API upload also failed:', apiError)
+          // Continue to the original error handling below
+          throw apiError
+        }
       }
 
       // Get public URL
@@ -258,12 +324,59 @@ export default function DocumentUpload({
   }
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault() // Prevent any form submission
     const file = event.target.files?.[0]
     if (file) {
       handleFileUpload(file)
     }
     // Reset input value to allow selecting the same file again
     event.target.value = ''
+  }
+
+  const handleUploadClick = (event: React.MouseEvent) => {
+    event.preventDefault() // Prevent form submission
+    event.stopPropagation() // Stop event bubbling
+    
+    console.log('Upload click triggered for:', documentType)
+    
+    // Try using ref first, then fallback to getElementById
+    if (fileInputRef.current) {
+      console.log('Using ref to trigger file input')
+      fileInputRef.current.click()
+    } else {
+      console.log('Ref not available, using getElementById')
+      const fileInput = document.getElementById(`${documentType}-upload`) as HTMLInputElement
+      console.log('File input found:', fileInput)
+      
+      if (fileInput) {
+        fileInput.click()
+      } else {
+        console.error(`File input not found for ID: ${documentType}-upload`)
+      }
+    }
+  }
+
+  const handleReplaceClick = (event: React.MouseEvent) => {
+    event.preventDefault() // Prevent form submission
+    event.stopPropagation() // Stop event bubbling
+    
+    console.log('Replace click triggered for:', documentType)
+    
+    // Try using ref first, then fallback to getElementById
+    if (fileInputRef.current) {
+      console.log('Using ref to trigger file input')
+      fileInputRef.current.click()
+    } else {
+      console.log('Ref not available, using getElementById')
+      const fileInput = document.getElementById(`${documentType}-upload`) as HTMLInputElement
+      console.log('File input found:', fileInput)
+      
+      if (fileInput) {
+        fileInput.click()
+      } else {
+        console.error(`File input not found for ID: ${documentType}-upload`)
+      }
+    }
   }
 
   const formatFileSize = (bytes: number): string => {
@@ -342,19 +455,10 @@ export default function DocumentUpload({
             </div>
             
                          <div className="flex gap-2">
-               <input
-                 type="file"
-                 accept={config.accept}
-                 onChange={handleFileSelect}
-                 className="hidden"
-                 id={`${documentType}-upload`}
-                 disabled={uploading}
-                 aria-label={`Upload ${config.title}`}
-                 title={`Upload ${config.title}`}
-               />
                <Button
+                 type="button"
                  variant="outline"
-                 onClick={() => document.getElementById(`${documentType}-upload`)?.click()}
+                 onClick={handleReplaceClick}
                  disabled={uploading}
                >
                  <Upload className="h-4 w-4 mr-2" />
@@ -365,7 +469,43 @@ export default function DocumentUpload({
         ) : (
           // Show upload area
           <div className="space-y-4">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={config.accept}
+              onChange={handleFileSelect}
+              className="hidden"
+              id={`${documentType}-upload`}
+              disabled={uploading}
+              aria-label={`Upload ${config.title}`}
+              title={`Upload ${config.title}`}
+            />
+            
+            <div 
+              className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+              onClick={handleUploadClick}
+              onDragOver={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }}
+              onDrop={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const files = e.dataTransfer.files
+                if (files.length > 0) {
+                  handleFileUpload(files[0])
+                }
+              }}
+            >
               <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <div className="space-y-2">
                 <p className="text-lg font-medium text-gray-900">
@@ -379,18 +519,9 @@ export default function DocumentUpload({
                 </p>
               </div>
               
-                             <input
-                 type="file"
-                 accept={config.accept}
-                 onChange={handleFileSelect}
-                 className="hidden"
-                 id={`${documentType}-upload`}
-                 disabled={uploading}
-                 aria-label={`Upload ${config.title}`}
-                 title={`Upload ${config.title}`}
-               />
               <Button
-                onClick={() => document.getElementById(`${documentType}-upload`)?.click()}
+                type="button"
+                onClick={handleUploadClick}
                 disabled={uploading}
                 className="mt-4"
               >
