@@ -57,7 +57,15 @@ interface PromoterStats {
   companies_count: number
 }
 
-export default function PromoterManagement() {
+// Page props interface
+interface PromoterManagementProps {
+  params: {
+    locale: string
+  }
+}
+
+export default function PromoterManagement({ params }: PromoterManagementProps) {
+  const { locale } = params
   // Core state
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
