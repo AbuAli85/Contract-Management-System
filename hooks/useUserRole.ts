@@ -47,76 +47,49 @@ export function useUserRole() {
         try {
           const supabaseClient = getSupabaseClient()
           
-          // First, try to ensure the user profile exists
+          // First try the API route since it's more reliable
           try {
-            await supabaseClient.rpc('ensure_user_profile', { 
-              user_id: user && typeof user === "object" && user !== null && "id" in user 
-                ? (user as { id: string }).id 
-                : "" 
+            const response = await fetch('/api/get-user-role', {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              },
             })
-          } catch (error) {
-            console.log("Could not ensure user profile:", error)
+            if (response.ok) {
+              const roleData = await response.json()
+              const fetchedRole = roleData.role?.value ?? roleData.role ?? null
+              setRole(fetchedRole)
+              return // Success, exit early
+            } else {
+              console.log("API route failed:", response.status)
+            }
+          } catch (apiError) {
+            console.log("API route error:", apiError)
           }
-          
-          // Now try to fetch the role
-          const { data, error } = await supabaseClient
-            .from("profiles")
-            .select("role")
-            .eq(
-              "id",
-              user &&
-                typeof user === "object" &&
-                user !== null &&
-                "id" in user &&
-                typeof (user as { id: string }).id === "string"
-                ? (user as { id: string }).id
-                : "",
-            )
-            .single()
-          
-          if (error) {
-            console.error("Error fetching role from profiles:", error)
-            // Try alternative approach - use the API route instead
-            try {
-              const response = await fetch('/api/get-user-role', {
-                headers: {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json',
-                },
-              })
-              if (response.ok) {
-                const roleData = await response.json()
-                setRole(roleData.role?.value ?? roleData.role ?? null)
-              } else {
-                console.error("API route also failed:", response.status)
-                // Fallback to default role based on email
-                if (user && typeof user === "object" && "email" in user) {
-                  const email = (user as { email: string }).email
-                  if (email === 'luxsess2001@gmail.com') {
-                    setRole('admin')
-                  } else {
-                    setRole('user')
-                  }
-                } else {
-                  setRole('user')
-                }
-              }
-            } catch (apiError) {
-              console.error("API route error:", apiError)
-              // Fallback to default role based on email
-              if (user && typeof user === "object" && "email" in user) {
-                const email = (user as { email: string }).email
-                if (email === 'luxsess2001@gmail.com') {
-                  setRole('admin')
-                } else {
-                  setRole('user')
-                }
-              } else {
-                setRole('user')
-              }
+
+          // Fallback: Try the RPC function
+          try {
+            const { data, error } = await supabaseClient.rpc('get_current_user_role')
+            if (!error && data) {
+              setRole(data)
+              return // Success, exit early
+            } else {
+              console.log("RPC function error:", error)
+            }
+          } catch (rpcError) {
+            console.log("RPC function failed:", rpcError)
+          }
+
+          // Final fallback: Use email-based role assignment
+          if (user && typeof user === "object" && "email" in user) {
+            const email = (user as { email: string }).email
+            if (email === 'luxsess2001@gmail.com') {
+              setRole('admin')
+            } else {
+              setRole('user')
             }
           } else {
-            setRole(data?.role ?? null)
+            setRole('user')
           }
         } catch (error) {
           console.error("Error fetching role:", error)
