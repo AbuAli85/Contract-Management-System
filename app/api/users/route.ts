@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerComponentClient } from "@/lib/supabaseServer"
+import { cookies } from "next/headers"
 
 // GET - Fetch all users
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerComponentClient()
 
@@ -12,14 +13,38 @@ export async function GET() {
       error: authError,
     } = await supabase.auth.getUser()
 
-    console.log("🔍 API Users: Auth check result:", { hasUser: !!user, authError: authError?.message })
+    // If no user found, try to get from session
+    if (!user) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (session?.user) {
+        console.log("✅ API Users: Found user from session:", session.user.id)
+        user = session.user
+      }
+    }
+
+    console.log("🔍 API Users: Auth check result:", { 
+      hasUser: !!user, 
+      userId: user?.id,
+      userEmail: user?.email,
+      authError: authError?.message 
+    })
 
     if (authError || !user) {
-      console.log("❌ API Users: Authentication failed")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      console.log("❌ API Users: Authentication failed - no user or auth error")
+      return NextResponse.json({ 
+        error: "Unauthorized", 
+        details: authError?.message || "No user found" 
+      }, { status: 401 })
     }
 
     console.log("✅ API Users: User authenticated:", user.id)
+
+    // Try to get session as well for additional verification
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+    console.log("🔍 API Users: Session check:", { 
+      hasSession: !!session, 
+      sessionError: sessionError?.message 
+    })
 
     // Check if user has admin permissions - try profiles table first, then users
     let userProfile = null
@@ -125,8 +150,34 @@ export async function GET() {
       userProfile = { role: "admin" }
     }
 
-    if (!userProfile.role || !["admin", "manager"].includes(userProfile.role)) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+    // If still no user profile found, try to create one for the admin user
+    if (!userProfile && user.email === 'luxsess2001@gmail.com') {
+      try {
+        console.log("🔧 API Users: Attempting to ensure admin profile exists...")
+        const { data: ensureResult, error: ensureError } = await supabase.rpc('ensure_user_profile', {
+          user_id: user.id,
+          user_email: user.email,
+          user_role: 'admin',
+          user_status: 'active'
+        })
+        
+        if (!ensureError) {
+          console.log("✅ API Users: Admin profile ensured")
+          userProfile = { role: "admin" }
+        } else {
+          console.log("⚠️ API Users: Could not ensure admin profile:", ensureError)
+        }
+      } catch (ensureError) {
+        console.log("⚠️ API Users: Ensure profile function failed:", ensureError)
+      }
+    }
+
+    if (!userProfile || !userProfile.role || !["admin", "manager"].includes(userProfile.role)) {
+      console.log("❌ API Users: Insufficient permissions - user profile:", userProfile)
+      return NextResponse.json({ 
+        error: "Insufficient permissions",
+        details: `User role: ${userProfile?.role || 'none'}, Required: admin or manager`
+      }, { status: 403 })
     }
 
     if (error) {

@@ -45,6 +45,8 @@ export function SignupForm() {
 
     try {
       console.log("📝 Signup Debug - Starting signup process...")
+      console.log("📝 Signup Debug - Email:", email)
+      console.log("📝 Signup Debug - Full Name:", fullName)
 
       const profile = {
         full_name: fullName,
@@ -54,27 +56,51 @@ export function SignupForm() {
         position: "",
       }
 
+      console.log("📝 Signup Debug - Profile data:", profile)
+
       const { success, error, data } = await signUp(email, password, profile)
+
+      console.log("📝 Signup Debug - SignUp response:", { success, error, data })
 
       if (!success || error) {
         console.error("📝 Signup Debug - Signup error:", error)
-        setError(error || "Signup failed")
+        
+        // Provide more specific error messages
+        let errorMessage = error || "Signup failed"
+        
+        if (error?.includes("User already registered")) {
+          errorMessage = "An account with this email already exists. Please try logging in instead."
+        } else if (error?.includes("Invalid email")) {
+          errorMessage = "Please enter a valid email address."
+        } else if (error?.includes("Password")) {
+          errorMessage = "Password does not meet requirements. Please ensure it's at least 8 characters long."
+        } else if (error?.includes("Database error") || error?.includes("saving new user")) {
+          errorMessage = "There was a problem creating your account. Please try again or contact support if the issue persists."
+        }
+        
+        setError(errorMessage)
         setLoading(false)
         return
       }
 
       console.log("📝 Signup Debug - Signup successful")
       setSuccess(
-        "Account created successfully! Your account is pending approval. You will be notified once approved.",
+        "Account created successfully! Please check your email to confirm your account. Your account will be pending approval until confirmed.",
       )
       
-      // Redirect to pending approval page after successful signup
+      // Clear form
+      setEmail("")
+      setPassword("")
+      setConfirmPassword("")
+      setFullName("")
+      
+      // Redirect to login page after successful signup
       setTimeout(() => {
-        router.push('/en/auth/pending-approval')
+        router.push('/en/auth/login?message=Please check your email to confirm your account')
       }, 3000)
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setLoading(false)
     }
