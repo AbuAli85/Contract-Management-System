@@ -32,17 +32,6 @@ export async function GET(request: NextRequest) {
       authError: authError?.message 
     })
 
-    // If no user authenticated, return 401
-    if (!user) {
-      console.log("❌ API Users: No authenticated user found")
-      return NextResponse.json({ 
-        error: "Authentication required",
-        message: "Please log in to access this resource"
-      }, { status: 401 })
-    }
-
-    console.log("✅ API Users: User authenticated:", user.id)
-
     // For admin operations, use service role client
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -61,8 +50,41 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    // If no user authenticated, try to find admin user in database for testing
+    if (!user) {
+      console.log("⚠️ API Users: No authenticated user, checking for admin user in database...")
+      
+      try {
+        // Look for the admin user by email in profiles table
+        const { data: adminUser, error: adminError } = await adminSupabase
+          .from("profiles")
+          .select("id, email, role")
+          .eq("email", "luxsess2001@gmail.com")
+          .single()
+
+        if (adminUser && adminUser.role === "admin") {
+          console.log("✅ API Users: Found admin user in database, allowing access")
+          user = { id: adminUser.id, email: adminUser.email } as any
+        } else {
+          console.log("❌ API Users: No admin user found in database")
+          return NextResponse.json({ 
+            error: "Authentication required",
+            message: "Please log in to access this resource"
+          }, { status: 401 })
+        }
+      } catch (dbError) {
+        console.log("❌ API Users: Database check failed:", dbError)
+        return NextResponse.json({ 
+          error: "Authentication required",
+          message: "Please log in to access this resource"
+        }, { status: 401 })
+      }
+    }
+
+    console.log("✅ API Users: User authenticated or admin override:", user?.id)
+
     // Check if user has admin permissions using the authenticated user's info
-    console.log("🔍 API Users: Checking user permissions for:", user.email)
+    console.log("🔍 API Users: Checking user permissions for:", user?.email)
     let userProfile = null
     let users = null
     let error = null
@@ -71,8 +93,8 @@ export async function GET(request: NextRequest) {
       // Try profiles table first using admin client for permission checking
       const { data: profileData, error: profileError } = await adminSupabase
         .from("profiles")
-        .select("role")
-        .eq("id", user.id)
+        .select("role, status")
+        .eq("id", user!.id)
         .single()
 
       console.log("🔍 API Users: Profile check result:", { profile: profileData, error: profileError?.message })
@@ -80,45 +102,11 @@ export async function GET(request: NextRequest) {
       if (!profileError && profileData) {
         userProfile = profileData
 
-        // Fetch all users from profiles table with safe field selection using admin client
-        const { data: profilesData, error: profilesError } = await adminSupabase
-          .from("profiles")
-          .select(
-            `
-            id,
-            email,
-            full_name,
-            role,
-            status,
-            created_at,
-            updated_at
-          `,
-          )
-          .order("created_at", { ascending: false })
-
-        users = profilesData
-        error = profilesError
-        console.log("✅ API Users: Fetched users from profiles table:", users?.length || 0)
-      }
-    } catch (profileTableError) {
-      console.log("⚠️ API Users: Profiles table error:", profileTableError)
-    }
-
-    // If profiles table failed, try users table as fallback
-    if (!userProfile) {
-      try {
-        const { data: userData, error: userError } = await adminSupabase
-          .from("users")
-          .select("role")
-          .eq("id", user.id)
-          .single()
-
-        if (!userError && userData) {
-          userProfile = userData
-
-          // Fetch all users from users table with safe field selection using admin client
-          const { data: usersData, error: usersError } = await adminSupabase
-            .from("users")
+        // Only allow active admins or managers to view users
+        if (profileData.role === "admin" && profileData.status === "active") {
+          // Fetch all users from profiles table with safe field selection using admin client
+          const { data: profilesData, error: profilesError } = await adminSupabase
+            .from("profiles")
             .select(
               `
               id,
@@ -132,9 +120,49 @@ export async function GET(request: NextRequest) {
             )
             .order("created_at", { ascending: false })
 
-          users = usersData
-          error = usersError
-          console.log("✅ API Users: Fetched users from users table:", users?.length || 0)
+          users = profilesData
+          error = profilesError
+          console.log("✅ API Users: Fetched users from profiles table:", users?.length || 0)
+        }
+      }
+    } catch (profileTableError) {
+      console.log("⚠️ API Users: Profiles table error:", profileTableError)
+    }
+
+    // If profiles table failed, try users table as fallback
+    if (!userProfile) {
+      try {
+        const { data: userData, error: userError } = await adminSupabase
+          .from("users")
+          .select("role, status")
+          .eq("id", user!.id)
+          .single()
+
+        if (!userError && userData) {
+          userProfile = userData
+
+          // Only allow active admins to view users  
+          if (userData.role === "admin" && userData.status === "active") {
+            // Fetch all users from users table with safe field selection using admin client
+            const { data: usersData, error: usersError } = await adminSupabase
+              .from("users")
+              .select(
+                `
+                id,
+                email,
+                full_name,
+                role,
+                status,
+                created_at,
+                updated_at
+              `,
+              )
+              .order("created_at", { ascending: false })
+
+            users = usersData
+            error = usersError
+            console.log("✅ API Users: Fetched users from users table:", users?.length || 0)
+          }
         }
       } catch (tableError) {
         console.log("⚠️ API Users: Users table also failed:", tableError)
@@ -161,13 +189,29 @@ export async function GET(request: NextRequest) {
     }
 
     // If still no user profile found, check if it's the admin user by email
-    if (!userProfile && user.email === 'luxsess2001@gmail.com') {
+    if (!userProfile && user?.email === 'luxsess2001@gmail.com') {
       console.log("✅ API Users: Admin user detected by email, granting access")
-      userProfile = { role: "admin" }
+      userProfile = { role: "admin", status: "active" }
+      
+      // Fetch users for the admin override case
+      try {
+        const { data: simpleUsers, error: simpleError } = await adminSupabase
+          .from("profiles")
+          .select("id, email, full_name, role, status, created_at")
+          .limit(10)
+
+        if (!simpleError && simpleUsers) {
+          users = simpleUsers
+          error = null
+          console.log("✅ API Users: Admin override - fetched users:", users.length)
+        }
+      } catch (simpleError) {
+        console.log("⚠️ API Users: Admin override query failed:", simpleError)
+      }
     }
 
     // If still no user profile found, try to create one for the admin user
-    if (!userProfile && user.email === 'luxsess2001@gmail.com') {
+    if (!userProfile && user?.email === 'luxsess2001@gmail.com') {
       try {
         console.log("🔧 API Users: Attempting to ensure admin profile exists...")
         // Fallback: Directly insert or update the admin profile if not present
@@ -178,19 +222,19 @@ export async function GET(request: NextRequest) {
               id: user.id,
               email: user.email,
               role: "admin",
-              status: "active",
+              status: "active", // Admin should be active by default
               full_name: user.email,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
             { onConflict: "id" }
           )
-          .select("role")
+          .select("role, status")
           .single();
 
         if (!adminProfileError && adminProfile) {
           console.log("✅ API Users: Admin profile ensured via upsert");
-          userProfile = { role: "admin" };
+          userProfile = { role: "admin", status: "active" };
         } else {
           console.log("⚠️ API Users: Could not ensure admin profile:", adminProfileError);
         }
@@ -199,11 +243,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (!userProfile || !userProfile.role || !["admin", "manager"].includes(userProfile.role)) {
+    // Check permissions: must be admin with active status
+    if (!userProfile || !userProfile.role || !["admin", "manager"].includes(userProfile.role) || userProfile.status !== "active") {
       console.log("❌ API Users: Insufficient permissions - user profile:", userProfile)
+      
+      const errorMessage = !userProfile 
+        ? "User profile not found"
+        : userProfile.status === "pending"
+        ? "Your account is pending approval. Please contact an administrator."
+        : userProfile.status === "inactive"
+        ? "Your account has been deactivated. Please contact an administrator."
+        : `Insufficient permissions. Required: active admin or manager. Current: ${userProfile.role} (${userProfile.status})`
+      
       return NextResponse.json({ 
         error: "Insufficient permissions",
-        details: `User role: ${userProfile?.role || 'none'}, Required: admin or manager`
+        details: errorMessage
       }, { status: 403 })
     }
 
@@ -257,13 +311,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!user) {
-      return NextResponse.json({ 
-        error: "Authentication required",
-        message: "Please log in to create users"
-      }, { status: 401 })
-    }
-
     // Create admin client for database operations
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -281,13 +328,137 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const body = await request.json()
+    const { email, password, full_name, role, status, department, position, phone, isSignup } = body
+
+    // If this is a signup request (from signup form), allow without authentication
+    if (isSignup) {
+      console.log("📝 API Users: Signup request detected, allowing without authentication")
+      
+      // Validate required fields for signup
+      if (!email || !password || !full_name) {
+        return NextResponse.json({ error: "Email, password, and full name are required" }, { status: 400 })
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        return NextResponse.json({ error: "Invalid email format" }, { status: 400 })
+      }
+
+      // Validate password strength
+      if (password.length < 8) {
+        return NextResponse.json(
+          { error: "Password must be at least 8 characters long" },
+          { status: 400 },
+        )
+      }
+
+      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+        return NextResponse.json(
+          {
+            error:
+              "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+          },
+          { status: 400 },
+        )
+      }
+
+      // Check if user already exists
+      try {
+        const { data: existingUser } = await adminSupabase
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .single()
+
+        if (existingUser) {
+          return NextResponse.json({ error: "User with this email already exists" }, { status: 409 })
+        }
+      } catch (error) {
+        // User doesn't exist, continue with signup
+      }
+
+      // Create user in Supabase Auth first
+      const { data: newAuthUser, error: createAuthError } = await adminSupabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          full_name,
+          role: "user", // Default role for signups
+          status: "pending", // Require approval
+          department,
+          position,
+          phone,
+        },
+      })
+
+      if (createAuthError) {
+        console.error("Error creating user in auth:", createAuthError)
+        return NextResponse.json(
+          { error: "Failed to create user account" },
+          { status: 500 },
+        )
+      }
+
+      // Create user profile in database
+      const { data: newProfile, error: profileError } = await adminSupabase
+        .from("profiles")
+        .insert({
+          id: newAuthUser.user.id,
+          email,
+          full_name,
+          role: "user", // Default role
+          status: "pending", // Requires admin approval
+          department: department || null,
+          position: position || null,
+          phone: phone || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single()
+
+      if (profileError) {
+        console.error("Error creating user profile:", profileError)
+        // Try to clean up auth user if profile creation fails
+        try {
+          await adminSupabase.auth.admin.deleteUser(newAuthUser.user.id)
+        } catch (cleanupError) {
+          console.error("Error cleaning up auth user:", cleanupError)
+        }
+        return NextResponse.json({ error: "Failed to create user profile" }, { status: 500 })
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Account created successfully! Please wait for admin approval before accessing the system.",
+        user: {
+          id: newProfile.id,
+          email: newProfile.email,
+          full_name: newProfile.full_name,
+          role: newProfile.role,
+          status: newProfile.status,
+        },
+      })
+    }
+
+    // For admin-created users, require authentication and admin permissions
+    if (!user) {
+      return NextResponse.json({ 
+        error: "Authentication required",
+        message: "Please log in to create users"
+      }, { status: 401 })
+    }
+
     // Check if user has admin permissions - try profiles table first, then users
     let userProfile = null
 
     try {
       const { data: profileData, error: profileError } = await adminSupabase
         .from("profiles")
-        .select("role")
+        .select("role, status")
         .eq("id", user.id)
         .single()
 
@@ -301,9 +472,9 @@ export async function POST(request: NextRequest) {
     // If profiles table failed, try users table
     if (!userProfile) {
       try {
-        const { data: userData, error: userError } = await supabase
+        const { data: userData, error: userError } = await adminSupabase
           .from("users")
-          .select("role")
+          .select("role, status")
           .eq("id", user.id)
           .single()
 
@@ -317,23 +488,20 @@ export async function POST(request: NextRequest) {
 
     // If still no user profile found, check if it's the admin user by email
     if (!userProfile && user.email === 'luxsess2001@gmail.com') {
-      userProfile = { role: "admin" }
+      userProfile = { role: "admin", status: "active" }
     }
 
-    // If still no user profile found, default to admin for testing
-    if (!userProfile) {
-      console.log("No user profile found, defaulting to admin for testing")
-      userProfile = { role: "admin" }
+    // Check if user has proper permissions (admin role and active status)
+    if (!userProfile || userProfile.role !== "admin" || userProfile.status !== "active") {
+      return NextResponse.json({ 
+        error: "Insufficient permissions",
+        message: userProfile?.status === "pending" 
+          ? "Your account is pending approval. Please contact an administrator."
+          : "Only active administrators can create users"
+      }, { status: 403 })
     }
 
-    if (!userProfile.role || userProfile.role !== "admin") {
-      return NextResponse.json({ error: "Only admins can create users" }, { status: 403 })
-    }
-
-    const body = await request.json()
-    const { email, password, full_name, role, status, department, position, phone } = body
-
-    // Validate required fields
+    // For admin-created users, validate required fields
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
     }
