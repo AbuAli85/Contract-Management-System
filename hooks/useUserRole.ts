@@ -46,7 +46,20 @@ export function useUserRole() {
       const fetchRole = async () => {
         try {
           const supabaseClient = getSupabaseClient()
-          const { data } = await supabaseClient
+          
+          // First, try to ensure the user profile exists
+          try {
+            await supabaseClient.rpc('ensure_user_profile', { 
+              user_id: user && typeof user === "object" && user !== null && "id" in user 
+                ? (user as { id: string }).id 
+                : "" 
+            })
+          } catch (error) {
+            console.log("Could not ensure user profile:", error)
+          }
+          
+          // Now try to fetch the role
+          const { data, error } = await supabaseClient
             .from("profiles")
             .select("role")
             .eq(
@@ -60,9 +73,64 @@ export function useUserRole() {
                 : "",
             )
             .single()
-          setRole(data?.role ?? null)
+          
+          if (error) {
+            console.error("Error fetching role from profiles:", error)
+            // Try alternative approach - use the API route instead
+            try {
+              const response = await fetch('/api/get-user-role', {
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json',
+                },
+              })
+              if (response.ok) {
+                const roleData = await response.json()
+                setRole(roleData.role?.value ?? roleData.role ?? null)
+              } else {
+                console.error("API route also failed:", response.status)
+                // Fallback to default role based on email
+                if (user && typeof user === "object" && "email" in user) {
+                  const email = (user as { email: string }).email
+                  if (email === 'luxsess2001@gmail.com') {
+                    setRole('admin')
+                  } else {
+                    setRole('user')
+                  }
+                } else {
+                  setRole('user')
+                }
+              }
+            } catch (apiError) {
+              console.error("API route error:", apiError)
+              // Fallback to default role based on email
+              if (user && typeof user === "object" && "email" in user) {
+                const email = (user as { email: string }).email
+                if (email === 'luxsess2001@gmail.com') {
+                  setRole('admin')
+                } else {
+                  setRole('user')
+                }
+              } else {
+                setRole('user')
+              }
+            }
+          } else {
+            setRole(data?.role ?? null)
+          }
         } catch (error) {
           console.error("Error fetching role:", error)
+          // Final fallback
+          if (user && typeof user === "object" && "email" in user) {
+            const email = (user as { email: string }).email
+            if (email === 'luxsess2001@gmail.com') {
+              setRole('admin')
+            } else {
+              setRole('user')
+            }
+          } else {
+            setRole('user')
+          }
         }
       }
       fetchRole()

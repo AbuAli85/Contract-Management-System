@@ -92,6 +92,38 @@ function DetailItem({
   )
 }
 
+// Custom Document Status Component
+function DocumentStatusDisplay({ 
+  expiryDate, 
+  documentUrl, 
+  documentNumber, 
+  documentType 
+}: { 
+  expiryDate: string | null | undefined
+  documentUrl: string | null | undefined
+  documentNumber: string | null | undefined
+  documentType: "id_card" | "passport"
+}) {
+  const statusInfo = getDocumentStatus(expiryDate)
+  
+  // Determine if document is available (has URL or number)
+  const hasDocument = documentUrl || documentNumber
+  
+  return (
+    <div className="flex items-center space-x-2 rounded-md border p-2 bg-gray-50">
+      <statusInfo.Icon className="h-5 w-5" style={{ color: statusInfo.colorClass }} />
+      <div className="flex flex-col">
+        <span className="text-sm font-semibold">
+          {hasDocument ? statusInfo.text : "No Document"}
+        </span>
+        <span className="text-xs text-gray-600">
+          {expiryDate ? `Expires: ${format(parseISO(expiryDate), "MMM dd, yyyy")}` : "No expiry date"}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function PromoterDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -206,21 +238,17 @@ export default function PromoterDetailPage() {
           .eq('promoter_id', promoterId)
         
         if (!tagsError && tagsData) {
-          tags = tagsData.map(t => t.tag).filter(Boolean)
+          tags = tagsData.map((t: any) => t.tag).filter(Boolean)
         }
       } catch (error) {
         // If promoter_tags table doesn't exist, use empty array
         console.log('promoter_tags table not available, using empty tags array')
       }
 
+      // Fetch contracts without complex joins to avoid relationship issues
       const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")
-        .select(
-          `
-          *,
-          second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar)
-        `,
-        )
+        .select("*")
         .eq("promoter_id", promoterId)
 
       if (contractsError) {
@@ -536,8 +564,10 @@ export default function PromoterDetailPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">ID Card</span>
-                    <DocumentStatusBadge
+                    <DocumentStatusDisplay
                       expiryDate={promoterDetails?.id_card_expiry_date}
+                      documentUrl={promoterDetails?.id_card_url}
+                      documentNumber={promoterDetails?.id_card_number}
                       documentType="id_card"
                     />
                   </div>
@@ -552,7 +582,7 @@ export default function PromoterDetailPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(promoterDetails.id_card_url, '_blank')}
+                        onClick={() => window.open(promoterDetails.id_card_url!, '_blank')}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View ID
@@ -576,8 +606,10 @@ export default function PromoterDetailPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Passport</span>
-                    <DocumentStatusBadge
+                    <DocumentStatusDisplay
                       expiryDate={promoterDetails?.passport_expiry_date}
+                      documentUrl={promoterDetails?.passport_url}
+                      documentNumber={promoterDetails?.passport_number}
                       documentType="passport"
                     />
                   </div>
@@ -600,7 +632,7 @@ export default function PromoterDetailPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(promoterDetails.passport_url, '_blank')}
+                        onClick={() => window.open(promoterDetails.passport_url!, '_blank')}
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View Passport

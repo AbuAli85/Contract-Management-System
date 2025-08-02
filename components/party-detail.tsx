@@ -72,9 +72,18 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
       supabase
         .from("profiles")
         .select("id, full_name")
-        .then(({ data }) =>
-          setUsers((data || []).map((u) => ({ id: u.id, full_name: u.full_name ?? null }))),
-        )
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("Error fetching profiles:", error)
+            setUsers([])
+          } else {
+            setUsers((data || []).map((u) => ({ id: u.id, full_name: u.full_name ?? null })))
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching profiles:", error)
+          setUsers([])
+        })
       supabase
         .from("party_files")
         .select("*")
