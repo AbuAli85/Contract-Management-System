@@ -1,6 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useState } from "react"
+import Link from "next/link"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,7 +21,10 @@ import {
   Users,
   FileText,
   Activity,
-  Building2
+  Building2,
+  Bell,
+  ChevronRight,
+  Plus
 } from "lucide-react"
 
 // Loading components
@@ -338,6 +342,193 @@ export default function DashboardPage({ params }: DashboardPageProps) {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Enhanced Entity Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Promoters Overview Card */}
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform duration-300">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+                <Button variant="ghost" size="sm" asChild className="text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-1 h-auto">
+                  <Link href={`/${locale}/manage-promoters`}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.totalPromoters || 0}</div>
+                  <div className="text-sm font-semibold text-purple-700">Total Promoters</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                    {stats?.activePromoters || 0} Active
+                  </Badge>
+                  {stats?.expiringIds > 0 && (
+                    <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
+                      {stats.expiringIds} Expiring IDs
+                    </Badge>
+                  )}
+                  {stats?.expiringPassports > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                      {stats.expiringPassports} Exp. Passports
+                    </Badge>
+                  )}
+                </div>
+                <div className="pt-2">
+                  <Link 
+                    href={`/${locale}/manage-promoters`}
+                    className="text-xs text-purple-600 hover:text-purple-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
+                  >
+                    Manage Promoters <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Parties Overview Card */}
+          <Card className="bg-gradient-to-br from-green-50 to-green-100/50 border-green-200/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/25 group-hover:scale-110 transition-transform duration-300">
+                  <Building2 className="h-6 w-6 text-white" />
+                </div>
+                <Button variant="ghost" size="sm" asChild className="text-green-600 hover:text-green-800 hover:bg-green-100 p-1 h-auto">
+                  <Link href={`/${locale}/manage-parties`}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.totalParties || 0}</div>
+                  <div className="text-sm font-semibold text-green-700">Total Companies</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                    {stats?.totalParties || 0} Registered
+                  </Badge>
+                  {stats?.expiringDocuments > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                      {stats.expiringDocuments} Exp. Docs
+                    </Badge>
+                  )}
+                </div>
+                <div className="pt-2">
+                  <Link 
+                    href={`/${locale}/manage-parties`}
+                    className="text-xs text-green-600 hover:text-green-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
+                  >
+                    Manage Companies <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Contracts Overview Card */}
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform duration-300">
+                  <FileText className="h-6 w-6 text-white" />
+                </div>
+                <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-1 h-auto">
+                  <Link href={`/${locale}/contracts`}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.totalContracts || 0}</div>
+                  <div className="text-sm font-semibold text-blue-700">Total Contracts</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                    {stats?.activeContracts || 0} Active
+                  </Badge>
+                  {stats?.pendingContracts > 0 && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200">
+                      {stats.pendingContracts} Pending
+                    </Badge>
+                  )}
+                  {stats?.completedContracts > 0 && (
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+                      {stats.completedContracts} Completed
+                    </Badge>
+                  )}
+                </div>
+                <div className="pt-2">
+                  <Link 
+                    href={`/${locale}/contracts`}
+                    className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
+                  >
+                    View All Contracts <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notifications & Alerts Overview Card */}
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200/50 hover:shadow-xl hover:scale-105 transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform duration-300">
+                  <Bell className="h-6 w-6 text-white" />
+                </div>
+                <Button variant="ghost" size="sm" asChild className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 p-1 h-auto">
+                  <Link href={`/${locale}/notifications`}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                <div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">{notifications.length || 0}</div>
+                  <div className="text-sm font-semibold text-orange-700">Notifications</div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {notifications.filter(n => n.priority === 'high').length > 0 ? (
+                    <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
+                      {notifications.filter(n => n.priority === 'high').length} High Priority
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="bg-green-100 text-green-700 border-green-200">
+                      All Clear
+                    </Badge>
+                  )}
+                  {notifications.filter(n => n.priority === 'medium').length > 0 && (
+                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200">
+                      {notifications.filter(n => n.priority === 'medium').length} Medium
+                    </Badge>
+                  )}
+                </div>
+                <div className="pt-2">
+                  <Link 
+                    href={`/${locale}/notifications`}
+                    className="text-xs text-orange-600 hover:text-orange-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
+                  >
+                    View All Notifications <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Enhanced Stats Section */}
