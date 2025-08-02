@@ -98,16 +98,21 @@ export async function POST(request: Request) {
     const timestamp = Date.now()
     
     // Clean promoter name - remove special characters and spaces
-    const cleanPromoterName = promoterName 
-      ? promoterName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
-      : 'Unknown'
+    let cleanPromoterName = 'Unknown_Promoter'
+    
+    if (promoterName && promoterName.trim() !== '' && promoterName !== 'Unknown') {
+      cleanPromoterName = promoterName.trim()
+        .replace(/[^a-zA-Z0-9\s]/g, '_')  // Replace special chars with underscore
+        .replace(/\s+/g, '_')             // Replace spaces with underscore
+        .replace(/_+/g, '_')              // Replace multiple underscores with single
+        .replace(/^_|_$/g, '')            // Remove leading/trailing underscores
+        .substring(0, 30)                 // Limit length to avoid too long filenames
+    }
     
     // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
     const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
     const uploadId = promoterId === 'new' ? `temp_${timestamp}` : promoterId
     const fileName = `${cleanPromoterName}_${uploadId}_${docTypeLabel}_${timestamp}.${fileExt}`
-
-    console.log('API upload filename:', fileName)
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer())

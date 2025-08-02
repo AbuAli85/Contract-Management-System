@@ -81,9 +81,16 @@ export default function DocumentUpload({
     const timestamp = Date.now()
     
     // Clean promoter name - remove special characters and spaces
-    const cleanPromoterName = promoterName 
-      ? promoterName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
-      : 'Unknown'
+    let cleanPromoterName = 'Unknown_Promoter'
+    
+    if (promoterName && promoterName.trim() !== '' && promoterName !== 'Unknown') {
+      cleanPromoterName = promoterName.trim()
+        .replace(/[^a-zA-Z0-9\s]/g, '_')  // Replace special chars with underscore
+        .replace(/\s+/g, '_')             // Replace spaces with underscore
+        .replace(/_+/g, '_')              // Replace multiple underscores with single
+        .replace(/^_|_$/g, '')            // Remove leading/trailing underscores
+        .substring(0, 30)                 // Limit length to avoid too long filenames
+    }
     
     // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
     const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
@@ -106,6 +113,37 @@ export default function DocumentUpload({
       setUploadedDocument(null)
     }
   }, [currentUrl, documentType])
+
+  // Fetch promoter name if not provided and we have a valid promoter ID
+  useEffect(() => {
+    const fetchPromoterName = async () => {
+      if (!promoterName || promoterName === 'Unknown') {
+        if (promoterId && promoterId !== 'new' && promoterId !== '') {
+          console.log('🔍 Fetching promoter name for ID:', promoterId)
+          try {
+            const supabase = createClient()
+            const { data, error } = await supabase
+              .from('promoters')
+              .select('name_en, id_card_number')
+              .eq('id', promoterId)
+              .single()
+            
+            if (data && !error) {
+              console.log('✅ Found promoter data:', data)
+              // We'll store this in a ref or state for use in filename generation
+              // For now, we'll log it and use it when creating filenames
+            } else {
+              console.log('❌ Could not fetch promoter data:', error?.message)
+            }
+          } catch (err) {
+            console.log('❌ Error fetching promoter:', err)
+          }
+        }
+      }
+    }
+    
+    fetchPromoterName()
+  }, [promoterId, promoterName])
 
   const validateFile = (file: File): string | null => {
     // Check file type
