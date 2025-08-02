@@ -66,6 +66,12 @@ interface PromoterManagementProps {
 
 export default function PromoterManagement({ params }: PromoterManagementProps) {
   const { locale } = params
+  
+  // Safety check for locale
+  if (!locale) {
+    console.error('❌ PromoterManagement: locale is undefined in params:', params)
+  }
+  
   // Core state
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([])
   const [filteredPromoters, setFilteredPromoters] = useState<EnhancedPromoter[]>([])
@@ -592,15 +598,18 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
 
   // View and Edit handlers
   const handleView = useCallback((promoter: EnhancedPromoter) => {
-    router.push(`/${locale}/manage-promoters/${promoter.id}`)
+    const safeLocale = locale || 'en'
+    router.push(`/${safeLocale}/manage-promoters/${promoter.id}`)
   }, [router, locale])
 
   const handleEdit = useCallback((promoter: EnhancedPromoter) => {
-    router.push(`/${locale}/manage-promoters/${promoter.id}/edit`)
+    const safeLocale = locale || 'en'
+    router.push(`/${safeLocale}/manage-promoters/${promoter.id}/edit`)
   }, [router, locale])
 
   const handleAddNew = useCallback(() => {
-    router.push(`/${locale}/manage-promoters/new`)
+    const safeLocale = locale || 'en'
+    router.push(`/${safeLocale}/manage-promoters/new`)
   }, [router, locale])
 
   if (isLoading) {

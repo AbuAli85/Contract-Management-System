@@ -1,271 +1,290 @@
-import { Suspense } from "react"
+"use client"
+
+import { Suspense, useEffect, useState } from "react"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DashboardStats } from "@/components/dashboard/dashboard-stats"
+import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications"
+import { DashboardActivities } from "@/components/dashboard/dashboard-activities"
+import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
+import { useToast } from "@/hooks/use-toast"
 import { 
-  FileText, 
-  Users, 
-  TrendingUp, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle,
-  BarChart3,
-  Plus,
-  Eye,
+  RefreshCw,
   Settings,
-  Bell
+  Download,
+  Calendar,
+  TrendingUp,
+  AlertTriangle,
+  Users,
+  FileText,
+  Activity
 } from "lucide-react"
 
-// Loading fallback
-function DashboardLoading() {
+// Loading components
+function StatsLoading() {
   return (
-    <div className="flex items-center justify-center py-12">
-      <div className="mr-2 animate-spin">⏳</div> Loading dashboard...
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {[...Array(8)].map((_, i) => (
+        <Card key={i} className="animate-pulse">
+          <CardHeader className="space-y-0 pb-2">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-8 bg-gray-200 rounded w-1/2 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
 
-interface DashboardStats {
-  totalContracts: number
-  activeContracts: number
-  pendingContracts: number
-  totalPromoters: number
-  totalParties: number
-  pendingApprovals: number
-  systemHealth: number
-  recentActivity: number
+function NotificationsLoading() {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
+        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
 }
 
-export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params
+interface DashboardPageProps {
+  params: Promise<{ locale: string }>
+}
 
-  // Mock data - in real app this would come from API
-  const stats = {
-    totalContracts: 156,
-    activeContracts: 89,
-    pendingContracts: 23,
-    totalPromoters: 45,
-    totalParties: 234,
-    pendingApprovals: 12,
-    systemHealth: 98,
-    recentActivity: 67
+export default function DashboardPage({ params }: DashboardPageProps) {
+  const [locale, setLocale] = useState<string>("")
+  const [stats, setStats] = useState<any>(null)
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const { toast } = useToast()
+
+  // Resolve params
+  useEffect(() => {
+    params.then(({ locale: resolvedLocale }) => {
+      setLocale(resolvedLocale)
+    })
+  }, [params])
+
+  // Fetch dashboard data
+  const fetchDashboardData = async (showRefreshToast = false) => {
+    try {
+      if (showRefreshToast) setRefreshing(true)
+      
+      const [statsResponse, notificationsResponse, activitiesResponse] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/dashboard/notifications'),
+        fetch('/api/dashboard/activities')
+      ])
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      }
+
+      if (notificationsResponse.ok) {
+        const notificationsData = await notificationsResponse.json()
+        setNotifications(notificationsData)
+      }
+
+      if (activitiesResponse.ok) {
+        const activitiesData = await activitiesResponse.json()
+        setActivities(activitiesData)
+      }
+
+      if (showRefreshToast) {
+        toast({
+          title: "Dashboard Updated",
+          description: "All data has been refreshed successfully.",
+        })
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+      toast({
+        title: "Update Failed",
+        description: "Failed to refresh dashboard data. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  // Initial data load
+  useEffect(() => {
+    if (locale) {
+      fetchDashboardData()
+    }
+  }, [locale])
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchDashboardData()
+    }, 5 * 60 * 1000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleRefresh = () => {
+    fetchDashboardData(true)
+  }
+
+  if (!locale) {
+    return (
+      <DashboardAuthGuard locale="en">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardAuthGuard>
+    )
   }
 
   return (
     <DashboardAuthGuard locale={locale}>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+      <div className="space-y-8 p-8 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50 min-h-screen">
+        {/* Enhanced Header */}
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back! Here's your system overview.</p>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            <p className="text-lg text-muted-foreground mt-2">
+              Welcome back! Here's what's happening with your contracts and promoters.
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Bell className="mr-2 h-4 w-4" />
-              Notifications
+          
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="hover:bg-blue-50"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="hover:bg-purple-50">
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button variant="outline" size="sm" className="hover:bg-gray-50">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalContracts}</div>
-              <p className="text-xs text-muted-foreground">
-                +12% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Promoters</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalPromoters}</div>
-              <p className="text-xs text-muted-foreground">
-                +5% from last week
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingApprovals}</div>
-              <p className="text-xs text-muted-foreground">
-                Requires attention
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">System Health</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.systemHealth}%</div>
-              <p className="text-xs text-muted-foreground">
-                All systems operational
-              </p>
-            </CardContent>
-          </Card>
+        {/* Stats Section */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-blue-600" />
+            <h2 className="text-xl font-semibold">Key Metrics</h2>
+          </div>
+          
+          <Suspense fallback={<StatsLoading />}>
+            {loading || !stats ? (
+              <StatsLoading />
+            ) : (
+              <DashboardStats stats={stats} />
+            )}
+          </Suspense>
         </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>
-              Access the most common features and workflows
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <a
-                href={`/${locale}/generate-contract`}
-                className="group rounded-lg border border-border p-6 hover:bg-accent transition-all duration-200 hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-blue-100 p-2 group-hover:bg-blue-200 transition-colors">
-                    <Plus className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold group-hover:text-blue-600 transition-colors">Generate Contract</h3>
-                    <p className="text-sm text-muted-foreground">Create a new contract</p>
-                  </div>
-                </div>
-              </a>
-
-              <a
-                href={`/${locale}/manage-promoters`}
-                className="group rounded-lg border border-border p-6 hover:bg-accent transition-all duration-200 hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-green-100 p-2 group-hover:bg-green-200 transition-colors">
-                    <Users className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold group-hover:text-green-600 transition-colors">Manage Promoters</h3>
-                    <p className="text-sm text-muted-foreground">View and manage promoters</p>
-                  </div>
-                </div>
-              </a>
-
-              <a 
-                href={`/${locale}/contracts`} 
-                className="group rounded-lg border border-border p-6 hover:bg-accent transition-all duration-200 hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-purple-100 p-2 group-hover:bg-purple-200 transition-colors">
-                    <Eye className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold group-hover:text-purple-600 transition-colors">View Contracts</h3>
-                    <p className="text-sm text-muted-foreground">Browse all contracts</p>
-                  </div>
-                </div>
-              </a>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Left Column - Quick Actions */}
+          <div className="lg:col-span-1">
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-green-600" />
+                <h2 className="text-xl font-semibold">Quick Actions</h2>
+              </div>
+              <DashboardQuickActions locale={locale} />
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Recent Activity
-            </CardTitle>
-            <CardDescription>
-              Latest system activities and updates
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Contract #CTR-2024-001 approved</p>
-                  <p className="text-xs text-muted-foreground">2 minutes ago</p>
+          {/* Right Column - Notifications & Activities */}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
+              {/* Notifications */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-orange-600" />
+                  <h2 className="text-xl font-semibold">Alerts & Notifications</h2>
                 </div>
-                <Badge variant="secondary">Approved</Badge>
+                <Suspense fallback={<NotificationsLoading />}>
+                  {loading ? (
+                    <NotificationsLoading />
+                  ) : (
+                    <DashboardNotifications 
+                      notifications={notifications} 
+                      onRefresh={handleRefresh}
+                    />
+                  )}
+                </Suspense>
               </div>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
-                <Users className="h-4 w-4 text-blue-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">New promoter registered: John Smith</p>
-                  <p className="text-xs text-muted-foreground">15 minutes ago</p>
+              {/* Recent Activities */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-purple-600" />
+                  <h2 className="text-xl font-semibold">Recent Activities</h2>
                 </div>
-                <Badge variant="secondary">New</Badge>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Contract #CTR-2024-015 pending approval</p>
-                  <p className="text-xs text-muted-foreground">1 hour ago</p>
-                </div>
-                <Badge variant="secondary">Pending</Badge>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-purple-50 border border-purple-200">
-                <FileText className="h-4 w-4 text-purple-600" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">Contract template updated</p>
-                  <p className="text-xs text-muted-foreground">2 hours ago</p>
-                </div>
-                <Badge variant="secondary">Updated</Badge>
+                <Suspense fallback={<NotificationsLoading />}>
+                  {loading ? (
+                    <NotificationsLoading />
+                  ) : (
+                    <DashboardActivities 
+                      activities={activities} 
+                      onRefresh={handleRefresh}
+                    />
+                  )}
+                </Suspense>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        {/* System Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              System Status
-            </CardTitle>
-            <CardDescription>
-              Current system performance and health metrics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.systemHealth}%</div>
-                <p className="text-sm text-muted-foreground">Uptime</p>
+        {/* System Status Footer */}
+        <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+          <CardContent className="flex items-center justify-between p-6">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
+                <Activity className="h-5 w-5 text-green-600" />
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{stats.recentActivity}</div>
-                <p className="text-sm text-muted-foreground">Activities Today</p>
+              <div>
+                <h3 className="font-semibold text-green-900">System Status: All Systems Operational</h3>
+                <p className="text-sm text-green-700">
+                  Last updated: {new Date().toLocaleTimeString()} • Uptime: 99.9%
+                </p>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.totalParties}</div>
-                <p className="text-sm text-muted-foreground">Total Parties</p>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-green-700">
+              <div className="flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                <span>{stats?.totalPromoters || 0} Promoters</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <FileText className="h-4 w-4" />
+                <span>{stats?.totalContracts || 0} Contracts</span>
               </div>
             </div>
           </CardContent>
