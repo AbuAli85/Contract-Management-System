@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     const formData = await request.formData()
     const file = formData.get("file") as File
     const promoterId = formData.get("promoterId") as string
+    const promoterName = formData.get("promoterName") as string
     const documentType = formData.get("documentType") as string
 
     if (!file) {
@@ -92,10 +93,21 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create unique filename
-    const fileExt = file.name.split('.').pop()?.toLowerCase()
-    const uploadId = promoterId === 'new' ? `temp_${Date.now()}` : promoterId
-    const fileName = `${uploadId}_${documentType}_${Date.now()}.${fileExt}`
+    // Create unique filename with promoter name
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf'
+    const timestamp = Date.now()
+    
+    // Clean promoter name - remove special characters and spaces
+    const cleanPromoterName = promoterName 
+      ? promoterName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+      : 'Unknown'
+    
+    // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
+    const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
+    const uploadId = promoterId === 'new' ? `temp_${timestamp}` : promoterId
+    const fileName = `${cleanPromoterName}_${uploadId}_${docTypeLabel}_${timestamp}.${fileExt}`
+
+    console.log('API upload filename:', fileName)
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer())
