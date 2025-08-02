@@ -180,15 +180,27 @@ export default function DocumentUpload({
       console.error('Error uploading document:', error)
       
       let errorMessage = "Failed to upload document"
+      let helpMessage = ""
+      
       if (error instanceof Error) {
-        if (error.message.includes('bucket') || error.message.includes('storage')) {
-          errorMessage = "Storage bucket not configured. Please contact administrator to set up document storage."
+        if (error.message.includes('bucket') && error.message.includes('not found')) {
+          errorMessage = "Storage bucket 'promoter-documents' not found"
+          helpMessage = "Please ask your administrator to create the storage bucket in Supabase Dashboard: Storage > New bucket > Name: 'promoter-documents' (public)"
+        } else if (error.message.includes('bucket') || error.message.includes('storage')) {
+          errorMessage = "Storage configuration issue"
+          helpMessage = "Please contact administrator to set up document storage properly."
         } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
-          errorMessage = "Permission denied. Please check your access rights."
+          errorMessage = "Permission denied"
+          helpMessage = "Please check your access rights or contact administrator."
         } else if (error.message.includes('row-level security') || error.message.includes('RLS')) {
-          errorMessage = "Access denied due to security policy. Please ensure you are properly authenticated."
+          errorMessage = "Access denied due to security policy"
+          helpMessage = "Please ensure you are properly authenticated or contact administrator to configure storage policies."
         } else if (error.message.includes('new row violates')) {
-          errorMessage = "Storage access denied. Please contact administrator to configure storage permissions."
+          errorMessage = "Storage access denied"
+          helpMessage = "Please contact administrator to configure storage permissions properly."
+        } else if (error.message.includes('mime type') && error.message.includes('not supported')) {
+          errorMessage = "File type not supported"
+          helpMessage = "Please upload only: JPEG, PNG, PDF files. Current file type is not allowed."
         } else {
           errorMessage = error.message
         }
@@ -196,7 +208,7 @@ export default function DocumentUpload({
       
       toast({
         title: "Upload failed",
-        description: errorMessage,
+        description: helpMessage ? `${errorMessage}. ${helpMessage}` : errorMessage,
         variant: "destructive",
       })
     } finally {
