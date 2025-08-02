@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { useParams, usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-service"
+import { usePendingUsersCount } from "@/hooks/use-pending-users"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RecentPromoters } from "@/components/recent-promoters"
@@ -33,6 +34,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
   const { user, loading, mounted } = useAuth()
+  const { count: pendingUsersCount } = usePendingUsersCount()
 
   // Debug logging - only log when there are issues
   if (!user && mounted && !loading) {
@@ -100,6 +102,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       icon: User,
       description: "Manage system users",
       badge: null
+    },
+    {
+      title: "User Approvals",
+      href: `/${locale}/dashboard/users/approvals`,
+      icon: Users,
+      description: "Approve pending users",
+      badge: pendingUsersCount > 0 ? pendingUsersCount.toString() : null
     },
     {
       title: "Settings",

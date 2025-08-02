@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, lazy, Suspense } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -34,8 +35,10 @@ import {
   Upload,
   Shield,
   Lock,
+  Users,
 } from "lucide-react"
 import { debounce } from "lodash"
+import { usePendingUsersCount } from "@/hooks/use-pending-users"
 
 // Lazy load components
 const PermissionsManager = lazy(() => import("@/components/user-management/PermissionsManager"))
@@ -109,6 +112,9 @@ function formatDate(date: string): string {
 }
 
 export default function NewUsersPage() {
+  // Hooks
+  const { count: pendingUsersCount } = usePendingUsersCount()
+  
   // Basic state
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -508,6 +514,43 @@ export default function NewUsersPage() {
     }
   }, [selectedUser, fetchUsers, toast])
 
+  // Handle user approval/status change
+  const handleApproveUser = useCallback(async (userId: string, status: string, role?: string) => {
+    try {
+      const response = await fetch(`/api/users/${userId}/approve`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ status, role }),
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        toast({
+          title: "User Status Updated",
+          description: result.message || `User ${status === 'active' ? 'approved' : status === 'inactive' ? 'deactivated' : 'updated'} successfully.`,
+        })
+        await fetchUsers(true) // Refresh the users list
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Error",
+          description: error.error || "Failed to update user status",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating user status:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update user status. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }, [fetchUsers, toast])
+
   // Handle bulk actions
   const handleBulkAction = useCallback(
     async (action: "delete" | "activate" | "deactivate") => {
@@ -592,6 +635,17 @@ export default function NewUsersPage() {
           <p className="text-muted-foreground">Manage users, roles, and permissions.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/dashboard/users/approvals">
+            <Button variant="outline" size="sm">
+              <Users className="mr-2 h-4 w-4" />
+              User Approvals
+              {pendingUsersCount > 0 && (
+                <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-xs">
+                  {pendingUsersCount}
+                </Badge>
+              )}
+            </Button>
+          </Link>
           <Button
             variant="outline"
             size="sm"
@@ -925,6 +979,57 @@ export default function NewUsersPage() {
                         {["admin", "manager", "user"].includes(currentUserRole) && (
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end space-x-2">
+                              {/* Approval buttons for pending users */}
+                              {currentUserRole === "admin" && user.status === "pending" && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleApproveUser(user.id, "active", "user")}
+                                    className="text-green-600 border-green-600 hover:bg-green-50"
+                                    title="Approve as User"
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleApproveUser(user.id, "inactive")}
+                                    className="text-red-600 border-red-600 hover:bg-red-50"
+                                    title="Reject User"
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                              
+                              {/* Status toggle buttons for active/inactive users */}
+                              {currentUserRole === "admin" && user.status === "active" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleApproveUser(user.id, "inactive")}
+                                  className="text-red-600 hover:text-red-700"
+                                  title="Deactivate User"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+                              
+                              {currentUserRole === "admin" && user.status === "inactive" && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleApproveUser(user.id, "active")}
+                                  className="text-green-600 hover:text-green-700"
+                                  title="Reactivate User"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                              )}
+
                               {currentUserRole === "admin" && (
                                 <Button
                                   variant="ghost"
