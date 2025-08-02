@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import {
   Bell,
@@ -125,7 +124,7 @@ export function DashboardNotifications({ notifications, onRefresh }: DashboardNo
             </p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] pr-4">
+          <div className="h-[400px] overflow-y-auto pr-4">
             <div className="space-y-3">
               {visibleNotifications.map((notification) => (
                 <div
@@ -202,7 +201,7 @@ export function DashboardNotifications({ notifications, onRefresh }: DashboardNo
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>
