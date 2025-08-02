@@ -22,6 +22,8 @@ import { createClient } from "@/lib/supabase/client"
 interface DocumentUploadProps {
   promoterId: string
   promoterName?: string // Add promoter name prop
+  idCardNumber?: string // Add ID card number
+  passportNumber?: string // Add passport number
   documentType: 'id_card' | 'passport'
   currentUrl?: string | null
   onUploadComplete: (url: string) => void
@@ -39,6 +41,8 @@ interface UploadedDocument {
 export default function DocumentUpload({
   promoterId,
   promoterName,
+  idCardNumber,
+  passportNumber,
   documentType,
   currentUrl,
   onUploadComplete,
@@ -78,7 +82,6 @@ export default function DocumentUpload({
   // Helper function to create clean filename
   const createCleanFilename = (file: File): string => {
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf'
-    const timestamp = Date.now()
     
     // Clean promoter name - remove special characters and spaces
     let cleanPromoterName = 'Unknown_Promoter'
@@ -92,11 +95,23 @@ export default function DocumentUpload({
         .substring(0, 30)                 // Limit length to avoid too long filenames
     }
     
-    // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
-    const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
-    const uploadId = promoterId === 'new' ? `temp_${timestamp}` : promoterId
+    // Create filename based on document type: {name_en}_{id_card_number/passport_number}.ext
+    let documentNumber = ''
     
-    return `${cleanPromoterName}_${uploadId}_${docTypeLabel}_${timestamp}.${fileExt}`
+    if (documentType === 'id_card') {
+      documentNumber = idCardNumber && idCardNumber.trim() !== '' 
+        ? idCardNumber.trim().replace(/[^a-zA-Z0-9]/g, '_')
+        : 'NO_ID'
+    } else if (documentType === 'passport') {
+      documentNumber = passportNumber && passportNumber.trim() !== '' 
+        ? passportNumber.trim().replace(/[^a-zA-Z0-9]/g, '_')
+        : 'NO_PASSPORT'
+    }
+    
+    // Add a short timestamp suffix to prevent conflicts (only last 4 digits)
+    const shortTimestamp = Date.now().toString().slice(-4)
+    
+    return `${cleanPromoterName}_${documentNumber}_${shortTimestamp}.${fileExt}`
   }
 
   // Update uploadedDocument when currentUrl changes
@@ -231,6 +246,8 @@ export default function DocumentUpload({
           formData.append('file', file)
           formData.append('promoterId', promoterId)
           formData.append('promoterName', promoterName || 'Unknown')
+          formData.append('idCardNumber', idCardNumber || '')
+          formData.append('passportNumber', passportNumber || '')
           formData.append('documentType', documentType)
 
           console.log('Sending to API route with promoter name:', promoterName)

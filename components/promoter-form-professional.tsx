@@ -1075,6 +1075,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                        <DocumentUpload
                          promoterId={isEditMode ? promoterToEdit?.id : 'new'}
                          promoterName={formData.full_name || promoterToEdit?.name_en || 'Unknown'}
+                         idCardNumber={formData.id_number}
+                         passportNumber={formData.passport_number}
                          documentType="id_card"
                          currentUrl={formData.id_card_url}
                          onUploadComplete={(url) => {
@@ -1090,6 +1092,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
                        <DocumentUpload
                          promoterId={isEditMode ? promoterToEdit?.id : 'new'}
                          promoterName={formData.full_name || promoterToEdit?.name_en || 'Unknown'}
+                         idCardNumber={formData.id_number}
+                         passportNumber={formData.passport_number}
                          documentType="passport"
                          currentUrl={formData.passport_url}
                          onUploadComplete={(url) => {

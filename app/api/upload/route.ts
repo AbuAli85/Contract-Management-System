@@ -57,6 +57,8 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File
     const promoterId = formData.get("promoterId") as string
     const promoterName = formData.get("promoterName") as string
+    const idCardNumber = formData.get("idCardNumber") as string
+    const passportNumber = formData.get("passportNumber") as string
     const documentType = formData.get("documentType") as string
 
     if (!file) {
@@ -93,9 +95,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create unique filename with promoter name
+    // Create unique filename with promoter name and document number
     const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf'
-    const timestamp = Date.now()
     
     // Clean promoter name - remove special characters and spaces
     let cleanPromoterName = 'Unknown_Promoter'
@@ -109,10 +110,23 @@ export async function POST(request: Request) {
         .substring(0, 30)                 // Limit length to avoid too long filenames
     }
     
-    // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
-    const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
-    const uploadId = promoterId === 'new' ? `temp_${timestamp}` : promoterId
-    const fileName = `${cleanPromoterName}_${uploadId}_${docTypeLabel}_${timestamp}.${fileExt}`
+    // Create filename based on document type: {name_en}_{id_card_number/passport_number}.ext
+    let documentNumber = ''
+    
+    if (documentType === 'id_card') {
+      documentNumber = idCardNumber && idCardNumber.trim() !== '' 
+        ? idCardNumber.trim().replace(/[^a-zA-Z0-9]/g, '_')
+        : 'NO_ID'
+    } else if (documentType === 'passport') {
+      documentNumber = passportNumber && passportNumber.trim() !== '' 
+        ? passportNumber.trim().replace(/[^a-zA-Z0-9]/g, '_')
+        : 'NO_PASSPORT'
+    }
+    
+    // Add a short timestamp suffix to prevent conflicts (only last 4 digits)
+    const shortTimestamp = Date.now().toString().slice(-4)
+    
+    const fileName = `${cleanPromoterName}_${documentNumber}_${shortTimestamp}.${fileExt}`
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer())
