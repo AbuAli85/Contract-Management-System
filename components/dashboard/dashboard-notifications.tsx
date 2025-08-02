@@ -116,12 +116,23 @@ export function DashboardNotifications({ notifications, onRefresh }: DashboardNo
       </CardHeader>
       <CardContent>
         {visibleNotifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">All caught up!</h3>
-            <p className="text-sm text-muted-foreground">
-              No notifications require your attention right now.
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="relative mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-emerald-100 rounded-3xl flex items-center justify-center shadow-lg">
+                <CheckCircle className="h-10 w-10 text-green-600" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">All caught up!</h3>
+            <p className="text-slate-600 max-w-md leading-relaxed mb-6 font-medium">
+              No notifications require your attention right now. We'll notify you when something important happens.
             </p>
+            <div className="flex items-center gap-3 text-sm text-slate-500 bg-green-50 px-4 py-2 rounded-full border border-green-200">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></div>
+              <span className="font-medium">System monitoring active</span>
+            </div>
           </div>
         ) : (
           <div className="h-[400px] overflow-y-auto pr-4">

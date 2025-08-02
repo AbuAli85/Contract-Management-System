@@ -141,12 +141,33 @@ export function DashboardActivities({ activities, onRefresh }: DashboardActiviti
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <Activity className="h-12 w-12 text-gray-400 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">No recent activities</h3>
-            <p className="text-sm text-muted-foreground">
-              Activities will appear here as they happen.
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="relative mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center shadow-lg">
+                <Activity className="h-10 w-10 text-blue-600" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                <Plus className="h-4 w-4 text-white" />
+              </div>
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">No recent activities</h3>
+            <p className="text-slate-600 max-w-md leading-relaxed mb-8 font-medium">
+              Activities will appear here as they happen. Create a contract or add a promoter to get started and see your system come to life.
             </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link href="/generate-contract">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Contract
+                </Button>
+              </Link>
+              <Link href="/manage-promoters/new">
+                <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 shadow-sm hover:shadow-lg transition-all duration-300 hover:scale-105">
+                  <Users className="h-4 w-4 mr-2" />
+                  Add Promoter
+                </Button>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="h-[400px] overflow-y-auto pr-4">
