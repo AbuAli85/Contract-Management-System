@@ -2,8 +2,6 @@
 
 import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 import {
@@ -15,30 +13,12 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
-  AlertCircle,
-  Calendar,
   Activity,
   Target,
   Zap,
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react"
-
-// Lazy load charts to prevent SSR issues
-const BarChart = React.lazy(() => import('recharts').then(module => ({ default: module.BarChart })))
-const Bar = React.lazy(() => import('recharts').then(module => ({ default: module.Bar })))
-const XAxis = React.lazy(() => import('recharts').then(module => ({ default: module.XAxis })))
-const YAxis = React.lazy(() => import('recharts').then(module => ({ default: module.YAxis })))
-const CartesianGrid = React.lazy(() => import('recharts').then(module => ({ default: module.CartesianGrid })))
-const Tooltip = React.lazy(() => import('recharts').then(module => ({ default: module.Tooltip })))
-const ResponsiveContainer = React.lazy(() => import('recharts').then(module => ({ default: module.ResponsiveContainer })))
-const PieChart = React.lazy(() => import('recharts').then(module => ({ default: module.PieChart })))
-const Pie = React.lazy(() => import('recharts').then(module => ({ default: module.Pie })))
-const Cell = React.lazy(() => import('recharts').then(module => ({ default: module.Cell })))
-const LineChart = React.lazy(() => import('recharts').then(module => ({ default: module.LineChart })))
-const Line = React.lazy(() => import('recharts').then(module => ({ default: module.Line })))
-const AreaChart = React.lazy(() => import('recharts').then(module => ({ default: module.AreaChart })))
-const Area = React.lazy(() => import('recharts').then(module => ({ default: module.Area })))
 
 interface DashboardStatsProps {
   stats: {
@@ -67,31 +47,7 @@ interface DashboardStatsProps {
   }
 }
 
-const COLORS = {
-  active: '#10b981',
-  pending: '#f59e0b',
-  completed: '#3b82f6',
-  cancelled: '#ef4444',
-  primary: '#6366f1',
-  secondary: '#8b5cf6'
-}
-
 export function DashboardStats({ stats }: DashboardStatsProps) {
-  // Prepare pie chart data
-  const statusData = Object.entries(stats.contractsByStatus).map(([status, count]) => ({
-    name: status.charAt(0).toUpperCase() + status.slice(1),
-    value: count,
-    color: COLORS[status as keyof typeof COLORS] || COLORS.primary
-  }))
-
-  // Prepare trend data (last 6 months)
-  const trendData = stats.monthlyData.slice(-6).map(item => ({
-    month: new Date(item.month + '-01').toLocaleDateString('en-US', { month: 'short' }),
-    contracts: item.total,
-    active: item.active,
-    completed: item.completed
-  }))
-
   const StatCard = ({ 
     title, 
     value, 
@@ -227,102 +183,89 @@ export function DashboardStats({ stats }: DashboardStatsProps) {
         />
       </div>
 
-      {/* Charts Section */}
+      {/* Status Overview Cards */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Contract Status Distribution */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5 text-blue-600" />
-              Contract Status Distribution
+              Contract Status Overview
             </CardTitle>
             <CardDescription>
               Current breakdown of all contracts by status
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            {/* Legend */}
-            <div className="flex flex-wrap gap-4 mt-4">
-              {statusData.map((item, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className={cn(
+            <div className="space-y-4">
+              {Object.entries(stats.contractsByStatus).map(([status, count]) => (
+                <div key={status} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
                       "w-3 h-3 rounded-full",
-                      item.name === "Active" && "bg-green-500",
-                      item.name === "Pending" && "bg-yellow-500", 
-                      item.name === "Completed" && "bg-blue-500",
-                      item.name === "Cancelled" && "bg-red-500"
-                    )}
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {item.name}: {item.value}
-                  </span>
+                      status === "active" && "bg-green-500",
+                      status === "pending" && "bg-yellow-500",
+                      status === "completed" && "bg-blue-500",
+                      status === "cancelled" && "bg-red-500"
+                    )} />
+                    <span className="text-sm font-medium capitalize">{status}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold">{count}</span>
+                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={cn(
+                          "h-2 rounded-full",
+                          status === "active" && "bg-green-500",
+                          status === "pending" && "bg-yellow-500",
+                          status === "completed" && "bg-blue-500",
+                          status === "cancelled" && "bg-red-500"
+                        )}
+                        style={{ 
+                          width: `${(count / Math.max(stats.totalContracts, 1)) * 100}%` 
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Monthly Trends */}
+        {/* Monthly Trends Summary */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-green-600" />
-              Contract Trends (6 Months)
+              Recent Trends
             </CardTitle>
             <CardDescription>
-              Monthly contract creation and completion trends
+              Summary of recent contract activity
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="contracts" 
-                    stackId="1"
-                    stroke={COLORS.primary} 
-                    fill={COLORS.primary}
-                    fillOpacity={0.6}
-                    name="Total Contracts"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="completed" 
-                    stackId="2"
-                    stroke={COLORS.completed} 
-                    fill={COLORS.completed}
-                    fillOpacity={0.6}
-                    name="Completed"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {stats.monthlyData[stats.monthlyData.length - 1]?.total || 0}
+                  </div>
+                  <p className="text-sm text-blue-600">This Month</p>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats.monthlyData[stats.monthlyData.length - 1]?.completed || 0}
+                  </div>
+                  <p className="text-sm text-green-600">Completed</p>
+                </div>
+              </div>
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  📈 Contract creation is {stats.contractGrowth > 0 ? 'trending up' : 'stable'} 
+                  with {stats.contractGrowth}% growth this month
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -4,7 +4,6 @@ import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import {
   Activity,
@@ -150,7 +149,7 @@ export function DashboardActivities({ activities, onRefresh }: DashboardActiviti
             </p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] pr-4">
+          <div className="h-[400px] overflow-y-auto pr-4">
             <div className="space-y-4">
               {activities.map((activity, index) => (
                 <div
@@ -208,7 +207,7 @@ export function DashboardActivities({ activities, onRefresh }: DashboardActiviti
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>

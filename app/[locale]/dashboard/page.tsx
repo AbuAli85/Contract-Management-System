@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { DashboardStats } from "@/components/dashboard/dashboard-stats"
+import { DashboardStats } from "@/components/dashboard/dashboard-stats-simple"
 import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications"
 import { DashboardActivities } from "@/components/dashboard/dashboard-activities"
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
@@ -62,11 +62,11 @@ function NotificationsLoading() {
 }
 
 interface DashboardPageProps {
-  params: Promise<{ locale: string }>
+  params: { locale: string }
 }
 
 export default function DashboardPage({ params }: DashboardPageProps) {
-  const [locale, setLocale] = useState<string>("")
+  const { locale } = params
   const [stats, setStats] = useState<any>(null)
   const [notifications, setNotifications] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
@@ -74,37 +74,52 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const [refreshing, setRefreshing] = useState(false)
   const { toast } = useToast()
 
-  // Resolve params
-  useEffect(() => {
-    params.then(({ locale: resolvedLocale }) => {
-      setLocale(resolvedLocale)
-    })
-  }, [params])
-
   // Fetch dashboard data
   const fetchDashboardData = async (showRefreshToast = false) => {
     try {
       if (showRefreshToast) setRefreshing(true)
       
+      // Use relative URLs for API calls
       const [statsResponse, notificationsResponse, activitiesResponse] = await Promise.all([
-        fetch('/api/dashboard/stats'),
-        fetch('/api/dashboard/notifications'),
-        fetch('/api/dashboard/activities')
+        fetch('/api/dashboard/stats').catch(err => {
+          console.error('Stats API error:', err)
+          return { ok: false }
+        }),
+        fetch('/api/dashboard/notifications').catch(err => {
+          console.error('Notifications API error:', err)
+          return { ok: false }
+        }),
+        fetch('/api/dashboard/activities').catch(err => {
+          console.error('Activities API error:', err)
+          return { ok: false }
+        })
       ])
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
         setStats(statsData)
+      } else {
+        // Set fallback stats data
+        setStats({
+          totalContracts: 0, activeContracts: 0, pendingContracts: 0, completedContracts: 0,
+          totalPromoters: 0, activePromoters: 0, totalParties: 0, pendingApprovals: 0,
+          recentActivity: 0, expiringDocuments: 0, contractsByStatus: {},
+          monthlyData: [], contractGrowth: 0, promoterGrowth: 0, completionRate: 0, avgProcessingTime: '0'
+        })
       }
 
       if (notificationsResponse.ok) {
         const notificationsData = await notificationsResponse.json()
         setNotifications(notificationsData)
+      } else {
+        setNotifications([])
       }
 
       if (activitiesResponse.ok) {
         const activitiesData = await activitiesResponse.json()
         setActivities(activitiesData)
+      } else {
+        setActivities([])
       }
 
       if (showRefreshToast) {
@@ -115,11 +130,24 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error)
-      toast({
-        title: "Update Failed",
-        description: "Failed to refresh dashboard data. Please try again.",
-        variant: "destructive",
-      })
+      
+      // Set fallback data
+      if (!stats) {
+        setStats({
+          totalContracts: 0, activeContracts: 0, pendingContracts: 0, completedContracts: 0,
+          totalPromoters: 0, activePromoters: 0, totalParties: 0, pendingApprovals: 0,
+          recentActivity: 0, expiringDocuments: 0, contractsByStatus: {},
+          monthlyData: [], contractGrowth: 0, promoterGrowth: 0, completionRate: 0, avgProcessingTime: '0'
+        })
+      }
+      
+      if (showRefreshToast) {
+        toast({
+          title: "Update Failed",
+          description: "Failed to refresh dashboard data. Using cached data.",
+          variant: "destructive",
+        })
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -128,10 +156,8 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   // Initial data load
   useEffect(() => {
-    if (locale) {
-      fetchDashboardData()
-    }
-  }, [locale])
+    fetchDashboardData()
+  }, [])
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
@@ -144,16 +170,6 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   const handleRefresh = () => {
     fetchDashboardData(true)
-  }
-
-  if (!locale) {
-    return (
-      <DashboardAuthGuard locale="en">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
-      </DashboardAuthGuard>
-    )
   }
 
   return (
