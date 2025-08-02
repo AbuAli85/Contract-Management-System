@@ -48,44 +48,34 @@ export function SignupForm() {
       console.log("📝 Signup Debug - Email:", email)
       console.log("📝 Signup Debug - Full Name:", fullName)
 
-      const profile = {
-        full_name: fullName,
-        role: "user", // Default role for new users
-        status: "pending", // All new users start as pending
-        department: "",
-        position: "",
-      }
+      // Use the API endpoint for signup instead of auth service
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          full_name: fullName,
+          isSignup: true, // Flag to indicate this is a signup request
+        }),
+      })
 
-      console.log("📝 Signup Debug - Profile data:", profile)
+      const result = await response.json()
 
-      const { success, error, data } = await signUp(email, password, profile)
+      console.log("📝 Signup Debug - API response:", result)
 
-      console.log("📝 Signup Debug - SignUp response:", { success, error, data })
-
-      if (!success || error) {
-        console.error("📝 Signup Debug - Signup error:", error)
-        
-        // Provide more specific error messages
-        let errorMessage = error || "Signup failed"
-        
-        if (error?.includes("User already registered")) {
-          errorMessage = "An account with this email already exists. Please try logging in instead."
-        } else if (error?.includes("Invalid email")) {
-          errorMessage = "Please enter a valid email address."
-        } else if (error?.includes("Password")) {
-          errorMessage = "Password does not meet requirements. Please ensure it's at least 8 characters long."
-        } else if (error?.includes("Database error") || error?.includes("saving new user")) {
-          errorMessage = "There was a problem creating your account. Please try again or contact support if the issue persists."
-        }
-        
-        setError(errorMessage)
+      if (!response.ok) {
+        console.error("📝 Signup Debug - Signup error:", result.error)
+        setError(result.error || "Signup failed")
         setLoading(false)
         return
       }
 
       console.log("📝 Signup Debug - Signup successful")
       setSuccess(
-        "Account created successfully! Please check your email to confirm your account. Your account will be pending approval until confirmed.",
+        result.message || "Account created successfully! Please wait for admin approval before accessing the system.",
       )
       
       // Clear form
@@ -96,7 +86,7 @@ export function SignupForm() {
       
       // Redirect to login page after successful signup
       setTimeout(() => {
-        router.push('/en/auth/login?message=Please check your email to confirm your account')
+        router.push('/en/auth/login?message=Account created successfully. Please wait for admin approval.')
       }, 3000)
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)
