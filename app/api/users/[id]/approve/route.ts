@@ -59,10 +59,11 @@ export async function PUT(
 
     console.log("🔄 API Approve: Updating user with data:", updateData)
 
-    const { error: updateError } = await adminClient
+    const { data: updatedUser, error: updateError } = await adminClient
       .from("profiles")
       .update(updateData)
       .eq("id", userId)
+      .select()
 
     if (updateError) {
       console.error("❌ API Approve: Error updating user:", updateError)
@@ -72,7 +73,20 @@ export async function PUT(
       }, { status: 500 })
     }
 
-    console.log("✅ API Approve: User updated successfully")
+    console.log("✅ API Approve: User updated successfully:", updatedUser)
+    
+    // Verify the update by querying the user again
+    const { data: verifyUser, error: verifyError } = await adminClient
+      .from("profiles")
+      .select("id, email, status, updated_at")
+      .eq("id", userId)
+      .single()
+      
+    if (verifyError) {
+      console.log("⚠️ API Approve: Could not verify update:", verifyError)
+    } else {
+      console.log("✅ API Approve: Verified user status:", verifyUser)
+    }
     return NextResponse.json({ 
       success: true,
       message: `User ${status === 'active' ? 'approved' : status === 'inactive' ? 'deactivated' : 'set to pending'} successfully`
