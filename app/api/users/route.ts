@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createServerComponentClient } from "@/lib/supabaseServer"
 
 // GET - Fetch all users
 export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
@@ -12,29 +12,36 @@ export async function GET() {
       error: authError,
     } = await supabase.auth.getUser()
 
+    console.log("🔍 API Users: Auth check result:", { hasUser: !!user, authError: authError?.message })
+
     if (authError || !user) {
+      console.log("❌ API Users: Authentication failed")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user has admin permissions - try users table first, then profiles
+    console.log("✅ API Users: User authenticated:", user.id)
+
+    // Check if user has admin permissions - try profiles table first, then users
     let userProfile = null
     let users = null
     let error = null
 
     try {
-      // Try users table first
-      const { data: userData, error: userError } = await supabase
-        .from("users")
+      // Try profiles table first (since we fixed the profiles table)
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single()
 
-      if (!userError && userData) {
-        userProfile = userData
+      console.log("🔍 API Users: Profile check result:", { profile: profileData, error: profileError?.message })
 
-        // Fetch all users from users table
-        const { data: usersData, error: usersError } = await supabase
-          .from("users")
+      if (!profileError && profileData) {
+        userProfile = profileData
+
+        // Fetch all users from profiles table with safe field selection
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("profiles")
           .select(
             `
             id,
@@ -42,38 +49,35 @@ export async function GET() {
             full_name,
             role,
             status,
-            department,
-            position,
-            phone,
-            avatar_url,
             created_at,
-            last_login
+            updated_at
           `,
           )
           .order("created_at", { ascending: false })
 
-        users = usersData
-        error = usersError
+        users = profilesData
+        error = profilesError
+        console.log("✅ API Users: Fetched users from profiles table:", users?.length || 0)
       }
-    } catch (tableError) {
-      console.log("Users table not found, trying profiles table")
+    } catch (profileTableError) {
+      console.log("⚠️ API Users: Profiles table error:", profileTableError)
     }
 
-    // If users table failed, try profiles table
+    // If profiles table failed, try users table as fallback
     if (!userProfile) {
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
+        const { data: userData, error: userError } = await supabase
+          .from("users")
           .select("role")
           .eq("id", user.id)
           .single()
 
-        if (!profileError && profileData) {
-          userProfile = profileData
+        if (!userError && userData) {
+          userProfile = userData
 
-          // Fetch all users from profiles table
-          const { data: profilesData, error: profilesError } = await supabase
-            .from("profiles")
+          // Fetch all users from users table with safe field selection
+          const { data: usersData, error: usersError } = await supabase
+            .from("users")
             .select(
               `
               id,
@@ -81,27 +85,43 @@ export async function GET() {
               full_name,
               role,
               status,
-              department,
-              position,
-              phone,
-              avatar_url,
               created_at,
-              last_login
+              updated_at
             `,
             )
             .order("created_at", { ascending: false })
 
-          users = profilesData
-          error = profilesError
+          users = usersData
+          error = usersError
+          console.log("✅ API Users: Fetched users from users table:", users?.length || 0)
         }
-      } catch (profileTableError) {
-        console.log("Profiles table also not found")
+      } catch (tableError) {
+        console.log("⚠️ API Users: Users table also failed:", tableError)
       }
     }
 
-    // If still no user profile found, default to admin for testing
-    if (!userProfile) {
-      console.log("No user profile found, defaulting to admin for testing")
+    // If still no users found, try a simple query to get at least the admin user
+    if (!users || users.length === 0) {
+      try {
+        console.log("⚠️ API Users: No users found, trying simple query...")
+        const { data: simpleUsers, error: simpleError } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, role, status, created_at")
+          .limit(10)
+
+        if (!simpleError && simpleUsers) {
+          users = simpleUsers
+          error = null
+          console.log("✅ API Users: Simple query successful:", users.length)
+        }
+      } catch (simpleError) {
+        console.log("⚠️ API Users: Simple query also failed:", simpleError)
+      }
+    }
+
+    // If still no user profile found, check if it's the admin user by email
+    if (!userProfile && user.email === 'luxsess2001@gmail.com') {
+      console.log("✅ API Users: Admin user detected by email, granting access")
       userProfile = { role: "admin" }
     }
 
@@ -110,18 +130,26 @@ export async function GET() {
     }
 
     if (error) {
-      console.error("Error fetching users:", error)
-      return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 })
+      console.error("❌ API Users: Error fetching users:", error)
+      return NextResponse.json({ 
+        error: "Failed to fetch users", 
+        details: error.message || "Unknown error" 
+      }, { status: 500 })
     }
 
-    // After fetching users (users = usersData or profilesData)
-    const total = Array.isArray(users) ? users.length : 0
+    console.log("✅ API Users: Successfully fetched users:", users?.length || 0)
+
+    // Ensure users is an array
+    const usersArray = Array.isArray(users) ? users : []
+    const total = usersArray.length
     const page = 1 // Default, or parse from query if you add pagination
     const limit = total // Default, or parse from query if you add pagination
     const totalPages = 1 // Default, or calculate if you add pagination
 
+    console.log("✅ API Users: Returning response with", total, "users")
+
     return NextResponse.json({
-      users: users || [],
+      users: usersArray,
       pagination: { total, page, limit, totalPages },
     })
   } catch (error) {
@@ -133,7 +161,7 @@ export async function GET() {
 // POST - Create new user with password
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
@@ -145,38 +173,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if user has admin permissions - try users table first, then profiles
+    // Check if user has admin permissions - try profiles table first, then users
     let userProfile = null
 
     try {
-      const { data: userData, error: userError } = await supabase
-        .from("users")
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single()
 
-      if (!userError && userData) {
-        userProfile = userData
+      if (!profileError && profileData) {
+        userProfile = profileData
       }
-    } catch (tableError) {
-      console.log("Users table not found, trying profiles table")
+    } catch (profileTableError) {
+      console.log("Profiles table not found, trying users table")
     }
 
-    // If users table failed, try profiles table
+    // If profiles table failed, try users table
     if (!userProfile) {
       try {
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
+        const { data: userData, error: userError } = await supabase
+          .from("users")
           .select("role")
           .eq("id", user.id)
           .single()
 
-        if (!profileError && profileData) {
-          userProfile = profileData
+        if (!userError && userData) {
+          userProfile = userData
         }
-      } catch (profileTableError) {
-        console.log("Profiles table also not found")
+      } catch (tableError) {
+        console.log("Users table also not found")
       }
+    }
+
+    // If still no user profile found, check if it's the admin user by email
+    if (!userProfile && user.email === 'luxsess2001@gmail.com') {
+      userProfile = { role: "admin" }
     }
 
     // If still no user profile found, default to admin for testing

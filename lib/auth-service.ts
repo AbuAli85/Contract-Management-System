@@ -153,6 +153,73 @@ export function useAuth() {
       }
       
       console.log("🔐 Auth Service: Sign in successful for:", data.user?.email)
+      
+      // Check user status after successful authentication
+      if (data.user) {
+        try {
+          // Check user status in both users and profiles tables
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("status, role")
+            .eq("id", data.user.id)
+            .single()
+          
+          if (!userError && userData) {
+            console.log("🔐 Auth Service: User status check:", userData.status)
+            
+            if (userData.status === "pending") {
+              console.log("🔐 Auth Service: User is pending approval")
+              return { 
+                success: false, 
+                error: "Your account is pending approval. Please contact an administrator.",
+                status: "pending"
+              }
+            }
+            
+            if (userData.status === "inactive") {
+              console.log("🔐 Auth Service: User is inactive")
+              return { 
+                success: false, 
+                error: "Your account has been deactivated. Please contact an administrator.",
+                status: "inactive"
+              }
+            }
+          } else {
+            // Try profiles table as fallback
+            const { data: profileData, error: profileError } = await supabase
+              .from("profiles")
+              .select("status, role")
+              .eq("id", data.user.id)
+              .single()
+            
+            if (!profileError && profileData) {
+              console.log("🔐 Auth Service: Profile status check:", profileData.status)
+              
+              if (profileData.status === "pending") {
+                console.log("🔐 Auth Service: Profile is pending approval")
+                return { 
+                  success: false, 
+                  error: "Your account is pending approval. Please contact an administrator.",
+                  status: "pending"
+                }
+              }
+              
+              if (profileData.status === "inactive") {
+                console.log("🔐 Auth Service: Profile is inactive")
+                return { 
+                  success: false, 
+                  error: "Your account has been deactivated. Please contact an administrator.",
+                  status: "inactive"
+                }
+              }
+            }
+          }
+        } catch (statusError) {
+          console.error("🔐 Auth Service: Error checking user status:", statusError)
+          // Continue with login if status check fails
+        }
+      }
+      
       return { success: true }
     } catch (error) {
       console.error("🔐 Auth Service: Sign in failed:", error)

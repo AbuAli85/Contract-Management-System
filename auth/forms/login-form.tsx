@@ -109,10 +109,41 @@ export function LoginForm() {
 
       // Use client-side authentication with enhanced error handling
       console.log("🔐 Login Debug - Calling signIn function...")
-      const { success: loginSuccess, error: clientError } = await signIn(email, password)
+      const { success: loginSuccess, error: clientError, status } = await signIn(email, password)
 
       if (!loginSuccess) {
         console.error("🔐 Login Debug - Client login failed:", clientError)
+        
+        // Handle pending approval status
+        if (status === "pending") {
+          console.log("🔐 Login Debug - User is pending approval, redirecting to pending page")
+          setError("Your account is pending approval. Redirecting to approval status page...")
+          
+          // Show toast notification
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account is under review. You'll be notified once approved.",
+            variant: "default",
+          })
+          
+          // Redirect to pending approval page
+          setTimeout(() => {
+            router.replace(`/${locale}/auth/pending-approval`)
+          }, 2000)
+          return
+        }
+        
+        // Handle inactive status
+        if (status === "inactive") {
+          setError("Your account has been deactivated. Please contact an administrator.")
+          
+          toast({
+            title: "Account Deactivated",
+            description: "Your account has been deactivated. Please contact support.",
+            variant: "destructive",
+          })
+          return
+        }
         
         // Enhanced error message handling
         let errorMessage = "Login failed. Please check your credentials and try again."
