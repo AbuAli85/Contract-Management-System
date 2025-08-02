@@ -188,22 +188,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // If still no users found, try a simple query to get at least the admin user
+        // If still no users found, try a simple query to get at least the admin user
+    // BUT RESPECT THE STATUS FILTER - if filtering by pending and none found, that's correct!
     if (!users || users.length === 0) {
-      try {
-        console.log("⚠️ API Users: No users found, trying simple query...")
-        const { data: simpleUsers, error: simpleError } = await adminSupabase
-          .from("profiles")
-          .select("id, email, full_name, role, status, created_at")
-          .limit(10)
+      // Only do fallback query if NOT filtering by status, or if we're looking for active/all users
+      if (!statusFilter || statusFilter === 'active') {
+        try {
+          console.log("⚠️ API Users: No users found, trying simple query...")
+          let simpleQuery = adminSupabase
+            .from("profiles")
+            .select("id, email, full_name, role, status, created_at")
 
-        if (!simpleError && simpleUsers) {
-          users = simpleUsers
-          error = null
-          console.log("✅ API Users: Simple query successful:", users.length)
+          // Apply status filter if provided
+          if (statusFilter && ['pending', 'active', 'inactive'].includes(statusFilter)) {
+            console.log("🔍 API Users: Applying status filter to simple query:", statusFilter)
+            simpleQuery = simpleQuery.eq('status', statusFilter)
+          }
+
+          const { data: simpleUsers, error: simpleError } = await simpleQuery.limit(10)
+
+          if (!simpleError && simpleUsers) {
+            users = simpleUsers
+            error = null
+            console.log("✅ API Users: Simple query successful:", users.length, statusFilter ? `(filtered by status: ${statusFilter})` : "")
+          }
+        } catch (simpleError) {
+          console.log("⚠️ API Users: Simple query also failed:", simpleError)
         }
-      } catch (simpleError) {
-        console.log("⚠️ API Users: Simple query also failed:", simpleError)
+      } else {
+        // If filtering by pending and no results found, that's correct - don't fallback
+        console.log(`✅ API Users: No ${statusFilter} users found - this is correct, not an error`)
+        users = []
+        error = null
       }
     }
 
@@ -212,20 +228,32 @@ export async function GET(request: NextRequest) {
       console.log("✅ API Users: Admin user detected by email, granting access")
       userProfile = { role: "admin", status: "active" }
       
-      // Fetch users for the admin override case
-      try {
-        const { data: simpleUsers, error: simpleError } = await adminSupabase
-          .from("profiles")
-          .select("id, email, full_name, role, status, created_at")
-          .limit(10)
+      // Fetch users for the admin override case - RESPECT STATUS FILTER
+      // Only fetch if we don't already have users or if no status filter applied
+      if ((!users || users.length === 0) && (!statusFilter || statusFilter === 'active')) {
+        try {
+          let adminOverrideQuery = adminSupabase
+            .from("profiles")
+            .select("id, email, full_name, role, status, created_at")
 
-        if (!simpleError && simpleUsers) {
-          users = simpleUsers
-          error = null
-          console.log("✅ API Users: Admin override - fetched users:", users.length)
+          // Apply status filter if provided
+          if (statusFilter && ['pending', 'active', 'inactive'].includes(statusFilter)) {
+            console.log("🔍 API Users: Applying status filter to admin override query:", statusFilter)
+            adminOverrideQuery = adminOverrideQuery.eq('status', statusFilter)
+          }
+
+          const { data: simpleUsers, error: simpleError } = await adminOverrideQuery.limit(10)
+
+          if (!simpleError && simpleUsers) {
+            users = simpleUsers
+            error = null
+            console.log("✅ API Users: Admin override - fetched users:", users.length, statusFilter ? `(filtered by status: ${statusFilter})` : "")
+          }
+        } catch (simpleError) {
+          console.log("⚠️ API Users: Admin override query failed:", simpleError)
         }
-      } catch (simpleError) {
-        console.log("⚠️ API Users: Admin override query failed:", simpleError)
+      } else if (statusFilter && statusFilter !== 'active') {
+        console.log(`✅ API Users: Admin override skipped - filtering by ${statusFilter}, results already determined`)
       }
     }
 
