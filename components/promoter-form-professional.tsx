@@ -341,6 +341,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         id_card_url: formData.id_card_url?.trim() || null,
         passport_url: formData.passport_url?.trim() || null,
         passport_number: formData.passport_number?.trim() || null,
+        profile_picture_url: formData.profile_picture_url?.trim() || null,
          notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 30)),
          notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 30)),
         

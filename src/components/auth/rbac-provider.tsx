@@ -149,6 +149,14 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       // Check profiles table as fallback
       console.log("🔐 RBACProvider: Checking profiles table...")
       try {
+        // First, try to ensure the user profile exists
+        try {
+          await supabase.rpc('ensure_user_profile', { user_id: user.id })
+          console.log("✅ RBACProvider: Ensured user profile exists")
+        } catch (error) {
+          console.log("⚠️ RBACProvider: Could not ensure user profile:", error)
+        }
+        
         const { data: profilesData, error: profilesError } = await supabase
           .from("profiles")
           .select("role")
@@ -163,7 +171,28 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           console.log("🔐 RBACProvider: No role found in profiles table or table empty")
         }
       } catch (error) {
-        console.log("🔐 RBACProvider: Profiles table not available or no role found")
+        console.log("🔐 RBACProvider: Profiles table error:", error)
+        // Try alternative approach - use the API route
+        try {
+          const response = await fetch('/api/get-user-role', {
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            },
+          })
+          if (response.ok) {
+            const roleData = await response.json()
+            const role = roleData.role?.value ?? roleData.role
+            if (role) {
+              console.log("✅ RBACProvider: Role from API route:", role)
+              setUserRoles([role as Role])
+              setIsLoading(false)
+              return
+            }
+          }
+        } catch (apiError) {
+          console.log("🔐 RBACProvider: API route also failed:", apiError)
+        }
       }
 
       // Fallback for admin user

@@ -31,6 +31,15 @@ export async function GET(request: NextRequest) {
     const user = session.user
     console.log("✅ User authenticated:", { id: user.id, email: user.email })
 
+    // First, ensure the user profile exists
+    try {
+      await supabase.rpc('ensure_user_profile', { user_id: user.id })
+      console.log("✅ Ensured user profile exists")
+    } catch (error) {
+      console.log("⚠️ Could not ensure user profile:", error)
+      // Continue anyway, we'll try to get the role from existing data
+    }
+
     // Get the latest role from all possible sources
     let currentRole = "user"
     let roleSource = "default"

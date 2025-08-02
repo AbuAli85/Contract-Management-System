@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -46,7 +46,7 @@ export default function DocumentUpload({
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(
-    currentUrl ? {
+    currentUrl && currentUrl.trim() !== "" ? {
       url: currentUrl,
       name: `${documentType}_document`,
       size: 0,
@@ -71,6 +71,21 @@ export default function DocumentUpload({
   }
 
   const config = documentLabels[documentType]
+
+  // Update uploadedDocument when currentUrl changes
+  useEffect(() => {
+    if (currentUrl && currentUrl.trim() !== "") {
+      setUploadedDocument({
+        url: currentUrl,
+        name: `${documentType}_document`,
+        size: 0,
+        type: 'application/pdf',
+        uploadedAt: new Date().toISOString()
+      })
+    } else {
+      setUploadedDocument(null)
+    }
+  }, [currentUrl, documentType])
 
   const validateFile = (file: File): string | null => {
     // Check file type
