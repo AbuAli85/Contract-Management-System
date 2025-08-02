@@ -50,6 +50,8 @@ export function SignupForm() {
         full_name: fullName,
         role: "user", // Default role for new users
         status: "pending", // All new users start as pending
+        department: "",
+        position: "",
       }
 
       const { success, error, data } = await signUp(email, password, profile)
@@ -63,12 +65,12 @@ export function SignupForm() {
 
       console.log("📝 Signup Debug - Signup successful")
       setSuccess(
-        "Account created successfully! Please check your email to confirm your account.",
+        "Account created successfully! Your account is pending approval. You will be notified once approved.",
       )
       
-      // Redirect to login page after successful signup
+      // Redirect to pending approval page after successful signup
       setTimeout(() => {
-        router.push('/en/auth/login')
+        router.push('/en/auth/pending-approval')
       }, 3000)
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)
