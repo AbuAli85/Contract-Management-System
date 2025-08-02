@@ -47,6 +47,9 @@ export function useUserRole() {
         try {
           const supabaseClient = getSupabaseClient()
           
+          console.log('🔍 useUserRole: Fetching role for user:', 
+            (user as any)?.email || (user as any)?.id)
+          
           // First try the API route since it's more reliable
           try {
             const response = await fetch('/api/get-user-role', {
@@ -58,49 +61,48 @@ export function useUserRole() {
             if (response.ok) {
               const roleData = await response.json()
               const fetchedRole = roleData.role?.value ?? roleData.role ?? null
+              console.log('✅ useUserRole: Got role from API:', fetchedRole)
               setRole(fetchedRole)
               return // Success, exit early
             } else {
-              console.log("API route failed:", response.status)
+              console.log("⚠️ useUserRole: API route failed:", response.status)
             }
           } catch (apiError) {
-            console.log("API route error:", apiError)
+            console.log("❌ useUserRole: API route error:", apiError)
           }
 
           // Fallback: Try the RPC function
           try {
             const { data, error } = await supabaseClient.rpc('get_current_user_role')
             if (!error && data) {
+              console.log('✅ useUserRole: Got role from RPC:', data)
               setRole(data)
               return // Success, exit early
             } else {
-              console.log("RPC function error:", error)
+              console.log("⚠️ useUserRole: RPC function error:", error?.message)
             }
           } catch (rpcError) {
-            console.log("RPC function failed:", rpcError)
+            console.log("❌ useUserRole: RPC function failed:", rpcError)
           }
 
           // Final fallback: Use email-based role assignment
           if (user && typeof user === "object" && "email" in user) {
-            const email = (user as { email: string }).email
-            if (email === 'luxsess2001@gmail.com') {
-              setRole('admin')
-            } else {
-              setRole('user')
-            }
+            const email = (user as { email: string }).email  
+            const fallbackRole = email === 'luxsess2001@gmail.com' ? 'admin' : 'user'
+            console.log('🔄 useUserRole: Using email fallback role:', fallbackRole, 'for', email)
+            setRole(fallbackRole)
           } else {
+            console.log('🔄 useUserRole: Using default role: user')
             setRole('user')
           }
         } catch (error) {
-          console.error("Error fetching role:", error)
+          console.error("❌ useUserRole: Error fetching role:", error)
           // Final fallback
           if (user && typeof user === "object" && "email" in user) {
             const email = (user as { email: string }).email
-            if (email === 'luxsess2001@gmail.com') {
-              setRole('admin')
-            } else {
-              setRole('user')
-            }
+            const fallbackRole = email === 'luxsess2001@gmail.com' ? 'admin' : 'user'
+            console.log('🔄 useUserRole: Final fallback role:', fallbackRole)
+            setRole(fallbackRole)
           } else {
             setRole('user')
           }

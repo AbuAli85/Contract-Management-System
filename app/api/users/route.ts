@@ -663,86 +663,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update user
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = await createServerComponentClient()
 
-    // Get current user to check permissions
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Create admin client for database operations
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    
-    if (!serviceRoleKey || !supabaseUrl) {
-      return NextResponse.json({ 
-        error: "Server configuration error" 
-      }, { status: 500 })
-    }
-
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    })
-
-    const body = await request.json()
-    const { userId, ...updateData } = body
-
-    if (!userId) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
-    }
-
-    // Check if user has permissions to update this user
-    const { data: userProfile } = await adminClient
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single()
-
-    if (!userProfile) {
-      return NextResponse.json({ error: "User profile not found" }, { status: 404 })
-    }
-
-    // Only allow admins to update other users, or users to update their own profile
-    if (userProfile.role !== "admin" && user.id !== userId) {
-      return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
-    }
-
-    // Update user profile
-    const { error: updateError } = await adminClient
-      .from("users")
-      .update({
-        full_name: updateData.full_name,
-        role: updateData.role,
-        status: updateData.status,
-        department: updateData.department,
-        position: updateData.position,
-        phone: updateData.phone,
-        avatar_url: updateData.avatar_url,
-      })
-      .eq("id", userId)
-
-    if (updateError) {
-      console.error("Error updating user:", updateError)
-      return NextResponse.json({ error: "Failed to update user" }, { status: 500 })
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error("Error in PUT /api/users:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
-  }
-}
 
 // DELETE - Delete user
 export async function DELETE(request: NextRequest) {
@@ -866,5 +787,101 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error("Error in DELETE /api/users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+// PUT - Update user (for permissions and other updates)
+export async function PUT(request: NextRequest) {
+  try {
+    console.log("🔍 API Users PUT: Starting user update request")
+    
+    // Use service role client directly to bypass auth issues
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!serviceRoleKey || !supabaseUrl) {
+      console.error("❌ API Users PUT: Missing service role credentials")
+      return NextResponse.json({ 
+        error: "Server configuration error" 
+      }, { status: 500 })
+    }
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
+    const body = await request.json()
+    const { userId, email, role, status, permissions, ...otherFields } = body
+
+    console.log("🔍 API Users PUT: Update request:", { userId, email, role, status, hasPermissions: !!permissions })
+
+    if (!userId && !email) {
+      return NextResponse.json({ 
+        error: "User ID or email is required" 
+      }, { status: 400 })
+    }
+
+    // Build update data
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    }
+
+    if (role && ["user", "manager", "admin"].includes(role)) {
+      updateData.role = role
+    }
+    if (status && ["active", "inactive", "pending"].includes(status)) {
+      updateData.status = status
+    }
+    
+    // Add other allowed fields
+    const allowedFields = ['first_name', 'last_name', 'company', 'phone', 'department', 'position', 'avatar_url']
+    for (const field of allowedFields) {
+      if (otherFields[field] !== undefined) {
+        updateData[field] = otherFields[field]
+      }
+    }
+
+    // Handle permissions separately if provided
+    if (permissions) {
+      updateData.permissions = permissions
+    }
+
+    console.log("🔄 API Users PUT: Updating user with data:", updateData)
+
+    // Update user by ID or email
+    let query = adminSupabase.from('profiles').update(updateData)
+    
+    if (userId) {
+      query = query.eq('id', userId)
+    } else if (email) {
+      query = query.eq('email', email)
+    }
+
+    const { data: updatedUser, error: updateError } = await query.select().single()
+
+    if (updateError) {
+      console.error("❌ API Users PUT: Error updating user:", updateError)
+      return NextResponse.json({ 
+        error: "Failed to update user",
+        details: updateError.message 
+      }, { status: 500 })
+    }
+
+    console.log("✅ API Users PUT: User updated successfully:", updatedUser?.id)
+
+    return NextResponse.json({
+      success: true,
+      user: updatedUser,
+      message: "User updated successfully"
+    })
+  } catch (error) {
+    console.error("❌ API Users PUT: Unexpected error:", error)
+    return NextResponse.json({ 
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

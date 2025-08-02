@@ -55,6 +55,7 @@ export default function UserApprovalsPage() {
 
   const handleApproveUser = async (userId: string, action: 'approve' | 'reject') => {
     try {
+      console.log(`🔄 Approval: Starting ${action} for user:`, userId);
       setApproving(userId);
       const newStatus = action === 'approve' ? 'active' : 'inactive';
       
@@ -66,7 +67,11 @@ export default function UserApprovalsPage() {
         body: JSON.stringify({ status: newStatus }),
       });
 
+      console.log(`📊 Approval: API response status:`, response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log(`✅ Approval: Success result:`, result);
         toast({
           title: "Success",
           description: `User ${action === 'approve' ? 'approved' : 'rejected'} successfully`
@@ -75,10 +80,11 @@ export default function UserApprovalsPage() {
         setPendingUsers(prev => prev.filter(user => user.id !== userId));
       } else {
         const errorData = await response.json();
+        console.error(`❌ Approval: API error:`, errorData);
         throw new Error(errorData.error || `Failed to ${action} user`);
       }
     } catch (error) {
-      console.error(`Error ${action}ing user:`, error);
+      console.error(`❌ Approval: ${action} error:`, error);
       toast({
         variant: "destructive",
         title: "Error",
