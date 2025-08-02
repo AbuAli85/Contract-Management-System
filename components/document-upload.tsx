@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 
 interface DocumentUploadProps {
   promoterId: string
+  promoterName?: string // Add promoter name prop
   documentType: 'id_card' | 'passport'
   currentUrl?: string | null
   onUploadComplete: (url: string) => void
@@ -37,6 +38,7 @@ interface UploadedDocument {
 
 export default function DocumentUpload({
   promoterId,
+  promoterName,
   documentType,
   currentUrl,
   onUploadComplete,
@@ -72,6 +74,23 @@ export default function DocumentUpload({
   }
 
   const config = documentLabels[documentType]
+
+  // Helper function to create clean filename
+  const createCleanFilename = (file: File): string => {
+    const fileExt = file.name.split('.').pop()?.toLowerCase() || 'pdf'
+    const timestamp = Date.now()
+    
+    // Clean promoter name - remove special characters and spaces
+    const cleanPromoterName = promoterName 
+      ? promoterName.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '')
+      : 'Unknown'
+    
+    // Create descriptive filename: PromoterName_ID_DocumentType_timestamp.ext
+    const docTypeLabel = documentType === 'id_card' ? 'ID_Card' : 'Passport'
+    const uploadId = promoterId === 'new' ? `temp_${timestamp}` : promoterId
+    
+    return `${cleanPromoterName}_${uploadId}_${docTypeLabel}_${timestamp}.${fileExt}`
+  }
 
   // Update uploadedDocument when currentUrl changes
   useEffect(() => {
@@ -136,13 +155,12 @@ export default function DocumentUpload({
         throw new Error("You must be logged in to upload files")
       }
 
-      // Create a unique filename with proper extension
-      const fileExt = file.name.split('.').pop()?.toLowerCase()
-      const uploadId = promoterId === 'new' ? `temp_${Date.now()}` : promoterId
-      const fileName = `${uploadId}_${documentType}_${Date.now()}.${fileExt}`
+      // Create a unique filename with promoter name and ID
+      const fileName = createCleanFilename(file)
       const filePath = `${fileName}` // Store directly in bucket root for now
 
-      console.log('Uploading to path:', filePath)
+      console.log('Uploading file:', fileName)
+      console.log('Upload path:', filePath)
 
       // Simulate upload progress
       const progressInterval = setInterval(() => {
@@ -174,9 +192,10 @@ export default function DocumentUpload({
           const formData = new FormData()
           formData.append('file', file)
           formData.append('promoterId', promoterId)
+          formData.append('promoterName', promoterName || 'Unknown')
           formData.append('documentType', documentType)
 
-          console.log('Sending to API route...')
+          console.log('Sending to API route with promoter name:', promoterName)
           const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
@@ -251,7 +270,19 @@ export default function DocumentUpload({
       if (error instanceof Error) {
         if (error.message.includes('bucket') && error.message.includes('not found')) {
           errorMessage = "Storage bucket 'promoter-documents' not found"
-          helpMessage = "Please ask your administrator to create the storage bucket in Supabase Dashboard: Storage > New bucket > Name: 'promoter-documents' (public)"
+          helpMessage = `⚠️ SETUP REQUIRED: Please create the storage bucket manually:
+
+1. Go to Supabase Dashboard > Storage
+2. Click "New bucket" 
+3. Name: "promoter-documents"
+4. Public: false (unchecked)
+5. File size limit: 5MB
+6. Allowed types: image/jpeg, image/png, application/pdf
+7. Click "Create bucket"
+
+Alternatively, run this SQL in SQL Editor:
+INSERT INTO storage.buckets (id, name, public, file_size_limit) 
+VALUES ('promoter-documents', 'promoter-documents', false, 5242880);`
         } else if (error.message.includes('bucket') || error.message.includes('storage')) {
           errorMessage = "Storage configuration issue"
           helpMessage = "Please contact administrator to set up document storage properly."
