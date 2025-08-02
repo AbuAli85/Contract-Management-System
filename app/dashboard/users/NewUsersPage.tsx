@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback, lazy, Suspense } from "react"
+import { useEffect, useState, useCallback } from "react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,10 +41,45 @@ import {
 import { debounce } from "lodash"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
 
-// Lazy load components
-const PermissionsManager = lazy(() => import("@/components/user-management/PermissionsManager"))
-const CreateUserForm = lazy(() => import("@/components/user-management/create-user-form"))
-const ChangePasswordForm = lazy(() => import("@/components/user-management/change-password-form"))
+// Dynamic imports for better chunk loading reliability
+const PermissionsManager = dynamic(
+  () => import("@/components/user-management/PermissionsManager"),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Loading permissions manager...</span>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const CreateUserForm = dynamic(
+  () => import("@/components/user-management/create-user-form"),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Loading create user form...</span>
+      </div>
+    ),
+    ssr: false
+  }
+)
+
+const ChangePasswordForm = dynamic(
+  () => import("@/components/user-management/change-password-form"),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2">Loading change password form...</span>
+      </div>
+    ),
+    ssr: false
+  }
+)
 
 // TypeScript interfaces for better type safety
 interface User {
@@ -1153,44 +1189,18 @@ export default function NewUsersPage() {
       </div>
 
       {/* Create User Modal */}
-      <Suspense
-        fallback={
-          <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
-            <DialogContent>
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="mr-2 animate-spin" />
-                Loading create user form...
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      >
-        <CreateUserForm
-          open={showAddModal}
-          onOpenChange={setShowAddModal}
-          onUserCreated={fetchUsers}
-        />
-      </Suspense>
+      <CreateUserForm
+        open={showAddModal}
+        onOpenChange={setShowAddModal}
+        onUserCreated={fetchUsers}
+      />
 
       {/* Change Password Modal */}
-      <Suspense
-        fallback={
-          <Dialog open={showChangePasswordModal} onOpenChange={setShowChangePasswordModal}>
-            <DialogContent>
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="mr-2 animate-spin" />
-                Loading change password form...
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      >
-        <ChangePasswordForm
-          open={showChangePasswordModal}
-          onOpenChange={setShowChangePasswordModal}
-          userId={selectedUser?.id}
-        />
-      </Suspense>
+      <ChangePasswordForm
+        open={showChangePasswordModal}
+        onOpenChange={setShowChangePasswordModal}
+        userId={selectedUser?.id}
+      />
 
       {/* Edit User Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
@@ -1366,25 +1376,12 @@ export default function NewUsersPage() {
       </Dialog>
 
       {/* Permissions Manager Modal */}
-      <Suspense
-        fallback={
-          <Dialog open={showPermissionsModal} onOpenChange={setShowPermissionsModal}>
-            <DialogContent>
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="mr-2 animate-spin" />
-                Loading permissions manager...
-              </div>
-            </DialogContent>
-          </Dialog>
-        }
-      >
-        <PermissionsManager
-          user={selectedUser}
-          open={showPermissionsModal}
-          onOpenChange={setShowPermissionsModal}
-          onPermissionsUpdate={fetchUsers}
-        />
-      </Suspense>
+      <PermissionsManager
+        user={selectedUser}
+        open={showPermissionsModal}
+        onOpenChange={setShowPermissionsModal}
+        onPermissionsUpdate={fetchUsers}
+      />
     </div>
   )
 }
