@@ -186,6 +186,12 @@ export default function DocumentUpload({
     console.log('- idCardNumber:', idCardNumber)
     console.log('- passportNumber:', passportNumber)
     console.log('- documentType:', documentType)
+    console.log('- promoterId:', promoterId)
+
+    // Additional debug: Check if values are empty/undefined/null
+    console.log('🔍 Value types and checks:')
+    console.log('- promoterName type:', typeof promoterName, 'isEmpty:', !promoterName || promoterName.trim() === '')
+    console.log('- idCardNumber type:', typeof idCardNumber, 'isEmpty:', !idCardNumber || idCardNumber.trim() === '')
 
     const validationError = validateFile(file)
     if (validationError) {
@@ -218,6 +224,7 @@ export default function DocumentUpload({
       const filePath = `${fileName}` // Store directly in bucket root for now
 
       console.log('🔍 Generated filename:', fileName)
+      console.log('🔍 File extension from:', file.name, 'extracted:', file.name.split('.').pop()?.toLowerCase())
       console.log('Upload path:', filePath)
 
       // Simulate upload progress

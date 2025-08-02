@@ -19,6 +19,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/api/") ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/test-filename") ||  // Skip our test page
     pathname.includes(".") ||
     pathname.includes("/.well-known/") ||
     pathname.includes("?_rsc=") ||
