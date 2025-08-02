@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerComponentClient } from "@/lib/supabaseServer"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
 // GET - Fetch all users
 export async function GET(request: NextRequest) {
   try {
+    // First try with session-based auth
     const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
-      data: { user },
+      data: { user: authUser },
       error: authError,
     } = await supabase.auth.getUser()
 
     // If no user found, try to get from session
+    let user = authUser
     if (!user) {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
       if (session?.user) {
@@ -29,31 +32,44 @@ export async function GET(request: NextRequest) {
       authError: authError?.message 
     })
 
-    if (authError || !user) {
-      console.log("❌ API Users: Authentication failed - no user or auth error")
+    // If no user authenticated, return 401
+    if (!user) {
+      console.log("❌ API Users: No authenticated user found")
       return NextResponse.json({ 
-        error: "Unauthorized", 
-        details: authError?.message || "No user found" 
+        error: "Authentication required",
+        message: "Please log in to access this resource"
       }, { status: 401 })
     }
 
     console.log("✅ API Users: User authenticated:", user.id)
 
-    // Try to get session as well for additional verification
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    console.log("🔍 API Users: Session check:", { 
-      hasSession: !!session, 
-      sessionError: sessionError?.message 
+    // For admin operations, use service role client
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!serviceRoleKey || !supabaseUrl) {
+      console.error("❌ API Users: Missing service role credentials")
+      return NextResponse.json({ 
+        error: "Server configuration error" 
+      }, { status: 500 })
+    }
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     })
 
-    // Check if user has admin permissions - try profiles table first, then users
+    // Check if user has admin permissions using the authenticated user's info
+    console.log("🔍 API Users: Checking user permissions for:", user.email)
     let userProfile = null
     let users = null
     let error = null
 
     try {
-      // Try profiles table first (since we fixed the profiles table)
-      const { data: profileData, error: profileError } = await supabase
+      // Try profiles table first using admin client for permission checking
+      const { data: profileData, error: profileError } = await adminSupabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
@@ -64,8 +80,8 @@ export async function GET(request: NextRequest) {
       if (!profileError && profileData) {
         userProfile = profileData
 
-        // Fetch all users from profiles table with safe field selection
-        const { data: profilesData, error: profilesError } = await supabase
+        // Fetch all users from profiles table with safe field selection using admin client
+        const { data: profilesData, error: profilesError } = await adminSupabase
           .from("profiles")
           .select(
             `
@@ -91,7 +107,7 @@ export async function GET(request: NextRequest) {
     // If profiles table failed, try users table as fallback
     if (!userProfile) {
       try {
-        const { data: userData, error: userError } = await supabase
+        const { data: userData, error: userError } = await adminSupabase
           .from("users")
           .select("role")
           .eq("id", user.id)
@@ -100,8 +116,8 @@ export async function GET(request: NextRequest) {
         if (!userError && userData) {
           userProfile = userData
 
-          // Fetch all users from users table with safe field selection
-          const { data: usersData, error: usersError } = await supabase
+          // Fetch all users from users table with safe field selection using admin client
+          const { data: usersData, error: usersError } = await adminSupabase
             .from("users")
             .select(
               `
@@ -129,7 +145,7 @@ export async function GET(request: NextRequest) {
     if (!users || users.length === 0) {
       try {
         console.log("⚠️ API Users: No users found, trying simple query...")
-        const { data: simpleUsers, error: simpleError } = await supabase
+        const { data: simpleUsers, error: simpleError } = await adminSupabase
           .from("profiles")
           .select("id, email, full_name, role, status, created_at")
           .limit(10)
@@ -154,18 +170,29 @@ export async function GET(request: NextRequest) {
     if (!userProfile && user.email === 'luxsess2001@gmail.com') {
       try {
         console.log("🔧 API Users: Attempting to ensure admin profile exists...")
-        const { data: ensureResult, error: ensureError } = await supabase.rpc('ensure_user_profile', {
-          user_id: user.id,
-          user_email: user.email,
-          user_role: 'admin',
-          user_status: 'active'
-        })
-        
-        if (!ensureError) {
-          console.log("✅ API Users: Admin profile ensured")
-          userProfile = { role: "admin" }
+        // Fallback: Directly insert or update the admin profile if not present
+        const { data: adminProfile, error: adminProfileError } = await adminSupabase
+          .from("profiles")
+          .upsert(
+            {
+              id: user.id,
+              email: user.email,
+              role: "admin",
+              status: "active",
+              full_name: user.email,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "id" }
+          )
+          .select("role")
+          .single();
+
+        if (!adminProfileError && adminProfile) {
+          console.log("✅ API Users: Admin profile ensured via upsert");
+          userProfile = { role: "admin" };
         } else {
-          console.log("⚠️ API Users: Could not ensure admin profile:", ensureError)
+          console.log("⚠️ API Users: Could not ensure admin profile:", adminProfileError);
         }
       } catch (ensureError) {
         console.log("⚠️ API Users: Ensure profile function failed:", ensureError)
@@ -212,23 +239,53 @@ export async function GET(request: NextRequest) {
 // POST - Create new user with password
 export async function POST(request: NextRequest) {
   try {
+    // First try with session-based auth
     const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
-      data: { user },
+      data: { user: postAuthUser },
       error: authError,
     } = await supabase.auth.getUser()
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // If no user found, try to get from session
+    let user = postAuthUser
+    if (!user) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (session?.user) {
+        user = session.user
+      }
     }
+
+    if (!user) {
+      return NextResponse.json({ 
+        error: "Authentication required",
+        message: "Please log in to create users"
+      }, { status: 401 })
+    }
+
+    // Create admin client for database operations
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!serviceRoleKey || !supabaseUrl) {
+      return NextResponse.json({ 
+        error: "Server configuration error" 
+      }, { status: 500 })
+    }
+
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     // Check if user has admin permissions - try profiles table first, then users
     let userProfile = null
 
     try {
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await adminSupabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
@@ -311,7 +368,7 @@ export async function POST(request: NextRequest) {
     let createError = null
 
     try {
-      const { data: existingUserData } = await supabase
+      const { data: existingUserData } = await adminSupabase
         .from("users")
         .select("id")
         .eq("email", email)
@@ -325,7 +382,7 @@ export async function POST(request: NextRequest) {
     // If users table failed, try profiles table
     if (!existingUser) {
       try {
-        const { data: existingProfileData } = await supabase
+        const { data: existingProfileData } = await adminSupabase
           .from("profiles")
           .select("id")
           .eq("email", email)
@@ -343,7 +400,7 @@ export async function POST(request: NextRequest) {
 
     // Create user in database - try users table first
     try {
-      const { data: newUserData, error: newUserError } = await supabase
+      const { data: newUserData, error: newUserError } = await adminSupabase
         .from("users")
         .insert({
           email,
@@ -354,7 +411,7 @@ export async function POST(request: NextRequest) {
           position: position || null,
           phone: phone || null,
           created_at: new Date().toISOString(),
-          created_by: user.id,
+          created_by: postAuthUser?.id,
         })
         .select()
         .single()
@@ -365,10 +422,10 @@ export async function POST(request: NextRequest) {
       console.log("Users table insert failed, trying profiles table")
 
       // Try profiles table
-      const { data: newProfileData, error: newProfileError } = await supabase
+      const { data: newProfileData, error: newProfileError } = await adminSupabase
         .from("profiles")
         .insert({
-          id: user.id, // Use the auth user ID
+          id: postAuthUser?.id, // Use the auth user ID
           email,
           full_name: full_name || null,
           role: role || "user",
@@ -395,7 +452,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user in Supabase Auth
-    const { data: authUser, error: createAuthError } = await supabase.auth.admin.createUser({
+    const { data: newAuthUser, error: createAuthError } = await adminSupabase.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm email
@@ -441,7 +498,7 @@ export async function POST(request: NextRequest) {
 // PUT - Update user
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
@@ -453,6 +510,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Create admin client for database operations
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!serviceRoleKey || !supabaseUrl) {
+      return NextResponse.json({ 
+        error: "Server configuration error" 
+      }, { status: 500 })
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
     const body = await request.json()
     const { userId, ...updateData } = body
 
@@ -461,7 +535,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if user has permissions to update this user
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await adminClient
       .from("users")
       .select("role")
       .eq("id", user.id)
@@ -477,7 +551,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from("users")
       .update({
         full_name: updateData.full_name,
@@ -505,7 +579,7 @@ export async function PUT(request: NextRequest) {
 // DELETE - Delete user
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createServerComponentClient()
 
     // Get current user to check permissions
     const {
@@ -516,6 +590,23 @@ export async function DELETE(request: NextRequest) {
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
+
+    // Create admin client for database operations
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    
+    if (!serviceRoleKey || !supabaseUrl) {
+      return NextResponse.json({ 
+        error: "Server configuration error" 
+      }, { status: 500 })
+    }
+
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
 
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("id")
@@ -528,7 +619,7 @@ export async function DELETE(request: NextRequest) {
     let userProfile = null
 
     try {
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await adminClient
         .from("users")
         .select("role")
         .eq("id", user.id)
@@ -544,7 +635,7 @@ export async function DELETE(request: NextRequest) {
     // If users table failed, try profiles table
     if (!userProfile) {
       try {
-        const { data: profileData, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await adminClient
           .from("profiles")
           .select("role")
           .eq("id", user.id)
@@ -577,13 +668,13 @@ export async function DELETE(request: NextRequest) {
     let deleteError = null
 
     try {
-      const { error: userDeleteError } = await supabase.from("users").delete().eq("id", userId)
+      const { error: userDeleteError } = await adminClient.from("users").delete().eq("id", userId)
 
       deleteError = userDeleteError
     } catch (tableError) {
       console.log("Users table delete failed, trying profiles table")
 
-      const { error: profileDeleteError } = await supabase
+      const { error: profileDeleteError } = await adminClient
         .from("profiles")
         .delete()
         .eq("id", userId)
@@ -598,7 +689,7 @@ export async function DELETE(request: NextRequest) {
 
     // Try to delete user from auth (this might fail if user doesn't exist in auth)
     try {
-      await supabase.auth.admin.deleteUser(userId)
+      await adminClient.auth.admin.deleteUser(userId)
     } catch (authDeleteError) {
       console.warn("Could not delete user from auth (might not exist):", authDeleteError)
     }
