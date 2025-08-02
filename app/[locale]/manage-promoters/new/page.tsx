@@ -1,17 +1,61 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, PlusCircle } from "lucide-react"
 import PromoterFormProfessional from "@/components/promoter-form-professional"
+import PromoterFilterSection from "@/components/promoter-filter-section"
+import { getSupabaseClient } from "@/lib/supabase"
+
+interface Employer {
+  id: string
+  name_en?: string
+  name_ar?: string
+}
 
 export default function AddNewPromoterPage() {
   const router = useRouter()
   const params = useParams()
   const locale = (params?.locale as string) || "en"
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterCompany, setFilterCompany] = useState("all")
+  const [filterDocument, setFilterDocument] = useState("all")
+  const [employers, setEmployers] = useState<Employer[]>([])
+  const [employersLoading, setEmployersLoading] = useState(true)
+
+  // Fetch employers for the filter
+  useEffect(() => {
+    const fetchEmployers = async () => {
+      try {
+        const supabase = getSupabaseClient()
+        if (!supabase) return
+
+        const { data, error } = await supabase
+          .from("employers")
+          .select("id, name_en, name_ar")
+          .order("name_en")
+
+        if (error) {
+          console.error("Error fetching employers:", error)
+          return
+        }
+
+        setEmployers(data || [])
+      } catch (error) {
+        console.error("Error fetching employers:", error)
+      } finally {
+        setEmployersLoading(false)
+      }
+    }
+
+    fetchEmployers()
+  }, [])
 
   const handleFormSubmit = () => {
     setIsSubmitting(true)
@@ -38,6 +82,11 @@ export default function AddNewPromoterPage() {
     )
   }
 
+  const uniqueCompanies = employers.map(emp => ({
+    id: emp.id,
+    name: emp.name_en || emp.name_ar || emp.id
+  }))
+
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-4xl">
@@ -62,6 +111,22 @@ export default function AddNewPromoterPage() {
             </div>
           </div>
         </div>
+
+        {/* Filter Section */}
+        <PromoterFilterSection
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          filterCompany={filterCompany}
+          setFilterCompany={setFilterCompany}
+          filterDocument={filterDocument}
+          setFilterDocument={setFilterDocument}
+          employers={employers}
+          employersLoading={employersLoading}
+          uniqueCompanies={uniqueCompanies}
+          showBulkActions={false}
+        />
 
         {/* Form */}
         <Card>
