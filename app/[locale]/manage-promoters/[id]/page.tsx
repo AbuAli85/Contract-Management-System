@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase"
 import type {
@@ -55,6 +55,7 @@ import { PromoterReports } from "@/components/promoter-reports"
 import { PromoterRanking } from "@/components/promoter-ranking"
 import { PromoterCRM } from "@/components/promoter-crm"
 import DocumentUpload from "@/components/document-upload"
+import PromoterFilterSection from "@/components/promoter-filter-section"
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[]
@@ -143,6 +144,70 @@ export default function PromoterDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const role = useUserRole()
+
+  // Filter section state
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterCompany, setFilterCompany] = useState("all")
+  const [filterDocument, setFilterDocument] = useState("all")
+  const [allPromoters, setAllPromoters] = useState<Promoter[]>([])
+  const [filteredPromoters, setFilteredPromoters] = useState<Promoter[]>([])
+  const [employers, setEmployers] = useState<{ id: string, name_en?: string, name_ar?: string }[]>([])
+  const [employersLoading, setEmployersLoading] = useState(true)
+
+  // Fetch all promoters for the filter
+  const fetchAllPromoters = useCallback(async () => {
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) return
+
+      const { data, error } = await supabase
+        .from("promoters")
+        .select("*")
+        .order("name_en")
+
+      if (error) {
+        console.error("Error fetching all promoters:", error)
+        return
+      }
+
+      setAllPromoters(data || [])
+      setFilteredPromoters(data || [])
+    } catch (error) {
+      console.error("Error fetching all promoters:", error)
+    }
+  }, [])
+
+  // Fetch employers for the filter
+  const fetchEmployers = useCallback(async () => {
+    try {
+      const supabase = getSupabaseClient()
+      if (!supabase) return
+
+      const { data, error } = await supabase
+        .from("employers")
+        .select("id, name_en, name_ar")
+        .order("name_en")
+
+      if (error) {
+        console.error("Error fetching employers:", error)
+        return
+      }
+
+      setEmployers(data || [])
+    } catch (error) {
+      console.error("Error fetching employers:", error)
+    } finally {
+      setEmployersLoading(false)
+    }
+  }, [])
+
+  // Handle promoter selection from filter
+  const handlePromoterSelect = useCallback((selectedPromoterId: string) => {
+    if (selectedPromoterId && selectedPromoterId !== promoterId) {
+      router.push(`/${locale}/manage-promoters/${selectedPromoterId}`)
+    }
+  }, [router, locale, promoterId])
 
   async function handleDeletePromoter() {
     if (!confirm('Are you sure you want to delete this promoter? This action cannot be undone.')) {
@@ -319,7 +384,74 @@ export default function PromoterDetailPage() {
     fetchPromoterDetails()
     fetchAuditLogs()
     fetchCVData()
-  }, [promoterId, role])
+    fetchAllPromoters()
+    fetchEmployers()
+  }, [promoterId, role, fetchAllPromoters, fetchEmployers])
+
+  // Filter promoters based on search and filter criteria
+  useEffect(() => {
+    let filtered = allPromoters
+
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase()
+      filtered = filtered.filter(promoter => {
+        const nameMatch = promoter.name_en?.toLowerCase().includes(searchLower) ||
+                         promoter.name_ar?.toLowerCase().includes(searchLower)
+        const idMatch = promoter.id_card_number?.toLowerCase().includes(searchLower)
+        const passportMatch = promoter.passport_number?.toLowerCase().includes(searchLower)
+        const emailMatch = promoter.email?.toLowerCase().includes(searchLower)
+        
+        return nameMatch || idMatch || passportMatch || emailMatch
+      })
+    }
+
+    // Status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(promoter => promoter.status === filterStatus)
+    }
+
+    // Company filter
+    if (filterCompany !== "all") {
+      filtered = filtered.filter(promoter => promoter.employer_id === filterCompany)
+    }
+
+    // Document filter
+    if (filterDocument !== "all") {
+      filtered = filtered.filter(promoter => {
+        switch (filterDocument) {
+          case "id_valid":
+            return promoter.id_card_expiry_date && new Date(promoter.id_card_expiry_date) > new Date()
+          case "id_expiring":
+            if (!promoter.id_card_expiry_date) return false
+            const idExpiry = new Date(promoter.id_card_expiry_date)
+            const now = new Date()
+            const daysUntilExpiry = Math.ceil((idExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+            return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+          case "id_expired":
+            return promoter.id_card_expiry_date && new Date(promoter.id_card_expiry_date) <= new Date()
+          case "id_missing":
+            return !promoter.id_card_number || !promoter.id_card_expiry_date
+          case "passport_valid":
+            return promoter.passport_expiry_date && new Date(promoter.passport_expiry_date) > new Date()
+          case "passport_expiring":
+            if (!promoter.passport_expiry_date) return false
+            const passportExpiry = new Date(promoter.passport_expiry_date)
+            const nowForPassport = new Date()
+            const daysUntilPassportExpiry = Math.ceil((passportExpiry.getTime() - nowForPassport.getTime()) / (1000 * 60 * 60 * 24))
+            return daysUntilPassportExpiry <= 30 && daysUntilPassportExpiry > 0
+          case "passport_expired":
+            return promoter.passport_expiry_date && new Date(promoter.passport_expiry_date) <= new Date()
+          case "passport_missing":
+            return !promoter.passport_number || !promoter.passport_expiry_date
+          default:
+            return true
+        }
+      })
+    }
+
+    setFilteredPromoters(filtered)
+  }, [allPromoters, searchTerm, filterStatus, filterCompany, filterDocument])
 
   if (isLoading) {
     return (
@@ -382,6 +514,71 @@ export default function PromoterDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Quick Promoter Search Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileTextIcon className="h-5 w-5" />
+            Quick Promoter Search
+          </CardTitle>
+          <CardDescription>
+            Quickly find and navigate to other promoters without going back to the main list
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PromoterFilterSection
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterCompany={filterCompany}
+            setFilterCompany={setFilterCompany}
+            filterDocument={filterDocument}
+            setFilterDocument={setFilterDocument}
+            employers={employers}
+            employersLoading={employersLoading}
+            uniqueCompanies={employers.map(emp => ({
+              id: emp.id,
+              name: emp.name_en || emp.name_ar || emp.id
+            }))}
+            showBulkActions={false}
+          />
+          
+          {/* Filtered Promoters List */}
+          {filteredPromoters.length > 0 && (searchTerm || filterStatus !== "all" || filterCompany !== "all" || filterDocument !== "all") && (
+            <div className="mt-4">
+              <h4 className="text-sm font-medium mb-3">
+                Found {filteredPromoters.length} promoter{filteredPromoters.length !== 1 ? 's' : ''}:
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
+                {filteredPromoters.filter(p => p.id !== promoterId).slice(0, 9).map((promoter) => (
+                  <Button
+                    key={promoter.id}
+                    variant="outline"
+                    size="sm"
+                    className="justify-start h-auto p-3 text-left"
+                    onClick={() => handlePromoterSelect(promoter.id)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm">{promoter.name_en}</span>
+                      {promoter.name_ar && (
+                        <span className="text-xs text-muted-foreground">{promoter.name_ar}</span>
+                      )}
+                      <span className="text-xs text-muted-foreground">{promoter.id_card_number || 'No ID'}</span>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              {filteredPromoters.filter(p => p.id !== promoterId).length > 9 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  And {filteredPromoters.filter(p => p.id !== promoterId).length - 9} more... Use filters to narrow down results.
+                </p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Quick Actions Section */}
       {role === "admin" && (

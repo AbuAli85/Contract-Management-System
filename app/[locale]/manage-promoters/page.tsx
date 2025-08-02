@@ -434,18 +434,6 @@ export default function PromoterManagement() {
     }
   }, [filteredPromoters, toast])
 
-  const handleAddNew = useCallback(() => {
-    router.push("/manage-promoters/new")
-  }, [router])
-
-  const handleEdit = useCallback((promoter: Promoter) => {
-    router.push(`/manage-promoters/${promoter.id}/edit`)
-  }, [router])
-
-  const handleView = useCallback((promoter: Promoter) => {
-    router.push(`/manage-promoters/${promoter.id}`)
-  }, [router])
-
   const handleDelete = useCallback(async (promoter: Promoter) => {
     if (!confirm(`Are you sure you want to delete promoter "${promoter.name_en}"?`)) {
       return
@@ -594,7 +582,18 @@ export default function PromoterManagement() {
     }
   }, [selectedPromoters, selectedCompanyForBulk, fetchPromoters, toast])
 
+  // View and Edit handlers
+  const handleView = useCallback((promoter: EnhancedPromoter) => {
+    router.push(`/${locale}/manage-promoters/${promoter.id}`)
+  }, [router, locale])
 
+  const handleEdit = useCallback((promoter: EnhancedPromoter) => {
+    router.push(`/${locale}/manage-promoters/${promoter.id}/edit`)
+  }, [router, locale])
+
+  const handleAddNew = useCallback(() => {
+    router.push(`/${locale}/manage-promoters/new`)
+  }, [router, locale])
 
   if (isLoading) {
     return (
