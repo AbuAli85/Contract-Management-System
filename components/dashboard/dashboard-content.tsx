@@ -90,7 +90,7 @@ export default function DashboardContent({ locale }: { locale: string }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">Welcome back, {user?.email || "User"}</p>
+          <p className="text-muted-foreground">Welcome back, {user?.email?.split('@')[0] || "User"}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleNewContract} className="flex items-center gap-2">

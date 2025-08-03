@@ -324,7 +324,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   </div>
                 </div>
                 <p className="text-lg text-slate-600 max-w-2xl leading-relaxed font-medium">
-                  Welcome back! You have {summaryMetrics.totalEntities} total entities, {summaryMetrics.recentActivities} recent activities, and {notifications.length} notifications requiring your attention.
+                  Welcome back, {user?.email?.split('@')[0] || 'User'}! You have {summaryMetrics.totalEntities} total entities, {summaryMetrics.recentActivities} recent activities, and {notifications.length} notifications requiring your attention.
                 </p>
               </div>
               
