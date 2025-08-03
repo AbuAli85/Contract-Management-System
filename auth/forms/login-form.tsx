@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-service"
+import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -25,6 +26,13 @@ export function LoginForm() {
   // Add refs to prevent unnecessary re-renders
   const isSubmittingRef = useRef(false)
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Silent session timeout - only active when user is authenticated
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    enableLogging: false, // Set to true for debugging
+    silent: true // Silent mode - no warnings, just automatic logout
+  })
 
   // Get the current locale from the URL or default to 'en'
   const pathname = typeof window !== "undefined" ? window.location.pathname : ""
