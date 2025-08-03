@@ -11,6 +11,7 @@ import { DashboardNotifications } from "@/components/dashboard/dashboard-notific
 import { DashboardActivities } from "@/components/dashboard/dashboard-activities"
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
 import { useToast } from "@/hooks/use-toast"
+import { useNotifications } from "@/hooks/use-notifications"
 import { 
   RefreshCw,
   Settings,
@@ -93,11 +94,11 @@ interface DashboardPageProps {
 export default function DashboardPage({ params }: DashboardPageProps) {
   const { locale } = params
   const [stats, setStats] = useState<any>(null)
-  const [notifications, setNotifications] = useState<any[]>([])
   const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const { toast } = useToast()
+  const { notifications, totalCount, highPriorityCount, fetchNotifications } = useNotifications()
 
   // Enhanced data fetching with detailed error handling and caching
   const fetchDashboardData = async (showRefreshToast = false) => {
@@ -139,7 +140,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       ])
 
       // Process stats data
-      if (statsResponse.ok) {
+      if (statsResponse.ok && 'json' in statsResponse) {
         const statsData = await statsResponse.json()
         console.log('Dashboard stats loaded:', statsData)
         setStats(statsData)
@@ -156,18 +157,18 @@ export default function DashboardPage({ params }: DashboardPageProps) {
         })
       }
 
-      // Process notifications data
-      if (notificationsResponse.ok) {
+      // Process notifications data - now handled by useNotifications hook
+      if (notificationsResponse.ok && 'json' in notificationsResponse) {
         const notificationsData = await notificationsResponse.json()
         console.log('Dashboard notifications loaded:', notificationsData?.length || 0, 'notifications')
-        setNotifications(notificationsData || [])
+        // Notifications are now managed by the useNotifications hook
       } else {
         console.warn('Notifications API failed')
-        setNotifications([])
+        // Notifications are now managed by the useNotifications hook
       }
 
       // Process activities data
-      if (activitiesResponse.ok) {
+      if (activitiesResponse.ok && 'json' in activitiesResponse) {
         const activitiesData = await activitiesResponse.json()
         console.log('Dashboard activities loaded:', activitiesData?.length || 0, 'activities')
         setActivities(activitiesData || [])
@@ -177,12 +178,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       }
 
       if (showRefreshToast) {
-        const totalNotifications = notifications.length || 0
-        const highPriorityNotifications = notifications.filter(n => n.priority === 'high').length || 0
-        
         toast({
           title: "Dashboard Updated Successfully",
-          description: `Loaded latest data • ${totalNotifications} notifications ${highPriorityNotifications > 0 ? `(${highPriorityNotifications} high priority)` : ''}`,
+          description: `Loaded latest data • ${totalCount} notifications ${highPriorityCount > 0 ? `(${highPriorityCount} high priority)` : ''}`,
         })
       }
     } catch (error) {
@@ -258,6 +256,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   const handleRefresh = () => {
     fetchDashboardData(true)
+    fetchNotifications() // Also refresh notifications
   }
 
   // Calculate summary metrics for display
