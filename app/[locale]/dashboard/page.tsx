@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
+import { useAuth } from "@/lib/auth-service"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
 import { SilentSessionTimeout } from "@/components/silent-session-timeout"
 import { Button } from "@/components/ui/button"
@@ -95,6 +96,7 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ params }: DashboardPageProps) {
   const { locale } = params
+  const { user } = useAuth()
   
   // Ensure locale is available before render
   if (!locale) {
