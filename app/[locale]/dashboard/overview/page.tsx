@@ -100,6 +100,7 @@ import {
 } from "lucide-react"
 import { PermissionGuard } from "@/hooks/use-permissions"
 import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 import type { DashboardAnalytics } from "@/lib/dashboard-types"
 
 // Force dynamic rendering to avoid build-time Supabase issues
@@ -286,20 +287,7 @@ export default function DashboardOverviewPage() {
   const showAllFeatures = true // Set to false in production
   const displayFeatures = showAllFeatures ? featureCards : filteredFeatures
 
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case "admin":
-        return { en: "Administrator", ar: "مدير النظام" }
-      case "manager":
-        return { en: "Manager", ar: "مدير" }
-      case "user":
-        return { en: "User", ar: "مستخدم" }
-      default:
-        return { en: "User", ar: "مستخدم" }
-    }
-  }
-
-  const roleDisplay = getRoleDisplayName(permissions.role)
+  const roleDisplay = getRoleDisplay(permissions.role)
 
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
@@ -355,8 +343,8 @@ export default function DashboardOverviewPage() {
           </h1>
           <p className="text-muted-foreground">
             {locale === "ar"
-              ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.ar}`
-              : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`}
+              ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.displayText}`
+              : `Welcome to the Contract Management System. Your current role: ${roleDisplay.displayText}`}
           </p>
         </div>
         <div className="flex items-center justify-center py-12">
@@ -376,8 +364,8 @@ export default function DashboardOverviewPage() {
         </h1>
         <p className="text-muted-foreground">
           {locale === "ar"
-            ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.ar}`
-            : `Welcome to the Contract Management System. Your current role: ${roleDisplay.en}`}
+            ? `مرحباً بك في نظام إدارة العقود. دورك الحالي: ${roleDisplay.displayText}`
+            : `Welcome to the Contract Management System. Your current role: ${roleDisplay.displayText}`}
         </p>
       </div>
 

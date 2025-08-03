@@ -43,6 +43,7 @@ import {
 import { useUserManagement, type User, type UserFilters } from "@/hooks/use-user-management"
 import { UserProfileModal } from "./user-profile-modal"
 import { useToast } from "@/hooks/use-toast"
+import { getRoleDisplay, ROLE_HIERARCHY } from "@/lib/role-hierarchy"
 import { usePermissions } from "@/hooks/use-permissions"
 import {
   Dialog,
@@ -275,13 +276,15 @@ export function UserManagementDashboard() {
 
   const getRoleBadge = useCallback((role: string) => {
     const colors = {
+      super_admin: "bg-red-100 text-red-800",
       admin: "bg-purple-100 text-purple-800",
       manager: "bg-blue-100 text-blue-800",
+      moderator: "bg-indigo-100 text-indigo-800",
       user: "bg-green-100 text-green-800",
-      viewer: "bg-gray-100 text-gray-800",
+      guest: "bg-gray-100 text-gray-800",
     }
 
-    return <Badge className={colors[role as keyof typeof colors] || colors.user}>{role}</Badge>
+    return <Badge className={colors[role as keyof typeof colors] || colors.user}>{getRoleDisplay(role).displayText}</Badge>
   }, [])
 
   const formatDate = useCallback((dateString: string) => {
@@ -588,10 +591,12 @@ export function UserManagementDashboard() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="admin">Administrator</SelectItem>
+                              <SelectItem value="super_admin">Super Admin</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
                               <SelectItem value="manager">Manager</SelectItem>
+                              <SelectItem value="moderator">Moderator</SelectItem>
                               <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="viewer">Viewer</SelectItem>
+                              <SelectItem value="guest">Guest</SelectItem>
                             </SelectContent>
                           </Select>
                         ) : (

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, User, Mail, Phone, Building, Briefcase } from "lucide-react"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 export default function ProfilePage() {
   const { user, profile, loading, updateProfile } = useAuth()
@@ -143,7 +144,7 @@ export default function ProfilePage() {
                   <Input
                     id="role"
                     type="text"
-                    value={profile?.role || "user"}
+                    value={getRoleDisplay(profile?.role || "user").displayText}
                     disabled
                     className="bg-gray-50"
                   />

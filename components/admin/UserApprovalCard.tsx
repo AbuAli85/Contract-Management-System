@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, XCircle, Clock, UserCheck } from "lucide-react"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 interface User {
   id: string
@@ -77,7 +78,7 @@ export function UserApprovalCard({ user, onApprove, isLoading = false }: UserApp
           <div className="flex items-center justify-between">
             <span>{user.email}</span>
             <Badge className={getRoleColor(user.role)}>
-              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              {getRoleDisplay(user.role).displayText}
             </Badge>
           </div>
         </CardDescription>
