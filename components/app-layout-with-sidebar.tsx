@@ -145,14 +145,14 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
         </div>
       </div>
 
-      {/* Session Timeout Component - only show for authenticated users */}
-      {user && !isLandingPage && (
+      {/* Session Timeout Component - temporarily disabled to prevent initialization errors */}
+      {/* {user && !isLandingPage && (
         <SessionTimeout 
           timeoutMinutes={5}
           warningMinutes={1}
           showStatus={true}
         />
-      )}
+      )} */}
     </div>
   )
 }
