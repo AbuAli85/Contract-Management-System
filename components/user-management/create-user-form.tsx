@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, Eye, EyeOff, UserPlus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 interface CreateUserFormData {
   email: string
@@ -290,7 +291,7 @@ export function CreateUserForm({ open, onOpenChange, onUserCreated }: CreateUser
                 <SelectContent>
                   {ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                      {getRoleDisplay(role).displayText}
                     </SelectItem>
                   ))}
                 </SelectContent>

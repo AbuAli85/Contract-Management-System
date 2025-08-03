@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Shield, Users, FileText, BarChart3, Settings, Loader2 } from "lucide-react"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 // TypeScript interfaces
 interface Permission {
@@ -141,7 +142,8 @@ const AVAILABLE_PERMISSIONS: Permission[] = [
 
 // Role-based default permissions
 const ROLE_PERMISSIONS = {
-  admin: AVAILABLE_PERMISSIONS.map((p) => p.id), // All permissions
+  super_admin: AVAILABLE_PERMISSIONS.map((p) => p.id), // All permissions
+  admin: AVAILABLE_PERMISSIONS.map((p) => p.id), // All permissions 
   manager: [
     "users.view",
     "users.create",
@@ -155,8 +157,16 @@ const ROLE_PERMISSIONS = {
     "reports.generate",
     "settings.view",
   ],
+  moderator: [
+    "contracts.view",
+    "contracts.create",
+    "contracts.edit",
+    "dashboard.view",
+    "analytics.view",
+    "settings.view",
+  ],
   user: ["contracts.view", "contracts.create", "contracts.edit", "dashboard.view"],
-  viewer: ["contracts.view", "dashboard.view"],
+  guest: ["contracts.view", "dashboard.view"],
 }
 
 export default function PermissionsManager({
@@ -323,7 +333,7 @@ export default function PermissionsManager({
                   size="sm"
                   onClick={() => handleRoleChange(roleOption)}
                 >
-                  {roleOption.charAt(0).toUpperCase() + roleOption.slice(1)}
+                  {getRoleDisplay(roleOption).displayText}
                 </Button>
               ))}
             </div>

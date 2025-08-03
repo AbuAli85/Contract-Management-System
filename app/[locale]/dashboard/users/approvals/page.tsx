@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X, User, Clock, Calendar } from "lucide-react";
-import { format } from "date-fns";
+import { format } from "date-fns"
+import { getRoleDisplay } from "@/lib/role-hierarchy";
 
 interface PendingUser {
   id: string;
@@ -183,7 +184,7 @@ export default function UserApprovalsPage() {
                     <div>
                       <span className="font-medium">Role:</span>
                       <Badge variant="secondary" className="ml-2">
-                        {user.role}
+                        {getRoleDisplay(user.role).displayText}
                       </Badge>
                     </div>
                     {user.profile?.company && (

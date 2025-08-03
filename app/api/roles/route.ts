@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     const roles = Object.entries(roleCounts).map(([roleName, userCount]) => ({
       id: roleName,
       name: roleName,
-      description: `${roleName.charAt(0).toUpperCase() + roleName.slice(1)} role`,
+      description: `${getRoleDisplay(roleName).displayText} role`,
       permissions: [], // Will be populated from permissions table
       userCount,
       created_at: new Date().toISOString(),

@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 import type { UserProfile } from "@/types/custom"
 import Link from "next/link"
 
@@ -98,7 +99,7 @@ export function UserProfile({ profile, compact = false }: UserProfileProps) {
             <p className="text-sm font-medium leading-none">{displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             {userRole && (
-              <p className="text-xs capitalize leading-none text-muted-foreground">{userRole}</p>
+              <p className="text-xs capitalize leading-none text-muted-foreground">{getRoleDisplay(userRole).displayText}</p>
             )}
           </div>
         </DropdownMenuLabel>

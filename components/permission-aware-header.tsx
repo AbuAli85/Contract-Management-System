@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { User, Bell, FilePlus, Building2, BarChart3, Shield, Crown, UserCheck, WifiOff, SignalHigh, SignalMedium, SignalLow, BatteryFull, BatteryCharging, Power, PowerOff, Volume1, VolumeX, MicOff, VideoOff, CameraOff, Loader2, ImageOff, FileEdit, FolderOpen, FolderPlus, FolderMinus, FolderX, FolderCheck, FolderSearch, FolderEdit, Sun, Moon,  } from 'lucide-react'
 import { useTheme } from "next-themes"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 interface HeaderProps {
   onSidebarToggle?: () => void
@@ -216,7 +217,7 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
                 <div className="mt-1 flex items-center gap-1">
                   {getRoleIcon(permissions.role)}
                   <Badge variant={getRoleBadgeVariant(permissions.role)} className="text-xs">
-                    {permissions.role.charAt(0).toUpperCase() + permissions.role.slice(1)}
+                    {getRoleDisplay(permissions.role).displayText}
                   </Badge>
                   {permissions.isLoading && (
                     <div className="ml-1">

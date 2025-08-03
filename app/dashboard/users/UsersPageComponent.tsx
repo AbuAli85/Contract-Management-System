@@ -28,6 +28,7 @@ import {
   AlertCircle,
 } from "lucide-react"
 import { debounce } from "lodash"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 const ROLES = ["admin", "manager", "user", "viewer"]
 const STATUS = ["active", "inactive", "pending"]
@@ -362,7 +363,7 @@ export default function UsersPageComponent() {
                                     <SelectItem value="all">All roles</SelectItem>
             {ROLES.map((role) => (
               <SelectItem key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
+                {getRoleDisplay(role).displayText}
               </SelectItem>
             ))}
           </SelectContent>
@@ -573,7 +574,7 @@ export default function UsersPageComponent() {
                 <SelectContent>
                   {ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                      {getRoleDisplay(role).displayText}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -648,7 +649,7 @@ export default function UsersPageComponent() {
                 <SelectContent>
                   {ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {role.charAt(0).toUpperCase() + role.slice(1)}
+                      {getRoleDisplay(role).displayText}
                     </SelectItem>
                   ))}
                 </SelectContent>
