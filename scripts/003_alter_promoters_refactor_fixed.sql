@@ -1,10 +1,9 @@
--- Refactor the promoters table
--- Add new notification and status fields
--- Remove fields that will be moved to the new 'contracts' table
+-- Fixed version of the promoters refactor migration
+-- This version handles the status constraint properly
 
 DO $$
 BEGIN
-    -- Rename legacy notification columns if present
+    -- Handle old column names if they exist
     IF EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_name='promoters' AND column_name='notify_before_id_expiry_days'
@@ -48,12 +47,31 @@ BEGIN
         ALTER TABLE promoters ADD COLUMN status TEXT DEFAULT 'active';
     END IF;
 
-    IF NOT EXISTS (
+    -- Fix any existing invalid status values before adding the constraint
+    UPDATE promoters SET status = 'active' WHERE status IS NULL;
+    
+    -- Common mappings for invalid statuses
+    UPDATE promoters SET status = 'pending_approval' WHERE status = 'pending';
+    UPDATE promoters SET status = 'active' WHERE status = 'approved';
+    UPDATE promoters SET status = 'inactive' WHERE status IN ('rejected', 'expired', 'cancelled', 'deleted');
+    UPDATE promoters SET status = 'suspended' WHERE status = 'blocked';
+    UPDATE promoters SET status = 'terminated' WHERE status = 'fired';
+    
+    -- Catch-all for any other unexpected values
+    UPDATE promoters SET status = 'active' 
+    WHERE status NOT IN ('active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated', 'pending_approval', 'pending_review', 'retired', 'probation', 'resigned', 'contractor', 'temporary', 'training', 'other');
+
+    -- Drop existing constraint if it exists
+    IF EXISTS (
         SELECT 1 FROM information_schema.table_constraints
         WHERE table_name='promoters' AND constraint_name='promoters_status_check'
     ) THEN
-        ALTER TABLE promoters ADD CONSTRAINT promoters_status_check CHECK (status IN ('active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated', 'pending_approval', 'pending_review', 'retired', 'probation', 'resigned', 'contractor', 'temporary', 'training', 'other'));
+        ALTER TABLE promoters DROP CONSTRAINT promoters_status_check;
     END IF;
+
+    -- Add the new constraint with all supported status values
+    ALTER TABLE promoters ADD CONSTRAINT promoters_status_check 
+    CHECK (status IN ('active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated', 'pending_approval', 'pending_review', 'retired', 'probation', 'resigned', 'contractor', 'temporary', 'training', 'other'));
 
     -- Remove old contract-related fields if they exist.
     -- Be cautious with DROP COLUMN if data migration is needed.
@@ -105,4 +123,4 @@ END $$;
 
 COMMENT ON COLUMN promoters.notify_days_before_id_expiry IS 'Number of days before ID card expiry to notify. Default 100.';
 COMMENT ON COLUMN promoters.notify_days_before_passport_expiry IS 'Number of days before passport expiry to notify. Default 210.';
-COMMENT ON COLUMN promoters.status IS 'Status of the promoter: active, inactive, suspended, holiday, on_leave, terminated, pending_approval, pending_review, retired, probation, resigned, contractor, temporary, training, other. Default active.';
+COMMENT ON COLUMN promoters.status IS 'Status of the promoter: active, inactive, suspended, holiday, on_leave, terminated, pending_approval, pending_review, retired, probation, resigned, contractor, temporary, training, other. Default active.'; 

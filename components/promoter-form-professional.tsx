@@ -19,6 +19,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { formatDateForDatabase } from "@/lib/date-utils"
+import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 import { DateInput } from "@/components/ui/date-input"
 import DocumentUpload from "@/components/document-upload"
 
@@ -53,7 +54,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
     }
   }
 
-  const safeGetNumber = (obj: any, key: string, defaultValue: number = 30) => {
+  const safeGetNumber = (obj: any, key: string, defaultValue: number = PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY) => {
     try {
       if (!obj || typeof obj !== 'object') return defaultValue
       const value = obj[key]
@@ -132,8 +133,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
      passport_url: "",
      
      // Notification settings
-     notify_days_before_id_expiry: 100,
-     notify_days_before_passport_expiry: 210,
+     notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
+     notify_days_before_passport_expiry: PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
      
      // Employer assignment
      employer_id: "",
@@ -227,8 +228,8 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
          profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
          id_card_url: safeGetValue(promoterToEdit, 'id_card_url'),
          passport_url: safeGetValue(promoterToEdit, 'passport_url'),
-         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 100),
-         notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', 210),
+         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY),
+         notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY),
          employer_id: safeGetValue(promoterToEdit, 'employer_id') || "none",
       })
     }

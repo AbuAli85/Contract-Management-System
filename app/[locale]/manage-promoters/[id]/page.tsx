@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { getSupabaseClient } from "@/lib/supabase"
+import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 import type {
   Promoter,
   Contract,
@@ -427,7 +428,7 @@ export default function PromoterDetailPage() {
             const idExpiry = new Date(promoter.id_card_expiry_date)
             const now = new Date()
             const daysUntilExpiry = Math.ceil((idExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-            return daysUntilExpiry <= 30 && daysUntilExpiry > 0
+            return daysUntilExpiry <= PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY && daysUntilExpiry > 0
           case "id_expired":
             return promoter.id_card_expiry_date && new Date(promoter.id_card_expiry_date) <= new Date()
           case "id_missing":
@@ -439,7 +440,7 @@ export default function PromoterDetailPage() {
             const passportExpiry = new Date(promoter.passport_expiry_date)
             const nowForPassport = new Date()
             const daysUntilPassportExpiry = Math.ceil((passportExpiry.getTime() - nowForPassport.getTime()) / (1000 * 60 * 60 * 24))
-            return daysUntilPassportExpiry <= 30 && daysUntilPassportExpiry > 0
+            return daysUntilPassportExpiry <= PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY && daysUntilPassportExpiry > 0
           case "passport_expired":
             return promoter.passport_expiry_date && new Date(promoter.passport_expiry_date) <= new Date()
           case "passport_missing":

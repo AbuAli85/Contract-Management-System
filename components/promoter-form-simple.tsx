@@ -13,6 +13,7 @@ import { User, FileText, Settings, Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { formatDateForDatabase } from "@/lib/date-utils"
+import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 import { DateInput } from "@/components/ui/date-input"
 
 interface PromoterFormSimpleProps {
@@ -62,8 +63,8 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
     profile_picture_url: promoterToEdit?.profile_picture_url || "",
     
     // Notification settings (only fields that exist in database)
-    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 100,
-    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 210,
+    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
+    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -98,8 +99,8 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
         status: formData.status || "active",
         notes: formData.notes || "",
         profile_picture_url: formData.profile_picture_url || "",
-              notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || "100"),
-      notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || "210"),
+                      notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY.toString()),
+        notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY.toString()),
       }
 
       let result
