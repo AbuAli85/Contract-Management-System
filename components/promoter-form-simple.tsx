@@ -62,8 +62,8 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
     profile_picture_url: promoterToEdit?.profile_picture_url || "",
     
     // Notification settings (only fields that exist in database)
-    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 30,
-    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 30,
+    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 100,
+    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 210,
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -98,8 +98,8 @@ export default function PromoterFormSimple(props: PromoterFormSimpleProps) {
         status: formData.status || "active",
         notes: formData.notes || "",
         profile_picture_url: formData.profile_picture_url || "",
-        notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || "30"),
-        notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || "30"),
+              notify_days_before_id_expiry: parseInt(formData.notify_days_before_id_expiry?.toString() || "100"),
+      notify_days_before_passport_expiry: parseInt(formData.notify_days_before_passport_expiry?.toString() || "210"),
       }
 
       let result

@@ -265,8 +265,8 @@ describe("Promoter Validation - Enhanced Functions", () => {
         passport_expiry_date: "2025-12-31",
         passport_number: "P123456789",
         notes: "Test promoter",
-        notify_days_before_id_expiry: 30,
-        notify_days_before_passport_expiry: 30,
+        notify_days_before_id_expiry: 100,
+        notify_days_before_passport_expiry: 210,
       }
 
       const result = validatePromoterProfile(validProfile)
@@ -368,14 +368,14 @@ describe("Promoter Validation - Enhanced Functions", () => {
 
     it("should handle number fields", () => {
       const rawData = {
-        notify_days_before_id_expiry: "30",
-        notify_days_before_passport_expiry: "60",
+        notify_days_before_id_expiry: "100",
+        notify_days_before_passport_expiry: "210",
       }
 
       const sanitized = sanitizePromoterData(rawData)
 
-      expect(sanitized.notify_days_before_id_expiry).toBe(30)
-      expect(sanitized.notify_days_before_passport_expiry).toBe(60)
+      expect(sanitized.notify_days_before_id_expiry).toBe(100)
+      expect(sanitized.notify_days_before_passport_expiry).toBe(210)
     })
 
     it("should handle undefined and null values", () => {
@@ -589,8 +589,8 @@ describe("Promoter Validation - Enhanced Functions", () => {
         passport_expiry_date: new Date("2025-12-31"),
         passport_number: "P123456789",
         notes: "Test promoter",
-        notify_days_before_id_expiry: 30,
-        notify_days_before_passport_expiry: 30,
+        notify_days_before_id_expiry: 100,
+        notify_days_before_passport_expiry: 210,
       }
 
       const result = promoterProfileSchema.safeParse(validProfile)

@@ -532,8 +532,8 @@ const validProfile: PromoterProfileFormData = {
   passport_expiry_date: new Date("2025-12-31"),
   passport_number: "P123456789",
   notes: "Test promoter",
-  notify_days_before_id_expiry: 30,
-  notify_days_before_passport_expiry: 30,
+          notify_days_before_id_expiry: 100,
+        notify_days_before_passport_expiry: 210,
 }
 
 const result = promoterProfileSchema.safeParse(validProfile)

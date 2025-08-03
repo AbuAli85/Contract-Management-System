@@ -197,7 +197,7 @@ function buildPromoterQuery(supabaseClient: any, searchTerm?: string, filters?: 
   // Apply document status filter
   if (filters?.documentStatus && filters.documentStatus !== "all") {
     const today = new Date()
-    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+    const thirtyDaysFromNow = new Date(today.getTime() + 100 * 24 * 60 * 60 * 1000)
 
     switch (filters.documentStatus) {
       case "expired":

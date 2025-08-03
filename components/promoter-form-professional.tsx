@@ -132,7 +132,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
      passport_url: "",
      
      // Notification settings
-     notify_days_before_id_expiry: 90,
+     notify_days_before_id_expiry: 100,
      notify_days_before_passport_expiry: 210,
      
      // Employer assignment
@@ -227,7 +227,7 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
          profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
          id_card_url: safeGetValue(promoterToEdit, 'id_card_url'),
          passport_url: safeGetValue(promoterToEdit, 'passport_url'),
-         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 90),
+         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 100),
          notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', 210),
          employer_id: safeGetValue(promoterToEdit, 'employer_id') || "none",
       })

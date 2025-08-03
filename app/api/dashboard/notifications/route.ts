@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       .from('promoters')
       .select('id, name_en, name_ar, id_expiry_date')
       .not('id_expiry_date', 'is', null)
-      .lte('id_expiry_date', new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())
+      .lte('id_expiry_date', new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString())
 
     expiringIds?.forEach(promoter => {
       const daysUntilExpiry = differenceInDays(new Date(promoter.id_expiry_date), now)
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
       .from('promoters')
       .select('id, name_en, name_ar, passport_expiry_date')
       .not('passport_expiry_date', 'is', null)
-      .lte('passport_expiry_date', new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString())
+      .lte('passport_expiry_date', new Date(now.getTime() + 210 * 24 * 60 * 60 * 1000).toISOString())
 
     expiringPassports?.forEach(promoter => {
       const daysUntilExpiry = differenceInDays(new Date(promoter.passport_expiry_date), now)

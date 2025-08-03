@@ -58,8 +58,8 @@ export default function PromoterForm(props: PromoterFormProps) {
     profile_picture_url: promoterToEdit?.profile_picture_url || "",
     
     // Notification settings (only fields that exist in database)
-    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 30,
-    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 30,
+    notify_days_before_id_expiry: promoterToEdit?.notify_days_before_id_expiry || 100,
+    notify_days_before_passport_expiry: promoterToEdit?.notify_days_before_passport_expiry || 210,
     
     // Additional fields that might be used in the form
     rating: promoterToEdit?.rating || 0,
@@ -418,8 +418,8 @@ export default function PromoterForm(props: PromoterFormProps) {
         status: formData.status,
         notes: formData.notes,
         profile_picture_url: formData.profile_picture_url,
-        notify_days_before_id_expiry: formData.notify_days_before_id_expiry || 30,
-        notify_days_before_passport_expiry: formData.notify_days_before_passport_expiry || 30,
+              notify_days_before_id_expiry: formData.notify_days_before_id_expiry || 100,
+      notify_days_before_passport_expiry: formData.notify_days_before_passport_expiry || 210,
       }
 
       let result
