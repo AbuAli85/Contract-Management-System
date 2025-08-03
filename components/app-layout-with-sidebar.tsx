@@ -1,28 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { useAuth } from "@/lib                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-lg font-semibold text-card-foreground">
-                        {getPageTitle()}
-                      </h1>
-                      {/* Enhanced Role Display */}
-                      <div className="flex items-center gap-1">
-                        {isAdmin && (
-                          <Badge variant="default" className="text-xs bg-red-600 hover:bg-red-700">
-                            <Crown className="h-3 w-3 mr-1" />
-                            Admin
-                          </Badge>
-                        )}
-                        {isUser && (
-                          <Badge variant="outline" className="text-xs">
-                            <User className="h-3 w-3 mr-1" />
-                            User
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>ice"
+import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
