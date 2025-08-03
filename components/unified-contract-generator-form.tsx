@@ -151,15 +151,28 @@ export default function UnifiedContractGeneratorForm({
 
   const promoterOptions = useMemo(() => {
     if (!promoters) return []
-    return promoters.map((p) => ({
+    
+    // Filter promoters based on selected employer
+    let filteredPromoters = promoters
+    
+    if (watchedSecondPartyId) {
+      filteredPromoters = promoters.filter((p) => {
+        // Check if promoter is associated with the selected employer
+        return p.employer_id?.toString() === watchedSecondPartyId || 
+               p.outsourced_to_id?.toString() === watchedSecondPartyId
+      })
+    }
+    
+    return filteredPromoters.map((p) => ({
       value: p.id.toString(),
       label: `${p.name_en} / ${p.name_ar} (ID: ${p.id_card_number ?? "N/A"})`,
     }))
-  }, [promoters])
+  }, [promoters, watchedSecondPartyId])
 
   // Watch form values for calculations and validation
   const watchedValues = useWatch({ control: form.control })
   const watchedPromoterId = useWatch({ control: form.control, name: "promoter_id" })
+  const watchedSecondPartyId = useWatch({ control: form.control, name: "second_party_id" })
   const watchedStartDate = useWatch({ control: form.control, name: "contract_start_date" })
   const watchedEndDate = useWatch({ control: form.control, name: "contract_end_date" })
   const watchedSalary = useWatch({ control: form.control, name: "basic_salary" })
@@ -205,6 +218,15 @@ export default function UnifiedContractGeneratorForm({
       }
     }
   }, [watchedPromoterId, promoters, form])
+
+  // Clear promoter selection when employer changes
+  useEffect(() => {
+    if (watchedSecondPartyId) {
+      // Clear promoter selection when employer changes
+      form.setValue("promoter_id", "")
+      setSelectedPromoter(null)
+    }
+  }, [watchedSecondPartyId, form])
 
   // Mutation for form submission
   const submitMutation = useMutation({
@@ -599,6 +621,16 @@ export default function UnifiedContractGeneratorForm({
                         />
                       </FormControl>
                       <FormMessage />
+                      {watchedSecondPartyId && promoterOptions.length === 0 && (
+                        <p className="text-sm text-amber-600 mt-2">
+                          ⚠️ No promoters found for the selected employer. Please select a different employer or add promoters to this employer.
+                        </p>
+                      )}
+                      {watchedSecondPartyId && promoterOptions.length > 0 && (
+                        <p className="text-sm text-green-600 mt-2">
+                          ✅ {promoterOptions.length} promoter(s) available for this employer
+                        </p>
+                      )}
                     </FormItem>
                   )}
                 />
