@@ -9,6 +9,7 @@ import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { SessionTimeout } from "./session-timeout"
 import { 
   Bell, 
   Settings, 
@@ -143,6 +144,15 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </main>
         </div>
       </div>
+
+      {/* Session Timeout Component - only show for authenticated users */}
+      {user && !isLandingPage && (
+        <SessionTimeout 
+          timeoutMinutes={5}
+          warningMinutes={1}
+          showStatus={true}
+        />
+      )}
     </div>
   )
 }

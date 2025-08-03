@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { useToast } from "@/hooks/use-toast"
+import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -109,6 +110,19 @@ export default function GenerateContractPage() {
   const { toast } = useToast()
   const pathname = usePathname()
   const locale = pathname?.split("/")[1] || "en"
+
+  // Initialize session timeout (5 minutes timeout, 1 minute warning)
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    warningMinutes: 1,
+    onTimeout: () => {
+      toast({
+        title: "Session Expired",
+        description: "You have been automatically logged out due to inactivity.",
+        variant: "destructive",
+      })
+    }
+  })
 
   // State management
   const [useEnhancedForm, setUseEnhancedForm] = useState(false)
