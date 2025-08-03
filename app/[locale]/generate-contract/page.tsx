@@ -8,12 +8,28 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle, FileText, Settings } from "lucide-react"
+import EnhancedContractForm from "@/components/enhanced-contract-form"
+import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
+import { useSessionTimeout } from "@/hooks/use-session-timeout"
 
 export default function GenerateContractPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const pathname = usePathname()
   const locale = pathname?.split("/")[1] || "en"
+
+  // Initialize session timeout (5 minutes timeout, 1 minute warning)
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    warningMinutes: 1,
+    onTimeout: () => {
+      toast({
+        title: "Session Expired",
+        description: "You have been automatically logged out due to inactivity.",
+        variant: "destructive",
+      })
+    }
+  })
 
   // State management
   const [isLoading, setIsLoading] = useState(true)
@@ -154,22 +170,59 @@ export default function GenerateContractPage() {
             </Alert>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => {
-                toast({
-                  title: "Form Selected",
-                  description: `${selectedForm === "unified" ? "Unified" : "Enhanced"} contract form is ready to use.`,
-                })
-              }}
-            >
-              Continue with {selectedForm === "unified" ? "Unified" : "Enhanced"} Form
-            </Button>
-            <Button variant="outline" onClick={() => window.location.href = `/${locale}/dashboard`}>
-              Back to Dashboard
-            </Button>
-          </div>
+                     {/* Action Buttons */}
+           <div className="flex gap-2">
+             <Button 
+               onClick={() => {
+                 toast({
+                   title: "Form Selected",
+                   description: `${selectedForm === "unified" ? "Unified" : "Enhanced"} contract form is ready to use.`,
+                 })
+               }}
+             >
+               Continue with {selectedForm === "unified" ? "Unified" : "Enhanced"} Form
+             </Button>
+             <Button variant="outline" onClick={() => window.location.href = `/${locale}/dashboard`}>
+               Back to Dashboard
+             </Button>
+           </div>
+
+           {/* Form Display */}
+           {selectedForm === "unified" && (
+             <div className="mt-6">
+               <UnifiedContractGeneratorForm
+                 mode="advanced"
+                 showAdvanced={true}
+                 autoRedirect={false}
+                 onFormSubmit={() => {
+                   toast({
+                     title: "Contract Saved",
+                     description: "Your contract has been successfully saved.",
+                   })
+                 }}
+               />
+             </div>
+           )}
+
+           {selectedForm === "enhanced" && (
+             <div className="mt-6">
+               <EnhancedContractForm
+                 onSuccess={() => {
+                   toast({
+                     title: "Contract Generated",
+                     description: "Your contract has been successfully generated and saved.",
+                   })
+                 }}
+                 onError={(error) => {
+                   toast({
+                     title: "Generation Failed",
+                     description: error.message || "Failed to generate contract.",
+                     variant: "destructive",
+                   })
+                 }}
+               />
+             </div>
+           )}
         </CardContent>
       </Card>
     </div>
