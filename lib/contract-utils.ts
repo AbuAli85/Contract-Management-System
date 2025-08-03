@@ -1,7 +1,7 @@
 // lib/contract-utils.ts
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { format, differenceInDays, differenceInMonths, parseISO } from "date-fns"
+// import { format, differenceInDays, differenceInMonths, parseISO } from "date-fns"
 import type { ContractGeneratorFormData } from "@/lib/schema-generator"
 import type { Database } from "@/types/supabase"
 
@@ -58,8 +58,9 @@ export interface ContractValidationResult {
  * Analyze contract duration and provide insights
  */
 export function analyzeContractDuration(startDate: Date, endDate: Date): ContractDurationAnalysis {
-  const duration = differenceInDays(endDate, startDate)
-  const months = differenceInMonths(endDate, startDate)
+  // Temporary fallback without date-fns
+  const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  const months = Math.floor(duration / 30)
 
   const analysis: ContractDurationAnalysis = {
     duration,
@@ -271,10 +272,18 @@ export function getStatusBadgeVariant(
  * Format contract dates for display
  */
 export function formatContractDates(startDate: string | Date, endDate: string | Date): string {
-  const start = typeof startDate === "string" ? parseISO(startDate) : startDate
-  const end = typeof endDate === "string" ? parseISO(endDate) : endDate
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate
 
-  return `${format(start, "dd MMM yyyy")} - ${format(end, "dd MMM yyyy")}`
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    })
+  }
+
+  return `${formatDate(start)} - ${formatDate(end)}`
 }
 
 /**
@@ -285,14 +294,14 @@ export function calculateContractProgress(
   endDate: string | Date,
   currentDate: Date = new Date(),
 ): number {
-  const start = typeof startDate === "string" ? parseISO(startDate) : startDate
-  const end = typeof endDate === "string" ? parseISO(endDate) : endDate
+  const start = typeof startDate === "string" ? new Date(startDate) : startDate
+  const end = typeof endDate === "string" ? new Date(endDate) : endDate
 
   if (currentDate < start) return 0
   if (currentDate > end) return 100
 
-  const totalDuration = differenceInDays(end, start)
-  const elapsed = differenceInDays(currentDate, start)
+  const totalDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const elapsed = Math.floor((currentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 
   return Math.round((elapsed / totalDuration) * 100)
 }
@@ -301,10 +310,10 @@ export function calculateContractProgress(
  * Get contract age in human readable format
  */
 export function getContractAge(createdAt: string | Date): string {
-  const created = typeof createdAt === "string" ? parseISO(createdAt) : createdAt
+  const created = typeof createdAt === "string" ? new Date(createdAt) : createdAt
   const now = new Date()
 
-  const days = differenceInDays(now, created)
+  const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
 
   if (days === 0) return "Today"
   if (days === 1) return "1 day ago"
@@ -502,7 +511,7 @@ export function checkComplianceIssues(contractData: any): {
       issues.push("End date must be after start date")
     }
 
-    const duration = differenceInDays(endDate, startDate)
+    const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
     if (duration < 1) {
       issues.push("Contract duration must be at least 1 day")
     }
