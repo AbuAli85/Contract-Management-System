@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense, lazy } from "react"
+import { useState, useEffect, Suspense, lazy, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-service"
@@ -240,23 +240,21 @@ export default function GenerateContractPage() {
   }
 
   // Contract types with enhanced configuration - group by category
-  const allContractTypes = getAllEnhancedContractTypes()
-  console.log('All contract types:', allContractTypes) // Debug log
-  
-  const contractTypesConfig = allContractTypes.reduce((acc, type) => {
-    if (!acc[type.category]) {
-      acc[type.category] = []
-    }
-    acc[type.category].push({
-      value: type.id,
-      label: type.name,
-      category: type.category,
-      requiredFields: type.validation.requiredFields
-    })
-    return acc
-  }, {} as Record<string, Array<{value: string, label: string, category: string, requiredFields: string[]}>>)
-  
-  console.log('Contract types config:', contractTypesConfig) // Debug log
+  const contractTypesConfig = useMemo(() => {
+    const allContractTypes = getAllEnhancedContractTypes()
+    return allContractTypes.reduce((acc, type) => {
+      if (!acc[type.category]) {
+        acc[type.category] = []
+      }
+      acc[type.category].push({
+        value: type.id,
+        label: type.name,
+        category: type.category,
+        requiredFields: type.validation.requiredFields
+      })
+      return acc
+    }, {} as Record<string, Array<{value: string, label: string, category: string, requiredFields: string[]}>>)
+  }, [])
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
@@ -281,7 +279,7 @@ export default function GenerateContractPage() {
           priority: "high",
         },
       ]
-      setInsights((prev) => [...prev, ...newInsights])
+      setInsights(newInsights)
     }
   }
 
