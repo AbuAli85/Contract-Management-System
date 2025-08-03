@@ -5,7 +5,7 @@ export interface Party {
   crn: string
   type?: "Employer" | "Client" | "Generic" | null
   role?: string | null
-  cr_expiry?: string | null
+  cr_expiry_date?: string | null
   contact_person?: string | null
   contact_email?: string | null
   contact_phone?: string | null
