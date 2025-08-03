@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, lazy } from "react"
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-service"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -117,6 +118,7 @@ interface SmartRecommendation {
 
 export default function GenerateContractPage() {
   const { user, profile } = useAuth()
+  const { toast } = useToast()
   const pathname = usePathname()
   const locale = pathname.split("/")[1] || "en"
 
@@ -237,7 +239,7 @@ export default function GenerateContractPage() {
   }
 
   // Contract types with enhanced configuration
-  const contractTypesConfig = getContractTypesByCategory()
+  const contractTypesConfig = getContractTypesByCategory("employment") // Default to employment category
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
