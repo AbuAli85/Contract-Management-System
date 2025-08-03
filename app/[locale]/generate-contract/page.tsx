@@ -84,6 +84,7 @@ import { CONTRACT_TYPES } from "@/constants/contract-options"
 import {
   getContractTypesByCategory,
   getEnhancedContractTypeConfig,
+  getAllEnhancedContractTypes,
   contractTypes,
   type ContractTypeConfig,
 } from "@/lib/contract-type-config"
@@ -238,8 +239,20 @@ export default function GenerateContractPage() {
     },
   }
 
-  // Contract types with enhanced configuration
-  const contractTypesConfig = getContractTypesByCategory("employment") // Default to employment category
+  // Contract types with enhanced configuration - group by category
+  const allContractTypes = getAllEnhancedContractTypes()
+  const contractTypesConfig = allContractTypes.reduce((acc, type) => {
+    if (!acc[type.category]) {
+      acc[type.category] = []
+    }
+    acc[type.category].push({
+      value: type.id,
+      label: type.name,
+      category: type.category,
+      requiredFields: type.validation.requiredFields
+    })
+    return acc
+  }, {} as Record<string, Array<{value: string, label: string, category: string, requiredFields: string[]}>>)
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
