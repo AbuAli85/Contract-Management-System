@@ -33,7 +33,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const locale = (params?.locale as string) || "en"
 
   // Check if we're on the landing page (root route)
-  const isLandingPage = pathname === `/${locale}` || pathname === `/${locale}/`
+  const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/")
 
   // Get current page title
   const getPageTitle = () => {
@@ -137,7 +137,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           )}
 
           {/* Page content */}
-          <main className={`flex-1 ${!isLandingPage ? "p-6" : ""}`}>
+          <main className={"flex-1 " + (!isLandingPage ? "p-6" : "")}>
             <div className="children-container">
               {children}
             </div>

@@ -87,7 +87,7 @@ export function ContractIntelligence({ contractId, contractData }: ContractIntel
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       const mockAnalysis: ContractAnalysis = {
-        id: `analysis_${id}`,
+        id: "analysis_" + id,
         contractId: id,
         riskScore: 75,
         complianceScore: 88,
@@ -326,7 +326,7 @@ export function ContractIntelligence({ contractId, contractData }: ContractIntel
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${getScoreColor(analysis.riskScore)}`}>
+                <div className={"text-2xl font-bold " + getScoreColor(analysis.riskScore)}>
                   {analysis.riskScore}/100
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -345,7 +345,7 @@ export function ContractIntelligence({ contractId, contractData }: ContractIntel
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${getScoreColor(analysis.complianceScore)}`}>
+                <div className={"text-2xl font-bold " + getScoreColor(analysis.complianceScore)}>
                   {analysis.complianceScore}/100
                 </div>
                 <p className="text-xs text-muted-foreground">Regulatory compliance level</p>
@@ -358,7 +358,7 @@ export function ContractIntelligence({ contractId, contractData }: ContractIntel
                 <Target className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${getScoreColor(analysis.efficiencyScore)}`}>
+                <div className={"text-2xl font-bold " + getScoreColor(analysis.efficiencyScore)}>
                   {analysis.efficiencyScore}/100
                 </div>
                 <p className="text-xs text-muted-foreground">Process optimization potential</p>

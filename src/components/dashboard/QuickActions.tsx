@@ -13,7 +13,7 @@ interface QuickActionProps {
 function QuickAction({ href, icon, title, description, className }: QuickActionProps) {
   return (
     <Link href={href}>
-      <Card className={`transition-all hover:-translate-y-1 hover:shadow-lg ${className}`}>
+      <Card className={"transition-all hover:-translate-y-1 hover:shadow-lg " + (className || "")}>
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="w-fit rounded-lg bg-primary/10 p-3">{icon}</div>
