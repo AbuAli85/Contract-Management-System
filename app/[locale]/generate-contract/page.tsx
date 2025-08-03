@@ -241,6 +241,8 @@ export default function GenerateContractPage() {
 
   // Contract types with enhanced configuration - group by category
   const allContractTypes = getAllEnhancedContractTypes()
+  console.log('All contract types:', allContractTypes) // Debug log
+  
   const contractTypesConfig = allContractTypes.reduce((acc, type) => {
     if (!acc[type.category]) {
       acc[type.category] = []
@@ -253,6 +255,8 @@ export default function GenerateContractPage() {
     })
     return acc
   }, {} as Record<string, Array<{value: string, label: string, category: string, requiredFields: string[]}>>)
+  
+  console.log('Contract types config:', contractTypesConfig) // Debug log
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
@@ -569,7 +573,7 @@ export default function GenerateContractPage() {
                     {category}
                   </h4>
                   <div className="space-y-2">
-                    {types.map((type) => (
+                    {Array.isArray(types) ? types.map((type) => (
                       <div
                         key={type.value}
                         className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
@@ -589,7 +593,9 @@ export default function GenerateContractPage() {
                           </Badge>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-sm text-muted-foreground">No contract types available for this category</div>
+                    )}
                   </div>
                 </div>
               ))}
