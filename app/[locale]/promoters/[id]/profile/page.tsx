@@ -18,14 +18,14 @@ export default async function PromoterProfileRedirect({
     // Check if promoter exists
     const promoter = await getPromoterById(id)
     if (!promoter) {
-      redirect(`/${locale}/manage-promoters`)
+      redirect("/" + locale + "/manage-promoters")
     }
 
     // Redirect to the correct route
-    redirect(`/${locale}/manage-promoters/${id}`)
+    redirect("/" + locale + "/manage-promoters/" + id)
   } catch (error) {
     // If any error occurs, redirect to the manage promoters page
     const { locale } = await params
-    redirect(`/${locale}/manage-promoters`)
+    redirect("/" + locale + "/manage-promoters")
   }
 } 
