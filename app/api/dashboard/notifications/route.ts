@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
-import { differenceInDays } from 'date-fns'
+// import { differenceInDays } from 'date-fns'
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       .eq('status', 'pending')
 
     pendingContracts?.forEach(contract => {
-      const daysPending = differenceInDays(now, new Date(contract.created_at))
+      const daysPending = Math.floor((now.getTime() - new Date(contract.created_at).getTime()) / (1000 * 60 * 60 * 24))
       notifications.push({
         id: `pending-${contract.id}`,
         type: 'warning',
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       .lte('visa_expiry_date', new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString())
 
     expiringIds?.forEach(promoter => {
-      const daysUntilExpiry = differenceInDays(new Date(promoter.visa_expiry_date), now)
+      const daysUntilExpiry = Math.floor((new Date(promoter.visa_expiry_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       notifications.push({
         id: `id-expiry-${promoter.id}`,
         type: daysUntilExpiry <= 7 ? 'error' : 'warning',
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       .lte('passport_expiry_date', new Date(now.getTime() + 210 * 24 * 60 * 60 * 1000).toISOString())
 
     expiringPassports?.forEach(promoter => {
-      const daysUntilExpiry = differenceInDays(new Date(promoter.passport_expiry_date), now)
+      const daysUntilExpiry = Math.floor((new Date(promoter.passport_expiry_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
       notifications.push({
         id: `passport-expiry-${promoter.id}`,
         type: daysUntilExpiry <= 30 ? 'error' : 'warning',
