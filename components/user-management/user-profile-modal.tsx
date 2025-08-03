@@ -28,6 +28,7 @@ import { Separator } from "@/components/ui/separator"
 import { User, Shield, Activity, Settings, Key, Eye, EyeOff, Save, X, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+import { getRoleDisplay, ROLE_HIERARCHY } from "@/lib/role-hierarchy"
 
 interface UserProfileModalProps {
   user: unknown
@@ -38,10 +39,12 @@ interface UserProfileModalProps {
 }
 
 const ROLES = [
-  { value: "admin", label: "Administrator", description: "Full system access" },
-  { value: "manager", label: "Manager", description: "Manage contracts and users" },
-  { value: "user", label: "User", description: "Basic access to contracts" },
-  { value: "viewer", label: "Viewer", description: "Read-only access" },
+  { value: "super_admin", label: "Super Admin", description: "Highest level - can do everything" },
+  { value: "admin", label: "Admin", description: "Can manage users, system settings" },
+  { value: "manager", label: "Manager", description: "Can manage teams, promoters" },
+  { value: "moderator", label: "Moderator", description: "Can moderate content, basic admin tasks" },
+  { value: "user", label: "User", description: "Basic user permissions" },
+  { value: "guest", label: "Guest", description: "Lowest level - read-only" },
 ]
 
 const STATUS_OPTIONS = [

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-service'
+import { getRoleDisplay as getHierarchyRoleDisplay } from '@/lib/role-hierarchy'
 import type { UserProfile } from '@/types/custom'
 
 export interface EnhancedUserProfile extends UserProfile {
@@ -37,7 +38,8 @@ export function useUserProfile() {
 
   const getRoleDisplay = (role: string | null | undefined) => {
     if (!role) return "User"
-    return role.charAt(0).toUpperCase() + role.slice(1)
+    const hierarchyDisplay = getHierarchyRoleDisplay(role)
+    return hierarchyDisplay.displayText
   }
 
   const fetchUserProfile = async () => {

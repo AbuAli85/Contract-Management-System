@@ -40,6 +40,9 @@ import {
 } from "lucide-react"
 import { debounce } from "lodash"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
+import { useAuth } from "@/lib/auth-service"
+import { useRolePermissions } from "@/components/user-role-display"
 
 // Dynamic imports for better chunk loading reliability
 const PermissionsManager = dynamic(
@@ -96,7 +99,7 @@ interface User {
   position?: string
 }
 
-type UserRole = "admin" | "manager" | "user" | "viewer"
+type UserRole = "super_admin" | "admin" | "manager" | "moderator" | "user" | "guest"
 type UserStatus = "active" | "inactive" | "pending"
 
 interface UserFormData {
@@ -111,7 +114,7 @@ interface UserFormData {
 }
 
 // Constants
-const ROLES: UserRole[] = ["admin", "manager", "user", "viewer"]
+const ROLES: UserRole[] = ["super_admin", "admin", "manager", "moderator", "user", "guest"]
 const STATUS: UserStatus[] = ["active", "inactive", "pending"]
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100]
 const DEPARTMENTS = ["Engineering", "Sales", "Marketing", "HR", "Finance", "Operations", "Support"]
@@ -210,9 +213,11 @@ export default function NewUsersPage() {
   })
 
   const { toast } = useToast()
+  const { user } = useAuth()
+  const { roleInfo } = useRolePermissions()
 
-  // Simulate current user role (in real app, get from auth context)
-  const currentUserRole: UserRole = "admin"
+  // Get current user role from auth context
+  const currentUserRole: UserRole = (roleInfo?.primary as UserRole) || "user"
 
   // Filtered and paginated users - using simple state instead of useMemo
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
@@ -775,7 +780,7 @@ export default function NewUsersPage() {
             <SelectItem value="all">All roles</SelectItem>
             {ROLES.map((role) => (
               <SelectItem key={role} value={role}>
-                {role.charAt(0).toUpperCase() + role.slice(1)}
+                {getRoleDisplay(role).displayText}
               </SelectItem>
             ))}
           </SelectContent>
@@ -983,7 +988,7 @@ export default function NewUsersPage() {
                           </div>
                         </td>
                         <td className="p-4">
-                          <Badge variant="secondary">{user.role}</Badge>
+                          <Badge variant="secondary">{getRoleDisplay(user.role).displayText}</Badge>
                         </td>
                         <td className="p-4">
                           <div className="flex items-center space-x-2">
@@ -1241,7 +1246,7 @@ export default function NewUsersPage() {
                   <SelectContent>
                     {ROLES.map((role) => (
                       <SelectItem key={role} value={role}>
-                        {role.charAt(0).toUpperCase() + role.slice(1)}
+                        {getRoleDisplay(role).displayText}
                       </SelectItem>
                     ))}
                   </SelectContent>
