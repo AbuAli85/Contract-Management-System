@@ -5,16 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
     
-    // Get current user
+    // Get current user but don't fail if not authenticated
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    if (userError || !user) {
-      return NextResponse.json({ 
-        error: 'Unauthorized',
-        userError: userError?.message 
-      }, { status: 401 })
-    }
-
     // Simple test queries
     const [
       promotersCount,
@@ -27,9 +20,13 @@ export async function GET(request: NextRequest) {
     ])
 
     const testResults = {
-      user: {
+      user: user ? {
         id: user.id,
         email: user.email
+      } : null,
+      authentication: {
+        authenticated: !!user,
+        error: userError?.message || null
       },
       database: {
         promoters: {
@@ -53,7 +50,11 @@ export async function GET(request: NextRequest) {
     console.error('Dashboard test error:', error)
     return NextResponse.json({ 
       error: 'Test failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      debug: {
+        timestamp: new Date().toISOString(),
+        errorType: error instanceof Error ? error.constructor.name : 'Unknown'
+      }
     }, { status: 500 })
   }
 } 
