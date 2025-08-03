@@ -256,7 +256,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="w-full justify-start"
                 asChild
               >
-                <Link href={`/${locale}/auth/logout`}>
+                <Link href={`/${locale}/logout`}>
                   <LogOut className="mr-2 h-3 w-3" />
                   Logout
                 </Link>
