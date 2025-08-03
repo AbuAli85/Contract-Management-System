@@ -34,7 +34,7 @@ export default function SimpleDashboardPage() {
   return (
     <div className="p-8">
       <h1 className="mb-4 text-2xl font-bold">Simple Dashboard</h1>
-      <p className="mb-4">Welcome, {user.email}!</p>
+      <p className="mb-4">Welcome, {user.email?.split('@')[0] || 'User'}!</p>
       <div className="rounded bg-gray-100 p-4">
         <h2 className="mb-2 font-semibold">User Info:</h2>
         <pre className="text-sm">{JSON.stringify({ id: user.id, email: user.email }, null, 2)}</pre>

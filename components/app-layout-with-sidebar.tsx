@@ -1,10 +1,32 @@
 "use client"
 
 import React, { useState } from "react"
-import { useAuth } from "@/lib/auth-service"
+import { useAuth } from "@/lib                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-lg font-semibold text-card-foreground">
+                        {getPageTitle()}
+                      </h1>
+                      {/* Enhanced Role Display */}
+                      <div className="flex items-center gap-1">
+                        {isAdmin && (
+                          <Badge variant="default" className="text-xs bg-red-600 hover:bg-red-700">
+                            <Crown className="h-3 w-3 mr-1" />
+                            Admin
+                          </Badge>
+                        )}
+                        {isUser && (
+                          <Badge variant="outline" className="text-xs">
+                            <User className="h-3 w-3 mr-1" />
+                            User
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>ice"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
+import { useRolePermissions } from "@/components/user-role-display"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
@@ -16,7 +38,9 @@ import {
   User, 
   LogOut, 
   Search,
-  Menu
+  Menu,
+  Crown,
+  Shield
 } from "lucide-react"
 
 interface AppLayoutWithSidebarProps {
@@ -28,6 +52,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const { user } = useAuth()
   const { totalCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile } = useUserProfile()
+  const { isAdmin, isUser, roleInfo } = useRolePermissions()
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
@@ -80,11 +105,22 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
-                      <h1 className="text-lg font-semibold text-card-foreground">
-                        {getPageTitle()}
-                      </h1>
+                      {/* Welcome message with user name */}
+                      {user && (
+                        <div className="flex items-center gap-2">
+                          <h1 className="text-lg font-semibold text-card-foreground">
+                            Welcome back, {userProfile?.display_name || user.email?.split('@')[0] || 'User'}!
+                          </h1>
+                        </div>
+                      )}
+                      {!user && (
+                        <h1 className="text-lg font-semibold text-card-foreground">
+                          {getPageTitle()}
+                        </h1>
+                      )}
+                      {/* Single Role Display */}
                       <Badge variant="outline" className="text-xs">
-                        {user?.email ? 'Admin' : 'Guest'}
+                        {roleInfo?.displayText || userProfile?.role_display || 'User'}
                       </Badge>
                     </div>
                   </div>
@@ -117,14 +153,14 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                       {user && (
                         <div className="flex items-center gap-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <User className="h-4 w-4" />
+                            {isAdmin ? <Crown className="h-4 w-4" /> : <User className="h-4 w-4" />}
                           </div>
                           <div className="hidden md:block">
                             <p className="text-sm font-medium text-card-foreground">
-                              {userProfile?.display_name || user.email}
+                              {userProfile?.display_name || user.email?.split('@')[0] || 'User'}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {userProfile?.role_display || 'Admin User'}
+                              {roleInfo?.displayText || userProfile?.role_display || 'User'}
                             </p>
                           </div>
                         </div>
