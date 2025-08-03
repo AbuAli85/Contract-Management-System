@@ -11,6 +11,8 @@ import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { DebugRoleInfo } from "@/components/debug-role-info"
+import { AdminRoleFixer } from "@/components/admin-role-fixer"
 import { 
   Bell, 
   Settings, 
@@ -30,7 +32,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user } = useAuth()
   const { totalCount: notificationCount, highPriorityCount } = useNotifications()
-  const { profile: userProfile } = useUserProfile()
+  const { profile: userProfile, fetchUserProfile } = useUserProfile()
   const { isAdmin, isUser, roleInfo } = useRolePermissions()
   const params = useParams()
   const pathname = usePathname()
@@ -59,6 +61,16 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     if (pathname?.includes('/notifications')) return 'Notifications'
     if (pathname?.includes('/audit')) return 'Audit Logs'
     return 'Dashboard'
+  }
+
+  // Function to refresh role data
+  const handleRefreshRole = async () => {
+    try {
+      await fetchUserProfile()
+      window.location.reload() // Force a full page refresh to clear all cached data
+    } catch (error) {
+      console.error('Failed to refresh role data:', error)
+    }
   }
 
   return (
@@ -98,9 +110,20 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                         </h1>
                       )}
                       {/* Single Role Display */}
-                      <Badge variant="outline" className="text-xs">
-                        {roleInfo?.displayText || userProfile?.role_display || 'User'}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {roleInfo?.displayText || userProfile?.role_display || 'User'}
+                        </Badge>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={handleRefreshRole}
+                          className="text-xs px-2 py-1 h-6"
+                          title="Refresh role data"
+                        >
+                          ↻
+                        </Button>
+                      </div>
                     </div>
                   </div>
                   
@@ -161,6 +184,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           {/* Page content */}
           <main className={"flex-1 " + (!isLandingPage ? "p-6" : "")}>
             <div className="children-container">
+              {/* Debug component - remove in production */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mb-4 flex gap-4">
+                  <DebugRoleInfo />
+                  <AdminRoleFixer />
+                </div>
+              )}
               {children}
             </div>
           </main>
