@@ -114,7 +114,7 @@ export default function ManagePartiesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [documentFilter, setDocumentFilter] = useState("all")
-  const [sortBy, setSortBy] = useState<"name" | "cr_expiry" | "license_expiry" | "contracts">(
+  const [sortBy, setSortBy] = useState<"name" | "cr_expiry_date" | "license_expiry_date" | "contracts">(
     "name",
   )
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
@@ -331,11 +331,11 @@ export default function ManagePartiesPage() {
           aValue = a.name_en.toLowerCase()
           bValue = b.name_en.toLowerCase()
           break
-        case "cr_expiry":
+        case "cr_expiry_date":
           aValue = a.days_until_cr_expiry ?? Infinity
           bValue = b.days_until_cr_expiry ?? Infinity
           break
-        case "license_expiry":
+        case "license_expiry_date":
           aValue = a.days_until_license_expiry ?? Infinity
           bValue = b.days_until_license_expiry ?? Infinity
           break
@@ -896,8 +896,8 @@ export default function ManagePartiesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="cr_expiry">CR Expiry</SelectItem>
-                  <SelectItem value="license_expiry">License Expiry</SelectItem>
+                  <SelectItem value="cr_expiry_date">CR Expiry</SelectItem>
+                  <SelectItem value="license_expiry_date">License Expiry</SelectItem>
                   <SelectItem value="contracts">Contract Count</SelectItem>
                 </SelectContent>
               </Select>
