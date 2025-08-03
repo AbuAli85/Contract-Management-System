@@ -88,7 +88,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                       {user && (
                         <div className="flex items-center gap-2">
                           <h1 className="text-lg font-semibold text-card-foreground">
-                            Welcome back, {userProfile?.display_name || user.email?.split('@')[0] || 'User'}!
+                            Welcome back, {userProfile?.full_name || userProfile?.display_name || user.email?.split('@')[0] || 'User'}!
                           </h1>
                         </div>
                       )}

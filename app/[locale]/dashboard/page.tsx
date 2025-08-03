@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-service"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
 import { SilentSessionTimeout } from "@/components/silent-session-timeout"
 import { Button } from "@/components/ui/button"
@@ -97,6 +98,7 @@ interface DashboardPageProps {
 export default function DashboardPage({ params }: DashboardPageProps) {
   const { locale } = params
   const { user } = useAuth()
+  const { profile: userProfile } = useUserProfile()
   
   // Ensure locale is available before render
   if (!locale) {
@@ -326,7 +328,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   </div>
                 </div>
                 <p className="text-lg text-slate-600 max-w-2xl leading-relaxed font-medium">
-                  Welcome back, {user?.email?.split('@')[0] || 'User'}! You have {summaryMetrics.totalEntities} total entities, {summaryMetrics.recentActivities} recent activities, and {notifications.length} notifications requiring your attention.
+                  Welcome back, {userProfile?.full_name || userProfile?.display_name || user?.email?.split('@')[0] || 'User'}! You have {summaryMetrics.totalEntities} total entities, {summaryMetrics.recentActivities} recent activities, and {notifications.length} notifications requiring your attention.
                 </p>
               </div>
               
