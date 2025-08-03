@@ -275,7 +275,6 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   }
 
   // Pre-calculate CSS classes to avoid complex inline expressions
-  const highPriorityCount = notifications.filter(n => n.priority === 'high').length
   const alertDotClass = "w-2 h-2 rounded-full " + (highPriorityCount > 0 ? 'bg-red-400' : 'bg-green-400')
   const refreshIconClass = "h-3 w-3 " + (refreshing ? 'animate-spin' : '')
   const refreshButtonClass = "mr-2 h-4 w-4 " + (refreshing ? 'animate-spin' : '')
