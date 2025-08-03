@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
+import { SilentSessionTimeout } from "@/components/silent-session-timeout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -281,6 +282,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
 
   return (
     <DashboardAuthGuard locale={locale}>
+      {/* Silent Session Timeout - automatically logs out after 5 minutes of inactivity */}
+      <SilentSessionTimeout timeoutMinutes={5} enableLogging={false} />
+      
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 animate-in fade-in duration-700">
         <div className="space-y-8 p-6">
           {/* Professional Header with Enhanced Styling */}

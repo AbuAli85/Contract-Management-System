@@ -4,12 +4,12 @@ import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { SessionTimeout } from "./session-timeout"
 import { 
   Bell, 
   Settings, 
@@ -31,6 +31,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
+
+  // Silent session timeout - automatically logs out after 5 minutes of inactivity
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    enableLogging: false, // Set to true for debugging
+    silent: true // Silent mode - no warnings, just automatic logout
+  })
 
   // Check if we're on the landing page (root route)
   const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/")
@@ -144,15 +151,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </main>
         </div>
       </div>
-
-      {/* Session Timeout Component - only show for authenticated users */}
-      {user && !isLandingPage && (
-        <SessionTimeout 
-          timeoutMinutes={5}
-          warningMinutes={1}
-          showStatus={true}
-        />
-      )}
     </div>
   )
 }
