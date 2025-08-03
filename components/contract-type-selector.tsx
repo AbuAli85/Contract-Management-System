@@ -76,7 +76,7 @@ export function ContractTypeSelector({
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"name" | "category" | "complexity">("name")
 
-  const filteredTypes = enhancedContractTypes
+  const filteredTypes = (enhancedContractTypes || [])
     .filter((type) => {
       const matchesSearch =
         type.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -166,7 +166,7 @@ export function ContractTypeSelector({
 
       {/* Contract Types Grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredTypes.map((type) => {
+        {(filteredTypes || []).map((type) => {
           const IconComponent =
             categoryIcons[type.category as keyof typeof categoryIcons] || Settings
           const categoryColor =
