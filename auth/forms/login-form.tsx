@@ -80,7 +80,7 @@ export function LoginForm() {
       const message = urlParams.get("message")
 
       if (error && message) {
-        setError(`${error}: ${message}`)
+        setError(error + ": " + message)
         // Clear the error from URL after displaying it
         const newUrl = new URL(window.location.href)
         newUrl.searchParams.delete("error")
