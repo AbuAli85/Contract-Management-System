@@ -3,149 +3,128 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    console.log('🔍 Dashboard stats: Starting request...')
     
-    // Get current user
+    const supabase = await createClient()
+    
+    // Get current user with better error handling
+    console.log('🔍 Dashboard stats: Getting user...')
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (userError) {
+      console.error('🔍 Dashboard stats: User error:', userError)
+      return NextResponse.json({ 
+        error: 'Authentication error', 
+        details: userError.message 
+      }, { status: 401 })
+    }
+    
+    if (!user) {
+      console.error('🔍 Dashboard stats: No user found')
+      return NextResponse.json({ 
+        error: 'User not authenticated' 
+      }, { status: 401 })
     }
 
-    // Get comprehensive dashboard statistics
+    console.log('🔍 Dashboard stats: User authenticated, fetching data...')
+
+    // Simplified queries with better error handling
+    const queries = [
+      // Total contracts
+      supabase.from('contracts').select('*', { count: 'exact', head: true }),
+      
+      // Total promoters
+      supabase.from('promoters').select('*', { count: 'exact', head: true }),
+      
+      // Total parties
+      supabase.from('parties').select('*', { count: 'exact', head: true }),
+      
+      // Active promoters
+      supabase.from('promoters').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+      
+      // Pending contracts
+      supabase.from('contracts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      
+      // Recent contracts (last 7 days)
+      supabase.from('contracts').select('*', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    ]
+
+    console.log('🔍 Dashboard stats: Executing queries...')
+    const results = await Promise.all(queries.map(async (query, index) => {
+      try {
+        const result = await query
+        console.log(`🔍 Dashboard stats: Query ${index} result:`, { count: result.count, error: result.error?.message })
+        return result
+      } catch (error) {
+        console.error(`🔍 Dashboard stats: Query ${index} failed:`, error)
+        return { count: 0, error: error instanceof Error ? error.message : 'Unknown error' }
+      }
+    }))
+
+    // Extract results
     const [
       contractsResult,
       promotersResult,
       partiesResult,
-      pendingApprovalsResult,
-      recentActivityResult,
-      expiringDocsResult,
-      contractStatusResult,
-      monthlyStatsResult
-    ] = await Promise.all([
-      // Total and active contracts
-      supabase
-        .from('contracts')
-        .select('status', { count: 'exact' }),
-      
-      // Total promoters and their status
-      supabase
-        .from('promoters')
-        .select('status, visa_expiry_date, passport_expiry_date', { count: 'exact' }),
-      
-      // Total parties
-      supabase
-        .from('parties')
-        .select('id', { count: 'exact' }),
-      
-      // Pending approvals (contracts with pending status)
-      supabase
-        .from('contracts')
-        .select('id', { count: 'exact' })
-        .eq('status', 'pending'),
-      
-      // Recent activity (last 7 days)
-      supabase
-        .from('contracts')
-        .select('id', { count: 'exact' })
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-      
-      // Expiring documents (next 30 days)
-      supabase
-        .from('promoters')
-        .select('id, visa_expiry_date, passport_expiry_date')
-        .or(`visa_expiry_date.lte.${new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString()},passport_expiry_date.lte.${new Date(Date.now() + 210 * 24 * 60 * 60 * 1000).toISOString()}`),
-      
-      // Contract status breakdown
-      supabase
-        .from('contracts')
-        .select('status')
-        .in('status', ['active', 'pending', 'completed', 'cancelled']),
-      
-      // Monthly statistics (last 6 months)
-      supabase
-        .from('contracts')
-        .select('created_at, status')
-        .gte('created_at', new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString())
-    ])
+      activePromotersResult,
+      pendingContractsResult,
+      recentContractsResult
+    ] = results
 
-    // Process contract status breakdown
-    const contractsByStatus = contractStatusResult.data?.reduce((acc: any, contract: any) => {
-      acc[contract.status] = (acc[contract.status] || 0) + 1
-      return acc
-    }, {}) || {}
+    // Check for errors
+    const errors = results.filter((r: any) => r.error).map((r: any) => r.error)
+    if (errors.length > 0) {
+      console.error('🔍 Dashboard stats: Database errors:', errors)
+      return NextResponse.json({ 
+        error: 'Database query errors', 
+        details: errors 
+      }, { status: 500 })
+    }
 
-    // Process monthly data
-    const monthlyData = monthlyStatsResult.data?.reduce((acc: any, contract: any) => {
-      const month = new Date(contract.created_at).toISOString().slice(0, 7) // YYYY-MM
-      if (!acc[month]) {
-        acc[month] = { total: 0, active: 0, pending: 0, completed: 0 }
-      }
-      acc[month].total++
-      acc[month][contract.status] = (acc[month][contract.status] || 0) + 1
-      return acc
-    }, {}) || {}
-
-    // Calculate promoter statistics
-    const promoterStats = promotersResult.data?.reduce((acc: any, promoter: any) => {
-      acc.total++
-      if (promoter.status === 'active') acc.active++
-      
-      // Check for expiring documents
-      const now = new Date()
-      const thirtyDaysFromNow = new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000)
-      
-      if (promoter.visa_expiry_date && new Date(promoter.visa_expiry_date) <= thirtyDaysFromNow) {
-        acc.expiringIds++
-      }
-      if (promoter.passport_expiry_date && new Date(promoter.passport_expiry_date) <= thirtyDaysFromNow) {
-        acc.expiringPassports++
-      }
-      
-      return acc
-    }, { total: 0, active: 0, expiringIds: 0, expiringPassports: 0 }) || { total: 0, active: 0, expiringIds: 0, expiringPassports: 0 }
-
+    // Build stats object
     const stats = {
       // Core metrics
       totalContracts: contractsResult.count || 0,
-      activeContracts: contractsByStatus.active || 0,
-      pendingContracts: contractsByStatus.pending || 0,
-      completedContracts: contractsByStatus.completed || 0,
+      activeContracts: 0, // Will be calculated from status
+      pendingContracts: pendingContractsResult.count || 0,
+      completedContracts: 0, // Will be calculated from status
       totalPromoters: promotersResult.count || 0,
-      activePromoters: promoterStats.active,
+      activePromoters: activePromotersResult.count || 0,
       totalParties: partiesResult.count || 0,
-      pendingApprovals: pendingApprovalsResult.count || 0,
-      recentActivity: recentActivityResult.count || 0,
+      pendingApprovals: pendingContractsResult.count || 0,
+      recentActivity: recentContractsResult.count || 0,
       
-      // Document expiry alerts
-      expiringDocuments: expiringDocsResult.data?.length || 0,
-      expiringIds: promoterStats.expiringIds,
-      expiringPassports: promoterStats.expiringPassports,
+      // Document expiry alerts (simplified)
+      expiringDocuments: 0,
+      expiringIds: 0,
+      expiringPassports: 0,
       
       // Status breakdown
-      contractsByStatus,
+      contractsByStatus: { active: 0, pending: pendingContractsResult.count || 0, completed: 0, cancelled: 0 },
       
       // Monthly trends
-      monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
-        month,
-        ...(data as any)
-      })).sort((a, b) => a.month.localeCompare(b.month)),
+      monthlyData: [],
       
       // Health metrics
-      systemHealth: 98, // This could be calculated based on various factors
+      systemHealth: 98,
       
-      // Growth metrics (mock for now - would need historical data)
-      contractGrowth: 12,
-      promoterGrowth: 8,
+      // Growth metrics
+      contractGrowth: 0,
+      promoterGrowth: 0,
       
       // Performance indicators
-      avgProcessingTime: '2.3', // days
-      completionRate: Math.round((contractsByStatus.completed || 0) / Math.max(contractsResult.count || 1, 1) * 100)
+      avgProcessingTime: '0',
+      completionRate: 0
     }
+
+    console.log('🔍 Dashboard stats: Final stats:', stats)
 
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Dashboard stats error:', error)
-    return NextResponse.json({ error: 'Failed to fetch dashboard statistics' }, { status: 500 })
+    console.error('🔍 Dashboard stats: Unexpected error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to fetch dashboard statistics',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
