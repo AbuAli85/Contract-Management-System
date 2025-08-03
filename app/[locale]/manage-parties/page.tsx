@@ -157,11 +157,11 @@ export default function ManagePartiesPage() {
             const { count: contractCount, error: contractError } = await supabase
               .from("contracts")
               .select("*", { count: "exact", head: true })
-              .or(`first_party_id.eq.${party.id},second_party_id.eq.${party.id}`)
+              .or("first_party_id.eq." + party.id + ",second_party_id.eq." + party.id)
               .eq("status", "active")
 
             if (contractError) {
-              console.warn(`Error fetching contracts for party ${party.id}:`, contractError)
+              console.warn("Error fetching contracts for party " + party.id + ":", contractError)
             }
 
             return {
@@ -631,7 +631,7 @@ export default function ManagePartiesPage() {
         text: "Expired",
         Icon: XCircle,
         colorClass: "text-red-500",
-        tooltip: `Expired on ${format(date, "MMM d, yyyy")}`,
+        tooltip: "Expired on " + format(date, "MMM d, yyyy"),
       }
     }
     if (daysUntilExpiry <= 30) {
@@ -639,14 +639,14 @@ export default function ManagePartiesPage() {
         text: "Expires Soon",
         Icon: AlertTriangle,
         colorClass: "text-orange-500",
-        tooltip: `Expires in ${daysUntilExpiry} day(s) on ${format(date, "MMM d, yyyy")}`,
+        tooltip: "Expires in " + daysUntilExpiry + " day(s) on " + format(date, "MMM d, yyyy"),
       }
     }
     return {
       text: "Valid",
       Icon: CheckCircle,
       colorClass: "text-green-500",
-      tooltip: `Valid until ${format(date, "MMM d, yyyy")}`,
+      tooltip: "Valid until " + format(date, "MMM d, yyyy"),
     }
   }
 
@@ -1058,7 +1058,7 @@ export default function ManagePartiesPage() {
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={() => toggleSelectParty(party.id)}
-                              aria-label={`Select ${party.name_en}`}
+                              aria-label={"Select " + party.name_en}
                             />
                           </TableCell>
                           <TableCell className="px-4 py-3">
@@ -1097,8 +1097,8 @@ export default function ManagePartiesPage() {
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <div className="flex flex-col items-center">
-                                    <crStatus.Icon className={`h-5 w-5 ${crStatus.colorClass}`} />
-                                    <span className={`mt-1 text-xs ${crStatus.colorClass}`}>
+                                    <crStatus.Icon className={"h-5 w-5 " + crStatus.colorClass} />
+                                    <span className={"mt-1 text-xs " + crStatus.colorClass}>
                                       {crStatus.text}
                                     </span>
                                     {party.days_until_cr_expiry !== undefined &&
@@ -1121,9 +1121,9 @@ export default function ManagePartiesPage() {
                                 <TooltipTrigger asChild>
                                   <div className="flex flex-col items-center">
                                     <licenseStatus.Icon
-                                      className={`h-5 w-5 ${licenseStatus.colorClass}`}
+                                      className={"h-5 w-5 " + licenseStatus.colorClass}
                                     />
-                                    <span className={`mt-1 text-xs ${licenseStatus.colorClass}`}>
+                                    <span className={"mt-1 text-xs " + licenseStatus.colorClass}>
                                       {licenseStatus.text}
                                     </span>
                                     {party.days_until_license_expiry !== undefined &&
@@ -1191,7 +1191,7 @@ export default function ManagePartiesPage() {
                                 className="text-xs"
                                 disabled={!party.id}
                               >
-                                <Link href={party.id ? `/manage-parties/${party.id}` : "#"}>
+                                <Link href={party.id ? "/manage-parties/" + party.id : "#"}>
                                   <Eye className="mr-1 h-3.5 w-3.5" /> View
                                 </Link>
                               </Button>
@@ -1217,7 +1217,7 @@ export default function ManagePartiesPage() {
                                     Edit Details
                                   </DropdownMenuItem>
                                   <DropdownMenuItem asChild>
-                                    <Link href={`/manage-parties/${party.id}`}>
+                                    <Link href={"/manage-parties/" + party.id}>
                                       <Eye className="mr-2 h-4 w-4" />
                                       View Profile
                                     </Link>
@@ -1283,7 +1283,7 @@ export default function ManagePartiesPage() {
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={() => toggleSelectParty(party.id)}
-                          aria-label={`Select ${party.name_en}`}
+                          aria-label={"Select " + party.name_en}
                         />
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

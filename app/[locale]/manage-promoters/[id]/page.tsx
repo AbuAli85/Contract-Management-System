@@ -81,10 +81,10 @@ function DetailItem({
     return null
   }
   return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
+    <div className={"flex flex-col gap-0.5 " + (className || "")}>
       <p className={labelClassName}>{label}</p>
       {typeof value === "string" ? (
-        <p className={`${valueClassName} ${isRtl ? "text-right" : ""}`} dir={isRtl ? "rtl" : "ltr"}>
+        <p className={valueClassName + " " + (isRtl ? "text-right" : "")} dir={isRtl ? "rtl" : "ltr"}>
           {value}
         </p>
       ) : (
