@@ -791,7 +791,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <span className="text-sm text-slate-400">Health: {summaryMetrics.systemHealth}%</span>
                 <div className="text-slate-500">•</div>
                 <span className="text-sm text-slate-400">
-                  {refreshing ? 'Refreshing...' : `Last sync: ${new Date().toLocaleTimeString()}`}
+                  {refreshing ? 'Refreshing...' : 'Last sync: ' + new Date().toLocaleTimeString()}
                 </span>
               </div>
               
