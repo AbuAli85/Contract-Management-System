@@ -12,6 +12,7 @@ import { DashboardActivities } from "@/components/dashboard/dashboard-activities
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
 import { useToast } from "@/hooks/use-toast"
 import { useNotifications } from "@/hooks/use-notifications"
+import { DashboardDiagnosticsPanel } from "@/components/dashboard-diagnostics-panel"
 import { 
   RefreshCw,
   Settings,
@@ -766,6 +767,9 @@ export default function DashboardPage({ params }: DashboardPageProps) {
           </CardContent>
         </div>
         </div>
+        
+        {/* Dashboard Diagnostics Panel */}
+        <DashboardDiagnosticsPanel className="mt-8" />
         
         {/* Enhanced System Status Footer with Real-time Data */}
         <div className="bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800 rounded-2xl p-6 mt-8 relative overflow-hidden">

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       // Total promoters and their status
       supabase
         .from('promoters')
-        .select('status, id_expiry_date, passport_expiry_date', { count: 'exact' }),
+        .select('status, visa_expiry_date, passport_expiry_date', { count: 'exact' }),
       
       // Total parties
       supabase
@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
       // Expiring documents (next 30 days)
       supabase
         .from('promoters')
-        .select('id, id_expiry_date, passport_expiry_date')
-        .or(`id_expiry_date.lte.${new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString()},passport_expiry_date.lte.${new Date(Date.now() + 210 * 24 * 60 * 60 * 1000).toISOString()}`),
+        .select('id, visa_expiry_date, passport_expiry_date')
+        .or(`visa_expiry_date.lte.${new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString()},passport_expiry_date.lte.${new Date(Date.now() + 210 * 24 * 60 * 60 * 1000).toISOString()}`),
       
       // Contract status breakdown
       supabase
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
       const now = new Date()
       const thirtyDaysFromNow = new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000)
       
-      if (promoter.id_expiry_date && new Date(promoter.id_expiry_date) <= thirtyDaysFromNow) {
+      if (promoter.visa_expiry_date && new Date(promoter.visa_expiry_date) <= thirtyDaysFromNow) {
         acc.expiringIds++
       }
       if (promoter.passport_expiry_date && new Date(promoter.passport_expiry_date) <= thirtyDaysFromNow) {
