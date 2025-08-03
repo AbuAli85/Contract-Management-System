@@ -115,7 +115,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                       )}
                       
                       <Button variant="outline" size="sm" asChild>
-                        <a href={`/${locale}/auth/logout`}>
+                        <a href={`/${locale}/logout`}>
                           <LogOut className="h-4 w-4" />
                           <span className="hidden md:inline ml-2">Logout</span>
                         </a>
