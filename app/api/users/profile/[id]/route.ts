@@ -45,13 +45,13 @@ export async function GET(
       console.error('Error fetching auth user:', authError)
     }
 
-    // Combine profile data with auth data
+    // Combine profile data with auth data - prioritize profiles table data
     const userProfile: UserProfile = {
       id: profile.id,
       email: authUser?.user?.email || profile.email || '',
       full_name: profile.full_name || authUser?.user?.user_metadata?.full_name || null,
       avatar_url: profile.avatar_url || authUser?.user?.user_metadata?.avatar_url || null,
-      role: profile.role || authUser?.user?.user_metadata?.role || null,
+      role: profile.role || 'user', // Always use profiles table role, fallback to 'user' if null
       created_at: profile.created_at || authUser?.user?.created_at || null,
       last_login: profile.last_login || authUser?.user?.last_sign_in_at || null
     }
