@@ -866,7 +866,11 @@ export default function EnhancedContractForm({
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const numValue = value === "" ? undefined : Number(value);
+                                field.onChange(isNaN(numValue) ? undefined : numValue);
+                              }}
                               disabled={isLoading}
                               placeholder="0"
                             />
@@ -886,7 +890,11 @@ export default function EnhancedContractForm({
                             <Input
                               type="number"
                               {...field}
-                              onChange={(e) => field.onChange(Number(e.target.value))}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                const numValue = value === "" ? undefined : Number(value);
+                                field.onChange(isNaN(numValue) ? undefined : numValue);
+                              }}
                               disabled={isLoading}
                               placeholder="0"
                             />
