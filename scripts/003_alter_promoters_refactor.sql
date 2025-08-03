@@ -35,12 +35,12 @@ BEGIN
 
     -- Add notify_days_before_id_expiry
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='promoters' AND column_name='notify_days_before_id_expiry') THEN
-        ALTER TABLE promoters ADD COLUMN notify_days_before_id_expiry INTEGER DEFAULT 30;
+        ALTER TABLE promoters ADD COLUMN notify_days_before_id_expiry INTEGER DEFAULT 100;
     END IF;
 
     -- Add notify_days_before_passport_expiry
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='promoters' AND column_name='notify_days_before_passport_expiry') THEN
-        ALTER TABLE promoters ADD COLUMN notify_days_before_passport_expiry INTEGER DEFAULT 30;
+        ALTER TABLE promoters ADD COLUMN notify_days_before_passport_expiry INTEGER DEFAULT 210;
     END IF;
 
     -- Add status (using TEXT with a CHECK constraint for ENUM-like behavior)
@@ -103,6 +103,6 @@ BEGIN
     END IF;
 END $$;
 
-COMMENT ON COLUMN promoters.notify_days_before_id_expiry IS 'Number of days before ID card expiry to notify. Default 30.';
-COMMENT ON COLUMN promoters.notify_days_before_passport_expiry IS 'Number of days before passport expiry to notify. Default 30.';
+COMMENT ON COLUMN promoters.notify_days_before_id_expiry IS 'Number of days before ID card expiry to notify. Default 100.';
+COMMENT ON COLUMN promoters.notify_days_before_passport_expiry IS 'Number of days before passport expiry to notify. Default 210.';
 COMMENT ON COLUMN promoters.status IS 'Status of the promoter: active, inactive, suspended. Default active.';

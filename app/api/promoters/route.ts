@@ -44,8 +44,8 @@ const promoterSchema = z.object({
   emergency_phone: z.string().optional(),
   notes: z.string().optional(),
   employer_id: z.string().uuid().optional(),
-  notify_days_before_id_expiry: z.number().min(1).max(365).default(30),
-  notify_days_before_passport_expiry: z.number().min(1).max(365).default(30),
+      notify_days_before_id_expiry: z.number().min(1).max(365).default(100),
+    notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 })
 
 export async function GET() {

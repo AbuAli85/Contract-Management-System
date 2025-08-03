@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS promoters (
     contract_valid_until DATE,
     id_card_expiry_date DATE,
     passport_expiry_date DATE,
-    notify_days_before_id_expiry INTEGER DEFAULT 30,
-    notify_days_before_passport_expiry INTEGER DEFAULT 90,
+    notify_days_before_id_expiry INTEGER DEFAULT 100,
+    notify_days_before_passport_expiry INTEGER DEFAULT 210,
     notify_days_before_contract_expiry INTEGER DEFAULT 30,
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
