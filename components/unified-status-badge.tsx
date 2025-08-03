@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 import {
   CheckCircle2,
   Clock,
@@ -49,7 +50,7 @@ const documentStatusConfigs: Record<DocumentStatus, StatusConfig> = {
   expiring_soon: {
     value: "expiring_soon",
     label: "Expiring Soon",
-    description: "Document will expire within 30 days",
+    description: `Document will expire within ${PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY} days (ID) or ${PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY} days (Passport)`,
     color: "bg-yellow-100 text-yellow-800 border-yellow-200",
     icon: AlertTriangle,
     priority: 2,

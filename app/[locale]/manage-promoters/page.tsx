@@ -31,6 +31,7 @@ import type { Promoter } from "@/lib/types"
 import { getSupabaseClient } from "@/lib/supabase"
 import { useToast } from "@/hooks/use-toast"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 
 // Enhanced Promoter Interface
 interface EnhancedPromoter extends Promoter {
@@ -121,7 +122,7 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     if (!dateString) return "missing"
     if (daysUntilExpiry === null) return "missing"
     if (daysUntilExpiry < 0) return "expired"
-    if (daysUntilExpiry <= 30) return "expiring"
+    if (daysUntilExpiry <= PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY) return "expiring"
     return "valid"
   }
 
@@ -140,8 +141,8 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     }
 
     if (
-      (idExpiry !== null && idExpiry <= 30) ||
-      (passportExpiry !== null && passportExpiry <= 30)
+      (idExpiry !== null && idExpiry <= PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY) ||
+      (passportExpiry !== null && passportExpiry <= PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY)
     ) {
       return "warning"
     }
