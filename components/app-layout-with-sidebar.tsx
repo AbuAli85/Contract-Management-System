@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
@@ -25,6 +26,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user } = useAuth()
   const { totalCount: notificationCount, highPriorityCount } = useNotifications()
+  const { profile: userProfile } = useUserProfile()
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
@@ -111,10 +113,10 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                           </div>
                           <div className="hidden md:block">
                             <p className="text-sm font-medium text-card-foreground">
-                              {user.email}
+                              {userProfile?.display_name || user.email}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Admin User
+                              {userProfile?.role_display || 'Admin User'}
                             </p>
                           </div>
                         </div>
