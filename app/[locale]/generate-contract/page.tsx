@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect, Suspense, lazy, useMemo } from "react"
+
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
 import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-service"
@@ -85,7 +88,6 @@ import {
   getContractTypesByCategory,
   getEnhancedContractTypeConfig,
   getAllEnhancedContractTypes,
-  contractTypes,
   type ContractTypeConfig,
 } from "@/lib/contract-type-config"
 
