@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
+import { useNotifications } from "@/hooks/use-notifications"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
@@ -23,6 +24,7 @@ interface AppLayoutWithSidebarProps {
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user } = useAuth()
+  const { totalCount: notificationCount, highPriorityCount } = useNotifications()
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
@@ -91,9 +93,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                     {/* Notifications */}
                     <Button variant="outline" size="sm" className="relative">
                       <Bell className="h-4 w-4" />
-                      <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
-                        3
-                      </Badge>
+                      {notificationCount > 0 && (
+                        <Badge className={`absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs ${
+                          highPriorityCount > 0 ? 'bg-red-500' : 'bg-orange-500'
+                        }`}>
+                          {notificationCount}
+                        </Badge>
+                      )}
                     </Button>
 
                     {/* User Menu */}
