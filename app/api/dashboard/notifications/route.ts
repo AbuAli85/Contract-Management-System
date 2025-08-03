@@ -47,19 +47,19 @@ export async function GET(request: NextRequest) {
     // Get expiring ID documents (next 30 days)
     const { data: expiringIds } = await supabase
       .from('promoters')
-      .select('id, name_en, name_ar, id_expiry_date')
-      .not('id_expiry_date', 'is', null)
-      .lte('id_expiry_date', new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString())
+      .select('id, name_en, name_ar, visa_expiry_date')
+      .not('visa_expiry_date', 'is', null)
+      .lte('visa_expiry_date', new Date(now.getTime() + 100 * 24 * 60 * 60 * 1000).toISOString())
 
     expiringIds?.forEach(promoter => {
-      const daysUntilExpiry = differenceInDays(new Date(promoter.id_expiry_date), now)
+      const daysUntilExpiry = differenceInDays(new Date(promoter.visa_expiry_date), now)
       notifications.push({
         id: `id-expiry-${promoter.id}`,
         type: daysUntilExpiry <= 7 ? 'error' : 'warning',
         priority: daysUntilExpiry <= 7 ? 'high' : 'medium',
         title: 'ID Document Expiring',
         message: `${promoter.name_en || promoter.name_ar}'s ID expires in ${daysUntilExpiry} days`,
-        timestamp: promoter.id_expiry_date,
+        timestamp: promoter.visa_expiry_date,
         action: {
           label: 'Update Document',
           url: `/manage-promoters/${promoter.id}/edit`
