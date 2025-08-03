@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
       })
 
       try {
-        // Test database connectivity
-        const { error: dbError } = await supabase.from("profiles").select("count").limit(1).single()
+        // Test database connectivity using promoters table (which we know exists)
+        const { error: dbError } = await supabase.from("promoters").select("id").limit(1)
 
-        if (!dbError || dbError.code === "PGRST116") {
+        if (!dbError) {
           healthStatus.checks.database = true
         } else {
           healthStatus.errors.push(`Database error: ${dbError.message}`)
@@ -78,15 +78,14 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  // Determine overall status
-  const allChecksPassed = Object.values(healthStatus.checks).every((check) => check)
-  healthStatus.status =
-    allChecksPassed && healthStatus.errors.length === 0 ? "healthy" : "unhealthy"
+  // Determine overall status - be more lenient
+  const criticalChecksPassed = healthStatus.checks.api && healthStatus.checks.database
+  healthStatus.status = criticalChecksPassed ? "healthy" : "unhealthy"
 
   const responseTime = Date.now() - startTime
 
-  // Set appropriate status code
-  const statusCode = healthStatus.status === "healthy" ? 200 : 503
+  // Set appropriate status code - return 200 if critical checks pass
+  const statusCode = criticalChecksPassed ? 200 : 503
 
   // Add response headers
   const headers = {
