@@ -68,19 +68,44 @@ export function DashboardNotifications({ notifications, onRefresh }: DashboardNo
 
   const getNotificationBorder = (type: string, priority: string) => {
     if (priority === 'high') {
-      return 'border-l-4 border-l-red-500'
-    }
-    switch (type) {
-      case 'error':
-        return 'border-l-4 border-l-red-500'
-      case 'warning':
-        return 'border-l-4 border-l-yellow-500'
-      case 'info':
-        return 'border-l-4 border-l-blue-500'
-      case 'success':
-        return 'border-l-4 border-l-green-500'
-      default:
-        return 'border-l-4 border-l-gray-300'
+      switch (type) {
+        case 'error':
+          return 'border-l-4 border-l-red-500 bg-red-50'
+        case 'warning':
+          return 'border-l-4 border-l-orange-500 bg-orange-50'
+        case 'info':
+          return 'border-l-4 border-l-blue-500 bg-blue-50'
+        case 'success':
+          return 'border-l-4 border-l-green-500 bg-green-50'
+        default:
+          return 'border-l-4 border-l-red-500 bg-red-50'
+      }
+    } else if (priority === 'medium') {
+      switch (type) {
+        case 'error':
+          return 'border-l-4 border-l-red-400 bg-red-25'
+        case 'warning':
+          return 'border-l-4 border-l-yellow-500 bg-yellow-50'
+        case 'info':
+          return 'border-l-4 border-l-blue-400 bg-blue-25'
+        case 'success':
+          return 'border-l-4 border-l-green-400 bg-green-25'
+        default:
+          return 'border-l-4 border-l-yellow-500 bg-yellow-50'
+      }
+    } else {
+      switch (type) {
+        case 'error':
+          return 'border-l-4 border-l-red-300 bg-red-25'
+        case 'warning':
+          return 'border-l-4 border-l-yellow-400 bg-yellow-25'
+        case 'info':
+          return 'border-l-4 border-l-blue-300 bg-blue-25'
+        case 'success':
+          return 'border-l-4 border-l-green-300 bg-green-25'
+        default:
+          return 'border-l-4 border-l-gray-300 bg-gray-25'
+      }
     }
   }
 
