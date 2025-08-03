@@ -327,7 +327,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   disabled={refreshing}
                   className="hover:bg-blue-50 border-blue-200 text-blue-700 hover:border-blue-300 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-105"
                 >
-                  <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={"mr-2 h-4 w-4 " + (refreshing ? 'animate-spin' : '')} />
                   {refreshing ? 'Updating...' : 'Refresh Data'}
                 </Button>
                 <Button 
@@ -805,7 +805,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   <span>Total: {summaryMetrics.totalEntities}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 ${notifications.filter(n => n.priority === 'high').length > 0 ? 'bg-red-400' : 'bg-green-400'} rounded-full`}></div>
+                  <div className={"w-2 h-2 " + (notifications.filter(n => n.priority === 'high').length > 0 ? 'bg-red-400' : 'bg-green-400') + " rounded-full"}></div>
                   <span>Alerts: {notifications.filter(n => n.priority === 'high').length}/{notifications.length}</span>
                 </div>
                 
@@ -814,7 +814,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   disabled={refreshing}
                   className="flex items-center gap-2 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors duration-200 disabled:opacity-50"
                 >
-                  <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={"h-3 w-3 " + (refreshing ? 'animate-spin' : '')} />
                   <span className="text-xs">Refresh</span>
                 </button>
               </div>
