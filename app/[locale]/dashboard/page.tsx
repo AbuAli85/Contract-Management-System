@@ -181,7 +181,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       if (showRefreshToast) {
         toast({
           title: "Dashboard Updated Successfully",
-          description: `Loaded latest data • ${totalCount} notifications ${highPriorityCount > 0 ? `(${highPriorityCount} high priority)` : ''}`,
+          description: "Dashboard data refreshed successfully",
         })
       }
     } catch (error) {
