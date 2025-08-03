@@ -112,7 +112,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       href: `/${locale}/dashboard/users/approvals`,
       icon: Users,
       description: "Approve pending users",
-      badge: pendingUsersCount > 0 ? pendingUsersCount.toString() : null
+      badge: (pendingUsersCount && pendingUsersCount > 0) ? pendingUsersCount.toString() : null
     },
     {
       title: "Settings",
@@ -126,7 +126,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       href: `/${locale}/dashboard/notifications`,
       icon: Bell,
       description: "View notifications",
-      badge: notificationCount > 0 ? notificationCount.toString() : null
+      badge: (notificationCount && notificationCount > 0) ? notificationCount.toString() : null
     },
     {
       title: "Audit Logs",
@@ -197,7 +197,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 Main Navigation
               </h3>
 
-              {navigationItems.map((item) => {
+              {(navigationItems || []).map((item) => {
                 const IconComponent = item.icon
                 const isActive = isActiveRoute(item.href)
                 
