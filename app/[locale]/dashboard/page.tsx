@@ -94,6 +94,12 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ params }: DashboardPageProps) {
   const { locale } = params
+  
+  // Ensure locale is available before render
+  if (!locale) {
+    return <div>Loading...</div>
+  }
+  
   const [stats, setStats] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -354,7 +360,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <Button variant="ghost" size="sm" asChild className="text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-1 h-auto">
-                  <Link href={`/${locale}/manage-promoters`}>
+                  <Link href={"/" + locale + "/manage-promoters"}>
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -383,7 +389,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 </div>
                 <div className="pt-2">
                   <Link 
-                    href={`/${locale}/manage-promoters`}
+                    href={"/" + locale + "/manage-promoters"}
                     className="text-xs text-purple-600 hover:text-purple-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
                   >
                     Manage Promoters <ChevronRight className="h-3 w-3" />
@@ -401,7 +407,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   <Building2 className="h-6 w-6 text-white" />
                 </div>
                 <Button variant="ghost" size="sm" asChild className="text-green-600 hover:text-green-800 hover:bg-green-100 p-1 h-auto">
-                  <Link href={`/${locale}/manage-parties`}>
+                  <Link href={"/" + locale + "/manage-parties"}>
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -425,7 +431,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 </div>
                 <div className="pt-2">
                   <Link 
-                    href={`/${locale}/manage-parties`}
+                    href={"/" + locale + "/manage-parties"}
                     className="text-xs text-green-600 hover:text-green-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
                   >
                     Manage Companies <ChevronRight className="h-3 w-3" />
@@ -443,7 +449,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   <FileText className="h-6 w-6 text-white" />
                 </div>
                 <Button variant="ghost" size="sm" asChild className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-1 h-auto">
-                  <Link href={`/${locale}/contracts`}>
+                  <Link href={"/" + locale + "/contracts"}>
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -472,7 +478,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 </div>
                 <div className="pt-2">
                   <Link 
-                    href={`/${locale}/contracts`}
+                    href={"/" + locale + "/contracts"}
                     className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
                   >
                     View All Contracts <ChevronRight className="h-3 w-3" />
@@ -490,7 +496,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                   <Bell className="h-6 w-6 text-white" />
                 </div>
                 <Button variant="ghost" size="sm" asChild className="text-orange-600 hover:text-orange-800 hover:bg-orange-100 p-1 h-auto">
-                  <Link href={`/${locale}/notifications`}>
+                  <Link href={"/" + locale + "/notifications"}>
                     <ChevronRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -520,7 +526,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 </div>
                 <div className="pt-2">
                   <Link 
-                    href={`/${locale}/notifications`}
+                    href={"/" + locale + "/notifications"}
                     className="text-xs text-orange-600 hover:text-orange-800 font-medium hover:underline transition-colors duration-200 flex items-center gap-1"
                   >
                     View All Notifications <ChevronRight className="h-3 w-3" />
