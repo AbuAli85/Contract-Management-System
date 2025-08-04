@@ -56,7 +56,7 @@ export function SignUpForm() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/en/auth/callback`,
+          emailRedirectTo: window.location.origin + "/en/auth/callback",
         },
       })
 

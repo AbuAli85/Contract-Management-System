@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle, RefreshCw, Home, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "./auth-provider"
+import { useAuthContext as useAuth } from "@/components/auth-provider"
 
 interface Props {
   children: ReactNode
@@ -97,7 +97,7 @@ export class AuthErrorBoundary extends Component<Props, State> {
   private handleSignOut = async () => {
     try {
       // Import auth provider dynamically to avoid circular dependencies
-      const { useAuth } = await import("./auth-provider")
+      const { useAuthContext } = await import("@/components/auth-provider")
       // Note: This won't work in class components, but we'll handle it in the functional wrapper
       window.location.href = "/en/logout"
     } catch (error) {
@@ -110,17 +110,17 @@ export class AuthErrorBoundary extends Component<Props, State> {
     // Open support contact form or email
     const supportEmail = "support@contractmanagement.com"
     const subject = encodeURIComponent("Authentication Error Report")
-    const body = encodeURIComponent(`
-Error Details:
-- Message: ${this.state.error?.message}
-- Stack: ${this.state.error?.stack}
-- Component Stack: ${this.state.errorInfo?.componentStack}
-- URL: ${window.location.href}
-- User Agent: ${navigator.userAgent}
-- Timestamp: ${new Date().toISOString()}
-    `)
+    const body = encodeURIComponent(
+      "Error Details:\n" +
+      "- Message: " + (this.state.error?.message || "Unknown") + "\n" +
+      "- Stack: " + (this.state.error?.stack || "No stack trace") + "\n" +
+      "- Component Stack: " + (this.state.errorInfo?.componentStack || "No component stack") + "\n" +
+      "- URL: " + window.location.href + "\n" +
+      "- User Agent: " + navigator.userAgent + "\n" +
+      "- Timestamp: " + new Date().toISOString() + "\n"
+    )
 
-    window.open(`mailto:${supportEmail}?subject=${subject}&body=${body}`)
+    window.open("mailto:" + supportEmail + "?subject=" + subject + "&body=" + body)
   }
 
   render() {
