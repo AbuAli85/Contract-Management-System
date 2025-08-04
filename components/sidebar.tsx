@@ -6,7 +6,7 @@ import { useParams } from "next/navigation"
 import { usePathname } from "@/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
-import { useNotifications } from "@/hooks/use-notifications"
+import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useRolePermissions } from "@/components/user-role-display"
 import { Button } from "@/components/ui/button"
@@ -40,7 +40,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const locale = (params?.locale as string) || "en"
   const { user, loading, mounted: authMounted } = useAuth()
   const { count: pendingUsersCount } = usePendingUsersCount()
-  const { totalCount: notificationCount, highPriorityCount } = useNotifications()
+  const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile } = useUserProfile()
   const { roleInfo } = useRolePermissions()
 
@@ -142,7 +142,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     },
     {
       title: "Notifications",
-      href: `/${locale}/dashboard/notifications`,
+      href: `/${locale}/notifications`,
       icon: Bell,
       description: "View notifications",
       badge: (notificationCount && notificationCount > 0) ? notificationCount.toString() : null

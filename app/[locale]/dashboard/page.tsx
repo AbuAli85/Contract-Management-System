@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats-simple"
-import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications"
+import { DashboardNotifications } from "@/components/dashboard/dashboard-notifications-enhanced"
 import { DashboardActivities } from "@/components/dashboard/dashboard-activities"
 import { DashboardQuickActions } from "@/components/dashboard/dashboard-quick-actions"
 import { useToast } from "@/hooks/use-toast"
-import { useNotifications } from "@/hooks/use-notifications"
+import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { DashboardDiagnosticsPanel } from "@/components/dashboard-diagnostics-panel"
 import { 
   RefreshCw,
@@ -110,7 +110,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const { toast } = useToast()
-  const { notifications, totalCount, highPriorityCount, fetchNotifications } = useNotifications()
+  const { notifications, summary, highPriorityCount, fetchNotifications } = useNotifications()
 
   // Enhanced data fetching with detailed error handling and caching
   const fetchDashboardData = async (showRefreshToast = false) => {
@@ -691,6 +691,28 @@ export default function DashboardPage({ params }: DashboardPageProps) {
             </div>
           </CardContent>
         </div>
+        </div>
+        
+        {/* Notifications & Activities Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Notifications Panel */}
+          <Suspense fallback={<NotificationsLoading />}>
+            <DashboardNotifications 
+              onRefresh={fetchNotifications}
+            />
+          </Suspense>
+          
+          {/* Activities Panel */}
+          <Suspense fallback={<div className="animate-pulse bg-white rounded-xl border p-6">
+            <div className="h-6 bg-slate-200 rounded w-32 mb-4"></div>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-4 bg-slate-200 rounded"></div>
+              ))}
+            </div>
+          </div>}>
+            <DashboardActivities activities={activities} />
+          </Suspense>
         </div>
         
         {/* Dashboard Diagnostics Panel */}
