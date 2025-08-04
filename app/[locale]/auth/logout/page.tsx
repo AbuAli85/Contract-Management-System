@@ -13,7 +13,7 @@ export default function AuthLogoutPage() {
     const locale = pathname.split("/")[1] || "en"
     
     // Redirect to the correct logout page
-    router.replace(`/${locale}/logout`)
+    router.replace("/" + locale + "/logout")
   }, [router])
 
   return (

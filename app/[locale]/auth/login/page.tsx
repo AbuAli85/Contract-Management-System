@@ -28,7 +28,7 @@ export default function LoginPage() {
   // Only redirect after mounted and session is ready
   useEffect(() => {
     if (mounted && !loading && session) {
-      router.replace(`/${locale}/dashboard`)
+      router.replace("/" + locale + "/dashboard")
     }
   }, [mounted, loading, session, router, locale])
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
         <div className="text-center text-sm pt-4">
           <span className="text-muted-foreground">Don't have an account? </span>
           <Link
-            href={`/${locale}/auth/signup`}
+            href={"/" + locale + "/auth/signup"}
             className="font-medium text-primary hover:text-primary/80"
           >
             Create a new account
