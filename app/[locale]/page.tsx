@@ -19,13 +19,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
           <div className="flex flex-wrap items-center justify-center gap-4">
             <a
-              href={`/${locale}/auth/login`}
+              href={"/" + locale + "/auth/login"}
               className="inline-block rounded-lg bg-primary px-6 py-3 text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Get Started
             </a>
             <a
-              href={`/${locale}/auth/signup`}
+              href={"/" + locale + "/auth/signup"}
               className="inline-block rounded-lg bg-secondary px-6 py-3 text-secondary-foreground transition-colors hover:bg-secondary/80"
             >
               Sign Up
@@ -75,7 +75,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               professional
             </p>
             <a
-              href={`/${locale}/auth/login`}
+              href={"/" + locale + "/auth/login"}
               className="inline-block rounded-lg bg-primary px-8 py-4 text-lg text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Start Now

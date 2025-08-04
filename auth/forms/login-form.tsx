@@ -47,7 +47,7 @@ export function LoginForm() {
         return redirectParam
       }
     }
-    return `/${locale}/dashboard`
+    return "/" + locale + "/dashboard"
   }, [locale])
 
   // Only log once when component mounts
@@ -74,7 +74,7 @@ export function LoginForm() {
         // Use timeout to prevent rapid redirects
         redirectTimeoutRef.current = setTimeout(() => {
           // Use window.location for more reliable redirect
-          window.location.href = `/${locale}/dashboard`
+          window.location.href = "/" + locale + "/dashboard"
         }, 100)
       }
     }
@@ -136,7 +136,7 @@ export function LoginForm() {
           
           // Redirect to pending approval page
           setTimeout(() => {
-            router.replace(`/${locale}/auth/pending-approval`)
+            router.replace("/" + locale + "/auth/pending-approval")
           }, 2000)
           return
         }
