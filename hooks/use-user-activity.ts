@@ -41,7 +41,7 @@ export function useUserActivity() {
         throw new Error('No user ID provided')
       }
 
-      const response = await fetch(`/api/users/activity?userId=${targetUserId}`, {
+      const response = await fetch("/api/users/activity?userId=" + targetUserId, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache',

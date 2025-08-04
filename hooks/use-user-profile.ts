@@ -51,7 +51,7 @@ export function useUserProfile() {
         throw new Error('No user ID available')
       }
 
-      const response = await fetch(`/api/users/profile/${user.id}`, {
+      const response = await fetch("/api/users/profile/" + user.id, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache',
@@ -106,7 +106,7 @@ export function useUserProfile() {
         throw new Error('No user ID available')
       }
 
-      const response = await fetch(`/api/users/profile/${user.id}`, {
+      const response = await fetch("/api/users/profile/" + user.id, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export function useUserProfile() {
     error,
     fetchUserProfile,
     updateUserProfile,
-    getDisplayName: (userProfile?: UserProfile | null) => getDisplayName(userProfile, user),
+    getDisplayName: (userProfile?: UserProfile | null) => getDisplayName(userProfile || null, user),
     getInitials: (fullName?: string) => getInitials(fullName || getDisplayName(null, user)),
     getRoleDisplay: (role?: string | null) => getRoleDisplay(role)
   }
