@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation"
 import { UserProfile } from "@/auth/components/user-profile"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 export default function ProfilePage() {
   const pathname = usePathname()
@@ -14,18 +13,16 @@ export default function ProfilePage() {
         : "en"
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-3xl">
-          <div className="rounded-lg bg-white shadow">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="mb-6 text-lg font-medium leading-6 text-gray-900">User Profile</h3>
+    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-3xl">
+        <div className="rounded-lg bg-white shadow">
+          <div className="px-4 py-5 sm:p-6">
+            <h3 className="mb-6 text-lg font-medium leading-6 text-gray-900">User Profile</h3>
 
-              <UserProfile />
-            </div>
+            <UserProfile />
           </div>
         </div>
       </div>
-    </AuthenticatedLayout>
+    </div>
   )
 }
