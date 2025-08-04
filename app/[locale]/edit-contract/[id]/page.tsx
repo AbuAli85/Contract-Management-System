@@ -35,7 +35,6 @@ import { LoadingSpinner } from "@/components/LoadingSpinner"
 import { ErrorCard } from "@/components/ErrorCard"
 // StatusBadge component removed - using Badge from UI components instead
 import { createClient } from "@/lib/supabase/client"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 export default function EditContractPage() {
   const params = useParams()
@@ -282,9 +281,8 @@ export default function EditContractPage() {
   }
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className="bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="mx-auto max-w-6xl px-4 py-8">
           {/* Header Section */}
           <div className="mb-8">
             <div className="mb-6 flex items-center gap-4">
@@ -312,7 +310,16 @@ export default function EditContractPage() {
                 <div className="flex-1">
                   <div className="mb-4 flex items-center gap-3">
                     <h1 className="text-3xl font-bold text-gray-900">Edit Contract</h1>
-                    <StatusBadge status={contract.status} />
+                    <Badge 
+                      variant={
+                        contract.status === 'active' ? 'default' :
+                        contract.status === 'draft' ? 'secondary' :
+                        contract.status === 'completed' ? 'outline' :
+                        'destructive'
+                      }
+                    >
+                      {contract.status}
+                    </Badge>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
@@ -594,7 +601,16 @@ export default function EditContractPage() {
                             <div>
                               <label className="text-sm font-medium text-gray-500">Status</label>
                               <div className="mt-1 text-gray-700">
-                                <StatusBadge status={contract.promoter.status} />
+                                <Badge 
+                                  variant={
+                                    contract.promoter.status === 'active' ? 'default' :
+                                    contract.promoter.status === 'draft' ? 'secondary' :
+                                    contract.promoter.status === 'completed' ? 'outline' :
+                                    'destructive'
+                                  }
+                                >
+                                  {contract.promoter.status}
+                                </Badge>
                               </div>
                             </div>
                           )}
@@ -939,6 +955,5 @@ export default function EditContractPage() {
           </div>
         </div>
       </div>
-    </AuthenticatedLayout>
   )
 }

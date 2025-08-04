@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -339,40 +338,35 @@ export default function RolesAndPermissionsPage() {
   // Check permissions - moved after all hooks
   if (!canManageUsers() || !canAssignRoles()) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="container mx-auto p-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center">
-                <Lock className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                <h3 className="mb-2 text-lg font-semibold text-gray-900">Access Denied</h3>
-                <p className="text-gray-600">
-                  You don't have permission to manage roles and permissions.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </AuthenticatedLayout>
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center">
+              <Lock className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">Access Denied</h3>
+              <p className="text-gray-600">
+                You don't have permission to manage roles and permissions.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
   if (loading) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="container mx-auto p-6">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-            <span className="ml-2 text-gray-600">Loading roles and permissions...</span>
-          </div>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-gray-600">Loading roles and permissions...</span>
         </div>
-      </AuthenticatedLayout>
+      </div>
     )
   }
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="container mx-auto space-y-6 p-6">
+    <div className="container mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -760,7 +754,6 @@ export default function RolesAndPermissionsPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AuthenticatedLayout>
   )
 }
 
