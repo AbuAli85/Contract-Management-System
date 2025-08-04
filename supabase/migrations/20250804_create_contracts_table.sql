@@ -4,8 +4,8 @@
 CREATE TABLE IF NOT EXISTS contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     promoter_id UUID REFERENCES promoters(id) ON DELETE CASCADE NOT NULL,
-    employer_id UUID REFERENCES parties(id) ON DELETE SET NULL, -- Party acting as Employer
-    client_id UUID REFERENCES parties(id) ON DELETE SET NULL,   -- Party acting as Client
+    employer_id UUID CONSTRAINT contracts_employer_id_fkey REFERENCES parties(id) ON DELETE SET NULL, -- Party acting as Employer
+    client_id UUID CONSTRAINT contracts_client_id_fkey REFERENCES parties(id) ON DELETE SET NULL,   -- Party acting as Client
     contract_number TEXT NOT NULL UNIQUE,
     title TEXT NOT NULL,
     description TEXT,
