@@ -813,7 +813,7 @@ export default function GenerateContractPage() {
                       <Progress value={formProgress.percentage} className="h-3 bg-slate-100" />
                       <div 
                         className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-80 transition-all duration-500"
-                        style={{width: `${Math.min(formProgress.percentage, 100)}%`}}
+                        style={{width: `${Math.min(formProgress.percentage, 100)}%`} as React.CSSProperties}
                       />
                     </div>
                     <div className="text-xs text-slate-500">

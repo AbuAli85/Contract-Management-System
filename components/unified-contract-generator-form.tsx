@@ -93,7 +93,7 @@ import { useParties } from "@/hooks/use-parties"
 import { usePromoters } from "@/hooks/use-promoters"
 import { useFormRegistration } from "@/hooks/use-form-context"
 import type { Promoter } from "@/lib/types"
-import { JOB_TITLES, CURRENCIES, WORK_LOCATIONS, DEPARTMENTS } from "@/constants/contract-options"
+import { JOB_TITLES, CURRENCIES, WORK_LOCATIONS, DEPARTMENTS, CONTRACT_TYPES } from "@/constants/contract-options"
 import {
   createContract,
   updateContract,
@@ -164,7 +164,7 @@ export default function UnifiedContractGeneratorForm({
       job_title: contract?.job_title || "",
       work_location: contract?.work_location || "",
       department: contract?.department || "",
-      contract_type: "",
+      contract_type: contract?.contract_type || "unlimited-contract", // Set default to unlimited contract
       currency: "OMR", // Default to OMR for Oman market
       basic_salary: contract?.contract_value || 0,
       allowances: 0,
@@ -328,6 +328,16 @@ export default function UnifiedContractGeneratorForm({
   })
 
   const onSubmit = (data: ContractGeneratorFormData) => {
+    console.log("Form submission attempted with data:", data)
+    console.log("Form errors:", form.formState.errors)
+    console.log("Form is valid:", form.formState.isValid)
+    
+    // Check if form is valid before submitting
+    if (!form.formState.isValid) {
+      toast.error("Please fix the validation errors before submitting")
+      return
+    }
+    
     setValidationErrors([])
     submitMutation.mutate(data)
   }
@@ -412,7 +422,7 @@ export default function UnifiedContractGeneratorForm({
               name="promoter_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Promoter</FormLabel>
+                  <FormLabel>Promoter *</FormLabel>
                   <FormControl>
                     <ComboboxField
                       field={field}
@@ -420,6 +430,27 @@ export default function UnifiedContractGeneratorForm({
                       placeholder="Select a promoter"
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="email" 
+                      placeholder="Enter email address" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Email address for contract notifications
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -479,7 +510,7 @@ export default function UnifiedContractGeneratorForm({
               name="job_title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Job Title (Optional)</FormLabel>
+                  <FormLabel>Job Title *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter job title" {...field} />
                   </FormControl>
@@ -490,10 +521,38 @@ export default function UnifiedContractGeneratorForm({
 
             <FormField
               control={form.control}
+              name="contract_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contract Type *</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select contract type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription>
+                    Choose the type of employment contract
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="work_location"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Work Location (Optional)</FormLabel>
+                  <FormLabel>Work Location *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter work location" {...field} />
                   </FormControl>
@@ -743,7 +802,7 @@ export default function UnifiedContractGeneratorForm({
                     name="department"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Department</FormLabel>
+                        <FormLabel>Department *</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <SelectTrigger>
@@ -844,7 +903,7 @@ export default function UnifiedContractGeneratorForm({
                     name="currency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Currency</FormLabel>
+                        <FormLabel>Currency *</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
                             <SelectTrigger>
@@ -980,6 +1039,29 @@ export default function UnifiedContractGeneratorForm({
             )}
           </motion.div>
 
+          {/* Form Validation Debugging */}
+          {process.env.NODE_ENV === "development" && (
+            <Alert className="border-blue-200 bg-blue-50">
+              <AlertDescription>
+                <div className="text-xs space-y-1">
+                  <div>Form Valid: {form.formState.isValid ? "✅" : "❌"}</div>
+                  <div>Is Loading: {isLoading ? "🔄" : "✅"}</div>
+                  <div>Submit Pending: {submitMutation.isPending ? "🔄" : "✅"}</div>
+                  {Object.keys(form.formState.errors).length > 0 && (
+                    <div className="mt-2">
+                      <div className="font-medium">Validation Errors:</div>
+                      {Object.entries(form.formState.errors).map(([field, error]) => (
+                        <div key={field} className="text-red-600">
+                          {field}: {error?.message}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Error Display */}
           {validationErrors.length > 0 && (
             <Alert variant="destructive">
@@ -999,6 +1081,22 @@ export default function UnifiedContractGeneratorForm({
             <Button type="button" variant="outline" onClick={() => router.back()}>
               Cancel
             </Button>
+            
+            {/* Debug button in development */}
+            {process.env.NODE_ENV === "development" && (
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => {
+                  console.log("Current form values:", form.getValues())
+                  console.log("Form errors:", form.formState.errors)
+                  form.trigger() // Trigger validation
+                }}
+              >
+                Debug Form
+              </Button>
+            )}
+            
             <Button type="submit" disabled={isLoading} className="min-w-[200px]">
               {isLoading ? (
                 <>
