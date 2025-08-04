@@ -31,6 +31,7 @@ import {
   Search,
   Briefcase,
   Workflow,
+  Menu,
 } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
