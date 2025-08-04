@@ -154,6 +154,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
       description: "System activity tracking",
       badge: null
     }
+  ]
 
   const isActiveRoute = (href: string) => {
     return pathname === href || (pathname && pathname.startsWith(href + '/'))
