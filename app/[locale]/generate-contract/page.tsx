@@ -579,24 +579,23 @@ export default function GenerateContractPage() {
         transition={{ duration: 0.5 }}
         className="space-y-6 p-6"
       >
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Failed to load required components. Please refresh the page.
-              <br />
-              Error: {configError}
-            </AlertDescription>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => window.location.reload()}
-            >
-              Refresh Page
-            </Button>
-          </Alert>
-        </motion.div>
-      </div>
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load required components. Please refresh the page.
+            <br />
+            Error: {configError}
+          </AlertDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => window.location.reload()}
+          >
+            Refresh Page
+          </Button>
+        </Alert>
+      </motion.div>
     )
   }
 
@@ -814,7 +813,7 @@ export default function GenerateContractPage() {
                       <Progress value={formProgress.percentage} className="h-3 bg-slate-100" />
                       <div 
                         className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-80 transition-all duration-500"
-                        style={{ width: `${Math.min(formProgress.percentage, 100)}%` }}
+                        style={{width: `${Math.min(formProgress.percentage, 100)}%`}}
                       />
                     </div>
                     <div className="text-xs text-slate-500">
