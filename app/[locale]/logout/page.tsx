@@ -32,7 +32,7 @@ export default function LogoutPage() {
         }
 
         // Redirect to localized login page
-        router.push(`/${locale}/auth/login`)
+        router.push("/" + locale + "/auth/login")
       } catch (error) {
         console.error("🔐 Logout: Unexpected error:", error)
         setStatus("error")
@@ -42,7 +42,7 @@ export default function LogoutPage() {
         const locale = pathname.split("/")[1] || "en"
 
         setTimeout(() => {
-          router.push(`/${locale}/auth/login`)
+          router.push("/" + locale + "/auth/login")
         }, 3000)
       }
     }
