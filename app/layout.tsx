@@ -5,17 +5,17 @@ import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 
-// 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout
-import { Settings, UserPlus, Menu, Search, HelpCircle } from "lucide-react"
+// 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout (DISABLED FOR DEBUGGING)
+// import { Settings, UserPlus, Menu, Search, HelpCircle } from "lucide-react"
 
-// Make all critical icons globally available
-if (typeof window !== 'undefined') {
-  (window as any).Settings = Settings;
-  (window as any).UserPlus = UserPlus;
-  (window as any).Menu = Menu;
-  (window as any).Search = Search;
-  (window as any).HelpCircle = HelpCircle;
-}
+// Make all critical icons globally available (DISABLED FOR DEBUGGING)
+// if (typeof window !== 'undefined') {
+//   (window as any).Settings = Settings;
+//   (window as any).UserPlus = UserPlus;
+//   (window as any).Menu = Menu;
+//   (window as any).Search = Search;
+//   (window as any).HelpCircle = HelpCircle;
+// }
 
 const fontInter = Inter({
   subsets: ["latin"],

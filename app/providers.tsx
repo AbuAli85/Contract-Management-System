@@ -12,8 +12,8 @@ import { FormContextProvider } from "@/hooks/use-form-context"
 import { Toaster } from "@/components/ui/toaster"
 import type { Session, User } from "@supabase/supabase-js"
 
-// 🔥 TEMPORARY TEST - Import global icons
-import "@/lib/global-icons"
+// 🔥 TEMPORARY TEST - Import global icons (DISABLED FOR DEBUGGING)
+// import "@/lib/global-icons"
 
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
