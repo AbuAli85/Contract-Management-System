@@ -99,18 +99,17 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   const { locale } = params
   const { user } = useAuth()
   const { profile: userProfile } = useUserProfile()
-  
-  // Ensure locale is available before render
-  if (!locale) {
-    return <div>Loading...</div>
-  }
-  
   const [stats, setStats] = useState<any>(null)
   const [activities, setActivities] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const { toast } = useToast()
   const { notifications, summary, highPriorityCount, fetchNotifications } = useNotifications()
+  
+  // Ensure locale is available before render - MOVED AFTER ALL HOOKS
+  if (!locale) {
+    return <div>Loading...</div>
+  }
 
   // Enhanced data fetching with detailed error handling and caching
   const fetchDashboardData = async (showRefreshToast = false) => {
