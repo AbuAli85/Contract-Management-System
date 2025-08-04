@@ -57,9 +57,9 @@ const useFormField = () => {
     return {
       id: itemContext.id,
       name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
+      formItemId: itemContext.id + "-form-item",
+      formDescriptionId: itemContext.id + "-form-item-description",
+      formMessageId: itemContext.id + "-form-item-message",
       error: undefined,
       formState: { errors: {} },
     }
@@ -72,9 +72,9 @@ const useFormField = () => {
     return {
       id: itemContext.id,
       name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
+      formItemId: itemContext.id + "-form-item",
+      formDescriptionId: itemContext.id + "-form-item-description",
+      formMessageId: itemContext.id + "-form-item-message",
       ...fieldState,
     }
   } catch (error) {
@@ -82,9 +82,9 @@ const useFormField = () => {
     return {
       id: itemContext.id,
       name: fieldContext.name,
-      formItemId: `${itemContext.id}-form-item`,
-      formDescriptionId: `${itemContext.id}-form-item-description`,
-      formMessageId: `${itemContext.id}-form-item-message`,
+      formItemId: itemContext.id + "-form-item",
+      formDescriptionId: itemContext.id + "-form-item-description",
+      formMessageId: itemContext.id + "-form-item-message",
       error: undefined,
       formState: { errors: {} },
     }
@@ -137,7 +137,7 @@ const FormControl = React.forwardRef<
     <Slot
       ref={ref}
       id={formItemId}
-      aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
+      aria-describedby={!error ? formDescriptionId : formDescriptionId + " " + formMessageId}
       aria-invalid={!!error}
       {...props}
     />
