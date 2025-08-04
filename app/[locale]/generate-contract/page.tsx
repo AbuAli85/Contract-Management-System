@@ -12,16 +12,12 @@ import EnhancedContractForm from "@/components/enhanced-contract-form"
 import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
 
-export default function GenerateContractPage() {
-  const { user } = useAuth()
+// Separate component for session timeout to avoid conditional hook calls
+function SessionTimeoutHandler({ user }: { user: any }) {
   const { toast } = useToast()
-  const pathname = usePathname()
-  const locale = pathname?.split("/")[1] || "en"
-
-  // Initialize session timeout (5 minutes timeout, 1 minute warning)
+  
   useSessionTimeout({
     timeoutMinutes: 5,
-    warningMinutes: 1,
     onTimeout: () => {
       toast({
         title: "Session Expired",
@@ -31,12 +27,25 @@ export default function GenerateContractPage() {
     }
   })
 
+  return null
+}
+
+export default function GenerateContractPage() {
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const pathname = usePathname()
+  const locale = pathname?.split("/")[1] || "en"
+
   // State management
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedForm, setSelectedForm] = useState<string>("unified")
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    // Set client flag
+    setIsClient(true)
+    
     // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -101,6 +110,9 @@ export default function GenerateContractPage() {
 
   return (
     <div className="container mx-auto p-6">
+      {/* Session timeout handler - only render on client side when user exists */}
+      {isClient && user && <SessionTimeoutHandler user={user} />}
+      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

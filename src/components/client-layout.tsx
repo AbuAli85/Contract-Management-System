@@ -10,7 +10,7 @@ import { ProfessionalHeader } from "@/components/professional-header"
 
 import { Loader2 } from "lucide-react"
 import { PerformanceMonitor } from "@/components/performance-monitor"
-import { FormProvider } from "@/hooks/use-form-context"
+import { FormContextProvider } from "@/hooks/use-form-context"
 import { useAuth } from "@/lib/auth-service"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -127,9 +127,9 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
         <main className="flex-1 overflow-y-auto p-6">
           <ErrorBoundary>
             <PerformanceMonitor>
-              <FormProvider>
+              <FormContextProvider>
                 <ToastProvider>{children}</ToastProvider>
-              </FormProvider>
+              </FormContextProvider>
             </PerformanceMonitor>
           </ErrorBoundary>
         </main>

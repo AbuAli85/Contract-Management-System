@@ -12,7 +12,7 @@ interface FormContextType {
 
 const FormContext = createContext<FormContextType | undefined>(undefined)
 
-export function FormProvider({ children }: { children: React.ReactNode }) {
+export function FormContextProvider({ children }: { children: React.ReactNode }) {
   const [formCount, setFormCount] = useState(0)
   const [isFormActive, setIsFormActive] = useState(false)
 
