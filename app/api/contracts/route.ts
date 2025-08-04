@@ -6,7 +6,24 @@ export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
+    console.log("🔍 Contracts API: Starting request...")
+    
     const supabase = await createClient()
+    
+    // Check if we're using a mock client
+    if (!supabase || typeof supabase.from !== 'function') {
+      console.error("❌ Contracts API: Using mock client - environment variables may be missing")
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Database connection not available. Please check environment variables.",
+          details: "Mock client detected - NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY may be missing",
+        },
+        { status: 503 },
+      )
+    }
+
+    console.log("🔍 Contracts API: Fetching contracts from database...")
 
     // First, let's check if the contracts table exists and has data
     const { data: contracts, error: contractsError } = await supabase
@@ -34,16 +51,19 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
 
     if (contractsError) {
-      console.error("Error fetching contracts:", contractsError)
+      console.error("❌ Contracts API: Error fetching contracts:", contractsError)
       return NextResponse.json(
         {
           success: false,
           error: "Failed to fetch contracts",
           details: contractsError.message,
+          code: contractsError.code,
         },
         { status: 500 },
       )
     }
+
+    console.log(`✅ Contracts API: Successfully fetched ${contracts?.length || 0} contracts`)
 
     // Get basic statistics
     const { count: totalContracts, error: countError } = await supabase
@@ -51,7 +71,7 @@ export async function GET(request: NextRequest) {
       .select("*", { count: "exact", head: true })
 
     if (countError) {
-      console.error("Error counting contracts:", countError)
+      console.error("⚠️ Contracts API: Error counting contracts:", countError)
     }
 
     // Get status distribution
@@ -60,7 +80,7 @@ export async function GET(request: NextRequest) {
       .select("status")
 
     if (statusError) {
-      console.error("Error fetching status data:", statusError)
+      console.error("⚠️ Contracts API: Error fetching status data:", statusError)
     }
 
     // Calculate statistics
@@ -100,6 +120,8 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    console.log("✅ Contracts API: Request completed successfully")
+
     return NextResponse.json({
       success: true,
       contracts: contracts || [],
@@ -107,7 +129,7 @@ export async function GET(request: NextRequest) {
       total: totalContracts || 0,
     })
   } catch (error) {
-    console.error("Contracts API error:", error)
+    console.error("❌ Contracts API: Unexpected error:", error)
     return NextResponse.json(
       {
         success: false,

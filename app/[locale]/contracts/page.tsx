@@ -80,6 +80,7 @@ import { useToast } from "@/hooks/use-toast"
 import { FileTextIcon } from "@radix-ui/react-icons"
 import { cn } from "@/lib/utils"
 import { ProtectedRoute } from "@/components/protected-route"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 // Enhanced Contract interface
 interface EnhancedContract extends ContractWithRelations {
@@ -151,11 +152,7 @@ export default function ContractsDashboardPage() {
   const params = useParams()
   const locale = (params?.locale as string) || "en"
 
-  return (
-    <ProtectedRoute redirectTo={`/${locale}/auth/login`}>
-      <ContractsContent />
-    </ProtectedRoute>
-  )
+  return <ContractsContent />
 }
 
 function ContractsContent() {
@@ -175,17 +172,31 @@ function ContractsContent() {
       setIsLoading(true)
       setError(null)
 
+      console.log("🔍 Contracts Page: Fetching contracts...")
       const response = await fetch("/api/contracts")
+      
+      if (!response.ok) {
+        console.error(`❌ Contracts Page: HTTP ${response.status} - ${response.statusText}`)
+        const errorText = await response.text()
+        console.error("❌ Contracts Page: Error response:", errorText)
+        
+        setError(`HTTP ${response.status}: ${response.statusText}`)
+        return
+      }
+
       const data = await response.json()
+      console.log("🔍 Contracts Page: API response:", data)
 
       if (data.success) {
         setContracts(data.contracts || [])
+        console.log(`✅ Contracts Page: Successfully loaded ${data.contracts?.length || 0} contracts`)
       } else {
+        console.error("❌ Contracts Page: API returned error:", data.error, data.details)
         setError(data.error || "Failed to fetch contracts")
       }
     } catch (err) {
-      setError("Failed to fetch contracts")
-      console.error("Error fetching contracts:", err)
+      console.error("❌ Contracts Page: Network error:", err)
+      setError("Failed to fetch contracts - network error")
     } finally {
       setIsLoading(false)
     }
@@ -658,25 +669,72 @@ function ContractsContent() {
 
   if (error) {
     return (
-      <Card className="m-4">
-        <CardHeader>
-          <CardTitle className="text-destructive">Error Loading Contracts</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>{error}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="space-y-6 p-4 md:p-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Error Loading Contracts
+            </CardTitle>
+            <CardDescription>
+              There was a problem loading your contracts. Please try again or contact support if the issue persists.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p className="font-medium">{error}</p>
+                  {process.env.NODE_ENV === "development" && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-sm font-medium text-muted-foreground">
+                        Debug Information
+                      </summary>
+                      <div className="mt-2 rounded bg-muted p-3 text-xs font-mono">
+                        <p>Error: {error}</p>
+                        <p>Timestamp: {new Date().toISOString()}</p>
+                        <p>User Agent: {typeof window !== "undefined" ? window.navigator.userAgent : "Server-side"}</p>
+                        <p>URL: {typeof window !== "undefined" ? window.location.href : "Server-side"}</p>
+                      </div>
+                    </details>
+                  )}
+                </div>
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex gap-2">
+              <Button onClick={fetchContracts} className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Try Again
+              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()}>
+                Reload Page
+              </Button>
+              <Button variant="outline" onClick={() => window.location.href = `/${locale}/dashboard`}>
+                Go to Dashboard
+              </Button>
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+              <p>If this error persists, try:</p>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Checking your internet connection</li>
+                <li>Refreshing the page</li>
+                <li>Clearing your browser cache</li>
+                <li>Contacting support if the issue continues</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
   return (
     <>
       <div className="space-y-6 p-4 md:p-6">
-        {/* Role Debug Panel - Only show in development */}
-        {process.env.NODE_ENV === "development" && <RoleDebugPanel />}
+
 
         {/* Statistics Cards */}
         {showStats && (
@@ -705,8 +763,6 @@ function ContractsContent() {
               </div>
 
               <div className="flex items-center gap-2">
-                <RoleStatusIndicator />
-                <RoleRefreshButton variant="ghost" size="sm" compact />
 
                 <TooltipProvider>
                   <Tooltip>
