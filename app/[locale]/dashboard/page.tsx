@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useState, useCallback } from "react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-service"
 import { useUserProfile } from "@/hooks/use-user-profile"
@@ -112,7 +112,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   }
 
   // Enhanced data fetching with detailed error handling and caching
-  const fetchDashboardData = async (showRefreshToast = false) => {
+  const fetchDashboardData = useCallback(async (showRefreshToast = false) => {
     try {
       if (showRefreshToast) setRefreshing(true)
       
@@ -220,12 +220,12 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [toast]) // Dependencies for useCallback
 
   // Initial data load
   useEffect(() => {
     fetchDashboardData()
-  }, [])
+  }, [fetchDashboardData])
 
   // Enhanced auto-refresh with smart intervals and user activity detection
   useEffect(() => {
@@ -239,7 +239,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
     }, 2 * 60 * 1000) // Refresh every 2 minutes for real-time feel
 
     return () => clearInterval(interval)
-  }, [])
+  }, [fetchDashboardData])
 
   // Enhanced page visibility API for smart refreshing
   useEffect(() => {
@@ -263,7 +263,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
       document.removeEventListener('visibilitychange', handleVisibilityChange)  
       window.removeEventListener('focus', handleFocus)
     }
-  }, [])
+  }, [fetchDashboardData])
 
   const handleRefresh = () => {
     fetchDashboardData(true)
