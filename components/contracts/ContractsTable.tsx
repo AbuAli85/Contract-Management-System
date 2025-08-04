@@ -1,6 +1,10 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import {
+  Loader2, MoreHorizontal, Grid, List, Building2, User, Copy, Archive, RefreshCw, Plus, AlertTriangle, XCircle, CheckCircle, Eye, Edit, Trash2, ChevronUp, ChevronDown, Search
+} from 'lucide-react'
 
 import { getSupabaseClient } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -40,18 +44,17 @@ import { Loader2, MoreHorizontal, Grid, List, Building2, User, Copy, Archive,  }
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-interface Contract {
   id: string
   contract_number: string
-  first_party_id: string
-  second_party_id: string
+  employer_id: string
+  client_id: string
   promoter_id: string
-  first_party_name_en: string
-  first_party_name_ar: string
-  first_party_crn: string
-  second_party_name_en: string
-  second_party_name_ar: string
-  second_party_crn: string
+  employer_name_en: string
+  employer_name_ar: string
+  employer_crn: string
+  client_name_en: string
+  client_name_ar: string
+  client_crn: string
   promoter_name_en: string
   promoter_name_ar: string
   email: string
@@ -373,8 +376,8 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         .select(
           `
     *,
-    first_party:parties!contracts_first_party_id_fkey (name_en, name_ar, crn),
-    second_party:parties!contracts_second_party_id_fkey (name_en, name_ar, crn),
+    employer:parties!contracts_employer_id_fkey (name_en, name_ar, crn),
+    client:parties!contracts_client_id_fkey (name_en, name_ar, crn),
     promoter:promoters!contracts_promoter_id_fkey (name_en, name_ar)
   `,
         )
@@ -383,18 +386,18 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
       if (error) throw error
 
       setContracts(
-        (data || []).map((contract) => ({
+        (data || []).map((contract: any) => ({
           id: contract.id || "",
           contract_number: contract.contract_number || "",
-          first_party_id: contract.first_party_id || "",
-          second_party_id: contract.second_party_id || "",
+          employer_id: contract.employer_id || "",
+          client_id: contract.client_id || "",
           promoter_id: contract.promoter_id || "",
-          first_party_name_en: contract.first_party?.name_en || "",
-          first_party_name_ar: contract.first_party?.name_ar || "",
-          first_party_crn: contract.first_party?.crn || "",
-          second_party_name_en: contract.second_party?.name_en || "",
-          second_party_name_ar: contract.second_party?.name_ar || "",
-          second_party_crn: contract.second_party?.crn || "",
+          employer_name_en: contract.employer?.name_en || "",
+          employer_name_ar: contract.employer?.name_ar || "",
+          employer_crn: contract.employer?.crn || "",
+          client_name_en: contract.client?.name_en || "",
+          client_name_ar: contract.client?.name_ar || "",
+          client_crn: contract.client?.crn || "",
           promoter_name_en: contract.promoter?.name_en || "",
           promoter_name_ar: contract.promoter?.name_ar || "",
           email: contract.email || "",
