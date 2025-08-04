@@ -970,7 +970,7 @@ export default function ContractDetailPage() {
                 <div>
                   <h4 className="mb-3 font-medium text-gray-900">Recent Activity</h4>
                   <div className="space-y-2">
-                    {pdfStatus.notifications.length > 0 ? (
+                    {Array.isArray(pdfStatus.notifications) && pdfStatus.notifications.length > 0 ? (
                       pdfStatus.notifications.map((notification, index) => (
                         <div
                           key={index}

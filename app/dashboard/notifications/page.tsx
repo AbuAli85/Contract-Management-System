@@ -146,7 +146,7 @@ export default function NotificationsPage() {
 
   // Filter notifications
   const filtered = useMemo(() => {
-    return notifications.filter((notif) => {
+    return Array.isArray(notifications) ? notifications.filter((notif) => {
       const matchesSearch =
         !search ||
         notif.message.toLowerCase().includes(search.toLowerCase()) ||
@@ -167,7 +167,7 @@ export default function NotificationsPage() {
           (!endDate || isBefore(parseISO(notif.created_at), endDate)))
 
       return matchesSearch && matchesType && matchesRead && matchesUser && matchesDate
-    })
+    }) : []
   }, [notifications, search, typeFilter, readFilter, userFilter, startDate, endDate])
 
   // Paginate filtered results

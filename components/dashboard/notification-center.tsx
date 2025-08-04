@@ -145,7 +145,7 @@ export function NotificationCenter({
     return colors[priority as keyof typeof colors] || "bg-gray-500 text-white"
   }
 
-  const filteredNotifications = notifications.filter((notification) => {
+  const filteredNotifications = Array.isArray(notifications) ? notifications.filter((notification) => {
     const matchesSearch =
       notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       notification.message.toLowerCase().includes(searchTerm.toLowerCase())
@@ -157,10 +157,10 @@ export function NotificationCenter({
       activeTab === notification.type
 
     return matchesSearch && matchesTab
-  })
+  }) : []
 
-  const unreadCount = notifications.filter((n) => !n.read).length
-  const urgentCount = notifications.filter((n) => n.priority === "urgent").length
+  const unreadCount = Array.isArray(notifications) ? notifications.filter((n) => !n.read).length : 0
+  const urgentCount = Array.isArray(notifications) ? notifications.filter((n) => n.priority === "urgent").length : 0
 
   const NotificationCard = ({ notification }: { notification: NotificationItem }) => (
     <Card
@@ -537,9 +537,9 @@ export function NotificationCenter({
           <CardContent>
             <div className="text-2xl font-bold">
               {
-                notifications.filter(
+                Array.isArray(notifications) ? notifications.filter(
                   (n) => new Date(n.created_at).toDateString() === new Date().toDateString(),
-                ).length
+                ).length : 0
               }
             </div>
           </CardContent>

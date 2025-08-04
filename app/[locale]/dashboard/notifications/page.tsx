@@ -211,7 +211,7 @@ export default function DashboardNotificationsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {notifications.map((notification) => (
+              {Array.isArray(notifications) ? notifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`flex items-start space-x-4 rounded-lg border p-4 ${
@@ -247,7 +247,7 @@ export default function DashboardNotificationsPage() {
                     <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
                   </div>
                 </div>
-              ))}
+              )) : null}
             </div>
           )}
         </CardContent>

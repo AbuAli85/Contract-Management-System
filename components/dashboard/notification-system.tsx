@@ -159,7 +159,7 @@ export default function NotificationSystem() {
               No new notifications. / لا توجد إشعارات جديدة.
             </p>
           )}
-          {!loading && notifications.length > 0 && (
+          {!loading && Array.isArray(notifications) && notifications.length > 0 && (
             <div className="space-y-3">
               {notifications.map((notif) => {
                 const IconComponent = iconMap[notif.type] || iconMap.default

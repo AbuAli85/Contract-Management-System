@@ -56,7 +56,7 @@ export default function Notifications() {
   const markAsRead = async (id: string) => {
     const supabase = getSupabaseClient()
     await supabase.from("notifications").update({ read: true }).eq("id", parseInt(id))
-    setNotifications(notifications.filter((n) => n.id !== id))
+    setNotifications(Array.isArray(notifications) ? notifications.filter((n) => n.id !== id) : [])
   }
 
   if (!user) return null
@@ -64,15 +64,15 @@ export default function Notifications() {
     <div>
       <h3>Notifications</h3>
       <ul>
-        {notifications.map((n) => (
+        {Array.isArray(notifications) ? notifications.map((n) => (
           <li key={n.id}>
             {n.message}
             <button onClick={() => markAsRead(n.id)} style={{ marginLeft: 8 }}>
               Mark as read
             </button>
           </li>
-        ))}
-        {notifications.length === 0 && <li>No new notifications.</li>}
+        )) : null}
+        {Array.isArray(notifications) && notifications.length === 0 && <li>No new notifications.</li>}
       </ul>
     </div>
   )
