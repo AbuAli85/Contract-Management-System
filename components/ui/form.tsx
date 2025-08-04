@@ -114,13 +114,13 @@ const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
-  const { error, formItemId } = useFormField()
+  const formField = useFormField()
 
   return (
     <Label
       ref={ref}
-      className={cn(error && "text-destructive", className)}
-      htmlFor={formItemId}
+      className={cn(formField.error && "text-destructive", className)}
+      htmlFor={formField.formItemId}
       {...props}
     />
   )
@@ -131,14 +131,14 @@ const FormControl = React.forwardRef<
   React.ElementRef<typeof Slot>,
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
-  const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
+  const formField = useFormField()
 
   return (
     <Slot
       ref={ref}
-      id={formItemId}
-      aria-describedby={!error ? formDescriptionId : formDescriptionId + " " + formMessageId}
-      aria-invalid={!!error}
+      id={formField.formItemId}
+      aria-describedby={!formField.error ? formField.formDescriptionId : formField.formDescriptionId + " " + formField.formMessageId}
+      aria-invalid={!!formField.error}
       {...props}
     />
   )

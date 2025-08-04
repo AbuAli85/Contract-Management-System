@@ -12,7 +12,7 @@ export default async function PromoterRedirect({
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
     if (!uuidRegex.test(id)) {
-      redirect(`/${locale}/manage-promoters`)
+      redirect("/" + locale + "/manage-promoters")
     }
 
     // Check if promoter exists

@@ -1297,7 +1297,7 @@ export default function ManagePartiesPage() {
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/manage-parties/${party.id}`}>
+                              <Link href={"/manage-parties/" + party.id}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Profile
                               </Link>
