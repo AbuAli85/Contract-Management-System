@@ -29,6 +29,7 @@ import {
   Search,
   Briefcase,
   Workflow,
+  UserPlus,
 } from "lucide-react"
 
 // Dynamic imports for potentially problematic modules
