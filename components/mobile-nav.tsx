@@ -49,7 +49,7 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <div className="mb-8 flex items-center justify-between">
           <Link
-            href={`/${locale}`}
+            href={"/" + locale}
             className="font-heading text-xl font-bold text-primary"
             onClick={() => setIsOpen(false)}
           >
@@ -65,10 +65,11 @@ export function MobileNav({ navItems, locale }: MobileNavProps) {
           {navItems.map((item) => (
             <Link
               key={item.title}
-              href={`/${locale}${item.href === "/" ? "" : item.href}`}
-              className={`py-2 text-lg font-medium transition-colors hover:text-primary ${
-                pathname?.includes(item.href) ? "text-primary" : "text-foreground/80"
-              }`}
+              href={"/" + locale + (item.href === "/" ? "" : item.href)}
+              className={
+                "py-2 text-lg font-medium transition-colors hover:text-primary " +
+                (pathname?.includes(item.href) ? "text-primary" : "text-foreground/80")
+              }
               onClick={() => setIsOpen(false)}
             >
               {item.title}
