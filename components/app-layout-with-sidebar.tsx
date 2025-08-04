@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
-import { useNotifications } from "@/hooks/use-notifications"
+import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useRolePermissions } from "@/components/user-role-display"
@@ -32,7 +32,7 @@ interface AppLayoutWithSidebarProps {
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user } = useAuth()
-  const { totalCount: notificationCount, highPriorityCount } = useNotifications()
+  const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile, fetchUserProfile } = useUserProfile()
   const { isAdmin, isUser, roleInfo } = useRolePermissions()
   const params = useParams()
