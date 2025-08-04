@@ -86,7 +86,7 @@ export function DashboardNotifications({
     getNotificationIcon
   } = useNotifications()
 
-  const displayNotifications = notifications.slice(0, maxItems)
+  const displayNotifications = Array.isArray(notifications) ? notifications.slice(0, maxItems) : []
 
   const handleNotificationClick = async (notification: any) => {
     // Mark as read if unread
