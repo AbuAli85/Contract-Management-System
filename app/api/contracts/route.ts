@@ -25,29 +25,10 @@ export async function GET(request: NextRequest) {
 
     console.log("🔍 Contracts API: Fetching contracts from database...")
 
-    // First, let's check if the contracts table exists and has data
+    // Start with a simple query first to test basic connectivity
     const { data: contracts, error: contractsError } = await supabase
       .from("contracts")
-      .select(
-        `
-        id,
-        contract_number,
-        status,
-        created_at,
-        updated_at,
-        start_date,
-        end_date,
-        job_title,
-        work_location,
-        value,
-        employer_id,
-        client_id,
-        promoter_id,
-        employer:parties!contracts_employer_id_fkey(id, name_en, name_ar, crn, type),
-        client:parties!contracts_client_id_fkey(id, name_en, name_ar, crn, type),
-        promoter:promoters!contracts_promoter_id_fkey(id, name_en, name_ar, id_card_number, status)
-      `,
-      )
+      .select("*")
       .order("created_at", { ascending: false })
 
     if (contractsError) {
