@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const month = (now.getMonth() + 1).toString().padStart(2, "0")
     const year = now.getFullYear()
     const random = nanoid(4).toUpperCase()
-    const contractNumber = `PAC-${day}${month}${year}-${random}`
+    const contractNumber = "PAC-" + day + month + year + "-" + random
 
     // Insert contract into database
     const { data: contract, error } = await supabase
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             contractId: contract.id,
             contractNumber,
-            update_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/generate-contract`,
+            update_url: (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000") + "/api/generate-contract",
             ...body,
           }),
         })

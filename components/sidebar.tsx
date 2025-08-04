@@ -62,99 +62,98 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <p className="mb-2 text-lg font-semibold text-card-foreground">Not signed in</p>
           <p className="mb-4 text-sm text-muted-foreground">Please log in to access the sidebar features.</p>
           <Button asChild variant="default" className="w-full">
-            <Link href={`/${locale}/login`}>Login</Link>
+            <Link href={"/" + locale + "/login"}>Login</Link>
           </Button>
         </div>
       </div>
     )
   }
 
-  const navigationItems = [
+    const navigationItems = [
     {
       title: "Dashboard",
-      href: `/${locale}/dashboard`,
+      href: "/" + locale + "/dashboard",
       icon: BarChart3,
       description: "Overview and analytics",
       badge: null
     },
     {
       title: "Generate Contract",
-      href: `/${locale}/generate-contract`,
-      icon: FileText,
+      href: "/" + locale + "/generate-contract",
+      icon: Plus,
       description: "Create new contracts",
-      badge: "New"
+      badge: null
     },
     {
       title: "Contracts",
-      href: `/${locale}/contracts`,
-      icon: FileSearch,
+      href: "/" + locale + "/contracts",
+      icon: FileText,
       description: "View all contracts",
       badge: null
     },
     {
       title: "Manage Parties",
-      href: `/${locale}/manage-parties`,
+      href: "/" + locale + "/manage-parties",
       icon: Users,
-      description: "Manage contract parties",
+      description: "Companies and individuals",
       badge: null
     },
     {
       title: "Manage Promoters",
-      href: `/${locale}/manage-promoters`,
-      icon: Target,
-      description: "Comprehensive promoter management",
+      href: "/" + locale + "/manage-promoters",
+      icon: User,
+      description: "Promoter management",
       badge: null
     },
     {
-      title: "Promoter Profiles",
-      href: `/${locale}/promoter-details`,
-      icon: User,
-      description: "View and manage promoter profiles",
+      title: "Promoter Details",
+      href: "/" + locale + "/promoter-details",
+      icon: FileSearch,
+      description: "Detailed promoter information",
       badge: null
     },
     {
       title: "Promoter Analysis",
-      href: `/${locale}/promoter-analysis`,
-      icon: BarChart3,
-      description: "Analytics and performance reports",
+      href: "/" + locale + "/promoter-analysis",
+      icon: Target,
+      description: "Performance analytics",
       badge: null
     },
     {
-      title: "User Management",
-      href: `/${locale}/dashboard/users`,
-      icon: User,
-      description: "Manage system users",
+      title: "Users",
+      href: "/" + locale + "/dashboard/users",
+      icon: Users,
+      description: "User management",
       badge: null
     },
     {
       title: "User Approvals",
-      href: `/${locale}/dashboard/users/approvals`,
-      icon: Users,
-      description: "Approve pending users",
-      badge: (pendingUsersCount && pendingUsersCount > 0) ? pendingUsersCount.toString() : null
+      href: "/" + locale + "/dashboard/users/approvals",
+      icon: User,
+      description: "Pending user approvals",
+      badge: null
     },
     {
       title: "Settings",
-      href: `/${locale}/dashboard/settings`,
+      href: "/" + locale + "/dashboard/settings",
       icon: Settings,
-      description: "System settings",
+      description: "System configuration",
       badge: null
     },
     {
       title: "Notifications",
-      href: `/${locale}/notifications`,
+      href: "/" + locale + "/notifications",
       icon: Bell,
-      description: "View notifications",
-      badge: (notificationCount && notificationCount > 0) ? notificationCount.toString() : null
-    },
-    {
-      title: "Audit Logs",
-      href: `/${locale}/dashboard/audit`,
-      icon: FileSearch,
-      description: "System audit logs",
+      description: "Alerts and messages",
       badge: null
     },
-  ]
+    {
+      title: "Audit Log",
+      href: "/" + locale + "/dashboard/audit",
+      icon: Crown,
+      description: "System activity tracking",
+      badge: null
+    }
 
   const isActiveRoute = (href: string) => {
     return pathname === href || (pathname && pathname.startsWith(href + '/'))
@@ -176,7 +175,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="border-b border-border p-4">
-            <Link href={`/${locale}`} className="flex items-center space-x-2">
+            <Link href={"/" + locale} className="flex items-center space-x-2">
               <div className="rounded-lg bg-primary p-2">
                 <FileText className="h-6 w-6 text-primary-foreground" />
               </div>
@@ -237,7 +236,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                       }
                     }}
                   >
-                    <IconComponent className={`h-4 w-4 ${isActive ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                    <IconComponent className={"h-4 w-4 " + (isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{item.title}</span>
@@ -250,11 +249,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           </Badge>
                         )}
                       </div>
-                      <div className={`text-xs ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                      <div className={"text-xs " + (isActive ? "text-primary-foreground/70" : "text-muted-foreground")}>
                         {item.description}
                       </div>
                     </div>
-                    <ChevronRight className={`h-3 w-3 transition-transform ${isActive ? "rotate-90" : ""}`} />
+                    <ChevronRight className={"h-3 w-3 transition-transform " + (isActive ? "rotate-90" : "")} />
                   </Link>
                 )
               })}
@@ -281,7 +280,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 className="w-full justify-start"
                 asChild
               >
-                <Link href={`/${locale}/logout`}>
+                <Link href={"/" + locale + "/logout"}>
                   <LogOut className="mr-2 h-3 w-3" />
                   Logout
                 </Link>

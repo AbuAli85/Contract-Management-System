@@ -131,7 +131,7 @@ export default function GenerateContractPage() {
               <Button onClick={() => window.location.reload()}>
                 Try Again
               </Button>
-              <Button variant="outline" onClick={() => window.location.href = `/${locale}/dashboard`}>
+              <Button variant="outline" onClick={() => window.location.href = "/" + locale + "/dashboard"}>
                 Go to Dashboard
               </Button>
             </div>
@@ -221,13 +221,13 @@ export default function GenerateContractPage() {
               onClick={() => {
                 toast({
                   title: "Form Selected",
-                  description: `${selectedForm === "unified" ? "Unified" : "Enhanced"} contract form is ready to use.`,
+                  description: (selectedForm === "unified" ? "Unified" : "Enhanced") + " contract form is ready to use.",
                 })
               }}
             >
               Continue with {selectedForm === "unified" ? "Unified" : "Enhanced"} Form
             </Button>
-            <Button variant="outline" onClick={() => window.location.href = `/${locale}/dashboard`}>
+            <Button variant="outline" onClick={() => window.location.href = "/" + locale + "/dashboard"}>
               Back to Dashboard
             </Button>
           </div>
