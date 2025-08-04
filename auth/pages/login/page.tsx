@@ -34,7 +34,7 @@ export default function LoginPage() {
               <OAuthButtons />
               <div className="text-center text-sm">
                 <span className="text-muted-foreground">Don't have an account? </span>
-                <Link href={`/${locale}/auth/signup`} className="text-primary hover:underline">
+                <Link href={"/" + locale + "/auth/signup"} className="text-primary hover:underline">
                   Sign up
                 </Link>
               </div>
