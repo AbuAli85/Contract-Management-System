@@ -129,6 +129,29 @@ function ProvidersContent({ children }: ProvidersContentProps) {
       }),
   )
 
+  // Ensure proper initialization order
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    // Small delay to ensure all providers are properly initialized
+    const timer = setTimeout(() => {
+      setIsReady(true)
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (!isReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Initializing application...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
