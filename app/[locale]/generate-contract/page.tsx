@@ -8,27 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertTriangle, FileText, Settings } from "lucide-react"
-import EnhancedContractForm from "@/components/enhanced-contract-form"
-import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
-import { useSessionTimeout } from "@/hooks/use-session-timeout"
-
-// Separate component for session timeout to avoid conditional hook calls
-function SessionTimeoutHandler({ user }: { user: any }) {
-  const { toast } = useToast()
-  
-  useSessionTimeout({
-    timeoutMinutes: 5,
-    onTimeout: () => {
-      toast({
-        title: "Session Expired",
-        description: "You have been automatically logged out due to inactivity.",
-        variant: "destructive",
-      })
-    }
-  })
-
-  return null
-}
 
 export default function GenerateContractPage() {
   const { user } = useAuth()
@@ -110,17 +89,14 @@ export default function GenerateContractPage() {
 
   return (
     <div className="container mx-auto p-6">
-      {/* Session timeout handler - only render on client side when user exists */}
-      {isClient && user && <SessionTimeoutHandler user={user} />}
-      
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Generate Contract
+            Generate Contract - UI Components Test
           </CardTitle>
           <CardDescription>
-            Choose your contract generation method
+            Testing UI components to isolate initialization errors
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -199,42 +175,16 @@ export default function GenerateContractPage() {
             </Button>
           </div>
 
-          {/* Form Display */}
-          {selectedForm === "unified" && (
-            <div className="mt-6">
-              <UnifiedContractGeneratorForm
-                mode="advanced"
-                showAdvanced={true}
-                autoRedirect={false}
-                onFormSubmit={() => {
-                  toast({
-                    title: "Contract Saved",
-                    description: "Your contract has been successfully saved.",
-                  })
-                }}
-              />
-            </div>
-          )}
-
-          {selectedForm === "enhanced" && (
-            <div className="mt-6">
-              <EnhancedContractForm
-                onSuccess={() => {
-                  toast({
-                    title: "Contract Generated",
-                    description: "Your contract has been successfully generated and saved.",
-                  })
-                }}
-                onError={(error) => {
-                  toast({
-                    title: "Generation Failed",
-                    description: error.message || "Failed to generate contract.",
-                    variant: "destructive",
-                  })
-                }}
-              />
-            </div>
-          )}
+          {/* Form Display - Temporarily disabled */}
+          <div className="mt-6">
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Form components are temporarily disabled to isolate the initialization error. 
+                If this page loads without errors, the issue is in the form components.
+              </AlertDescription>
+            </Alert>
+          </div>
         </CardContent>
       </Card>
     </div>

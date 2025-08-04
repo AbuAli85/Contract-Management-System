@@ -33,6 +33,53 @@ export async function GET(
       .eq('id', targetUserId)
       .single()
 
+    // If profile doesn't exist, try to create it
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log('Profile not found, attempting to create one...')
+      
+      // Get user from auth.users for additional data
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(targetUserId)
+
+      if (authError) {
+        console.error('Error fetching auth user:', authError)
+        return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      // Create a new profile
+      const newProfile = {
+        id: targetUserId,
+        email: authUser.user?.email || '',
+        full_name: authUser.user?.user_metadata?.full_name || null,
+        avatar_url: authUser.user?.user_metadata?.avatar_url || null,
+        role: authUser.user?.user_metadata?.role || 'user',
+        created_at: authUser.user?.created_at || new Date().toISOString(),
+        last_login: authUser.user?.last_sign_in_at || null
+      }
+
+      const { data: createdProfile, error: createError } = await supabase
+        .from('profiles')
+        .insert(newProfile)
+        .select()
+        .single()
+
+      if (createError) {
+        console.error('Error creating profile:', createError)
+        // Return fallback profile from auth data
+        const fallbackProfile: UserProfile = {
+          id: targetUserId,
+          email: authUser.user?.email || '',
+          full_name: authUser.user?.user_metadata?.full_name || null,
+          avatar_url: authUser.user?.user_metadata?.avatar_url || null,
+          role: authUser.user?.user_metadata?.role || 'user',
+          created_at: authUser.user?.created_at || null,
+          last_login: authUser.user?.last_sign_in_at || null
+        }
+        return NextResponse.json(fallbackProfile)
+      }
+
+      return NextResponse.json(createdProfile)
+    }
+
     if (profileError) {
       console.error('Error fetching profile:', profileError)
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
