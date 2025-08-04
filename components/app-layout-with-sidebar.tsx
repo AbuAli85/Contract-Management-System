@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
-import { useSessionTimeout } from "@/hooks/use-session-timeout"
+// import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useRolePermissions } from "@/components/user-role-display"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
@@ -38,12 +38,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
 
-  // Silent session timeout - automatically logs out after 5 minutes of inactivity
-  useSessionTimeout({
-    timeoutMinutes: 5,
-    enableLogging: false, // Set to true for debugging
-    silent: true // Silent mode - no warnings, just automatic logout
-  })
+  // Temporarily disable session timeout to isolate the issue
+  // useSessionTimeout({
+  //   timeoutMinutes: 5,
+  //   enableLogging: false, // Set to true for debugging
+  //   silent: true // Silent mode - no warnings, just automatic logout
+  // })
 
   // Check if we're on the landing page (root route)
   const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/")
@@ -98,81 +98,46 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                     <div className="flex items-center gap-3">
                       {/* Welcome message with user name */}
                       {user && (
-                        <div className="flex items-center gap-2">
-                          <h1 className="text-lg font-semibold text-card-foreground">
-                            Welcome back, {userProfile?.full_name || userProfile?.display_name || user.email?.split('@')[0] || 'User'}!
-                          </h1>
+                        <div className="hidden sm:block">
+                          <p className="text-sm text-muted-foreground">
+                            Welcome back, <span className="font-medium text-foreground">{user.email}</span>
+                          </p>
                         </div>
                       )}
-                      {!user && (
-                        <h1 className="text-lg font-semibold text-card-foreground">
-                          {getPageTitle()}
-                        </h1>
-                      )}
-                      {/* Single Role Display */}
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-xs">
-                          {roleInfo?.displayText || userProfile?.role_display || 'User'}
-                        </Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={handleRefreshRole}
-                          className="text-xs px-2 py-1 h-6"
-                          title="Refresh role data"
-                        >
-                          ↻
-                        </Button>
-                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    {/* Search */}
-                    <div className="relative hidden md:block">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        className="w-64 rounded-md border border-border bg-background px-3 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                      />
-                    </div>
+
+                  <div className="flex items-center gap-2">
+                    {/* Debug role info - only show in development */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <DebugRoleInfo roleInfo={roleInfo} />
+                    )}
+
+                    {/* Admin role fixer - only show for admins in development */}
+                    {process.env.NODE_ENV === 'development' && isAdmin && (
+                      <AdminRoleFixer onRefresh={handleRefreshRole} />
+                    )}
 
                     {/* Notifications */}
-                    <Button variant="outline" size="sm" className="relative">
+                    <Button variant="ghost" size="icon" className="relative">
                       <Bell className="h-4 w-4" />
                       {notificationCount > 0 && (
-                        <Badge className={`absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs ${
-                          highPriorityCount > 0 ? 'bg-red-500' : 'bg-orange-500'
-                        }`}>
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs"
+                        >
                           {notificationCount}
                         </Badge>
                       )}
                     </Button>
 
-                    {/* User Menu */}
+                    {/* User menu */}
                     <div className="flex items-center gap-2">
-                      {user && (
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            {isAdmin ? <Crown className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                          </div>
-                          <div className="hidden md:block">
-                            <p className="text-sm font-medium text-card-foreground">
-                              {userProfile?.display_name || user.email?.split('@')[0] || 'User'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {roleInfo?.displayText || userProfile?.role_display || 'User'}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={`/${locale}/logout`}>
-                          <LogOut className="h-4 w-4" />
-                          <span className="hidden md:inline ml-2">Logout</span>
-                        </a>
+                      <Button variant="ghost" size="icon">
+                        <User className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <Settings className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -181,18 +146,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
             </header>
           )}
 
-          {/* Page content */}
-          <main className={"flex-1 " + (!isLandingPage ? "p-6" : "")}>
-            <div className="children-container">
-              {/* Debug component - remove in production */}
-              {process.env.NODE_ENV === 'development' && (
-                <div className="mb-4 flex gap-4">
-                  <DebugRoleInfo />
-                  <AdminRoleFixer />
-                </div>
-              )}
-              {children}
-            </div>
+          {/* Main content */}
+          <main className="flex-1">
+            {children}
           </main>
         </div>
       </div>
