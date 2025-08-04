@@ -2,12 +2,11 @@
 
 import React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "@/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetClose } from "@/components/ui/sheet"
 import { Menu, X } from "lucide-react"
 import { useAuth } from "@/lib/auth-service"
-import { useRouter } from "next/navigation"
 
 interface NavItem {
   title: string
