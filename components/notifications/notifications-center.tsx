@@ -77,7 +77,9 @@ export function NotificationsCenter({
   const [showBulkActions, setShowBulkActions] = useState(false)
 
   const filteredNotifications = useMemo(() => {
-    let filtered = notifications
+    // Ensure notifications is always an array
+    const safeNotifications = Array.isArray(notifications) ? notifications : []
+    let filtered = safeNotifications
 
     if (filters.category) {
       filtered = filtered.filter(n => n.category === filters.category)

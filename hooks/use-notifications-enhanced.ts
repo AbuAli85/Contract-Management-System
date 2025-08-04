@@ -107,11 +107,11 @@ export function useNotifications() {
       if (response.ok) {
         // Update local state
         setNotifications(prev => 
-          prev.map(notification => 
+          Array.isArray(prev) ? prev.map(notification => 
             notificationIds.includes(notification.id) 
               ? { ...notification, read: true }
               : notification
-          )
+          ) : []
         )
         
         // Update summary
@@ -141,11 +141,11 @@ export function useNotifications() {
       if (response.ok) {
         // Update local state
         setNotifications(prev => 
-          prev.map(notification => 
+          Array.isArray(prev) ? prev.map(notification => 
             notificationIds.includes(notification.id) 
               ? { ...notification, read: false }
               : notification
-          )
+          ) : []
         )
         
         // Update summary
@@ -161,7 +161,9 @@ export function useNotifications() {
 
   const markAllAsRead = useCallback(async () => {
     try {
-      const unreadIds = notifications.filter(n => !n.read).map(n => n.id)
+      // Ensure notifications is an array before filtering
+      const safeNotifications = Array.isArray(notifications) ? notifications : []
+      const unreadIds = safeNotifications.filter(n => !n.read).map(n => n.id)
       if (unreadIds.length === 0) return
 
       const response = await fetch('/api/dashboard/notifications', {
@@ -178,7 +180,7 @@ export function useNotifications() {
       if (response.ok) {
         // Mark all as read
         setNotifications(prev => 
-          prev.map(notification => ({ ...notification, read: true }))
+          Array.isArray(prev) ? prev.map(notification => ({ ...notification, read: true })) : []
         )
         
         // Update summary
@@ -205,11 +207,12 @@ export function useNotifications() {
       if (response.ok) {
         // Remove from local state
         setNotifications(prev => 
-          prev.filter(notification => !notificationIds.includes(notification.id))
+          Array.isArray(prev) ? prev.filter(notification => !notificationIds.includes(notification.id)) : []
         )
         
         // Update summary
-        const deletedUnread = notifications.filter(n => 
+        const safeNotifications = Array.isArray(notifications) ? notifications : []
+        const deletedUnread = safeNotifications.filter(n => 
           notificationIds.includes(n.id) && !n.read
         ).length
         
