@@ -10,7 +10,14 @@ interface FormContextType {
   formCount: number
 }
 
-const FormContext = createContext<FormContextType | undefined>(undefined)
+// Create context with a default value to prevent initialization errors
+const FormContext = createContext<FormContextType>({
+  isFormActive: false,
+  setFormActive: () => {},
+  registerForm: () => {},
+  unregisterForm: () => {},
+  formCount: 0,
+})
 
 export function FormContextProvider({ children }: { children: React.ReactNode }) {
   const [formCount, setFormCount] = useState(0)
@@ -36,16 +43,16 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
     setIsFormActive(active)
   }, [])
 
+  const contextValue: FormContextType = {
+    isFormActive,
+    setFormActive,
+    registerForm,
+    unregisterForm,
+    formCount,
+  }
+
   return (
-    <FormContext.Provider
-      value={{
-        isFormActive,
-        setFormActive,
-        registerForm,
-        unregisterForm,
-        formCount,
-      }}
-    >
+    <FormContext.Provider value={contextValue}>
       {children}
     </FormContext.Provider>
   )
@@ -53,8 +60,9 @@ export function FormContextProvider({ children }: { children: React.ReactNode })
 
 export function useFormContext() {
   const context = useContext(FormContext)
-  if (context === undefined) {
-    // Return a safe default for SSR instead of throwing an error
+  
+  // Additional safety check for SSR
+  if (typeof window === "undefined") {
     return {
       isFormActive: false,
       setFormActive: () => {},
@@ -63,6 +71,7 @@ export function useFormContext() {
       formCount: 0,
     }
   }
+  
   return context
 }
 
@@ -71,8 +80,8 @@ export function useFormRegistration() {
   const { registerForm, unregisterForm } = useFormContext()
 
   React.useEffect(() => {
-    // Only register on the client side
-    if (typeof window !== "undefined") {
+    // Only register on the client side and ensure context is available
+    if (typeof window !== "undefined" && registerForm && unregisterForm) {
       registerForm()
       return () => {
         unregisterForm()

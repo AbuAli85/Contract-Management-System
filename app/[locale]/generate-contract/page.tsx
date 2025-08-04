@@ -41,18 +41,51 @@ export default function GenerateContractPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedForm, setSelectedForm] = useState<string>("unified")
   const [isClient, setIsClient] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
     // Set client flag
     setIsClient(true)
+    
+    // Ensure all hooks and contexts are properly initialized
+    const initTimer = setTimeout(() => {
+      setIsInitialized(true)
+    }, 100)
     
     // Simulate loading
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 1000)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      clearTimeout(initTimer)
+    }
   }, [])
+
+  // Don't render anything until properly initialized
+  if (!isInitialized) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Generate Contract
+            </CardTitle>
+            <CardDescription>
+              Initializing contract generation tools...
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
