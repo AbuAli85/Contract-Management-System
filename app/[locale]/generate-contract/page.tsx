@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { useToast } from "@/hooks/use-toast"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
@@ -33,8 +33,8 @@ function SessionTimeoutHandler({ user }: { user: any }) {
 export default function GenerateContractPage() {
   const { user } = useAuth()
   const { toast } = useToast()
-  const pathname = usePathname()
-  const locale = pathname?.split("/")[1] || "en"
+  const params = useParams()
+  const locale = (params?.locale as string) || "en"
 
   // State management
   const [isLoading, setIsLoading] = useState(true)
