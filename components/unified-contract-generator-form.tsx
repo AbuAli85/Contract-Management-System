@@ -175,6 +175,15 @@ export default function UnifiedContractGeneratorForm({
     },
   })
 
+  // Watch form values for calculations and validation (MUST BE DECLARED BEFORE USAGE)
+  const watchedValues = useWatch({ control: form.control })
+  const watchedPromoterId = useWatch({ control: form.control, name: "promoter_id" })
+  const watchedSecondPartyId = useWatch({ control: form.control, name: "second_party_id" })
+  const watchedStartDate = useWatch({ control: form.control, name: "contract_start_date" })
+  const watchedEndDate = useWatch({ control: form.control, name: "contract_end_date" })
+  const watchedSalary = useWatch({ control: form.control, name: "basic_salary" })
+  const watchedAllowances = useWatch({ control: form.control, name: "allowances" })
+
   // Build combobox options
   const partyOptions = useMemo(() => {
     const allParties = [...(clientParties || []), ...(employerParties || [])]
@@ -185,33 +194,24 @@ export default function UnifiedContractGeneratorForm({
   }, [clientParties, employerParties])
 
   const promoterOptions = useMemo(() => {
-    if (!promoters) return []
+    if (!promoters || !Array.isArray(promoters)) return []
     
     // Filter promoters based on selected employer
-    let filteredPromoters = promoters
+    let filteredPromoters = promoters as Promoter[]
     
     if (watchedSecondPartyId) {
-      filteredPromoters = promoters.filter((p) => {
+      filteredPromoters = (promoters as Promoter[]).filter((p: Promoter) => {
         // Check if promoter is associated with the selected employer
         return p.employer_id?.toString() === watchedSecondPartyId || 
                p.outsourced_to_id?.toString() === watchedSecondPartyId
       })
     }
     
-    return filteredPromoters.map((p) => ({
+    return filteredPromoters.map((p: Promoter) => ({
       value: p.id.toString(),
       label: `${p.name_en} / ${p.name_ar} (ID: ${p.id_card_number ?? "N/A"})`,
     }))
   }, [promoters, watchedSecondPartyId])
-
-  // Watch form values for calculations and validation
-  const watchedValues = useWatch({ control: form.control })
-  const watchedPromoterId = useWatch({ control: form.control, name: "promoter_id" })
-  const watchedSecondPartyId = useWatch({ control: form.control, name: "second_party_id" })
-  const watchedStartDate = useWatch({ control: form.control, name: "contract_start_date" })
-  const watchedEndDate = useWatch({ control: form.control, name: "contract_end_date" })
-  const watchedSalary = useWatch({ control: form.control, name: "basic_salary" })
-  const watchedAllowances = useWatch({ control: form.control, name: "allowances" })
 
   // Calculate form completion progress
   const formProgress = useMemo(() => {
@@ -242,8 +242,8 @@ export default function UnifiedContractGeneratorForm({
 
   // Auto-fill promoter data when selected
   useEffect(() => {
-    if (watchedPromoterId && promoters) {
-      const selectedPromoter = promoters.find((p) => p.id.toString() === watchedPromoterId)
+    if (watchedPromoterId && promoters && Array.isArray(promoters)) {
+      const selectedPromoter = (promoters as Promoter[]).find((p: Promoter) => p.id.toString() === watchedPromoterId)
       if (selectedPromoter) {
         setSelectedPromoter(selectedPromoter)
         // Auto-fill email if not already set
