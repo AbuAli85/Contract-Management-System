@@ -326,6 +326,102 @@ export default function GenerateContractPage() {
     },
   ])
 
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
+  const handleContractTypeSelect = useCallback((type: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      setSelectedContractType(type)
+      // Update insights based on contract type
+      updateInsightsForContractType(type)
+      
+      toast({
+        title: "Contract Type Selected",
+        description: "Selected " + (getEnhancedContractTypeConfig(type)?.name || type) + " contract template.",
+      })
+    } catch (error) {
+      console.error("Error selecting contract type:", error)
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError("Failed to select contract type: " + errorMessage)
+      toast({
+        title: "Selection Failed",
+        description: "Failed to select contract type. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [toast, getEnhancedContractTypeConfig])
+
+  const updateInsightsForContractType = useCallback((type: string) => {
+    try {
+      const typeConfig = getEnhancedContractTypeConfig(type)
+      if (typeConfig) {
+        // Create the new insights specific to the selected contract
+        const contractSpecificInsights: ContractInsight[] = [
+          {
+            type: "info",
+            title: (typeConfig.name || "Contract") + " Contract Selected",
+            description: typeConfig.description || "Contract template selected",
+            priority: "medium" as const,
+          },
+          {
+            type: "success",
+            title: "Template Ready",
+            description: "This template includes " + (typeConfig.fields?.length || 0) + " configured fields.",
+            priority: "high" as const,
+          },
+        ]
+        // Set the insights state to be the initial general insights plus the new specific ones
+        setInsights([...initialInsights, ...contractSpecificInsights])
+      } else {
+        // If no specific type is selected, revert to only the initial insights
+        setInsights(initialInsights)
+      }
+    } catch (error) {
+      console.error("Error updating insights:", error)
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError("Failed to update contract insights: " + errorMessage)
+    }
+  }, [initialInsights, getEnhancedContractTypeConfig])
+
+  const updateFormProgress = useCallback((sectionName: string, isCompleted: boolean) => {
+    try {
+      setFormProgress(prevProgress => {
+        // Find the section and update its 'completed' status
+        const updatedSections = prevProgress.sections.map(section =>
+          section.name === sectionName ? { ...section, completed: isCompleted } : section
+        )
+
+        // Count the number of newly completed sections
+        const completedCount = updatedSections.filter(section => section.completed).length
+
+        // Calculate the new percentage
+        const percentage = Math.round((completedCount / prevProgress.total) * 100)
+
+        // Return the new state object
+        return {
+          ...prevProgress,
+          completed: completedCount,
+          percentage: percentage,
+          sections: updatedSections,
+        }
+      })
+
+      // Provide feedback for progress updates
+      if (isCompleted) {
+        toast({
+          title: "Section Completed",
+          description: `${sectionName} section has been completed.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error updating form progress:", error)
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError("Failed to update form progress: " + errorMessage)
+    }
+  }, [toast])
+
   // Contract type categories
   const contractCategories = [
     { id: "employment", label: "Employment", icon: Users, count: 4 },
@@ -347,6 +443,31 @@ export default function GenerateContractPage() {
     }
   })()
 
+  // Filter the contract types based on the active category
+  const filteredContractTypes = allContractTypes.filter(
+    (type) => activeCategory === "all" || type.category === activeCategory
+  )
+  
+  // Group the filtered types by category for rendering
+  const contractTypesConfig = filteredContractTypes.reduce((acc, type) => {
+    if (!acc[type.category]) {
+      acc[type.category] = []
+    }
+    acc[type.category].push(type)
+    return acc
+  }, {} as Record<string, any[]>)
+
+  // Best practices
+  const bestPractices = [
+    "Ensure all party information is accurate and up-to-date",
+    "Verify contract dates align with business requirements",
+    "Review job title and department classifications",
+    "Confirm work location and arrangement details",
+    "Validate compensation structure and benefits",
+    "Include all required legal clauses and terms",
+  ]
+
+  // EARLY RETURNS MOVED AFTER ALL HOOKS
   // Early return for loading states
   if (configLoading) {
     return (
@@ -399,125 +520,6 @@ export default function GenerateContractPage() {
       </AuthenticatedLayout>
     )
   }
-  
-  // Filter the contract types based on the active category
-  const filteredContractTypes = allContractTypes.filter(
-    (type) => activeCategory === "all" || type.category === activeCategory
-  )
-  
-  // Group the filtered types by category for rendering
-  const contractTypesConfig = filteredContractTypes.reduce((acc, type) => {
-    if (!acc[type.category]) {
-      acc[type.category] = []
-    }
-    acc[type.category].push(type)
-    return acc
-  }, {} as Record<string, any[]>)
-
-  // Best practices
-  const bestPractices = [
-    "Ensure all party information is accurate and up-to-date",
-    "Verify contract dates align with business requirements",
-    "Review job title and department classifications",
-    "Confirm work location and arrangement details",
-    "Validate compensation structure and benefits",
-    "Include all required legal clauses and terms",
-  ]
-
-  const handleContractTypeSelect = useCallback((type: string) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      setSelectedContractType(type)
-      // Update insights based on contract type
-      updateInsightsForContractType(type)
-      
-      toast({
-        title: "Contract Type Selected",
-        description: "Selected " + (getEnhancedContractTypeConfig(type)?.name || type) + " contract template.",
-      })
-    } catch (error) {
-      console.error("Error selecting contract type:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError("Failed to select contract type: " + errorMessage)
-      toast({
-        title: "Selection Failed",
-        description: "Failed to select contract type. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
-
-  const updateInsightsForContractType = useCallback((type: string) => {
-    try {
-      const typeConfig = getEnhancedContractTypeConfig(type)
-      if (typeConfig) {
-        // Create the new insights specific to the selected contract
-        const contractSpecificInsights: ContractInsight[] = [
-          {
-            type: "info",
-            title: (typeConfig.name || "Contract") + " Contract Selected",
-            description: typeConfig.description || "Contract template selected",
-            priority: "medium" as const,
-          },
-          {
-            type: "success",
-            title: "Template Ready",
-            description: "This template includes " + (typeConfig.fields?.length || 0) + " configured fields.",
-            priority: "high" as const,
-          },
-        ]
-        // Set the insights state to be the initial general insights plus the new specific ones
-        setInsights([...initialInsights, ...contractSpecificInsights])
-      } else {
-        // If no specific type is selected, revert to only the initial insights
-        setInsights(initialInsights)
-      }
-    } catch (error) {
-      console.error("Error updating insights:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError("Failed to update contract insights: " + errorMessage)
-    }
-  }, [initialInsights])
-
-  const updateFormProgress = useCallback((sectionName: string, isCompleted: boolean) => {
-    try {
-      setFormProgress(prevProgress => {
-        // Find the section and update its 'completed' status
-        const updatedSections = prevProgress.sections.map(section =>
-          section.name === sectionName ? { ...section, completed: isCompleted } : section
-        )
-
-        // Count the number of newly completed sections
-        const completedCount = updatedSections.filter(section => section.completed).length
-
-        // Calculate the new percentage
-        const percentage = Math.round((completedCount / prevProgress.total) * 100)
-
-        // Return the new state object
-        return {
-          ...prevProgress,
-          completed: completedCount,
-          percentage: percentage,
-          sections: updatedSections,
-        }
-      })
-
-      // Provide feedback for progress updates
-      if (isCompleted) {
-        toast({
-          title: "Section Completed",
-          description: `${sectionName} section has been completed.`,
-        })
-      }
-    } catch (error) {
-      console.error("Error updating form progress:", error)
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError("Failed to update form progress: " + errorMessage)
-    }
-  }, [toast])
 
   return (
     <AuthenticatedLayout locale={locale}>
