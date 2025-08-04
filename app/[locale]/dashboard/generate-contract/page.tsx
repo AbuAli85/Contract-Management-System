@@ -25,6 +25,12 @@ import {
   AlertTriangle,
   Settings,
   UserPlus,
+  Brain,
+  Lock,
+  Plus,
+  Search,
+  Briefcase,
+  Workflow,
 } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
