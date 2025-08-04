@@ -274,7 +274,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
   // Calculate summary metrics for display
   const summaryMetrics = {
     totalEntities: (stats?.totalContracts || 0) + (stats?.totalPromoters || 0) + (stats?.totalParties || 0),
-    pendingActions: (stats?.pendingApprovals || 0) + (notifications.filter(n => n.priority === 'high').length || 0),
+    pendingActions: (stats?.pendingApprovals || 0) + (Array.isArray(notifications) ? notifications.filter(n => n.priority === 'high').length : 0),
     recentActivities: activities.length || 0,
     systemHealth: stats?.systemHealth || 98
   }
@@ -518,11 +518,11 @@ export default function DashboardPage({ params }: DashboardPageProps) {
             <CardContent className="pt-0">
               <div className="space-y-3">
                 <div>
-                  <div className="text-3xl font-bold text-slate-900 mb-1">{notifications.length || 0}</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-1">{Array.isArray(notifications) ? notifications.length : 0}</div>
                   <div className="text-sm font-semibold text-orange-700">Notifications</div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {notifications.filter(n => n.priority === 'high').length > 0 ? (
+                  {Array.isArray(notifications) && notifications.filter(n => n.priority === 'high').length > 0 ? (
                     <Badge variant="secondary" className="bg-red-100 text-red-700 border-red-200">
                       {notifications.filter(n => n.priority === 'high').length} High Priority
                     </Badge>
@@ -531,7 +531,7 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                       All Clear
                     </Badge>
                   )}
-                  {notifications.filter(n => n.priority === 'medium').length > 0 && (
+                  {Array.isArray(notifications) && notifications.filter(n => n.priority === 'medium').length > 0 && (
                     <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200">
                       {notifications.filter(n => n.priority === 'medium').length} Medium
                     </Badge>
@@ -680,10 +680,10 @@ export default function DashboardPage({ params }: DashboardPageProps) {
                 <div className="flex items-center gap-3 mb-2">
                   <AlertTriangle className="h-6 w-6 text-green-600 group-hover/stat:text-green-700 transition-colors duration-200" />
                   <span className="text-3xl font-bold text-green-900 group-hover/stat:text-green-800 transition-colors duration-200">
-                    {notifications.filter(n => n.priority === 'high').length || 0}
+                    {Array.isArray(notifications) ? notifications.filter(n => n.priority === 'high').length : 0}
                   </span>
                   <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                    /{notifications.length || 0}
+                    /{Array.isArray(notifications) ? notifications.length : 0}
                   </div>
                 </div>
                 <p className="text-sm text-green-700 font-semibold">Alerts</p>
