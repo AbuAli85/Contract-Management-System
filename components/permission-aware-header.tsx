@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-
+import { usePathname, useRouter } from "@/navigation"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { useAuth } from "@/lib/auth-service"

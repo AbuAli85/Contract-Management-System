@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { PermissionAwareSidebar } from "@/components/permission-aware-sidebar"
 import { PermissionAwareHeader } from "@/components/permission-aware-header"
 import { useState, useEffect } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname } from "@/navigation"
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [

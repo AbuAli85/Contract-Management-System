@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname } from "@/navigation"
 import { useMemo } from "react"
 import { AppLayoutWithSidebar } from "@/components/app-layout-with-sidebar"
 import { SimpleLayout } from "@/components/simple-layout"
