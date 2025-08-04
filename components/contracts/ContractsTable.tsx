@@ -40,10 +40,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { format, parseISO, differenceInDays } from "date-fns"
-import { Loader2, MoreHorizontal, Grid, List, Building2, User, Copy, Archive,  } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
+type Contract = {
   id: string
   contract_number: string
   employer_id: string
@@ -142,8 +142,8 @@ const ContractRow = React.memo(
         </TableCell>
         <TableCell>
           <div className="flex flex-col">
-            <span className="font-medium">{contract.first_party_name_en}</span>
-            <span className="text-sm text-muted-foreground">{contract.second_party_name_en}</span>
+            <span className="font-medium">{contract.client_name_en}</span>
+            <span className="text-sm text-muted-foreground">{contract.employer_name_en}</span>
           </div>
         </TableCell>
         <TableCell>
@@ -253,11 +253,11 @@ const TableHeaderComponent = React.memo(
           </TableHead>
           <TableHead
             className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort("first_party_name_en")}
+            onClick={() => handleSort("client_name_en")}
           >
             <div className="flex items-center">
               Parties
-              {sortField === "first_party_name_en" &&
+              {sortField === "client_name_en" &&
                 (sortDirection === "asc" ? (
                   <ChevronUp className="ml-1 h-4 w-4" />
                 ) : (
@@ -336,8 +336,8 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     const filtered = contracts.filter((contract) => {
       const matchesSearch =
         contract.contract_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.first_party_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.second_party_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.client_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.employer_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contract.promoter_name_en.toLowerCase().includes(searchTerm.toLowerCase()) ||
         contract.job_title.toLowerCase().includes(searchTerm.toLowerCase())
 
