@@ -3,11 +3,13 @@
 import { useState, useEffect, Suspense, lazy, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
+import React from "react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Sparkles,
   FileText,
@@ -25,24 +27,135 @@ import {
 } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
-// Lazy load the heavy form component with a more aggressive loading strategy
-const GenerateContractForm = lazy(() =>
-  import("@/components/enhanced-contract-form").then((module) => ({
-    default: module.default,
-  })),
-)
+// Error Boundary Component
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
 
-// Lazy load CSS to reduce initial bundle
-const loadContractEnhancementsCSS = () => {
-  if (typeof window !== "undefined") {
-    import("../../../../styles/contract-enhancements.css")
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: any): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.error("Enhanced Contract Form Error:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-2">
+              <p>Failed to load the contract form. This might be due to:</p>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                <li>A JavaScript initialization error</li>
+                <li>Missing dependencies</li>
+                <li>Build configuration issues</li>
+              </ul>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline" 
+                size="sm"
+                className="mt-2"
+              >
+                Reload Page
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )
+    }
+
+    return this.props.children
   }
 }
 
-// Preload the form component when user hovers over the button
-const preloadForm = () => {
-  import("@/components/enhanced-contract-form")
-}
+// More robust lazy loading with retry mechanism
+const GenerateContractForm = lazy((): Promise<{ default: React.ComponentType<any> }> => {
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  const loadWithRetry = (): Promise<{ default: React.ComponentType<any> }> => {
+    return import("@/components/enhanced-contract-form")
+      .then((module) => ({
+        default: module.default,
+      }))
+      .catch((error) => {
+        console.error("Failed to load enhanced-contract-form (attempt " + (retryCount + 1) + "):", error);
+        
+        if (retryCount < maxRetries) {
+          retryCount++;
+          // Wait a bit before retrying
+          return new Promise((resolve, reject) => {
+            setTimeout(() => {
+              loadWithRetry().then(resolve).catch(reject);
+            }, 1000 * retryCount);
+          });
+        }
+        
+        // If all retries failed, return a fallback component
+        return {
+          default: () => (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <p><strong>Contract Form Load Error</strong></p>
+                  <p>The contract form failed to load after multiple attempts.</p>
+                  <p className="text-sm text-gray-600">
+                    Error: {error.message || "Unknown error"}
+                  </p>
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      size="sm"
+                    >
+                      Reload Page
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        // Clear module cache and try again
+                        window.location.reload();
+                      }}
+                      variant="outline" 
+                      size="sm"
+                    >
+                      Clear Cache & Reload
+                    </Button>
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )
+        };
+      });
+  };
+  
+  return loadWithRetry();
+});
+
+// Fallback component for loading states
+const FormLoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center p-12 space-y-4">
+    <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+    <div className="text-center">
+      <p className="text-lg font-medium text-gray-700">Loading Contract Form...</p>
+      <p className="text-sm text-gray-500 mt-1">This may take a moment</p>
+    </div>
+  </div>
+);
 
 export default function DashboardGenerateContractPage() {
   const pathname = usePathname()
@@ -50,6 +163,7 @@ export default function DashboardGenerateContractPage() {
   const [progress, setProgress] = useState(65)
   const [activeFeature, setActiveFeature] = useState(0)
   const [showForm, setShowForm] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [insights, setInsights] = useState({
     totalRequiredFields: 25,
     completedFields: 16,
@@ -122,10 +236,19 @@ export default function DashboardGenerateContractPage() {
     return () => clearInterval(featureTimer)
   }, [])
 
-  // Load CSS when form is shown
+  // Preload with error handling
+  const preloadForm = () => {
+    import("@/components/enhanced-contract-form")
+      .catch((error) => {
+        console.warn("Failed to preload form:", error)
+        setFormError("Form preload failed - it may not load properly")
+      })
+  }
+
+  // Load CSS when form is shown (removed since not needed)
   useEffect(() => {
     if (showForm) {
-      loadContractEnhancementsCSS()
+      // CSS loading removed to simplify
     }
   }, [showForm])
 
@@ -140,12 +263,23 @@ export default function DashboardGenerateContractPage() {
           >
             {/* Back Button */}
             <Button
-              onClick={() => setShowForm(false)}
+              onClick={() => {
+                setShowForm(false)
+                setFormError(null)
+              }}
               variant="outline"
               className="mb-6 border-white/30 bg-white/80 shadow-lg backdrop-blur-sm hover:bg-white/90"
             >
               ← Back to Overview
             </Button>
+
+            {/* Error Display */}
+            {formError && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
 
             {/* Form Section */}
             <Card className="overflow-hidden border-white/30 bg-white/80 shadow-2xl backdrop-blur-xl">
@@ -179,16 +313,11 @@ export default function DashboardGenerateContractPage() {
                 </div>
               </CardHeader>
               <CardContent className="bg-gradient-to-br from-white via-blue-50/20 to-purple-50/20 p-8">
-                <Suspense
-                  fallback={
-                    <div className="flex items-center justify-center p-8">
-                      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600">Loading contract form...</span>
-                    </div>
-                  }
-                >
-                  <GenerateContractForm />
-                </Suspense>
+                <ErrorBoundary>
+                  <Suspense fallback={<FormLoadingFallback />}>
+                    <GenerateContractForm />
+                  </Suspense>
+                </ErrorBoundary>
               </CardContent>
             </Card>
           </motion.div>
@@ -347,12 +476,7 @@ export default function DashboardGenerateContractPage() {
                   <Progress
                     value={insights.completionPercentage}
                     className="h-4 overflow-hidden rounded-full bg-gray-200"
-                  >
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: insights.completionPercentage + "%" }}
-                    />
-                  </Progress>
+                  />
                 </div>
 
                 <div className="mt-4 flex items-center justify-between text-sm">
@@ -383,7 +507,7 @@ export default function DashboardGenerateContractPage() {
                 <Card className="overflow-hidden border-white/30 bg-white/80 shadow-xl backdrop-blur-xl transition-all duration-300 group-hover:shadow-2xl">
                   <CardContent className="p-6 text-center">
                     <div
-                      className={"mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-r " + stat.color + " flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110"}
+                      className="mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-r flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110"
                     >
                       <stat.icon className="h-8 w-8 text-white" />
                     </div>
