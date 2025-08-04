@@ -42,14 +42,20 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { profile: userProfile } = useUserProfile()
   const { roleInfo } = useRolePermissions()
 
-  // Debug logging - only log when there are issues
+  // Show a user-friendly message if no user is available after auth completes
   if (!user && mounted && !loading) {
-    console.log("🧭 Sidebar: No user available after auth complete", {
-      isOpen,
-      locale,
-      loading,
-      mounted,
-    })
+    return (
+      <div className="fixed left-0 top-0 z-50 h-full w-64 bg-card shadow-lg flex flex-col items-center justify-center">
+        <div className="text-center">
+          <User className="mx-auto mb-4 h-10 w-10 text-muted-foreground" />
+          <p className="mb-2 text-lg font-semibold text-card-foreground">Not signed in</p>
+          <p className="mb-4 text-sm text-muted-foreground">Please log in to access the sidebar features.</p>
+          <Button asChild variant="default" className="w-full">
+            <Link href={`/${locale}/login`}>Login</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const navigationItems = [
