@@ -60,9 +60,9 @@ type Contract = {
   email: string
   job_title: string
   work_location: string
-  contract_start_date: string
-  contract_end_date: string
-  contract_value: number
+  start_date: string
+  end_date: string
+  value: number
   status: string
   is_current: boolean
   created_at: string
@@ -96,7 +96,7 @@ const ContractRow = React.memo(
     // Memoize expensive calculations
     const contractStatus = useMemo(() => {
       const today = new Date()
-      const endDate = parseISO(contract.contract_end_date)
+      const endDate = parseISO(contract.end_date)
       const daysUntilExpiry = differenceInDays(endDate, today)
 
       if (daysUntilExpiry < 0)
@@ -104,7 +104,7 @@ const ContractRow = React.memo(
       if (daysUntilExpiry <= 30)
         return { status: "expiring", color: "bg-yellow-100 text-yellow-800", icon: AlertTriangle }
       return { status: "active", color: "bg-green-100 text-green-800", icon: CheckCircle }
-    }, [contract.contract_end_date])
+    }, [contract.end_date])
 
     const handleViewDetails = useCallback(() => {
       router.push(`/contracts/${contract.id}`)
@@ -155,10 +155,10 @@ const ContractRow = React.memo(
         <TableCell>
           <div className="flex flex-col">
             <span className="font-medium">
-              {format(parseISO(contract.contract_start_date), "MMM dd, yyyy")}
+              {format(parseISO(contract.start_date), "dd/MM/yyyy")}
             </span>
             <span className="text-sm text-muted-foreground">
-              to {format(parseISO(contract.contract_end_date), "MMM dd, yyyy")}
+              to {format(parseISO(contract.end_date), "dd/MM/yyyy")}
             </span>
           </div>
         </TableCell>
@@ -169,7 +169,7 @@ const ContractRow = React.memo(
           </Badge>
         </TableCell>
         <TableCell className="text-right font-medium">
-          {contract.contract_value?.toLocaleString("en-US", { style: "currency", currency: "OMR" })}
+          {contract.value?.toLocaleString("en-US", { style: "currency", currency: "OMR" })}
         </TableCell>
         <TableCell className="w-12">
           <DropdownMenu>
@@ -281,11 +281,11 @@ const TableHeaderComponent = React.memo(
           </TableHead>
           <TableHead
             className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort("contract_start_date")}
+            onClick={() => handleSort("start_date")}
           >
             <div className="flex items-center">
               Duration
-              {sortField === "contract_start_date" &&
+              {sortField === "start_date" &&
                 (sortDirection === "asc" ? (
                   <ChevronUp className="ml-1 h-4 w-4" />
                 ) : (
@@ -296,11 +296,11 @@ const TableHeaderComponent = React.memo(
           <TableHead>Status</TableHead>
           <TableHead
             className="cursor-pointer hover:bg-muted/50"
-            onClick={() => handleSort("contract_value")}
+            onClick={() => handleSort("value")}
           >
             <div className="flex items-center">
               Value
-              {sortField === "contract_value" &&
+              {sortField === "value" &&
                 (sortDirection === "asc" ? (
                   <ChevronUp className="ml-1 h-4 w-4" />
                 ) : (
@@ -351,7 +351,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
       let aValue: string | number = a[sortField as keyof Contract] as string | number
       let bValue: string | number = b[sortField as keyof Contract] as string | number
 
-      if (sortField === "contract_start_date" || sortField === "contract_end_date") {
+      if (sortField === "start_date" || sortField === "end_date") {
         aValue = new Date(aValue as string).getTime()
         bValue = new Date(bValue as string).getTime()
       }
@@ -403,9 +403,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           email: contract.email || "",
           job_title: contract.job_title || "",
           work_location: contract.work_location || "",
-          contract_start_date: contract.contract_start_date || "",
-          contract_end_date: contract.contract_end_date || "",
-          contract_value: contract.contract_value ?? 0,
+          start_date: contract.start_date || "",
+          end_date: contract.end_date || "",
+          value: contract.value ?? 0,
           status: contract.status || "",
           is_current: contract.is_current ?? false,
           created_at: contract.created_at || "",
@@ -471,9 +471,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           email: contract.email,
           job_title: contract.job_title,
           work_location: contract.work_location,
-          contract_start_date: contract.contract_start_date,
-          contract_end_date: contract.contract_end_date,
-          contract_value: contract.contract_value,
+          start_date: contract.start_date,
+          end_date: contract.end_date,
+          value: contract.value,
           status: "draft",
           is_current: true,
           // ...any other fields that exist in the contracts table
