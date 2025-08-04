@@ -1,9 +1,20 @@
 "use client"
 
+// 🔥 TEMPORARY TEST - Global Settings Fix
+import { Settings } from "lucide-react"
+
+// Make Settings globally available (temporary fix)
+if (typeof window !== 'undefined') {
+  (window as any).Settings = Settings;
+}
+
+// Add it to React's global scope as well
+import React from "react"
+;(React as any).Settings = Settings
+
 import { useState, useEffect, Suspense, lazy, useMemo } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import React from "react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -40,7 +51,9 @@ import {
   ChevronRight,
   MoreVertical,
   MoreHorizontal,
-  Settings,
+  // Settings,        // ← MOVED TO TOP FOR GLOBAL ACCESS
+  Cog,             // ← ALTERNATIVE SETTINGS ICON
+  Sliders,         // ← ALTERNATIVE SETTINGS ICON 
   Edit,
   Trash2,
   Save,

@@ -35,7 +35,7 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Briefcase, Brain, Shield, BarChart3, Bell, Building, FileCheck, Gavel, Lightbulb, Monitor, Palette, Workflow, DollarSign, UserCheck, FileSearch, Users, Calendar, FileText, Eye, Download, CheckCircle, AlertTriangle, AlertCircle, Info, Search, UserPlus, Menu, Plus, Minus, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, Edit, Trash2, Save, Upload, Copy, Share, Filter, Clock, Globe, MapPin, Mail, Phone, Star, Award, TrendingUp, Home, RefreshCw, EyeOff } from 'lucide-react'
+import { Loader2, Briefcase, Brain, Shield, BarChart3, Bell, Building, FileCheck, Gavel, Lightbulb, Monitor, Palette, Workflow, DollarSign, UserCheck, FileSearch, Users, Calendar, FileText, Eye, Download, CheckCircle, AlertTriangle, AlertCircle, Info, Search, UserPlus, Menu, Plus, Minus, X, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Settings, Cog, Sliders, Edit, Trash2, Save, Upload, Copy, Share, Filter, Clock, Globe, MapPin, Mail, Phone, Star, Award, TrendingUp, Home, RefreshCw, EyeOff } from 'lucide-react'
 
 import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
 import { ComboboxField } from "@/components/combobox-field"
