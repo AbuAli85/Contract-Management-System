@@ -69,7 +69,6 @@ export default function GenerateContractPage() {
   // State management
   const [useEnhancedForm, setUseEnhancedForm] = useState(false)
   const [showAIInsights, setShowAIInsights] = useState(true)
-  const [showContractInsights, setShowContractInsights] = useState(true)
   const [selectedContractType, setSelectedContractType] = useState<string>("")
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(false)
@@ -223,11 +222,12 @@ export default function GenerateContractPage() {
       
       toast({
         title: "Contract Type Selected",
-        description: `Selected ${type} contract template.`,
+        description: `Selected ${getEnhancedContractTypeConfig(type)?.name || type} contract template.`,
       })
     } catch (error) {
       console.error("Error selecting contract type:", error)
-      setError("Failed to select contract type. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError(`Failed to select contract type: ${errorMessage}`)
       toast({
         title: "Selection Failed",
         description: "Failed to select contract type. Please try again.",
@@ -265,7 +265,8 @@ export default function GenerateContractPage() {
       }
     } catch (error) {
       console.error("Error updating insights:", error)
-      setError("Failed to update contract insights.")
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError(`Failed to update contract insights: ${errorMessage}`)
     }
   }, [initialInsights])
 
@@ -301,7 +302,8 @@ export default function GenerateContractPage() {
       }
     } catch (error) {
       console.error("Error updating form progress:", error)
-      setError("Failed to update form progress.")
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+      setError(`Failed to update form progress: ${errorMessage}`)
     }
   }, [toast])
 
@@ -547,7 +549,8 @@ export default function GenerateContractPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />9 Contract Types
+              <FileText className="h-5 w-5" />
+              Contract Types
             </CardTitle>
             <CardDescription>Each contract type has unique templates, fields, and business rules</CardDescription>
           </CardHeader>
@@ -705,10 +708,11 @@ export default function GenerateContractPage() {
             }}
             onError={(error) => {
               console.error("Enhanced form error:", error)
-              setError(`Contract generation failed: ${error.message || "Unknown error"}`)
+              const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
+              setError(`Contract generation failed: ${errorMessage}`)
               toast({
                 title: "Generation Failed",
-                description: error.message || "Failed to generate contract.",
+                description: errorMessage,
                 variant: "destructive",
               })
             }}
@@ -732,7 +736,7 @@ export default function GenerateContractPage() {
       {/* AI Contract Intelligence */}
       {showAIInsights && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}>
-          <ContractIntelligence contractId="sample-contract-123" />
+          <ContractIntelligence contractId={selectedContractType || "sample-contract-123"} />
         </motion.div>
       )}
     </motion.div>
