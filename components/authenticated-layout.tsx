@@ -4,7 +4,7 @@ import { ReactNode } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
 import { ThemeProvider } from "@/components/theme-provider"
-import { PermissionAwareSidebar } from "@/components/permission-aware-sidebar"
+import { Sidebar } from "@/components/sidebar"
 import { PermissionAwareHeader } from "@/components/permission-aware-header"
 import { useState, useEffect } from "react"
 import { usePathname } from "@/navigation"
@@ -99,10 +99,10 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <RBACProvider user={user}>
+      <RBACProvider>
         <div className="flex h-screen bg-background">
           {/* Sidebar */}
-          <PermissionAwareSidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
+          <Sidebar isOpen={!isSidebarCollapsed} onClose={toggleSidebar} />
 
           {/* Main Content */}
           <div className="flex flex-1 flex-col overflow-hidden">
