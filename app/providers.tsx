@@ -8,6 +8,7 @@ import { createBrowserClient } from "@supabase/ssr"
 import { AuthProvider } from "@/components/auth-provider"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
 import { ThemeProvider } from "@/components/theme-provider"
+import { FormContextProvider } from "@/hooks/use-form-context"
 import { Toaster } from "@/components/ui/toaster"
 import type { Session, User } from "@supabase/supabase-js"
 
@@ -132,9 +133,11 @@ function ProvidersContent({ children }: ProvidersContentProps) {
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <RBACProvider>{children}</RBACProvider>
-          </AuthProvider>
+          <FormContextProvider>
+            <AuthProvider>
+              <RBACProvider>{children}</RBACProvider>
+            </AuthProvider>
+          </FormContextProvider>
         </ThemeProvider>
       </AuthContextProvider>
       <Toaster />
