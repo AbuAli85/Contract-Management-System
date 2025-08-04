@@ -11,27 +11,67 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
+  // Navigation & Menus
+  Menu,
+  Search,           // ← The current missing one
+  
+  // Users
+  UserPlus,         // ← Previously missing
+  Users,
+  User,
+  
+  // Core UI Icons
   Sparkles,
   FileText,
-  CheckCircle,
-  TrendingUp,
-  Users,
-  Shield,
-  Zap,
-  Globe,
-  Star,
-  Award,
   Info,
+  CheckCircle,
   AlertTriangle,
-  Settings,
-  UserPlus,
   Brain,
   Lock,
   Plus,
-  Search,
   Briefcase,
   Workflow,
-  Menu,
+  
+  // Additional common icons that might be missing
+  X,
+  ChevronDown,
+  ChevronUp,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  MoreHorizontal,
+  Settings,
+  Edit,
+  Trash2,
+  Save,
+  Download,
+  Upload,
+  Copy,
+  Share,
+  Filter,
+  SortAsc,
+  SortDesc,
+  Calendar,
+  Clock,
+  Globe,
+  Shield,
+  Zap,
+  Star,
+  Award,
+  TrendingUp,
+  TrendingDown,
+  Home,
+  ExternalLink,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Bell,
+  Mail,
+  Phone,
+  MapPin,
+  Building,
+  CreditCard,
+  DollarSign,
 } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
