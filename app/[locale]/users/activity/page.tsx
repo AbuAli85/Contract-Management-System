@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -87,8 +86,7 @@ export default function UserActivityPage() {
   // Check permissions
   if (!canManageUsers()) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6">
           <Card>
             <CardContent className="p-6">
               <div className="text-center">
@@ -101,7 +99,6 @@ export default function UserActivityPage() {
             </CardContent>
           </Card>
         </div>
-      </AuthenticatedLayout>
     )
   }
 
@@ -247,8 +244,7 @@ export default function UserActivityPage() {
   const uniqueResourceTypes = [...new Set(activities.map((a) => a.resource_type))].sort()
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="container mx-auto space-y-6 p-6">
+    <div className="container mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -438,7 +434,6 @@ export default function UserActivityPage() {
           </CardContent>
         </Card>
       </div>
-    </AuthenticatedLayout>
   )
 }
 
