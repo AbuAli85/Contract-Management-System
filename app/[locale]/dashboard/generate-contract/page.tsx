@@ -350,7 +350,7 @@ export default function DashboardGenerateContractPage() {
                   >
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out"
-                      style={{ width: `${insights.completionPercentage}%` }}
+                      style={{ width: insights.completionPercentage + "%" }}
                     />
                   </Progress>
                 </div>
@@ -383,7 +383,7 @@ export default function DashboardGenerateContractPage() {
                 <Card className="overflow-hidden border-white/30 bg-white/80 shadow-xl backdrop-blur-xl transition-all duration-300 group-hover:shadow-2xl">
                   <CardContent className="p-6 text-center">
                     <div
-                      className={`mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-r ${stat.color} flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110`}
+                      className={"mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-r " + stat.color + " flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110"}
                     >
                       <stat.icon className="h-8 w-8 text-white" />
                     </div>
