@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
-// import { useSessionTimeout } from "@/hooks/use-session-timeout"
+import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useRolePermissions } from "@/components/user-role-display"
 import { useParams, usePathname } from "next/navigation"
 import { Sidebar } from "./sidebar"
@@ -38,12 +38,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
 
-  // Temporarily disable session timeout to isolate the issue
-  // useSessionTimeout({
-  //   timeoutMinutes: 5,
-  //   enableLogging: false, // Set to true for debugging
-  //   silent: true // Silent mode - no warnings, just automatic logout
-  // })
+  // Silent session timeout - automatically logs out after 5 minutes of inactivity
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    enableLogging: false, // Set to true for debugging
+    silent: true // Silent mode - no warnings, just automatic logout
+  })
 
   // Check if we're on the landing page (root route)
   const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/")
