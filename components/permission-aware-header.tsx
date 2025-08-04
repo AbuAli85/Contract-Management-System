@@ -19,7 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { User, Bell, FilePlus, Building2, BarChart3, Shield, Crown, UserCheck, WifiOff, SignalHigh, SignalMedium, SignalLow, BatteryFull, BatteryCharging, Power, PowerOff, Volume1, VolumeX, MicOff, VideoOff, CameraOff, Loader2, ImageOff, FileEdit, FolderOpen, FolderPlus, FolderMinus, FolderX, FolderCheck, FolderSearch, FolderEdit, Sun, Moon, UserPlus, Menu, Search } from 'lucide-react'
+import { User, Bell, FilePlus, Building2, BarChart3, Shield, Crown, UserCheck, WifiOff, SignalHigh, SignalMedium, SignalLow, BatteryFull, BatteryCharging, Power, PowerOff, Volume1, VolumeX, MicOff, VideoOff, CameraOff, Loader2, ImageOff, FileEdit, FolderOpen, FolderPlus, FolderMinus, FolderX, FolderCheck, FolderSearch, FolderEdit, Sun, Moon, UserPlus, Menu, Search, HelpCircle, Settings, RefreshCw, LogOut } from 'lucide-react'
 import { useTheme } from "next-themes"
 import { getRoleDisplay } from "@/lib/role-hierarchy"
 
