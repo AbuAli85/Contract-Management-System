@@ -5,6 +5,7 @@ import React from "react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useRBAC } from "@/src/components/auth/rbac-provider"
 import { useAuth } from "@/lib/auth-service"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -30,6 +31,7 @@ interface HeaderProps {
 export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: HeaderProps) {
   const permissions = usePermissions()
   const { user, signOut } = useAuth()
+  const { profile: userProfile } = useUserProfile()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const pathname = usePathname()
@@ -212,7 +214,9 @@ export function PermissionAwareHeader({ onSidebarToggle, isSidebarCollapsed }: H
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.email || "User"}</p>
+                <p className="text-sm font-medium leading-none">
+                  {userProfile?.full_name || userProfile?.display_name || user?.email?.split('@')[0] || 'User'}
+                </p>
                 <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                 <div className="mt-1 flex items-center gap-1">
                   {getRoleIcon(permissions.role)}
