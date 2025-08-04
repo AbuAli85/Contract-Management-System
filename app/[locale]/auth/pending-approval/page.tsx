@@ -88,7 +88,7 @@ export default async function PendingApprovalPage({ params }: { params: Promise<
             {/* Actions */}
             <div className="space-y-3">
               <Button asChild className="w-full" variant="outline">
-                <Link href={`/${locale}/auth/login`}>
+                <Link href={"/" + locale + "/auth/login"}>
                   Back to Login
                 </Link>
               </Button>
