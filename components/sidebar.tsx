@@ -1,8 +1,9 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { useParams, usePathname } from "next/navigation"
+import { useParams } from "next/navigation"
+import { usePathname } from "@/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
 import { useNotifications } from "@/hooks/use-notifications"
@@ -33,17 +34,27 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const [mounted, setMounted] = useState(false)
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
-  const { user, loading, mounted } = useAuth()
+  const { user, loading, mounted: authMounted } = useAuth()
   const { count: pendingUsersCount } = usePendingUsersCount()
   const { totalCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile } = useUserProfile()
   const { roleInfo } = useRolePermissions()
 
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Don't render anything until mounted to prevent hydration issues
+  if (!mounted) {
+    return null
+  }
+
   // Show a user-friendly message if no user is available after auth completes
-  if (!user && mounted && !loading) {
+  if (!user && authMounted && !loading) {
     return (
       <div className="fixed left-0 top-0 z-50 h-full w-64 bg-card shadow-lg flex flex-col items-center justify-center">
         <div className="text-center">

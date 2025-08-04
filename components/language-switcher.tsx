@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "@/navigation"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
