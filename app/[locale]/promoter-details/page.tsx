@@ -89,7 +89,7 @@ export default function PromoterDetailsPage() {
   }
 
   function handleViewPromoter(promoterId: string) {
-    router.push(`/manage-promoters/${promoterId}`)
+    router.push("/manage-promoters/" + promoterId)
   }
 
   if (isLoading) {

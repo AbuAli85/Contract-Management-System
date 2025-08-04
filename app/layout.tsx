@@ -20,13 +20,13 @@ const buildTimestamp = { buildId: process.env.BUILD_ID || "dev" }
 
 export const metadata: Metadata = {
   title: "Contract Management System",
-  description: `Professional contract management and generation system (Build: ${buildTimestamp.buildId})`,
+  description: "Professional contract management and generation system (Build: " + (buildTimestamp.buildId) + ")",
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${fontInter.variable} ${fontLexend.variable}`} suppressHydrationWarning>
+      <body className={fontInter.variable + " " + fontLexend.variable} suppressHydrationWarning>
         <Providers>
           {children}
           <Toaster />
