@@ -3,13 +3,18 @@
 import { useState, useCallback, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { useAuth } from "@/src/components/auth"
+import dynamic from 'next/dynamic'
+
+// UI Components first (these are usually safe)
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/components/ui/use-toast"
+
+// Icons
 import {
   Sparkles,
   FileText,
@@ -25,12 +30,118 @@ import {
   Workflow,
 } from "lucide-react"
 
-// Imports for the forms - keep these
-import EnhancedContractForm from "@/components/enhanced-contract-form"
-import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
-import ContractIntelligence from "@/components/ai/contract-intelligence"
-import { getContractTypesByCategory, getEnhancedContractTypeConfig, getAllEnhancedContractTypes } from "@/lib/contract-type-config"
-import { useToast } from "@/components/ui/use-toast"
+// Dynamic imports for potentially problematic modules
+const DynamicEnhancedContractForm = dynamic(
+  () => import("@/components/enhanced-contract-form"),
+  { 
+    loading: () => <div className="flex items-center justify-center p-8">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Loading enhanced form...</p>
+      </div>
+    </div>,
+    ssr: false 
+  }
+)
+
+const DynamicUnifiedContractGeneratorForm = dynamic(
+  () => import("@/components/unified-contract-generator-form"),
+  { 
+    loading: () => <div className="flex items-center justify-center p-8">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Loading contract form...</p>
+      </div>
+    </div>,
+    ssr: false 
+  }
+)
+
+const DynamicContractIntelligence = dynamic(
+  () => import("@/components/ai/contract-intelligence"),
+  { 
+    loading: () => <div className="flex items-center justify-center p-8">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+        <p>Loading AI insights...</p>
+      </div>
+    </div>,
+    ssr: false 
+  }
+)
+
+// Custom hook for auth with error handling
+function useAuthSafe() {
+  const [authState, setAuthState] = useState<{ user: any, loading: boolean, error: string | null }>({ 
+    user: null, 
+    loading: true, 
+    error: null 
+  });
+  
+  useEffect(() => {
+    async function loadAuth() {
+      try {
+        const { useAuth } = await import("@/src/components/auth");
+        const auth = useAuth();
+        setAuthState({ 
+          user: auth.user, 
+          loading: false, 
+          error: null 
+        });
+      } catch (error) {
+        console.error("Auth loading error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Auth loading failed";
+        setAuthState({ user: null, loading: false, error: errorMessage });
+      }
+    }
+    
+    loadAuth();
+  }, []);
+  
+  return authState;
+}
+
+// Custom hook for contract config with error handling
+function useContractConfig() {
+  const [config, setConfig] = useState<{
+    getAllEnhancedContractTypes: () => any[],
+    getEnhancedContractTypeConfig: (id: string) => any | null,
+    loading: boolean,
+    error: string | null
+  }>({
+    getAllEnhancedContractTypes: () => [],
+    getEnhancedContractTypeConfig: () => null,
+    loading: true,
+    error: null
+  });
+  
+  useEffect(() => {
+    async function loadConfig() {
+      try {
+        const configModule = await import("@/lib/contract-type-config");
+        setConfig({
+          getAllEnhancedContractTypes: configModule.getAllEnhancedContractTypes,
+          getEnhancedContractTypeConfig: configModule.getEnhancedContractTypeConfig,
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error("Config loading error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Config loading failed";
+        setConfig({
+          getAllEnhancedContractTypes: () => [],
+          getEnhancedContractTypeConfig: () => null,
+          loading: false,
+          error: errorMessage
+        });
+      }
+    }
+    
+    loadConfig();
+  }, []);
+  
+  return config;
+}
 
 interface ContractInsight {
   type: "success" | "warning" | "info" | "error"
@@ -61,10 +172,17 @@ interface SmartRecommendation {
 }
 
 export default function GenerateContractPage() {
-  const { user } = useAuth()
-  const pathname = usePathname()
-  const locale = pathname?.split("/")[1] || "en"
-  const { toast } = useToast()
+  const { user, loading: authLoading, error: authError } = useAuthSafe();
+  const { 
+    getAllEnhancedContractTypes, 
+    getEnhancedContractTypeConfig, 
+    loading: configLoading, 
+    error: configError 
+  } = useContractConfig();
+  
+  const pathname = usePathname();
+  const locale = pathname?.split("/")[1] || "en";
+  const { toast } = useToast();
 
   // State management
   const [useEnhancedForm, setUseEnhancedForm] = useState(false)
@@ -157,6 +275,55 @@ export default function GenerateContractPage() {
       return []
     }
   })()
+
+  // Early return for loading states
+  if (authLoading || configLoading) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center min-h-screen"
+      >
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-medium">Loading contract generator...</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            {authLoading ? "Authenticating..." : "Loading configuration..."}
+          </p>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Early return for error states
+  if (authError || configError) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6 p-6"
+      >
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Failed to load required components. Please refresh the page.
+            <br />
+            Error: {authError || configError}
+          </AlertDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => window.location.reload()}
+          >
+            Refresh Page
+          </Button>
+        </Alert>
+      </motion.div>
+    );
+  }
   
   // Filter the contract types based on the active category
   const filteredContractTypes = allContractTypes.filter(
@@ -222,7 +389,7 @@ export default function GenerateContractPage() {
       
       toast({
         title: "Contract Type Selected",
-        description: `Selected ${getEnhancedContractTypeConfig(type)?.name || type} contract template.`,
+        description: "Selected " + (getEnhancedContractTypeConfig(type)?.name || type) + " contract template.",
       })
     } catch (error) {
       console.error("Error selecting contract type:", error)
@@ -246,15 +413,15 @@ export default function GenerateContractPage() {
         const contractSpecificInsights: ContractInsight[] = [
           {
             type: "info",
-            title: `${typeConfig.name} Contract Selected`,
-            description: typeConfig.description,
-            priority: "medium",
+            title: (typeConfig.name || "Contract") + " Contract Selected",
+            description: typeConfig.description || "Contract template selected",
+            priority: "medium" as const,
           },
           {
             type: "success",
             title: "Template Ready",
-            description: `This template includes ${typeConfig.fields.length} configured fields.`,
-            priority: "high",
+            description: "This template includes " + (typeConfig.fields?.length || 0) + " configured fields.",
+            priority: "high" as const,
           },
         ]
         // Set the insights state to be the initial general insights plus the new specific ones
@@ -584,7 +751,7 @@ export default function GenerateContractPage() {
                   <div key={category} className="space-y-3">
                     <h4 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{category}</h4>
                     <div className="space-y-2">
-                      {types.map((type: any) => (
+                      {(types as any[]).map((type: any) => (
                         <div
                           key={type.id}
                           className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
@@ -698,7 +865,7 @@ export default function GenerateContractPage() {
       {/* Main Form */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}>
         {useEnhancedForm ? (
-          <EnhancedContractForm
+          <DynamicEnhancedContractForm
             onSuccess={() => {
               setError(null)
               toast({
@@ -718,7 +885,7 @@ export default function GenerateContractPage() {
             }}
           />
         ) : (
-          <UnifiedContractGeneratorForm
+          <DynamicUnifiedContractGeneratorForm
             mode="advanced"
             showAdvanced={true}
             autoRedirect={false}
@@ -736,7 +903,7 @@ export default function GenerateContractPage() {
       {/* AI Contract Intelligence */}
       {showAIInsights && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.0 }}>
-          <ContractIntelligence contractId={selectedContractType || "sample-contract-123"} />
+          <DynamicContractIntelligence contractId={selectedContractType || "sample-contract-123"} />
         </motion.div>
       )}
     </motion.div>
