@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-service'
 import { getRoleDisplay as getHierarchyRoleDisplay } from '@/lib/role-hierarchy'
 import type { UserProfile } from '@/types/custom'
@@ -42,7 +42,7 @@ export function useUserProfile() {
     return hierarchyDisplay.displayText
   }
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -98,7 +98,7 @@ export function useUserProfile() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id])
 
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
     try {
@@ -141,7 +141,7 @@ export function useUserProfile() {
     if (user?.id) {
       fetchUserProfile()
     }
-  }, [user?.id])
+  }, [user?.id, fetchUserProfile])
 
   return {
     profile,
