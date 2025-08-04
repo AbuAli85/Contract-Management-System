@@ -27,8 +27,6 @@ import {
   Zap,
   Award,
   Star,
-  TrendingUpIcon,
-  TrendingDownIcon,
 } from "lucide-react"
 import {
   LineChart as RechartsLineChart,
@@ -240,9 +238,9 @@ export function AdvancedAnalyticsDashboard() {
 
   const getGrowthIcon = (value: number) => {
     return value >= 0 ? (
-      <TrendingUpIcon className="h-4 w-4 text-green-500" />
+      <TrendingUp className="h-4 w-4 text-green-500" />
     ) : (
-      <TrendingDownIcon className="h-4 w-4 text-red-500" />
+      <TrendingDown className="h-4 w-4 text-red-500" />
     )
   }
 

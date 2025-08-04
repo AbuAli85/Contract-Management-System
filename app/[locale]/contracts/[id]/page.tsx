@@ -34,8 +34,32 @@ import {
 
 // Import our refactored components
 import { useContract } from "@/hooks/useContract"
-// StatusBadge component removed - using Badge from UI components instead
+// StatusBadge component for displaying contract status
 import { LoadingSpinner } from "@/components/LoadingSpinner"
+
+// Simple StatusBadge implementation
+function StatusBadge({ status }: { status?: string }) {
+  let color = "bg-gray-200 text-gray-800"
+  let label = status || "Unknown"
+  if (status === "active") {
+    color = "bg-green-100 text-green-800"
+    label = "Active"
+  } else if (status === "pending") {
+    color = "bg-yellow-100 text-yellow-800"
+    label = "Pending"
+  } else if (status === "cancelled") {
+    color = "bg-red-100 text-red-800"
+    label = "Cancelled"
+  } else if (status === "processing") {
+    color = "bg-blue-100 text-blue-800"
+    label = "Processing"
+  }
+  return (
+    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${color}`}>
+      {label}
+    </span>
+  )
+}
 import { ErrorCard } from "@/components/ErrorCard"
 import { useAuth } from "@/lib/auth-service"
 import { OverviewTab } from "@/components/contract-tabs/OverviewTab"
@@ -305,7 +329,7 @@ export default function ContractDetailPage() {
               <div className="flex-1">
                 <div className="mb-4 flex items-center gap-3">
                   <h1 className="text-3xl font-bold text-gray-900">Contract Details</h1>
-                  <StatusBadge status={contract?.status} />
+                  <StatusBadge status={contract?.status ?? undefined} />
                   {isApproved && (
                     <Badge className="bg-green-100 text-green-800">
                       <CheckCircleIcon className="mr-1 h-3 w-3" />
@@ -340,18 +364,20 @@ export default function ContractDetailPage() {
                   </div>
                   <div>
                     <label className="font-medium text-gray-500">Created</label>
-                    <p className="mt-1 text-gray-900">{formatDate(contract?.created_at)}</p>
+                    <p className="mt-1 text-gray-900">{String(formatDate(contract?.created_at))}</p>
                   </div>
                   <div>
                     <label className="font-medium text-gray-500">Last Updated</label>
-                    <p className="mt-1 text-gray-900">{formatDate(contract?.updated_at)}</p>
+                    <p className="mt-1 text-gray-900">{String(formatDate(contract?.updated_at))}</p>
                   </div>
                   <div>
                     <label className="font-medium text-gray-500">Duration</label>
                     <p className="mt-1 text-gray-900">
-                      {calculateDuration(
-                        contract?.contract_start_date,
-                        contract?.contract_end_date,
+                      {String(
+                        calculateDuration(
+                          contract?.contract_start_date,
+                          contract?.contract_end_date,
+                        )
                       )}
                     </p>
                   </div>
@@ -790,7 +816,7 @@ export default function ContractDetailPage() {
                             Contract was initially created in the system
                           </p>
                           <p className="mt-2 text-xs font-medium text-blue-600">
-                            {formatDateTime(contract?.created_at)}
+                            {String(formatDateTime(contract?.created_at))}
                           </p>
                         </div>
                       </div>
@@ -807,7 +833,7 @@ export default function ContractDetailPage() {
                             <h4 className="font-semibold text-green-900">Contract Start Date</h4>
                             <p className="mt-1 text-sm text-green-700">Employment period begins</p>
                             <p className="mt-2 text-xs font-medium text-green-600">
-                              {formatDate(contract.contract_start_date)}
+                              {String(formatDate(contract.contract_start_date))}
                             </p>
                           </div>
                         </div>
@@ -827,7 +853,7 @@ export default function ContractDetailPage() {
                               Contract information was modified
                             </p>
                             <p className="mt-2 text-xs font-medium text-yellow-600">
-                              {formatDateTime(contract.updated_at)}
+                              {String(formatDateTime(contract.updated_at))}
                             </p>
                           </div>
                         </div>
@@ -845,7 +871,7 @@ export default function ContractDetailPage() {
                             <h4 className="font-semibold text-red-900">Contract End Date</h4>
                             <p className="mt-1 text-sm text-red-700">Employment period ends</p>
                             <p className="mt-2 text-xs font-medium text-red-600">
-                              {formatDate(contract.contract_end_date)}
+                              {String(formatDate(contract.contract_end_date))}
                             </p>
                             {new Date(contract.contract_end_date) > new Date() && (
                               <p className="mt-1 text-xs text-red-500">
@@ -870,9 +896,11 @@ export default function ContractDetailPage() {
                     <div className="rounded-lg bg-gray-50 p-4 text-center">
                       <h5 className="font-medium text-gray-900">Contract Duration</h5>
                       <p className="mt-1 text-sm text-gray-600">
-                        {calculateDuration(
-                          contract?.contract_start_date,
-                          contract?.contract_end_date,
+                        {String(
+                          calculateDuration(
+                            contract?.contract_start_date,
+                            contract?.contract_end_date,
+                          )
                         )}
                       </p>
                     </div>
@@ -880,14 +908,14 @@ export default function ContractDetailPage() {
                     <div className="rounded-lg bg-gray-50 p-4 text-center">
                       <h5 className="font-medium text-gray-900">Current Status</h5>
                       <div className="mt-1">
-                        <StatusBadge status={contract?.status} />
+                        <StatusBadge status={contract?.status ?? undefined} />
                       </div>
                     </div>
 
                     <div className="rounded-lg bg-gray-50 p-4 text-center">
                       <h5 className="font-medium text-gray-900">Last Activity</h5>
                       <p className="mt-1 text-sm text-gray-600">
-                        {formatDate(contract?.updated_at)}
+                        {String(formatDate(contract?.updated_at))}
                       </p>
                     </div>
                   </div>
@@ -982,7 +1010,7 @@ export default function ContractDetailPage() {
                               <p className="text-sm text-gray-600">{notification.message}</p>
                             </div>
                             <span className="text-xs text-gray-500">
-                              {formatDateTime(notification.created_at)}
+                              {String(formatDateTime(notification.created_at))}
                             </span>
                           </div>
                         </div>
