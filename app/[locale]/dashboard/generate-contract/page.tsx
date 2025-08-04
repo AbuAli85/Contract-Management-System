@@ -24,6 +24,7 @@ import {
   Info,
   AlertTriangle,
   Settings,
+  UserPlus,
 } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
