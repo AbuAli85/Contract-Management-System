@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { useAuth } from "@/src/components/auth"
@@ -72,6 +72,8 @@ export default function GenerateContractPage() {
   const [showContractInsights, setShowContractInsights] = useState(true)
   const [selectedContractType, setSelectedContractType] = useState<string>("")
   const [activeCategory, setActiveCategory] = useState<string>("all")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [formProgress, setFormProgress] = useState<FormProgress>({
     completed: 0,
     total: 11,
@@ -146,8 +148,16 @@ export default function GenerateContractPage() {
   ]
 
   // Contract types with enhanced configuration and filtering
-  // Initialize all contract types first
-  const allContractTypes = getAllEnhancedContractTypes()
+  // Initialize all contract types first with error handling
+  const allContractTypes = (() => {
+    try {
+      return getAllEnhancedContractTypes()
+    } catch (error) {
+      console.error("Failed to load contract types:", error)
+      setError("Failed to load contract types. Please refresh the page.")
+      return []
+    }
+  })()
   
   // Filter the contract types based on the active category
   const filteredContractTypes = allContractTypes.filter(
@@ -203,60 +213,140 @@ export default function GenerateContractPage() {
     },
   }
 
-  const handleContractTypeSelect = (type: string) => {
-    setSelectedContractType(type)
-    // Update insights based on contract type
-    updateInsightsForContractType(type)
-  }
-
-  const updateInsightsForContractType = (type: string) => {
-    const typeConfig = getEnhancedContractTypeConfig(type)
-    if (typeConfig) {
-      // Create the new insights specific to the selected contract
-      const contractSpecificInsights: ContractInsight[] = [
-        {
-          type: "info",
-          title: `${typeConfig.name} Contract Selected`,
-          description: typeConfig.description,
-          priority: "medium",
-        },
-        {
-          type: "success",
-          title: "Template Ready",
-          description: `This template includes ${typeConfig.fields.length} configured fields.`,
-          priority: "high",
-        },
-      ]
-      // Set the insights state to be the initial general insights plus the new specific ones
-      setInsights([...initialInsights, ...contractSpecificInsights])
-    } else {
-      // If no specific type is selected, revert to only the initial insights
-      setInsights(initialInsights)
+  const handleContractTypeSelect = useCallback((type: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      setSelectedContractType(type)
+      // Update insights based on contract type
+      updateInsightsForContractType(type)
+      
+      toast({
+        title: "Contract Type Selected",
+        description: `Selected ${type} contract template.`,
+      })
+    } catch (error) {
+      console.error("Error selecting contract type:", error)
+      setError("Failed to select contract type. Please try again.")
+      toast({
+        title: "Selection Failed",
+        description: "Failed to select contract type. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
     }
-  }
+  }, [toast])
 
-  const updateFormProgress = (sectionName: string, isCompleted: boolean) => {
-    setFormProgress(prevProgress => {
-      // Find the section and update its 'completed' status
-      const updatedSections = prevProgress.sections.map(section =>
-        section.name === sectionName ? { ...section, completed: isCompleted } : section
-      )
-
-      // Count the number of newly completed sections
-      const completedCount = updatedSections.filter(section => section.completed).length
-
-      // Calculate the new percentage
-      const percentage = Math.round((completedCount / prevProgress.total) * 100)
-
-      // Return the new state object
-      return {
-        ...prevProgress,
-        completed: completedCount,
-        percentage: percentage,
-        sections: updatedSections,
+  const updateInsightsForContractType = useCallback((type: string) => {
+    try {
+      const typeConfig = getEnhancedContractTypeConfig(type)
+      if (typeConfig) {
+        // Create the new insights specific to the selected contract
+        const contractSpecificInsights: ContractInsight[] = [
+          {
+            type: "info",
+            title: `${typeConfig.name} Contract Selected`,
+            description: typeConfig.description,
+            priority: "medium",
+          },
+          {
+            type: "success",
+            title: "Template Ready",
+            description: `This template includes ${typeConfig.fields.length} configured fields.`,
+            priority: "high",
+          },
+        ]
+        // Set the insights state to be the initial general insights plus the new specific ones
+        setInsights([...initialInsights, ...contractSpecificInsights])
+      } else {
+        // If no specific type is selected, revert to only the initial insights
+        setInsights(initialInsights)
       }
-    })
-  }
+    } catch (error) {
+      console.error("Error updating insights:", error)
+      setError("Failed to update contract insights.")
+    }
+  }, [initialInsights])
+
+  const updateFormProgress = useCallback((sectionName: string, isCompleted: boolean) => {
+    try {
+      setFormProgress(prevProgress => {
+        // Find the section and update its 'completed' status
+        const updatedSections = prevProgress.sections.map(section =>
+          section.name === sectionName ? { ...section, completed: isCompleted } : section
+        )
+
+        // Count the number of newly completed sections
+        const completedCount = updatedSections.filter(section => section.completed).length
+
+        // Calculate the new percentage
+        const percentage = Math.round((completedCount / prevProgress.total) * 100)
+
+        // Return the new state object
+        return {
+          ...prevProgress,
+          completed: completedCount,
+          percentage: percentage,
+          sections: updatedSections,
+        }
+      })
+
+      // Provide feedback for progress updates
+      if (isCompleted) {
+        toast({
+          title: "Section Completed",
+          description: `${sectionName} section has been completed.`,
+        })
+      }
+    } catch (error) {
+      console.error("Error updating form progress:", error)
+      setError("Failed to update form progress.")
+    }
+  }, [toast])
+
+  // Feature comparison component to reduce duplication
+  const FeatureCard = ({ 
+    formType, 
+    isSelected, 
+    onClick 
+  }: { 
+    formType: typeof featureComparison.standard, 
+    isSelected: boolean, 
+    onClick: () => void 
+  }) => (
+    <Card
+      className={`border-2 transition-all duration-200 cursor-pointer ${
+        isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+      }`}
+      onClick={onClick}
+    >
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {formType.title === "Standard Form" ? (
+            <FileText className="h-5 w-5" />
+          ) : (
+            <Sparkles className="h-5 w-5" />
+          )}
+          {formType.title}
+        </CardTitle>
+        <CardDescription>{formType.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {formType.features.map((feature, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span className="text-sm">{feature}</span>
+            </div>
+          ))}
+        </div>
+        <Badge className="mt-4" variant={formType.status === "active" ? "default" : "secondary"}>
+          {formType.status === "active" ? "Active" : "Development"}
+        </Badge>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <motion.div
@@ -265,6 +355,27 @@ export default function GenerateContractPage() {
       transition={{ duration: 0.5 }}
       className="space-y-6"
     >
+      {/* Error Display */}
+      {error && (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => {
+                setError(null)
+                window.location.reload()
+              }}
+            >
+              Retry
+            </Button>
+          </Alert>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="space-y-4 text-center">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -332,59 +443,16 @@ export default function GenerateContractPage() {
         transition={{ delay: 0.4 }}
         className="grid gap-6 md:grid-cols-2"
       >
-        <Card
-          className={`border-2 transition-all duration-200 ${
-            !useEnhancedForm ? "border-primary bg-primary/5" : "border-border"
-          }`}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {featureComparison.standard.title}
-            </CardTitle>
-            <CardDescription>{featureComparison.standard.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {featureComparison.standard.features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
-            <Badge className="mt-4" variant={featureComparison.standard.status === "active" ? "default" : "secondary"}>
-              {featureComparison.standard.status === "active" ? "Active" : "Development"}
-            </Badge>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={`border-2 transition-all duration-200 ${
-            useEnhancedForm ? "border-primary bg-primary/5" : "border-border"
-          }`}
-        >
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
-              {featureComparison.enhanced.title}
-            </CardTitle>
-            <CardDescription>{featureComparison.enhanced.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {featureComparison.enhanced.features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
-            <Badge className="mt-4" variant={featureComparison.enhanced.status === "active" ? "default" : "secondary"}>
-              {featureComparison.enhanced.status === "active" ? "Active" : "Development"}
-            </Badge>
-          </CardContent>
-        </Card>
+        <FeatureCard
+          formType={featureComparison.standard}
+          isSelected={!useEnhancedForm}
+          onClick={() => setUseEnhancedForm(false)}
+        />
+        <FeatureCard
+          formType={featureComparison.enhanced}
+          isSelected={useEnhancedForm}
+          onClick={() => setUseEnhancedForm(true)}
+        />
       </motion.div>
 
       {/* Contract Generation Insights */}
@@ -518,8 +586,8 @@ export default function GenerateContractPage() {
                           key={type.id}
                           className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
                             selectedContractType === type.id ? "border-primary bg-primary/5" : ""
-                          }`}
-                          onClick={() => handleContractTypeSelect(type.id)}
+                          } ${isLoading ? "opacity-50 pointer-events-none" : ""}`}
+                          onClick={() => !isLoading && handleContractTypeSelect(type.id)}
                         >
                           <div className="flex items-center justify-between">
                             <div>
@@ -629,12 +697,15 @@ export default function GenerateContractPage() {
         {useEnhancedForm ? (
           <EnhancedContractForm
             onSuccess={() => {
+              setError(null)
               toast({
                 title: "Contract Generated",
                 description: "Your contract has been successfully generated and saved.",
               })
             }}
             onError={(error) => {
+              console.error("Enhanced form error:", error)
+              setError(`Contract generation failed: ${error.message || "Unknown error"}`)
               toast({
                 title: "Generation Failed",
                 description: error.message || "Failed to generate contract.",
@@ -648,6 +719,7 @@ export default function GenerateContractPage() {
             showAdvanced={true}
             autoRedirect={false}
             onFormSubmit={() => {
+              setError(null)
               toast({
                 title: "Contract Saved",
                 description: "Your contract has been successfully saved.",
