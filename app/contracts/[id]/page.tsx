@@ -37,16 +37,16 @@ import {
 
 export default function ContractDetailPage() {
   const params = useParams()
+  const [contract, setContract] = useState<ContractDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("overview")
 
   if (!params) {
     return <div>Loading page...</div>
   }
 
   const contractId = params.id as string
-  const [contract, setContract] = useState<ContractDetail | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState("overview")
 
   const mockActivityLogs: ActivityLog[] = [
     {
