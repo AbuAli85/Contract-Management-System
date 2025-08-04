@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-service"
+import { useUserProfile } from "@/hooks/use-user-profile"
 import {
   FileText,
   Users,
@@ -50,6 +51,7 @@ interface Promoter {
 export default function DashboardContent({ locale }: { locale: string }) {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const { profile: userProfile } = useUserProfile()
   const [analytics, setAnalytics] = useState<DashboardAnalytics | null>(null)
 
   // Fetch dashboard data
@@ -90,7 +92,7 @@ export default function DashboardContent({ locale }: { locale: string }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-          <p className="text-muted-foreground">Welcome back, {user?.email?.split('@')[0] || "User"}</p>
+          <p className="text-muted-foreground">Welcome back, {userProfile?.full_name || userProfile?.display_name || user?.email?.split('@')[0] || "User"}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={handleNewContract} className="flex items-center gap-2">

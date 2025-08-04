@@ -100,7 +100,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                       {user && (
                         <div className="hidden sm:block">
                           <p className="text-sm text-muted-foreground">
-                            Welcome back, <span className="font-medium text-foreground">{user.email}</span>
+                            Welcome back, <span className="font-medium text-foreground">
+                              {userProfile?.full_name || userProfile?.display_name || user.email?.split('@')[0] || 'User'}
+                            </span>
                           </p>
                         </div>
                       )}

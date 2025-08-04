@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-service"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { useRolePermissions } from "@/components/user-role-display"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RecentPromoters } from "@/components/recent-promoters"
@@ -39,6 +40,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { count: pendingUsersCount } = usePendingUsersCount()
   const { totalCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile } = useUserProfile()
+  const { roleInfo } = useRolePermissions()
 
   // Debug logging - only log when there are issues
   if (!user && mounted && !loading) {
@@ -177,12 +179,12 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-card-foreground truncate">
-                    {userProfile?.display_name || user.email}
+                    {userProfile?.full_name || userProfile?.display_name || user.email?.split('@')[0] || 'User'}
                   </p>
                   <div className="flex items-center gap-1">
                     <Crown className="h-3 w-3 text-yellow-500" />
                     <span className="text-xs text-muted-foreground">
-                      {userProfile?.role_display || 'Admin'}
+                      {roleInfo.displayText}
                     </span>
                   </div>
                 </div>
