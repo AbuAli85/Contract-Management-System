@@ -462,8 +462,8 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
 
         const newContract = {
           contract_number: newContractNumber,
-          first_party_id: contract.first_party_id, // Use the foreign key, not the name/crn
-          second_party_id: contract.second_party_id,
+          employer_id: contract.employer_id, // Use the foreign key, not the name/crn
+          client_id: contract.client_id,
           promoter_id: contract.promoter_id,
           email: contract.email,
           job_title: contract.job_title,
