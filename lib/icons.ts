@@ -9,13 +9,17 @@
 
 // Re-export all commonly used icons from lucide-react
 export {
-  // ⚡ CRITICAL ICONS (Previously causing errors)
-  Settings,        // ← Current error causing icon
+  // ⚡ CRITICAL ICONS (Fix for ReferenceErrors)
+  Settings,        // ← MAIN ERROR CAUSING ICON
   UserPlus,        // ← Previously missing
   Menu,            // ← Previously missing  
   Search,          // ← Previously missing
   
-  // Navigation & Menu Icons
+  // Alternative Settings Icons (in case naming conflicts)
+  Cog,             // ← Alternative to Settings
+  Sliders,         // ← Alternative settings icon
+  
+  // Core Navigation & UI Icons  
   X,
   ChevronDown,
   ChevronUp,
@@ -113,7 +117,7 @@ export {
   Timer,
   Bell,
   BellRing,
-  Sliders,
+  // Sliders,    // ← Moved to CRITICAL ICONS section
   Eye,
   EyeOff,
   Image,
@@ -177,7 +181,7 @@ export {
   Gavel,
   
   // System & Settings Icons
-  Cog,
+  // Cog,           // ← Moved to CRITICAL ICONS section
   
   // Miscellaneous
   Palette,
@@ -209,3 +213,8 @@ export const defaultIconProps: Partial<IconProps> = {
   size: IconSizes.md,
   strokeWidth: 2,
 }
+
+// Alternative Settings exports (APPROACH 3)
+export { Settings as SettingsIcon } from "lucide-react"
+export { Cog as SettingsAlt } from "lucide-react"
+export { Sliders as SettingsSliders } from "lucide-react"

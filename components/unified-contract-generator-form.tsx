@@ -39,7 +39,9 @@ import {
   Loader2,
   AlertTriangle,
   FileText,
-  Settings,
+  Settings,        // ← PRIMARY SETTINGS ICON
+  Cog,             // ← ALTERNATIVE SETTINGS ICON
+  Sliders,         // ← ALTERNATIVE SETTINGS ICON
   Sparkles,
   Calculator,
   Users,

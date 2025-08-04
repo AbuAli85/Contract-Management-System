@@ -29,7 +29,9 @@ import {
   Plus,
   X,
   ChevronDown,
-  Settings,
+  Settings,        // ← PRIMARY SETTINGS ICON
+  Cog,             // ← ALTERNATIVE SETTINGS ICON 
+  Sliders,         // ← ALTERNATIVE SETTINGS ICON
   Edit,
   Trash2,
   Save,
