@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update users table if it exists
-    const { data: userUpdate, error: userError } = await supabase
+    const { data: userUpdate, error: userUpdateError } = await supabase
       .from('users')
       .upsert({
         id: user.id,
@@ -162,9 +162,9 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
-    if (userError) {
-      console.error("❌ Debug User Role: Error updating user record:", userError)
-      updates.push({ type: 'user_record', success: false, error: userError.message })
+    if (userUpdateError) {
+      console.error("❌ Debug User Role: Error updating user record:", userUpdateError)
+      updates.push({ type: 'user_record', success: false, error: userUpdateError.message })
     } else {
       console.log("✅ Debug User Role: User record updated successfully")
       updates.push({ type: 'user_record', success: true })
