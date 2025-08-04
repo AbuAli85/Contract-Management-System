@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { Home, BarChart3, FilePlus, UserCheck, User, Bell, Shield, Moon, Sun, Building2, Briefcase, FileCheck, FileX, FileSearch, FileEdit, TrendingUp  } from 'lucide-react'
+import { Home, BarChart3, FilePlus, UserCheck, User, Bell, Shield, Moon, Sun, Building2, Briefcase, FileCheck, FileX, FileSearch, FileEdit, TrendingUp, Menu, Download } from 'lucide-react'
 import { useTheme } from "next-themes"
 
 interface NavItem {
