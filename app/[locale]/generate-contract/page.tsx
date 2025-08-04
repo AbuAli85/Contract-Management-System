@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Icons
 import {
@@ -70,36 +71,30 @@ const DynamicContractIntelligence = dynamic(
   }
 )
 
-// Custom hook for auth with error handling
-function useAuthSafe() {
-  const [authState, setAuthState] = useState<{ user: any, loading: boolean, error: string | null }>({ 
-    user: null, 
-    loading: true, 
-    error: null 
-  });
-  
-  useEffect(() => {
-    async function loadAuth() {
-      try {
-        const { useAuth } = await import("@/src/components/auth");
-        const auth = useAuth();
-        setAuthState({ 
-          user: auth.user, 
-          loading: false, 
-          error: null 
-        });
-      } catch (error) {
-        console.error("Auth loading error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Auth loading failed";
-        setAuthState({ user: null, loading: false, error: errorMessage });
-      }
-    }
-    
-    loadAuth();
-  }, []);
-  
-  return authState;
+// Enhanced form submission types
+interface FormValues {
+  contractType: string
+  employerCompany: string
+  employeeName: string
+  startDate: string
+  endDate: string
+  salary: string
+  position: string
+  language: "english" | "arabic" | "bilingual"
 }
+
+// Smart recommendation interface
+interface SmartRecommendation {
+  id: string
+  title: string
+  description: string
+  action: string
+  impact: "high" | "medium" | "low"
+  implementation: string
+  estimatedSavings?: string
+}
+
+export default function GenerateContractPage() {
 
 // Custom hook for contract config with error handling
 function useContractConfig() {
@@ -172,7 +167,6 @@ interface SmartRecommendation {
 }
 
 export default function GenerateContractPage() {
-  const { user, loading: authLoading, error: authError } = useAuthSafe();
   const { 
     getAllEnhancedContractTypes, 
     getEnhancedContractTypeConfig, 
@@ -277,52 +271,56 @@ export default function GenerateContractPage() {
   })()
 
   // Early return for loading states
-  if (authLoading || configLoading) {
+  if (configLoading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="flex items-center justify-center min-h-screen"
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-lg font-medium">Loading contract generator...</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            {authLoading ? "Authenticating..." : "Loading configuration..."}
-          </p>
-        </div>
-      </motion.div>
-    );
+      <AuthenticatedLayout locale={locale}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-center min-h-screen"
+        >
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg font-medium">Loading contract generator...</p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Loading configuration...
+            </p>
+          </div>
+        </motion.div>
+      </AuthenticatedLayout>
+    )
   }
 
   // Early return for error states
-  if (authError || configError) {
+  if (configError) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6 p-6"
-      >
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load required components. Please refresh the page.
-            <br />
-            Error: {authError || configError}
-          </AlertDescription>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => window.location.reload()}
-          >
-            Refresh Page
-          </Button>
-        </Alert>
-      </motion.div>
-    );
+      <AuthenticatedLayout locale={locale}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="space-y-6 p-6"
+        >
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Failed to load required components. Please refresh the page.
+              <br />
+              Error: {configError}
+            </AlertDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => window.location.reload()}
+            >
+              Refresh Page
+            </Button>
+          </Alert>
+        </motion.div>
+      </AuthenticatedLayout>
+    )
   }
   
   // Filter the contract types based on the active category
@@ -518,12 +516,13 @@ export default function GenerateContractPage() {
   )
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6"
-    >
+    <AuthenticatedLayout locale={locale}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6"
+      >
       {/* Error Display */}
       {error && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
@@ -907,5 +906,6 @@ export default function GenerateContractPage() {
         </motion.div>
       )}
     </motion.div>
+    </AuthenticatedLayout>
   )
 }
