@@ -51,7 +51,7 @@ interface AttendanceData {
 const api = {
   // Dashboard metrics
   getDashboardMetrics: async (period: string): Promise<DashboardMetrics> => {
-    const response = await fetch(`/api/dashboard/metrics?period=${period}`)
+    const response = await fetch("/api/dashboard/metrics?period=" + period)
     if (!response.ok) throw new Error("Failed to fetch dashboard metrics")
     return response.json()
   },
@@ -64,7 +64,7 @@ const api = {
   },
 
   getPromoter: async (id: string): Promise<Promoter> => {
-    const response = await fetch(`/api/promoters/${id}`)
+    const response = await fetch("/api/promoters/" + id)
     if (!response.ok) throw new Error("Failed to fetch promoter")
     return response.json()
   },
@@ -78,14 +78,8 @@ const api = {
     return response.json()
   },
 
-  updatePromoter: async ({
-    id,
-    data,
-  }: {
-    id: string
-    data: Partial<Promoter>
-  }): Promise<Promoter> => {
-    const response = await fetch(`/api/promoters/${id}`, {
+  updatePromoter: async (id: string, data: any) => {
+    const response = await fetch("/api/promoters/" + id, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -95,7 +89,7 @@ const api = {
   },
 
   deletePromoter: async (id: string): Promise<void> => {
-    const response = await fetch(`/api/promoters/${id}`, {
+    const response = await fetch("/api/promoters/" + id, {
       method: "DELETE",
     })
     if (!response.ok) throw new Error("Failed to delete promoter")
@@ -103,7 +97,7 @@ const api = {
 
   // Tasks
   getTasks: async (promoterId?: string): Promise<Task[]> => {
-    const url = promoterId ? `/api/promoters/${promoterId}/tasks` : "/api/tasks"
+    const url = promoterId ? "/api/promoters/" + promoterId + "/tasks" : "/api/tasks"
     const response = await fetch(url)
     if (!response.ok) throw new Error("Failed to fetch tasks")
     return response.json()

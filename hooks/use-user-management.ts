@@ -91,7 +91,7 @@ export function useUserManagement() {
         if (filters.sortBy) params.append("sortBy", filters.sortBy)
         if (filters.sortOrder) params.append("sortOrder", filters.sortOrder)
 
-        const response = await fetch(`/api/users?${params.toString()}`, {
+        const response = await fetch("/api/users?" + params.toString(), {
           signal: abortControllerRef.current.signal,
         })
 
@@ -148,7 +148,7 @@ export function useUserManagement() {
 
         toast({
           title: "User created successfully",
-          description: `User ${userData.email} has been created.`,
+          description: "User " + userData.email + " has been created.",
         })
 
         // Refresh users list
@@ -175,7 +175,7 @@ export function useUserManagement() {
     async (userId: string, userData: Partial<User>) => {
       setLoading(true)
       try {
-        const response = await fetch(`/api/users/${userId}`, {
+        const response = await fetch("/api/users/" + userId, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -192,7 +192,7 @@ export function useUserManagement() {
 
         toast({
           title: "User updated successfully",
-          description: `User ${userData.email || "profile"} has been updated.`,
+          description: "User " + (userData.email || "profile") + " has been updated.",
         })
 
         // Refresh users list
@@ -219,7 +219,7 @@ export function useUserManagement() {
     async (userId: string) => {
       setLoading(true)
       try {
-        const response = await fetch(`/api/users/${userId}`, {
+        const response = await fetch("/api/users/" + userId, {
           method: "DELETE",
         })
 
@@ -270,7 +270,7 @@ export function useUserManagement() {
 
         toast({
           title: "Users updated successfully",
-          description: `${userIds.length} users have been updated.`,
+          description: userIds.length + " users have been updated.",
         })
 
         // Refresh users list
@@ -309,7 +309,7 @@ export function useUserManagement() {
 
         toast({
           title: "Users deleted successfully",
-          description: `${userIds.length} users have been deleted.`,
+          description: userIds.length + " users have been deleted.",
         })
 
         // Refresh users list
@@ -333,7 +333,7 @@ export function useUserManagement() {
   const getUserById = useCallback(
     async (userId: string): Promise<User | null> => {
       try {
-        const response = await fetch(`/api/users/${userId}`)
+        const response = await fetch("/api/users/" + userId)
 
         if (!response.ok) {
           const error = await response.json()
@@ -359,7 +359,7 @@ export function useUserManagement() {
   const getUserStats = useCallback(
     async (userId: string) => {
       try {
-        const response = await fetch(`/api/users/${userId}/stats`)
+        const response = await fetch("/api/users/" + userId + "/stats")
 
         if (!response.ok) {
           const error = await response.json()
@@ -385,7 +385,7 @@ export function useUserManagement() {
   const getUserActivity = useCallback(
     async (userId: string, limit = 10) => {
       try {
-        const response = await fetch(`/api/users/${userId}/activity?limit=${limit}`)
+        const response = await fetch("/api/users/" + userId + "/activity?limit=" + limit)
 
         if (!response.ok) {
           const error = await response.json()
