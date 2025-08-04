@@ -34,7 +34,7 @@ import {
 import EnhancedContractForm from "@/components/enhanced-contract-form"
 import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
 import ContractIntelligence from "@/components/ai/contract-intelligence"
-import { getContractTypesByCategory, getEnhancedContractTypeConfig } from "@/lib/contract-type-config"
+import { getContractTypesByCategory, getEnhancedContractTypeConfig, getAllEnhancedContractTypes } from "@/lib/contract-type-config"
 import { useToast } from "@/components/ui/use-toast" // Import useToast
 
 interface ContractInsight {
@@ -66,9 +66,9 @@ interface SmartRecommendation {
 }
 
 export default function GenerateContractPage() {
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
   const pathname = usePathname()
-  const locale = pathname.split("/")[1] || "en"
+  const locale = pathname?.split("/")[1] || "en"
   const { toast } = useToast() // Initialize useToast
 
   // State management
@@ -187,7 +187,14 @@ export default function GenerateContractPage() {
   }
 
   // Contract types with enhanced configuration
-  const contractTypesConfig = getContractTypesByCategory()
+  const allContractTypes = getAllEnhancedContractTypes()
+  const contractTypesConfig = allContractTypes.reduce((acc, type) => {
+    if (!acc[type.category]) {
+      acc[type.category] = []
+    }
+    acc[type.category].push(type)
+    return acc
+  }, {} as Record<string, any[]>)
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
@@ -201,14 +208,14 @@ export default function GenerateContractPage() {
       const newInsights: ContractInsight[] = [
         {
           type: "info",
-          title: `${typeConfig.label} Contract`,
+          title: `${typeConfig.name} Contract`,
           description: typeConfig.description,
           priority: "medium",
         },
         {
           type: "success",
           title: "Template Available",
-          description: `Professional template with ${typeConfig.requiredFields.length} required fields`,
+          description: `Professional template with ${typeConfig.fields.length} required fields`,
           priority: "high",
         },
       ]
@@ -472,19 +479,19 @@ export default function GenerateContractPage() {
                 <div key={category} className="space-y-3">
                   <h4 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{category}</h4>
                   <div className="space-y-2">
-                    {types.map((type) => (
+                    {types.map((type: any) => (
                       <div
-                        key={type.value}
+                        key={type.id}
                         className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
-                          selectedContractType === type.value ? "border-primary bg-primary/5" : ""
+                          selectedContractType === type.id ? "border-primary bg-primary/5" : ""
                         }`}
-                        onClick={() => handleContractTypeSelect(type.value)}
+                        onClick={() => handleContractTypeSelect(type.id)}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium">{type.label}</div>
+                            <div className="font-medium">{type.name}</div>
                             <div className="text-xs text-muted-foreground">
-                              {type.requiredFields.length} required fields
+                              {type.fields.length} required fields
                             </div>
                           </div>
                           <Badge variant="outline" className="text-xs">
