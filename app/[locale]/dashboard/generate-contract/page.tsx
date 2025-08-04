@@ -86,7 +86,6 @@ import {
   CreditCard,
   DollarSign,
 } from "lucide-react"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Error Boundary Component
 interface ErrorBoundaryState {
@@ -315,8 +314,7 @@ export default function DashboardGenerateContractPage() {
 
   if (showForm) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -383,13 +381,11 @@ export default function DashboardGenerateContractPage() {
             </Card>
           </motion.div>
         </div>
-      </AuthenticatedLayout>
     )
   }
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -705,6 +701,5 @@ export default function DashboardGenerateContractPage() {
           </motion.div>
         </div>
       </div>
-    </AuthenticatedLayout>
   )
 }

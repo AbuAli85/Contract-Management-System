@@ -13,7 +13,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/components/ui/use-toast"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
 // Icons
 import {
@@ -471,13 +470,12 @@ export default function GenerateContractPage() {
   // Early return for loading states
   if (configLoading) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center justify-center min-h-screen"
-        >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-center min-h-screen"
+      >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p className="text-lg font-medium">Loading contract generator...</p>
@@ -486,20 +484,18 @@ export default function GenerateContractPage() {
             </p>
           </div>
         </motion.div>
-      </AuthenticatedLayout>
     )
   }
 
   // Early return for error states
   if (configError) {
     return (
-      <AuthenticatedLayout locale={locale}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="space-y-6 p-6"
-        >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="space-y-6 p-6"
+      >
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
@@ -517,17 +513,15 @@ export default function GenerateContractPage() {
             </Button>
           </Alert>
         </motion.div>
-      </AuthenticatedLayout>
     )
   }
 
   return (
-    <AuthenticatedLayout locale={locale}>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="space-y-6"
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="space-y-6"
       >
       {/* Error Display */}
       {error && (
@@ -912,6 +906,5 @@ export default function GenerateContractPage() {
         </motion.div>
       )}
     </motion.div>
-    </AuthenticatedLayout>
   )
 }
