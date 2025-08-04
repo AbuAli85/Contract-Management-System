@@ -1,7 +1,7 @@
 // Global icon initialization for client-side
 "use client"
 
-import { Settings, UserPlus, Menu, Search, Cog, Sliders } from "lucide-react"
+import { Settings, UserPlus, Menu, Search, Cog, Sliders, HelpCircle } from "lucide-react"
 
 // Initialize global icons on client side
 if (typeof window !== 'undefined') {
@@ -10,6 +10,7 @@ if (typeof window !== 'undefined') {
   (window as any).UserPlus = UserPlus;
   (window as any).Menu = Menu;
   (window as any).Search = Search;
+  (window as any).HelpCircle = HelpCircle;
   
   // Alternative icons
   (window as any).Cog = Cog;
@@ -20,6 +21,7 @@ if (typeof window !== 'undefined') {
     UserPlus: !!UserPlus,
     Menu: !!Menu,
     Search: !!Search,
+    HelpCircle: !!HelpCircle,
     Cog: !!Cog,
     Sliders: !!Sliders
   });

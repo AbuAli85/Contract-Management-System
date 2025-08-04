@@ -6,7 +6,7 @@ import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 
 // 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout
-import { Settings, UserPlus, Menu, Search } from "lucide-react"
+import { Settings, UserPlus, Menu, Search, HelpCircle } from "lucide-react"
 
 // Make all critical icons globally available
 if (typeof window !== 'undefined') {
@@ -14,6 +14,7 @@ if (typeof window !== 'undefined') {
   (window as any).UserPlus = UserPlus;
   (window as any).Menu = Menu;
   (window as any).Search = Search;
+  (window as any).HelpCircle = HelpCircle;
 }
 
 const fontInter = Inter({
