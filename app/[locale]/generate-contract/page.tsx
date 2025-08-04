@@ -150,6 +150,23 @@ export default function GenerateContractPage() {
     { id: "nda", label: "NDA", icon: Lock, count: 1 },
   ]
 
+  // Contract types with enhanced configuration and filtering
+  const allContractTypes = getAllEnhancedContractTypes()
+  
+  // Filter the contract types based on the active category
+  const filteredContractTypes = allContractTypes.filter(
+    (type) => activeCategory === "all" || type.category === activeCategory
+  )
+  
+  // Group the filtered types by category for rendering
+  const contractTypesConfig = filteredContractTypes.reduce((acc, type) => {
+    if (!acc[type.category]) {
+      acc[type.category] = []
+    }
+    acc[type.category].push(type)
+    return acc
+  }, {} as Record<string, any[]>)
+
   // Best practices
   const bestPractices = [
     "Ensure all party information is accurate and up-to-date",
@@ -189,23 +206,6 @@ export default function GenerateContractPage() {
       status: "development",
     },
   }
-
-  // Contract types with enhanced configuration and filtering
-  const allContractTypes = getAllEnhancedContractTypes()
-  
-  // Filter the contract types based on the active category
-  const filteredContractTypes = allContractTypes.filter(
-    (type) => activeCategory === "all" || type.category === activeCategory
-  )
-  
-  // Group the filtered types by category for rendering
-  const contractTypesConfig = filteredContractTypes.reduce((acc, type) => {
-    if (!acc[type.category]) {
-      acc[type.category] = []
-    }
-    acc[type.category].push(type)
-    return acc
-  }, {} as Record<string, any[]>)
 
   const handleContractTypeSelect = (type: string) => {
     setSelectedContractType(type)
