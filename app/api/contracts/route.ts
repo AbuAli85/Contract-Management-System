@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         promoter_id,
         employer:parties!contracts_employer_id_fkey(id, name_en, name_ar, crn, type),
         client:parties!contracts_client_id_fkey(id, name_en, name_ar, crn, type),
-        promoters:promoters!contracts_promoter_id_fkey(id, name_en, name_ar, id_card_number, status)
+        promoter:promoters!contracts_promoter_id_fkey(id, name_en, name_ar, id_card_number, status)
       `,
       )
       .order("created_at", { ascending: false })
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (statusData) {
-      statusData.forEach((contract) => {
+      statusData.forEach((contract: { status: string }) => {
         switch (contract.status) {
           case "active":
             stats.active++
