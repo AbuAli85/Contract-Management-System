@@ -227,7 +227,7 @@ export default function GenerateContractPage() {
     } catch (error) {
       console.error("Error selecting contract type:", error)
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError(`Failed to select contract type: ${errorMessage}`)
+      setError("Failed to select contract type: " + errorMessage)
       toast({
         title: "Selection Failed",
         description: "Failed to select contract type. Please try again.",
@@ -266,7 +266,7 @@ export default function GenerateContractPage() {
     } catch (error) {
       console.error("Error updating insights:", error)
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError(`Failed to update contract insights: ${errorMessage}`)
+      setError("Failed to update contract insights: " + errorMessage)
     }
   }, [initialInsights])
 
@@ -303,7 +303,7 @@ export default function GenerateContractPage() {
     } catch (error) {
       console.error("Error updating form progress:", error)
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-      setError(`Failed to update form progress: ${errorMessage}`)
+      setError("Failed to update form progress: " + errorMessage)
     }
   }, [toast])
 
@@ -709,7 +709,7 @@ export default function GenerateContractPage() {
             onError={(error) => {
               console.error("Enhanced form error:", error)
               const errorMessage = error instanceof Error ? error.message : "An unknown error occurred."
-              setError(`Contract generation failed: ${errorMessage}`)
+              setError("Contract generation failed: " + errorMessage)
               toast({
                 title: "Generation Failed",
                 description: errorMessage,

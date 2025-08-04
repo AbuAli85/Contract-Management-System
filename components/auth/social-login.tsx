@@ -82,16 +82,16 @@ export function SocialLogin({
       const result = await signInWithProvider(provider)
 
       if (result.success) {
-        toast.success(`Redirecting to ${PROVIDER_CONFIGS[provider]?.name || provider}...`)
+        toast.success("Redirecting to " + (PROVIDER_CONFIGS[provider]?.name || provider) + "...")
         onSuccess?.()
       } else {
-        const errorMessage = result.error || `Failed to sign in with ${provider}`
+        const errorMessage = result.error || ("Failed to sign in with " + provider)
         setError(errorMessage)
         onError?.(errorMessage)
         toast.error(errorMessage)
       }
     } catch (error) {
-      const errorMessage = `An unexpected error occurred while signing in with ${provider}`
+      const errorMessage = "An unexpected error occurred while signing in with " + provider
       console.error("Social login error:", error)
       setError(errorMessage)
       onError?.(errorMessage)
@@ -210,16 +210,16 @@ export function SocialLoginWithStatus({
       const result = await signInWithProvider(provider)
 
       if (result.success) {
-        toast.success(`Redirecting to ${PROVIDER_CONFIGS[provider]?.name || provider}...`)
+        toast.success("Redirecting to " + (PROVIDER_CONFIGS[provider]?.name || provider) + "...")
         onSuccess?.()
       } else {
-        const errorMessage = result.error || `Failed to sign in with ${provider}`
+        const errorMessage = result.error || ("Failed to sign in with " + provider)
         setError(errorMessage)
         onError?.(errorMessage)
         toast.error(errorMessage)
       }
     } catch (error) {
-      const errorMessage = `An unexpected error occurred while signing in with ${provider}`
+      const errorMessage = "An unexpected error occurred while signing in with " + provider
       console.error("Social login error:", error)
       setError(errorMessage)
       onError?.(errorMessage)
