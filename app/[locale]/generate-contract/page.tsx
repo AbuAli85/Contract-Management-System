@@ -76,6 +76,7 @@ export default function GenerateContractPage() {
   const [showAIInsights, setShowAIInsights] = useState(true)
   const [showContractInsights, setShowContractInsights] = useState(true)
   const [selectedContractType, setSelectedContractType] = useState<string>("")
+  const [activeCategory, setActiveCategory] = useState<string>("all")
   const [formProgress, setFormProgress] = useState<FormProgress>({
     completed: 0,
     total: 11,
@@ -90,8 +91,8 @@ export default function GenerateContractPage() {
     ],
   })
 
-  // AI Insights and Recommendations
-  const [insights, setInsights] = useState<ContractInsight[]>([
+  // Keep initial insights separate for cleaner management
+  const initialInsights: ContractInsight[] = [
     {
       type: "info",
       title: "Enhanced Schema Validation",
@@ -110,7 +111,10 @@ export default function GenerateContractPage() {
       description: "Contract dates are validated to ensure compliance with legal requirements.",
       priority: "high",
     },
-  ])
+  ]
+
+  // AI Insights and Recommendations
+  const [insights, setInsights] = useState<ContractInsight[]>(initialInsights)
 
   const [recommendations, setRecommendations] = useState<SmartRecommendation[]>([
     {
@@ -186,9 +190,16 @@ export default function GenerateContractPage() {
     },
   }
 
-  // Contract types with enhanced configuration
+  // Contract types with enhanced configuration and filtering
   const allContractTypes = getAllEnhancedContractTypes()
-  const contractTypesConfig = allContractTypes.reduce((acc, type) => {
+  
+  // Filter the contract types based on the active category
+  const filteredContractTypes = allContractTypes.filter(
+    (type) => activeCategory === "all" || type.category === activeCategory
+  )
+  
+  // Group the filtered types by category for rendering
+  const contractTypesConfig = filteredContractTypes.reduce((acc, type) => {
     if (!acc[type.category]) {
       acc[type.category] = []
     }
@@ -205,32 +216,48 @@ export default function GenerateContractPage() {
   const updateInsightsForContractType = (type: string) => {
     const typeConfig = getEnhancedContractTypeConfig(type)
     if (typeConfig) {
-      const newInsights: ContractInsight[] = [
+      // Create the new insights specific to the selected contract
+      const contractSpecificInsights: ContractInsight[] = [
         {
           type: "info",
-          title: `${typeConfig.name} Contract`,
+          title: `${typeConfig.name} Contract Selected`,
           description: typeConfig.description,
           priority: "medium",
         },
         {
           type: "success",
-          title: "Template Available",
-          description: `Professional template with ${typeConfig.fields.length} required fields`,
+          title: "Template Ready",
+          description: `This template includes ${typeConfig.fields.length} configured fields.`,
           priority: "high",
         },
       ]
-      setInsights((prev) => [...prev, ...newInsights])
+      // Set the insights state to be the initial general insights plus the new specific ones
+      setInsights([...initialInsights, ...contractSpecificInsights])
+    } else {
+      // If no specific type is selected, revert to only the initial insights
+      setInsights(initialInsights)
     }
   }
 
-  const updateFormProgress = (section: string, completed: boolean) => {
-    setFormProgress((prev) => {
-      const updatedSections = prev.sections.map((s) => (s.name === section ? { ...s, completed } : s))
-      const completedCount = updatedSections.filter((s) => s.completed).length
+  const updateFormProgress = (sectionName: string, isCompleted: boolean) => {
+    setFormProgress(prevProgress => {
+      // Find the section and update its 'completed' status
+      const updatedSections = prevProgress.sections.map(section =>
+        section.name === sectionName ? { ...section, completed: isCompleted } : section
+      )
+
+      // Count the number of newly completed sections
+      const completedCount = updatedSections.filter(section => section.completed).length
+
+      // Calculate the new percentage
+      const percentage = Math.round((completedCount / prevProgress.total) * 100)
+
+      // Return the new state object
       return {
-        ...prev,
+        ...prevProgress,
         completed: completedCount,
-        percentage: Math.round((completedCount / prev.total) * 100),
+        percentage: percentage,
+        sections: updatedSections,
       }
     })
   }
@@ -463,11 +490,21 @@ export default function GenerateContractPage() {
           <CardContent>
             {/* Filter Buttons */}
             <div className="mb-6 flex flex-wrap gap-2">
-              <Button variant="outline" size="sm">
+              <Button
+                variant={activeCategory === "all" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveCategory("all")}
+              >
                 All Types
               </Button>
               {contractCategories.map((category) => (
-                <Button key={category.id} variant="outline" size="sm">
+                <Button
+                  key={category.id}
+                  variant={activeCategory === category.id ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveCategory(category.id)}
+                >
+                  <category.icon className="mr-2 h-4 w-4" />
                   {category.label}
                 </Button>
               ))}
@@ -475,34 +512,42 @@ export default function GenerateContractPage() {
 
             {/* Contract Type Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(contractTypesConfig).map(([category, types]) => (
-                <div key={category} className="space-y-3">
-                  <h4 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{category}</h4>
-                  <div className="space-y-2">
-                    {types.map((type: any) => (
-                      <div
-                        key={type.id}
-                        className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
-                          selectedContractType === type.id ? "border-primary bg-primary/5" : ""
-                        }`}
-                        onClick={() => handleContractTypeSelect(type.id)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{type.name}</div>
-                            <div className="text-xs text-muted-foreground">
-                              {type.fields.length} required fields
+              {Object.keys(contractTypesConfig).length > 0 ? (
+                Object.entries(contractTypesConfig).map(([category, types]) => (
+                  <div key={category} className="space-y-3">
+                    <h4 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">{category}</h4>
+                    <div className="space-y-2">
+                      {types.map((type: any) => (
+                        <div
+                          key={type.id}
+                          className={`cursor-pointer rounded-lg border p-3 transition-all duration-200 hover:border-primary ${
+                            selectedContractType === type.id ? "border-primary bg-primary/5" : ""
+                          }`}
+                          onClick={() => handleContractTypeSelect(type.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{type.name}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {type.fields.length} configured fields
+                              </div>
                             </div>
+                            <Badge variant="outline" className="text-xs">
+                              {type.category}
+                            </Badge>
                           </div>
-                          <Badge variant="outline" className="text-xs">
-                            {type.category}
-                          </Badge>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center text-muted-foreground py-8">
+                  <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p>No contract types found in this category.</p>
+                  <p className="text-xs mt-1">Try selecting a different category or "All Types".</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
