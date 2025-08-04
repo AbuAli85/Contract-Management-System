@@ -25,17 +25,12 @@ import {
   Workflow,
 } from "lucide-react"
 
-// Lazy load components for better performance
-// const EnhancedContractForm = lazy(() => import("@/components/enhanced-contract-form"))
-// const UnifiedContractGeneratorForm = lazy(() => import("@/components/unified-contract-generator-form"))
-// const ContractIntelligence = lazy(() => import("@/components/ai/contract-intelligence"))
-
-// Temporary direct imports for testing
+// Imports for the forms - keep these
 import EnhancedContractForm from "@/components/enhanced-contract-form"
 import UnifiedContractGeneratorForm from "@/components/unified-contract-generator-form"
 import ContractIntelligence from "@/components/ai/contract-intelligence"
 import { getContractTypesByCategory, getEnhancedContractTypeConfig, getAllEnhancedContractTypes } from "@/lib/contract-type-config"
-import { useToast } from "@/components/ui/use-toast" // Import useToast
+import { useToast } from "@/components/ui/use-toast"
 
 interface ContractInsight {
   type: "success" | "warning" | "info" | "error"
@@ -69,7 +64,7 @@ export default function GenerateContractPage() {
   const { user } = useAuth()
   const pathname = usePathname()
   const locale = pathname?.split("/")[1] || "en"
-  const { toast } = useToast() // Initialize useToast
+  const { toast } = useToast()
 
   // State management
   const [useEnhancedForm, setUseEnhancedForm] = useState(false)
@@ -151,6 +146,7 @@ export default function GenerateContractPage() {
   ]
 
   // Contract types with enhanced configuration and filtering
+  // Initialize all contract types first
   const allContractTypes = getAllEnhancedContractTypes()
   
   // Filter the contract types based on the active category
