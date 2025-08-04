@@ -2,12 +2,12 @@
 
 import { useState } from "react"
 
-export default function GenerateContractPage() {
+export default function TestSimplePage() {
   const [count, setCount] = useState(0)
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Generate Contract - Minimal Test</h1>
+      <h1 className="text-2xl font-bold mb-4">Simple Test Page</h1>
       <p className="mb-4">This is a minimal test page to check for initialization errors.</p>
       <button 
         onClick={() => setCount(count + 1)}
@@ -17,4 +17,4 @@ export default function GenerateContractPage() {
       </button>
     </div>
   )
-}
+} 
