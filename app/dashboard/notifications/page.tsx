@@ -92,7 +92,7 @@ export default function NotificationsPage() {
         if (error) throw error
         if (!ignore) {
           // Transform the data to match NotificationItem interface
-          const transformedData: NotificationItem[] = (data || []).map((notification) => ({
+          const transformedData: NotificationItem[] = (data || []).map((notification: any) => ({
             id: notification.id.toString(), // Convert number to string
             type:
               (notification.type as "success" | "error" | "warning" | "info" | "default") ||
