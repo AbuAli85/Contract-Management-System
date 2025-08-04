@@ -85,16 +85,13 @@ interface FormValues {
 
 // Smart recommendation interface
 interface SmartRecommendation {
-  id: string
+  category: string
   title: string
   description: string
-  action: string
-  impact: "high" | "medium" | "low"
+  impact: "low" | "medium" | "high"
   implementation: string
   estimatedSavings?: string
 }
-
-export default function GenerateContractPage() {
 
 // Custom hook for contract config with error handling
 function useContractConfig() {
@@ -138,6 +135,85 @@ function useContractConfig() {
   return config;
 }
 
+// Feature comparison component to reduce duplication
+const FeatureCard = ({ 
+  formType, 
+  isSelected, 
+  onClick 
+}: { 
+  formType: {
+    title: string;
+    description: string;
+    features: string[];
+    status: "active" | "development";
+  },
+  isSelected: boolean, 
+  onClick: () => void 
+}) => (
+  <Card
+    className={`border-2 transition-all duration-200 cursor-pointer ${
+      isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+    }`}
+    onClick={onClick}
+  >
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        {formType.title === "Standard Form" ? (
+          <FileText className="h-5 w-5" />
+        ) : (
+          <Sparkles className="h-5 w-5" />
+        )}
+        {formType.title}
+      </CardTitle>
+      <CardDescription>{formType.description}</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <div className="space-y-2">
+        {formType.features.map((feature, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 text-green-500" />
+            <span className="text-sm">{feature}</span>
+          </div>
+        ))}
+      </div>
+      <Badge className="mt-4" variant={formType.status === "active" ? "default" : "secondary"}>
+        {formType.status === "active" ? "Active" : "Development"}
+      </Badge>
+    </CardContent>
+  </Card>
+)
+
+// Feature comparison data
+const featureComparison = {
+  standard: {
+    title: "Standard Form",
+    description: "Enhanced with advanced validation and business rules",
+    features: [
+      "Enhanced schema validation",
+      "Business rule enforcement", 
+      "Smart field requirements",
+      "Date validation & constraints",
+      "Comprehensive error handling",
+      "Ready for production use",
+    ],
+    status: "active" as const,
+  },
+  enhanced: {
+    title: "Enhanced Form",
+    description: "Advanced interface with sectioned workflow (In Development)",
+    features: [
+      "Sectioned form with progress tracking",
+      "Real-time contract insights",
+      "Smart auto-completion",
+      "Salary recommendations", 
+      "Advanced analytics",
+      "Coming soon...",
+    ],
+    status: "development" as const,
+  },
+}
+
+// TypeScript interfaces
 interface ContractInsight {
   type: "success" | "warning" | "info" | "error"
   title: string
@@ -347,36 +423,6 @@ export default function GenerateContractPage() {
     "Include all required legal clauses and terms",
   ]
 
-  // Feature comparison
-  const featureComparison = {
-    standard: {
-      title: "Standard Form",
-      description: "Enhanced with advanced validation and business rules",
-      features: [
-        "Enhanced schema validation",
-        "Business rule enforcement",
-        "Smart field requirements",
-        "Date validation & constraints",
-        "Comprehensive error handling",
-        "Ready for production use",
-      ],
-      status: "active",
-    },
-    enhanced: {
-      title: "Enhanced Form",
-      description: "Advanced interface with sectioned workflow (In Development)",
-      features: [
-        "Sectioned form with progress tracking",
-        "Real-time contract insights",
-        "Smart auto-completion",
-        "Salary recommendations",
-        "Advanced analytics",
-        "Coming soon...",
-      ],
-      status: "development",
-    },
-  }
-
   const handleContractTypeSelect = useCallback((type: string) => {
     try {
       setIsLoading(true)
@@ -471,49 +517,6 @@ export default function GenerateContractPage() {
       setError("Failed to update form progress: " + errorMessage)
     }
   }, [toast])
-
-  // Feature comparison component to reduce duplication
-  const FeatureCard = ({ 
-    formType, 
-    isSelected, 
-    onClick 
-  }: { 
-    formType: typeof featureComparison.standard, 
-    isSelected: boolean, 
-    onClick: () => void 
-  }) => (
-    <Card
-      className={`border-2 transition-all duration-200 cursor-pointer ${
-        isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-      }`}
-      onClick={onClick}
-    >
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {formType.title === "Standard Form" ? (
-            <FileText className="h-5 w-5" />
-          ) : (
-            <Sparkles className="h-5 w-5" />
-          )}
-          {formType.title}
-        </CardTitle>
-        <CardDescription>{formType.description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {formType.features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <span className="text-sm">{feature}</span>
-            </div>
-          ))}
-        </div>
-        <Badge className="mt-4" variant={formType.status === "active" ? "default" : "secondary"}>
-          {formType.status === "active" ? "Active" : "Development"}
-        </Badge>
-      </CardContent>
-    </Card>
-  )
 
   return (
     <AuthenticatedLayout locale={locale}>
