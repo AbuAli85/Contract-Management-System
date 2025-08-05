@@ -698,6 +698,39 @@ export default function EnhancedContractForm({
                 </CardContent>
               </Card>
 
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5" />
+                    Contact Information
+                  </CardTitle>
+                  <CardDescription>Email address for contract notifications</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="Enter email address" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          This email will be used for contract notifications and updates
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Contract Period */}
               <Card>
                 <CardHeader>
