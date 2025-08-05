@@ -46,6 +46,33 @@ test-*.js
 debug-*.js
 quick-*.js
 build-test.js
+check-*.js
+analyze-*.js
+create-*.js
+export-*.js
+import-*.js
+
+# Export/import data files
+*-export.json
+export-summary.json
+*.csv
+
+# Temporary SQL files
+*-temp.sql
+*-fix.sql
+*-backup.sql
+
+# Documentation overload prevention
+*_FIX*.md
+*_FIXES*.md
+*_SUMMARY*.md
+*_DEBUG*.md
+*_ERROR*.md
+*_COMPLETE*.md
+DEBUG_*.md
+FIX_*.md
+URGENT_*.md
+TEMP_*.md
 
 # Git configuration files (accidentally created)
 h upstream*
