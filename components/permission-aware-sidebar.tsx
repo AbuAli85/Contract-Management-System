@@ -150,7 +150,6 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
       title: "Approval Workflow",
       titleAr: "سير عمل الموافقة",
       items: [
-        items: [
         {
           href: "/" + locale + "/dashboard/user-approvals",
           label: "User Approvals",
@@ -177,7 +176,6 @@ export function PermissionAwareSidebar({ isCollapsed = false, onToggle }: Sideba
           labelAr: "الموافقات المكتملة",
           icon: FileCheck,
         },
-      ],
       ],
     },
     {
