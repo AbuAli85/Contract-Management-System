@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { ContractHeader } from "@/components/contracts/ContractHeader"
-import { ContractInfo } from "@/components/contracts/ContractInfo"
+import { ContractInfoEnhanced } from "@/components/contracts/ContractInfoEnhanced"
 
 export default function ContractDetailPage() {
   const params = useParams()
@@ -33,7 +33,7 @@ export default function ContractDetailPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <ContractHeader contractId={contractId} />
-        <ContractInfo contract={contract} contractId={contractId} />
+        <ContractInfoEnhanced contract={contract} contractId={contractId} useRealData={true} />
       </div>
     </div>
   )
