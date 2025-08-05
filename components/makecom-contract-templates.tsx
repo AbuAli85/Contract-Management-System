@@ -252,7 +252,7 @@ export default function MakecomContractTemplates() {
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="" disabled>
+                  <SelectItem value="no-types" disabled>
                     {loading ? "Loading contract types..." : "No contract types available"}
                   </SelectItem>
                 )}

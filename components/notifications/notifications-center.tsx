@@ -70,8 +70,8 @@ export function NotificationsCenter({
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [filters, setFilters] = useState({
-    category: '',
-    priority: '',
+    category: 'all',
+    priority: 'all',
     unreadOnly: false
   })
   const [showBulkActions, setShowBulkActions] = useState(false)
@@ -81,11 +81,11 @@ export function NotificationsCenter({
     const safeNotifications = Array.isArray(notifications) ? notifications : []
     let filtered = safeNotifications
 
-    if (filters.category) {
+    if (filters.category && filters.category !== 'all') {
       filtered = filtered.filter(n => n.category === filters.category)
     }
 
-    if (filters.priority) {
+    if (filters.priority && filters.priority !== 'all') {
       filtered = filtered.filter(n => n.priority === filters.priority)
     }
 
@@ -306,7 +306,7 @@ export function NotificationsCenter({
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="contract">Contracts</SelectItem>
                     <SelectItem value="promoter">Promoters</SelectItem>
                     <SelectItem value="document">Documents</SelectItem>
@@ -326,7 +326,7 @@ export function NotificationsCenter({
                     <SelectValue placeholder="All Priorities" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Priorities</SelectItem>
+                    <SelectItem value="all">All Priorities</SelectItem>
                     <SelectItem value="high">High</SelectItem>
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="low">Low</SelectItem>
@@ -400,7 +400,7 @@ export function NotificationsCenter({
                 <Button 
                   variant="link" 
                   size="sm" 
-                  onClick={() => setFilters({ category: '', priority: '', unreadOnly: false })}
+                  onClick={() => setFilters({ category: 'all', priority: 'all', unreadOnly: false })}
                   className="mt-2"
                 >
                   Clear filters
