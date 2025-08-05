@@ -866,7 +866,8 @@ const OverviewSection = ({
             </div>
             <div className="relative">
               <Progress value={formProgress.percentage} className="h-3 bg-slate-100" />
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-80 transition-all duration-500 h-3"
+              <div 
+                className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full opacity-80 transition-all duration-500 h-3"
                 style={{ width: `${Math.min(formProgress.percentage, 100)}%` }}
               />
             </div>
@@ -1349,16 +1350,16 @@ const SettingsSection = () => (
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Default Language</label>
-            <select className="w-full p-2 border border-slate-200 rounded-lg">
+            <label htmlFor="default-language" className="text-sm font-medium">Default Language</label>
+            <select id="default-language" className="w-full p-2 border border-slate-200 rounded-lg">
               <option value="en">English</option>
               <option value="ar">Arabic</option>
               <option value="bilingual">Bilingual</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Currency Format</label>
-            <select className="w-full p-2 border border-slate-200 rounded-lg">
+            <label htmlFor="currency-format" className="text-sm font-medium">Currency Format</label>
+            <select id="currency-format" className="w-full p-2 border border-slate-200 rounded-lg">
               <option value="omr">Omani Rial (OMR)</option>
               <option value="usd">US Dollar (USD)</option>
               <option value="eur">Euro (EUR)</option>
@@ -1377,16 +1378,16 @@ const SettingsSection = () => (
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Email Notifications</label>
-            <input type="checkbox" className="rounded" />
+            <label htmlFor="email-notifications" className="text-sm font-medium">Email Notifications</label>
+            <input id="email-notifications" type="checkbox" className="rounded" />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Contract Reminders</label>
-            <input type="checkbox" className="rounded" />
+            <label htmlFor="contract-reminders" className="text-sm font-medium">Contract Reminders</label>
+            <input id="contract-reminders" type="checkbox" className="rounded" />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">AI Insights Alerts</label>
-            <input type="checkbox" className="rounded" />
+            <label htmlFor="ai-insights-alerts" className="text-sm font-medium">AI Insights Alerts</label>
+            <input id="ai-insights-alerts" type="checkbox" className="rounded" />
           </div>
         </CardContent>
       </Card>
@@ -1407,8 +1408,8 @@ const SettingsSection = () => (
             </Button>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Data Retention</label>
-            <select className="w-full p-2 border border-slate-200 rounded-lg">
+            <label htmlFor="data-retention" className="text-sm font-medium">Data Retention</label>
+            <select id="data-retention" className="w-full p-2 border border-slate-200 rounded-lg">
               <option value="30">30 days</option>
               <option value="90">90 days</option>
               <option value="365">1 year</option>
@@ -1428,16 +1429,16 @@ const SettingsSection = () => (
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Debug Mode</label>
-            <input type="checkbox" className="rounded" />
+            <label htmlFor="debug-mode" className="text-sm font-medium">Debug Mode</label>
+            <input id="debug-mode" type="checkbox" className="rounded" />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm font-medium">Auto-save Drafts</label>
-            <input type="checkbox" className="rounded" defaultChecked />
+            <label htmlFor="auto-save-drafts" className="text-sm font-medium">Auto-save Drafts</label>
+            <input id="auto-save-drafts" type="checkbox" className="rounded" defaultChecked />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Theme</label>
-            <select className="w-full p-2 border border-slate-200 rounded-lg">
+            <label htmlFor="theme-selection" className="text-sm font-medium">Theme</label>
+            <select id="theme-selection" className="w-full p-2 border border-slate-200 rounded-lg">
               <option value="light">Light</option>
               <option value="dark">Dark</option>
               <option value="auto">Auto</option>
