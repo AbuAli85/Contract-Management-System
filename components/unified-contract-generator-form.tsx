@@ -338,6 +338,137 @@ function UnifiedContractGeneratorForm({
     }
   }, [watchedPromoterId, promoters, form])
 
+  // Watch for contract type changes to pre-fill template data
+  const watchedContractType = useWatch({ control: form.control, name: "contract_type" })
+  
+  // Auto-fill form based on selected contract template
+  useEffect(() => {
+    if (watchedContractType && watchedContractType !== form.getValues("contract_type")) {
+      // Get template configuration based on contract type
+      const selectedTemplate = CONTRACT_TYPES.find(type => type.value === watchedContractType)
+      
+      if (selectedTemplate) {
+        // Clear existing template-specific values first
+        const currentValues = form.getValues()
+        
+        // Apply template-specific defaults based on contract type
+        switch (watchedContractType) {
+          case "unlimited-contract":
+            // Unlimited contract - no end date, standard settings
+            form.setValue("contract_end_date", undefined)
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 3)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 30)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 40)
+            break
+            
+          case "limited-contract":
+          case "oman-fixed-term-makecom":
+            // Fixed-term contract - requires end date
+            if (!currentValues.contract_end_date && currentValues.contract_start_date) {
+              const startDate = new Date(currentValues.contract_start_date)
+              const endDate = new Date(startDate)
+              endDate.setFullYear(startDate.getFullYear() + 1) // Default 1 year
+              form.setValue("contract_end_date", endDate)
+            }
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 2)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 14)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 40)
+            break
+            
+          case "part-time-contract":
+          case "oman-part-time-makecom":
+            // Part-time contract - reduced hours
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 20)
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 1)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 14)
+            break
+            
+          case "probationary":
+            // Probationary contract - short term with specific settings
+            if (!currentValues.contract_end_date && currentValues.contract_start_date) {
+              const startDate = new Date(currentValues.contract_start_date)
+              const endDate = new Date(startDate)
+              endDate.setMonth(startDate.getMonth() + 3) // 3 months probation
+              form.setValue("contract_end_date", endDate)
+            }
+            form.setValue("probation_period_months", 0) // No additional probation
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 7)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 40)
+            break
+            
+          case "internship":
+          case "training-contract":
+            // Internship/Training - typically short-term with minimal salary
+            if (!currentValues.contract_end_date && currentValues.contract_start_date) {
+              const startDate = new Date(currentValues.contract_start_date)
+              const endDate = new Date(startDate)
+              endDate.setMonth(startDate.getMonth() + 6) // 6 months default
+              form.setValue("contract_end_date", endDate)
+            }
+            form.setValue("probation_period_months", 0)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 7)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 35)
+            if (!currentValues.basic_salary) form.setValue("basic_salary", 300) // Minimum training allowance
+            break
+            
+          case "consulting":
+          case "freelance":
+          case "project-based":
+            // Consulting/Freelance - project-based with flexible terms
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 7)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 30)
+            form.setValue("probation_period_months", 0)
+            break
+            
+          case "seasonal":
+          case "temporary":
+            // Seasonal/Temporary - short-term with minimal commitments
+            if (!currentValues.contract_end_date && currentValues.contract_start_date) {
+              const startDate = new Date(currentValues.contract_start_date)
+              const endDate = new Date(startDate)
+              endDate.setMonth(startDate.getMonth() + 4) // 4 months default
+              form.setValue("contract_end_date", endDate)
+            }
+            form.setValue("probation_period_months", 0)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 3)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 25)
+            break
+            
+          case "executive":
+          case "management":
+          case "director":
+            // Executive contracts - enhanced terms
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 6)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 60)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 45)
+            if (!currentValues.basic_salary) form.setValue("basic_salary", 2000) // Higher base salary
+            break
+            
+          case "remote-work":
+            // Remote work contract - flexible arrangements
+            if (!currentValues.work_location) form.setValue("work_location", "remote")
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 40)
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 2)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 30)
+            break
+            
+          default:
+            // Default template values for other contract types
+            if (!currentValues.probation_period_months) form.setValue("probation_period_months", 3)
+            if (!currentValues.notice_period_days) form.setValue("notice_period_days", 30)
+            if (!currentValues.working_hours_per_week) form.setValue("working_hours_per_week", 40)
+            break
+        }
+        
+        // Show notification about template application
+        toast.success(`Template applied: ${selectedTemplate.label}`, {
+          description: "Form fields have been pre-filled based on the selected contract type.",
+          duration: 3000,
+        })
+      }
+    }
+  }, [watchedContractType, form, toast])
+
   // Clear promoter selection when employer changes
   useEffect(() => {
     if (watchedSecondPartyId) {
