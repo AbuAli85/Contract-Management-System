@@ -159,8 +159,8 @@ export default function EnhancedContractForm({
       department: contract?.department || "",
       contract_type: contract?.contract_type || "",
       currency: contract?.currency || "OMR",
-      basic_salary: contract?.contract_value || 0,
-      allowances: 0,
+      basic_salary: contract?.contract_value || undefined,
+      allowances: undefined,
       probation_period_months: 3,
       notice_period_days: 30,
       working_hours_per_week: 40,
@@ -898,11 +898,17 @@ export default function EnhancedContractForm({
                           <FormControl>
                             <Input
                               type="number"
-                              {...field}
+                              value={field.value ?? ""}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                const numValue = value === "" ? undefined : Number(value);
-                                field.onChange(isNaN(numValue) ? undefined : numValue);
+                                if (value === "") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
                               }}
                               disabled={isLoading}
                               placeholder="0"
@@ -922,11 +928,17 @@ export default function EnhancedContractForm({
                           <FormControl>
                             <Input
                               type="number"
-                              {...field}
+                              value={field.value ?? ""}
                               onChange={(e) => {
                                 const value = e.target.value;
-                                const numValue = value === "" ? undefined : Number(value);
-                                field.onChange(isNaN(numValue) ? undefined : numValue);
+                                if (value === "") {
+                                  field.onChange(undefined);
+                                } else {
+                                  const numValue = Number(value);
+                                  if (!isNaN(numValue)) {
+                                    field.onChange(numValue);
+                                  }
+                                }
                               }}
                               disabled={isLoading}
                               placeholder="0"
