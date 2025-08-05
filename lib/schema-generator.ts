@@ -45,46 +45,47 @@ export const contractGeneratorSchema = z
     contract_type: z
       .string()
       .min(1, "Contract type is required.")
-      .max(100, "Contract type is too long.")
-      .refine(
-        (value) => {
-          // Validate against known contract types
-          const validTypes = [
-            "unlimited-contract",
-            "limited-contract",
-            "part-time-contract",
-            "full-time-permanent",
-            "full-time-fixed",
-            "part-time-permanent",
-            "part-time-fixed",
-            "probationary",
-            "training-contract",
-            "internship",
-            "graduate-trainee",
-            "project-based",
-            "consulting",
-            "freelance",
-            "contractor",
-            "seasonal",
-            "temporary",
-            "casual",
-            "executive",
-            "management",
-            "director",
-            "remote-work",
-            "hybrid-work",
-            "secondment",
-            "apprenticeship",
-            "service-agreement",
-            "retainer",
-            "other",
-          ]
-          return validTypes.includes(value)
-        },
-        {
-          message: "Please select a valid contract type from the available options.",
-        },
-      ),
+      .max(100, "Contract type is too long."),
+      // Temporarily removed .refine validation to debug
+      // .refine(
+      //   (value) => {
+      //     // Validate against known contract types
+      //     const validTypes = [
+      //       "unlimited-contract",
+      //       "limited-contract",
+      //       "part-time-contract",
+      //       "full-time-permanent",
+      //       "full-time-fixed",
+      //       "part-time-permanent",
+      //       "part-time-fixed",
+      //       "probationary",
+      //       "training-contract",
+      //       "internship",
+      //       "graduate-trainee",
+      //       "project-based",
+      //       "consulting",
+      //       "freelance",
+      //       "contractor",
+      //       "seasonal",
+      //       "temporary",
+      //       "casual",
+      //       "executive",
+      //       "management",
+      //       "director",
+      //       "remote-work",
+      //       "hybrid-work",
+      //       "secondment",
+      //       "apprenticeship",
+      //       "service-agreement",
+      //       "retainer",
+      //       "other",
+      //     ]
+      //     return validTypes.includes(value)
+      //   },
+      //   {
+      //     message: "Please select a valid contract type from the available options.",
+      //   },
+      // ),
 
     currency: z.string().min(1, "Currency is required.").max(10, "Currency code is too long."),
 

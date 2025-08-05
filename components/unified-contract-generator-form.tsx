@@ -334,10 +334,32 @@ export default function UnifiedContractGeneratorForm({
     console.log("Form submission attempted with data:", data)
     console.log("Form errors:", form.formState.errors)
     console.log("Form is valid:", form.formState.isValid)
+    console.log("Required fields:", getRequiredFields())
+    console.log("Form touched fields:", form.formState.touchedFields)
+    
+    // Log each required field and its value for debugging
+    const requiredFields = getRequiredFields()
+    requiredFields.forEach(field => {
+      const value = form.getValues(field as keyof ContractGeneratorFormData)
+      console.log(`Field ${field}:`, value, typeof value, value === null, value === undefined, value === "")
+    })
     
     // Check if form is valid before submitting
     if (!form.formState.isValid) {
-      toast.error("Please fix the validation errors before submitting")
+      console.log("Form validation failed, but attempting to trigger validation and retry...")
+      
+      // Force trigger validation on all fields
+      form.trigger().then(isValid => {
+        console.log("Manual validation result:", isValid)
+        if (isValid) {
+          console.log("Manual validation passed, proceeding with submission")
+          setValidationErrors([])
+          submitMutation.mutate(data)
+        } else {
+          console.log("Manual validation also failed")
+          toast.error("Please fix the validation errors before submitting")
+        }
+      })
       return
     }
     
@@ -1188,6 +1210,23 @@ export default function UnifiedContractGeneratorForm({
                 }}
               >
                 Debug Form
+              </Button>
+            )}
+            
+            {/* Force Submit button for debugging */}
+            {process.env.NODE_ENV === "development" && (
+              <Button 
+                type="button" 
+                variant="destructive" 
+                onClick={() => {
+                  console.log("Force submit bypassing validation")
+                  const data = form.getValues()
+                  console.log("Force submit data:", data)
+                  setValidationErrors([])
+                  submitMutation.mutate(data)
+                }}
+              >
+                Force Submit (Debug)
               </Button>
             )}
             
