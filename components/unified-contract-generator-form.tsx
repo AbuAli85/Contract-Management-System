@@ -18,7 +18,6 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form"
-import { useOptimizedNumberInput } from "@/lib/performance-hooks"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -167,18 +166,16 @@ export default function UnifiedContractGeneratorForm({
       department: contract?.department || "",
       contract_type: contract?.contract_type || "unlimited-contract", // Set default to unlimited contract
       currency: "OMR", // Default to OMR for Oman market
-      basic_salary: contract?.contract_value || 0,
-      allowances: 0,
-      probation_period_months: 3, // Default 3 months probation
-      notice_period_days: 30, // Default 30 days notice
-      working_hours_per_week: 40, // Standard 40 hours
+      basic_salary: contract?.contract_value || undefined,
+      allowances: undefined,
+      probation_period_months: undefined, // Changed from 3 to undefined for consistency
+      notice_period_days: undefined, // Changed from 30 to undefined for consistency
+      working_hours_per_week: undefined, // Changed from 40 to undefined for consistency
       special_terms: "",
     },
   })
 
-  // Performance optimization: Debounced number input handler to prevent UI blocking
-  const createOptimizedNumberHandler = useOptimizedNumberInput()
-
+  // Performance optimization: Direct number input handling to prevent UI blocking
   // Watch form values for calculations and validation (MUST BE DECLARED BEFORE USAGE)
   const watchedValues = useWatch({ control: form.control })
   const watchedPromoterId = useWatch({ control: form.control, name: "promoter_id" })
@@ -220,6 +217,8 @@ export default function UnifiedContractGeneratorForm({
   // Calculate form completion progress
   const formProgress = useMemo(() => {
     const requiredFields = getRequiredFields()
+    if (requiredFields.length === 0) return 0
+    
     const completedFields = requiredFields.filter((field) => {
       const value = form.getValues(field as keyof ContractGeneratorFormData)
       return value !== undefined && value !== null && value !== ""
@@ -498,8 +497,18 @@ export default function UnifiedContractGeneratorForm({
                     <Input
                       type="number"
                       placeholder="Enter contract value"
-                      {...field}
-                      onChange={createOptimizedNumberHandler(field.onChange)}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "") {
+                          field.onChange(undefined);
+                        } else {
+                          const numValue = Number(value);
+                          if (!isNaN(numValue)) {
+                            field.onChange(numValue);
+                          }
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -528,7 +537,7 @@ export default function UnifiedContractGeneratorForm({
                 <FormItem>
                   <FormLabel>Contract Type *</FormLabel>
                   <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select contract type" />
                       </SelectTrigger>
@@ -614,9 +623,9 @@ export default function UnifiedContractGeneratorForm({
         <div className="mb-6">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700">Form Completion</span>
-            <span className="text-sm text-gray-500">{formProgress}%</span>
+            <span className="text-sm text-gray-500">{isNaN(formProgress) ? 0 : formProgress}%</span>
           </div>
-          <Progress value={formProgress} className="h-2" />
+          <Progress value={isNaN(formProgress) ? 0 : formProgress} className="h-2" />
         </div>
 
         {/* Contract Insights */}
@@ -629,7 +638,7 @@ export default function UnifiedContractGeneratorForm({
                   <h3 className="font-semibold text-blue-900">Contract Insights</h3>
                   <div className="mt-1 flex gap-4 text-sm text-blue-700">
                     <span>Duration: {contractInsights.durationText}</span>
-                    {contractInsights.totalCompensation > 0 && (
+                    {contractInsights.totalCompensation > 0 && !isNaN(contractInsights.totalCompensation) && (
                       <span>Total: {contractInsights.totalCompensation} OMR</span>
                     )}
                     <Badge variant={contractInsights.isShortTerm ? "secondary" : "default"}>
@@ -727,6 +736,27 @@ export default function UnifiedContractGeneratorForm({
                           ✅ {promoterOptions.length} promoter(s) available for this employer
                         </p>
                       )}
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="email" 
+                          placeholder="Enter email address" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Email address for contract notifications
+                      </FormDescription>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -857,6 +887,34 @@ export default function UnifiedContractGeneratorForm({
                   />
                 </div>
 
+                <FormField
+                  control={form.control}
+                  name="contract_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contract Type *</FormLabel>
+                      <FormControl>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select contract type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CONTRACT_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormDescription>
+                        Choose the type of employment contract
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <FormField
                     control={form.control}
@@ -868,8 +926,18 @@ export default function UnifiedContractGeneratorForm({
                           <Input
                             type="number"
                             placeholder="0.00"
-                            {...field}
-                            onChange={createOptimizedNumberHandler(field.onChange)}
+                            value={field.value ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue)) {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -887,8 +955,18 @@ export default function UnifiedContractGeneratorForm({
                           <Input
                             type="number"
                             placeholder="0.00"
-                            {...field}
-                            onChange={createOptimizedNumberHandler(field.onChange)}
+                            value={field.value ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                field.onChange(undefined);
+                              } else {
+                                const numValue = Number(value);
+                                if (!isNaN(numValue)) {
+                                  field.onChange(numValue);
+                                }
+                              }
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -953,12 +1031,18 @@ export default function UnifiedContractGeneratorForm({
                                 <Input
                                   type="number"
                                   placeholder="3"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value ? Number(e.target.value) : undefined,
-                                    )
-                                  }
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                      field.onChange(undefined);
+                                    } else {
+                                      const numValue = Number(value);
+                                      if (!isNaN(numValue)) {
+                                        field.onChange(numValue);
+                                      }
+                                    }
+                                  }}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -976,12 +1060,18 @@ export default function UnifiedContractGeneratorForm({
                                 <Input
                                   type="number"
                                   placeholder="30"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value ? Number(e.target.value) : undefined,
-                                    )
-                                  }
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                      field.onChange(undefined);
+                                    } else {
+                                      const numValue = Number(value);
+                                      if (!isNaN(numValue)) {
+                                        field.onChange(numValue);
+                                      }
+                                    }
+                                  }}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -999,12 +1089,18 @@ export default function UnifiedContractGeneratorForm({
                                 <Input
                                   type="number"
                                   placeholder="40"
-                                  {...field}
-                                  onChange={(e) =>
-                                    field.onChange(
-                                      e.target.value ? Number(e.target.value) : undefined,
-                                    )
-                                  }
+                                  value={field.value ?? ""}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                      field.onChange(undefined);
+                                    } else {
+                                      const numValue = Number(value);
+                                      if (!isNaN(numValue)) {
+                                        field.onChange(numValue);
+                                      }
+                                    }
+                                  }}
                                 />
                               </FormControl>
                               <FormMessage />
@@ -1050,7 +1146,7 @@ export default function UnifiedContractGeneratorForm({
                       <div className="font-medium">Validation Errors:</div>
                       {Object.entries(form.formState.errors).map(([field, error]) => (
                         <div key={field} className="text-red-600">
-                          {field}: {error?.message}
+                          {field}: {typeof error === 'object' && error?.message ? error.message : 'Validation error'}
                         </div>
                       ))}
                     </div>
