@@ -365,15 +365,6 @@ export default function GenerateContractPage() {
     ],
   })
 
-  // Auto-navigate to generator tab when contract type is selected
-  const handleContractTypeSelectWithNavigation = useCallback((type: string) => {
-    handleContractTypeSelect(type)
-    // Auto-navigate to generator tab after selection
-    setTimeout(() => {
-      setActiveTab("generator")
-    }, 500)
-  }, [handleContractTypeSelect])
-
   // Keep initial insights separate for cleaner management
   const initialInsights: ContractInsight[] = [
     {
@@ -450,6 +441,15 @@ export default function GenerateContractPage() {
       setIsLoading(false)
     }
   }, [toast, getEnhancedContractTypeConfig])
+
+  // Auto-navigate to generator tab when contract type is selected
+  const handleContractTypeSelectWithNavigation = useCallback((type: string) => {
+    handleContractTypeSelect(type)
+    // Auto-navigate to generator tab after selection
+    setTimeout(() => {
+      setActiveTab("generator")
+    }, 500)
+  }, [handleContractTypeSelect])
 
   const updateInsightsForContractType = useCallback((type: string) => {
     try {
