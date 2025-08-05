@@ -829,12 +829,110 @@ function UnifiedContractGeneratorForm({
                     </Select>
                   </FormControl>
                   <FormDescription>
-                    Choose the type of employment contract
+                    Choose the type of employment contract. Template settings will be auto-applied.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Template Preview Section */}
+            {watchedContractType && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                  <h4 className="text-sm font-medium text-blue-800">
+                    Template Applied: {CONTRACT_TYPES.find(t => t.value === watchedContractType)?.label}
+                  </h4>
+                </div>
+                <p className="text-xs text-blue-600 mb-2">
+                  The following defaults have been applied based on your selection:
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
+                  {watchedContractType === "unlimited-contract" && (
+                    <>
+                      <div>• No end date required</div>
+                      <div>• 3 months probation</div>
+                      <div>• 30 days notice period</div>
+                      <div>• 40 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "limited-contract" || watchedContractType === "oman-fixed-term-makecom") && (
+                    <>
+                      <div>• 1 year default duration</div>
+                      <div>• 2 months probation</div>
+                      <div>• 14 days notice period</div>
+                      <div>• 40 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "part-time-contract" || watchedContractType === "oman-part-time-makecom") && (
+                    <>
+                      <div>• 20 hours/week</div>
+                      <div>• 1 month probation</div>
+                      <div>• 14 days notice period</div>
+                      <div>• Flexible schedule</div>
+                    </>
+                  )}
+                  {watchedContractType === "probationary" && (
+                    <>
+                      <div>• 3 months duration</div>
+                      <div>• No additional probation</div>
+                      <div>• 7 days notice period</div>
+                      <div>• 40 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "internship" || watchedContractType === "training-contract") && (
+                    <>
+                      <div>• 6 months duration</div>
+                      <div>• No probation period</div>
+                      <div>• 7 days notice period</div>
+                      <div>• 35 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "consulting" || watchedContractType === "freelance" || watchedContractType === "project-based") && (
+                    <>
+                      <div>• Project-based terms</div>
+                      <div>• No probation period</div>
+                      <div>• 7 days notice period</div>
+                      <div>• 30 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "seasonal" || watchedContractType === "temporary") && (
+                    <>
+                      <div>• 4 months duration</div>
+                      <div>• No probation period</div>
+                      <div>• 3 days notice period</div>
+                      <div>• 25 hours/week</div>
+                    </>
+                  )}
+                  {(watchedContractType === "executive" || watchedContractType === "management" || watchedContractType === "director") && (
+                    <>
+                      <div>• Enhanced terms</div>
+                      <div>• 6 months probation</div>
+                      <div>• 60 days notice period</div>
+                      <div>• 45 hours/week</div>
+                    </>
+                  )}
+                  {watchedContractType === "remote-work" && (
+                    <>
+                      <div>• Remote location set</div>
+                      <div>• 2 months probation</div>
+                      <div>• 30 days notice period</div>
+                      <div>• 40 hours/week</div>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-blue-600 mt-2 italic">
+                  You can modify these values below as needed.
+                </p>
+              </motion.div>
+            )}
 
             <FormField
               control={form.control}
