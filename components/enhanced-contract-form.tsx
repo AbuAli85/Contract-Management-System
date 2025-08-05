@@ -675,7 +675,7 @@ export default function EnhancedContractForm({
                               </SelectItem>
                             ))}
                             {filteredPromoters?.length === 0 && watchedSecondParty && (
-                              <SelectItem value="" disabled>
+                              <SelectItem value="no-promoters" disabled>
                                 No promoters found for this employer
                               </SelectItem>
                             )}

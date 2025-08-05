@@ -41,7 +41,7 @@ export default function OptimizedDashboard() {
   // State management
   const [overview, setOverview] = useState<DashboardOverview | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
@@ -71,7 +71,7 @@ export default function OptimizedDashboard() {
     ref: loadMoreRef
   } = useInfiniteContracts({
     searchQuery,
-    filters: statusFilter ? { status: [statusFilter] } : {},
+    filters: statusFilter && statusFilter !== 'all' ? { status: [statusFilter] } : {},
     enabled: true
   })
 
@@ -327,7 +327,7 @@ export default function OptimizedDashboard() {
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="pending_approval">Pending Approval</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
