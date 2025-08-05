@@ -74,7 +74,7 @@ const DynamicEnhancedContractForm = dynamic(
 )
 
 const DynamicUnifiedContractGeneratorForm = dynamic(
-  () => import("@/components/unified-contract-generator-form"),
+  () => import("@/components/contract-form-wrapper"),
   { 
     loading: () => <div className="flex items-center justify-center p-8">
       <div className="text-center">
