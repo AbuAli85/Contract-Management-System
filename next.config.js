@@ -15,6 +15,8 @@ const nextConfig = {
     VERCEL_ANALYTICS_DEBUG: "false",
     _next_intl_trailing_slash: "false",
   },
+  // Fix for next-intl configuration
+  trailingSlash: false,
   // Add cache-busting and deployment optimizations
   generateBuildId: async () => {
     // Generate a unique build ID based on timestamp

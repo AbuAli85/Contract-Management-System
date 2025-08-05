@@ -78,8 +78,8 @@ export function PromoterCVResume({
   const handleSkillSubmit = async () => {
     try {
       const url = editingItem
-        ? `/api/promoters/${promoterId}/skills`
-        : `/api/promoters/${promoterId}/skills`
+        ? "/api/promoters/" + promoterId + "/skills"
+        : "/api/promoters/" + promoterId + "/skills"
 
       const method = editingItem ? "PUT" : "POST"
       const body = editingItem ? { id: editingItem.id, ...skillForm } : skillForm
@@ -109,7 +109,7 @@ export function PromoterCVResume({
 
   const handleSkillDelete = async (skillId: string) => {
     try {
-      const response = await fetch(`/api/promoters/${promoterId}/skills`, {
+      const response = await fetch("/api/promoters/" + promoterId + "/skills", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: skillId }),
@@ -135,7 +135,7 @@ export function PromoterCVResume({
 
   const handleExperienceSubmit = async () => {
     try {
-      const url = `/api/promoters/${promoterId}/experience`
+      const url = "/api/promoters/" + promoterId + "/experience"
       const method = editingItem ? "PUT" : "POST"
       const body = editingItem ? { id: editingItem.id, ...experienceForm } : experienceForm
 
@@ -166,7 +166,7 @@ export function PromoterCVResume({
 
   const handleExperienceDelete = async (experienceId: string) => {
     try {
-      const response = await fetch(`/api/promoters/${promoterId}/experience`, {
+      const response = await fetch("/api/promoters/" + promoterId + "/experience", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: experienceId }),
@@ -190,7 +190,7 @@ export function PromoterCVResume({
 
   const handleEducationSubmit = async () => {
     try {
-      const url = `/api/promoters/${promoterId}/education`
+      const url = "/api/promoters/" + promoterId + "/education"
       const method = editingItem ? "PUT" : "POST"
       const body = editingItem
         ? { id: editingItem.id, ...educationForm, year: parseInt(educationForm.year) || null }
@@ -223,7 +223,7 @@ export function PromoterCVResume({
 
   const handleEducationDelete = async (educationId: string) => {
     try {
-      const response = await fetch(`/api/promoters/${promoterId}/education`, {
+      const response = await fetch("/api/promoters/" + promoterId + "/education", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: educationId }),
@@ -247,7 +247,7 @@ export function PromoterCVResume({
 
   const handleDocumentSubmit = async () => {
     try {
-      const url = `/api/promoters/${promoterId}/documents`
+      const url = "/api/promoters/" + promoterId + "/documents"
       const method = editingItem ? "PUT" : "POST"
       const body = editingItem ? { id: editingItem.id, ...documentForm } : documentForm
 
