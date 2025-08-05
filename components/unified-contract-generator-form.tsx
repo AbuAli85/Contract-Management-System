@@ -18,6 +18,7 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form"
+import { useOptimizedNumberInput } from "@/lib/performance-hooks"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -174,6 +175,9 @@ export default function UnifiedContractGeneratorForm({
       special_terms: "",
     },
   })
+
+  // Performance optimization: Debounced number input handler to prevent UI blocking
+  const createOptimizedNumberHandler = useOptimizedNumberInput()
 
   // Watch form values for calculations and validation (MUST BE DECLARED BEFORE USAGE)
   const watchedValues = useWatch({ control: form.control })
@@ -495,9 +499,7 @@ export default function UnifiedContractGeneratorForm({
                       type="number"
                       placeholder="Enter contract value"
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                      }
+                      onChange={createOptimizedNumberHandler(field.onChange)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -867,9 +869,7 @@ export default function UnifiedContractGeneratorForm({
                             type="number"
                             placeholder="0.00"
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                            }
+                            onChange={createOptimizedNumberHandler(field.onChange)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -888,9 +888,7 @@ export default function UnifiedContractGeneratorForm({
                             type="number"
                             placeholder="0.00"
                             {...field}
-                            onChange={(e) =>
-                              field.onChange(e.target.value ? Number(e.target.value) : undefined)
-                            }
+                            onChange={createOptimizedNumberHandler(field.onChange)}
                           />
                         </FormControl>
                         <FormMessage />
