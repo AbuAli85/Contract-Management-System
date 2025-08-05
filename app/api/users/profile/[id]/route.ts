@@ -7,12 +7,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (userError || !user) {
+      console.error('Auth error:', userError)
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -23,27 +24,35 @@ export async function GET(
     const isOwnProfile = targetUserId === user.id
 
     if (!isAdmin && !isOwnProfile) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden - insufficient permissions' }, { status: 403 })
     }
 
-    // Get user profile from profiles table
+    // Get user profile from profiles table with explicit error handling
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', targetUserId)
       .single()
 
-    // If profile doesn't exist, try to create it
-    if (profileError && profileError.code === 'PGRST116') {
-      console.log('Profile not found, attempting to create one...')
-      
-      // Get user from auth.users for additional data
-      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(targetUserId)
+    // Handle profile not found with better error logging
+    if (profileError) {
+      console.error('Profile fetch error:', {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint
+      })
 
-      if (authError) {
-        console.error('Error fetching auth user:', authError)
-        return NextResponse.json({ error: 'User not found' }, { status: 404 })
-      }
+      if (profileError.code === 'PGRST116') {
+        console.log('Profile not found, attempting to create one...')
+        
+        // Get user from auth.users for additional data
+        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(targetUserId)
+
+        if (authError) {
+          console.error('Error fetching auth user:', authError)
+          return NextResponse.json({ error: 'User not found in authentication system' }, { status: 404 })
+        }
 
       // Create a new profile
       const newProfile = {
@@ -115,7 +124,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
