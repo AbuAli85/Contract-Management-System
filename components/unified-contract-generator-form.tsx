@@ -9,6 +9,45 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+// Error Boundary Component
+import React from "react"
+
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean; error?: Error }
+> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("UnifiedContractGeneratorForm Error:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-bold text-red-600 mb-4">Something went wrong</h2>
+          <p className="text-gray-600 mb-4">The contract form encountered an error.</p>
+          <button 
+            onClick={() => this.setState({ hasError: false })}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Try Again
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
+
 import {
   Form,
   FormControl,
@@ -120,7 +159,7 @@ const sectionVariants = {
   exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
 }
 
-export default function UnifiedContractGeneratorForm({
+function UnifiedContractGeneratorForm({
   contract,
   onFormSubmit,
   showAdvanced = false,
@@ -139,12 +178,26 @@ export default function UnifiedContractGeneratorForm({
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
-  // Load parties & promoters
-  const { data: clientParties, isLoading: isLoadingClientParties } = useParties("Client")
+  // Load parties & promoters with error handling
+  const { data: clientParties, isLoading: isLoadingClientParties, error: clientError } = useParties("Client")
+  const { data: employerParties, isLoading: isLoadingEmployerParties, error: employerError } = useParties("Employer")
+  const { data: promoters, isLoading: isLoadingPromoters, error: promotersError } = usePromoters()
 
-  const { data: employerParties, isLoading: isLoadingEmployerParties } = useParties("Employer")
-
-  const { data: promoters, isLoading: isLoadingPromoters } = usePromoters()
+  // Handle data loading errors
+  useEffect(() => {
+    if (clientError) {
+      console.error("Error loading client parties:", clientError)
+      toast.error("Failed to load client parties")
+    }
+    if (employerError) {
+      console.error("Error loading employer parties:", employerError)
+      toast.error("Failed to load employer parties")
+    }
+    if (promotersError) {
+      console.error("Error loading promoters:", promotersError)
+      toast.error("Failed to load promoters")
+    }
+  }, [clientError, employerError, promotersError])
 
   // Form setup with enhanced defaults
   const form = useForm<ContractGeneratorFormData>({
@@ -389,12 +442,40 @@ export default function UnifiedContractGeneratorForm({
     return ""
   }
 
-  // Loading states
+  // Loading states with error handling
   const isLoading =
     isLoadingClientParties ||
     isLoadingEmployerParties ||
     isLoadingPromoters ||
     submitMutation.isPending
+
+  // Show loading if data is still being fetched
+  if (isLoadingClientParties || isLoadingEmployerParties || isLoadingPromoters) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading contract form...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error if any critical data failed to load
+  if (clientError || employerError || promotersError) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold text-red-600 mb-4">Failed to Load Data</h2>
+        <p className="text-gray-600 mb-4">Unable to load required data for the contract form.</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Reload Page
+        </button>
+      </div>
+    )
+  }
 
   // Simple mode form
   if (mode === "simple") {
@@ -1249,3 +1330,15 @@ export default function UnifiedContractGeneratorForm({
     </div>
   )
 }
+
+// Wrapped component with error boundary and additional safety
+function UnifiedContractGeneratorFormSafe(props: UnifiedContractGeneratorFormProps) {
+  return (
+    <ErrorBoundary>
+      <UnifiedContractGeneratorForm {...props} />
+    </ErrorBoundary>
+  )
+}
+
+// Export the safe version by default
+export default UnifiedContractGeneratorFormSafe
