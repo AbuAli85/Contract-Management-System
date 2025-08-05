@@ -117,7 +117,7 @@ export default function MakecomContractTemplates() {
     setLoading(true)
     try {
       const response = await fetch(
-        `/api/contracts/makecom/generate?action=template&type=${contractType}`,
+        "/api/contracts/makecom/generate?action=template&type=" + contractType,
       )
       const result = await response.json()
 
@@ -148,7 +148,7 @@ export default function MakecomContractTemplates() {
     setLoading(true)
     try {
       const response = await fetch(
-        `/api/contracts/makecom/generate?action=blueprint&type=${selectedType}`,
+        "/api/contracts/makecom/generate?action=blueprint&type=" + selectedType,
       )
       const result = await response.json()
 
