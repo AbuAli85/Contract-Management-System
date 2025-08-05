@@ -816,10 +816,10 @@ function UnifiedContractGeneratorForm({
                   <FormLabel>Contract Type *</FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select contract type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[200px] overflow-y-auto">
                         {CONTRACT_TYPES.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}
@@ -1188,10 +1188,10 @@ function UnifiedContractGeneratorForm({
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select job title" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
                               {JOB_TITLES.map((title) => (
                                 <SelectItem key={title.value} value={title.value}>
                                   {title.label}
@@ -1213,10 +1213,10 @@ function UnifiedContractGeneratorForm({
                         <FormLabel>Department *</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select department" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
                               {DEPARTMENTS.map((dept) => (
                                 <SelectItem key={dept.value} value={dept.value}>
                                   {dept.label}
@@ -1238,10 +1238,10 @@ function UnifiedContractGeneratorForm({
                         <FormLabel>Work Location</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select work location" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
                               {WORK_LOCATIONS.map((location) => (
                                 <SelectItem key={location.value} value={location.value}>
                                   <div className="flex flex-col">
@@ -1263,35 +1263,33 @@ function UnifiedContractGeneratorForm({
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="contract_type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contract Type *</FormLabel>
-                      <FormControl>
-                        <Select onValueChange={field.onChange} value={field.value || ""}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select contract type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {CONTRACT_TYPES.map((type) => (
-                              <SelectItem key={type.value} value={type.value}>
-                                {type.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormDescription>
-                        Choose the type of employment contract
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="contract_type"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Contract Type *</FormLabel>
+                        <FormControl>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select contract type" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
+                              {CONTRACT_TYPES.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          Choose the type of employment contract
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   <FormField
                     control={form.control}
                     name="basic_salary"
@@ -1358,10 +1356,10 @@ function UnifiedContractGeneratorForm({
                         <FormLabel>Currency *</FormLabel>
                         <FormControl>
                           <Select value={field.value || ""} onValueChange={field.onChange}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="max-h-[200px] overflow-y-auto">
                               {CURRENCIES.map((currency) => (
                                 <SelectItem key={currency.value} value={currency.value}>
                                   {currency.label}
