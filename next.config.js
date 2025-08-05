@@ -2,50 +2,26 @@
 const withNextIntl = require("next-intl/plugin")("./i18n.ts")
 
 const nextConfig = {
-  experimental: {
-    // Temporarily disabled to fix lucide-react import issues
-    // optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
-  // Disable ESLint during build to avoid configuration issues
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Environment variables for Vercel Analytics and next-intl
-  env: {
-    VERCEL_ANALYTICS_DEBUG: "false",
-    _next_intl_trailing_slash: "false",
-  },
-  // Fix for next-intl configuration
-  trailingSlash: false,
-  // Add cache-busting and deployment optimizations
-  generateBuildId: async () => {
-    // Generate a unique build ID based on timestamp
-    return "build-" + Date.now()
-  },
-  // Ensure proper caching headers
-  async headers() {
-    return [
-      {
-        source: "/_next/static/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-        ],
-      },
-      {
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "public, max-age=0, must-revalidate",
-          },
-        ],
-      },
-    ]
-  },
-  webpack: (config, { dev, isServer }) => {
+  // Disable SWC minification to avoid bundling issues
+  swcMinify: false,
+  
+  // Enable React strict mode
+  reactStrictMode: false, // Temporarily disable to debug
+  
+  // Webpack configuration
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Disable webpack cache to avoid stale bundle issues
+    config.cache = false
+    
+    // Completely disable all minification
+    config.optimization.minimize = false
+    config.optimization.minimizer = []
+    
+    // Add webpack configuration to resolve module issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+    }
+    
     // Fix for module compatibility issues
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -54,15 +30,34 @@ const nextConfig = {
       tls: false,
     }
 
-    // Ensure proper module resolution
-    config.resolve.extensionAlias = {
-      ".js": [".js", ".ts", ".tsx"],
-      ".jsx": [".jsx", ".tsx"],
+    // Optimize bundle splitting
+    if (!isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+          },
+          lucide: {
+            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+            name: 'lucide',
+            priority: 20,
+            chunks: 'all',
+          },
+        },
+      }
     }
-
-    // Add better error handling for module resolution
-    config.resolve.modules = ["node_modules", ...(config.resolve.modules || [])]
-
+    
     // Handle webpack module resolution issues
     config.module.rules.push({
       test: /\.(js|jsx|ts|tsx)$/,
@@ -70,19 +65,33 @@ const nextConfig = {
         fullySpecified: false,
       },
     })
-
-    // Add fallback for missing modules
-    config.plugins.push(
-      new (require("webpack").IgnorePlugin)({
-        resourceRegExp: /^\.\/8728\.js$/,
-      }),
-    )
-
+    
     return config
   },
-  // Enable compression
-  compress: true,
-  // Optimize images
+  
+  // Experimental features
+  experimental: {
+    // Server components external packages
+    serverComponentsExternalPackages: ['lucide-react'],
+  },
+  
+  // Compiler options
+  compiler: {
+    // Remove console logs in production
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  
+  // Disable ESLint during build to avoid configuration issues
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
+  // Disable type checking during build to avoid issues
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
+  // Image domains (if using next/image)
   images: {
     formats: ["image/webp", "image/avif"],
     domains: [
@@ -103,10 +112,5 @@ const nextConfig = {
       }
     ],
   },
-  // Disable type checking during build to avoid issues
-  typescript: {
-    ignoreBuildErrors: true,
-  },
 }
-
-module.exports = withNextIntl(nextConfig);
+module.exports = withNextIntl(nextConfig)
