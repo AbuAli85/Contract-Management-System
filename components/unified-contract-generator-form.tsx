@@ -9,6 +9,9 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 
+// Client-side check to prevent SSR issues
+const isClient = typeof window !== 'undefined'
+
 // Error Boundary Component
 import React from "react"
 
@@ -166,36 +169,61 @@ function UnifiedContractGeneratorForm({
   mode = "advanced",
   autoRedirect = true,
 }: UnifiedContractGeneratorFormProps) {
+  // Client-side guard to prevent SSR issues
+  if (!isClient) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Initializing contract form...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Register this form to disable auto-refresh during form interactions
   useFormRegistration()
   const router = useRouter()
   const queryClient = useQueryClient()
   // const { toast } = useToast()
 
-  // State management
+    // State management with hydration safety
+  const [mounted, setMounted] = useState(false)
   const [currentSection, setCurrentSection] = useState(0)
   const [showAdvancedFields, setShowAdvancedFields] = useState(showAdvanced)
   const [selectedPromoter, setSelectedPromoter] = useState<Promoter | null>(null)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
 
-  // Load parties & promoters with error handling
+  // Hydration check
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Load parties & promoters with error handling and auth safety
   const { data: clientParties, isLoading: isLoadingClientParties, error: clientError } = useParties("Client")
   const { data: employerParties, isLoading: isLoadingEmployerParties, error: employerError } = useParties("Employer")
   const { data: promoters, isLoading: isLoadingPromoters, error: promotersError } = usePromoters()
 
-  // Handle data loading errors
+  // Handle data loading errors with auth context
   useEffect(() => {
     if (clientError) {
       console.error("Error loading client parties:", clientError)
-      toast.error("Failed to load client parties")
+      // Only show error toast if not an auth error
+      if (!clientError.message.includes('Auth') && !clientError.message.includes('session')) {
+        toast.error("Failed to load client parties")
+      }
     }
     if (employerError) {
       console.error("Error loading employer parties:", employerError)
-      toast.error("Failed to load employer parties")
+      if (!employerError.message.includes('Auth') && !employerError.message.includes('session')) {
+        toast.error("Failed to load employer parties")
+      }
     }
     if (promotersError) {
       console.error("Error loading promoters:", promotersError)
-      toast.error("Failed to load promoters")
+      if (!promotersError.message.includes('Auth') && !promotersError.message.includes('session')) {
+        toast.error("Failed to load promoters")
+      }
     }
   }, [clientError, employerError, promotersError])
 
@@ -449,6 +477,18 @@ function UnifiedContractGeneratorForm({
     isLoadingPromoters ||
     submitMutation.isPending
 
+  // Show loading if not mounted yet (prevents hydration mismatch)
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading contract form...</p>
+        </div>
+      </div>
+    )
+  }
+
   // Show loading if data is still being fetched
   if (isLoadingClientParties || isLoadingEmployerParties || isLoadingPromoters) {
     return (
@@ -461,8 +501,12 @@ function UnifiedContractGeneratorForm({
     )
   }
 
-  // Show error if any critical data failed to load
-  if (clientError || employerError || promotersError) {
+  // Show error if any critical data failed to load (but not auth errors)
+  const hasNonAuthErrors = (clientError && !clientError.message.includes('Auth') && !clientError.message.includes('session')) ||
+                          (employerError && !employerError.message.includes('Auth') && !employerError.message.includes('session')) ||
+                          (promotersError && !promotersError.message.includes('Auth') && !promotersError.message.includes('session'))
+
+  if (hasNonAuthErrors) {
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold text-red-600 mb-4">Failed to Load Data</h2>
