@@ -365,6 +365,15 @@ export default function GenerateContractPage() {
     ],
   })
 
+  // Auto-navigate to generator tab when contract type is selected
+  const handleContractTypeSelectWithNavigation = useCallback((type: string) => {
+    handleContractTypeSelect(type)
+    // Auto-navigate to generator tab after selection
+    setTimeout(() => {
+      setActiveTab("generator")
+    }, 500)
+  }, [handleContractTypeSelect])
+
   // Keep initial insights separate for cleaner management
   const initialInsights: ContractInsight[] = [
     {
@@ -783,7 +792,7 @@ export default function GenerateContractPage() {
                       setActiveCategory={setActiveCategory}
                       contractTypesConfig={contractTypesConfig}
                       selectedContractType={selectedContractType}
-                      handleContractTypeSelect={handleContractTypeSelect}
+                      handleContractTypeSelect={handleContractTypeSelectWithNavigation}
                       isLoading={isLoading}
                     />
                   </TabsContent>
@@ -798,6 +807,8 @@ export default function GenerateContractPage() {
                       DynamicUnifiedContractGeneratorForm={DynamicUnifiedContractGeneratorForm}
                       setError={setError}
                       toast={toast}
+                      selectedContractType={selectedContractType}
+                      setActiveTab={setActiveTab}
                     />
                   </TabsContent>
 
@@ -1162,7 +1173,9 @@ const GeneratorSection = ({
   DynamicEnhancedContractForm,
   DynamicUnifiedContractGeneratorForm,
   setError,
-  toast
+  toast,
+  selectedContractType,
+  setActiveTab
 }: {
   useEnhancedForm: boolean,
   setUseEnhancedForm: (value: boolean) => void,
@@ -1170,9 +1183,39 @@ const GeneratorSection = ({
   DynamicEnhancedContractForm: any,
   DynamicUnifiedContractGeneratorForm: any,
   setError: (error: string | null) => void,
-  toast: any
+  toast: any,
+  selectedContractType?: string,
+  setActiveTab?: (tab: string) => void
 }) => (
   <div className="space-y-6">
+    {/* Contract Type Status */}
+    {!selectedContractType && (
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <div className="flex items-center justify-between">
+            <span>Please select a contract type from the Templates tab to begin generation.</span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setActiveTab?.("templates")}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Browse Templates
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    )}
+
+    {selectedContractType && (
+      <Alert>
+        <CheckCircle className="h-4 w-4" />
+        <AlertDescription>
+          Contract type selected: <strong>{selectedContractType}</strong>. You can now proceed with form generation.
+        </AlertDescription>
+      </Alert>
+    )}
     {/* Form Type Selector */}
     <Card className="border-0 shadow-lg bg-white/60 backdrop-blur-sm">
       <CardHeader className="text-center pb-6">
@@ -1236,6 +1279,18 @@ const GeneratorSection = ({
             </div>
           </div>
         </CardTitle>
+        
+        {/* Quick Help */}
+        <CardDescription className="text-sm bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <div className="flex items-start gap-2">
+            <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <strong>Quick Start:</strong> Fill out all required fields marked with red asterisks (*), 
+              then click the "Generate Contract" button at the bottom of the form. 
+              If you encounter any issues, scroll down to see validation errors.
+            </div>
+          </div>
+        </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         {useEnhancedForm ? (
@@ -1264,6 +1319,7 @@ const GeneratorSection = ({
             showAdvanced={true}
             autoRedirect={false}
             onFormSubmit={() => {
+              console.log("Form submitted successfully!")
               setError(null)
               toast({
                 title: "✅ Contract Saved Successfully",
