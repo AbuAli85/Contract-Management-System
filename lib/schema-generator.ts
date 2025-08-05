@@ -4,13 +4,9 @@ import { z } from "zod"
 export const contractGeneratorSchema = z
   .object({
     // Required party IDs
-    first_party_id: z.string().uuid("Please select Party A (Client).").optional().or(z.literal("")),
-    second_party_id: z
-      .string()
-      .uuid("Please select Party B (Employer).")
-      .optional()
-      .or(z.literal("")),
-    promoter_id: z.string().uuid("Please select the promoter.").optional().or(z.literal("")),
+    first_party_id: z.string().min(1, "Please select Party A (Client)."),
+    second_party_id: z.string().min(1, "Please select Party B (Employer)."),
+    promoter_id: z.string().min(1, "Please select the promoter."),
 
     // Auto-filled party data (hidden fields)
     first_party_name_en: z.string().optional(),
@@ -28,8 +24,8 @@ export const contractGeneratorSchema = z
     promoter_passport_url: z.string().optional(),
 
     // Contract period with enhanced validation
-    contract_start_date: z.date().optional(),
-    contract_end_date: z.date().optional(),
+    contract_start_date: z.date({ required_error: "Contract start date is required." }),
+    contract_end_date: z.date({ required_error: "Contract end date is required." }),
 
     // Contact information
     email: z
@@ -136,8 +132,7 @@ export const contractGeneratorSchema = z
   })
   .refine(
     (data) => {
-      // Contract dates validation - allow same day contracts
-      if (!data.contract_start_date || !data.contract_end_date) return true
+      // Contract dates validation - both dates are now required, so we always validate
       return data.contract_end_date >= data.contract_start_date
     },
     {
@@ -147,14 +142,7 @@ export const contractGeneratorSchema = z
   )
   .refine(
     (data) => {
-      // Different parties validation - only validate if both parties are selected
-      if (
-        !data.first_party_id ||
-        !data.second_party_id ||
-        data.first_party_id === "" ||
-        data.second_party_id === ""
-      )
-        return true
+      // Different parties validation - both parties are now required, so we always validate
       return data.first_party_id !== data.second_party_id
     },
     {
@@ -164,8 +152,7 @@ export const contractGeneratorSchema = z
   )
   .refine(
     (data) => {
-      // Contract duration validation - only validate if both dates are provided
-      if (!data.contract_start_date || !data.contract_end_date) return true
+      // Contract duration validation - both dates are now required, so we always validate
       const startDate = data.contract_start_date
       const endDate = data.contract_end_date
       const diffInDays = Math.ceil(
@@ -182,8 +169,7 @@ export const contractGeneratorSchema = z
   )
   .refine(
     (data) => {
-      // Future start date validation - only validate if start date is provided
-      if (!data.contract_start_date) return true
+      // Future start date validation - start date is now required, so we always validate
       const today = new Date()
       today.setHours(0, 0, 0, 0) // Start of today
       return data.contract_start_date >= today
