@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Local API</title>
+</head>
+<body>
+    <h1>Local API Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testAPIs() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing local APIs...</p>';
+            
+            try {
+                // Test health endpoint
+                console.log('Testing health endpoint...');
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                results.innerHTML += `<p><strong>Health API:</strong> ${healthResponse.status} - ${JSON.stringify(healthData)}</p>`;
+                
+                // Test sync endpoint (should fail without auth)
+                console.log('Testing sync endpoint...');
+                const syncResponse = await fetch('/api/users/sync', { method: 'POST' });
+                const syncData = await syncResponse.json();
+                results.innerHTML += `<p><strong>Sync API:</strong> ${syncResponse.status} - ${JSON.stringify(syncData)}</p>`;
+                
+                // Test profile endpoint with known admin ID
+                console.log('Testing profile endpoint...');
+                const profileResponse = await fetch('/api/users/profile/611d9a4a-b202-4112-9869-cff47872ac40');
+                const profileData = await profileResponse.json();
+                results.innerHTML += `<p><strong>Profile API:</strong> ${profileResponse.status} - ${JSON.stringify(profileData)}</p>`;
+                
+                results.innerHTML += '<p><strong>All tests completed!</strong></p>';
+                
+            } catch (error) {
+                results.innerHTML += `<p><strong>Error:</strong> ${error.message}</p>`;
+                console.error('API Test Error:', error);
+            }
+        }
+        
+        // Run tests when page loads
+        window.onload = testAPIs;
+    </script>
+</body>
+</html>

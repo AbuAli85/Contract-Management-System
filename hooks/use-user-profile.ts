@@ -52,7 +52,7 @@ export function useUserProfile() {
       
       if (!targetUserId) {
         console.log('⚠️ No authenticated user, using default admin user for development')
-        targetUserId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' // Default admin user
+        targetUserId = '611d9a4a-b202-4112-9869-cff47872ac40' // Default admin user
       }
 
       console.log('🔍 Fetching profile for user:', targetUserId)
