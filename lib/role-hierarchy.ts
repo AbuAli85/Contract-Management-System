@@ -100,10 +100,14 @@ export function getRoleDisplay(userRole: string) {
  */
 export async function updateUserRole(userId: string, newRole: UserRole) {
   const supabase = createClient()
+  if (!supabase) {
+    console.error("Supabase client is not available.")
+    return { success: false, error: "Supabase client is not available." }
+  }
   
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from('profiles')
       .update({ role: newRole })
       .eq('id', userId)
       .select()
@@ -123,10 +127,14 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
  */
 export async function getUsersWithRoleInfo() {
   const supabase = createClient()
+  if (!supabase) {
+    console.error("Supabase client is not available.")
+    return { success: false, error: "Supabase client is not available." }
+  }
   
   try {
     const { data: users, error } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .order('role', { ascending: false })
     
