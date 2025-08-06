@@ -50,15 +50,22 @@ export function useUserProfile() {
       // Get the target user ID
       let targetUserId = user?.id
       
-      // Only use fallback in development environment
+      // Only use fallback in localhost development environment
+      const isLocalhost = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' || 
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.includes('.local')
+      )
+      
       if (!targetUserId) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('⚠️ No authenticated user, using default admin user for development')
+        if (isLocalhost) {
+          console.log('⚠️ No authenticated user, using default admin user for localhost development')
           targetUserId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' // Default admin user (Fahad alamri)
         } else {
-          // In production, require authentication
-          console.error('❌ No authenticated user found in production')
-          throw new Error('Authentication required')
+          // In production/deployed environment, require authentication
+          console.error('❌ No authenticated user found in production environment')
+          setLoading(false)
+          throw new Error('Please log in to continue')
         }
       }
 
