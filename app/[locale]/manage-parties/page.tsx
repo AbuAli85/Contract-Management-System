@@ -154,19 +154,28 @@ export default function ManagePartiesPage() {
           try {
             const supabase = getSupabaseClient()
 
-            const { count: contractCount, error: contractError } = await supabase
-              .from("contracts")
-              .select("*", { count: "exact", head: true })
-              .or("first_party_id.eq." + party.id + ",second_party_id.eq." + party.id)
-              .eq("status", "active")
+            // Use the correct column names based on actual schema
+            let contractCount = 0
+            try {
+              const { count, error: contractError } = await supabase
+                .from("contracts")
+                .select("id", { count: "exact", head: true })
+                .or(`employer_id.eq.${party.id},client_id.eq.${party.id}`)
 
-            if (contractError) {
-              console.warn("Error fetching contracts for party " + party.id + ":", contractError)
+              if (contractError) {
+                console.warn("Error fetching contracts for party " + party.id + ":", contractError.message)
+                contractCount = 0
+              } else {
+                contractCount = count || 0
+              }
+            } catch (error) {
+              console.warn("Exception fetching contracts for party " + party.id + ":", error)
+              contractCount = 0
             }
 
             return {
               ...party,
-              contract_count: contractCount || 0,
+              contract_count: contractCount,
             }
           } catch (error) {
             console.warn(`Error processing party ${party.id}:`, error)

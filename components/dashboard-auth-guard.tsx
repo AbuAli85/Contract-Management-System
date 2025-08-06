@@ -10,7 +10,7 @@ interface DashboardAuthGuardProps {
 }
 
 export function DashboardAuthGuard({ children, locale }: DashboardAuthGuardProps) {
-  const { session, loading } = useSupabase()
+  const { session, loading, supabase } = useSupabase()
   const router = useRouter()
   const [mounted, setMounted] = useState(false)
   const [userStatus, setUserStatus] = useState<string | null>(null)
@@ -24,12 +24,11 @@ export function DashboardAuthGuard({ children, locale }: DashboardAuthGuardProps
   // Check user status when session is available
   useEffect(() => {
     const checkUserStatus = async () => {
-      if (!session?.user || checkingStatus) return
+      if (!session?.user || checkingStatus || !supabase) return
       
       setCheckingStatus(true)
       
       try {
-        const supabase = useSupabase().supabase
         
         // Check user status in both users and profiles tables
         const { data: userData, error: userError } = await supabase
@@ -79,10 +78,10 @@ export function DashboardAuthGuard({ children, locale }: DashboardAuthGuardProps
       }
     }
 
-    if (mounted && !loading && session) {
+    if (mounted && !loading && session && supabase) {
       checkUserStatus()
     }
-  }, [mounted, loading, session, router, locale, checkingStatus])
+  }, [mounted, loading, session, router, locale, checkingStatus, supabase])
 
   // Only redirect after mounted and session is ready
   useEffect(() => {
