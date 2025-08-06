@@ -3,11 +3,22 @@
 import { createServerComponentClient } from "@/lib/supabaseServer"
 import type { Database } from "@/types/supabase"
 import { getContractGenerationService } from "@/lib/contract-generation-service"
+import { ensureUserProfile } from "@/lib/ensure-user-profile"
+import { createClient } from "@/lib/supabase/server"
 
 export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
 
 export async function createContract(newContract: ContractInsert) {
-  const supabase = await createServerComponentClient()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error("User must be authenticated to create a contract.")
+  }
+
+  // Ensure the user has a profile before proceeding
+  await ensureUserProfile(user)
+
   const { data, error } = await supabase
     .from("contracts")
     .insert(newContract)
@@ -53,6 +64,16 @@ export async function generateContractWithMakecom(contractData: {
   special_terms?: string
 }) {
   try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error("User must be authenticated to generate a contract.")
+    }
+
+    // Ensure the user has a profile before proceeding
+    await ensureUserProfile(user)
+
     // Basic validation to prevent common errors
     if (!contractData.first_party_id || !contractData.second_party_id || !contractData.promoter_id) {
       throw new Error("Missing required party or promoter information.");
