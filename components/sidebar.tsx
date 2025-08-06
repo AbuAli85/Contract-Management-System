@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useSafeParams, useLocaleFromParams } from "@/hooks/use-safe-params"
 import { usePathname } from "@/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
@@ -35,9 +35,9 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
-  const params = useParams()
+  const params = useSafeParams()
   const pathname = usePathname()
-  const locale = (params?.locale as string) || "en"
+  const locale = useLocaleFromParams()
   const { user, loading, mounted: authMounted } = useAuth()
   const { count: pendingUsersCount } = usePendingUsersCount()
   const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
@@ -46,7 +46,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   // Debug logging for params issue
   useEffect(() => {
-    console.log('🔍 Sidebar - useParams result:', params)
+    console.log('🔍 Sidebar - useSafeParams result:', params)
     console.log('🔍 Sidebar - pathname:', pathname)
     console.log('🔍 Sidebar - locale:', locale)
   }, [params, pathname, locale])
