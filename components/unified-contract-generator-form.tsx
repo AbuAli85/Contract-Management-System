@@ -351,6 +351,12 @@ function UnifiedContractGeneratorForm({
         // Clear existing template-specific values first
         const currentValues = form.getValues()
         
+        console.log("🔧 Template Auto-fill: Applying template", {
+          contractType: watchedContractType,
+          templateLabel: selectedTemplate.label,
+          currentValues: currentValues
+        })
+        
         // Apply template-specific defaults based on contract type
         switch (watchedContractType) {
           case "unlimited-contract":
