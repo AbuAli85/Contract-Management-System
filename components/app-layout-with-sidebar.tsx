@@ -52,13 +52,16 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     locale = 'en'
   }
 
-  // Check if we're on the landing page (root route) or auth pages
-  const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/") || 
-                       pathname?.includes('/auth/') || 
-                       pathname?.includes('/login') || 
-                       pathname?.includes('/signup') ||
-                       pathname?.includes('/forgot-password') ||
-                       pathname?.includes('/reset-password')
+  // Check if we're on pages that should NOT show sidebar/navbar
+  const shouldHideSidebar = (pathname?.includes('/auth/') || 
+                           pathname?.includes('/login') || 
+                           pathname?.includes('/signup') ||
+                           pathname?.includes('/forgot-password') ||
+                           pathname?.includes('/reset-password')) &&
+                           !pathname?.includes('/dashboard')
+
+  // Show sidebar and header for all pages except auth pages
+  const showSidebarAndHeader = !shouldHideSidebar
 
   // Component mount detection
   useEffect(() => {
@@ -71,7 +74,8 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
       console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params)
       console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
       console.log('🔍 AppLayoutWithSidebar - locale:', locale)
-      console.log('🔍 AppLayoutWithSidebar - isLandingPage:', isLandingPage)
+      console.log('🔍 AppLayoutWithSidebar - shouldHideSidebar:', shouldHideSidebar)
+      console.log('🔍 AppLayoutWithSidebar - showSidebarAndHeader:', showSidebarAndHeader)
       console.log('🔍 AppLayoutWithSidebar - user:', !!user)
       console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen)
     }
@@ -143,7 +147,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile menu button - show for dashboard and other authenticated pages */}
-      {(!isLandingPage || pathname?.includes('/dashboard')) && (
+      {showSidebarAndHeader && (
         <div className="fixed left-4 top-4 z-50 md:hidden">
           <MobileMenuButton isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         </div>
@@ -152,14 +156,14 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
       {/* Layout container */}
       <div className="flex min-h-screen">
         {/* Sidebar - show for dashboard and other authenticated pages */}
-        {(!isLandingPage || pathname?.includes('/dashboard')) && (
+        {showSidebarAndHeader && (
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         )}
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col">
           {/* Top header - show for dashboard and other authenticated pages */}
-          {(!isLandingPage || pathname?.includes('/dashboard')) && (
+          {showSidebarAndHeader && (
             <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm">
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between">
@@ -170,7 +174,11 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                         <div className="hidden sm:block">
                           <p className="text-sm text-muted-foreground">
                             Welcome back, <span className="font-medium text-foreground">
-                              {userProfile?.full_name || userProfile?.display_name || user.email?.split('@')[0] || 'User'}
+                              {userProfile?.full_name && userProfile.full_name !== 'Emergency User' 
+                                ? userProfile.full_name 
+                                : userProfile?.display_name && userProfile.display_name !== 'Emergency User'
+                                ? userProfile.display_name
+                                : user.email?.split('@')[0] || 'User'}
                             </span>
                           </p>
                         </div>
