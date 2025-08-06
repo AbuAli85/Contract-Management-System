@@ -58,27 +58,11 @@ export function LoginForm() {
   // Handle redirect when user is authenticated
   React.useEffect(() => {
     if (user && !authLoading && mounted && !isSubmittingRef.current) {
-      // Check if we're already on the dashboard to prevent unnecessary redirects
-      const currentPath = typeof window !== "undefined" ? window.location.pathname : ""
-      if (!currentPath.includes("/dashboard")) {
-        console.log("🔐 Login Page: User authenticated, redirecting to dashboard", {
-          user: user.email,
-        })
-        isSubmittingRef.current = true
-        
-        // Clear any existing timeout
-        if (redirectTimeoutRef.current) {
-          clearTimeout(redirectTimeoutRef.current)
-        }
-        
-        // Use timeout to prevent rapid redirects
-        redirectTimeoutRef.current = setTimeout(() => {
-          // Use window.location for more reliable redirect
-          window.location.href = "/" + locale + "/dashboard"
-        }, 100)
-      }
+      console.log("🔐 Login Form: User authenticated, allowing page-level redirect to handle navigation")
+      // Let the page-level redirect handle the navigation
+      // Don't add our own redirect here to avoid conflicts
     }
-  }, [user, authLoading, mounted, locale])
+  }, [user, authLoading, mounted])
 
   // Check for OAuth errors in URL parameters
   React.useEffect(() => {
@@ -190,12 +174,9 @@ export function LoginForm() {
         description: "Login successful. Redirecting to dashboard...",
       })
 
-      // After successful login, redirect immediately
-      console.log("🔐 Login Debug - Login successful, redirecting to dashboard")
-      console.log("🔐 Login Debug - Redirect URL:", redirectTo)
-
-      // Use router.replace for client-side navigation without adding to history
-      router.replace(redirectTo)
+      // The redirect will be handled by the page-level useEffect
+      // No need to redirect here to avoid conflicts
+      console.log("🔐 Login Debug - Login successful, redirect will be handled by page component")
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)
       const errorMessage = "An unexpected error occurred. Please try again."
