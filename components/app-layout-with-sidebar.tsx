@@ -33,11 +33,31 @@ interface AppLayoutWithSidebarProps {
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [hasError, setHasError] = useState(false)
   
-  const { user } = useAuth()
-  const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
-  const { profile: userProfile, fetchUserProfile } = useUserProfile()
-  const { isAdmin, isUser, roleInfo } = useRolePermissions()
+  // Wrap hooks in try-catch for error handling
+  let user, notificationCount, highPriorityCount, userProfile, fetchUserProfile, isAdmin, isUser, roleInfo
+  
+  try {
+    const authResult = useAuth()
+    user = authResult?.user
+    
+    const notificationResult = useNotifications()
+    notificationCount = notificationResult?.unreadCount || 0
+    highPriorityCount = notificationResult?.highPriorityCount || 0
+    
+    const profileResult = useUserProfile()
+    userProfile = profileResult?.profile
+    fetchUserProfile = profileResult?.fetchUserProfile
+    
+    const roleResult = useRolePermissions()
+    isAdmin = roleResult?.isAdmin || false
+    isUser = roleResult?.isUser || false
+    roleInfo = roleResult?.roleInfo
+  } catch (error) {
+    console.error('Hook error in AppLayoutWithSidebar:', error)
+    setHasError(true)
+  }
   
   // Safe parameter handling with error boundary
   let params, pathname, locale
@@ -79,14 +99,35 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
       console.log('🔍 AppLayoutWithSidebar - user:', !!user)
       console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen)
     }
-  }, [mounted, params, pathname, locale, isLandingPage, user, sidebarOpen])
+  }, [mounted, params, pathname, locale, shouldHideSidebar, showSidebarAndHeader, user, sidebarOpen])
 
   // Silent session timeout - automatically logs out after 5 minutes of inactivity
-  useSessionTimeout({
-    timeoutMinutes: 5,
-    enableLogging: false, // Set to true for debugging
-    silent: true // Silent mode - no warnings, just automatic logout
-  })
+  try {
+    useSessionTimeout({
+      timeoutMinutes: 5,
+      enableLogging: false, // Set to true for debugging
+      silent: true // Silent mode - no warnings, just automatic logout
+    })
+  } catch (error) {
+    console.warn('Session timeout error:', error)
+  }
+
+  // Error boundary fallback
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Something went wrong loading the layout</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-primary text-primary-foreground rounded"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   // Get current page title
   const getPageTitle = () => {
@@ -231,9 +272,5 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </main>
         </div>
       </div>
-      
-      {/* Debug component - remove in production */}
-      {process.env.NODE_ENV === 'development' && <DebugAuthState />}
-    </div>
   )
 }
