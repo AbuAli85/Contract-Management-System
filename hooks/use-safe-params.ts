@@ -1,4 +1,5 @@
 import { useParams as useNextParams } from "next/navigation"
+import { usePathname as useNextPathname } from "next/navigation"
 
 /**
  * Safe wrapper around Next.js useParams that handles edge cases
@@ -18,6 +19,27 @@ export function useSafeParams() {
   } catch (error) {
     console.error('🚨 Error in useParams:', error)
     return {}
+  }
+}
+
+/**
+ * Safe wrapper around Next.js usePathname that handles edge cases
+ * where pathname might be undefined or null
+ */
+export function useSafePathname(): string {
+  try {
+    const pathname = useNextPathname()
+    
+    // Ensure we always return a string, even if pathname is undefined
+    if (!pathname || typeof pathname !== 'string') {
+      console.warn('🚨 usePathname returned undefined or invalid value:', pathname)
+      return '/'
+    }
+    
+    return pathname
+  } catch (error) {
+    console.error('🚨 Error in usePathname:', error)
+    return '/'
   }
 }
 

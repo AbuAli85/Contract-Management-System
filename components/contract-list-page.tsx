@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowLeftIcon, Construction } from "lucide-react"
-import { useParams } from "next/navigation"
+import { useSafeParams } from "@/hooks/use-safe-params"
 import { format } from "date-fns"
 
 export default function EditPromoterPage() {
-  const params = useParams()
+  const params = useSafeParams()
   const promoterId = params?.id ? String(params.id) : ""
 
   // Example date formatting for display

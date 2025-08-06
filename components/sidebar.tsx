@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import Link from "next/link"
-import { useSafeParams, useLocaleFromParams } from "@/hooks/use-safe-params"
-import { usePathname } from "@/navigation"
+import { Link } from "@/navigation"
+import { useSafeParams, useLocaleFromParams, useSafePathname } from "@/hooks/use-safe-params"
 import { useAuth } from "@/lib/auth-service"
 import { usePendingUsersCount } from "@/hooks/use-pending-users"
 import { useNotifications } from "@/hooks/use-notifications-enhanced"
@@ -36,7 +35,7 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
   const params = useSafeParams()
-  const pathname = usePathname()
+  const pathname = useSafePathname()
   const locale = useLocaleFromParams()
   const { user, loading, mounted: authMounted } = useAuth()
   const { count: pendingUsersCount } = usePendingUsersCount()
