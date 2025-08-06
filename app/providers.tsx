@@ -18,11 +18,14 @@ import type { Session, User } from "@supabase/supabase-js"
 const isDev = process.env.NODE_ENV === "development"
 const refetchOnFocus = process.env.NODE_ENV === "production"
 
-// Auth context
+import { AuthService } from "@/lib/auth-service"
+
+// ...existing code...
 interface AuthContextType {
   user: User | null
   session: Session | null
   loading: boolean
+  isProfileSynced: boolean
   supabase: ReturnType<typeof createBrowserClient> | null
 }
 
@@ -32,6 +35,7 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isProfileSynced, setIsProfileSynced] = useState(false)
   const [supabase, setSupabase] = useState<ReturnType<typeof createBrowserClient> | null>(null)
 
   useEffect(() => {
@@ -59,37 +63,21 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
       setSupabase(client as ReturnType<typeof createBrowserClient>)
       console.log("✅ AuthContextProvider: Supabase client created successfully")
 
-      // Get initial session
-      const getInitialSession = async () => {
-        try {
-          console.log("🔐 AuthContextProvider: Getting initial session...")
-          const { data: { session } } = await client.auth.getSession()
-          console.log("🔐 AuthContextProvider: Initial session:", session ? "found" : "not found")
-          setSession(session)
-          setUser(session?.user ?? null)
-        } catch (error) {
-          console.error("❌ AuthContextProvider: Error getting initial session:", error)
-        } finally {
-          setLoading(false)
-        }
-      }
+      // Initialize the AuthService singleton
+      const authService = AuthService.getInstance()
+      authService.initialize(client)
 
-      getInitialSession()
-
-      // Listen for auth changes
-      console.log("🔐 AuthContextProvider: Setting up auth listener...")
-      const { data: { subscription } } = client.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("🔐 AuthContextProvider: Auth state changed:", event, session ? "session" : "no session")
-          setSession(session)
-          setUser(session?.user ?? null)
-          setLoading(false)
-        }
-      )
+      // Subscribe to the AuthService for all state updates
+      const unsubscribe = authService.subscribe(state => {
+        setUser(state.user)
+        setSession(state.session)
+        setLoading(state.loading)
+        setIsProfileSynced(state.isProfileSynced)
+      })
 
       return () => {
         console.log("🔐 AuthContextProvider: Cleaning up auth listener...")
-        subscription.unsubscribe()
+        unsubscribe()
       }
     } catch (error) {
       console.error("❌ AuthContextProvider: Error creating Supabase client:", error)
@@ -101,6 +89,7 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    isProfileSynced,
     supabase,
   }
 
