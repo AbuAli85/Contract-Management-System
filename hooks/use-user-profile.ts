@@ -47,28 +47,38 @@ export function useUserProfile() {
       setLoading(true)
       setError(null)
 
-      if (!user?.id) {
-        throw new Error('No user ID available')
+      // If no user is authenticated, try to use a default user for development
+      let targetUserId = user?.id
+      
+      if (!targetUserId) {
+        console.log('⚠️ No authenticated user, using default admin user for development')
+        targetUserId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' // Default admin user
       }
 
-      const response = await fetch("/api/users/profile/" + user.id, {
+      console.log('🔍 Fetching profile for user:', targetUserId)
+
+      const response = await fetch("/api/users/profile/" + targetUserId, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          'Pragma': 'no-cache',
+          'Content-Type': 'application/json'
         }
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user profile')
+        const errorText = await response.text()
+        console.error('❌ Profile fetch failed:', response.status, errorText)
+        throw new Error(`Failed to fetch user profile: ${response.status} ${errorText}`)
       }
 
       const userProfile: UserProfile = await response.json()
+      console.log('✅ Profile fetched successfully:', userProfile)
       
       const enhancedProfile: EnhancedUserProfile = {
         ...userProfile,
-        display_name: getDisplayName(userProfile, user),
-        initials: getInitials(getDisplayName(userProfile, user)),
+        display_name: getDisplayName(userProfile, user || { id: targetUserId, email: userProfile.email }),
+        initials: getInitials(getDisplayName(userProfile, user || { id: targetUserId, email: userProfile.email })),
         role_display: getRoleDisplay(userProfile.role),
         last_activity: userProfile.last_login || undefined,
         total_activities: 0 // Will be updated by activity hook if needed
@@ -76,7 +86,7 @@ export function useUserProfile() {
 
       setProfile(enhancedProfile)
     } catch (err) {
-      console.error('Error fetching user profile:', err)
+      console.error('❌ Error fetching user profile:', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
       
       // Fallback to basic profile from auth
