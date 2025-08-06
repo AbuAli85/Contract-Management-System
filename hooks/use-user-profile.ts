@@ -47,12 +47,19 @@ export function useUserProfile() {
       setLoading(true)
       setError(null)
 
-      // If no user is authenticated, try to use a default user for development
+      // Get the target user ID
       let targetUserId = user?.id
       
+      // Only use fallback in development environment
       if (!targetUserId) {
-        console.log('⚠️ No authenticated user, using default admin user for development')
-        targetUserId = '611d9a4a-b202-4112-9869-cff47872ac40' // Default admin user
+        if (process.env.NODE_ENV === 'development') {
+          console.log('⚠️ No authenticated user, using default admin user for development')
+          targetUserId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' // Default admin user (Fahad alamri)
+        } else {
+          // In production, require authentication
+          console.error('❌ No authenticated user found in production')
+          throw new Error('Authentication required')
+        }
       }
 
       console.log('🔍 Fetching profile for user:', targetUserId)
@@ -69,7 +76,17 @@ export function useUserProfile() {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('❌ Profile fetch failed:', response.status, errorText)
-        throw new Error(`Failed to fetch user profile: ${response.status} ${errorText}`)
+        
+        // In production, provide more user-friendly error messages
+        if (response.status === 404) {
+          throw new Error('User profile not found. Please contact support.')
+        } else if (response.status === 401) {
+          throw new Error('Authentication expired. Please log in again.')
+        } else if (response.status === 403) {
+          throw new Error('Access denied. You may not have permission to view this profile.')
+        } else {
+          throw new Error(`Profile fetch failed. Please try again later. (Error: ${response.status})`)
+        }
       }
 
       const userProfile: UserProfile = await response.json()
@@ -87,10 +104,11 @@ export function useUserProfile() {
       setProfile(enhancedProfile)
     } catch (err) {
       console.error('❌ Error fetching user profile:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      setError(err instanceof Error ? err.message : 'Unknown error occurred')
       
-      // Fallback to basic profile from auth
-      if (user) {
+      // Fallback to basic profile from auth (only if user is authenticated)
+      if (user && user.id) {
+        console.log('🔄 Using fallback profile from authentication data')
         const fallbackProfile: EnhancedUserProfile = {
           id: user.id,
           email: user.email || '',
@@ -104,6 +122,9 @@ export function useUserProfile() {
           last_login: user.last_sign_in_at || null
         }
         setProfile(fallbackProfile)
+      } else {
+        // No user data available, profile remains null
+        setProfile(null)
       }
     } finally {
       setLoading(false)
@@ -150,6 +171,11 @@ export function useUserProfile() {
   useEffect(() => {
     if (user?.id) {
       fetchUserProfile()
+    } else {
+      // No user authenticated - reset profile state
+      setProfile(null)
+      setLoading(false)
+      setError(null)
     }
   }, [user?.id, fetchUserProfile])
 
