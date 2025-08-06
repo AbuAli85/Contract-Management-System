@@ -7,7 +7,7 @@ import { useUserProfile } from "@/hooks/use-user-profile"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useRolePermissions } from "@/components/user-role-display"
 import { useSafeParams, useLocaleFromParams } from "@/hooks/use-safe-params"
-import { usePathname } from "@/navigation"
+import { useSafePathname } from "@/hooks/use-safe-params"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
 import { Button } from "@/components/ui/button"
@@ -36,7 +36,7 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const { profile: userProfile, fetchUserProfile } = useUserProfile()
   const { isAdmin, isUser, roleInfo } = useRolePermissions()
   const params = useSafeParams()
-  const pathname = usePathname()
+  const pathname = useSafePathname()
   const locale = useLocaleFromParams()
 
   // Debug logging for params issue

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useSafeParams } from "@/hooks/use-safe-params"
 import { getSupabaseClient } from "@/lib/supabase"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +23,7 @@ interface RecentPromotersProps {
 }
 
 export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
-  const params = useParams()
+  const params = useSafeParams()
   const locale = (params?.locale as string) || "en"
   const [promoters, setPromoters] = useState<RecentPromoter[]>([])
   const [isLoading, setIsLoading] = useState(true)

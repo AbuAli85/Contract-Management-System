@@ -1,7 +1,7 @@
 "use client"
 
 import { ReactNode, useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { useSafePathname } from '@/hooks/use-safe-params'
 import { Inter } from "next/font/google"
 import { ToastProvider } from "@/components/toast-notifications"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -21,7 +21,7 @@ interface ClientLayoutProps {
 }
 
 function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; locale: string }) {
-  const pathname = usePathname()
+  const pathname = useSafePathname()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isClient, setIsClient] = useState(false)
   const [forceShow, setForceShow] = useState(false)
