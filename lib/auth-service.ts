@@ -110,6 +110,50 @@ export class AuthService {
       this.refreshTimer = null
     }
   }
+
+  private async syncUserProfile() {
+    try {
+      const response = await fetch('/api/users/sync', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to sync user profile.');
+      }
+      console.log('[AuthService] User profile synchronized successfully.');
+    } catch (error) {
+      console.error('[AuthService] Error syncing user profile:', error);
+      // We can decide if we want to set an error state here
+      // this.updateState({ error: 'Profile sync failed.' });
+    }
+  }
+
+  // This method will be called by the provider
+  async initialize(supabase: any) {
+    if (this.state.mounted) return;
+
+    this.updateState({ loading: true, mounted: true });
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      this.updateState({ user: session.user, session, loading: false });
+      await this.syncUserProfile(); // Sync profile on initial load
+    } else {
+      this.updateState({ loading: false });
+    }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event: string, session: Session | null) => {
+        this.updateState({ user: session?.user ?? null, session });
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          await this.syncUserProfile(); // Sync profile on sign-in or refresh
+        }
+      }
+    );
+
+    // Store the unsubscribe function
+    this.listeners.push(() => authListener?.subscription.unsubscribe());
+  }
 }
 
 // React hook for using AuthService with Supabase auth helpers
