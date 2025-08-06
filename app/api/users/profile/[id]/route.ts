@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    // Use service role client to bypass all RLS and auth issues
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const { id: targetUserId } = await params;
+    const supabase = await createClient();
     
-    const targetUserId = params.id;
     console.log('📋 Profile API: Fetching profile for user ID:', targetUserId);
 
     // Set CORS headers for browser requests
@@ -19,7 +15,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
-    // First try profiles table (which has the data)
+    // Try to get the profile from the profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
@@ -29,34 +25,28 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (profileError) {
       console.error('❌ Profile fetch error:', profileError);
       
-      // Fallback: try to get from auth users if profiles fails
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
+      if (profileError.code === 'PGRST116') {
+        // Profile not found
+        return NextResponse.json({ 
+          error: 'Profile not found',
+          message: 'User profile does not exist',
+          code: 'PROFILE_NOT_FOUND'
+        }, { status: 404, headers });
+      }
       
-      if (authError) {
-        console.error('❌ Auth fallback error:', authError);
-        return NextResponse.json({ error: 'User not found' }, { status: 404, headers });
-      }
+      // Other database error
+      return NextResponse.json({ 
+        error: 'Database error',
+        message: profileError.message 
+      }, { status: 500, headers });
+    }
 
-      const authUser = authData.users.find((u: any) => u.id === targetUserId);
-      if (!authUser) {
-        console.log('❌ User not found in auth or profiles');
-        return NextResponse.json({ error: 'User not found' }, { status: 404, headers });
-      }
-
-      // Return minimal profile from auth data
-      const fallbackProfile = {
-        id: authUser.id,
-        email: authUser.email || '',
-        full_name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || '',
-        avatar_url: authUser.user_metadata?.avatar_url || null,
-        role: 'user',
-        status: 'active',
-        created_at: authUser.created_at,
-        last_login: authUser.last_sign_in_at
-      };
-
-      console.log('✅ Profile API: Returning fallback profile');
-      return NextResponse.json(fallbackProfile, { headers });
+    if (!profile) {
+      console.log('❌ Profile not found');
+      return NextResponse.json({ 
+        error: 'Profile not found',
+        message: 'User profile does not exist' 
+      }, { status: 404, headers });
     }
 
     // Success - return profile data
@@ -72,7 +62,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       updated_at: profile.updated_at
     };
 
-    console.log('✅ Profile API: Successfully fetched profile');
+    console.log('✅ Profile API: Successfully fetched profile for', profile.email);
     return NextResponse.json(userProfile, { headers });
 
   } catch (error) {
@@ -99,6 +89,6 @@ export async function OPTIONS() {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    }
   });
 }
