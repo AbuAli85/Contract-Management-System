@@ -5,6 +5,18 @@ import { differenceInDays, differenceInHours, formatDistanceToNow } from 'date-f
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
 
+// CORS preflight handler
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  })
+}
+
 export interface NotificationData {
   id: string
   type: 'error' | 'warning' | 'info' | 'success'
@@ -30,6 +42,8 @@ export interface NotificationData {
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔔 Dashboard notifications API called')
+    
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unread_only') === 'true'
     const category = searchParams.get('category')
@@ -45,7 +59,26 @@ export async function GET(request: NextRequest) {
       console.warn('Notifications API: User error (continuing anyway):', userError)
     }
     if (!user) {
-      console.warn('Notifications API: No user found (continuing anyway)')
+      console.warn('Notifications API: No user found (returning empty notifications)')
+      // Return empty notifications for unauthenticated users
+      return NextResponse.json({
+        notifications: [],
+        summary: { 
+          total: 0, 
+          unread: 0, 
+          high: 0, 
+          medium: 0, 
+          low: 0, 
+          categories: {} 
+        }
+      }, { 
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      })
     }
 
     const notifications: NotificationData[] = []
@@ -242,6 +275,12 @@ export async function GET(request: NextRequest) {
       notifications: limitedNotifications,
       summary,
       timestamp: now.toISOString()
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
     })
   } catch (error) {
     console.error('Notifications error:', error)
@@ -249,7 +288,14 @@ export async function GET(request: NextRequest) {
       error: 'Failed to fetch notifications',
       notifications: [],
       summary: { total: 0, unread: 0, high: 0, medium: 0, low: 0, categories: {} }
-    }, { status: 500 })
+    }, { 
+      status: 500,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      }
+    })
   }
 }
 
