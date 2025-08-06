@@ -12,6 +12,7 @@ export interface EnhancedUserProfile extends UserProfile {
 }
 
 export function useUserProfile() {
+  console.log('🔄 useUserProfile hook loaded - v2.0.1 - Production fix')
   const { user } = useAuth()
   const [profile, setProfile] = useState<EnhancedUserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -62,10 +63,18 @@ export function useUserProfile() {
         user: user?.id ? 'authenticated' : 'not authenticated',
         hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
         isLocalhost,
-        targetUserId
+        targetUserId,
+        NODE_ENV: process.env.NODE_ENV,
+        currentURL: typeof window !== 'undefined' ? window.location.href : 'server'
       })
       
       if (!targetUserId) {
+        console.error('🚨 BLOCKING API CALL - No user ID available!', {
+          user: user?.id,
+          isLocalhost,
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'server'
+        })
+        
         if (isLocalhost) {
           console.log('⚠️ No authenticated user, using default admin user for localhost development')
           targetUserId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' // Default admin user (Fahad alamri)
@@ -79,6 +88,19 @@ export function useUserProfile() {
       }
 
       console.log('🔍 Fetching profile for user:', targetUserId)
+
+      // SAFETY CHECK: Never allow hardcoded user ID in production
+      const isProductionHardcodedId = targetUserId === '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170' && !isLocalhost
+      if (isProductionHardcodedId) {
+        console.error('🚨 BLOCKED: Attempted to use hardcoded user ID in production!', {
+          targetUserId,
+          hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+          isLocalhost
+        })
+        setLoading(false)
+        setError('Authentication required for production environment')
+        return
+      }
 
       const response = await fetch("/api/users/profile/" + targetUserId, {
         method: 'GET',
