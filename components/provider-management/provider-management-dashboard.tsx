@@ -31,7 +31,8 @@ import {
   Briefcase,
   Shield,
   Zap,
-  Package
+  Package,
+  FileText
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -108,6 +109,22 @@ export function ProviderManagementDashboard() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [industryFilter, setIndustryFilter] = useState('all')
   const [selectedView, setSelectedView] = useState<'overview' | 'list' | 'analytics' | 'performance'>('overview')
+
+  // Handler functions for interactivity
+  const handleAddProvider = () => {
+    console.log('Opening Add New Provider form...')
+    alert('Add New Provider functionality would open here!')
+  }
+
+  const handleExportReport = () => {
+    console.log('Exporting provider report...')
+    alert('Export Provider Report functionality would download a file here!')
+  }
+
+  const handleViewProvider = (providerId: string) => {
+    console.log(`Viewing provider details for ID: ${providerId}`)
+    alert(`View Provider ${providerId} details would open here!`)
+  }
 
   // Mock data - replace with real API calls
   useEffect(() => {
@@ -257,11 +274,18 @@ export function ProviderManagementDashboard() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handleExportReport}
+          >
             <BarChart3 className="h-4 w-4" />
             Export Report
           </Button>
-          <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700">
+          <Button 
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            onClick={handleAddProvider}
+          >
             <Plus className="h-4 w-4" />
             Add New Provider
           </Button>
@@ -361,6 +385,65 @@ export function ProviderManagementDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* Provider Dashboard Features Showcase */}
+          <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-green-800">
+                <Factory className="h-6 w-6 text-green-600" />
+                Provider Management Features
+              </CardTitle>
+              <CardDescription className="text-green-600">
+                Complete provider performance tracking and capacity optimization
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <UserCheck className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Promoter Management</p>
+                    <p className="text-sm text-green-600">Track and allocate workforce</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <Activity className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Capacity Tracking</p>
+                    <p className="text-sm text-green-600">Real-time utilization monitoring</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <Target className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Performance Metrics</p>
+                    <p className="text-sm text-green-600">KPI tracking and analytics</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <Package className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Service Portfolio</p>
+                    <p className="text-sm text-green-600">Manage service offerings</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <DollarSign className="h-8 w-8 text-yellow-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Revenue Analytics</p>
+                    <p className="text-sm text-green-600">Financial performance tracking</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+                  <Shield className="h-8 w-8 text-red-600" />
+                  <div>
+                    <p className="font-semibold text-green-800">Quality Assurance</p>
+                    <p className="text-sm text-green-600">Service quality monitoring</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Top Performing Providers */}
             <Card className="lg:col-span-2">
