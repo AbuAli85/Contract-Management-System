@@ -44,6 +44,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const { profile: userProfile } = useUserProfile()
   const { roleInfo } = useRolePermissions()
 
+  // Debug logging for params issue
+  useEffect(() => {
+    console.log('🔍 Sidebar - useParams result:', params)
+    console.log('🔍 Sidebar - pathname:', pathname)
+    console.log('🔍 Sidebar - locale:', locale)
+  }, [params, pathname, locale])
+
   useEffect(() => {
     setMounted(true)
   }, [])

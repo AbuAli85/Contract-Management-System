@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAuth } from "@/lib/auth-service"
 import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { useUserProfile } from "@/hooks/use-user-profile"
@@ -38,6 +38,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const params = useParams()
   const pathname = usePathname()
   const locale = (params?.locale as string) || "en"
+
+  // Debug logging for params issue
+  useEffect(() => {
+    console.log('🔍 AppLayoutWithSidebar - useParams result:', params)
+    console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
+    console.log('🔍 AppLayoutWithSidebar - locale:', locale)
+  }, [params, pathname, locale])
 
   // Silent session timeout - automatically logs out after 5 minutes of inactivity
   useSessionTimeout({
