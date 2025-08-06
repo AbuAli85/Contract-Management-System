@@ -102,6 +102,31 @@ export function ClientManagementDashboard() {
   const [industryFilter, setIndustryFilter] = useState('all')
   const [selectedView, setSelectedView] = useState<'overview' | 'list' | 'analytics'>('overview')
 
+  // Handler functions for interactivity
+  const handleAddClient = () => {
+    console.log('Opening Add New Client form...')
+    // In a real app, this would open a modal or navigate to a form
+    alert('Add New Client functionality would open here!')
+  }
+
+  const handleExportReport = () => {
+    console.log('Exporting client report...')
+    // In a real app, this would generate and download a report
+    alert('Export Report functionality would download a file here!')
+  }
+
+  const handleViewClient = (clientId: string) => {
+    console.log(`Viewing client details for ID: ${clientId}`)
+    // In a real app, this would navigate to client detail page
+    alert(`View Client ${clientId} details would open here!`)
+  }
+
+  const handleEditClient = (clientId: string) => {
+    console.log(`Editing client with ID: ${clientId}`)
+    // In a real app, this would open edit form
+    alert(`Edit Client ${clientId} form would open here!`)
+  }
+
   // Mock data - replace with real API calls
   useEffect(() => {
     const mockStats: ClientStats = {
@@ -216,11 +241,18 @@ export function ClientManagementDashboard() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handleExportReport}
+          >
             <BarChart3 className="h-4 w-4" />
             Export Report
           </Button>
-          <Button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+            onClick={handleAddClient}
+          >
             <Plus className="h-4 w-4" />
             Add New Client
           </Button>
@@ -319,6 +351,65 @@ export function ClientManagementDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {/* Client Dashboard Features Showcase */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <Star className="h-6 w-6 text-blue-600" />
+                Client Management Features
+              </CardTitle>
+              <CardDescription className="text-blue-600">
+                Comprehensive client lifecycle management with advanced analytics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <Users className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Client Profiles</p>
+                    <p className="text-sm text-blue-600">Complete client information management</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <TrendingUp className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Revenue Tracking</p>
+                    <p className="text-sm text-blue-600">Real-time financial analytics</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <Star className="h-8 w-8 text-yellow-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Satisfaction Monitoring</p>
+                    <p className="text-sm text-blue-600">Client happiness tracking</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <FileText className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Contract Management</p>
+                    <p className="text-sm text-blue-600">Full contract lifecycle tracking</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <Search className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Advanced Search</p>
+                    <p className="text-sm text-blue-600">Smart filtering and discovery</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                  <BarChart3 className="h-8 w-8 text-indigo-600" />
+                  <div>
+                    <p className="font-semibold text-blue-800">Analytics Dashboard</p>
+                    <p className="text-sm text-blue-600">Data-driven insights</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Recent Activities */}
             <Card className="lg:col-span-2">

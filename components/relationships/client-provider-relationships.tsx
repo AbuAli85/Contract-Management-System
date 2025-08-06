@@ -102,6 +102,22 @@ export function ClientProviderRelationships() {
   const [typeFilter, setTypeFilter] = useState('all')
   const [selectedView, setSelectedView] = useState<'network' | 'list' | 'analytics' | 'insights'>('network')
 
+  // Handler functions for interactivity
+  const handleCreatePartnership = () => {
+    console.log('Opening Create Partnership form...')
+    alert('Create Partnership functionality would open here!')
+  }
+
+  const handleExportNetwork = () => {
+    console.log('Exporting network data...')
+    alert('Export Network functionality would download a file here!')
+  }
+
+  const handleAnalyzeRelationship = (relationshipId: string) => {
+    console.log(`Analyzing relationship ID: ${relationshipId}`)
+    alert(`Analyze Relationship ${relationshipId} would open detailed insights!`)
+  }
+
   // Mock data - replace with real API calls
   useEffect(() => {
     const mockStats: RelationshipStats = {
@@ -282,11 +298,18 @@ export function ClientProviderRelationships() {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2"
+            onClick={handleExportNetwork}
+          >
             <Download className="h-4 w-4" />
             Export Network
           </Button>
-          <Button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700">
+          <Button 
+            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700"
+            onClick={handleCreatePartnership}
+          >
             <Plus className="h-4 w-4" />
             Create Partnership
           </Button>
@@ -386,6 +409,65 @@ export function ClientProviderRelationships() {
         </TabsList>
 
         <TabsContent value="network" className="space-y-6">
+          {/* Relationship Dashboard Features Showcase */}
+          <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-purple-800">
+                <Heart className="h-6 w-6 text-purple-600" />
+                Relationship Management Features
+              </CardTitle>
+              <CardDescription className="text-purple-600">
+                Advanced partnership mapping and relationship intelligence
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <Network className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Network Visualization</p>
+                    <p className="text-sm text-purple-600">Interactive partnership mapping</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <TrendingUp className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Strength Scoring</p>
+                    <p className="text-sm text-purple-600">Real-time relationship health</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <Star className="h-8 w-8 text-yellow-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Satisfaction Tracking</p>
+                    <p className="text-sm text-purple-600">Partnership happiness monitoring</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <DollarSign className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Value Attribution</p>
+                    <p className="text-sm text-purple-600">Revenue tracking per partnership</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <Zap className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Smart Insights</p>
+                    <p className="text-sm text-purple-600">AI-powered recommendations</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+                  <Target className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <p className="font-semibold text-purple-800">Growth Optimization</p>
+                    <p className="text-sm text-purple-600">Partnership expansion planning</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Network Visualization Placeholder */}
           <Card>
             <CardHeader>
