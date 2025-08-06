@@ -6,7 +6,7 @@ import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useSessionTimeout } from "@/hooks/use-session-timeout"
 import { useRolePermissions } from "@/components/user-role-display"
-import { useParams } from "next/navigation"
+import { useSafeParams, useLocaleFromParams } from "@/hooks/use-safe-params"
 import { usePathname } from "@/navigation"
 import { Sidebar } from "./sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
@@ -35,13 +35,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile, fetchUserProfile } = useUserProfile()
   const { isAdmin, isUser, roleInfo } = useRolePermissions()
-  const params = useParams()
+  const params = useSafeParams()
   const pathname = usePathname()
-  const locale = (params?.locale as string) || "en"
+  const locale = useLocaleFromParams()
 
   // Debug logging for params issue
   useEffect(() => {
-    console.log('🔍 AppLayoutWithSidebar - useParams result:', params)
+    console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params)
     console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
     console.log('🔍 AppLayoutWithSidebar - locale:', locale)
   }, [params, pathname, locale])
