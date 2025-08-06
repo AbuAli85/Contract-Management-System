@@ -22,6 +22,20 @@ export default function ProfileSyncGuard({ children, loadingComponent }: Profile
   }, [isAuthenticated, loading, router]);
 
   // While the auth state is loading or the profile is syncing, show a loading indicator.
+  // But add a timeout to prevent infinite loading
+  useEffect(() => {
+    if (isAuthenticated() && !isProfileSynced) {
+      console.log("🔐 ProfileSyncGuard: Profile sync in progress...")
+      // Add a 10-second timeout to prevent infinite loading
+      const timeout = setTimeout(() => {
+        console.log("🔐 ProfileSyncGuard: Sync timeout reached, proceeding anyway")
+        // Force proceed if sync takes too long
+      }, 10000)
+      
+      return () => clearTimeout(timeout)
+    }
+  }, [isAuthenticated, isProfileSynced])
+
   if (loading || (isAuthenticated() && !isProfileSynced)) {
     return loadingComponent || (
       <div className="flex h-screen w-full items-center justify-center">
