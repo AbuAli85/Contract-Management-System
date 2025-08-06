@@ -31,7 +31,42 @@ export function middleware(request: NextRequest) {
     pathname.includes("/debug/") ||
     pathname.includes("/health")
   ) {
-    return NextResponse.next()
+    // Apply security headers for API routes
+    const response = NextResponse.next()
+    
+    // Security Headers
+    if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
+      response.headers.set('X-Frame-Options', 'DENY')
+      response.headers.set('X-Content-Type-Options', 'nosniff')
+      response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+      response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    }
+
+    // XSS Protection
+    if (process.env.ENABLE_XSS_PROTECTION === 'true') {
+      response.headers.set('X-XSS-Protection', '1; mode=block')
+    }
+
+    // CORS Headers for API routes
+    if (pathname.startsWith('/api/')) {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || []
+      const origin = request.headers.get('origin')
+      
+      if (origin && allowedOrigins.includes(origin)) {
+        response.headers.set('Access-Control-Allow-Origin', origin)
+      }
+      
+      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+      response.headers.set('Access-Control-Allow-Credentials', 'true')
+    }
+
+    // Request logging
+    if (process.env.ENABLE_REQUEST_LOGGING === 'true') {
+      console.log(`[${new Date().toISOString()}] ${request.method} ${request.url}`)
+    }
+
+    return response
   }
 
   // Handle root path redirect with error handling
@@ -48,10 +83,47 @@ export function middleware(request: NextRequest) {
   try {
     const response = intlMiddleware(request)
     if (response) {
+      // Add security headers to page responses
+      if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
+        response.headers.set('X-Frame-Options', 'DENY')
+        response.headers.set('X-Content-Type-Options', 'nosniff')
+        response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+        response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+      }
+
+      // XSS Protection
+      if (process.env.ENABLE_XSS_PROTECTION === 'true') {
+        response.headers.set('X-XSS-Protection', '1; mode=block')
+      }
+
+      // Content Security Policy
+      if (process.env.ENABLE_CONTENT_SECURITY_POLICY === 'true') {
+        const csp = [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data: https: blob:",
+          "font-src 'self' https:",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live",
+          "frame-ancestors 'none'",
+        ].join('; ')
+        response.headers.set('Content-Security-Policy', csp)
+      }
+
       return response
     }
     // Fallback redirect
-    return NextResponse.redirect(new URL("/en", request.url))
+    const fallbackResponse = NextResponse.redirect(new URL("/en", request.url))
+    
+    // Add security headers to fallback response
+    if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
+      fallbackResponse.headers.set('X-Frame-Options', 'DENY')
+      fallbackResponse.headers.set('X-Content-Type-Options', 'nosniff')
+      fallbackResponse.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+      fallbackResponse.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    }
+    
+    return fallbackResponse
   } catch (error) {
     console.error("Emergency middleware i18n error:", error)
     // Ultimate fallback - just continue
