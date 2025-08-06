@@ -168,7 +168,7 @@ export function useUserProfile() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user]) // Added user dependency to useCallback
 
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
     try {
@@ -216,7 +216,7 @@ export function useUserProfile() {
       setLoading(false)
       setError(null)
     }
-  }, [user?.id, fetchUserProfile])
+  }, [user?.id]) // Removed fetchUserProfile dependency to prevent infinite loop
 
   return {
     profile,
