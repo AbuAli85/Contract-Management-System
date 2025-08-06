@@ -33,8 +33,22 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   const queryClient = useQueryClient()
   const queryKey = useMemo(() => ["promoters"], [])
   const { toast } = useToast()
-  const { user } = useAuth()
-  const { isFormActive } = useFormContext()
+  
+  // Safe auth hook usage with fallback
+  let user = null
+  let isFormActive = false
+  
+  try {
+    const authResult = useAuth()
+    user = authResult?.user || null
+    
+    const formContext = useFormContext()
+    isFormActive = formContext?.isFormActive || false
+  } catch (error) {
+    console.warn('Auth or form context not available:', error)
+    // Continue without auth - hooks will work in limited mode
+  }
+  
   const channelRef = useRef<RealtimeChannel | null>(null)
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
