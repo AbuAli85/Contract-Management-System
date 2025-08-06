@@ -11,6 +11,7 @@ interface AuthState {
   session: Session | null
   loading: boolean
   mounted: boolean
+  isProfileSynced: boolean; // New state to track profile sync status
   error: string | null
 }
 
@@ -23,6 +24,7 @@ export class AuthService {
     session: null,
     loading: true,
     mounted: false,
+    isProfileSynced: false, // Default to false
     error: null,
   }
   private listeners: AuthListener[] = []
@@ -112,6 +114,7 @@ export class AuthService {
   }
 
   private async syncUserProfile() {
+    this.updateState({ isProfileSynced: false }); // Set to false before starting
     try {
       const response = await fetch('/api/users/sync', {
         method: 'POST',
@@ -121,10 +124,10 @@ export class AuthService {
         throw new Error(data.message || 'Failed to sync user profile.');
       }
       console.log('[AuthService] User profile synchronized successfully.');
+      this.updateState({ isProfileSynced: true }); // Set to true on success
     } catch (error) {
       console.error('[AuthService] Error syncing user profile:', error);
-      // We can decide if we want to set an error state here
-      // this.updateState({ error: 'Profile sync failed.' });
+      this.updateState({ isProfileSynced: false, error: 'Profile sync failed.' });
     }
   }
 
@@ -147,6 +150,8 @@ export class AuthService {
         this.updateState({ user: session?.user ?? null, session });
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           await this.syncUserProfile(); // Sync profile on sign-in or refresh
+        } else if (event === 'SIGNED_OUT') {
+          this.updateState({ isProfileSynced: false }); // Reset on sign-out
         }
       }
     );
@@ -164,17 +169,23 @@ export function useAuth() {
     session: session,
     loading: loading,
     mounted: true,
+    isProfileSynced: false, // Initialize with default
     error: null,
   })
 
   React.useEffect(() => {
-    setState({
+    const authService = AuthService.getInstance();
+    const unsubscribe = authService.subscribe(setState);
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
+    setState(prevState => ({
+      ...prevState,
       user: user || null,
       session: session,
       loading: loading,
-      mounted: true,
-      error: null,
-    })
+    }))
   }, [user, session, loading])
 
   const signIn = async (email: string, password: string) => {
@@ -363,6 +374,7 @@ export function useAuth() {
     session: state.session,
     loading: state.loading,
     mounted: state.mounted,
+    isProfileSynced: state.isProfileSynced, // Expose the new state
     error: state.error,
     signIn,
     signUp,
