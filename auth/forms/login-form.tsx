@@ -174,8 +174,14 @@ export function LoginForm() {
         description: "Login successful. Redirecting to dashboard...",
       })
 
-      // The redirect will be handled by the page-level useEffect
-      // No need to redirect here to avoid conflicts
+      // Add a backup redirect in case the page-level redirect fails
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          console.log("🔐 Login Form: Backup redirect triggered")
+          window.location.replace("/" + locale + "/dashboard")
+        }
+      }, 2000) // 2 second delay for backup redirect
+
       console.log("🔐 Login Debug - Login successful, redirect will be handled by page component")
     } catch (error) {
       console.error("🔐 Login Debug - Unexpected error:", error)

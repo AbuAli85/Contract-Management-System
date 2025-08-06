@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 import { AuthLayoutWrapper } from "@/components/auth-layout-wrapper"
 import { ErrorBoundary } from "@/components/error-boundary"
+import { AuthRedirect } from "@/components/auth-redirect"
 
 export async function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }]
@@ -38,6 +39,7 @@ export default async function LocaleLayout({
   return (
     <ErrorBoundary>
       <NextIntlClientProvider messages={messages} locale={locale}>
+        <AuthRedirect />
         <AuthLayoutWrapper>{children}</AuthLayoutWrapper>
       </NextIntlClientProvider>
     </ErrorBoundary>

@@ -25,13 +25,8 @@ export default function LoginPage() {
     setMounted(true)
   }, [])
 
-  // Only redirect after mounted and session is ready
-  useEffect(() => {
-    if (mounted && !loading && session) {
-      console.log("🔐 Login Page: User authenticated, redirecting to dashboard")
-      window.location.href = "/" + locale + "/dashboard"
-    }
-  }, [mounted, loading, session, locale])
+  // The AuthRedirect component will handle redirects
+  // Remove the redirect logic from here to avoid conflicts
 
   // Check for OAuth errors in URL parameters
   useEffect(() => {
