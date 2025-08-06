@@ -32,30 +32,25 @@ interface AppLayoutWithSidebarProps {
 
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  
   const { user } = useAuth()
   const { unreadCount: notificationCount, highPriorityCount } = useNotifications()
   const { profile: userProfile, fetchUserProfile } = useUserProfile()
   const { isAdmin, isUser, roleInfo } = useRolePermissions()
-  const params = useSafeParams()
-  const pathname = useSafePathname()
-  const locale = useLocaleFromParams()
-
-  // Debug logging for params issue
-  useEffect(() => {
-    console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params)
-    console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
-    console.log('🔍 AppLayoutWithSidebar - locale:', locale)
-    console.log('🔍 AppLayoutWithSidebar - isLandingPage:', isLandingPage)
-    console.log('🔍 AppLayoutWithSidebar - user:', !!user)
-    console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen)
-  }, [params, pathname, locale, isLandingPage, user, sidebarOpen])
-
-  // Silent session timeout - automatically logs out after 5 minutes of inactivity
-  useSessionTimeout({
-    timeoutMinutes: 5,
-    enableLogging: false, // Set to true for debugging
-    silent: true // Silent mode - no warnings, just automatic logout
-  })
+  
+  // Safe parameter handling with error boundary
+  let params, pathname, locale
+  try {
+    params = useSafeParams()
+    pathname = useSafePathname()
+    locale = useLocaleFromParams()
+  } catch (error) {
+    console.warn('Safe params error:', error)
+    params = {}
+    pathname = '/'
+    locale = 'en'
+  }
 
   // Check if we're on the landing page (root route) or auth pages
   const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/") || 
@@ -65,29 +60,84 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                        pathname?.includes('/forgot-password') ||
                        pathname?.includes('/reset-password')
 
+  // Component mount detection
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Debug logging for params issue
+  useEffect(() => {
+    if (mounted) {
+      console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params)
+      console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
+      console.log('🔍 AppLayoutWithSidebar - locale:', locale)
+      console.log('🔍 AppLayoutWithSidebar - isLandingPage:', isLandingPage)
+      console.log('🔍 AppLayoutWithSidebar - user:', !!user)
+      console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen)
+    }
+  }, [mounted, params, pathname, locale, isLandingPage, user, sidebarOpen])
+
+  // Silent session timeout - automatically logs out after 5 minutes of inactivity
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    enableLogging: false, // Set to true for debugging
+    silent: true // Silent mode - no warnings, just automatic logout
+  })
+
   // Get current page title
   const getPageTitle = () => {
+    if (pathname?.includes('/dashboard/advanced')) return 'Advanced Dashboard'
+    if (pathname?.includes('/dashboard/analytics')) return 'Analytics'
+    if (pathname?.includes('/dashboard/approvals')) return 'Approvals'
+    if (pathname?.includes('/dashboard/audit')) return 'Audit Logs'
+    if (pathname?.includes('/dashboard/contracts')) return 'Contract Management'
+    if (pathname?.includes('/dashboard/generate-contract')) return 'Generate Contract'
+    if (pathname?.includes('/dashboard/makecom-templates')) return 'Make.com Templates'
+    if (pathname?.includes('/dashboard/notifications')) return 'Notifications'
+    if (pathname?.includes('/dashboard/overview')) return 'Overview'
+    if (pathname?.includes('/dashboard/profile')) return 'Profile'
+    if (pathname?.includes('/dashboard/reports')) return 'Reports'
+    if (pathname?.includes('/dashboard/roles')) return 'Role Management'
+    if (pathname?.includes('/dashboard/settings')) return 'Settings'
+    if (pathname?.includes('/dashboard/user-approvals')) return 'User Approvals'
+    if (pathname?.includes('/dashboard/user-management')) return 'User Management'
+    if (pathname?.includes('/dashboard/users')) return 'User Management'
     if (pathname?.includes('/dashboard')) return 'Dashboard'
     if (pathname?.includes('/generate-contract')) return 'Generate Contract'
+    if (pathname?.includes('/contracts/analytics')) return 'Contract Analytics'
+    if (pathname?.includes('/contracts/approved')) return 'Approved Contracts'
+    if (pathname?.includes('/contracts/pending')) return 'Pending Contracts'
+    if (pathname?.includes('/contracts/rejected')) return 'Rejected Contracts'
     if (pathname?.includes('/contracts')) return 'Contracts'
     if (pathname?.includes('/manage-parties')) return 'Manage Parties'
     if (pathname?.includes('/manage-promoters')) return 'Manage Promoters'
     if (pathname?.includes('/promoter-analysis')) return 'Promoter Analysis'
-    if (pathname?.includes('/users')) return 'User Management'
-    if (pathname?.includes('/settings')) return 'Settings'
+    if (pathname?.includes('/promoter-details')) return 'Promoter Details'
+    if (pathname?.includes('/promoters/performance')) return 'Promoter Performance'
+    if (pathname?.includes('/crm')) return 'CRM'
     if (pathname?.includes('/notifications')) return 'Notifications'
+    if (pathname?.includes('/onboarding')) return 'Onboarding'
+    if (pathname?.includes('/profile/settings')) return 'Profile Settings'
+    if (pathname?.includes('/profile/security')) return 'Security Settings'
+    if (pathname?.includes('/profile')) return 'Profile'
+    if (pathname?.includes('/users/activity')) return 'User Activity'
+    if (pathname?.includes('/users/roles')) return 'User Roles'
+    if (pathname?.includes('/users')) return 'User Management'
     if (pathname?.includes('/audit')) return 'Audit Logs'
+    if (pathname?.includes('/settings')) return 'Settings'
     return 'Dashboard'
   }
 
-  // Function to refresh role data
-  const handleRefreshRole = async () => {
-    try {
-      await fetchUserProfile()
-      window.location.reload() // Force a full page refresh to clear all cached data
-    } catch (error) {
-      console.error('Failed to refresh role data:', error)
-    }
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -131,12 +181,12 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                   <div className="flex items-center gap-2">
                     {/* Debug role info - only show in development */}
                     {process.env.NODE_ENV === 'development' && (
-                      <DebugRoleInfo roleInfo={roleInfo} />
+                      <DebugRoleInfo />
                     )}
 
                     {/* Admin role fixer - only show for admins in development */}
                     {process.env.NODE_ENV === 'development' && isAdmin && (
-                      <AdminRoleFixer onRefresh={handleRefreshRole} />
+                      <AdminRoleFixer />
                     )}
 
                     {/* Notifications */}
