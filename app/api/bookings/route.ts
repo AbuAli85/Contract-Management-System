@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { triggerBookingCreatedWebhook } from "@/lib/webhook-helpers"
 
 export async function GET(request: NextRequest) {
   try {
@@ -204,6 +205,23 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 },
       )
+    }
+
+    console.log("✅ Booking created successfully:", booking.id)
+
+    // Trigger Make.com webhook for automation
+    try {
+      console.log("🔔 Triggering booking created webhook...")
+      const webhookResult = await triggerBookingCreatedWebhook(booking)
+      
+      if (webhookResult.success) {
+        console.log("✅ Webhook triggered successfully")
+      } else {
+        console.warn("⚠️ Webhook failed but booking was created:", webhookResult.error)
+      }
+    } catch (webhookError) {
+      console.error("❌ Webhook trigger error:", webhookError)
+      // Don't fail the booking creation if webhook fails
     }
 
     return NextResponse.json({
