@@ -12,7 +12,36 @@ export interface EnhancedUserProfile extends UserProfile {
 }
 
 export function useUserProfile() {
-  console.log('🔄 useUserProfile hook loaded - v2.0.1 - Production fix')
+  console.log('🔄 useUserProfile hook loaded - v2.0.2 - Emergency infinite loop prevention')
+  
+  // EMERGENCY CIRCUIT BREAKER - Check for runaway execution
+  const startTime = Date.now()
+  if (typeof window !== 'undefined') {
+    const lastCall = window.localStorage.getItem('userProfileLastCall')
+    const callCount = parseInt(window.localStorage.getItem('userProfileCallCount') || '0')
+    
+    if (lastCall && (startTime - parseInt(lastCall)) < 1000 && callCount > 10) {
+      console.error('🚨 CIRCUIT BREAKER ACTIVATED: Too many calls to useUserProfile hook!')
+      console.error('🚨 Infinite loop detected - switching to emergency mode')
+      // Reset counter after logging
+      window.localStorage.setItem('userProfileCallCount', '0')
+      // Return minimal safe profile
+      return {
+        profile: null,
+        loading: false,
+        error: 'Emergency mode: Infinite loop detected',
+        fetchUserProfile: () => Promise.resolve(),
+        updateUserProfile: () => Promise.reject(new Error('Emergency mode active')),
+        getDisplayName: () => 'User',
+        getInitials: () => 'U',
+        getRoleDisplay: () => 'User'
+      }
+    }
+    
+    // Track calls for circuit breaker
+    window.localStorage.setItem('userProfileLastCall', startTime.toString())
+    window.localStorage.setItem('userProfileCallCount', (callCount + 1).toString())
+  }
   const { user } = useAuth()
   const [profile, setProfile] = useState<EnhancedUserProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -208,6 +237,8 @@ export function useUserProfile() {
   }
 
   useEffect(() => {
+    console.log('🔍 useEffect triggered for user ID:', user?.id)
+    
     if (user?.id) {
       fetchUserProfile()
     } else {
@@ -215,6 +246,16 @@ export function useUserProfile() {
       setProfile(null)
       setLoading(false)
       setError(null)
+    }
+    
+    // Cleanup circuit breaker on successful completion
+    return () => {
+      if (typeof window !== 'undefined') {
+        const count = parseInt(window.localStorage.getItem('userProfileCallCount') || '0')
+        if (count > 0) {
+          window.localStorage.setItem('userProfileCallCount', Math.max(0, count - 1).toString())
+        }
+      }
     }
   }, [user?.id]) // Removed fetchUserProfile dependency to prevent infinite loop
 
