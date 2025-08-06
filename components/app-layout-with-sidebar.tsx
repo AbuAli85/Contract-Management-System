@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DebugRoleInfo } from "@/components/debug-role-info"
 import { AdminRoleFixer } from "@/components/admin-role-fixer"
+import { DebugAuthState } from "@/components/debug-auth-state"
 import { 
   Bell, 
   Settings, 
@@ -44,7 +45,10 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     console.log('🔍 AppLayoutWithSidebar - useSafeParams result:', params)
     console.log('🔍 AppLayoutWithSidebar - pathname:', pathname)  
     console.log('🔍 AppLayoutWithSidebar - locale:', locale)
-  }, [params, pathname, locale])
+    console.log('🔍 AppLayoutWithSidebar - isLandingPage:', isLandingPage)
+    console.log('🔍 AppLayoutWithSidebar - user:', !!user)
+    console.log('🔍 AppLayoutWithSidebar - sidebarOpen:', sidebarOpen)
+  }, [params, pathname, locale, isLandingPage, user, sidebarOpen])
 
   // Silent session timeout - automatically logs out after 5 minutes of inactivity
   useSessionTimeout({
@@ -53,8 +57,13 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     silent: true // Silent mode - no warnings, just automatic logout
   })
 
-  // Check if we're on the landing page (root route)
-  const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/")
+  // Check if we're on the landing page (root route) or auth pages
+  const isLandingPage = pathname === ("/" + locale) || pathname === ("/" + locale + "/") || 
+                       pathname?.includes('/auth/') || 
+                       pathname?.includes('/login') || 
+                       pathname?.includes('/signup') ||
+                       pathname?.includes('/forgot-password') ||
+                       pathname?.includes('/reset-password')
 
   // Get current page title
   const getPageTitle = () => {
@@ -83,8 +92,8 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Mobile menu button - only show if not landing page */}
-      {!isLandingPage && (
+      {/* Mobile menu button - show for dashboard and other authenticated pages */}
+      {(!isLandingPage || pathname?.includes('/dashboard')) && (
         <div className="fixed left-4 top-4 z-50 md:hidden">
           <MobileMenuButton isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
         </div>
@@ -92,13 +101,15 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
 
       {/* Layout container */}
       <div className="flex min-h-screen">
-        {/* Sidebar - only show if not landing page */}
-        {!isLandingPage && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+        {/* Sidebar - show for dashboard and other authenticated pages */}
+        {(!isLandingPage || pathname?.includes('/dashboard')) && (
+          <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        )}
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col">
-          {/* Top header - only show if not landing page */}
-          {!isLandingPage && (
+          {/* Top header - show for dashboard and other authenticated pages */}
+          {(!isLandingPage || pathname?.includes('/dashboard')) && (
             <header className="sticky top-0 z-30 border-b border-border bg-card shadow-sm">
               <div className="px-4 py-3">
                 <div className="flex items-center justify-between">
@@ -162,6 +173,9 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </main>
         </div>
       </div>
+      
+      {/* Debug component - remove in production */}
+      {process.env.NODE_ENV === 'development' && <DebugAuthState />}
     </div>
   )
 }
