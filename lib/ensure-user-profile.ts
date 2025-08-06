@@ -1,4 +1,4 @@
-import { getSupabaseClient } from './supabase';
+import { createClient } from '@/lib/supabase/server';
 import { User } from '@supabase/supabase-js';
 
 /**
@@ -11,7 +11,9 @@ import { User } from '@supabase/supabase-js';
  * @throws An error if the profile cannot be fetched or created.
  */
 export async function ensureUserProfile(user: User) {
-  const supabase = getSupabaseClient();
+  const supabase = await createClient();
+
+  console.log(`[ensureUserProfile] Checking profile for user ${user.id} (${user.email})`);
 
   // First, try to fetch the profile
   const { data: profile, error: fetchError } = await supabase
@@ -29,6 +31,7 @@ export async function ensureUserProfile(user: User) {
 
   if (profile) {
     // Profile already exists, return it
+    console.log(`[ensureUserProfile] Profile found for user ${user.id}`);
     return profile;
   }
 
@@ -37,13 +40,13 @@ export async function ensureUserProfile(user: User) {
   
   const newUserProfile = {
     id: user.id,
-    email: user.email,
-    // Add default values for other required fields
-    // Make sure these match the 'profiles' table schema
+    email: user.email || '',
+    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    avatar_url: user.user_metadata?.avatar_url || null,
     role: 'user', // Default role
     status: 'active', // Default status
-    // name_en and name_ar can be left null if your schema allows it,
-    // or you can populate them from user metadata if available.
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   const { data: createdProfile, error: createError } = await supabase
