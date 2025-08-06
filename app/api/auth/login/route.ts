@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { AuthErrorHandler } from "@/lib/auth-error-handler"
+import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
+import { createAuditLog, logAuditEvent } from "@/lib/security"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
-export async function POST(request: NextRequest) {
+async function loginHandler(request: NextRequest) {
   try {
     console.log("🔐 Server login API called")
 
@@ -16,6 +18,16 @@ export async function POST(request: NextRequest) {
         "Email and password are required",
         "VALIDATION_ERROR",
       )
+      
+      // Log failed validation attempt
+      const auditEntry = createAuditLog(
+        request,
+        'LOGIN_VALIDATION_FAILED',
+        false,
+        { email: email || 'missing', reason: 'missing_credentials' }
+      )
+      logAuditEvent(auditEntry)
+      
       return NextResponse.json(error, { status: 400 })
     }
 
@@ -31,16 +43,53 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("🔐 Server login error:", error)
       const apiError = AuthErrorHandler.handleAuthError(error)
+      
+      // Log failed login attempt
+      const auditEntry = createAuditLog(
+        request,
+        'LOGIN_FAILED',
+        false,
+        { 
+          email, 
+          error: error.message,
+          errorCode: error.status 
+        }
+      )
+      logAuditEvent(auditEntry)
+      
       return NextResponse.json(apiError, { status: 400 })
     }
 
     if (!data.user) {
       console.error("🔐 No user returned from sign in")
       const error = AuthErrorHandler.createError("Authentication failed", "AUTH_FAILED")
+      
+      // Log authentication failure
+      const auditEntry = createAuditLog(
+        request,
+        'LOGIN_AUTH_FAILED',
+        false,
+        { email, reason: 'no_user_returned' }
+      )
+      logAuditEvent(auditEntry)
+      
       return NextResponse.json(error, { status: 400 })
     }
 
     console.log("🔐 Server login successful for user:", data.user.id)
+
+    // Log successful login
+    const auditEntry = createAuditLog(
+      request,
+      'LOGIN_SUCCESS',
+      true,
+      { 
+        userId: data.user.id,
+        email: data.user.email,
+        sessionId: data.session?.access_token?.substring(0, 10) + '...'
+      }
+    )
+    logAuditEvent(auditEntry)
 
     // Debug: Log session details
     if (data.session) {
@@ -74,7 +123,23 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error("🔐 Server login API error:", error)
+    
+    // Log unexpected error
+    const auditEntry = createAuditLog(
+      request,
+      'LOGIN_ERROR',
+      false,
+      { 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      }
+    )
+    logAuditEvent(auditEntry)
+    
     const apiError = AuthErrorHandler.handleGenericError(error)
     return NextResponse.json(apiError, { status: 500 })
   }
 }
+
+// Export the rate-limited handler
+export const POST = withRateLimit(loginHandler, RATE_LIMITS.auth)
