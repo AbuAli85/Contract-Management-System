@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Use service role client to bypass RLS issues
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient();
     
     const targetUserId = params.id;
     console.log('Fetching profile for user ID:', targetUserId);
@@ -29,7 +26,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      const authUser = authData.users.find((u: any) => u.id === targetUserId);
+      const authUser = authData.users.find(u => u.id === targetUserId);
       if (!authUser) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
