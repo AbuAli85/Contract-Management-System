@@ -57,6 +57,14 @@ export function useUserProfile() {
         window.location.hostname.includes('.local')
       )
       
+      // Debug logging
+      console.log('🔍 Environment check:', {
+        user: user?.id ? 'authenticated' : 'not authenticated',
+        hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+        isLocalhost,
+        targetUserId
+      })
+      
       if (!targetUserId) {
         if (isLocalhost) {
           console.log('⚠️ No authenticated user, using default admin user for localhost development')
@@ -65,7 +73,8 @@ export function useUserProfile() {
           // In production/deployed environment, require authentication
           console.error('❌ No authenticated user found in production environment')
           setLoading(false)
-          throw new Error('Please log in to continue')
+          setError('Please log in to continue')
+          return
         }
       }
 
@@ -74,8 +83,9 @@ export function useUserProfile() {
       const response = await fetch("/api/users/profile/" + targetUserId, {
         method: 'GET',
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
+          'Expires': '0',
           'Content-Type': 'application/json'
         }
       })
