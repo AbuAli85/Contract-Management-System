@@ -25,7 +25,15 @@ import {
   ChevronRight,
   Crown,
   Briefcase,
-  Plus
+  Plus,
+  TrendingUp,
+  UserCheck,
+  UserPlus,
+  Building2,
+  BarChart,
+  FileBarChart,
+  Shield,
+  Zap
 } from "lucide-react"
 
 interface SidebarProps {
@@ -117,7 +125,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
   // Safe navigation items with error handling
   const createNavigationItems = () => {
     try {
-      return [
+      const baseItems = [
         {
           title: "Dashboard",
           href: "/" + locale + "/dashboard",
@@ -151,6 +159,48 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
           badge: "New"
         },
         {
+          title: "Promoter Analysis",
+          href: "/" + locale + "/promoter-analysis",
+          icon: TrendingUp,
+          description: "Performance analytics"
+        },
+        {
+          title: "User Management",
+          href: "/" + locale + "/dashboard/users",
+          icon: UserCheck,
+          description: "Manage system users"
+        },
+        {
+          title: "User Approvals",
+          href: "/" + locale + "/dashboard/user-approvals",
+          icon: UserPlus,
+          description: "Approve pending users"
+        },
+        {
+          title: "CRM",
+          href: "/" + locale + "/crm",
+          icon: Building2,
+          description: "Customer relationship management"
+        },
+        {
+          title: "Analytics",
+          href: "/" + locale + "/dashboard/analytics",
+          icon: BarChart,
+          description: "Detailed analytics"
+        },
+        {
+          title: "Reports",
+          href: "/" + locale + "/dashboard/reports",
+          icon: FileBarChart,
+          description: "Generate reports"
+        },
+        {
+          title: "Audit Logs",
+          href: "/" + locale + "/dashboard/audit",
+          icon: Shield,
+          description: "System audit trails"
+        },
+        {
           title: "Notifications",
           href: "/" + locale + "/notifications",
           icon: Bell,
@@ -159,12 +209,40 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
           badgeVariant: highPriorityCount > 0 ? "destructive" : "secondary"
         },
         {
+          title: "Profile",
+          href: "/" + locale + "/profile",
+          icon: User,
+          description: "Your profile settings"
+        },
+        {
           title: "Settings",
           href: "/" + locale + "/dashboard/settings",
           icon: Settings,
           description: "App configuration"
         }
       ]
+
+      // Add admin-only items
+      if (isAdmin) {
+        baseItems.splice(-2, 0, // Insert before Settings
+          {
+            title: "Role Management",
+            href: "/" + locale + "/dashboard/roles",
+            icon: Crown,
+            description: "Manage user roles",
+            badge: "Admin"
+          },
+          {
+            title: "Advanced Dashboard",
+            href: "/" + locale + "/dashboard/advanced",
+            icon: Zap,
+            description: "Advanced features",
+            badge: "Pro"
+          }
+        )
+      }
+
+      return baseItems
     } catch (error) {
       console.error('Error creating navigation items:', error)
       return [
