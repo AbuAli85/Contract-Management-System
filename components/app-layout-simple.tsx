@@ -1,14 +1,15 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Sidebar } from "./sidebar"
+import { SimpleSidebar } from "./simple-sidebar"
 import { MobileMenuButton } from "./mobile-menu-button"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
   Bell, 
   Settings, 
-  User
+  User,
+  Menu
 } from "lucide-react"
 
 interface AppLayoutSimpleProps {
@@ -16,7 +17,7 @@ interface AppLayoutSimpleProps {
 }
 
 export function AppLayoutSimple({ children }: AppLayoutSimpleProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Default to open on desktop
   const [mounted, setMounted] = useState(false)
 
   // Component mount detection
@@ -43,10 +44,22 @@ export function AppLayoutSimple({ children }: AppLayoutSimpleProps) {
         <MobileMenuButton isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
       </div>
 
+      {/* Desktop sidebar toggle button */}
+      <div className="hidden md:block fixed left-4 top-4 z-50">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="bg-background"
+        >
+          <Menu className="h-4 w-4" />
+        </Button>
+      </div>
+
       {/* Layout container */}
       <div className="flex min-h-screen">
         {/* Sidebar */}
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <SimpleSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Main content area */}
         <div className="flex-1 flex flex-col">
