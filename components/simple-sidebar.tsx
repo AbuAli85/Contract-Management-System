@@ -35,6 +35,13 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       description: "Overview and metrics"
     },
     {
+      label: "Advanced Dashboard",
+      href: "/en/dashboard/advanced",
+      icon: TrendingUp,
+      description: "Professional analytics",
+      badge: "NEW"
+    },
+    {
       label: "Generate Contract",
       href: "/en/generate-contract", 
       icon: FileText,
@@ -47,22 +54,36 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       description: "Manage all contracts"
     },
     {
+      label: "Booking System",
+      href: "/en/booking-system",
+      icon: Briefcase,
+      description: "Resource booking & scheduling",
+      badge: "PRO"
+    },
+    {
+      label: "Tracking Dashboard",
+      href: "/en/tracking",
+      icon: Target,
+      description: "Real-time project tracking",
+      badge: "LIVE"
+    },
+    {
       label: "Promoters",
-      href: "/en/manage-promoters",
+      href: "/en/promoters",
       icon: Users,
       description: "Manage promoters",
       badge: "160"
     },
     {
       label: "Companies", 
-      href: "/en/manage-parties",
+      href: "/en/companies",
       icon: Building2,
       description: "Manage companies",
       badge: "16"
     },
     {
       label: "Analytics",
-      href: "/en/dashboard/analytics",
+      href: "/en/analytics",
       icon: BarChart3,
       description: "Performance metrics"
     },
@@ -82,7 +103,8 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       label: "Notifications",
       href: "/en/notifications",
       icon: Bell,
-      description: "View notifications"
+      description: "View notifications",
+      badge: "12"
     },
     {
       label: "Profile",
