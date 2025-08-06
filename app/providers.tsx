@@ -65,6 +65,13 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
 
       // Initialize the AuthService singleton
       const authService = AuthService.getInstance()
+      
+      // Add a fallback timeout in case AuthService gets stuck
+      const initTimeout = setTimeout(() => {
+        console.log("🔐 AuthContextProvider: AuthService initialization timeout, forcing sync state to true")
+        setIsProfileSynced(true)
+      }, 10000) // 10 second timeout
+      
       authService.initialize(client)
 
       // Subscribe to the AuthService for all state updates
@@ -77,6 +84,7 @@ function AuthContextProvider({ children }: { children: React.ReactNode }) {
 
       return () => {
         console.log("🔐 AuthContextProvider: Cleaning up auth listener...")
+        clearTimeout(initTimeout)
         unsubscribe()
       }
     } catch (error) {

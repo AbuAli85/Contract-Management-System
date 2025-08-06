@@ -114,50 +114,90 @@ export class AuthService {
   }
 
   private async syncUserProfile() {
+    console.log('[AuthService] Starting user profile sync...');
     this.updateState({ isProfileSynced: false }); // Set to false before starting
+    
     try {
       const response = await fetch('/api/users/sync', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
       const data = await response.json();
-      if (!response.ok || !data.success) {
+      
+      if (!data.success) {
         throw new Error(data.message || 'Failed to sync user profile.');
       }
+      
       console.log('[AuthService] User profile synchronized successfully.');
       this.updateState({ isProfileSynced: true }); // Set to true on success
+      
     } catch (error) {
       console.error('[AuthService] Error syncing user profile:', error);
-      this.updateState({ isProfileSynced: false, error: 'Profile sync failed.' });
+      // Don't block the app if profile sync fails
+      // Set to true anyway to allow the user to proceed
+      console.log('[AuthService] Setting isProfileSynced to true despite error to allow app to function');
+      this.updateState({ isProfileSynced: true, error: null });
     }
   }
 
   // This method will be called by the provider
   async initialize(supabase: any) {
-    if (this.state.mounted) return;
-
-    this.updateState({ loading: true, mounted: true });
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      this.updateState({ user: session.user, session, loading: false });
-      await this.syncUserProfile(); // Sync profile on initial load
-    } else {
-      this.updateState({ loading: false });
+    if (this.state.mounted) {
+      console.log('[AuthService] Already initialized, skipping...');
+      return;
     }
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event: string, session: Session | null) => {
-        this.updateState({ user: session?.user ?? null, session });
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          await this.syncUserProfile(); // Sync profile on sign-in or refresh
-        } else if (event === 'SIGNED_OUT') {
-          this.updateState({ isProfileSynced: false }); // Reset on sign-out
-        }
-      }
-    );
+    console.log('[AuthService] Initializing...');
+    this.updateState({ loading: true, mounted: true });
 
-    // Store the unsubscribe function
-    this.listeners.push(() => authListener?.subscription.unsubscribe());
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        console.log('[AuthService] Found existing session, updating state...');
+        this.updateState({ user: session.user, session, loading: false });
+        await this.syncUserProfile(); // Sync profile on initial load
+      } else {
+        console.log('[AuthService] No existing session found');
+        this.updateState({ loading: false, isProfileSynced: true }); // No user, no sync needed
+      }
+
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (event: string, session: Session | null) => {
+          console.log('[AuthService] Auth state changed:', event, session ? 'has session' : 'no session');
+          
+          this.updateState({ user: session?.user ?? null, session });
+          
+          if (event === 'SIGNED_IN') {
+            console.log('[AuthService] User signed in, syncing profile...');
+            await this.syncUserProfile(); // Sync profile on sign-in
+          } else if (event === 'TOKEN_REFRESHED') {
+            console.log('[AuthService] Token refreshed, checking if profile sync needed...');
+            // Only sync if not already synced
+            if (!this.state.isProfileSynced) {
+              await this.syncUserProfile();
+            }
+          } else if (event === 'SIGNED_OUT') {
+            console.log('[AuthService] User signed out, resetting profile sync state');
+            this.updateState({ isProfileSynced: false }); // Reset on sign-out
+          }
+        }
+      );
+
+      // Store the unsubscribe function
+      this.listeners.push(() => authListener?.subscription.unsubscribe());
+      
+    } catch (error) {
+      console.error('[AuthService] Error during initialization:', error);
+      this.updateState({ loading: false, error: 'Failed to initialize auth service' });
+    }
   }
 }
 
