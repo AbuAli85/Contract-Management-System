@@ -4,6 +4,7 @@ import { usePathname } from "@/navigation"
 import { useMemo } from "react"
 import { AppLayoutWithSidebar } from "@/components/app-layout-with-sidebar"
 import { SimpleLayout } from "@/components/simple-layout"
+import ProfileSyncGuard from "@/components/profile-sync-guard"
 
 export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -35,5 +36,9 @@ export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
     return <SimpleLayout>{children}</SimpleLayout>
   }
 
-  return <AppLayoutWithSidebar>{children}</AppLayoutWithSidebar>
-} 
+  return (
+    <ProfileSyncGuard>
+      <AppLayoutWithSidebar>{children}</AppLayoutWithSidebar>
+    </ProfileSyncGuard>
+  )
+}
