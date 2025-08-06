@@ -163,13 +163,13 @@ export class AuthService {
 
 // React hook for using AuthService with Supabase auth helpers
 export function useAuth() {
-  const { user, session, loading, supabase } = useSupabase()
+  const { user, session, loading, isProfileSynced, supabase } = useSupabase()
   const [state, setState] = React.useState<AuthState>({
     user: user || null,
     session: session,
     loading: loading,
     mounted: true,
-    isProfileSynced: false, // Initialize with default
+    isProfileSynced: isProfileSynced,
     error: null,
   })
 
@@ -185,8 +185,9 @@ export function useAuth() {
       user: user || null,
       session: session,
       loading: loading,
+      isProfileSynced: isProfileSynced,
     }))
-  }, [user, session, loading])
+  }, [user, session, loading, isProfileSynced])
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
