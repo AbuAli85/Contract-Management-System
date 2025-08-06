@@ -193,8 +193,7 @@ export function useAuth() {
     // Check for emergency mode conditions
     const emergencyChecks = [
       typeof window === 'undefined',
-      !supabase,
-      emergencyMode
+      !supabase
     ]
 
     if (emergencyChecks.some(Boolean)) {
@@ -202,6 +201,8 @@ export function useAuth() {
       setEmergencyMode(true)
       return
     }
+
+    if (emergencyMode) return
 
     const authService = AuthService.getInstance();
     const unsubscribe = authService.subscribe((newState) => {
@@ -213,7 +214,7 @@ export function useAuth() {
       }
     });
     return () => unsubscribe();
-  }, [supabase, emergencyMode]);
+  }, [supabase]);
 
   React.useEffect(() => {
     if (emergencyMode) return
@@ -230,7 +231,7 @@ export function useAuth() {
       console.error('Auth state sync error:', error)
       setEmergencyMode(true)
     }
-  }, [user, session, loading, isProfileSynced, emergencyMode])
+  }, [user, session, loading, isProfileSynced])
 
   // Emergency safe functions with null checks
   const signIn = async (email: string, password: string) => {
