@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { AuthErrorHandler } from "@/lib/auth-error-handler"
+import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { withRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 import { createAuditLog, logAuditEvent } from "@/lib/security"
 
@@ -42,7 +43,7 @@ async function loginHandler(request: NextRequest) {
 
     if (error) {
       console.error("🔐 Server login error:", error)
-      const apiError = AuthErrorHandler.handleAuthError(error)
+      const apiError = ApiErrorHandler.handleAuthError(error)
       
       // Log failed login attempt
       const auditEntry = createAuditLog(
@@ -57,7 +58,7 @@ async function loginHandler(request: NextRequest) {
       )
       logAuditEvent(auditEntry)
       
-      return NextResponse.json(apiError, { status: 400 })
+      return NextResponse.json(ApiErrorHandler.formatErrorResponse(apiError), { status: apiError.status || 400 })
     }
 
     if (!data.user) {

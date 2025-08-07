@@ -1,4 +1,6 @@
 // 🔄 HYBRID AUTH SERVICE - Safe during SSR, functional on client
+// Enhanced error handling for better user experience
+// Converts raw Supabase errors to user-friendly messages
 import { useSupabase } from "@/app/providers"
 import { useEffect, useState } from "react"
 
@@ -29,13 +31,75 @@ export function useAuth() {
     loading,
     mounted: isClient,
     signIn: async (email: string, password: string) => {
-      if (!supabase) return { user: null, session: null }
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      })
-      if (error) throw error
-      return data
+      if (!supabase) return { success: false, error: "Authentication service unavailable" }
+      
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        })
+        
+        if (error) {
+          // Format the error message for better user experience
+          let formattedError = "Authentication failed"
+          
+          if (error.message) {
+            if (error.message.includes("Invalid login credentials")) {
+              formattedError = "Invalid email or password. Please try again."
+            } else if (error.message.includes("Email not confirmed")) {
+              formattedError = "Please check your email and confirm your account before signing in."
+            } else if (error.message.includes("Too many requests")) {
+              formattedError = "Too many login attempts. Please wait a few minutes before trying again."
+            } else if (error.message.includes("User not found")) {
+              formattedError = "No account found with this email address."
+            } else {
+              formattedError = error.message
+            }
+          }
+          
+          return { success: false, error: formattedError }
+        }
+        
+        if (!data.user) {
+          return { success: false, error: "Authentication failed" }
+        }
+        
+        // Check user status if needed
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("status, role")
+            .eq("id", data.user.id)
+            .single()
+          
+          if (!userError && userData) {
+            if (userData.status === "pending") {
+              return { 
+                success: false, 
+                error: "Your account is pending approval. Please contact an administrator.",
+                status: "pending"
+              }
+            }
+            
+            if (userData.status === "inactive") {
+              return { 
+                success: false, 
+                error: "Your account has been deactivated. Please contact an administrator.",
+                status: "inactive"
+              }
+            }
+          }
+        } catch (statusError) {
+          console.error("Error checking user status:", statusError)
+          // Continue with login if status check fails
+        }
+        
+        return { success: true, user: data.user, session: data.session }
+      } catch (error) {
+        // Handle unexpected errors
+        const errorMessage = error instanceof Error ? error.message : "Authentication failed"
+        return { success: false, error: errorMessage }
+      }
     },
     signOut: async () => {
       if (!supabase) return
@@ -73,12 +137,41 @@ export const authService = {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     )
     
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+      
+      if (error) {
+        // Format the error message for better user experience
+        let formattedError = "Authentication failed"
+        
+        if (error.message) {
+          if (error.message.includes("Invalid login credentials")) {
+            formattedError = "Invalid email or password. Please try again."
+          } else if (error.message.includes("Email not confirmed")) {
+            formattedError = "Please check your email and confirm your account before signing in."
+          } else if (error.message.includes("Too many requests")) {
+            formattedError = "Too many login attempts. Please wait a few minutes before trying again."
+          } else if (error.message.includes("User not found")) {
+            formattedError = "No account found with this email address."
+          } else {
+            formattedError = error.message
+          }
+        }
+        
+        throw new Error(formattedError)
+      }
+      
+      return data
+    } catch (error) {
+      // Re-throw the error with proper formatting
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error("Authentication failed")
+    }
   },
 
   signOut: async () => {
