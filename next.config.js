@@ -2,34 +2,11 @@
 const withNextIntl = require("next-intl/plugin")("./i18n.ts")
 
 const nextConfig = {
-  // Disable SWC minification to avoid bundling issues
-  swcMinify: false,
-  
-  // Enable React strict mode
-  reactStrictMode: false, // Temporarily disable to debug
+  // Enable React strict mode for better error detection
+  reactStrictMode: true,
   
   // Webpack configuration
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Disable webpack cache to avoid stale bundle issues
-    config.cache = false
-    
-    // Completely disable all minification
-    config.optimization.minimize = false
-    config.optimization.minimizer = []
-    
-    // Add webpack configuration to resolve module issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    }
-    
-    // Fix for module compatibility issues
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-    }
-
     // Optimize bundle splitting
     if (!isServer) {
       config.optimization.splitChunks = {
@@ -56,6 +33,19 @@ const nextConfig = {
           },
         },
       }
+    }
+    
+    // Handle webpack module resolution issues
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    }
+
+    // Add webpack configuration to resolve module issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
     }
     
     // Handle webpack module resolution issues
@@ -112,28 +102,6 @@ const nextConfig = {
       }
     ],
   },
-
-  // Add headers for development to prevent caching issues
-  async headers() {
-    return [
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
-          },
-        ],
-      },
-    ];
-  },
 }
+
 module.exports = withNextIntl(nextConfig)

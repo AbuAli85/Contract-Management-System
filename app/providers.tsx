@@ -10,8 +10,9 @@ import { FormContextProvider } from "@/hooks/use-form-context"
 import { SystemStatusBanner } from "@/components/system-status-banner"
 import { createContext } from "react"
 import type { Session, User } from "@supabase/supabase-js"
+import { patchReactDOM } from "@/lib/dom-safety-patch"
 
-// � HYBRID MODE - Emergency during SSR, Real auth on client
+// 🔧 HYBRID MODE - Emergency during SSR, Real auth on client
 // Uses circuit breaker during build/SSR but enables authentication on client side
 
 interface AuthContextType {
@@ -41,6 +42,13 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
   // Detect when we're on the client side
   useEffect(() => {
     setIsClient(true)
+    
+    // Apply DOM safety patches on client side
+    try {
+      patchReactDOM()
+    } catch (error) {
+      console.warn('Failed to apply DOM safety patches:', error)
+    }
   }, [])
 
   // Initialize real authentication on client side

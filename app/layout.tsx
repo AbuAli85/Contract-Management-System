@@ -4,6 +4,7 @@ import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import { Providers } from "./providers"
 import { Toaster } from "@/components/ui/toaster"
+import { DOMErrorBoundary } from "@/components/dom-error-boundary"
 
 // 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout (DISABLED FOR DEBUGGING)
 // import { Settings, UserPlus, Menu, Search, HelpCircle } from "lucide-react"
@@ -40,12 +41,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body className={fontInter.variable + " " + fontLexend.variable} suppressHydrationWarning>
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 text-sm">
-          � Build-Safe Mode: Providers restored with circuit breakers
+          🔧 Build-Safe Mode: Providers restored with circuit breakers
         </div>
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <DOMErrorBoundary
+          onError={(error, errorInfo) => {
+            console.error('Root layout caught error:', error, errorInfo)
+          }}
+        >
+          <Providers>
+            {children}
+            <Toaster />
+          </Providers>
+        </DOMErrorBoundary>
       </body>
     </html>
   )
