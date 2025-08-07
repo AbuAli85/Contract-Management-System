@@ -1,10 +1,13 @@
 "use client"
+// 🔄 HYBRID MODE - Emergency during SSR, Real auth on client
+// Uses circuit breaker during build/SSR but enables authentication on client side
 
 import React, { useEffect, useState } from "react"
 import type React from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ThemeProvider } from "@/components/theme-provider"
 import { FormContextProvider } from "@/hooks/use-form-context"
+import { SystemStatusBanner } from "@/components/system-status-banner"
 import { createContext } from "react"
 import type { Session, User } from "@supabase/supabase-js"
 
@@ -226,6 +229,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             disableTransitionOnChange
           >
             <FormContextProvider>
+              <SystemStatusBanner />
               {children}
             </FormContextProvider>
           </ThemeProvider>
