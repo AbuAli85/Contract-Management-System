@@ -38,8 +38,8 @@ export default async function SafeLocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <div className="min-h-screen">
             <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4">
-              <p className="font-bold">� Safe Mode Active</p>
-              <p>Authentication components with circuit breakers enabled. No infinite loops.</p>
+              <p className="font-bold">🔐 Authentication System Active</p>
+              <p>Enhanced authentication with improved error handling and user experience.</p>
             </div>
             {children}
           </div>

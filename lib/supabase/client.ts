@@ -124,7 +124,7 @@ function createSupabaseClient() {
       detectSessionInUrl: true,
       storageKey: "sb-auth-token",
       storage: typeof window !== "undefined" ? window.localStorage : undefined,
-      flowType: "pkce",
+      // Remove flowType for password-based authentication
     },
     global: {
       headers: {

@@ -57,6 +57,8 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
   // Initialize real authentication on client side
   useEffect(() => {
     if (isClient && typeof window !== 'undefined') {
+      console.log("🔐 Initializing authentication on client side...")
+      
       // Set a timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
         console.warn("🔐 Auth initialization timeout, falling back to safe mode")
@@ -67,14 +69,23 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
           isProfileSynced: true,
           supabase: null
         })
-      }, 5000) // 5 second timeout
+      }, 10000) // 10 second timeout
 
       // Only import and initialize Supabase on client side
       const initializeAuth = async () => {
         try {
+          console.log("🔐 Loading Supabase client...")
           const { createClient } = await import('@supabase/supabase-js')
           
-          if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+          const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          
+          console.log("🔐 Environment variables:", {
+            url: supabaseUrl ? 'SET' : 'NOT SET',
+            key: supabaseKey ? 'SET' : 'NOT SET'
+          })
+          
+          if (!supabaseUrl || !supabaseKey) {
             console.warn("🔐 Supabase credentials missing, staying in safe mode")
             clearTimeout(timeoutId)
             setAuthState({
@@ -87,15 +98,16 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
             return
           }
 
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-          )
+          console.log("🔐 Creating Supabase client...")
+          const supabase = createClient(supabaseUrl, supabaseKey)
+          console.log("🔐 Supabase client created successfully")
 
           // Get initial session
+          console.log("🔐 Getting initial session...")
           const { data: { session }, error } = await supabase.auth.getSession()
           
           if (!error) {
+            console.log("🔐 Session retrieved successfully:", session ? 'has session' : 'no session')
             clearTimeout(timeoutId)
             setAuthState({
               user: session?.user || null,
@@ -106,8 +118,10 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
             })
 
             // Listen for auth changes
+            console.log("🔐 Setting up auth state listener...")
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
               (event, session) => {
+                console.log("🔐 Auth state changed:", event, session ? 'has session' : 'no session')
                 setAuthState(prev => ({
                   ...prev,
                   user: session?.user || null,

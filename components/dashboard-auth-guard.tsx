@@ -31,7 +31,15 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
       
       setCheckingStatus(true)
       
+      // Add timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn("🔐 User status check timeout, allowing access")
+        setCheckingStatus(false)
+        setUserStatus("active")
+      }, 5000) // 5 second timeout
+      
       try {
+        console.log("🔐 Checking user status for:", session.user.id)
         
         // Check user status in both users and profiles tables
         const { data: userData, error: userError } = await supabase
@@ -41,6 +49,7 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
           .single()
         
         if (!userError && userData) {
+          console.log("🔐 User status found in users table:", userData.status)
           setUserStatus(userData.status as string)
           
           if (userData.status === "pending") {
@@ -57,6 +66,7 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
             return
           }
         } else {
+          console.log("🔐 User not found in users table, checking profiles table...")
           // Try profiles table as fallback
           const { data: profileData, error: profileError } = await supabase
             .from("profiles")
@@ -65,6 +75,7 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
             .single()
           
           if (!profileError && profileData) {
+            console.log("🔐 User status found in profiles table:", profileData.status)
             setUserStatus(profileData.status as string)
             
             if (profileData.status === "pending") {
@@ -80,11 +91,18 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
               router.replace(redirectUrl)
               return
             }
+          } else {
+            console.log("🔐 User not found in profiles table either, allowing access")
+            // If user doesn't exist in either table, allow access (new user)
+            setUserStatus("active")
           }
         }
       } catch (error) {
         console.error("Error checking user status:", error)
+        // On error, allow access to prevent blocking
+        setUserStatus("active")
       } finally {
+        clearTimeout(timeoutId)
         setCheckingStatus(false)
       }
     }

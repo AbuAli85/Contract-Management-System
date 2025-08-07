@@ -40,8 +40,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className={fontInter.variable + " " + fontLexend.variable} suppressHydrationWarning>
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-2 text-sm">
-          🔧 Build-Safe Mode: Providers restored with circuit breakers
+        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-2 text-sm">
+          🔧 Authentication System: Hybrid mode with enhanced error handling
         </div>
         <DOMErrorBoundary>
           <Providers>
