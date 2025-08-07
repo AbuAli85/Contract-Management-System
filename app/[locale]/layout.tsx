@@ -5,7 +5,7 @@ export async function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }]
 }
 
-export default async function EmergencyLayout({
+export default async function SafeLocaleLayout({
   children,
   params,
 }: {
@@ -37,9 +37,9 @@ export default async function EmergencyLayout({
       <body className="min-h-screen bg-background font-sans antialiased">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <div className="min-h-screen">
-            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4">
-              <p className="font-bold">🚨 Emergency Mode Active</p>
-              <p>All authentication components have been disabled to prevent infinite loops.</p>
+            <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4">
+              <p className="font-bold">� Safe Mode Active</p>
+              <p>Authentication components with circuit breakers enabled. No infinite loops.</p>
             </div>
             {children}
           </div>
