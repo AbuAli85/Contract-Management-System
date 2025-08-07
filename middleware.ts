@@ -101,11 +101,13 @@ export function middleware(request: NextRequest) {
         const csp = [
           "default-src 'self'",
           "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
-          "style-src 'self' 'unsafe-inline'",
+          "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "img-src 'self' data: https: blob:",
-          "font-src 'self' https:",
-          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live",
+          "font-src 'self' https: data: https://fonts.gstatic.com",
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live https://fonts.googleapis.com https://fonts.gstatic.com",
           "frame-ancestors 'none'",
+          "object-src 'none'",
+          "base-uri 'self'",
         ].join('; ')
         response.headers.set('Content-Security-Policy', csp)
       }
