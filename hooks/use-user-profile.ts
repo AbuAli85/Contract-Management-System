@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/lib/auth-service"
+import { debounceManager } from "@/lib/debounce-manager"
 
 // Emergency fix for user profile hook
 interface UserProfile {
@@ -123,6 +124,12 @@ export function useUserProfile() {
       })
       setLoading(false)
       setError(null)
+      return
+    }
+
+    // Check if already debouncing to prevent rapid calls
+    if (debounceManager.isDebouncing('fetchUserProfile')) {
+      console.log('⏳ User profile fetch already in progress, skipping...')
       return
     }
 
@@ -266,15 +273,29 @@ export function useUserProfile() {
     }
   }, [user, profile])
 
+  // Create a debounced version of fetchUserProfile
+  const debouncedFetchUserProfile = useCallback(
+    debounceManager.debounce('fetchUserProfile', fetchUserProfile, 1000, 5),
+    [fetchUserProfile]
+  )
+
   // Fetch profile on mount and when user changes
   useEffect(() => {
-    if (user || typeof window !== 'undefined') {
-      fetchUserProfile()
+    if (user?.id || typeof window !== 'undefined') {
+      console.log('🔄 Triggering user profile fetch for user:', user?.id || 'localhost')
+      debouncedFetchUserProfile()
     } else {
       setLoading(false)
       setProfile(null)
     }
   }, [user?.id]) // Removed fetchUserProfile from dependencies to prevent infinite loop
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      debounceManager.clearAll()
+    }
+  }, [])
 
   return {
     profile,
