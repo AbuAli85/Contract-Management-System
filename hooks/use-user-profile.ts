@@ -274,7 +274,7 @@ export function useUserProfile() {
       setLoading(false)
       setProfile(null)
     }
-  }, [user?.id, fetchUserProfile])
+  }, [user?.id]) // Removed fetchUserProfile from dependencies to prevent infinite loop
 
   return {
     profile,
