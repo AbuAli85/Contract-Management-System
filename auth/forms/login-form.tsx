@@ -18,6 +18,7 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [forceShow, setForceShow] = useState(false)
 
   const { signIn, user, loading: authLoading, mounted } = useAuth()
   const router = useRouter()
@@ -26,6 +27,16 @@ export function LoginForm() {
   // Add refs to prevent unnecessary re-renders
   const isSubmittingRef = useRef(false)
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Force show after timeout to prevent infinite loading
+  React.useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      console.warn("🔐 Login Form: Force showing form after timeout")
+      setForceShow(true)
+    }, 8000) // 8 second timeout
+
+    return () => clearTimeout(timeoutId)
+  }, [])
 
   // Silent session timeout - only active when user is authenticated
   useSessionTimeout({
@@ -200,12 +211,19 @@ export function LoginForm() {
   }, [email, password, signIn, router, redirectTo, toast, loading])
 
   // Show loading while checking authentication
-  if (authLoading || !mounted) {
+  if ((authLoading || !mounted) && !forceShow) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <p className="text-gray-600">Loading authentication...</p>
+          <p className="mt-2 text-sm text-gray-500">This may take a few moments...</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            Still loading? Click here to refresh
+          </button>
         </div>
       </div>
     )

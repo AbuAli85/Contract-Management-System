@@ -37,7 +37,10 @@ const AuthContext = createContext<AuthContextType>(SAFE_AUTH_VALUES)
 // Hybrid AuthContextProvider
 function HybridAuthContextProvider({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false)
-  const [authState, setAuthState] = useState<AuthContextType>(SAFE_AUTH_VALUES)
+  const [authState, setAuthState] = useState<AuthContextType>({
+    ...SAFE_AUTH_VALUES,
+    loading: true // Start with loading true
+  })
 
   // Detect when we're on the client side
   useEffect(() => {
@@ -54,6 +57,18 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
   // Initialize real authentication on client side
   useEffect(() => {
     if (isClient && typeof window !== 'undefined') {
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        console.warn("🔐 Auth initialization timeout, falling back to safe mode")
+        setAuthState({
+          user: null,
+          session: null,
+          loading: false,
+          isProfileSynced: true,
+          supabase: null
+        })
+      }, 5000) // 5 second timeout
+
       // Only import and initialize Supabase on client side
       const initializeAuth = async () => {
         try {
@@ -61,6 +76,14 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
           
           if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
             console.warn("🔐 Supabase credentials missing, staying in safe mode")
+            clearTimeout(timeoutId)
+            setAuthState({
+              user: null,
+              session: null,
+              loading: false,
+              isProfileSynced: true,
+              supabase: null
+            })
             return
           }
 
@@ -73,6 +96,7 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
           const { data: { session }, error } = await supabase.auth.getSession()
           
           if (!error) {
+            clearTimeout(timeoutId)
             setAuthState({
               user: session?.user || null,
               session: session,
@@ -94,13 +118,34 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
             )
 
             return () => subscription.unsubscribe()
+          } else {
+            console.warn("🔐 Session error, falling back to safe mode:", error)
+            clearTimeout(timeoutId)
+            setAuthState({
+              user: null,
+              session: null,
+              loading: false,
+              isProfileSynced: true,
+              supabase: null
+            })
           }
         } catch (error) {
           console.warn("🔐 Auth initialization failed, staying in safe mode:", error)
+          clearTimeout(timeoutId)
+          setAuthState({
+            user: null,
+            session: null,
+            loading: false,
+            isProfileSynced: true,
+            supabase: null
+          })
         }
       }
 
       initializeAuth()
+
+      // Cleanup timeout on unmount
+      return () => clearTimeout(timeoutId)
     }
   }, [isClient])
 
