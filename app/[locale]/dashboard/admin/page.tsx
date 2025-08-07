@@ -258,7 +258,14 @@ function AdminStatsOverview() {
   )
 }
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  params: {
+    locale: string
+  }
+}
+
+export default function AdminDashboard({ params }: AdminDashboardProps) {
+  const { locale } = params
   const { user, loading: authLoading } = useAuth()
   const { profile, loading: profileLoading } = useUserProfile()
   const { toast } = useToast()
