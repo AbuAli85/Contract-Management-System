@@ -272,5 +272,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
           </main>
         </div>
       </div>
+    </div>
   )
 }
