@@ -42,7 +42,11 @@ export class DOMErrorBoundary extends Component<Props, State> {
 
     // Call the onError callback if provided
     if (this.props.onError) {
-      this.props.onError(error, errorInfo)
+      try {
+        this.props.onError(error, errorInfo)
+      } catch (callbackError) {
+        console.error('Error in onError callback:', callbackError)
+      }
     }
 
     // For DOM errors, we can try to recover by forcing a re-render
