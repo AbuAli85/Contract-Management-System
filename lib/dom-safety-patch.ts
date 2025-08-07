@@ -1,3 +1,5 @@
+"use client"
+
 // DOM Safety Patch for React
 // This utility patches React's DOM manipulation methods to be more resilient
 
@@ -12,7 +14,7 @@ export function patchReactDOM() {
 
   // Patch Node.prototype.insertBefore
   const originalInsertBefore = Node.prototype.insertBefore
-  Node.prototype.insertBefore = function(newNode: Node, referenceNode: Node | null): Node {
+  Node.prototype.insertBefore = function<T extends Node>(newNode: T, referenceNode: Node | null): T {
     try {
       // Validate nodes before insertion
       if (!newNode || !this) {
@@ -26,16 +28,16 @@ export function patchReactDOM() {
         return this.appendChild(newNode)
       }
 
-      return originalInsertBefore.call(this, newNode, referenceNode)
+      return originalInsertBefore.call(this, newNode, referenceNode) as T
     } catch (error) {
       console.warn('insertBefore failed, falling back to appendChild:', error)
-      return this.appendChild(newNode)
+      return this.appendChild(newNode) as T
     }
   }
 
   // Patch Node.prototype.removeChild
   const originalRemoveChild = Node.prototype.removeChild
-  Node.prototype.removeChild = function(child: Node): Node {
+  Node.prototype.removeChild = function<T extends Node>(child: T): T {
     try {
       // Validate nodes before removal
       if (!child || !this) {
@@ -49,7 +51,7 @@ export function patchReactDOM() {
         return child
       }
 
-      return originalRemoveChild.call(this, child)
+      return originalRemoveChild.call(this, child) as T
     } catch (error) {
       console.warn('removeChild failed:', error)
       return child
@@ -58,7 +60,7 @@ export function patchReactDOM() {
 
   // Patch Node.prototype.replaceChild
   const originalReplaceChild = Node.prototype.replaceChild
-  Node.prototype.replaceChild = function(newChild: Node, oldChild: Node): Node {
+  Node.prototype.replaceChild = function<T extends Node>(newChild: Node, oldChild: T): T {
     try {
       // Validate nodes before replacement
       if (!newChild || !oldChild || !this) {
@@ -73,7 +75,7 @@ export function patchReactDOM() {
         return oldChild
       }
 
-      return originalReplaceChild.call(this, newChild, oldChild)
+      return originalReplaceChild.call(this, newChild, oldChild) as T
     } catch (error) {
       console.warn('replaceChild failed, falling back to appendChild:', error)
       this.appendChild(newChild)
@@ -83,7 +85,7 @@ export function patchReactDOM() {
 
   // Patch Node.prototype.appendChild
   const originalAppendChild = Node.prototype.appendChild
-  Node.prototype.appendChild = function(child: Node): Node {
+  Node.prototype.appendChild = function<T extends Node>(child: T): T {
     try {
       // Validate nodes before appending
       if (!child || !this) {
@@ -91,7 +93,7 @@ export function patchReactDOM() {
         return child
       }
 
-      return originalAppendChild.call(this, child)
+      return originalAppendChild.call(this, child) as T
     } catch (error) {
       console.warn('appendChild failed:', error)
       return child
@@ -136,7 +138,4 @@ if (typeof window !== 'undefined') {
   } else {
     patchReactDOM()
   }
-}
-
-// Export for manual patching
-export { patchReactDOM } 
+} 
