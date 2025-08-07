@@ -47,4 +47,4 @@ export default async function EmergencyLayout({
       </body>
     </html>
   )
-} 
+}
