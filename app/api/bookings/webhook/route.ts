@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 
 // Force dynamic rendering for this API route
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (payload.event.startsWith('booking.') && payload.booking_id) {
       try {
-        const supabase = createServerComponentClient({ cookies })
+        const supabase = await createClient()
 
         // Get booking details with related data
         const { data: bookingData, error: bookingError } = await supabase
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       
       // Log the failure to database for monitoring
       try {
-        const supabase = createServerComponentClient({ cookies })
+        const supabase = await createClient()
         await supabase.from('webhook_logs').insert({
           webhook_type: payload.event,
           payload: enrichedPayload,
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     // Log successful webhook execution
     try {
-      const supabase = createServerComponentClient({ cookies })
+      const supabase = await createClient()
       await supabase.from('webhook_logs').insert({
         webhook_type: payload.event,
         payload: enrichedPayload,
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // Log the error to database
     try {
-      const supabase = createServerComponentClient({ cookies })
+      const supabase = await createClient()
       await supabase.from('webhook_logs').insert({
         webhook_type: 'unknown',
         payload: { error: 'Failed to parse request' },

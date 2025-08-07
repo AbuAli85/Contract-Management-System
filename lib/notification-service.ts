@@ -1,4 +1,4 @@
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 
 export interface NotificationData {
   user_id: string
@@ -10,7 +10,7 @@ export interface NotificationData {
 }
 
 export class NotificationService {
-  private supabase = createClientComponentClient()
+  private supabase = createClient()
 
   /**
    * Create a notification for a specific user

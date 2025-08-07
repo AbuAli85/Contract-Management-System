@@ -90,7 +90,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Image domains (if using next/image)
   images: {
     formats: ["image/webp", "image/avif"],
