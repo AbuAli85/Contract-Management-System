@@ -285,82 +285,109 @@ export default function ClientDashboard({ params }: { params: { locale: string }
     }
   }, [toast])
 
+  // Early loading state
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-pulse">
+            <div className="w-16 h-16 bg-blue-200 rounded-lg mx-auto mb-4"></div>
+            <div className="w-32 h-4 bg-gray-200 rounded mx-auto"></div>
+          </div>
+          <p className="text-slate-600 mt-4">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <DashboardAuthGuard locale={locale} requiredRole="client">
-      <SilentSessionTimeout />
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          {/* Header */}
-          <div className="flex flex-col gap-6 mb-8">
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-slate-900">Client Dashboard</h1>
-                  <p className="text-slate-600">
-                    Manage your contracts and service providers
-                  </p>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Header */}
+        <div className="flex flex-col gap-6 mb-8">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Building2 className="w-5 h-5 text-blue-600" />
               </div>
-              
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
-                  Client
-                </Badge>
-                <Badge variant="outline" className="text-slate-600">
-                  Active Account
-                </Badge>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900">Client Dashboard</h1>
+                <p className="text-slate-600">
+                  Manage your contracts and service providers
+                </p>
               </div>
             </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-              <div className="text-sm text-slate-600">
-                Welcome back, {profile?.full_name || profile?.display_name || user?.email || 'Client'}
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                  {refreshing ? 'Refreshing...' : 'Refresh'}
-                </Button>
-                
-                <Link href="/generate-contract">
-                  <Button size="sm" className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    New Contract
-                  </Button>
-                </Link>
-              </div>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+                Client
+              </Badge>
+              <Badge variant="outline" className="text-slate-600">
+                Active Account
+              </Badge>
             </div>
           </div>
 
-          {/* Dashboard Content */}
-          <div className="space-y-8">
-            {/* Client Overview Stats */}
-            <Suspense fallback={<div className="h-64 bg-slate-100 rounded-lg animate-pulse" />}>
-              <ClientStatsOverview />
-            </Suspense>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+            <div className="text-sm text-slate-600">
+              Welcome back, {profile?.full_name || profile?.display_name || user?.email || 'Client'}
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+              
+              <Link href="/generate-contract">
+                <Button size="sm" className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  New Contract
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
 
-            {/* Client Quick Actions */}
-            <Suspense fallback={<div className="h-64 bg-slate-100 rounded-lg animate-pulse" />}>
-              <ClientQuickActions />
-            </Suspense>
+        {/* Dashboard Content */}
+        <div className="space-y-8">
+          {/* Client Overview Stats */}
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-lg animate-pulse" />}>
+            <ClientStatsOverview />
+          </Suspense>
 
-            {/* Full Client Management Dashboard */}
-            <Suspense fallback={<div className="h-96 bg-slate-100 rounded-lg animate-pulse" />}>
-              <ClientManagementDashboard />
-            </Suspense>
+          {/* Client Quick Actions */}
+          <Suspense fallback={<div className="h-64 bg-slate-100 rounded-lg animate-pulse" />}>
+            <ClientQuickActions />
+          </Suspense>
+
+          {/* Temporarily commented out to isolate infinite loop issue */}
+          {/* <Suspense fallback={<div className="h-96 bg-slate-100 rounded-lg animate-pulse" />}>
+            <ClientManagementDashboard />
+          </Suspense> */}
+          
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-8">
+            <div className="text-center">
+              <Building2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                Client Management Dashboard
+              </h3>
+              <p className="text-slate-600 mb-4">
+                Full client management features temporarily disabled while fixing infinite loop issue.
+              </p>
+              <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
+                Under Maintenance
+              </Badge>
+            </div>
           </div>
         </div>
       </div>
-    </DashboardAuthGuard>
+    </div>
   )
 }

@@ -129,25 +129,31 @@ export function ClientManagementDashboard() {
 
   // Mock data - replace with real API calls
   useEffect(() => {
-    const mockStats: ClientStats = {
-      total: 24,
-      active: 18,
-      inactive: 6,
-      new_this_month: 3,
-      total_revenue: 125000,
-      avg_satisfaction: 4.3,
-      top_services: [
-        { name: 'Marketing Services', count: 12 },
-        { name: 'IT Consulting', count: 8 },
-        { name: 'HR Services', count: 6 }
-      ]
-    }
+    // Add a flag to prevent multiple concurrent loads
+    let isMounted = true
+    
+    const loadMockData = async () => {
+      if (!isMounted) return
+      
+      const mockStats: ClientStats = {
+        total: 24,
+        active: 18,
+        inactive: 6,
+        new_this_month: 3,
+        total_revenue: 125000,
+        avg_satisfaction: 4.3,
+        top_services: [
+          { name: 'Marketing Services', count: 12 },
+          { name: 'IT Consulting', count: 8 },
+          { name: 'HR Services', count: 6 }
+        ]
+      }
 
-    const mockClients: Client[] = [
-      {
-        id: '1',
-        name_en: 'Oman Oil Company',
-        name_ar: 'شركة النفط العمانية',
+      const mockClients: Client[] = [
+        {
+          id: '1',
+          name_en: 'Oman Oil Company',
+          name_ar: 'شركة النفط العمانية',
         crn: 'OM123456789',
         contact_person: 'Ahmed Al-Rashdi',
         contact_email: 'ahmed@omanoil.com',
@@ -186,9 +192,18 @@ export function ClientManagementDashboard() {
       }
     ]
 
-    setStats(mockStats)
-    setClients(mockClients)
-    setLoading(false)
+    if (isMounted) {
+      setStats(mockStats)
+      setClients(mockClients)
+      setLoading(false)
+    }
+    }
+    
+    loadMockData()
+    
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredClients = clients.filter(client => {
