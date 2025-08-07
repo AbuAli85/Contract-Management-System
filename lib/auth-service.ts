@@ -16,6 +16,7 @@ export function useAuth() {
       user: null,
       session: null,
       loading: false,
+      mounted: false,
       signIn: () => Promise.resolve({ user: null, session: null }),
       signOut: () => Promise.resolve(),
       signUp: () => Promise.resolve({ user: null, session: null })
@@ -26,6 +27,7 @@ export function useAuth() {
     user,
     session,
     loading,
+    mounted: isClient,
     signIn: async (email: string, password: string) => {
       if (!supabase) return { user: null, session: null }
       const { data, error } = await supabase.auth.signInWithPassword({
