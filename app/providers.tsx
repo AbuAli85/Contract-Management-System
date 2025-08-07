@@ -71,6 +71,16 @@ export function useRBAC() {
   return SAFE_RBAC_VALUES
 }
 
+// Emergency usePermissions hook for compatibility
+export function usePermissions() {
+  console.log("🔐 EMERGENCY MODE: usePermissions using safe fallback values")
+  return {
+    hasPermission: () => false,
+    loading: false,
+    permissions: []
+  }
+}
+
 // Main Providers component with emergency circuit breakers
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(
