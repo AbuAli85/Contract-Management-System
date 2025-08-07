@@ -1,7 +1,6 @@
+// 🔄 HYBRID USER PROFILE HOOK - Safe during SSR, functional on client
 import { useState, useEffect, useCallback } from "react"
-
-// 🚨 EMERGENCY CIRCUIT BREAKER MODE 🚨
-// This hook is completely disabled to prevent infinite loops
+import { useSupabase } from "@/app/providers"
 
 interface UserProfile {
   id: string
@@ -21,34 +20,131 @@ interface EnhancedUserProfile extends UserProfile {
   getRoleDisplay: () => string
 }
 
-// Emergency safe fallback profile
-const EMERGENCY_SAFE_PROFILE: EnhancedUserProfile = {
-  id: 'emergency-user',
-  email: 'emergency@example.com',
-  full_name: 'Emergency User',
-  display_name: 'Emergency User',
-  role: 'user',
-  status: 'active',
-  getDisplayName: () => 'Emergency User',
-  getInitials: () => 'EU',
-  getRoleDisplay: () => 'User'
-}
-
 export function useUserProfile() {
-  console.log("🚨 EMERGENCY MODE: useUserProfile using circuit breaker - NO NETWORK CALLS")
-  
+  const { user, session, supabase } = useSupabase()
+  const [profile, setProfile] = useState<EnhancedUserProfile | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const createEnhancedProfile = (profileData: any): EnhancedUserProfile => {
+    return {
+      ...profileData,
+      getDisplayName: () => profileData.display_name || profileData.full_name || profileData.email?.split('@')[0] || 'User',
+      getInitials: () => {
+        const name = profileData.display_name || profileData.full_name || profileData.email || 'User'
+        return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+      },
+      getRoleDisplay: () => {
+        const role = profileData.role || 'user'
+        return role.charAt(0).toUpperCase() + role.slice(1)
+      }
+    }
+  }
+
+  useEffect(() => {
+    if (!isClient || !user || !supabase) {
+      return
+    }
+
+    const fetchProfile = async () => {
+      setLoading(true)
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
+
+        if (!error && data) {
+          setProfile(createEnhancedProfile(data))
+        } else {
+          // Create a default profile from user data
+          const defaultProfile = {
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            display_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            role: 'user',
+            status: 'active',
+            avatar_url: user.user_metadata?.avatar_url || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }
+          setProfile(createEnhancedProfile(defaultProfile))
+        }
+      } catch (error) {
+        console.warn("Profile fetch failed:", error)
+        // Create fallback profile
+        const fallbackProfile = {
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          display_name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          role: 'user',
+          status: 'active',
+          avatar_url: user.user_metadata?.avatar_url || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        setProfile(createEnhancedProfile(fallbackProfile))
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [isClient, user, supabase])
+
+  const fetchUserProfile = useCallback(async () => {
+    if (!isClient || !user || !supabase) return
+    
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single()
+
+    if (!error && data) {
+      setProfile(createEnhancedProfile(data))
+    }
+  }, [isClient, user, supabase])
+
+  const syncUserProfile = useCallback(async () => {
+    if (!isClient || !user || !supabase) return
+    await fetchUserProfile()
+  }, [isClient, fetchUserProfile])
+
+  // Return safe defaults during SSR
+  if (!isClient) {
+    const safeFallback = createEnhancedProfile({
+      id: 'ssr-user',
+      email: 'user@example.com',
+      full_name: 'User',
+      display_name: 'User',
+      role: 'user',
+      status: 'active'
+    })
+
+    return {
+      profile: safeFallback,
+      loading: false,
+      error: null,
+      fetchUserProfile: () => Promise.resolve(),
+      syncUserProfile: () => Promise.resolve(),
+      isProfileSynced: true
+    }
+  }
+
   return {
-    profile: EMERGENCY_SAFE_PROFILE,
-    loading: false,
+    profile,
+    loading,
     error: null,
-    fetchUserProfile: () => {
-      console.log("🚨 EMERGENCY MODE: fetchUserProfile disabled")
-      return Promise.resolve()
-    },
-    syncUserProfile: () => {
-      console.log("🚨 EMERGENCY MODE: syncUserProfile disabled")  
-      return Promise.resolve()
-    },
-    isProfileSynced: true
+    fetchUserProfile,
+    syncUserProfile,
+    isProfileSynced: !!profile
   }
 }

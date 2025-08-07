@@ -2,6 +2,7 @@
 
 import { LoginForm } from "@/auth/forms/login-form"
 import { OAuthButtons } from "@/auth/forms/oauth-buttons"
+import { AuthStatusIndicator } from "@/components/auth-status-indicator"
 import Link from "next/link"
 import { useSearchParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -50,6 +51,9 @@ export default function LoginPage() {
 
   return (
     <div className="w-full space-y-6">
+      {/* Auth Status Indicator */}
+      <AuthStatusIndicator />
+
       {/* Header */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-card-foreground mb-2">
