@@ -39,10 +39,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className={fontInter.variable + " " + fontLexend.variable} suppressHydrationWarning>
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-2 text-sm">
+          🚨 Root Layout Emergency Mode: All providers disabled to stop infinite loops
+        </div>
+        {children}
+        <Toaster />
       </body>
     </html>
   )
