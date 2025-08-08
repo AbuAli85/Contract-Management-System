@@ -16,7 +16,7 @@ import {
   Loader2,
   ExternalLink
 } from "lucide-react"
-import { MakeWebhookManager } from "@/lib/webhooks/make-webhooks"
+// Updated to use new webhook system
 
 interface WebhookTest {
   type: string
@@ -32,9 +32,20 @@ export default function DebugWebhooksPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get webhook status and URLs
-    setWebhookStatus(MakeWebhookManager.getWebhookStatus())
-    setWebhookUrls(MakeWebhookManager.getWebhookUrls())
+    // Get webhook status and URLs - now using environment variables
+    const webhookTypes = ['serviceCreation', 'bookingCreated', 'trackingUpdated', 'paymentSucceeded']
+    const status: Record<string, boolean> = {}
+    const urls: Record<string, string | undefined> = {}
+    
+    webhookTypes.forEach(type => {
+      const envVar = `MAKE_${type.toUpperCase()}_WEBHOOK`
+      const url = process.env[envVar]
+      status[type] = !!url
+      urls[type] = url
+    })
+    
+    setWebhookStatus(status)
+    setWebhookUrls(urls)
     setLoading(false)
   }, [])
 
@@ -45,19 +56,22 @@ export default function DebugWebhooksPage() {
     ])
 
     try {
-      const result = await MakeWebhookManager.sendWebhook(
-        webhookType as keyof typeof MakeWebhookManager.webhooks,
-        testPayload
-      )
+      const response = await fetch(`/api/webhooks/${webhookType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testPayload)
+      })
+
+      const result = await response.json()
 
       setTestResults(prev => 
         prev.map(test => 
           test.type === webhookType 
             ? { 
                 type: webhookType, 
-                status: result.success ? "success" : "error",
-                message: result.message,
-                response: result.data
+                status: response.ok ? "success" : "error",
+                message: response.ok ? "Webhook sent successfully" : result.error || "Webhook failed",
+                response: result
               }
             : test
         )

@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { SafeImage } from "@/components/ui/safe-image"
 import { cn } from "@/lib/utils"
-import ProtectedRoute from "@/components/protected-route"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import ExcelImportModal from "@/components/excel-import-modal"
 
 // Icons
@@ -28,7 +28,7 @@ import {
 
 // Types and Utils
 import type { Promoter } from "@/lib/types"
-import { getSupabaseClient } from "@/lib/supabase"
+import { useSupabase } from "@/app/providers"
 import { useToast } from "@/hooks/use-toast"
 import { usePermissions } from "@/hooks/use-permissions"
 import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
@@ -150,14 +150,14 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     return "active"
   }
 
+  const { supabase, loading: authLoading } = useSupabase()
+
   // Data fetching
   const fetchPromoters = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const supabase = getSupabaseClient()
-      
       if (!supabase) {
         throw new Error("Database connection not available")
       }
@@ -235,12 +235,14 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     } finally {
         setIsLoading(false)
     }
-  }, [])
+  }, [supabase])
 
-  // Load data on mount
+  // Load data on mount - only when supabase is available
   useEffect(() => {
-    fetchPromoters()
-  }, [fetchPromoters])
+    if (supabase && !authLoading) {
+      fetchPromoters()
+    }
+  }, [fetchPromoters, supabase, authLoading])
 
   // Get unique companies for filter
   const [employers, setEmployers] = useState<{ id: string; name_en: string; name_ar: string }[]>([])
@@ -250,7 +252,6 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
   const fetchEmployers = useCallback(async () => {
     try {
       setEmployersLoading(true)
-      const supabase = getSupabaseClient()
       
       if (!supabase) {
         throw new Error("Database connection not available")
@@ -275,12 +276,14 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     } finally {
       setEmployersLoading(false)
     }
-  }, [])
+  }, [supabase])
 
-  // Load employers on mount
+  // Load employers on mount - only when supabase is available
   useEffect(() => {
-    fetchEmployers()
-  }, [fetchEmployers])
+    if (supabase && !authLoading) {
+      fetchEmployers()
+    }
+  }, [fetchEmployers, supabase, authLoading])
 
   // Get unique companies for filter
   const uniqueCompanies = useMemo(() => {
@@ -613,25 +616,25 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
     router.push(`/${safeLocale}/manage-promoters/new`)
   }, [router, locale])
 
-  if (isLoading) {
+  if (isLoading || authLoading) {
     return (
-      <ProtectedRoute>
+      <AuthenticatedLayout locale={locale}>
         <div className="min-h-screen bg-background px-4 py-8">
           <div className="mx-auto max-w-screen-xl">
             <div className="flex items-center justify-center h-64">
               <div className="flex items-center gap-2">
                 <Loader2 className="h-6 w-6 animate-spin" />
-                <span>Loading promoters...</span>
+                <span>{authLoading ? "Initializing..." : "Loading promoters..."}</span>
               </div>
             </div>
           </div>
         </div>
-      </ProtectedRoute>
+      </AuthenticatedLayout>
     )
   }
 
   return (
-    <ProtectedRoute>
+    <AuthenticatedLayout locale={locale}>
       <div className="min-h-screen bg-background px-4 py-8">
         <div className="mx-auto max-w-screen-xl">
                      {/* Header */}
@@ -1198,7 +1201,7 @@ export default function PromoterManagement({ params }: PromoterManagementProps) 
           )}
         </div>
       </div>
-    </ProtectedRoute>
+    </AuthenticatedLayout>
   )
 }
 

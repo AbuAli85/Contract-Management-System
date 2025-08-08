@@ -39,13 +39,15 @@ import {
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
+  locale?: string
 }
 
-function SidebarContent({ isOpen, onClose }: SidebarProps) {
+function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
   const params = useSafeParams()
   const pathname = useSafePathname()
-  const locale = useLocaleFromParams()
+  const extractedLocale = useLocaleFromParams()
+  const locale = propLocale || extractedLocale
   const { user, loading, mounted: authMounted, signOut } = useAuth()
   
   // Use safe hooks with error boundaries
@@ -481,7 +483,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
   )
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, locale }: SidebarProps) {
   return (
     <EmergencyErrorBoundaryWrapper
       fallback={
@@ -498,7 +500,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         </div>
       }
     >
-      <SidebarContent isOpen={isOpen} onClose={onClose} />
+      <SidebarContent isOpen={isOpen} onClose={onClose} locale={locale} />
     </EmergencyErrorBoundaryWrapper>
   )
 }

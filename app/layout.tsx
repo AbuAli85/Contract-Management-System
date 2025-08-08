@@ -38,11 +38,8 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={fontInter.variable + " " + fontLexend.variable} suppressHydrationWarning>
-        <div className="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-2 text-sm">
-          🔧 Authentication System: Hybrid mode with enhanced error handling
-        </div>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${fontInter.variable} ${fontLexend.variable} min-h-screen bg-background font-sans antialiased`} suppressHydrationWarning>
         <DOMErrorBoundary>
           <Providers>
             {children}

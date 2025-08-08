@@ -1,98 +1,84 @@
 "use client"
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth-service'
-import { useSupabase } from '@/app/providers'
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 export default function SimpleTestPage() {
-  const { user, session, loading, supabase } = useSupabase()
-  const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [authResult, setAuthResult] = useState<any>(null)
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  const handleTestAuth = async () => {
-    if (!email || !password) {
-      setAuthResult({ error: 'Please enter both email and password' })
-      return
-    }
-
-    try {
-      const result = await signIn(email, password)
-      setAuthResult(result)
-    } catch (error) {
-      setAuthResult({ error: error instanceof Error ? error.message : 'Unknown error' })
-    }
-  }
-
-  if (!isClient) {
-    return <div>Loading...</div>
-  }
+  const [count, setCount] = useState(0)
+  const [inputValue, setInputValue] = useState('')
 
   return (
-    <div className="container mx-auto p-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-8">🔍 Simple Authentication Test</h1>
+    <div className="container mx-auto p-8">
+      <h1 className="text-3xl font-bold mb-8">Simple Test Page</h1>
       
-      <div className="space-y-6">
-        {/* Auth Status */}
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Authentication Status</h2>
-          <div className="space-y-2">
-            <div><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</div>
-            <div><strong>User:</strong> {user ? user.email : 'None'}</div>
-            <div><strong>Session:</strong> {session ? 'Active' : 'None'}</div>
-            <div><strong>Supabase Client:</strong> {supabase ? 'Available' : 'Not Available'}</div>
-          </div>
-        </div>
-
-        {/* Test Authentication */}
-        <div className="border rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Test Authentication</h2>
-          <div className="space-y-4">
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Components Test</CardTitle>
+            <CardDescription>
+              This page tests if basic React components are working
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Email:</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="test@example.com"
+              <Label htmlFor="test-input">Test Input</Label>
+              <Input
+                id="test-input"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type something..."
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium mb-1">Password:</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border rounded"
-                placeholder="password"
-              />
+              <Button 
+                onClick={() => setCount(count + 1)}
+                className="mr-4"
+              >
+                Count: {count}
+              </Button>
+              
+              <Button 
+                variant="outline"
+                onClick={() => setCount(0)}
+              >
+                Reset
+              </Button>
             </div>
-            <button
-              onClick={handleTestAuth}
-              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            >
-              Test Sign In
-            </button>
-          </div>
-        </div>
-
-        {/* Results */}
-        {authResult && (
-          <div className="border rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Test Results</h2>
-            <pre className="text-sm bg-gray-100 p-4 rounded overflow-auto">
-              {JSON.stringify(authResult, null, 2)}
-            </pre>
-          </div>
-        )}
+            
+            <div className="p-4 bg-green-100 border border-green-300 rounded">
+              ✅ If you can see this page, React components are working!
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Environment Test</CardTitle>
+            <CardDescription>
+              Check if environment variables are loaded
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div>
+                <strong>NEXT_PUBLIC_SUPABASE_URL:</strong> 
+                {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Not Set'}
+              </div>
+              <div>
+                <strong>NEXT_PUBLIC_SUPABASE_ANON_KEY:</strong> 
+                {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Not Set'}
+              </div>
+              <div>
+                <strong>NODE_ENV:</strong> {process.env.NODE_ENV}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
-} 
+}

@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Loader2, CheckCircle, AlertCircle, Plus } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { sendServiceCreation } from "@/lib/webhooks/make-webhooks"
+// Removed direct webhook import - now using API route
 
 interface Provider {
   id: string
@@ -48,41 +48,17 @@ export function ServiceForm({ providers }: ServiceFormProps) {
     setErrorMessage("")
 
     const payload = {
-      service_id: crypto.randomUUID(), // Pre-generate UUID for PATCH key
-      provider_id: providerId,
-      service_name: serviceName.trim(),
-      created_at: new Date().toISOString()
+      serviceId: crypto.randomUUID(),
+      name: serviceName.trim(),
+      providerId: providerId,
+      createdAt: new Date().toISOString()
     }
 
     try {
       console.log("🔗 Sending service creation request:", payload)
       
-      // Try webhook first using the webhook manager
-      const webhookResult = await sendServiceCreation(payload)
-      
-      if (webhookResult.success) {
-        console.log("✅ Service creation via webhook successful:", webhookResult.data)
-        
-        setStatus("success")
-        
-        toast({
-          title: "Service Created Successfully",
-          description: "The service has been created and sent for approval via webhook.",
-          variant: "default",
-        })
-
-        // Reset form after success
-        setTimeout(() => {
-          setServiceName("")
-          setProviderId("")
-          setStatus("idle")
-        }, 2000)
-        return
-      }
-
-      // Fallback to API route if webhook fails
-      console.log("🔄 Using API fallback for service creation")
-      const apiResponse = await fetch("/api/services", {
+      // Send webhook via API route
+      const webhookResponse = await fetch("/api/webhooks/serviceCreation", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json"
@@ -90,18 +66,19 @@ export function ServiceForm({ providers }: ServiceFormProps) {
         body: JSON.stringify(payload),
       })
 
-      if (!apiResponse.ok) {
-        throw new Error(`HTTP ${apiResponse.status}: ${apiResponse.statusText}`)
+      if (!webhookResponse.ok) {
+        const errorData = await webhookResponse.json()
+        throw new Error(errorData.error || `HTTP ${webhookResponse.status}: ${webhookResponse.statusText}`)
       }
 
-      const apiResult = await apiResponse.json()
-      console.log("✅ Service creation via API successful:", apiResult)
+      const webhookResult = await webhookResponse.json()
+      console.log("✅ Service creation webhook successful:", webhookResult)
       
       setStatus("success")
       
       toast({
         title: "Service Created Successfully",
-        description: "The service has been created and is pending approval.",
+        description: "The service has been created and sent for approval via webhook.",
         variant: "default",
       })
 

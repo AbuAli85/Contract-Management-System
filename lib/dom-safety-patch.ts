@@ -2,6 +2,7 @@
 
 // DOM Safety Patch for React
 // This utility patches React's DOM manipulation methods to be more resilient
+// Only apply when explicitly called to avoid hydration issues
 
 let isPatched = false
 
@@ -11,6 +12,12 @@ export function patchReactDOM() {
   }
 
   console.log('🔧 Applying DOM safety patches...')
+
+  // Only patch in development and when explicitly needed
+  if (process.env.NODE_ENV !== 'development') {
+    console.log('⏭️ Skipping DOM patches in production')
+    return
+  }
 
   // Patch Node.prototype.insertBefore
   const originalInsertBefore = Node.prototype.insertBefore
@@ -130,12 +137,5 @@ export function patchReactDOM() {
   console.log('✅ DOM safety patches applied')
 }
 
-// Auto-patch on module load
-if (typeof window !== 'undefined') {
-  // Wait for DOM to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', patchReactDOM)
-  } else {
-    patchReactDOM()
-  }
-} 
+// Remove automatic patching to avoid hydration issues
+// The patch should only be applied when explicitly called 

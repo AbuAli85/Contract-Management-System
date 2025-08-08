@@ -1,125 +1,258 @@
-// 🚨 EMERGENCY CIRCUIT BREAKER MODE 🚨
-// This safe hook prevents infinite loops by providing safe fallback values
-
 import React from "react"
+import { useSupabase } from "@/app/providers"
+import { useAuth } from "@/lib/auth-service"
 
-// Emergency safe type definitions
+// Real type definitions
 type Role = "admin" | "user" | "manager" | "reviewer" | "promoter"
 type Action = string
 type Resource = string
 
-// Emergency safe usePermissions hook
+// Real usePermissions hook that works with authentication
 export function usePermissions() {
-  console.log("🔐 EMERGENCY MODE: usePermissions using circuit breaker - NO NETWORK CALLS")
-  
+  const { session, supabase } = useSupabase()
+  const { user } = useAuth()
+  const [role, setRole] = React.useState<Role>("user")
+  const [roles, setRoles] = React.useState<Role[]>(["user"])
+  const [loading, setLoading] = React.useState(true)
+
+  // Fetch user role from Supabase
+  React.useEffect(() => {
+    const fetchUserRole = async () => {
+      if (!session?.user || !supabase) {
+        setLoading(false)
+        return
+      }
+
+      try {
+        setLoading(true)
+        
+        // Check profiles table for user role
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+
+        if (error) {
+          console.warn('Failed to fetch user role:', error)
+          // Default to user role if not found
+          setRole("user")
+          setRoles(["user"])
+        } else {
+          const userRole = profile?.role as Role || "user"
+          setRole(userRole)
+          setRoles([userRole])
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error)
+        setRole("user")
+        setRoles(["user"])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserRole()
+  }, [session?.user, supabase])
+
+  // Action-based permissions
+  const can = (action: Action): boolean => {
+    if (loading) return false
+    if (role === "admin") return true
+    // Add specific permission logic here
+    return false
+  }
+
+  const canAny = (actions: Action[]): boolean => {
+    return actions.some(action => can(action))
+  }
+
+  const canAll = (actions: Action[]): boolean => {
+    return actions.every(action => can(action))
+  }
+
+  // Resource-based permissions
+  const canManage = (resource: Resource): boolean => {
+    if (loading) return false
+    if (role === "admin") return true
+    return false
+  }
+
+  const canRead = (resource: Resource): boolean => {
+    if (loading) return false
+    if (role === "admin" || role === "manager") return true
+    return false
+  }
+
+  const canCreate = (resource: Resource): boolean => {
+    if (loading) return false
+    if (role === "admin" || role === "manager") return true
+    return false
+  }
+
+  const canUpdate = (resource: Resource): boolean => {
+    if (loading) return false
+    if (role === "admin" || role === "manager") return true
+    return false
+  }
+
+  const canDelete = (resource: Resource): boolean => {
+    if (loading) return false
+    if (role === "admin") return true
+    return false
+  }
+
+  const hasAnyResourcePermission = (resource: Resource, actions: Action[]): boolean => {
+    return actions.some(action => can(action))
+  }
+
+  const hasAnyPermission = (resource: Resource): boolean => {
+    return canRead(resource) || canCreate(resource) || canUpdate(resource) || canDelete(resource)
+  }
+
+  // Role checking functions
+  const isAdmin = () => role === "admin"
+  const isManager = () => role === "manager"
+  const isUser = () => role === "user"
+  const isReviewer = () => role === "reviewer"
+  const isPromoter = () => role === "promoter"
+
+  const hasRole = (roleToCheck: Role): boolean => {
+    return roles.includes(roleToCheck)
+  }
+
+  const hasAnyRole = (rolesToCheck: Role[]): boolean => {
+    return rolesToCheck.some(roleToCheck => roles.includes(roleToCheck))
+  }
+
+  const hasAllRoles = (rolesToCheck: Role[]): boolean => {
+    return rolesToCheck.every(roleToCheck => roles.includes(roleToCheck))
+  }
+
+  // Permission aggregation functions
+  const getAllowedActions = (): Action[] => {
+    if (loading) return []
+    if (role === "admin") return ["*"] // All actions
+    return [] // Add specific actions based on role
+  }
+
+  const getAllowedResources = (): Resource[] => {
+    if (loading) return []
+    if (role === "admin") return ["*"] // All resources
+    return [] // Add specific resources based on role
+  }
+
+  const getResourceActions = (resource: Resource): Action[] => {
+    if (loading) return []
+    if (role === "admin") return ["read", "create", "update", "delete"]
+    return [] // Add specific actions based on role and resource
+  }
+
+  // Specific permission checks for common actions
+  const canAddPromoter = () => can("promoter:create") || role === "admin"
+  const canEditPromoter = () => can("promoter:update") || role === "admin"
+  const canDeletePromoter = () => can("promoter:delete") || role === "admin"
+  const canBulkDeletePromoters = () => can("promoter:bulk_delete") || role === "admin"
+  const canExportPromoters = () => can("promoter:export") || role === "admin"
+
+  const canAddParty = () => can("party:create") || role === "admin"
+  const canEditParty = () => can("party:update") || role === "admin"
+  const canDeleteParty = () => can("party:delete") || role === "admin"
+  const canBulkDeleteParties = () => can("party:bulk_delete") || role === "admin"
+  const canExportParties = () => can("party:export") || role === "admin"
+
+  const canCreateContract = () => can("contract:create") || role === "admin"
+  const canEditContract = () => can("contract:update") || role === "admin"
+  const canDeleteContract = () => can("contract:delete") || role === "admin"
+  const canGenerateContract = () => can("contract:generate") || role === "admin"
+  const canApproveContract = () => can("contract:approve") || role === "admin"
+  const canExportContracts = () => can("contract:export") || role === "admin"
+
+  const canManageUsers = () => role === "admin"
+  const canAssignRoles = () => role === "admin"
+
+  const canAccessSettings = () => role === "admin"
+  const canAccessAnalytics = () => role === "admin" || role === "manager"
+  const canAccessAuditLogs = () => role === "admin"
+  const canAccessNotifications = () => true // Everyone can access notifications
+
+  const refreshRoles = async () => {
+    // Re-fetch user role
+    if (session?.user && supabase) {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single()
+
+        if (!error && profile) {
+          const userRole = profile.role as Role || "user"
+          setRole(userRole)
+          setRoles([userRole])
+        }
+      } catch (error) {
+        console.error('Error refreshing roles:', error)
+      }
+    }
+  }
+
   return {
-    // Current user's role - safe defaults
-    role: "admin" as Role,
-    roles: ["admin"] as Role[],
-    isLoading: false,
-    refreshRoles: () => {},
+    role,
+    roles,
+    isLoading: loading,
+    refreshRoles,
 
-    // Action-based permissions - safe defaults allowing access
-    can: (action: Action): boolean => {
-      return true // Emergency mode allows all actions
-    },
+    can,
+    canAny,
+    canAll,
+    canManage,
+    canRead,
+    canCreate,
+    canUpdate,
+    canDelete,
+    hasAnyResourcePermission,
+    hasAnyPermission,
 
-    canAny: (actions: Action[]): boolean => {
-      return true // Emergency mode allows all actions
-    },
+    isAdmin,
+    isManager,
+    isUser,
+    isReviewer,
+    isPromoter,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles,
 
-    canAll: (actions: Action[]): boolean => {
-      return true // Emergency mode allows all actions  
-    },
+    getAllowedActions,
+    getAllowedResources,
+    getResourceActions,
 
-    // Resource-based permissions - safe defaults allowing access
-    canManage: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
+    canAddPromoter,
+    canEditPromoter,
+    canDeletePromoter,
+    canBulkDeletePromoters,
+    canExportPromoters,
 
-    canRead: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
+    canAddParty,
+    canEditParty,
+    canDeleteParty,
+    canBulkDeleteParties,
+    canExportParties,
 
-    canCreate: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
+    canCreateContract,
+    canEditContract,
+    canDeleteContract,
+    canGenerateContract,
+    canApproveContract,
+    canExportContracts,
 
-    canUpdate: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
+    canManageUsers,
+    canAssignRoles,
 
-    canDelete: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
-
-    hasAnyResourcePermission: (resource: Resource, actions: Action[]): boolean => {
-      return true // Emergency mode allows all resources
-    },
-
-    hasAnyPermission: (resource: Resource): boolean => {
-      return true // Emergency mode allows all resources
-    },
-
-    // Role checking functions - safe defaults
-    isAdmin: () => true,
-    isManager: () => true,
-    isUser: () => true,
-    isReviewer: () => true,
-    isPromoter: () => true,
-
-    hasRole: (role: Role): boolean => {
-      return true // Emergency mode allows all roles
-    },
-
-    hasAnyRole: (roles: Role[]): boolean => {
-      return true // Emergency mode allows all roles
-    },
-
-    hasAllRoles: (roles: Role[]): boolean => {
-      return true // Emergency mode allows all roles
-    },
-
-    // Permission aggregation functions - safe defaults
-    getAllowedActions: (): Action[] => {
-      return [] // Emergency mode returns empty array
-    },
-
-    getAllowedResources: (): Resource[] => {
-      return [] // Emergency mode returns empty array
-    },
-
-    getResourceActions: (resource: Resource): Action[] => {
-      return [] // Emergency mode returns empty array
-    },
-
-    // Specific permission checks for common actions - all return true
-    canAddPromoter: () => true,
-    canEditPromoter: () => true,
-    canDeletePromoter: () => true,
-    canBulkDeletePromoters: () => true,
-    canExportPromoters: () => true,
-
-    canAddParty: () => true,
-    canEditParty: () => true,
-    canDeleteParty: () => true,
-    canBulkDeleteParties: () => true,
-    canExportParties: () => true,
-
-    canCreateContract: () => true,
-    canEditContract: () => true,
-    canDeleteContract: () => true,
-    canGenerateContract: () => true,
-    canApproveContract: () => true,
-    canExportContracts: () => true,
-
-    canManageUsers: () => true,
-    canAssignRoles: () => true,
-
-    canAccessSettings: () => true,
-    canAccessAnalytics: () => true,
-    canAccessAuditLogs: () => true,
-    canAccessNotifications: () => true,
+    canAccessSettings,
+    canAccessAnalytics,
+    canAccessAuditLogs,
+    canAccessNotifications,
   }
 }
 
@@ -130,8 +263,17 @@ export function withPermission<T extends object>(
   fallback?: React.ComponentType<T>,
 ) {
   return function PermissionWrappedComponent(props: T) {
-    // Emergency mode - always allow access
-    return React.createElement(Component, props)
+    const { can } = usePermissions()
+    
+    if (can(requiredAction)) {
+      return React.createElement(Component, props)
+    }
+    
+    if (fallback) {
+      return React.createElement(fallback, props)
+    }
+    
+    return null
   }
 }
 
@@ -143,8 +285,13 @@ interface PermissionGuardProps {
 }
 
 export function PermissionGuard({ action, children, fallback }: PermissionGuardProps) {
-  // Emergency mode - always show children
-  return React.createElement(React.Fragment, null, children)
+  const { can } = usePermissions()
+  
+  if (can(action)) {
+    return React.createElement(React.Fragment, null, children)
+  }
+  
+  return React.createElement(React.Fragment, null, fallback)
 }
 
 // Resource permission guard
@@ -156,6 +303,11 @@ interface ResourcePermissionGuardProps {
 }
 
 export function ResourcePermissionGuard({ resource, action, children, fallback }: ResourcePermissionGuardProps) {
-  // Emergency mode - always show children
-  return React.createElement(React.Fragment, null, children)
+  const { can } = usePermissions()
+  
+  if (can(action)) {
+    return React.createElement(React.Fragment, null, children)
+  }
+  
+  return React.createElement(React.Fragment, null, fallback)
 }
