@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react"
-import { useAuth } from "@/app/providers"
+import { useAuth } from "@/lib/auth-service"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const { supabase } = useAuth()
+  const { signIn, signUp } = useAuth()
 
   // Get locale from URL
   const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en'
@@ -33,21 +33,20 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      if (!supabase) {
-        setError("Authentication service not available")
-        return
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-      } else if (data.user) {
-        // Redirect to dashboard on successful login
+      const result = await signIn(email, password)
+      
+      if (result && 'success' in result) {
+        if (result.success) {
+          // Redirect to dashboard on successful login
+          router.push(`/${locale}/dashboard`)
+        } else {
+          setError(result.error || "Login failed. Please try again.")
+        }
+      } else if (result && 'user' in result && result.user) {
+        // Legacy format - user exists means success
         router.push(`/${locale}/dashboard`)
+      } else {
+        setError("Login failed. Please try again.")
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
@@ -61,23 +60,20 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      if (!supabase) {
-        setError("Authentication service not available")
-        return
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-      } else if (data.user) {
+      const result = await signUp(email, password, { full_name: email })
+      
+      if (result && 'user' in result && result.user) {
         setError("Please check your email for verification link before signing in.")
+      } else {
+        setError("Signup failed. Please try again.")
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.")
+      console.error("Signup error:", err)
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unexpected error occurred. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
