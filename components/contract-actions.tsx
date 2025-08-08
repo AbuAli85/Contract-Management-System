@@ -35,7 +35,7 @@ import {
   Users,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 
 interface ContractActionsProps {
@@ -57,7 +57,7 @@ export function ContractActions({
   const handleStatusUpdate = async (newStatus: string) => {
     setIsUpdatingStatus(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase
         .from("contracts")
         .update({ status: newStatus })
@@ -84,7 +84,7 @@ export function ContractActions({
 
   const handleDelete = async () => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase.from("contracts").delete().eq("id", contractId)
 
       if (error) throw error
@@ -107,7 +107,7 @@ export function ContractActions({
 
   const handleDuplicate = async () => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data: originalContract, error: fetchError } = await supabase
         .from("contracts")
         .select("*")

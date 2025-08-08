@@ -1,6 +1,6 @@
 // app/api/contracts/[id]/activity/route.ts
 import { NextRequest, NextResponse } from "next/server"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const contractId = params.id
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     // Get contract basic info
     const { data: contract, error: contractError } = await supabase

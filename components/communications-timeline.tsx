@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useInView } from "react-intersection-observer"
 import { format, parseISO } from "date-fns"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -68,7 +68,7 @@ export default function CommunicationsTimeline({
       setError(null)
 
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
 
         const { data, error: fetchError } = await supabase.rpc("get_party_communications", {
           p_party_id: partyId,

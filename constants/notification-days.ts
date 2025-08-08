@@ -1,10 +1,11 @@
 // Notification day constants for different document types
 // This file centralizes all notification day values used throughout the application
 
-// Promoter document notification days
 export const PROMOTER_NOTIFICATION_DAYS = {
-  ID_EXPIRY: 100,        // Days before ID expiry to notify
-  PASSPORT_EXPIRY: 210,  // Days before passport expiry to notify
+  ID_EXPIRY: 30,
+  PASSPORT_EXPIRY: 60,
+  CONTRACT_EXPIRY: 7,
+  DOCUMENT_EXPIRY: 14,
 } as const
 
 // Company/Party document notification days (if different from promoters)

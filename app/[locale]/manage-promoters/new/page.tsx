@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, PlusCircle } from "lucide-react"
 import PromoterFormProfessional from "@/components/promoter-form-professional"
 import PromoterFilterSection from "@/components/promoter-filter-section"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 interface Employer {
   id: string
@@ -33,7 +33,7 @@ export default function AddNewPromoterPage() {
   useEffect(() => {
     const fetchEmployers = async () => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         if (!supabase) return
 
         const { data, error } = await supabase

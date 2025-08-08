@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { getSupabaseClient } from "../lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import PartyDetail from "./party-detail"
 import type { Party } from "../lib/types"
 
@@ -9,7 +9,7 @@ export default function PartyList() {
   const [selectedParty, setSelectedParty] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     supabase
       .from("parties")
       .select("*")

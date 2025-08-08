@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { FileText, Users, BarChart3, Settings, Plus, Search, TrendingUp } from "lucide-react"
 import { useEffect, useState } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 interface HomePageContentProps {
   locale: string
@@ -32,23 +32,25 @@ export function HomePageContent({ locale }: HomePageContentProps) {
 
     async function fetchStats() {
       try {
+        const supabase = createClient()
+        
         // Fetch contracts count
-        const { count: contractsCount } = await getSupabaseClient()
+        const { count: contractsCount } = await supabase
           .from("contracts")
           .select("*", { count: "exact", head: true })
 
         // Fetch parties count
-        const { count: partiesCount } = await getSupabaseClient()
+        const { count: partiesCount } = await supabase
           .from("parties")
           .select("*", { count: "exact", head: true })
 
         // Fetch promoters count
-        const { count: promotersCount } = await getSupabaseClient()
+        const { count: promotersCount } = await supabase
           .from("promoters")
           .select("*", { count: "exact", head: true })
 
         // Fetch active contracts count
-        const { count: activeContractsCount } = await getSupabaseClient()
+        const { count: activeContractsCount } = await supabase
           .from("contracts")
           .select("*", { count: "exact", head: true })
           .eq("status", "active")

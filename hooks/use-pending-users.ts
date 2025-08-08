@@ -1,61 +1,66 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
-export function usePendingUsersCount() {
-  const [count, setCount] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState<any[]>([]);
+interface PendingUsersResult {
+  count: number
+  loading: boolean
+  users: any[]
+  refresh: () => Promise<void>
+}
 
-  const fetchPendingCount = useCallback(async () => {
+export function usePendingUsersCount(): PendingUsersResult {
+  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [users, setUsers] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchPendingUsers = async () => {
     try {
-      console.log('🔍 Fetching pending users count...');
-      const response = await fetch('/api/users?status=pending', {
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
+      setLoading(true)
+      setError(null)
       
-      console.log('📊 Pending users response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        const pendingUsers = data.users || [];
-        const pendingCount = pendingUsers.length;
-        console.log('✅ Pending users count:', pendingCount);
-        console.log('📋 Pending users details:', pendingUsers.map((u: any) => ({ email: u.email, status: u.status, id: u.id })));
-        setCount(pendingCount);
-        setUsers(pendingUsers);
-      } else {
-        console.log('⚠️ Failed to fetch pending users:', response.status);
-        // Don't throw error, just keep count at 0
+      const supabase = createClient()
+      const { data, error: supabaseError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('status', 'pending')
+
+      if (supabaseError) {
+        console.error('❌ Failed to fetch pending users:', supabaseError)
+        setError(supabaseError.message)
+        setCount(0)
+        setUsers([])
+        return
       }
+
+      const pendingUsers = data || []
+      setCount(pendingUsers.length)
+      setUsers(pendingUsers)
+      console.log(`✅ Found ${pendingUsers.length} pending users`)
+      
     } catch (error) {
-      console.error('❌ Error fetching pending users count:', error);
-      // Don't throw error, just keep count at 0
+      console.error('❌ Error fetching pending users:', error)
+      setError('Failed to fetch pending users')
+      setCount(0)
+      setUsers([])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }
+
+  const refresh = async () => {
+    await fetchPendingUsers()
+  }
 
   useEffect(() => {
-    fetchPendingCount();
-    
-    // Refresh count every 30 seconds
-    const interval = setInterval(fetchPendingCount, 30000);
-    
-    // Listen for user approval events and refresh immediately
-    const handleUserApprovalChanged = () => {
-      console.log('🔔 User approval changed event received, refreshing pending users...');
-      fetchPendingCount();
-    };
-    
-    window.addEventListener('userApprovalChanged', handleUserApprovalChanged);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('userApprovalChanged', handleUserApprovalChanged);
-    };
-  }, [fetchPendingCount]);
+    // Only fetch once on mount, not repeatedly
+    fetchPendingUsers()
+  }, []) // Empty dependency array to prevent infinite loops
 
-  return { count, loading, users, refresh: fetchPendingCount };
+  return {
+    count,
+    loading,
+    users,
+    refresh
+  }
 }

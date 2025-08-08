@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { getSupabaseClient } from "../lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useUserRole } from "../hooks/useUserRole"
 import { PartyNote, PartyTag, PartyActivity, PartyFile } from "../lib/types"
 import { User } from "@supabase/supabase-js"
@@ -24,7 +24,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
   useEffect(() => {
     // Get current user
     const getUser = async () => {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -33,7 +33,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
     getUser()
 
     // Listen for auth changes
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -47,7 +47,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
     if (user) {
       const partyIdStr = partyId.toString()
       // Fetch notes, tags, activities, and party owner
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       supabase
         .from("party_notes")
         .select("*")
@@ -94,7 +94,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
 
   const addNote = async () => {
     if (!noteInput.trim() || !user) return
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     await supabase
       .from("party_notes")
       .insert({ party_id: partyId.toString(), user_id: user.id, note: noteInput })
@@ -108,7 +108,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
 
   const addTag = async () => {
     if (!tagInput.trim()) return
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     await supabase.from("party_tags").insert({ party_id: partyId.toString(), tag: tagInput })
     setTagInput("")
     supabase
@@ -119,7 +119,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
   }
 
   const changeOwner = async (newOwnerId: string) => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     await supabase.from("parties").update({ owner_id: newOwnerId }).eq("id", partyId.toString())
     setOwnerId(newOwnerId)
   }
@@ -127,7 +127,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
   const uploadFile = async (file: File) => {
     if (!user) return
     const filePath = `${partyId}/${Date.now()}_${file.name}`
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const { error } = await supabase.storage.from("party-files").upload(filePath, file)
     if (error) {
       console.error("Error uploading file:", error)
@@ -151,7 +151,7 @@ export default function PartyDetail({ partyId }: PartyDetailProps) {
   }
 
   const deleteFile = async (file: PartyFile) => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const filePath = file.file_url.split("/party-files/")[1]
     await supabase.storage.from("party-files").remove([filePath])
     await supabase.from("party_files").delete().eq("id", parseInt(file.id))

@@ -23,7 +23,7 @@ import {
   ChevronUp,
   Download,
 } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
 import clsx from "clsx"
 
@@ -70,7 +70,7 @@ export default function AuditLogsPage() {
     setLoading(true)
     setError(null)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data, error } = await supabase
         .from("audit_logs")
         .select("id, user_id, action, entity_type, entity_id, details, created_at")
@@ -103,7 +103,7 @@ export default function AuditLogsPage() {
 
   // Real-time subscription (once)
   useEffect(() => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const channel = supabase
       .channel("public:audit_logs:feed")
       .on(

@@ -1,5 +1,6 @@
-import { getSupabaseClient } from "./supabase"
-import type { Promoter } from "./types"
+import { createClient } from "@/lib/supabase/client"
+import { devLog } from "@/lib/dev-log"
+import type { Promoter } from "@/lib/types"
 
 // Enhanced type definitions for better type safety
 export interface RetryConfig {
@@ -231,7 +232,7 @@ export async function fetchPromotersWithPagination(
 ): Promise<PaginatedResult<Promoter>> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { page, limit, offset = 0 } = params
 
       // Build query using the enhanced builder
@@ -250,30 +251,25 @@ export async function fetchPromotersWithPagination(
         throw new Error(`Error fetching promoters: ${promotersError.message}`)
       }
 
-      // Fetch contract counts for promoters (lazy loading)
-      const promotersWithCounts = await Promise.all(
+      // Add contract count to each promoter
+      const promotersWithContractCount = await Promise.all(
         (promotersData || []).map(async (promoter) => {
           try {
+            const supabaseClient = createClient()
             const { count: contractCount, error: contractError } = await supabaseClient
               .from("contracts")
               .select("*", { count: "exact", head: true })
               .eq("promoter_id", promoter.id)
-              .eq("status", "active")
 
             if (contractError) {
-              console.warn(`Error fetching contracts for promoter ${promoter.id}:`, contractError)
+              devLog(`Error fetching contract count for promoter ${promoter.id}:`, contractError)
+              return { ...promoter, contract_count: 0 }
             }
 
-            return {
-              ...promoter,
-              active_contracts_count: contractCount || 0,
-            }
+            return { ...promoter, contract_count: contractCount || 0 }
           } catch (error) {
-            console.warn(`Error processing promoter ${promoter.id}:`, error)
-            return {
-              ...promoter,
-              active_contracts_count: 0,
-            }
+            devLog(`Error processing promoter ${promoter.id}:`, error)
+            return { ...promoter, contract_count: 0 }
           }
         }),
       )
@@ -282,7 +278,7 @@ export async function fetchPromotersWithPagination(
       const totalPages = Math.ceil(total / limit)
 
       return {
-        data: promotersWithCounts,
+        data: promotersWithContractCount,
         total,
         page,
         limit,
@@ -315,7 +311,7 @@ export async function fetchPromotersAnalytics(
 ): Promise<PaginatedResult<any>> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { page, limit } = params
 
       // Use the RPC function for analytics
@@ -377,7 +373,7 @@ export async function fetchPromotersAnalytics(
 export async function getPromoterPerformanceStats(): Promise<PromoterPerformanceStats> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
 
       const { data, error } = await supabaseClient.rpc(`get_promoter_performance_stats`)
 
@@ -415,7 +411,7 @@ export async function exportPromotersToCSV(
 ): Promise<string> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
 
       // Build query to get all promoters for export
       let query = buildPromoterQuery(supabaseClient, searchTerm, filters)
@@ -485,7 +481,7 @@ export async function importPromotersFromCSV(
 ): Promise<ImportResult> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
 
       // Call the Edge Function for CSV import
       const { data, error } = await supabaseClient.functions.invoke(`import-promoters-csv`, {
@@ -512,7 +508,7 @@ export async function importPromotersFromCSV(
 export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       // Fetch promoters
       const { data: promotersData, error: promotersError } = await supabaseClient
         .from("promoters")
@@ -527,6 +523,7 @@ export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
       const enhancedData = await Promise.all(
         (promotersData || []).map(async (promoter) => {
           try {
+            const supabaseClient = createClient()
             const { count: contractCount, error: contractError } = await supabaseClient
               .from("contracts")
               .select("*", { count: "exact", head: true })
@@ -564,7 +561,7 @@ export async function fetchPromotersWithContractCount(): Promise<Promoter[]> {
 export async function deletePromoters(promoterIds: string[]): Promise<void> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { error } = await supabaseClient.from("promoters").delete().in("id", promoterIds)
 
       if (error) {
@@ -582,7 +579,7 @@ export async function deletePromoters(promoterIds: string[]): Promise<void> {
 export async function updatePromoterStatus(promoterId: string, status: string): Promise<void> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { error } = await supabaseClient
         .from("promoters")
         .update({ status })
@@ -606,7 +603,7 @@ export async function bulkUpdatePromoterStatus(
 ): Promise<void> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { error } = await supabaseClient
         .from("promoters")
         .update({ status })
@@ -629,7 +626,7 @@ export async function getPromotersWithExpiringDocuments(
 ): Promise<Promoter[]> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const futureDate = new Date()
       futureDate.setDate(futureDate.getDate() + daysAhead)
 
@@ -658,7 +655,7 @@ export async function getPromotersWithExpiringDocuments(
 export async function searchPromoters(searchTerm: string): Promise<Promoter[]> {
   try {
     return await withRetry(async () => {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { data, error } = await supabaseClient
         .from("promoters")
         .select("*")
@@ -683,7 +680,7 @@ export async function searchPromoters(searchTerm: string): Promise<Promoter[]> {
  */
 export async function getPromoterActivitySummary(promoterId: string) {
   return withRetry(async () => {
-    const supabaseClient = getSupabaseClient()
+    const supabaseClient = createClient()
     // Get contracts count
     const { count: contractsCount, error: contractsError } = await supabaseClient
       .from("contracts")
@@ -718,7 +715,7 @@ export async function getPromoterActivitySummary(promoterId: string) {
  */
 export async function getPromoterCVData(promoterId: string) {
   return withRetry(async () => {
-    const supabaseClient = getSupabaseClient()
+    const supabaseClient = createClient()
 
     // Fetch CV-related data only when needed
     const [skillsResult, experienceResult, educationResult, documentsResult] = await Promise.all([

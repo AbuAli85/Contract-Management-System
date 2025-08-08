@@ -9,7 +9,7 @@ type Resource = string
 
 // Real usePermissions hook that works with authentication
 export function usePermissions() {
-  const { session, supabase } = useSupabase()
+  const { session, supabase, loading: authLoading } = useSupabase()
   const { user } = useAuth()
   const [role, setRole] = React.useState<Role>("user")
   const [roles, setRoles] = React.useState<Role[]>(["user"])
@@ -18,6 +18,10 @@ export function usePermissions() {
   // Fetch user role from Supabase
   React.useEffect(() => {
     const fetchUserRole = async () => {
+      if (authLoading) {
+        return // Wait for auth to load
+      }
+      
       if (!session?.user || !supabase) {
         setLoading(false)
         return
@@ -53,11 +57,11 @@ export function usePermissions() {
     }
 
     fetchUserRole()
-  }, [session?.user, supabase])
+  }, [session?.user, supabase, authLoading])
 
   // Action-based permissions
   const can = (action: Action): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin") return true
     // Add specific permission logic here
     return false
@@ -73,31 +77,31 @@ export function usePermissions() {
 
   // Resource-based permissions
   const canManage = (resource: Resource): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin") return true
     return false
   }
 
   const canRead = (resource: Resource): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin" || role === "manager") return true
     return false
   }
 
   const canCreate = (resource: Resource): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin" || role === "manager") return true
     return false
   }
 
   const canUpdate = (resource: Resource): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin" || role === "manager") return true
     return false
   }
 
   const canDelete = (resource: Resource): boolean => {
-    if (loading) return false
+    if (loading || authLoading) return false
     if (role === "admin") return true
     return false
   }
@@ -131,19 +135,19 @@ export function usePermissions() {
 
   // Permission aggregation functions
   const getAllowedActions = (): Action[] => {
-    if (loading) return []
+    if (loading || authLoading) return []
     if (role === "admin") return ["*"] // All actions
     return [] // Add specific actions based on role
   }
 
   const getAllowedResources = (): Resource[] => {
-    if (loading) return []
+    if (loading || authLoading) return []
     if (role === "admin") return ["*"] // All resources
     return [] // Add specific resources based on role
   }
 
   const getResourceActions = (resource: Resource): Action[] => {
-    if (loading) return []
+    if (loading || authLoading) return []
     if (role === "admin") return ["read", "create", "update", "delete"]
     return [] // Add specific actions based on role and resource
   }
@@ -200,7 +204,7 @@ export function usePermissions() {
   return {
     role,
     roles,
-    isLoading: loading,
+    isLoading: loading || authLoading,
     refreshRoles,
 
     can,

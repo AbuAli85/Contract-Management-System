@@ -34,7 +34,7 @@ import {
   Clock,
 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 interface ContractForBulkOps {
   id: string
@@ -84,7 +84,7 @@ export function BulkOperations({
     setOperation(`Updating ${selectedContracts.length} contracts to ${newStatus}...`)
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase
         .from("contracts")
         .update({ status: newStatus })
@@ -118,7 +118,7 @@ export function BulkOperations({
     setOperation(`Deleting ${selectedContracts.length} contracts...`)
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase.from("contracts").delete().in("id", selectedContracts)
 
       if (error) throw error
@@ -150,7 +150,7 @@ export function BulkOperations({
     setOperation(`Exporting ${selectedContracts.length} contracts...`)
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const selectedContractData = allContracts.filter((contract) =>
         selectedContracts.includes(contract.id),
       )

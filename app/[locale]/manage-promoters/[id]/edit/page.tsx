@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import type { Promoter } from "@/lib/types"
 import { ArrowLeftIcon, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import PromoterFormProfessional from "@/components/promoter-form-professional"
 import PromoterFilterSection from "@/components/promoter-filter-section"
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 interface Employer {
   id: string
@@ -51,7 +54,7 @@ export default function EditPromoterPage() {
   useEffect(() => {
     const fetchEmployers = async () => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         if (!supabase) return
 
         const { data, error } = await supabase
@@ -83,7 +86,7 @@ export default function EditPromoterPage() {
       setError(null)
 
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         if (!supabase) {
           throw new Error("Failed to initialize database connection")
         }
@@ -135,70 +138,80 @@ export default function EditPromoterPage() {
     router.push(`/${locale}/manage-promoters/${promoterId}`)
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading promoter...</span>
-      </div>
-    )
-  }
-
-  if (error || !promoter) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="mb-4 text-red-600">{error || "Promoter not found"}</p>
-          <Button onClick={() => router.push(`/${locale}/manage-promoters`)}>
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
-            Back to Promoters
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   const uniqueCompanies = employers.map(emp => ({
     id: emp.id,
     name: emp.name_en || emp.name_ar || emp.id
   }))
 
   return (
-    <div className="min-h-screen bg-slate-100 px-4 py-8 dark:bg-slate-950 sm:py-12 md:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
+    <div className="min-h-screen bg-background p-4 md:p-6">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="mb-6">
           <Button
             variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/${locale}/manage-promoters/${promoterId}`)}
-            className="text-muted-foreground hover:text-foreground"
+            onClick={() => router.back()}
+            className="mb-4"
           >
             <ArrowLeftIcon className="mr-2 h-4 w-4" />
             Back to Promoter Details
           </Button>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Edit Promoter</h1>
+              <p className="text-muted-foreground">Update promoter information</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary">Edit Mode</Badge>
+            </div>
+          </div>
         </div>
 
         {/* Filter Section */}
-        <PromoterFilterSection
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filterStatus={filterStatus}
-          setFilterStatus={setFilterStatus}
-          filterCompany={filterCompany}
-          setFilterCompany={setFilterCompany}
-          filterDocument={filterDocument}
-          setFilterDocument={setFilterDocument}
-          employers={employers}
-          employersLoading={employersLoading}
-          uniqueCompanies={uniqueCompanies}
-          showBulkActions={false}
-        />
+        <div className="mb-6">
+          <PromoterFilterSection
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterCompany={filterCompany}
+            setFilterCompany={setFilterCompany}
+            filterDocument={filterDocument}
+            setFilterDocument={setFilterDocument}
+            employers={employers}
+            employersLoading={employersLoading}
+          />
+        </div>
 
-        <PromoterFormProfessional
-          promoterToEdit={promoter}
-          onFormSubmit={handleFormSubmit}
-          onCancel={handleCancel}
-        />
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading promoter details...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="mb-6">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </div>
+        )}
+
+        {/* Form */}
+        {!isLoading && promoter && (
+          <PromoterFormProfessional
+            promoterToEdit={promoter}
+            onFormSubmit={handleFormSubmit}
+            onCancel={handleCancel}
+          />
+        )}
       </div>
     </div>
   )

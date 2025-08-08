@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { useSafeParams } from "@/hooks/use-safe-params"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,7 @@ export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
 
   async function fetchRecentPromoters() {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       
       const { data, error } = await supabase
         .from('promoters')

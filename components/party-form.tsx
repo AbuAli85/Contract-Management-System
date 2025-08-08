@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { partyFormSchema, type PartyFormData } from "@/lib/party-schema"
 import type { Party } from "@/lib/types"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { format, parseISO } from "date-fns"
 
@@ -134,7 +134,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
       }
 
       if (partyToEdit?.id) {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { error } = await supabase
           .from("parties")
           .update(partyData)
@@ -143,7 +143,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         if (error) throw error
         toast({ title: "Success!", description: "Party updated successfully." })
       } else {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { error } = await supabase.from("parties").insert(partyData).select()
         if (error) throw error
         toast({ title: "Success!", description: "Party added successfully." })

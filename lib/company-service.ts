@@ -1,23 +1,7 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import type { CompanyProfile, Employee, CompanyServiceResponse, EmployeeServiceResponse, UserRole } from '@/types/company'
 
-// Safe Supabase client creation - only on client side
-function getSupabaseClient() {
-  if (typeof window === 'undefined') {
-    // Server-side rendering - return null
-    return null
-  }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials not available')
-    return null
-  }
-
-  return createClient(supabaseUrl, supabaseAnonKey)
-}
 
 /**
  * Company Service for managing company profiles, employees, and related operations
@@ -29,7 +13,7 @@ export class CompanyService {
    */
   static async createCompanyProfile(profileData: Omit<CompanyProfile, 'id' | 'created_at' | 'updated_at'>): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -61,7 +45,7 @@ export class CompanyService {
    */
   static async getCompanyProfileByUserId(userId: string): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -92,7 +76,7 @@ export class CompanyService {
    */
   static async updateCompanyProfile(id: string, updates: Partial<CompanyProfile>): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -129,7 +113,7 @@ export class CompanyService {
     limit?: number
   }): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -175,7 +159,7 @@ export class CompanyService {
    */
   static async uploadCompanyLogo(file: File, companyId: string): Promise<{ url?: string; error?: string }> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -212,7 +196,7 @@ export class CompanyService {
    */
   static async verifyCompanyProfile(id: string, verified: boolean): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -246,7 +230,7 @@ export class CompanyService {
    */
   static async addEmployee(employeeData: Omit<Employee, 'id' | 'created_at' | 'updated_at'>): Promise<EmployeeServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -282,7 +266,7 @@ export class CompanyService {
     department?: string
   }): Promise<EmployeeServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -325,7 +309,7 @@ export class CompanyService {
    */
   static async updateEmployee(id: string, updates: Partial<Employee>): Promise<EmployeeServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -357,7 +341,7 @@ export class CompanyService {
    */
   static async removeEmployee(id: string): Promise<EmployeeServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -384,7 +368,7 @@ export class CompanyService {
    */
   static async getExpiringDocuments(daysAhead: number = 30): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }
@@ -415,7 +399,7 @@ export class CompanyService {
    */
   static async searchCompanies(searchTerm: string): Promise<CompanyServiceResponse> {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         return { error: 'Supabase client not available' }
       }

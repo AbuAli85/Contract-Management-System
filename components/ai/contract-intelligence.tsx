@@ -51,7 +51,7 @@ import {
   MapPin,
   Building,
 } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface ContractAnalysis {

@@ -8,53 +8,44 @@ import { usePendingUsersCount } from "@/hooks/use-pending-users"
 import { useNotifications } from "@/hooks/use-notifications-enhanced"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useRolePermissions } from "@/components/user-role-display"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { RecentPromoters } from "@/components/recent-promoters"
-import { EmergencyErrorBoundaryWrapper } from "@/components/emergency-error-boundary"
-import { 
-  FileText, 
-  Users, 
-  Target, 
-  BarChart3, 
-  Settings, 
-  Bell, 
-  FileSearch,
-  User,
-  LogOut,
-  ChevronRight,
-  Crown,
-  Briefcase,
-  Plus,
-  TrendingUp,
-  UserCheck,
-  UserPlus,
-  Building2,
-  BarChart,
-  FileBarChart,
-  Shield,
-  Zap
-} from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
+import { User, Bell, FilePlus, Building2, BarChart3, Shield, Crown, UserCheck, WifiOff, SignalHigh, SignalMedium, SignalLow, BatteryFull, BatteryCharging, Power, PowerOff, Volume1, VolumeX, MicOff, VideoOff, CameraOff, Loader2, ImageOff, FileEdit, FolderOpen, FolderPlus, FolderMinus, FolderX, FolderCheck, FolderSearch, FolderEdit, Sun, Moon, UserPlus, Menu, Search, HelpCircle, Settings, RefreshCw, LogOut, ChevronRight, Users } from "lucide-react"
+import { useTheme } from "next-themes"
+import { getRoleDisplay } from "@/lib/role-hierarchy"
 
 interface SidebarProps {
   isOpen: boolean
   onClose: () => void
   locale?: string
+  onSidebarToggle?: () => void
+  isSidebarCollapsed?: boolean
 }
 
-function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
+function SidebarContent({ isOpen, onClose, locale: propLocale, onSidebarToggle, isSidebarCollapsed }: SidebarProps) {
   const [mounted, setMounted] = useState(false)
   const params = useSafeParams()
   const pathname = useSafePathname()
   const extractedLocale = useLocaleFromParams()
   const locale = propLocale || extractedLocale
   const { user, loading, mounted: authMounted, signOut } = useAuth()
-  
-  // Use safe hooks with error boundaries
-  const { count: pendingUsersCount = 0 } = usePendingUsersCount() || {}
-  const { unreadCount: notificationCount = 0, highPriorityCount = 0 } = useNotifications() || {}
-  const { profile: userProfile } = useUserProfile() || {}
-  const { roleInfo = { displayText: 'User' } } = useRolePermissions() || {}
+  const { profile: userProfile } = useUserProfile()
+  const { roleInfo } = useRolePermissions()
+  const { theme, setTheme } = useTheme()
+  const { unreadCount: notificationCount } = useNotifications()
+  const { count: pendingUsersCount = 0 } = usePendingUsersCount()
 
   // Debug logging for params issue
   useEffect(() => {
@@ -70,7 +61,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
   // Don't render anything until mounted to prevent hydration issues
   if (!mounted) {
     return (
-      <div className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
+      <div className={`sidebar-container ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         <div className="flex flex-col items-center justify-center h-full">
@@ -86,7 +77,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
   // Emergency fallback if auth is not ready
   if (!authMounted || loading) {
     return (
-      <div className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
+      <div className={`sidebar-container ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         <div className="flex flex-col items-center justify-center h-full">
@@ -130,102 +121,102 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
       const baseItems = [
         {
           title: "Dashboard",
-          href: "/" + locale + "/dashboard",
+          href: "/dashboard",
           icon: BarChart3,
           description: "Overview and analytics"
         },
         {
           title: "Generate Contract",
-          href: "/" + locale + "/generate-contract",
-          icon: FileText,
+          href: "/generate-contract",
+          icon: FilePlus,
           description: "Create new contracts"
         },
         {
           title: "View Contracts",
-          href: "/" + locale + "/contracts",
-          icon: FileSearch,
+          href: "/contracts",
+          icon: FolderOpen,
           description: "Browse existing contracts",
           badge: "Active"
         },
         {
           title: "Manage Parties",
-          href: "/" + locale + "/manage-parties",
+          href: "/manage-parties",
           icon: Users,
           description: "Handle contract parties"
         },
         {
           title: "Manage Promoters",
-          href: "/" + locale + "/manage-promoters",
-          icon: Target,
+          href: "/manage-promoters",
+          icon: FolderPlus,
           description: "Promoter management",
           badge: "New"
         },
         {
           title: "Promoter Analysis",
-          href: "/" + locale + "/promoter-analysis",
-          icon: TrendingUp,
+          href: "/promoter-analysis",
+          icon: FolderSearch,
           description: "Performance analytics"
         },
         {
           title: "User Management",
-          href: "/" + locale + "/dashboard/users",
+          href: "/dashboard/users",
           icon: UserCheck,
           description: "Manage system users"
         },
         {
           title: "User Approvals",
-          href: "/" + locale + "/dashboard/user-approvals",
+          href: "/dashboard/user-approvals",
           icon: UserPlus,
           description: "Approve pending users"
         },
         {
           title: "CRM",
-          href: "/" + locale + "/crm",
+          href: "/crm",
           icon: Building2,
           description: "Customer relationship management"
         },
         {
           title: "Analytics",
-          href: "/" + locale + "/dashboard/analytics",
-          icon: BarChart,
+          href: "/dashboard/analytics",
+          icon: FolderEdit,
           description: "Detailed analytics"
         },
         {
           title: "Reports",
-          href: "/" + locale + "/dashboard/reports",
-          icon: FileBarChart,
+          href: "/dashboard/reports",
+          icon: FolderCheck,
           description: "Generate reports"
         },
         {
           title: "Audit Logs",
-          href: "/" + locale + "/dashboard/audit",
+          href: "/dashboard/audit",
           icon: Shield,
           description: "System audit trails"
         },
         {
           title: "Notifications",
-          href: "/" + locale + "/notifications",
+          href: "/notifications",
           icon: Bell,
           description: "View all notifications",
           badge: notificationCount > 0 ? notificationCount.toString() : undefined,
-          badgeVariant: highPriorityCount > 0 ? "destructive" : "secondary"
+          badgeVariant: "secondary"
         },
         {
           title: "Profile",
-          href: "/" + locale + "/profile",
+          href: "/profile",
           icon: User,
           description: "Your profile settings"
         },
         {
           title: "Settings",
-          href: "/" + locale + "/dashboard/settings",
+          href: "/dashboard/settings",
           icon: Settings,
           description: "App configuration"
         }
       ]
 
       // Add admin-only items
-      if (isAdmin) {
+      if (roleInfo?.canDoAdmin) {
         baseItems.splice(-2, 0, // Insert before Settings
           {
             title: "Role Management",
@@ -237,7 +228,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
           {
             title: "Advanced Dashboard",
             href: "/" + locale + "/dashboard/advanced",
-            icon: Zap,
+            icon: Power,
             description: "Advanced features",
             badge: "Pro"
           }
@@ -273,7 +264,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
   // Emergency navigation fallback for dashboard pages without proper auth
   if (showEmergencyNavigation) {
     return (
-      <div className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
+      <div className={`sidebar-container ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         {/* Header */}
@@ -320,7 +311,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
         {/* Footer with login link */}
         <div className="border-t p-4">
           <Button asChild variant="outline" className="w-full">
-            <Link href={"/" + locale + "/auth/login"}>Sign In</Link>
+            <Link href="/auth/login">Sign In</Link>
           </Button>
         </div>
       </div>
@@ -328,16 +319,29 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
   }
 
   return (
-    <div className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
-      isOpen ? "translate-x-0" : "-translate-x-full"
-    }`}>
+    <div className={`h-full ${
+      isSidebarCollapsed ? 'w-16' : 'w-64'
+    } bg-card shadow-lg transition-all duration-300 ease-in-out`}>
       {/* Header */}
       <div className="border-b p-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-card-foreground">Menu</h2>
-          <Button variant="ghost" size="sm" onClick={onClose} className="p-1">
-            ×
-          </Button>
+          {!isSidebarCollapsed && <h2 className="text-lg font-semibold text-card-foreground">Menu</h2>}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onSidebarToggle} 
+              className="p-1"
+              title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+            {!isSidebarCollapsed && (
+              <Button variant="ghost" size="sm" onClick={onClose} className="p-1 md:hidden">
+                ×
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -348,21 +352,23 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
               {userProfile?.getInitials?.() || user.email?.[0]?.toUpperCase() || 'U'}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-card-foreground truncate">
-                {userProfile?.getDisplayName?.() || 
-                 userProfile?.full_name || 
-                 userProfile?.display_name || 
-                 user.email?.split('@')[0] || 
-                 'User'}
-              </p>
-              <div className="flex items-center gap-1">
-                <Crown className="h-3 w-3 text-yellow-500" />
-                <span className="text-xs text-muted-foreground">
-                  {roleInfo?.displayText || 'User'}
-                </span>
+            {!isSidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-card-foreground truncate">
+                  {userProfile?.getDisplayName?.() || 
+                   userProfile?.full_name || 
+                   userProfile?.display_name || 
+                   user.email?.split('@')[0] || 
+                   'User'}
+                </p>
+                <div className="flex items-center gap-1">
+                  <Crown className="h-3 w-3 text-yellow-500" />
+                  <span className="text-xs text-muted-foreground">
+                    {roleInfo?.displayText || 'User'}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -370,9 +376,11 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4">
         <div className="space-y-2">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Main Navigation
-          </h3>
+          {!isSidebarCollapsed && (
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Main Navigation
+            </h3>
+          )}
 
           {Array.isArray(navigationItems) && navigationItems.map((item) => {
             const IconComponent = item.icon
@@ -388,36 +396,39 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
                     ? "bg-accent text-accent-foreground"
                     : "text-muted-foreground"
                 }`}
+                title={isSidebarCollapsed ? item.title : undefined}
               >
                 <div className="flex items-center space-x-3">
                   <IconComponent className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{item.title}</span>
+                  {!isSidebarCollapsed && <span className="truncate">{item.title}</span>}
                 </div>
-                <div className="flex items-center space-x-1">
-                  {item.badge && (
-                    <Badge 
-                      variant={(item.badgeVariant as "destructive" | "secondary" | "default" | "outline") || "secondary"} 
-                      className="text-xs px-1.5 py-0.5"
-                    >
-                      {item.badge}
-                    </Badge>
-                  )}
-                  <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-accent-foreground" />
-                </div>
+                {!isSidebarCollapsed && (
+                  <div className="flex items-center space-x-1">
+                    {item.badge && (
+                      <Badge 
+                        variant={(item.badgeVariant as "destructive" | "secondary" | "default" | "outline") || "secondary"} 
+                        className="text-xs px-1.5 py-0.5"
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
+                    <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-accent-foreground" />
+                  </div>
+                )}
               </Link>
             )
           })}
         </div>
 
-        {/* Admin Section */}
-        {user && (
+        {/* Admin Section - only show when expanded */}
+        {user && !isSidebarCollapsed && (
           <div className="mt-6 space-y-2">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Admin
             </h3>
             
             <Link
-              href={"/" + locale + "/dashboard/users"}
+              href="/dashboard/users"
               onClick={onClose}
               className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
@@ -430,7 +441,7 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
 
             {pendingUsersCount > 0 && (
               <Link
-                href={"/" + locale + "/dashboard/users/approvals"}
+                href="/dashboard/users/approvals"
                 onClick={onClose}
                 className="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               >
@@ -448,59 +459,19 @@ function SidebarContent({ isOpen, onClose, locale: propLocale }: SidebarProps) {
             )}
           </div>
         )}
-
-        {/* Recent Promoters Section */}
-        <div className="mt-6">
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Recent Promoters
-          </h3>
-          <EmergencyErrorBoundaryWrapper>
-            <RecentPromoters />
-          </EmergencyErrorBoundaryWrapper>
-        </div>
       </nav>
-
-      {/* Footer */}
-      <div className="border-t p-4">
-        <Button
-          variant="ghost" 
-          size="sm" 
-          className="w-full justify-start text-muted-foreground hover:text-destructive"
-          onClick={async () => {
-            try {
-              await signOut()
-              onClose()
-            } catch (error) {
-              console.error('Logout error:', error)
-            }
-          }}
-        >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
-        </Button>
-      </div>
     </div>
   )
 }
 
-export function Sidebar({ isOpen, onClose, locale }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, locale, onSidebarToggle, isSidebarCollapsed }: SidebarProps) {
   return (
-    <EmergencyErrorBoundaryWrapper
-      fallback={
-        <div className="fixed left-0 top-0 z-50 h-full w-64 bg-card shadow-lg flex flex-col items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 bg-destructive/10 rounded-full mx-auto mb-2 flex items-center justify-center">
-              <span className="text-destructive text-xs">!</span>
-            </div>
-            <p className="text-sm text-muted-foreground">Sidebar error</p>
-            <Button variant="outline" size="sm" onClick={onClose} className="mt-2">
-              Close
-            </Button>
-          </div>
-        </div>
-      }
-    >
-      <SidebarContent isOpen={isOpen} onClose={onClose} locale={locale} />
-    </EmergencyErrorBoundaryWrapper>
+    <SidebarContent 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      locale={locale} 
+      onSidebarToggle={onSidebarToggle}
+      isSidebarCollapsed={isSidebarCollapsed}
+    />
   )
 }

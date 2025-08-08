@@ -12,7 +12,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Search, Loader2, ArrowUpDown } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { devLog } from "@/lib/dev-log"
 import type { AuditLogItem, AuditLogRow } from "@/lib/dashboard-types"
 import { useToast } from "@/hooks/use-toast"

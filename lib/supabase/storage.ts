@@ -1,4 +1,4 @@
-import { getSupabaseClient } from "../supabase"
+import { createClient } from "./client"
 
 interface UploadResult {
   success: boolean
@@ -7,7 +7,7 @@ interface UploadResult {
 }
 
 export async function uploadImage(file: File, bucket: string): Promise<UploadResult> {
-  const supabaseClient = getSupabaseClient()
+  const supabaseClient = createClient()
   const fileExt = file.name.split(".").pop()
   const fileName = `${Date.now()}.${fileExt}`
   const filePath = `${bucket}/${fileName}`

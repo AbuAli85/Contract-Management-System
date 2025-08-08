@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 // Force dynamic rendering to avoid build-time Supabase issues
 export const dynamic = "force-dynamic"
@@ -45,13 +45,14 @@ export default function AnalyticsPage() {
     if (!isClient) return
 
     async function fetchAnalytics() {
-      if (!getSupabaseClient()) {
+      const supabase = createClient()
+      if (!supabase) {
         setLoading(false)
         return
       }
       setLoading(true)
       // Contracts stats
-      const { data: contracts } = await getSupabaseClient()
+      const { data: contracts } = await supabase
         .from("contracts")
         .select("id, contract_end_date, created_at, status, promoter_id")
       const now = new Date()
@@ -83,11 +84,11 @@ export default function AnalyticsPage() {
         }
       })
       // Promoters
-      const { count: totalPromoters } = await getSupabaseClient()
+      const { count: totalPromoters } = await supabase
         .from("promoters")
         .select("id", { count: "exact", head: true })
       // Companies
-      const { count: totalCompanies } = await getSupabaseClient()
+      const { count: totalCompanies } = await supabase
         .from("parties")
         .select("id", { count: "exact", head: true })
       setStats({

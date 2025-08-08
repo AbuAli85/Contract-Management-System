@@ -1,4 +1,6 @@
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
+import { devLog } from "@/lib/dev-log"
+import type { Party } from "@/lib/types"
 import type {
   Party,
   Contact,
@@ -91,7 +93,7 @@ export async function fetchPartiesWithPagination(params: PartySearchParams): Pro
   hasPrev: boolean
 }> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     let query = supabase.from("parties").select("*", { count: "exact" })
 
@@ -162,7 +164,7 @@ export async function fetchPartiesWithPagination(params: PartySearchParams): Pro
 // Search parties with fuzzy matching
 export async function searchParties(searchText: string): Promise<Party[]> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { data, error } = await supabase.rpc("search_parties_with_contacts", {
       search_text: searchText.trim(),
@@ -181,7 +183,7 @@ export async function fetchPartyWithContacts(
   partyId: string,
 ): Promise<Party & { contacts: Contact[] }> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     // Fetch party
     const { data: party, error: partyError } = await supabase
@@ -216,7 +218,7 @@ export async function fetchPartyWithContacts(
 // Create or update party
 export async function saveParty(partyData: Partial<Party>): Promise<Party> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     if (partyData.id) {
       // Update existing party
@@ -248,7 +250,7 @@ export async function saveParty(partyData: Partial<Party>): Promise<Party> {
 // Create or update contact
 export async function saveContact(contactData: Partial<Contact>): Promise<Contact> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     if (contactData.id) {
       // Update existing contact
@@ -280,7 +282,7 @@ export async function saveContact(contactData: Partial<Contact>): Promise<Contac
 // Delete party (will cascade delete contacts)
 export async function deleteParty(partyId: string): Promise<void> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { error } = await supabase.from("parties").delete().eq("id", partyId)
 
@@ -301,7 +303,7 @@ export async function bulkDeleteParties(
   total: number
 }> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { data, error } = await supabase.functions.invoke("delete-parties", {
       body: {
@@ -324,7 +326,7 @@ export async function exportPartiesToCSV(
   includeContacts: boolean = true,
 ): Promise<string> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     let query = supabase.from("parties").select("*")
 
@@ -463,7 +465,7 @@ export async function getPartyStatistics(): Promise<{
   expired_documents: number
 }> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { data, error } = await supabase.rpc("get_party_statistics")
 
@@ -492,7 +494,7 @@ export async function getPartiesWithExpiringDocuments(
   daysThreshold: number = 30,
 ): Promise<Party[]> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { data, error } = await supabase
       .from("parties")
@@ -513,7 +515,7 @@ export async function getPartiesWithExpiringDocuments(
 // Update party status
 export async function updatePartyStatus(partyId: string, status: string): Promise<void> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { error } = await supabase.from("parties").update({ status }).eq("id", partyId)
 
@@ -526,7 +528,7 @@ export async function updatePartyStatus(partyId: string, status: string): Promis
 // Bulk update party statuses
 export async function bulkUpdatePartyStatus(partyIds: string[], status: string): Promise<void> {
   return withRetry(async () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
 
     const { error } = await supabase.from("parties").update({ status }).in("id", partyIds)
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -48,7 +48,7 @@ export default function PromoterDetailsPage() {
 
   async function fetchPromoters() {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       
       const { data, error } = await supabase
         .from('promoters')
