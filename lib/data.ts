@@ -1,5 +1,5 @@
 import type { ContractWithRelations } from "@/hooks/use-contracts"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 export const getContract = async (contractId: string): Promise<ContractWithRelations | null> => {
   if (!contractId) {
@@ -8,7 +8,7 @@ export const getContract = async (contractId: string): Promise<ContractWithRelat
   }
 
   try {
-    const supabaseClient = getSupabaseClient()
+    const supabaseClient = createClient()
     const { data, error } = await supabaseClient
       .from("contracts")
       .select(

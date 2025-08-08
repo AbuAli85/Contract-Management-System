@@ -56,4 +56,33 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer components {
+  /* Essential layout utilities */
+  .sidebar-layout {
+    @apply flex h-screen bg-background;
+  }
+  
+  .sidebar-container {
+    @apply h-full bg-card shadow-lg transition-all duration-300 ease-in-out;
+  }
+  
+  .main-content {
+    @apply flex flex-1 flex-col overflow-hidden transition-all duration-300;
+  }
+  
+  /* Mobile responsive utilities */
+  .mobile-sidebar {
+    @apply fixed md:relative z-50;
+  }
+  
+  .mobile-overlay {
+    @apply fixed inset-0 z-40 bg-black/50 md:hidden;
+  }
+  
+  /* Page content spacing */
+  .page-content {
+    @apply p-4 md:p-6 h-full overflow-auto;
+  }
 } 

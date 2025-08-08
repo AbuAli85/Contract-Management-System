@@ -242,7 +242,7 @@ describe('Button', () => {
 ```typescript
 // hooks/use-realtime-contracts.ts
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import type { Contract } from "@/lib/types"
 
 export function useRealtimeContracts() {

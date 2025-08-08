@@ -13,7 +13,7 @@ import {
   ChartLegend,
   ChartLegendContent,
 } from "@/components/ui/chart"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -68,7 +68,7 @@ export default function ChartsSection() {
     setLoading(true)
     try {
       // Query contracts directly for status counts
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data: contractsData, error: contractsError } = await supabase
         .from("contracts")
         .select("status")

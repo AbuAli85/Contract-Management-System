@@ -206,30 +206,12 @@ function ContractsContent() {
     fetchContracts()
   }, [fetchContracts])
 
+  // All hooks must be called at the top level, before any conditional returns
   const deleteContractMutation = useDeleteContractMutation()
   const { toast } = useToast()
   const permissions = usePermissions()
-
-  // Role-based access control with error handling
-  const canCreateContract = permissions.canCreateContract()
-  const canEditContract = permissions.canEditContract()
-  const canDeleteContract = permissions.canDeleteContract()
-  const canExportContracts = permissions.canExportContracts()
-  const canGenerateContract = permissions.canGenerateContract()
-
-  // Show loading state if permissions are still loading
-  if (permissions.isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Loading permissions...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Enhanced state management
+  
+  // Enhanced state management - moved before conditional returns
   const [selectedContracts, setSelectedContracts] = useState<string[]>([])
   const [currentView, setCurrentView] = useState<"table" | "grid">("table")
   const [searchTerm, setSearchTerm] = useState("")
@@ -243,8 +225,28 @@ function ContractsContent() {
   const [isExporting, setIsExporting] = useState(false)
   const [bulkActionLoading, setBulkActionLoading] = useState(false)
 
+  // Role-based access control with error handling
+  const canCreateContract = permissions.canCreateContract()
+  const canEditContract = permissions.canEditContract()
+  const canDeleteContract = permissions.canDeleteContract()
+  const canExportContracts = permissions.canExportContracts()
+  const canGenerateContract = permissions.canGenerateContract()
+
+  // All hooks must be called before any conditional returns
   const isMountedRef = useRef(true)
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Show loading state if permissions are still loading - moved to after all hooks
+  if (permissions.isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading permissions...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Auto-refresh setup
   useEffect(() => {

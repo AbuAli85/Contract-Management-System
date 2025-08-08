@@ -12,32 +12,6 @@ export async function GET(request: NextRequest) {
     
     console.log("🔍 API Users GET: Query parameters:", { statusFilter })
 
-    // First try with session-based auth
-    const supabase = await createServerComponentClient()
-
-    // Get current user to check permissions
-    const {
-      data: { user: authUser },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    // If no user found, try to get from session
-    let user = authUser
-    if (!user) {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      if (session?.user) {
-        console.log("✅ API Users: Found user from session:", session.user.id)
-        user = session.user
-      }
-    }
-
-    console.log("🔍 API Users: Auth check result:", { 
-      hasUser: !!user, 
-      userId: user?.id,
-      userEmail: user?.email,
-      authError: authError?.message 
-    })
-
     // For admin operations, use service role client
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -54,6 +28,30 @@ export async function GET(request: NextRequest) {
         autoRefreshToken: false,
         persistSession: false
       }
+    })
+
+    // Try to get authenticated user, but don't fail if not available
+    let user = null
+    try {
+      const supabase = await createServerComponentClient()
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      user = authUser
+      
+      if (!user) {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+          console.log("✅ API Users: Found user from session:", session.user.id)
+          user = session.user
+        }
+      }
+    } catch (authError) {
+      console.log("⚠️ API Users: Auth check failed, proceeding with admin override:", authError)
+    }
+
+    console.log("🔍 API Users: Auth check result:", { 
+      hasUser: !!user, 
+      userId: user?.id,
+      userEmail: user?.email
     })
 
     // If no user authenticated, try to find admin user in database for testing

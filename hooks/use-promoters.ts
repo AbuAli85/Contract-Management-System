@@ -1,11 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useEffect, useMemo, useRef } from "react"
-import {
-  getSupabaseClient,
-  createRealtimeChannel,
-  subscribeToChannel,
-  handleRealtimeError,
-} from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { devLog } from "@/lib/dev-log"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-service"
@@ -14,7 +9,11 @@ import type { Promoter } from "@/lib/types"
 import type { RealtimeChannel } from "@supabase/supabase-js"
 
 const fetchPromoters = async (): Promise<Promoter[]> => {
-  const supabaseClient = getSupabaseClient()
+  const supabaseClient = createClient()
+  if (!supabaseClient) {
+    throw new Error("Failed to create Supabase client")
+  }
+  
   const { data, error } = await supabaseClient
     .from("promoters")
     .select("*")
@@ -27,6 +26,30 @@ const fetchPromoters = async (): Promise<Promoter[]> => {
     throw new Error(error.message)
   }
   return data || []
+}
+
+// Helper function to create realtime channel
+const createRealtimeChannel = (supabaseClient: any, tableName: string) => {
+  return supabaseClient.channel(`public:${tableName}`)
+}
+
+// Helper function to subscribe to channel
+const subscribeToChannel = (channel: RealtimeChannel, onUpdate: () => void) => {
+  return channel
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'promoters' }, () => {
+      onUpdate()
+    })
+    .subscribe()
+}
+
+// Helper function to handle realtime errors
+const handleRealtimeError = (error: any, toast: any) => {
+  console.error("Realtime error:", error)
+  toast({
+    title: "Connection Error",
+    description: "Lost connection to real-time updates. Trying to reconnect...",
+    variant: "destructive",
+  })
 }
 
 export const usePromoters = (enableRealtime: boolean = true) => {
@@ -59,15 +82,19 @@ export const usePromoters = (enableRealtime: boolean = true) => {
     retry: 3, // Retry 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     enabled: user !== null, // Only run query when we know auth status
-    onError: (error) => {
-      console.error("Error fetching promoters:", error)
+  })
+
+  // Handle query errors
+  useEffect(() => {
+    if (queryResult.error) {
+      console.error("Error fetching promoters:", queryResult.error)
       toast({
         title: "Error loading promoters",
-        description: error.message || "Failed to load promoters. Please try again.",
+        description: queryResult.error.message || "Failed to load promoters. Please try again.",
         variant: "destructive",
       })
-    },
-  })
+    }
+  }, [queryResult.error, toast])
 
   // --- Realtime subscription ---
   useEffect(() => {
@@ -97,100 +124,68 @@ export const usePromoters = (enableRealtime: boolean = true) => {
       try {
         // Clean up any existing channel first
         if (channelRef.current) {
-          const supabaseClient = getSupabaseClient()
-          supabaseClient.removeChannel(channelRef.current)
+          const supabaseClient = createClient()
+          if (supabaseClient) {
+            supabaseClient.removeChannel(channelRef.current)
+          }
           channelRef.current = null
         }
 
         // Create channel using utility function
-        channelRef.current = createRealtimeChannel("promoters", (payload) => {
-          devLog("Realtime promoter change received!", payload)
-          queryClient.invalidateQueries({ queryKey: queryKey })
-        })
+        const supabaseClient = createClient()
+        if (!supabaseClient) {
+          throw new Error("Failed to create Supabase client")
+        }
+        
+        channelRef.current = createRealtimeChannel(supabaseClient, "promoters")
 
         if (!channelRef.current) {
-          devLog("Failed to create promoters channel")
-          return
+          throw new Error("Failed to create realtime channel")
         }
 
         // Subscribe using utility function
-        subscribeToChannel(channelRef.current, (status, err) => {
-          if (status === "SUBSCRIBED") {
-            devLog("Subscribed to promoters channel!")
-            retryCount = 0 // Reset retry count on successful connection
-            isSubscribed = true
-          }
-          if (status === "CHANNEL_ERROR") {
-            const errorType = handleRealtimeError(err, "promoters")
-            devLog(
-              `Promoters channel error (${status}): ${err?.message ?? "Unknown error"} - Type: ${errorType}`,
-            )
-
-            // Check if it's an authentication error
-            if (errorType === "AUTH_ERROR") {
-              devLog("Authentication error detected, will retry after auth check")
-              // Don't retry immediately, let the auth state change handler deal with it
-              return
-            }
-
-            // Retry connection if we haven't exceeded max retries
-            if (retryCount < maxRetries) {
-              retryCount++
-              devLog(`Retrying promoters subscription (${retryCount}/${maxRetries})...`)
-              retryTimeoutRef.current = setTimeout(() => {
-                isSubscribed = false
-                setupSubscription()
-              }, 2000 * retryCount) // Exponential backoff
-            } else {
-              devLog("Max retries exceeded for promoters subscription")
-              // Don't show toast for realtime errors as they're not critical
-            }
-          }
-          if (status === "TIMED_OUT") {
-            devLog(`Subscription timed out (${status})`)
-
-            // Retry connection if we haven't exceeded max retries
-            if (retryCount < maxRetries) {
-              retryCount++
-              devLog(
-                `Retrying promoters subscription after timeout (${retryCount}/${maxRetries})...`,
-              )
-              retryTimeoutRef.current = setTimeout(() => {
-                isSubscribed = false
-                setupSubscription()
-              }, 2000 * retryCount) // Exponential backoff
-            } else {
-              devLog("Max retries exceeded for promoters subscription after timeout")
-              // Don't show toast for realtime errors as they're not critical
-            }
-          }
+        subscribeToChannel(channelRef.current, () => {
+          queryClient.invalidateQueries({ queryKey: queryKey })
         })
 
-        return channelRef.current
+        isSubscribed = true
+        devLog("Successfully subscribed to promoters realtime channel")
       } catch (error) {
         devLog("Error setting up promoters subscription:", error)
-        return null
+        
+        // Retry if we haven't exceeded max retries
+        if (retryCount < maxRetries) {
+          retryCount++
+          devLog(`Retrying promoters subscription (${retryCount}/${maxRetries})...`)
+          retryTimeoutRef.current = setTimeout(() => {
+            isSubscribed = false
+            setupSubscription()
+          }, 2000 * retryCount) // Exponential backoff
+        } else {
+          devLog("Max retries exceeded for promoters subscription")
+          handleRealtimeError(error, toast)
+        }
       }
     }
 
     setupSubscription()
 
+    // Cleanup function
     return () => {
-      // Clean up timeout
+      isSubscribed = false
+      if (channelRef.current) {
+        const supabaseClient = createClient()
+        if (supabaseClient) {
+          supabaseClient.removeChannel(channelRef.current)
+        }
+        channelRef.current = null
+      }
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current)
         retryTimeoutRef.current = null
       }
-
-      // Clean up channel
-      isSubscribed = false
-      if (channelRef.current) {
-        const supabaseClient = getSupabaseClient()
-        supabaseClient.removeChannel(channelRef.current)
-        channelRef.current = null
-      }
     }
-  }, [user, enableRealtime, isFormActive, queryClient, queryKey, toast])
+  }, [enableRealtime, user, isFormActive, queryClient, queryKey, toast])
 
   return queryResult
 }

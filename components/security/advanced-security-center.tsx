@@ -54,7 +54,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface SecurityEvent {

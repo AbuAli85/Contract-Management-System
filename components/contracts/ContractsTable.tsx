@@ -6,7 +6,7 @@ import {
   Loader2, MoreHorizontal, Grid, List, Building2, User, Copy, Archive, RefreshCw, Plus, AlertTriangle, XCircle, CheckCircle, Eye, Edit, Trash2, ChevronUp, ChevronDown, Search
 } from 'lucide-react'
 
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -370,7 +370,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     setError(null)
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data, error } = await supabase
         .from("contracts")
         .select(
@@ -479,7 +479,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
           // ...any other fields that exist in the contracts table
         }
 
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { error } = await supabase.from("contracts").insert(newContract)
 
         if (error) throw error
@@ -505,7 +505,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
   const archiveContract = useCallback(
     async (contractId: string) => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { error } = await supabase
           .from("contracts")
           .update({ is_current: false, updated_at: new Date().toISOString() })
@@ -534,7 +534,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
   const deleteContract = useCallback(
     async (contractId: string) => {
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { error } = await supabase.from("contracts").delete().eq("id", contractId)
 
         if (error) throw error

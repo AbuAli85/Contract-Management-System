@@ -60,8 +60,8 @@ export default function DiagnosticPage() {
 
   const testSupabaseClient = async () => {
     try {
-      const { getSupabaseClient } = await import("@/lib/supabase")
-      const client = getSupabaseClient()
+      const { createClient } = await import("@/lib/supabase/client")
+    const client = createClient()
       if (!client) {
         throw new Error('Supabase client creation failed')
       }

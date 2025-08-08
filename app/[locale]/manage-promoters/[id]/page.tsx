@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
 import type {
   Promoter,
@@ -159,7 +159,7 @@ export default function PromoterDetailPage() {
   // Fetch all promoters for the filter
   const fetchAllPromoters = useCallback(async () => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) return
 
       const { data, error } = await supabase
@@ -182,7 +182,7 @@ export default function PromoterDetailPage() {
   // Fetch employers for the filter
   const fetchEmployers = useCallback(async () => {
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) return
 
       const { data, error } = await supabase
@@ -217,7 +217,7 @@ export default function PromoterDetailPage() {
 
     setIsDeleting(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       
       // Delete related records first (if they exist)
       await supabase.from('promoter_skills').delete().eq('promoter_id', promoterId)
@@ -250,7 +250,7 @@ export default function PromoterDetailPage() {
 
     setIsUpdatingStatus(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const newStatus = promoterDetails.status === 'active' ? 'inactive' : 'active'
       
       const { error } = await supabase
@@ -282,7 +282,7 @@ export default function PromoterDetailPage() {
       setIsLoading(true)
       setError(null)
 
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data: promoterData, error: promoterError } = await supabase
         .from("promoters")
         .select("*")
@@ -335,7 +335,7 @@ export default function PromoterDetailPage() {
 
     async function fetchAuditLogs() {
       if (role !== "admin") return
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data, error } = await supabase
         .from("audit_logs")
         .select("*")

@@ -23,7 +23,7 @@ import { DatePickerWithRange } from "@/components/date-picker-with-range"
 import { Badge } from "@/components/ui/badge"
 import { Download, Search, ArrowUpDown, Loader2 } from "lucide-react"
 import type { ContractReportItem } from "@/lib/dashboard-types"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { devLog } from "@/lib/dev-log"
 import { format, parseISO, isValid } from "date-fns"
 import type { DateRange } from "react-day-picker"
@@ -53,7 +53,7 @@ export default function ContractReportsTable() {
   const fetchContracts = async () => {
     setLoading(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { data, error } = await supabase
         .from("contracts")
         .select(
@@ -111,7 +111,7 @@ export default function ContractReportsTable() {
   useEffect(() => {
     // For views, Supabase Realtime listens to changes on the underlying tables.
     // So, we subscribe to `contracts`, `promoters`, and `parties`.
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const handleTableChange = (payload: any, tableName: string) => {
       devLog(`${tableName} table change for view:`, payload)
       toast({
@@ -191,7 +191,7 @@ export default function ContractReportsTable() {
   }
 
   const handleExportCSV = () => {
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const headers = [
       "Contract ID",
       "Promoter",

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
-import { getSupabaseClient } from "@/lib/supabase" // Your Supabase client instance
+import { createClient } from "@/lib/supabase/client" // Your Supabase client instance
 import type { Party } from "@/lib/types" // Use the custom Party interface
 import { devLog } from "@/lib/dev-log"
 
 const fetchParties = async (partyType?: "Employer" | "Client"): Promise<Party[]> => {
-  const supabaseClient = getSupabaseClient()
+  const supabaseClient = createClient()
   let query = supabaseClient
     .from("parties")
     .select(

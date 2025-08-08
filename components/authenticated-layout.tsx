@@ -5,9 +5,13 @@ import { useAuth } from "@/lib/auth-service"
 import { RBACProvider } from "@/src/components/auth/rbac-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
-import { PermissionAwareHeader } from "@/components/permission-aware-header"
 import { useState, useEffect } from "react"
 import { usePathname } from "@/navigation"
+import { Button } from "@/components/ui/button"
+import { Search, FilePlus, UserPlus, Sun, Bell, User, LogOut } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { useTheme } from "next-themes"
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
@@ -36,6 +40,8 @@ const PUBLIC_PAGES = [
   "/instant",
   "/bypass",
   "/dashboard-direct",
+  "/auth/login",
+  "/auth/signup",
 ]
 
 interface AuthenticatedLayoutProps {
@@ -44,10 +50,11 @@ interface AuthenticatedLayoutProps {
 }
 
 export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutProps) {
-  const { user, loading } = useAuth()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+  const { user, loading, signOut } = useAuth()
+  const { theme, setTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
@@ -57,36 +64,172 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
     setIsSidebarCollapsed(!isSidebarCollapsed)
   }
 
-  if (!mounted) {
-    return null
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Sign out error:', error)
+    }
   }
 
-  // Check if current page is public
-  const isPublicPage = PUBLIC_PAGES.some((page) => pathname?.includes(page))
-
-  // For public pages, render without sidebar and header
-  if (isPublicPage) {
-    return <>{children}</>
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark')
   }
 
-  // Check authentication state
-  console.log("🔍 AuthenticatedLayout: Auth state:", { user: !!user, loading, mounted })
-  
-  // Show loading state while authentication is initializing
-  if (loading) {
-    console.log("🔍 AuthenticatedLayout: Loading state, showing spinner")
+  // Check if user is authenticated
+  if (!mounted || loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-          <p>Loading authentication...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     )
   }
 
-  // Show login prompt if no user
+  // Check if user is not authenticated
   if (!user) {
+    console.log("🔍 AuthenticatedLayout: No user, redirecting to login")
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="mb-4">
+            <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
+            <p className="text-muted-foreground">Please sign in to access your account</p>
+          </div>
+          <div className="space-y-3">
+            <Button asChild className="w-full">
+              <Link href="/auth/login">
+                Sign In
+              </Link>
+            </Button>
+            <Button variant="outline" asChild className="w-full">
+              <Link href="/auth/signup">
+                Create Account
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Check if current page is public
+  const isPublicPage = PUBLIC_PAGES.some((page) => pathname?.includes(page))
+
+  // If user is authenticated, always show sidebar and navigation
+  if (user) {
+    return (
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <RBACProvider>
+          <div className="flex h-screen bg-background">
+            {/* Mobile overlay */}
+            {!isSidebarCollapsed && (
+              <div 
+                className="fixed inset-0 z-40 bg-black/50 md:hidden" 
+                onClick={toggleSidebar}
+              />
+            )}
+
+            {/* Sidebar */}
+            <div className={`${
+              isSidebarCollapsed 
+                ? 'hidden md:flex md:w-16' 
+                : 'fixed md:relative z-50 w-64'
+            } h-full flex-shrink-0`}>
+              <Sidebar 
+                isOpen={!isSidebarCollapsed} 
+                onClose={toggleSidebar} 
+                locale={locale}
+                onSidebarToggle={toggleSidebar}
+                isSidebarCollapsed={isSidebarCollapsed}
+              />
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col min-w-0">
+              {/* Header */}
+              <header className="border-b bg-card shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3">
+                  {/* Left side - Search and Quick Actions */}
+                  <div className="flex items-center space-x-4 flex-1">
+                    {/* Search Box */}
+                    <div className="relative flex-1 max-w-md">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <input
+                        type="text"
+                        placeholder="Search contracts, promoters, parties..."
+                        className="w-full pl-10 pr-3 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Quick Actions */}
+                    <div className="hidden md:flex items-center space-x-2">
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href="/contracts/new">
+                          <FilePlus className="mr-2 h-4 w-4" />
+                          New Contract
+                        </Link>
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href="/manage-promoters/new">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Add Promoter
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Right side - Theme, Notifications, User */}
+                  <div className="flex items-center space-x-2">
+                    {/* Theme Toggle */}
+                    <Button variant="ghost" size="sm" onClick={toggleTheme}>
+                      <Sun className="h-4 w-4" />
+                    </Button>
+
+                    {/* Notifications */}
+                    <Button variant="ghost" size="sm" className="relative" asChild>
+                      <Link href="/dashboard/notifications">
+                        <Bell className="h-4 w-4" />
+                        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs">
+                          3
+                        </Badge>
+                      </Link>
+                    </Button>
+
+                    {/* User Menu */}
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href="/dashboard/profile">
+                          <User className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={handleSignOut}
+                      >
+                        <LogOut className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </header>
+
+              {/* Page Content */}
+              <main className="flex-1 overflow-auto p-6">
+                {children}
+              </main>
+            </div>
+          </div>
+        </RBACProvider>
+      </ThemeProvider>
+    )
+  }
+
+  // Show login prompt if no user and not a public page
+  if (!user && !isPublicPage) {
     console.log("🔍 AuthenticatedLayout: No user, showing login prompt")
     return (
       <div className="flex h-screen items-center justify-center">
@@ -104,28 +247,6 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
     )
   }
 
-  return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <RBACProvider>
-        <div className="flex h-screen bg-background">
-          {/* Sidebar */}
-          <Sidebar isOpen={!isSidebarCollapsed} onClose={toggleSidebar} locale={locale} />
-
-          {/* Main Content */}
-          <div className="flex flex-1 flex-col overflow-hidden">
-            {/* Header */}
-            <PermissionAwareHeader
-              onSidebarToggle={toggleSidebar}
-              isSidebarCollapsed={isSidebarCollapsed}
-            />
-
-            {/* Page Content */}
-            <main className="flex-1 overflow-auto">
-              <div className="container mx-auto p-6">{children}</div>
-            </main>
-          </div>
-        </div>
-      </RBACProvider>
-    </ThemeProvider>
-  )
+  // For public pages without user, render without sidebar
+  return <>{children}</>
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,7 +84,7 @@ export default function NotificationsPage() {
       setLoading(true)
       setError(null)
       try {
-        const supabase = getSupabaseClient()
+        const supabase = createClient()
         const { data, error } = await supabase
           .from("notifications")
           .select("id, type, message, created_at, user_email, related_contract_id, is_read")
@@ -119,7 +119,7 @@ export default function NotificationsPage() {
 
     fetchNotifications()
     // Real-time subscription
-    const supabase = getSupabaseClient()
+    const supabase = createClient()
     const channel = supabase
       .channel("public:notifications:feed")
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => {
@@ -216,7 +216,7 @@ export default function NotificationsPage() {
   const markAllAsRead = async () => {
     setIsUpdating(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase.from("notifications").update({ is_read: true }).neq("id", 0)
 
       if (error) throw error
@@ -241,7 +241,7 @@ export default function NotificationsPage() {
   const clearAll = async () => {
     setIsUpdating(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       const { error } = await supabase.from("notifications").delete().neq("id", 0)
       if (error) throw error
 

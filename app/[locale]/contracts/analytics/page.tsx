@@ -43,7 +43,7 @@ import {
   Users,
   DollarSign,
 } from "lucide-react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface ContractAnalytics {
@@ -91,7 +91,7 @@ export default function ContractAnalyticsPage() {
   })
   const [selectedPeriod, setSelectedPeriod] = useState("30")
   const { toast } = useToast()
-  const supabase = getSupabaseClient()
+      const supabase = createClient()
 
   // Color palette for charts
   const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]

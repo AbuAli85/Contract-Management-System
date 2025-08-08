@@ -44,7 +44,7 @@ import {
   AreaChart,
   Area,
 } from "recharts"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdvancedAnalyticsData {
@@ -112,7 +112,7 @@ export function AdvancedAnalyticsDashboard() {
   const fetchAdvancedAnalytics = async () => {
     setLoading(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
 
       // Fetch comprehensive analytics data
       const { data: contracts, error: contractsError } = await supabase

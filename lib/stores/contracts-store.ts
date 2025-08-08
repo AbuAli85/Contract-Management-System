@@ -1,5 +1,5 @@
 import { create, StateCreator } from "zustand"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { Contract, ContractStatus } from "@/lib/types"
 import { toast } from "@/hooks/use-toast"
 
@@ -39,7 +39,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
   fetchContracts: async () => {
     set({ isLoading: true })
     try {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       const { data, error } = await supabaseClient
         .from("contracts")
         .select("*")

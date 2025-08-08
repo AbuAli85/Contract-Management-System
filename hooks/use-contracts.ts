@@ -2,7 +2,7 @@
 
 // --- Supabase setup and core utilities ---
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { getSupabaseClient } from "@/lib/supabase" // Initialized Supabase client
+import { createClient } from "@/lib/supabase/client" // Initialized Supabase client
 import { createContract, deleteContract } from "@/app/actions/contracts"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-service"
@@ -45,7 +45,7 @@ export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
 // --- Queries ---
 // Fetch all contracts with their related party and promoter info
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
-  const supabaseClient = getSupabaseClient()
+  const supabaseClient = createClient()
   // Try the new schema first (first_party_id, second_party_id)
   let { data, error } = await supabaseClient
     .from("contracts")
@@ -165,7 +165,7 @@ export const useContracts = () => {
 
     const setupSubscription = () => {
       try {
-        const supabaseClient = getSupabaseClient()
+        const supabaseClient = createClient()
         const newChannel = supabaseClient
           .channel("public-contracts-realtime")
           .on(
@@ -202,7 +202,7 @@ export const useContracts = () => {
                 devLog(`Retrying contracts subscription (${retryCount}/${maxRetries})...`)
                 retryTimeout = setTimeout(() => {
                   if (channel) {
-                    const supabaseClient = getSupabaseClient()
+                    const supabaseClient = createClient()
                     supabaseClient.removeChannel(channel)
                   }
                   setupSubscription()
@@ -222,7 +222,7 @@ export const useContracts = () => {
                 )
                 retryTimeout = setTimeout(() => {
                   if (channel) {
-                    const supabaseClient = getSupabaseClient()
+                    const supabaseClient = createClient()
                     supabaseClient.removeChannel(channel)
                   }
                   setupSubscription()
@@ -247,7 +247,7 @@ export const useContracts = () => {
         clearTimeout(retryTimeout)
       }
       if (channel) {
-        const supabaseClient = getSupabaseClient()
+        const supabaseClient = createClient()
         supabaseClient.removeChannel(channel)
       }
     }

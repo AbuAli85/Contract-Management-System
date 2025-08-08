@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Upload, FileSpreadsheet, CheckCircle, AlertTriangle, XCircle, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import * as XLSX from "xlsx"
 
 interface ExcelImportModalProps {
@@ -68,7 +68,7 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
   const fetchCompanies = useCallback(async () => {
     setCompaniesLoading(true)
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       if (!supabase) {
         console.error("Supabase client not available")
         return
@@ -303,7 +303,7 @@ export default function ExcelImportModal({ isOpen, onClose, onImportComplete }: 
     setStep("import")
 
     try {
-      const supabase = getSupabaseClient()
+      const supabase = createClient()
       
       if (!supabase) {
         throw new Error("Database connection not available")

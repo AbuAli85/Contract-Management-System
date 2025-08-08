@@ -2,7 +2,7 @@ import React from "react"
 import type { Metadata } from "next"
 import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
-import { Providers } from "./providers"
+import Providers from "./providers"
 import { Toaster } from "@/components/ui/toaster"
 import { DOMErrorBoundary } from "@/components/dom-error-boundary"
 

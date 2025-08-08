@@ -1,259 +1,359 @@
 "use client"
-import React from "react"
+
+import React, { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
-  Users, 
   FileText, 
-  Calendar, 
-  DollarSign, 
+  Users, 
+  UserCheck, 
   TrendingUp, 
-  Settings,
+  Activity, 
+  Clock, 
+  CheckCircle,
+  ArrowRight,
+  Shield,
   LogOut,
-  User,
-  Plus,
-  Building2,
-  UserPlus,
-  Search,
-  Download,
-  Edit,
-  Eye
+  Loader2
 } from "lucide-react"
+import { useAuth } from "@/app/providers"
+import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
+import { createClient } from "@/lib/supabase/client"
+import type { DashboardAnalytics } from "@/lib/dashboard-types"
 import Link from "next/link"
 
-export default function DashboardPage() {
-  // Get current locale
-  const pathname = typeof window !== "undefined" ? window.location.pathname : ""
-  const locale = pathname.split("/")[1] || "en"
+interface DashboardData {
+  analytics: DashboardAnalytics | null
+  recentActivity: any[]
+  loading: boolean
+  error: string | null
+}
 
-  const handleLogout = () => {
-    // Redirect back to login
-    window.location.href = `/${locale}/auth/login`
+export default function DashboardPage() {
+  const { user, session } = useAuth()
+  const [mounted, setMounted] = useState(false)
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    analytics: null,
+    recentActivity: [],
+    loading: true,
+    error: null
+  })
+
+  useEffect(() => {
+    setMounted(true)
+    fetchDashboardData()
+    
+    // Set up real-time subscriptions for data updates
+    const supabase = createClient()
+    if (supabase) {
+      // Subscribe to contract changes
+      const contractsChannel = supabase
+        .channel('dashboard-contracts')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'contracts' }, 
+          () => {
+            fetchDashboardData()
+          }
+        )
+        .subscribe()
+      
+      // Subscribe to promoter changes
+      const promotersChannel = supabase
+        .channel('dashboard-promoters')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'promoters' }, 
+          () => {
+            fetchDashboardData()
+          }
+        )
+        .subscribe()
+      
+      // Subscribe to audit log changes for recent activity
+      const auditChannel = supabase
+        .channel('dashboard-audit')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'audit_logs' }, 
+          () => {
+            fetchDashboardData()
+          }
+        )
+        .subscribe()
+      
+      // Cleanup subscriptions on unmount
+      return () => {
+        supabase.removeChannel(contractsChannel)
+        supabase.removeChannel(promotersChannel)
+        supabase.removeChannel(auditChannel)
+      }
+    }
+  }, [])
+
+  const fetchDashboardData = async () => {
+    try {
+      setDashboardData(prev => ({ ...prev, loading: true, error: null }))
+      
+      // Fetch analytics data
+      const analytics = await getDashboardAnalytics()
+      
+      // Fetch recent activity from audit logs
+      const supabase = createClient()
+      let auditLogs: any[] = []
+      let auditError = null
+      
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('audit_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5)
+        auditLogs = data || []
+        auditError = error
+      }
+      
+      if (auditError) {
+        console.error('Error fetching audit logs:', auditError)
+      }
+      
+      setDashboardData({
+        analytics,
+        recentActivity: auditLogs,
+        loading: false,
+        error: null
+      })
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error)
+      setDashboardData(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load dashboard data'
+      }))
+    }
+  }
+
+  if (!mounted || dashboardData.loading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back! Here's an overview of your contract management system.
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="animate-spin h-8 w-8 mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading dashboard data...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (dashboardData.error) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back! Here's an overview of your contract management system.
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">{dashboardData.error}</p>
+            <Button onClick={fetchDashboardData}>Try Again</Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const { analytics, recentActivity } = dashboardData
+  
+  // Calculate percentage changes (mock for now, you can implement based on your needs)
+  const formatPercentageChange = (current: number, previous: number) => {
+    if (previous === 0) return "+0%"
+    const change = ((current - previous) / previous) * 100
+    return `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Contract Management System
-              </h1>
-              <Badge variant="secondary" className="ml-4">
-                Professional Edition
-              </Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-400" />
-                <span className="text-sm text-gray-600">Admin User</span>
-              </div>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Welcome Section */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Welcome back! Here's an overview of your contract management system.
+        </p>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Contract Management Dashboard
-          </h2>
-          <p className="text-gray-600">
-            Generate, manage, and track professional contracts with advanced automation.
-          </p>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href={`/${locale}/generate-contract`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Generate Contract</CardTitle>
-                <Plus className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">Create New</div>
-                <p className="text-xs text-muted-foreground">
-                  Generate professional contracts
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href={`/${locale}/contracts`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Manage Contracts</CardTitle>
-                <FileText className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">24</div>
-                <p className="text-xs text-muted-foreground">
-                  Active contracts
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href={`/${locale}/manage-parties`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Manage Parties</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">156</div>
-                <p className="text-xs text-muted-foreground">
-                  Registered parties
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link href={`/${locale}/manage-promoters`}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Manage Promoters</CardTitle>
-                <UserPlus className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">89</div>
-                <p className="text-xs text-muted-foreground">
-                  Active promoters
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-        </div>
-
-        {/* Main Features Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Contract Generation */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Contract Generation
-              </CardTitle>
-              <CardDescription>
-                Create professional contracts with intelligent templates and automation
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button asChild className="w-full">
-                  <Link href={`/${locale}/generate-contract`}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Contract
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href={`/${locale}/contracts`}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    View All
-                  </Link>
-                </Button>
-              </div>
-              <div className="text-sm text-gray-600">
-                <p>• Professional contract templates</p>
-                <p>• Automated PDF generation</p>
-                <p>• Make.com integration</p>
-                <p>• Google Drive storage</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Party Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Party Management
-              </CardTitle>
-              <CardDescription>
-                Manage clients, providers, and business relationships
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button asChild className="w-full">
-                  <Link href={`/${locale}/manage-parties`}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Party
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href={`/${locale}/manage-parties`}>
-                    <Search className="h-4 w-4 mr-2" />
-                    Browse
-                  </Link>
-                </Button>
-              </div>
-              <div className="text-sm text-gray-600">
-                <p>• Client & provider registration</p>
-                <p>• Document expiry tracking</p>
-                <p>• Business relationship management</p>
-                <p>• Compliance monitoring</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.total_contracts?.toLocaleString() || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {formatPercentageChange(analytics?.contracts_this_month || 0, analytics?.contracts_last_month || 0)} from last month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Promoters</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.active_promoters?.toLocaleString() || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics?.total_promoters ? `${analytics.active_promoters}/${analytics.total_promoters} total` : 'No data'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pending Contracts</CardTitle>
+            <UserCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.pending_contracts?.toLocaleString() || 0}</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics?.total_contracts ? `${((analytics.pending_contracts || 0) / analytics.total_contracts * 100).toFixed(1)}% of total` : 'No data'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analytics?.success_rate?.toFixed(1) || 0}%</div>
+            <p className="text-xs text-muted-foreground">
+              {analytics?.completed_contracts || 0} completed contracts
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Generate Contract
+            </CardTitle>
             <CardDescription>
-              Latest contract activities and updates
+              Create a new contract with our intelligent templates
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Contract PAC-08082025-ABCD generated</p>
-                    <p className="text-sm text-gray-600">Employment contract for John Doe</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">2 hours ago</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">New party registered</p>
-                    <p className="text-sm text-gray-600">ABC Company Ltd. added to system</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">1 day ago</span>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <div>
-                    <p className="font-medium">Contract expiry reminder</p>
-                    <p className="text-sm text-gray-600">Contract PAC-01082025-XYZ expires in 30 days</p>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">3 days ago</span>
-              </div>
-            </div>
+            <Link href="/generate-contract">
+              <Button className="w-full">
+                Create Contract
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
-      </main>
+
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Manage Promoters
+            </CardTitle>
+            <CardDescription>
+              View and manage promoter profiles and performance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/manage-promoters">
+              <Button variant="outline" className="w-full">
+                View Promoters
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer transition-shadow hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              View Analytics
+            </CardTitle>
+            <CardDescription>
+              Access detailed analytics and performance insights
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/contracts/analytics">
+              <Button variant="outline" className="w-full">
+                View Analytics
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>
+            Latest system activities and updates
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentActivity.length > 0 ? (
+              recentActivity.map((activity) => {
+                const getActivityColor = (action: string) => {
+                  if (action.includes('create')) return 'bg-green-500'
+                  if (action.includes('update')) return 'bg-blue-500'
+                  if (action.includes('delete')) return 'bg-red-500'
+                  return 'bg-gray-500'
+                }
+                
+                const formatTimeAgo = (dateString: string) => {
+                  const date = new Date(dateString)
+                  const now = new Date()
+                  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+                  
+                  if (diffInMinutes < 1) return 'Just now'
+                  if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
+                  if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} hours ago`
+                  return `${Math.floor(diffInMinutes / 1440)} days ago`
+                }
+                
+                return (
+                  <div key={activity.id} className="flex items-center space-x-4">
+                    <div className={`w-2 h-2 rounded-full ${getActivityColor(activity.action)}`}></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{activity.action} {activity.table_name}</p>
+                      <p className="text-xs text-muted-foreground">{formatTimeAgo(activity.created_at)}</p>
+                    </div>
+                  </div>
+                )
+              })
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

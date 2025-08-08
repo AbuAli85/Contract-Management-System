@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 import { useAuth } from "@/lib/auth-service"
 import { devLog } from "@/lib/dev-log"
 import { RealtimeChannel } from "@supabase/supabase-js"
@@ -16,7 +16,7 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
     let channel: RealtimeChannel | null = null
 
     try {
-      const supabaseClient = getSupabaseClient()
+      const supabaseClient = createClient()
       channel = supabaseClient
         .channel(`public:${table}:realtime`)
         .on("postgres_changes", { event: "*", schema: "public", table }, onChange)
@@ -42,7 +42,7 @@ export function useRealtimeTable(table: string, onChange: (payload: any) => void
 
     return () => {
       if (channel) {
-        const supabaseClient = getSupabaseClient()
+        const supabaseClient = createClient()
         supabaseClient.removeChannel(channel as RealtimeChannel)
       }
     }

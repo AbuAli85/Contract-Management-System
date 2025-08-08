@@ -1,8 +1,6 @@
 "use client"
 
 import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { Slot } from "@radix-ui/react-slot"
 import {
   Controller,
   ControllerProps,
@@ -111,8 +109,8 @@ const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  HTMLLabelElement,
+  React.LabelHTMLAttributes<HTMLLabelElement>
 >(({ className, ...props }, ref) => {
   const formField = useFormField()
 
@@ -128,19 +126,23 @@ const FormLabel = React.forwardRef<
 FormLabel.displayName = "FormLabel"
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ children, ...props }, ref) => {
   const formField = useFormField()
 
   return (
-    <Slot
+    <div
       ref={ref}
       id={formField.formItemId}
-      aria-describedby={!formField.error ? formField.formDescriptionId : formField.formDescriptionId + " " + formField.formMessageId}
-      aria-invalid={!!formField.error}
+      aria-describedby={!formField.error 
+        ? formField.formDescriptionId 
+        : `${formField.formDescriptionId} ${formField.formMessageId}`}
+      aria-invalid={formField.error ? "true" : undefined}
       {...props}
-    />
+    >
+      {children}
+    </div>
   )
 })
 FormControl.displayName = "FormControl"

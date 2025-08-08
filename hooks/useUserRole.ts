@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getSupabaseClient } from "@/lib/supabase"
+import { createClient } from "@/lib/supabase/client"
 
 export function useUserRole() {
   const [user, setUser] = useState<unknown>(null)
@@ -9,7 +9,7 @@ export function useUserRole() {
     // Get current user
     const getUser = async () => {
       try {
-        const supabaseClient = getSupabaseClient()
+        const supabaseClient = createClient()
         const {
           data: { user },
         } = await supabaseClient.auth.getUser()
@@ -23,7 +23,7 @@ export function useUserRole() {
     // Listen for auth changes
     const setupAuthListener = async () => {
       try {
-        const supabaseClient = getSupabaseClient()
+        const supabaseClient = createClient()
         const {
           data: { subscription },
         } = supabaseClient.auth.onAuthStateChange(
@@ -43,9 +43,9 @@ export function useUserRole() {
 
   useEffect(() => {
     if (user) {
-      const fetchRole = async () => {
-        try {
-          const supabaseClient = getSupabaseClient()
+              const fetchRole = async () => {
+          try {
+            const supabaseClient = createClient()
           
           console.log('🔍 useUserRole: Fetching role for user:', 
             (user as any)?.email || (user as any)?.id)

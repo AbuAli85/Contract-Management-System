@@ -1,14 +1,14 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { Eye, EyeOff, ArrowRight, Shield } from "lucide-react"
+import { useAuth } from "@/app/providers"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -18,35 +18,80 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
+  const { supabase } = useAuth()
 
-  // Get current locale for links
-  const pathname = typeof window !== "undefined" ? window.location.pathname : ""
-  const locale = pathname.split("/")[1] || "en"
+  // Get locale from URL
+  const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en'
 
-  // Mark when component has hydrated
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Show loading while mounting
-  if (!mounted) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-gray-900"></div>
-      </div>
-    )
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
-    // Simple authentication - redirect to dashboard
-    setTimeout(() => {
+    try {
+      if (!supabase) {
+        setError("Authentication service not available")
+        return
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else if (data.user) {
+        // Redirect to dashboard on successful login
+        router.push(`/${locale}/dashboard`)
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
       setLoading(false)
-      router.push(`/${locale}/dashboard`)
-    }, 1000)
+    }
+  }
+
+  const handleSignUp = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      if (!supabase) {
+        setError("Authentication service not available")
+        return
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else if (data.user) {
+        setError("Please check your email for verification link before signing in.")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -74,40 +119,40 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
-
+              
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
                     required
                   />
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 h-4 w-4 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </Button>
                 </div>
               </div>
 
@@ -117,32 +162,44 @@ export default function LoginPage() {
                 </Alert>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <>
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
+              <div className="space-y-2">
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign In
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  disabled={loading}
+                  onClick={handleSignUp}
+                >
+                  Create Account
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
 
-        {/* Quick Access */}
+        {/* Demo Access */}
         <Card className="border-green-200 bg-green-50">
           <CardHeader>
             <CardTitle className="text-green-800 flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              Quick Access
+              Demo Access
             </CardTitle>
             <CardDescription className="text-green-700">
-              For demonstration purposes, you can access the system directly
+              For demonstration purposes only
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -150,7 +207,7 @@ export default function LoginPage() {
               onClick={() => router.push(`/${locale}/dashboard`)}
               className="w-full bg-green-600 hover:bg-green-700 text-white"
             >
-              Access Contract Management System
+              Access Demo Dashboard
             </Button>
           </CardContent>
         </Card>
