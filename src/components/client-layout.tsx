@@ -138,10 +138,6 @@ function AuthenticatedAppLayout({ children, locale }: { children: ReactNode; loc
 
 export function ClientLayout({ children, locale }: ClientLayoutProps) {
   return (
-    <html lang={locale} className={inter.className} suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
-        <AuthenticatedAppLayout locale={locale}>{children}</AuthenticatedAppLayout>
-      </body>
-    </html>
+    <AuthenticatedAppLayout locale={locale}>{children}</AuthenticatedAppLayout>
   )
 }

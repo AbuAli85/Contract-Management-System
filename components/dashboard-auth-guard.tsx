@@ -18,6 +18,8 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
   const [userRole, setUserRole] = useState<string | null>(null)
   const [checkingStatus, setCheckingStatus] = useState(false)
   const [checkingRole, setCheckingRole] = useState(false)
+  const [lastStatusCheck, setLastStatusCheck] = useState<number>(0)
+  const [lastRoleCheck, setLastRoleCheck] = useState<number>(0)
 
   // Mark when component has hydrated
   useEffect(() => {
@@ -28,6 +30,13 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
   useEffect(() => {
     const checkUserStatus = async () => {
       if (!session?.user || checkingStatus || !supabase) return
+      
+      // Debounce status checks to prevent excessive calls
+      const now = Date.now()
+      if (now - lastStatusCheck < 30000) { // 30 second debounce (increased from 10)
+        console.log("🔐 Skipping user status check (debounced)")
+        return
+      }
       
       setCheckingStatus(true)
       
@@ -104,18 +113,26 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
       } finally {
         clearTimeout(timeoutId)
         setCheckingStatus(false)
+        setLastStatusCheck(Date.now())
       }
     }
 
     if (mounted && !loading && session && supabase) {
       checkUserStatus()
     }
-  }, [mounted, loading, session, router, locale, checkingStatus, supabase])
+  }, [mounted, loading, session, router, locale, checkingStatus, supabase, lastStatusCheck])
 
   // Check user role when required
   useEffect(() => {
     const checkUserRole = async () => {
       if (!session?.user || checkingRole || !requiredRole) return
+      
+      // Debounce role checks to prevent excessive calls
+      const now = Date.now()
+      if (now - lastRoleCheck < 30000) { // 30 second debounce (increased from 10)
+        console.log("🔐 Skipping user role check (debounced)")
+        return
+      }
       
       setCheckingRole(true)
       
@@ -144,13 +161,14 @@ export function DashboardAuthGuard({ children, locale, requiredRole }: Dashboard
         router.replace(redirectUrl)
       } finally {
         setCheckingRole(false)
+        setLastRoleCheck(Date.now())
       }
     }
 
     if (mounted && !loading && session && requiredRole) {
       checkUserRole()
     }
-  }, [mounted, loading, session, router, locale, requiredRole, checkingRole])
+  }, [mounted, loading, session, router, locale, requiredRole, checkingRole, lastRoleCheck])
 
   // Only redirect after mounted and session is ready
   useEffect(() => {

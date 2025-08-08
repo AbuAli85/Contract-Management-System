@@ -2,6 +2,10 @@
 const withNextIntl = require("next-intl/plugin")("./i18n.ts")
 
 const nextConfig = {
+  // Next-intl configuration
+  env: {
+    _next_intl_trailing_slash: "true"
+  },
   // Enable React strict mode for better error detection
   reactStrictMode: true,
   

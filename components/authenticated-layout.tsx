@@ -69,18 +69,25 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
     return <>{children}</>
   }
 
+  // Check authentication state
+  console.log("🔍 AuthenticatedLayout: Auth state:", { user: !!user, loading, mounted })
+  
+  // Show loading state while authentication is initializing
   if (loading) {
+    console.log("🔍 AuthenticatedLayout: Loading state, showing spinner")
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
-          <p>Loading...</p>
+          <p>Loading authentication...</p>
         </div>
       </div>
     )
   }
 
+  // Show login prompt if no user
   if (!user) {
+    console.log("🔍 AuthenticatedLayout: No user, showing login prompt")
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -102,7 +109,7 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
       <RBACProvider>
         <div className="flex h-screen bg-background">
           {/* Sidebar */}
-          <Sidebar isOpen={!isSidebarCollapsed} onClose={toggleSidebar} />
+          <Sidebar isOpen={!isSidebarCollapsed} onClose={toggleSidebar} locale={locale} />
 
           {/* Main Content */}
           <div className="flex flex-1 flex-col overflow-hidden">

@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
-import createMiddleware from "next-intl/middleware"
+import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest as NextRequestType } from 'next/server'
+
+// Fix for next-intl import issue
+const createMiddleware = require('next-intl/middleware').default
 
 // Emergency middleware with enhanced error handling
 const intlMiddleware = createMiddleware({

@@ -5,6 +5,28 @@ import { differenceInDays, differenceInHours, formatDistanceToNow } from 'date-f
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
 
+// Simple in-memory rate limiter for notifications API
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW = 60000 // 60 seconds (1 minute)
+const MAX_REQUESTS_PER_WINDOW = 20 // Increased to be more lenient
+
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(identifier)
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW })
+    return true
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return false
+  }
+  
+  record.count++
+  return true
+}
+
 // CORS preflight handler
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -44,6 +66,32 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔔 Dashboard notifications API called')
     
+    // Rate limiting check
+    const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+    if (!checkRateLimit(clientIp)) {
+      console.warn('Notifications API: Rate limit exceeded for', clientIp)
+      return NextResponse.json({
+        notifications: [],
+        summary: { 
+          total: 0, 
+          unread: 0, 
+          high: 0, 
+          medium: 0, 
+          low: 0, 
+          categories: {} 
+        },
+        rateLimited: true
+      }, { 
+        status: 200, // Return 200 instead of 429 to prevent client errors
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'X-Rate-Limited': 'true'
+        }
+      })
+    }
+    
     const { searchParams } = new URL(request.url)
     const unreadOnly = searchParams.get('unread_only') === 'true'
     const category = searchParams.get('category')
@@ -52,8 +100,53 @@ export async function GET(request: NextRequest) {
     
     const supabase = await createClient()
     
+    // Check for session first to avoid repeated auth errors
+    let session = null
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      session = data.session
+      if (error) {
+        console.warn('Notifications API: Session error (continuing anyway):', error)
+      }
+    } catch (error) {
+      console.warn('Notifications API: Session error (continuing anyway):', error)
+    }
+    
+    // If no session, return empty notifications immediately
+    if (!session) {
+      console.warn('Notifications API: No session found (returning empty notifications)')
+      return NextResponse.json({
+        notifications: [],
+        summary: { 
+          total: 0, 
+          unread: 0, 
+          high: 0, 
+          medium: 0, 
+          low: 0, 
+          categories: {} 
+        }
+      }, { 
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      })
+    }
+    
     // Get current user but don't fail if not authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    let user = null
+    let userError = null
+    
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      user = data.user
+      userError = error
+    } catch (error) {
+      console.warn('Notifications API: Auth error (continuing anyway):', error)
+      userError = error
+    }
     
     if (userError) {
       console.warn('Notifications API: User error (continuing anyway):', userError)

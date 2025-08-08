@@ -10,7 +10,7 @@ import { FormContextProvider } from "@/hooks/use-form-context"
 import { SystemStatusBanner } from "@/components/system-status-banner"
 import { createContext } from "react"
 import type { Session, User } from "@supabase/supabase-js"
-import { patchReactDOM } from "@/lib/dom-safety-patch"
+
 
 // 🔧 HYBRID MODE - Emergency during SSR, Real auth on client
 // Uses circuit breaker during build/SSR but enables authentication on client side
@@ -39,25 +39,20 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
   const [isClient, setIsClient] = useState(false)
   const [authState, setAuthState] = useState<AuthContextType>({
     ...SAFE_AUTH_VALUES,
-    loading: true // Start with loading true
+    loading: false // Start with loading false to prevent infinite loading
   })
+  const [initialized, setInitialized] = useState(false)
 
   // Detect when we're on the client side
   useEffect(() => {
     setIsClient(true)
-    
-    // Apply DOM safety patches on client side
-    try {
-      patchReactDOM()
-    } catch (error) {
-      console.warn('Failed to apply DOM safety patches:', error)
-    }
   }, [])
 
   // Initialize real authentication on client side
   useEffect(() => {
-    if (isClient && typeof window !== 'undefined') {
+    if (isClient && typeof window !== 'undefined' && !initialized) {
       console.log("🔐 Initializing authentication on client side...")
+      setInitialized(true)
       
       // Set a timeout to prevent infinite loading
       const timeoutId = setTimeout(() => {
@@ -69,7 +64,7 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
           isProfileSynced: true,
           supabase: null
         })
-      }, 10000) // 10 second timeout
+      }, 3000) // 3 second timeout for faster debugging
 
       // Only import and initialize Supabase on client side
       const initializeAuth = async () => {
@@ -85,8 +80,12 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
             key: supabaseKey ? 'SET' : 'NOT SET'
           })
           
-          if (!supabaseUrl || !supabaseKey) {
-            console.warn("🔐 Supabase credentials missing, staying in safe mode")
+          // Check if the environment variables are placeholder values
+          const isPlaceholderUrl = supabaseUrl === 'https://your-project.supabase.co'
+          const isPlaceholderKey = supabaseKey === 'your-anon-key-here'
+          
+          if (!supabaseUrl || !supabaseKey || isPlaceholderUrl || isPlaceholderKey) {
+            console.warn("🔐 Supabase credentials missing or are placeholder values, staying in safe mode")
             clearTimeout(timeoutId)
             setAuthState({
               user: null,
@@ -106,6 +105,8 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
           console.log("🔐 Getting initial session...")
           const { data: { session }, error } = await supabase.auth.getSession()
           
+          console.log("🔐 Session result:", { session: !!session, error: error?.message })
+          
           if (!error) {
             console.log("🔐 Session retrieved successfully:", session ? 'has session' : 'no session')
             clearTimeout(timeoutId)
@@ -116,6 +117,7 @@ function HybridAuthContextProvider({ children }: { children: React.ReactNode }) 
               isProfileSynced: true,
               supabase: supabase
             })
+            console.log("🔐 Auth state updated successfully")
 
             // Listen for auth changes
             console.log("🔐 Setting up auth state listener...")
@@ -296,7 +298,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
             disableTransitionOnChange
           >
             <FormContextProvider>
-              <SystemStatusBanner />
               {children}
             </FormContextProvider>
           </ThemeProvider>

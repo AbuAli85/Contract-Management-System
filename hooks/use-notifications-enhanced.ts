@@ -55,6 +55,13 @@ export function useNotifications() {
   const [lastFetch, setLastFetch] = useState<Date | null>(null)
 
   const fetchNotifications = useCallback(async (filters: NotificationFilters = {}) => {
+    // Prevent rapid repeated calls
+    const now = Date.now()
+    if (lastFetch && now - lastFetch.getTime() < 30000) { // 30 second debounce (increased from 10)
+      console.log('Notifications: Skipping fetch (debounced)')
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -73,6 +80,12 @@ export function useNotifications() {
 
       const data = await response.json()
       
+      // Handle rate limiting gracefully
+      if (data.rateLimited) {
+        console.log('Notifications: Rate limited, using cached data')
+        return
+      }
+      
       if (data.error) {
         throw new Error(data.error)
       }
@@ -89,7 +102,7 @@ export function useNotifications() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [lastFetch])
 
   const markAsRead = useCallback(async (notificationIds: string[]) => {
     try {
