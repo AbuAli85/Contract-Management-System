@@ -35,11 +35,11 @@ interface ActivityItem {
 }
 
 interface DashboardActivitiesProps {
-  activities: ActivityItem[]
+  activities?: ActivityItem[]
   onRefresh?: () => void
 }
 
-export function DashboardActivities({ activities, onRefresh }: DashboardActivitiesProps) {
+export function DashboardActivities({ activities = [], onRefresh }: DashboardActivitiesProps) {
   const getActivityIcon = (iconName: string, action: string) => {
     const iconProps = { className: "h-4 w-4" }
     
@@ -140,7 +140,7 @@ export function DashboardActivities({ activities, onRefresh }: DashboardActiviti
         )}
       </CardHeader>
       <CardContent>
-        {activities.length === 0 ? (
+        {!activities || activities.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="relative mb-6">
               <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center shadow-lg">
@@ -172,13 +172,13 @@ export function DashboardActivities({ activities, onRefresh }: DashboardActiviti
         ) : (
           <div className="h-[400px] overflow-y-auto pr-4">
             <div className="space-y-4">
-              {activities.map((activity, index) => (
+              {activities?.map((activity, index) => (
                 <div
                   key={activity.id}
                   className="relative flex items-start gap-4 p-3 rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   {/* Timeline line */}
-                  {index < activities.length - 1 && (
+                  {index < (activities?.length || 0) - 1 && (
                     <div className="absolute left-6 top-12 w-px h-8 bg-border" />
                   )}
 
