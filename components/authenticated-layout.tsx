@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react"
 import { useAuth } from "@/lib/auth-service"
-import { RBACProvider } from "@/src/components/auth/rbac-provider"
+// RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
 import { useState, useEffect } from "react"
@@ -42,6 +42,10 @@ const PUBLIC_PAGES = [
   "/dashboard-direct",
   "/auth/login",
   "/auth/signup",
+  "/unauthorized",
+  "/test-fix",
+  "/test-basic",
+  "/test-booking-fixed",
 ]
 
 interface AuthenticatedLayoutProps {
@@ -122,8 +126,7 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
   if (user) {
     return (
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <RBACProvider>
-          <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-background">
             {/* Mobile overlay */}
             {!isSidebarCollapsed && (
               <div 
@@ -222,8 +225,7 @@ export function AuthenticatedLayout({ children, locale }: AuthenticatedLayoutPro
                 {children}
               </main>
             </div>
-          </div>
-        </RBACProvider>
+        </div>
       </ThemeProvider>
     )
   }

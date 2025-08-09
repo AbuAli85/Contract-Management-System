@@ -3,7 +3,6 @@ import type { Metadata } from "next"
 import { Inter, Lexend } from "next/font/google"
 import "./globals.css"
 import Providers from "./providers"
-import { Toaster } from "@/components/ui/toaster"
 import { DOMErrorBoundary } from "@/components/dom-error-boundary"
 
 // 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout (DISABLED FOR DEBUGGING)
@@ -43,7 +42,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <DOMErrorBoundary>
           <Providers>
             {children}
-            <Toaster />
           </Providers>
         </DOMErrorBoundary>
       </body>
