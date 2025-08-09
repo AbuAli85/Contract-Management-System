@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ThemeProvider } from "@/components/theme-provider"
+import { EnhancedRBACProvider } from "@/components/auth/enhanced-rbac-provider"
 import { createClient } from "@/lib/supabase/client"
+import { Toaster } from "sonner"
 
 // Simple Auth Context
 interface AuthContextType {
@@ -128,6 +130,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       queries: {
         staleTime: 60 * 1000,
         retry: 1,
+        refetchOnWindowFocus: false,
       },
     },
   }))
@@ -141,9 +144,15 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         disableTransitionOnChange
       >
         <AuthProvider>
-          <RBACProvider>
+          <EnhancedRBACProvider>
             {children}
-          </RBACProvider>
+            <Toaster 
+              position="top-right"
+              expand={false}
+              richColors
+              closeButton
+            />
+          </EnhancedRBACProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
