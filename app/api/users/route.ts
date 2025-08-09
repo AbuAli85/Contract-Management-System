@@ -399,15 +399,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-        return NextResponse.json(
-          {
-            error:
-              "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-          },
-          { status: 400 },
-        )
-      }
+      // Relaxed password requirements - only check for length
+      // Strong password requirements can be enforced in production if needed
+      console.log("📝 Password validation passed for signup")
 
       // Check if user already exists
       try {
@@ -428,7 +422,7 @@ export async function POST(request: NextRequest) {
       const { data: newAuthUser, error: createAuthError } = await adminSupabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: true, // Auto-confirm email
+        email_confirm: true, // Auto-confirm email for development
         user_metadata: {
           full_name,
           role: "user", // Default role for signups

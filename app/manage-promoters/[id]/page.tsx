@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { notFound, redirect } from "next/navigation"
-import Image from "next/image"
+// import Image from "next/image" // Temporarily disabled to avoid webpack conflicts
 
 import { getPromoterById } from "@/app/actions/promoters"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"

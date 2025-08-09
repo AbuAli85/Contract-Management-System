@@ -1,7 +1,6 @@
 import { NextIntlClientProvider } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
-
+import { UniversalLayout } from "@/components/universal-layout"
 export async function generateStaticParams() {
   return [{ locale: "en" }, { locale: "ar" }]
 }
@@ -34,9 +33,9 @@ export default async function SafeLocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <AuthenticatedLayout locale={locale}>
+      <UniversalLayout locale={locale}>
         {children}
-      </AuthenticatedLayout>
+      </UniversalLayout>
     </NextIntlClientProvider>
   )
 } 

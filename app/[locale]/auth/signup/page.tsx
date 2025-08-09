@@ -10,7 +10,7 @@ export default function SignupPage() {
   const locale = pathname.split("/")[1] || "en"
   
   return (
-    <div className="w-full max-w-md space-y-8 px-4 py-12 sm:px-6 lg:px-8">
+    <>
       <div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your account
@@ -44,6 +44,6 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

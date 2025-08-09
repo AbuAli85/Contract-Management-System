@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/navigation"
 import { useAuth } from "@/lib/auth-service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -86,7 +86,8 @@ export function SignupForm() {
       
       // Redirect to login page after successful signup
       setTimeout(() => {
-        router.push('/en/auth/login?message=Account created successfully. Please wait for admin approval.')
+        // Use router.push for proper Next.js navigation
+        router.push('/auth/login?message=Account created successfully. Please wait for admin approval.')
       }, 3000)
     } catch (error) {
       console.error("📝 Signup Debug - Unexpected error:", error)

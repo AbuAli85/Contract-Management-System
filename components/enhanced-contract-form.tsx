@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { format, parseISO, differenceInDays } from "date-fns"
+import { format, parseISO, differenceInDays, isValid } from "date-fns"
 
 import {
   Form,
@@ -320,7 +320,17 @@ export default function EnhancedContractForm({
       const completedSections = sections.filter((section) => {
         return section.fields.every((field) => {
           const value = form.getValues(field as keyof ContractGeneratorFormData)
-          return value && value !== ""
+          // Handle different types of values
+          if (value instanceof Date) {
+            return isValid(value)
+          }
+          if (typeof value === 'number') {
+            return !isNaN(value) && value > 0
+          }
+          if (typeof value === 'string') {
+            return value.trim() !== ""
+          }
+          return Boolean(value)
         })
       }).length
 

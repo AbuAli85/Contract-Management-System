@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
-  const { signIn, signUp } = useAuth()
+  const { signIn } = useAuth()
 
   // Get locale from URL
   const locale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] || 'en' : 'en'
@@ -37,14 +37,14 @@ export default function LoginPage() {
       
       if (result && 'success' in result) {
         if (result.success) {
-          // Redirect to dashboard on successful login
-          router.push(`/${locale}/dashboard`)
+          // Redirect to dashboard on successful login (router already handles locale)
+          router.push('/dashboard')
         } else {
           setError(result.error || "Login failed. Please try again.")
         }
       } else if (result && 'user' in result && result.user) {
-        // Legacy format - user exists means success
-        router.push(`/${locale}/dashboard`)
+        // Legacy format - user exists means success (router already handles locale)
+        router.push('/dashboard')
       } else {
         setError("Login failed. Please try again.")
       }
@@ -55,28 +55,9 @@ export default function LoginPage() {
     }
   }
 
-  const handleSignUp = async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const result = await signUp(email, password, { full_name: email })
-      
-      if (result && 'user' in result && result.user) {
-        setError("Please check your email for verification link before signing in.")
-      } else {
-        setError("Signup failed. Please try again.")
-      }
-    } catch (err) {
-      console.error("Signup error:", err)
-      if (err instanceof Error) {
-        setError(err.message)
-      } else {
-        setError("An unexpected error occurred. Please try again.")
-      }
-    } finally {
-      setLoading(false)
-    }
+  const handleSignUp = () => {
+    // Redirect to signup page instead of trying to signup from login page (router already handles locale)
+    router.push('/auth/signup')
   }
 
   if (!mounted) {
@@ -91,17 +72,16 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Contract Management System
-          </h2>
-          <p className="text-gray-600">
-            Sign in to access your contract management dashboard
-          </p>
-        </div>
+    <>
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Contract Management System
+        </h2>
+        <p className="text-gray-600">
+          Sign in to access your contract management dashboard
+        </p>
+      </div>
 
         {/* Login Form */}
         <Card>
@@ -187,27 +167,26 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        {/* Demo Access */}
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-green-800 flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Demo Access
-            </CardTitle>
-            <CardDescription className="text-green-700">
-              For demonstration purposes only
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button 
-              onClick={() => router.push(`/${locale}/dashboard`)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              Access Demo Dashboard
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+      {/* Demo Access */}
+      <Card className="border-green-200 bg-green-50">
+        <CardHeader>
+          <CardTitle className="text-green-800 flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Demo Access
+          </CardTitle>
+          <CardDescription className="text-green-700">
+            For demonstration purposes only
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => router.push('/dashboard')}
+            className="w-full bg-green-600 hover:bg-green-700 text-white"
+          >
+            Access Demo Dashboard
+          </Button>
+        </CardContent>
+      </Card>
+    </>
   )
 }
