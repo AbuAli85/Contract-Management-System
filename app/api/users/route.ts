@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerComponentClient } from "@/lib/supabaseServer"
+import { createClient as createServerClient } from "@/lib/supabase/server"
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     // Try to get authenticated user, but don't fail if not available
     let user = null
     try {
-      const supabase = await createServerComponentClient()
+      const supabase = createServerClient()
       const { data: { user: authUser } } = await supabase.auth.getUser()
       user = authUser
       
@@ -339,7 +339,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // First try with session-based auth
-    const supabase = await createServerComponentClient()
+    const supabase = createServerClient()
 
     // Get current user to check permissions
     const {
@@ -707,7 +707,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Delete user
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = await createServerComponentClient()
+    const supabase = createServerClient()
 
     // Get current user to check permissions
     const {

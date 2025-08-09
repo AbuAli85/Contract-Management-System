@@ -22,6 +22,7 @@ import { getDashboardAnalytics } from "@/lib/dashboard-data.client"
 import { createClient } from "@/lib/supabase/client"
 import type { DashboardAnalytics } from "@/lib/dashboard-types"
 import Link from "next/link"
+import { SampleDataButton } from "@/components/dashboard/sample-data-button"
 
 interface DashboardData {
   analytics: DashboardAnalytics | null
@@ -182,10 +183,21 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Welcome Section */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back! Here's an overview of your contract management system.
-        </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back! Here's an overview of your contract management system.
+            </p>
+          </div>
+          {/* Show sample data button if no contracts exist */}
+          {analytics?.total_contracts === 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">No contracts yet?</span>
+              <SampleDataButton />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats Cards */}
