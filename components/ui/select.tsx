@@ -101,7 +101,18 @@ interface SelectValueProps {
 const SelectValue: React.FC<SelectValueProps> = ({ placeholder, className }) => {
   const { value, valueToLabel } = React.useContext(SelectContext)
   
-  const displayText = value && valueToLabel?.get(value) ? valueToLabel.get(value) : value || placeholder
+  // Get the display text from the value-to-label mapping
+  const displayText = React.useMemo(() => {
+    if (!value) return placeholder
+    
+    const mappedLabel = valueToLabel?.get(value)
+    if (mappedLabel && mappedLabel.trim()) {
+      return mappedLabel
+    }
+    
+    // Fallback to value if no label mapping exists
+    return value
+  }, [value, valueToLabel, placeholder])
   
   return (
     <span className={cn("block truncate", className)}>
@@ -151,29 +162,32 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
     
     // Register this item's label with the context
     React.useEffect(() => {
-      if (setValueToLabel && children && typeof children === 'string') {
-        setValueToLabel(prev => {
-          const newMap = new Map(prev)
-          newMap.set(value, children)
-          return newMap
-        })
-      } else if (setValueToLabel && children && React.isValidElement(children)) {
-        // Handle JSX children by extracting text content
+      if (setValueToLabel && children) {
         const extractText = (element: React.ReactNode): string => {
           if (typeof element === 'string') return element
           if (typeof element === 'number') return element.toString()
-          if (React.isValidElement(element) && element.props.children) {
-            return extractText(element.props.children)
+          if (Array.isArray(element)) {
+            return element.map(extractText).join(' ')
+          }
+          if (React.isValidElement(element)) {
+            if (element.props.children) {
+              return extractText(element.props.children)
+            }
           }
           return ''
         }
-        const text = extractText(children)
+        
+        const text = extractText(children).trim()
         if (text) {
           setValueToLabel(prev => {
             const newMap = new Map(prev)
             newMap.set(value, text)
+            // Debug logging for text extraction
+            console.log(`🔧 SelectItem: Mapped value "${value}" to text "${text}"`)
             return newMap
           })
+        } else {
+          console.warn(`🔧 SelectItem: Failed to extract text for value "${value}", children:`, children)
         }
       }
     }, [value, children, setValueToLabel])
