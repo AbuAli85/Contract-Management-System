@@ -30,13 +30,35 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
   const navigationItems = getNavigationItems(userRole)
   const roleInfo = getRoleInfo(userRole)
 
+  // Marketplace navigation sections
+  const marketplaceNavItems = [
+    {
+      label: 'Marketplace Home',
+      href: '/marketplace',
+      icon: '🏪',
+      permission: 'dashboard.view' as const
+    },
+    {
+      label: 'Browse Services',
+      href: '/marketplace/services',
+      icon: '🔍',
+      permission: 'dashboard.view' as const
+    },
+    {
+      label: 'Payment & Escrow',
+      href: '/marketplace/payments',
+      icon: '💳',
+      permission: 'payments.view' as const
+    }
+  ]
+
   // Role-specific navigation sections
   const clientNavItems = [
     {
-      label: 'Browse Services',
-      href: '/services',
-      icon: '🏢',
-      permission: 'dashboard.view' as const
+      label: 'My Projects',
+      href: '/client/projects',
+      icon: '📋',
+      permission: 'projects.view_own' as const
     },
     {
       label: 'My Bookings',
@@ -51,7 +73,13 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       permission: 'favorites.manage' as const
     },
     {
-      label: 'Reviews',
+      label: 'Messages',
+      href: '/client/messages',
+      icon: '💬',
+      permission: 'messages.view' as const
+    },
+    {
+      label: 'Reviews & Ratings',
       href: '/client/reviews',
       icon: '⭐',
       permission: 'reviews.create' as const
@@ -60,22 +88,40 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
 
   const providerNavItems = [
     {
+      label: 'My Profile',
+      href: '/provider/profile',
+      icon: '👤',
+      permission: 'profile.edit_own' as const
+    },
+    {
       label: 'My Services',
       href: '/provider/services',
       icon: '⚙️',
       permission: 'services.edit_own' as const
     },
     {
-      label: 'Bookings',
-      href: '/provider/bookings',
-      icon: '📋',
-      permission: 'bookings.view_provider' as const
+      label: 'Orders & Projects',
+      href: '/provider/orders',
+      icon: '📦',
+      permission: 'orders.view_provider' as const
     },
     {
-      label: 'Availability',
-      href: '/provider/availability',
-      icon: '⏰',
-      permission: 'availability.manage' as const
+      label: 'Earnings',
+      href: '/provider/earnings',
+      icon: '💰',
+      permission: 'earnings.view_own' as const
+    },
+    {
+      label: 'Client Messages',
+      href: '/provider/messages',
+      icon: '💬',
+      permission: 'messages.view' as const
+    },
+    {
+      label: 'Portfolio',
+      href: '/provider/portfolio',
+      icon: '🎨',
+      permission: 'portfolio.edit_own' as const
     },
     {
       label: 'Analytics',
@@ -84,10 +130,10 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       permission: 'analytics.view_own' as const
     },
     {
-      label: 'Reviews',
+      label: 'Reviews & Ratings',
       href: '/provider/reviews',
-      icon: '💬',
-      permission: 'reviews.edit_own' as const
+      icon: '⭐',
+      permission: 'reviews.view_own' as const
     }
   ]
 
@@ -173,6 +219,36 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
           <Home className="h-4 w-4" />
           <span>Dashboard</span>
         </Link>
+
+        {/* Marketplace Navigation */}
+        <Separator className="my-3" />
+        <div className="space-y-1">
+          <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            Marketplace
+          </h3>
+          {marketplaceNavItems.map((item) => {
+            if (!hasPermission(item.permission)) return null
+            
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  pathname === item.href 
+                    ? "bg-blue-100 text-blue-700" 
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <span className="text-base">{item.icon}</span>
+                <span>{item.label}</span>
+                {item.label === 'Payment & Escrow' && (
+                  <Badge variant="secondary" className="ml-auto text-xs">NEW</Badge>
+                )}
+              </Link>
+            )
+          })}
+        </div>
 
         {/* Role-specific navigation */}
         {roleSpecificItems.length > 0 && (

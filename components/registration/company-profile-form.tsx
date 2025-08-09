@@ -30,7 +30,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 
 import { companyProfileSchema, type CompanyProfile, BUSINESS_CATEGORIES, PROVIDER_SERVICES } from '@/types/company'
-import { CompanyService } from '@/lib/company-service'
+// import { CompanyService } from '@/lib/company-service'
 
 interface CompanyProfileFormProps {
   userId: string
@@ -132,21 +132,32 @@ export function CompanyProfileForm({
         logo_url: logoUrl
       }
 
-      const result = initialData?.id 
-        ? await CompanyService.updateCompanyProfile(initialData.id, profileData)
-        : await CompanyService.createCompanyProfile(profileData)
+      const response = await fetch('/api/companies', {
+        method: initialData?.id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...profileData,
+          id: initialData?.id,
+          role: role
+        }),
+      })
 
-      if (result.error) {
-        throw new Error(result.error)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to save company profile')
       }
+
+      const result = await response.json()
 
       setSubmitMessage({ 
         type: 'success', 
         text: initialData?.id ? 'Company profile updated successfully!' : 'Company profile created successfully!' 
       })
 
-      if (onSuccess && result.data) {
-        onSuccess(result.data)
+      if (onSuccess && result) {
+        onSuccess(result)
       }
 
     } catch (error) {
@@ -228,6 +239,8 @@ export function CompanyProfileForm({
                   accept="image/*"
                   onChange={handleLogoUpload}
                   className="hidden"
+                  aria-label="Upload company logo"
+                  title="Upload company logo"
                 />
                 <p className="text-xs text-muted-foreground mt-2">
                   PNG, JPG up to 2MB
