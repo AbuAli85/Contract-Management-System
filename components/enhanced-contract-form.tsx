@@ -414,12 +414,16 @@ export default function EnhancedContractForm({
         issues.push("Contract end date is required")
       }
 
-      if (!formData.employee_name) {
-        issues.push("Employee name is required")
+      if (!formData.first_party_id) {
+        issues.push("Client (First Party) must be selected")
       }
 
-      if (!formData.employer_name) {
-        issues.push("Employer name is required")
+      if (!formData.second_party_id) {
+        issues.push("Employer (Second Party) must be selected")
+      }
+
+      if (!formData.email) {
+        issues.push("Contact email is required")
       }
 
       // Check date logic
@@ -431,7 +435,10 @@ export default function EnhancedContractForm({
           issues.push("Contract end date must be after start date")
         }
 
-        if (startDate < new Date()) {
+        // Allow contracts to start today or in the future
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (startDate < today) {
           issues.push("Contract start date cannot be in the past")
         }
       }
@@ -445,6 +452,11 @@ export default function EnhancedContractForm({
       if (formData.contract_type === "full-time-permanent" && !formData.department) {
         issues.push("Department is required for full-time permanent contracts")
       }
+
+      // Validate email format
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        issues.push("Please enter a valid email address")
+      }
     } catch (error) {
       console.warn("Error checking compliance issues:", error)
       issues.push("Error validating form data")
@@ -453,21 +465,7 @@ export default function EnhancedContractForm({
     return issues
   }
 
-  // Update form progress
-  useEffect(() => {
-    const completedSections = sections.filter((section) => {
-      return section.fields.every((field) => {
-        const value = form.getValues(field as keyof ContractGeneratorFormData)
-        return value && value !== ""
-      })
-    }).length
-
-    setFormProgress({
-      completed: completedSections,
-      total: sections.length,
-      percentage: Math.round((completedSections / sections.length) * 100),
-    })
-  }, [])
+  // This effect was duplicate - removed to prevent conflicts with the main analysis effect above
 
   // Mutations
   const createMutation = useMutation({
@@ -512,6 +510,13 @@ export default function EnhancedContractForm({
 
   const onSubmit = async (data: ContractGeneratorFormData) => {
     try {
+      // Validate form data before submission
+      const validationIssues = checkComplianceIssues(data)
+      if (validationIssues.length > 0) {
+        toast.error(`Please fix the following issues: ${validationIssues.join(", ")}`)
+        return
+      }
+
       if (contract?.id) {
         await updateMutation.mutateAsync({ id: contract.id, ...data })
       } else {
@@ -519,15 +524,36 @@ export default function EnhancedContractForm({
       }
     } catch (error) {
       console.error("Form submission error:", error)
+      toast.error("Failed to save contract. Please check your data and try again.")
     }
   }
 
   const handleGenerateContract = async () => {
     const data = form.getValues()
+    
+    // Validate form data before generation
+    const isValid = await form.trigger()
+    if (!isValid) {
+      toast.error("Please fill in all required fields before generating the contract.")
+      return
+    }
+
+    // Check for critical missing data
+    if (!data.first_party_id || !data.second_party_id) {
+      toast.error("Both contracting parties must be selected to generate a contract.")
+      return
+    }
+
+    if (!data.contract_start_date || !data.contract_end_date) {
+      toast.error("Contract start and end dates are required for generation.")
+      return
+    }
+
     try {
       await generateMutation.mutateAsync(data)
     } catch (error) {
       console.error("Contract generation error:", error)
+      toast.error("Failed to generate contract. Please verify all required information is provided.")
     }
   }
 
@@ -609,11 +635,21 @@ export default function EnhancedContractForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {clientParties.map((party) => (
-                                <SelectItem key={party.id} value={party.id}>
-                                  {party.name_en} / {party.name_ar}
+                              {isLoadingParties ? (
+                                <SelectItem value="loading" disabled>
+                                  Loading clients...
                                 </SelectItem>
-                              ))}
+                              ) : clientParties.length === 0 ? (
+                                <SelectItem value="no-clients" disabled>
+                                  No clients found. Please add a client in Party Management.
+                                </SelectItem>
+                              ) : (
+                                clientParties.map((party) => (
+                                  <SelectItem key={party.id} value={party.id}>
+                                    {party.name_en} / {party.name_ar}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -636,11 +672,21 @@ export default function EnhancedContractForm({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {employerParties.map((party) => (
-                                <SelectItem key={party.id} value={party.id}>
-                                  {party.name_en} / {party.name_ar}
+                              {isLoadingParties ? (
+                                <SelectItem value="loading" disabled>
+                                  Loading employers...
                                 </SelectItem>
-                              ))}
+                              ) : employerParties.length === 0 ? (
+                                <SelectItem value="no-employers" disabled>
+                                  No employers found. Please add an employer in Party Management.
+                                </SelectItem>
+                              ) : (
+                                employerParties.map((party) => (
+                                  <SelectItem key={party.id} value={party.id}>
+                                    {party.name_en} / {party.name_ar}
+                                  </SelectItem>
+                                ))
+                              )}
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -676,18 +722,25 @@ export default function EnhancedContractForm({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {filteredPromoters?.map((promoter: any) => (
-                              <SelectItem key={promoter.id} value={promoter.id}>
-                                {promoter.name_en} / {promoter.name_ar}
-                                {watchedSecondParty && promoter.employer_id === watchedSecondParty && (
-                                  <span className="ml-2 text-xs text-green-600">✓ Related</span>
-                                )}
+                            {isLoadingPromoters ? (
+                              <SelectItem value="loading" disabled>
+                                Loading promoters...
                               </SelectItem>
-                            ))}
-                            {filteredPromoters?.length === 0 && watchedSecondParty && (
+                            ) : !watchedSecondParty ? (
+                              <SelectItem value="no-employer" disabled>
+                                Please select an employer first
+                              </SelectItem>
+                            ) : filteredPromoters?.length === 0 ? (
                               <SelectItem value="no-promoters" disabled>
                                 No promoters found for this employer
                               </SelectItem>
+                            ) : (
+                              filteredPromoters?.map((promoter: any) => (
+                                <SelectItem key={promoter.id} value={promoter.id}>
+                                  {promoter.name_en} / {promoter.name_ar}
+                                  <span className="ml-2 text-xs text-green-600">✓ Related</span>
+                                </SelectItem>
+                              ))
                             )}
                           </SelectContent>
                         </Select>
@@ -732,7 +785,7 @@ export default function EnhancedContractForm({
                           />
                         </FormControl>
                         <FormDescription>
-                          This email will be used for contract notifications and updates
+                          This email will be used for contract notifications and updates. Ensure it's a valid email address.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -915,13 +968,15 @@ export default function EnhancedContractForm({
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = Number(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
                                   }
                                 }
                               }}
                               disabled={isLoading}
-                              placeholder="0"
+                              placeholder="Enter basic salary amount"
+                              min="0"
+                              step="1"
                             />
                           </FormControl>
                           <FormMessage />
@@ -934,7 +989,7 @@ export default function EnhancedContractForm({
                       name="allowances"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Allowances</FormLabel>
+                          <FormLabel>Allowances (Optional)</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -945,13 +1000,15 @@ export default function EnhancedContractForm({
                                   field.onChange(undefined);
                                 } else {
                                   const numValue = Number(value);
-                                  if (!isNaN(numValue)) {
+                                  if (!isNaN(numValue) && numValue >= 0) {
                                     field.onChange(numValue);
                                   }
                                 }
                               }}
                               disabled={isLoading}
-                              placeholder="0"
+                              placeholder="Enter allowances amount"
+                              min="0"
+                              step="1"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1029,7 +1086,9 @@ export default function EnhancedContractForm({
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>Choose the type of employment contract</FormDescription>
+                        <FormDescription>
+                          Choose the type of employment contract. This affects the template and clauses generated.
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

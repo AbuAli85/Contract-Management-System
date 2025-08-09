@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { partyFormSchema, type PartyFormData } from "@/lib/party-schema"
 import type { Party } from "@/lib/types"
 import { createClient } from "@/lib/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { format, parseISO } from "date-fns"
 
 import { Button } from "@/components/ui/button"
@@ -38,7 +38,6 @@ interface PartyFormProps {
 }
 
 export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps) {
-  const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<PartyFormData>({
@@ -58,7 +57,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
       contact_phone: "",
       contact_email: "",
       address_en: "",
-      address_ar: "",
+      // address_ar: "", // Not available in Party type
       notes: "",
     },
   })
@@ -78,11 +77,11 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         contact_email: partyToEdit.contact_email || "",
         contact_phone: partyToEdit.contact_phone || "",
         address_en: partyToEdit.address_en || "",
-        address_ar: partyToEdit.address_ar || "",
+        // address_ar: partyToEdit.address_ar || "", // Not available in Party type
         tax_number: partyToEdit.tax_number || "",
         license_number: partyToEdit.license_number || "",
-        license_expiry_date: partyToEdit.license_expiry_date
-          ? parseISO(partyToEdit.license_expiry_date)
+        license_expiry_date: partyToEdit.license_expiry
+          ? parseISO(partyToEdit.license_expiry)
           : undefined,
         status: (partyToEdit.status as "Active" | "Inactive" | "Suspended") || "Active",
         notes: partyToEdit.notes || "",
@@ -103,7 +102,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         contact_phone: "",
         contact_email: "",
         address_en: "",
-        address_ar: "",
+        // address_ar: "", // Not available in Party type
         notes: "",
       })
     }
@@ -123,38 +122,37 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         contact_email: values.contact_email || null,
         contact_phone: values.contact_phone || null,
         address_en: values.address_en || null,
-        address_ar: values.address_ar || null,
+        // address_ar: values.address_ar || null, // Not available in Party type
         tax_number: values.tax_number || null,
         license_number: values.license_number || null,
-        license_expiry_date: values.license_expiry_date
+        license_expiry: values.license_expiry_date
           ? format(values.license_expiry_date, "yyyy-MM-dd")
           : null,
         status: values.status,
         notes: values.notes || null,
       }
 
+      const supabase = createClient()
+      if (!supabase) {
+        throw new Error("Failed to initialize Supabase client")
+      }
+
       if (partyToEdit?.id) {
-        const supabase = createClient()
         const { error } = await supabase
           .from("parties")
           .update(partyData)
           .eq("id", partyToEdit.id)
           .select()
         if (error) throw error
-        toast({ title: "Success!", description: "Party updated successfully." })
+        toast.success("Party updated successfully!")
       } else {
-        const supabase = createClient()
         const { error } = await supabase.from("parties").insert(partyData).select()
         if (error) throw error
-        toast({ title: "Success!", description: "Party added successfully." })
+        toast.success("Party added successfully!")
       }
       onFormSubmit()
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive",
-      })
+      toast.error(error.message || "An unexpected error occurred.")
     } finally {
       setIsSubmitting(false)
     }
@@ -217,7 +215,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select type" />
@@ -251,7 +249,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />
@@ -439,24 +437,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="address_ar"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>العنوان (عربي)</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="العنوان الكامل بالعربية"
-                          {...field}
-                          dir="rtl"
-                          className="text-right"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Address AR field removed - not available in Party type */}
               </div>
             </CardContent>
           </Card>

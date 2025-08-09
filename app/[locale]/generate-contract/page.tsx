@@ -20,9 +20,10 @@ export default function GenerateContractPage() {
         
         <EnhancedContractForm 
           onSuccess={() => {
-            console.log("Contract generated successfully")
+            // Contract successfully created/updated - handled by the form itself with toast notifications
           }}
           onError={(error) => {
+            // Error handling is managed by the form component with proper user feedback
             console.error("Contract generation error:", error)
           }}
         />
