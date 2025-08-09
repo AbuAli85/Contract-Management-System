@@ -117,6 +117,27 @@ export function useAuth() {
       })
       if (error) throw error
       return data
+    },
+    signInWithProvider: async (provider: 'github' | 'google') => {
+      if (!supabase) return { success: false, error: "Authentication service unavailable" }
+      
+      try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/api/auth/callback`
+          }
+        })
+        
+        if (error) {
+          return { success: false, error: error.message }
+        }
+        
+        return { success: true, data }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "OAuth sign-in failed"
+        return { success: false, error: errorMessage }
+      }
     }
   }
 }

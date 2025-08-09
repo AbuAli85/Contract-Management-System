@@ -1,33 +1,15 @@
-import { NextIntlClientProvider } from "next-intl"
-import { ErrorBoundary } from "@/components/error-boundary"
+import React from "react"
 
-export default async function AuthLayout({
+export default function AuthLayout({
   children,
-  params,
 }: {
   children: React.ReactNode
-  params: Promise<{ locale: string }>
 }) {
-  const { locale } = await params
-
-  // Use empty messages to avoid dynamic rendering
-  const messages = {}
-
   return (
-    <ErrorBoundary>
-      <NextIntlClientProvider messages={messages} locale={locale}>
-        <div className="min-h-screen bg-gray-50">
-          {/* Simple header for auth pages */}
-          <header className="border-b border-gray-200 bg-white shadow-sm">
-            <div className="px-4 py-3">
-              <h1 className="text-lg font-semibold text-gray-900">Contract Management System</h1>
-            </div>
-          </header>
-
-          {/* Main content */}
-          <main>{children}</main>
-        </div>
-      </NextIntlClientProvider>
-    </ErrorBoundary>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        {children}
+      </div>
+    </div>
   )
 }

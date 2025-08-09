@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useSupabase } from '@/app/providers'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname } from '@/navigation'
 
 export function AuthRedirect() {
   const { session, loading } = useSupabase()
@@ -21,12 +21,11 @@ export function AuthRedirect() {
         const segments = pathname.split('/')
         const locale = segments[1] || 'en'
         
-        // Force redirect using window.location for reliability
-        const dashboardUrl = `/${locale}/dashboard`
-        console.log("🔐 AuthRedirect: Redirecting to:", dashboardUrl)
+        // Use next-intl aware router for proper locale handling
+        console.log("🔐 AuthRedirect: Redirecting to dashboard")
         
-        // Use replace to avoid adding to browser history
-        window.location.replace(dashboardUrl)
+        // Use router.replace to avoid adding to browser history
+        router.replace('/dashboard')
       }
     }
   }, [session, loading, pathname, router])

@@ -8,6 +8,10 @@ interface SelectContextType {
   value?: string
   onValueChange?: (value: string) => void
   disabled?: boolean
+  isOpen?: boolean
+  setIsOpen?: (open: boolean) => void
+  valueToLabel?: Map<string, string>
+  setValueToLabel?: (map: Map<string, string>) => void
 }
 
 const SelectContext = React.createContext<SelectContextType>({})
@@ -20,9 +24,35 @@ interface SelectProps {
 }
 
 const Select: React.FC<SelectProps> = ({ children, value, onValueChange, disabled }) => {
+  const [isOpen, setIsOpen] = React.useState(false)
+  const [valueToLabel, setValueToLabel] = React.useState<Map<string, string>>(new Map())
+  const selectRef = React.useRef<HTMLDivElement>(null)
+  
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
   return (
-    <SelectContext.Provider value={{ value, onValueChange, disabled }}>
-      <div className="relative">
+    <SelectContext.Provider value={{ 
+      value, 
+      onValueChange, 
+      disabled, 
+      isOpen, 
+      setIsOpen, 
+      valueToLabel, 
+      setValueToLabel 
+    }}>
+      <div ref={selectRef} className="relative">
         {children}
       </div>
     </SelectContext.Provider>
@@ -35,8 +65,13 @@ interface SelectTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
   ({ className, children, ...props }, ref) => {
-    const { disabled } = React.useContext(SelectContext)
-    const [isOpen, setIsOpen] = React.useState(false)
+    const { disabled, isOpen, setIsOpen } = React.useContext(SelectContext)
+    
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsOpen?.(!isOpen)
+    }
     
     return (
       <button
@@ -47,11 +82,11 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
           className
         )}
         disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleClick}
         {...props}
       >
         {children}
-        <ChevronDown className="h-4 w-4 opacity-50" />
+        <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform", isOpen && "rotate-180")} />
       </button>
     )
   }
@@ -64,11 +99,13 @@ interface SelectValueProps {
 }
 
 const SelectValue: React.FC<SelectValueProps> = ({ placeholder, className }) => {
-  const { value } = React.useContext(SelectContext)
+  const { value, valueToLabel } = React.useContext(SelectContext)
+  
+  const displayText = value && valueToLabel?.get(value) ? valueToLabel.get(value) : value || placeholder
   
   return (
     <span className={cn("block truncate", className)}>
-      {value || placeholder}
+      {displayText}
     </span>
   )
 }
@@ -81,13 +118,16 @@ interface SelectContentProps {
 
 const SelectContent = React.forwardRef<HTMLDivElement, SelectContentProps>(
   ({ children, className, position = "popper" }, ref) => {
+    const { isOpen } = React.useContext(SelectContext)
+    
+    if (!isOpen) return null
+    
     return (
       <div
         ref={ref}
         className={cn(
-          "relative z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
-          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
-          position === "popper" && "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+          "absolute z-50 min-w-[8rem] max-h-60 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
+          position === "popper" && "top-full mt-1",
           className
         )}
       >
@@ -106,18 +146,57 @@ interface SelectItemProps {
 
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ children, value, className }, ref) => {
-    const { value: selectedValue, onValueChange } = React.useContext(SelectContext)
+    const { value: selectedValue, onValueChange, setIsOpen, valueToLabel, setValueToLabel } = React.useContext(SelectContext)
     const isSelected = selectedValue === value
+    
+    // Register this item's label with the context
+    React.useEffect(() => {
+      if (setValueToLabel && children && typeof children === 'string') {
+        setValueToLabel(prev => {
+          const newMap = new Map(prev)
+          newMap.set(value, children)
+          return newMap
+        })
+      } else if (setValueToLabel && children && React.isValidElement(children)) {
+        // Handle JSX children by extracting text content
+        const extractText = (element: React.ReactNode): string => {
+          if (typeof element === 'string') return element
+          if (typeof element === 'number') return element.toString()
+          if (React.isValidElement(element) && element.props.children) {
+            return extractText(element.props.children)
+          }
+          return ''
+        }
+        const text = extractText(children)
+        if (text) {
+          setValueToLabel(prev => {
+            const newMap = new Map(prev)
+            newMap.set(value, text)
+            return newMap
+          })
+        }
+      }
+    }, [value, children, setValueToLabel])
+    
+    const handleClick = (e: React.MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      onValueChange?.(value)
+      // Use a small timeout to ensure the value change completes
+      setTimeout(() => {
+        setIsOpen?.(false)
+      }, 0)
+    }
     
     return (
       <div
         ref={ref}
         className={cn(
-          "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+          "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
           isSelected && "bg-accent text-accent-foreground",
           className
         )}
-        onClick={() => onValueChange?.(value)}
+        onClick={handleClick}
       >
         <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
           {isSelected && <span className="h-2 w-2 rounded-full bg-current" />}
