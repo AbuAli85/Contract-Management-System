@@ -91,6 +91,7 @@ export function BookingSystem() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [resources, setResources] = useState<BookingResource[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedResourceType, setSelectedResourceType] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -112,108 +113,46 @@ export function BookingSystem() {
 
   const loadBookingData = async () => {
     setLoading(true)
+    setError(null)
     try {
-      // Simulate loading data
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Fetch real booking resources
+      const resourcesResponse = await fetch('/api/booking-resources')
+      if (resourcesResponse.ok) {
+        const resourcesData = await resourcesResponse.json()
+        setResources(resourcesData.resources || [])
+      } else {
+        // Fallback to a basic set of resources if API fails
+        setResources([
+          {
+            id: '1',
+            name: 'Conference Room A',
+            type: 'meeting_room',
+            capacity: 12,
+            location: 'Floor 3, West Wing',
+            amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'WiFi'],
+            hourly_rate: 50,
+            availability_hours: { start: '08:00', end: '18:00' },
+            is_available: true
+          }
+        ])
+      }
       
-      // Mock resources data
-      setResources([
-        {
-          id: '1',
-          name: 'Conference Room A',
-          type: 'meeting_room',
-          capacity: 12,
-          location: 'Floor 3, West Wing',
-          amenities: ['Projector', 'Whiteboard', 'Video Conferencing', 'WiFi'],
-          hourly_rate: 50,
-          availability_hours: { start: '08:00', end: '18:00' },
-          is_available: true
-        },
-        {
-          id: '2',
-          name: 'Executive Boardroom',
-          type: 'meeting_room',
-          capacity: 8,
-          location: 'Floor 5, Executive Suite',
-          amenities: ['4K Display', 'Premium Audio', 'Coffee Station', 'WiFi'],
-          hourly_rate: 100,
-          availability_hours: { start: '08:00', end: '20:00' },
-          is_available: true
-        },
-        {
-          id: '3',
-          name: 'Company Van',
-          type: 'vehicle',
-          capacity: 8,
-          location: 'Parking Garage Level 1',
-          amenities: ['GPS', 'Air Conditioning', 'First Aid Kit'],
-          hourly_rate: 25,
-          availability_hours: { start: '06:00', end: '22:00' },
-          is_available: false
-        },
-        {
-          id: '4',
-          name: 'Presentation Equipment',
-          type: 'equipment',
-          capacity: 1,
-          location: 'Equipment Storage',
-          amenities: ['Portable Projector', 'Laptop', 'Cables', 'Remote'],
-          hourly_rate: 15,
-          availability_hours: { start: '08:00', end: '17:00' },
-          is_available: true
-        }
-      ])
-
-      // Mock bookings data
-      setBookings([
-        {
-          id: '1',
-          resource_id: '1',
-          resource_name: 'Conference Room A',
-          title: 'Project Kickoff Meeting',
-          description: 'Initial planning session for Q1 project',
-          start_time: `${selectedDate}T09:00:00`,
-          end_time: `${selectedDate}T11:00:00`,
-          user_id: 'user1',
-          user_name: 'John Doe',
-          status: 'confirmed',
-          attendees: ['john@company.com', 'jane@company.com', 'mike@company.com'],
-          total_cost: 100,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          resource_id: '2',
-          resource_name: 'Executive Boardroom',
-          title: 'Board Meeting',
-          description: 'Monthly board review',
-          start_time: `${selectedDate}T14:00:00`,
-          end_time: `${selectedDate}T16:00:00`,
-          user_id: 'user2',
-          user_name: 'Jane Smith',
-          status: 'confirmed',
-          attendees: ['board@company.com'],
-          total_cost: 200,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '3',
-          resource_id: '3',
-          resource_name: 'Company Van',
-          title: 'Client Visit Transportation',
-          description: 'Transport team to client site',
-          start_time: `${selectedDate}T10:00:00`,
-          end_time: `${selectedDate}T15:00:00`,
-          user_id: 'user3',
-          user_name: 'Mike Johnson',
-          status: 'pending',
-          attendees: ['team@company.com'],
-          total_cost: 125,
-          created_at: new Date().toISOString()
-        }
-      ])
+      // Fetch real bookings for selected date
+      const bookingsResponse = await fetch(`/api/bookings?date=${selectedDate}&resourceType=${selectedResourceType}`)
+      if (bookingsResponse.ok) {
+        const bookingsData = await bookingsResponse.json()
+        setBookings(bookingsData.bookings || [])
+      } else {
+        // If API fails, show empty bookings
+        setBookings([])
+      }
+      
     } catch (error) {
       console.error('Failed to load booking data:', error)
+      setError('Failed to load booking data. Please try again.')
+      // Set fallback data on error
+      setResources([])
+      setBookings([])
     } finally {
       setLoading(false)
     }

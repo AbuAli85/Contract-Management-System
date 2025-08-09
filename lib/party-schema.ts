@@ -19,7 +19,7 @@ export const partyFormSchema = z.object({
     .optional()
     .or(z.literal("")),
   address_en: z.string().optional(),
-  address_ar: z.string().optional(),
+  // address_ar: z.string().optional(), // Not available in Party type
   notes: z.string().optional(),
 })
 

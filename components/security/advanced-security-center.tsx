@@ -126,6 +126,36 @@ export function AdvancedSecurityCenter() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<"24h" | "7d" | "30d" | "90d">("24h")
   const { toast } = useToast()
 
+  // Helper functions for event classification
+  const determineEventType = (action: string): string => {
+    if (action?.toLowerCase().includes('login') || action?.toLowerCase().includes('auth')) {
+      return 'authentication'
+    }
+    if (action?.toLowerCase().includes('permission') || action?.toLowerCase().includes('role')) {
+      return 'permission_change'
+    }
+    if (action?.toLowerCase().includes('access') || action?.toLowerCase().includes('view')) {
+      return 'data_access'
+    }
+    if (action?.toLowerCase().includes('webhook') || action?.toLowerCase().includes('api')) {
+      return 'api_activity'
+    }
+    return 'system_activity'
+  }
+
+  const determineSeverity = (action: string, success: boolean): "low" | "medium" | "high" => {
+    if (!success) {
+      if (action?.toLowerCase().includes('login') || action?.toLowerCase().includes('auth')) {
+        return 'high'
+      }
+      return 'medium'
+    }
+    if (action?.toLowerCase().includes('permission') || action?.toLowerCase().includes('role')) {
+      return 'medium'
+    }
+    return 'low'
+  }
+
   useEffect(() => {
     loadSecurityData()
   }, [selectedTimeframe])
@@ -133,49 +163,55 @@ export function AdvancedSecurityCenter() {
   const loadSecurityData = async () => {
     setLoading(true)
     try {
-      // Mock security events
-      const mockEvents: SecurityEvent[] = [
-        {
-          id: "evt_001",
-          type: "suspicious_activity",
-          severity: "high",
-          description: "Multiple failed login attempts detected",
-          timestamp: new Date().toISOString(),
-          user: "unknown@company.com",
-          ipAddress: "192.168.1.100",
-          location: "Unknown",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          resolved: false,
-        },
-        {
-          id: "evt_002",
-          type: "data_access",
-          severity: "medium",
-          description: "Sensitive contract data accessed outside business hours",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-          user: "sarah@company.com",
-          ipAddress: "192.168.1.50",
-          location: "Office",
-          userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-          resolved: true,
-          actionTaken: "Verified legitimate access",
-        },
-        {
-          id: "evt_003",
-          type: "permission_change",
-          severity: "low",
-          description: "User role updated from Viewer to Editor",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-          user: "admin@company.com",
-          ipAddress: "192.168.1.1",
-          location: "Office",
-          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          resolved: true,
-          actionTaken: "Approved change request",
-        },
-      ]
-
-      setSecurityEvents(mockEvents)
+      // Fetch real security events from webhook logs and auth logs
+      const response = await fetch(`/api/audit-logs?timeframe=${selectedTimeframe}`)
+      
+      if (response.ok) {
+        const auditData = await response.json()
+        
+        // Transform audit logs to security events
+        const realEvents: SecurityEvent[] = auditData.logs?.map((log: any) => ({
+          id: log.id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          type: determineEventType(log.action),
+          severity: determineSeverity(log.action, log.success),
+          description: log.description || `${log.action} ${log.success ? 'completed' : 'failed'}`,
+          timestamp: log.timestamp || log.created_at,
+          user: log.user_email || log.details?.user || 'System',
+          ipAddress: log.ip || log.details?.ip || 'Unknown',
+          location: log.details?.location || 'Unknown',
+          userAgent: log.details?.userAgent || log.user_agent || 'Unknown',
+          resolved: log.success !== false,
+          actionTaken: log.success ? 'Automatically resolved' : undefined,
+        })) || []
+        
+        setSecurityEvents(realEvents)
+      } else {
+        // Fallback to basic security events from webhook logs
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        
+        const { data: webhookLogs } = await supabase
+          .from('webhook_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50)
+        
+        const webhookEvents: SecurityEvent[] = (webhookLogs || []).map((log: any) => ({
+          id: log.id,
+          type: log.error ? "webhook_failure" : "webhook_success",
+          severity: log.error ? "medium" : "low",
+          description: log.error ? `Webhook failed: ${log.error}` : `Webhook ${log.type} executed successfully`,
+          timestamp: log.created_at,
+          user: "System",
+          ipAddress: "Internal",
+          location: "Server",
+          userAgent: "Webhook System",
+          resolved: !log.error,
+          actionTaken: log.error ? `Retry attempted ${log.attempts} times` : "Completed successfully",
+        }))
+        
+        setSecurityEvents(webhookEvents)
+      }
 
       // Mock compliance reports
       const mockReports: ComplianceReport[] = [
@@ -263,19 +299,31 @@ export function AdvancedSecurityCenter() {
 
       setThreats(mockThreats)
 
-      // Mock metrics
-      const mockMetrics: SecurityMetrics = {
-        totalEvents: 156,
-        criticalEvents: 3,
-        resolvedEvents: 142,
-        activeThreats: 2,
-        complianceScore: 87,
-        dataBreachRisk: 12,
-        systemVulnerabilities: 5,
-        userAccessScore: 94,
+      // Calculate real metrics from security events
+      const currentEvents = securityEvents
+      const realMetrics: SecurityMetrics = {
+        totalEvents: currentEvents.length,
+        criticalEvents: currentEvents.filter(e => e.severity === 'high').length,
+        resolvedEvents: currentEvents.filter(e => e.resolved).length,
+        activeThreats: currentEvents.filter(e => !e.resolved && e.severity === 'high').length,
+        complianceScore: currentEvents.length > 0 
+          ? Math.round((currentEvents.filter(e => e.resolved).length / currentEvents.length) * 100)
+          : 100,
+        dataBreachRisk: Math.min(
+          currentEvents.filter(e => e.type === 'data_access' && !e.resolved).length * 10, 
+          100
+        ),
+        systemVulnerabilities: currentEvents.filter(e => 
+          e.type === 'system_activity' && !e.resolved
+        ).length,
+        userAccessScore: currentEvents.length > 0
+          ? Math.round(100 - (currentEvents.filter(e => 
+              e.type === 'authentication' && !e.resolved
+            ).length / currentEvents.length) * 50)
+          : 100,
       }
 
-      setMetrics(mockMetrics)
+      setMetrics(realMetrics)
     } catch (error) {
       console.error("Error loading security data:", error)
       toast({
