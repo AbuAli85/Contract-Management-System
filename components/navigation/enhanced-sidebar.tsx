@@ -55,6 +55,18 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
   // Role-specific navigation sections
   const clientNavItems = [
     {
+      label: 'Client Dashboard',
+      href: '/dashboard/client-comprehensive',
+      icon: '📊',
+      permission: 'dashboard.view' as const
+    },
+    {
+      label: 'Project Workflow',
+      href: '/workflow',
+      icon: '🔄',
+      permission: 'projects.view_own' as const
+    },
+    {
       label: 'My Projects',
       href: '/client/projects',
       icon: '📋',
@@ -87,6 +99,18 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
   ]
 
   const providerNavItems = [
+    {
+      label: 'Provider Dashboard',
+      href: '/dashboard/provider-comprehensive',
+      icon: '📊',
+      permission: 'dashboard.view' as const
+    },
+    {
+      label: 'Project Workflow',
+      href: '/workflow',
+      icon: '🔄',
+      permission: 'projects.view_own' as const
+    },
     {
       label: 'My Profile',
       href: '/provider/profile',
