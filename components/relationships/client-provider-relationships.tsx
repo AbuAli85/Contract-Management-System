@@ -210,16 +210,19 @@ export function ClientProviderRelationships() {
       }
     }
     
-    loadRealData()
-    
-    return () => {
-      isMounted = false
+    // Fallback mock relationships for demonstration (will be removed when real data is available)
+    const mockStats = {
+      total: 5,
+      active: 3,
+      potential: 2,
+      paused: 0,
+      total_value: 225000,
+      avg_satisfaction: 4.5
     }
-  }, [])
 
-  // Fallback mock relationships for demonstration (will be removed when real data is available)
-      {
-        id: '1',
+    const mockRelationships = [
+    {
+      id: '1',
         client_id: 'c1',
         provider_id: 'p1',
         client_name: 'Oman National Bank',
@@ -313,6 +316,13 @@ export function ClientProviderRelationships() {
     setStats(mockStats)
     setRelationships(mockRelationships)
     setLoading(false)
+    
+    // Uncomment this when real data is available
+    // loadRealData()
+    
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredRelationships = relationships.filter(relationship => {
