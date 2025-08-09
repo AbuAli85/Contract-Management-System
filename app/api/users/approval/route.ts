@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerComponentClient } from "@/lib/supabaseServer"
+import { createClient } from "@/lib/supabase/server"
 
 // GET - Fetch pending users for approval
 export async function GET(request: NextRequest) {
   try {
     console.log("🔧 User approval API called")
-    const supabase = await createServerComponentClient()
+    const supabase = createClient()
 
     // Get current user to check permissions
     const {
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 // POST - Approve or reject users
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerComponentClient()
+    const supabase = createClient()
 
     // Get current user to check permissions
     const {

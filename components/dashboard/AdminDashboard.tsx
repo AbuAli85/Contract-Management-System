@@ -1,9 +1,16 @@
 "use client"
-import { Bar } from "react-chartjs-2"
-import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js"
 import { CalendarCheck, BarChart3, CheckCircle2, Users, ClipboardList, TrendingUp } from 'lucide-react'
 
-ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
+// Simple chart placeholder component
+const Bar = ({ data, options }: { data: any; options?: any }) => (
+  <div className="h-64 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center border border-blue-200">
+    <div className="text-center">
+      <BarChart3 className="h-12 w-12 mx-auto text-blue-500 mb-2" />
+      <p className="text-blue-600 font-medium">Chart Visualization</p>
+      <p className="text-blue-500 text-sm">Chart.js integration coming soon</p>
+    </div>
+  </div>
+)
 
 const kpis = [
   {
