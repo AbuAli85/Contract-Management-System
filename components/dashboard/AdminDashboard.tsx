@@ -1,5 +1,5 @@
 "use client"
-import { CalendarCheck, BarChart3, CheckCircle2, Users, ClipboardList, TrendingUp } from 'lucide-react'
+import { CalendarCheck, BarChart3, CheckCircle2, Users, ClipboardList, TrendingUp, Plus, FileText } from 'lucide-react'
 
 // Simple chart placeholder component
 const Bar = ({ data, options }: { data: any; options?: any }) => (
