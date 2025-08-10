@@ -559,6 +559,271 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Create function to update booking status with validation and audit trail
+CREATE OR REPLACE FUNCTION update_booking_status(
+    p_id UUID,
+    p_status TEXT
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    booking_record RECORD;
+    old_status TEXT;
+    current_user_id UUID;
+BEGIN
+    -- Get current user ID from auth context
+    current_user_id := auth.uid();
+    
+    -- Get current booking details
+    SELECT 
+        b.status,
+        b.client_id,
+        b.provider_company_id,
+        ps.provider_id
+    INTO booking_record
+    FROM bookings b
+    JOIN provider_services ps ON b.service_id = ps.id
+    WHERE b.id = p_id;
+    
+    IF booking_record IS NULL THEN
+        RAISE EXCEPTION 'Booking not found';
+    END IF;
+    
+    old_status := booking_record.status;
+    
+    -- Validate status transition
+    IF NOT (
+        -- Client can cancel their own pending/confirmed bookings
+        (current_user_id = booking_record.client_id AND 
+         p_status = 'cancelled' AND 
+         old_status IN ('pending', 'confirmed')) OR
+        -- Provider can update status for their services
+        (current_user_id = booking_record.provider_id AND 
+         p_status IN ('confirmed', 'in_progress', 'completed', 'cancelled') AND
+         old_status IN ('pending', 'confirmed', 'in_progress')) OR
+        -- Admin can make any status change
+        (EXISTS (
+            SELECT 1 FROM user_roles ur 
+            WHERE ur.user_id = current_user_id 
+            AND ur.role IN ('admin', 'manager')
+            AND ur.is_active = true
+        ))
+    ) THEN
+        RAISE EXCEPTION 'Invalid status transition or insufficient permissions';
+    END IF;
+    
+    -- Update booking status
+    UPDATE bookings 
+    SET status = p_status::service_booking_status,
+        updated_at = NOW()
+    WHERE id = p_id;
+    
+    -- Create audit trail
+    INSERT INTO booking_events (
+        booking_id,
+        event_type,
+        old_value,
+        new_value,
+        description,
+        created_by
+    ) VALUES (
+        p_id,
+        'status_change',
+        jsonb_build_object('status', old_status),
+        jsonb_build_object('status', p_status),
+        'Status changed from ' || old_status || ' to ' || p_status,
+        current_user_id
+    );
+    
+    -- Create notification for client if status changed by provider
+    IF current_user_id != booking_record.client_id AND 
+       p_status IN ('confirmed', 'in_progress', 'completed', 'cancelled') THEN
+        INSERT INTO enhanced_notifications (
+            user_id,
+            type,
+            title,
+            message,
+            priority,
+            data
+        ) VALUES (
+            booking_record.client_id,
+            'booking_status_change',
+            'Booking Status Updated',
+            'Your booking status has been updated to: ' || p_status,
+            'medium',
+            jsonb_build_object(
+                'booking_id', p_id,
+                'old_status', old_status,
+                'new_status', p_status
+            )
+        );
+    END IF;
+    
+    RETURN true;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create function to create a new booking with validation
+CREATE OR REPLACE FUNCTION create_booking(
+    p_service_id UUID,
+    p_client_id UUID,
+    p_scheduled_at TIMESTAMPTZ,
+    p_duration_minutes INTEGER DEFAULT NULL,
+    p_participant_count INTEGER DEFAULT 1,
+    p_total_price DECIMAL(10,2) DEFAULT NULL,
+    p_currency TEXT DEFAULT 'USD',
+    p_notes TEXT DEFAULT NULL,
+    p_client_notes TEXT DEFAULT NULL
+)
+RETURNS UUID AS $$
+DECLARE
+    service_record RECORD;
+    new_booking_id UUID;
+    calculated_duration INTEGER;
+    calculated_price DECIMAL(10,2);
+    provider_id UUID;
+BEGIN
+    -- Get current user ID from auth context
+    IF auth.uid() != p_client_id THEN
+        RAISE EXCEPTION 'Can only create bookings for yourself';
+    END IF;
+    
+    -- Get service details
+    SELECT 
+        ps.id,
+        ps.provider_id,
+        ps.duration_minutes,
+        ps.price_base,
+        ps.price_currency,
+        ps.status,
+        ps.requires_approval
+    INTO service_record
+    FROM provider_services ps
+    WHERE ps.id = p_service_id;
+    
+    IF service_record IS NULL THEN
+        RAISE EXCEPTION 'Service not found';
+    END IF;
+    
+    IF service_record.status != 'active' THEN
+        RAISE EXCEPTION 'Service is not available';
+    END IF;
+    
+    -- Check if user can book this service
+    IF NOT can_user_book_service(p_client_id, p_service_id, p_scheduled_at) THEN
+        RAISE EXCEPTION 'Cannot book this service at the specified time';
+    END IF;
+    
+    -- Check for conflicts
+    IF EXISTS (
+        SELECT 1 FROM bookings b
+        WHERE b.service_id = p_service_id
+        AND b.status IN ('confirmed', 'in_progress')
+        AND (
+            (b.scheduled_at, b.scheduled_at + (b.duration_minutes * INTERVAL '1 minute')) 
+            OVERLAPS 
+            (p_scheduled_at, p_scheduled_at + (COALESCE(p_duration_minutes, service_record.duration_minutes) * INTERVAL '1 minute'))
+        )
+    ) THEN
+        RAISE EXCEPTION 'Time slot is not available';
+    END IF;
+    
+    -- Set calculated values
+    calculated_duration := COALESCE(p_duration_minutes, service_record.duration_minutes);
+    calculated_price := COALESCE(p_total_price, service_record.price_base);
+    provider_id := service_record.provider_id;
+    
+    -- Determine initial status
+    DECLARE
+        initial_status service_booking_status;
+    BEGIN
+        IF service_record.requires_approval THEN
+            initial_status := 'pending';
+        ELSE
+            initial_status := 'confirmed';
+        END IF;
+        
+        -- Insert the booking
+        INSERT INTO bookings (
+            service_id,
+            client_id,
+            provider_company_id,
+            status,
+            scheduled_at,
+            scheduled_end,
+            duration_minutes,
+            participant_count,
+            total_price,
+            currency,
+            notes,
+            client_notes,
+            metadata
+        ) VALUES (
+            p_service_id,
+            p_client_id,
+            (SELECT company_id FROM users WHERE id = provider_id),
+            initial_status,
+            p_scheduled_at,
+            p_scheduled_at + (calculated_duration * INTERVAL '1 minute'),
+            calculated_duration,
+            p_participant_count,
+            calculated_price,
+            COALESCE(p_currency, service_record.price_currency),
+            p_notes,
+            p_client_notes,
+            jsonb_build_object(
+                'created_via', 'rpc',
+                'requires_approval', service_record.requires_approval
+            )
+        ) RETURNING id INTO new_booking_id;
+        
+        -- Create audit trail
+        INSERT INTO booking_events (
+            booking_id,
+            event_type,
+            new_value,
+            description,
+            created_by
+        ) VALUES (
+            new_booking_id,
+            'booking_created',
+            jsonb_build_object(
+                'status', initial_status,
+                'service_id', p_service_id,
+                'scheduled_at', p_scheduled_at
+            ),
+            'Booking created via RPC',
+            p_client_id
+        );
+        
+        -- Create notification for provider if approval required
+        IF service_record.requires_approval THEN
+            INSERT INTO enhanced_notifications (
+                user_id,
+                type,
+                title,
+                message,
+                priority,
+                data
+            ) VALUES (
+                provider_id,
+                'new_booking_request',
+                'New Booking Request',
+                'You have a new booking request that requires approval',
+                'high',
+                jsonb_build_object(
+                    'booking_id', new_booking_id,
+                    'service_id', p_service_id,
+                    'client_id', p_client_id,
+                    'scheduled_at', p_scheduled_at
+                )
+            );
+        END IF;
+        
+        RETURN new_booking_id;
+    END;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Grant permissions
 GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
@@ -577,3 +842,5 @@ COMMENT ON TABLE enhanced_notifications IS 'Enhanced notification system with pr
 
 COMMENT ON FUNCTION get_available_time_slots IS 'Returns available booking time slots for a provider/service on a specific date';
 COMMENT ON FUNCTION can_user_book_service IS 'Checks if a user can book a specific service at a given time';
+COMMENT ON FUNCTION update_booking_status IS 'Updates booking status with validation, audit trail, and notifications';
+COMMENT ON FUNCTION create_booking IS 'Creates a new booking with validation, conflict checking, and proper status handling';
