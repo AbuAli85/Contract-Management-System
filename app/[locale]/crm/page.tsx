@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/app/providers"
-import { useRBAC } from "@/src/components/auth/rbac-provider"
+import { useEnhancedRBAC } from "@/components/auth/enhanced-rbac-provider"
 import { createClient } from "@/lib/supabase/client"
 import AdminDashboard from "@/components/dashboard/AdminDashboard"
 import PromoterDashboard from "@/components/dashboard/PromoterDashboard"
 
 export default function CRMPage() {
   const { loading } = useAuth()
-  const { userRoles, hasRole, isLoading } = useRBAC()
-  const isAdmin = hasRole("admin")
+  const { userRole, hasPermission, isLoading } = useEnhancedRBAC()
+  const isAdmin = userRole === "admin" || hasPermission("dashboard.view_all")
   const [promoters, setPromoters] = useState<{ id: string }[]>([])
   const [promotersLoading, setPromotersLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,7 +50,7 @@ export default function CRMPage() {
     fetchPromoters()
   }, [])
 
-  console.log("CRM Page state:", { userRoles, loading, isAdmin, promotersLoading, promoters, error })
+  console.log("CRM Page state:", { userRole, loading, isAdmin, promotersLoading, promoters, error })
 
   if (loading || isLoading) return <div className="p-8 text-center">Loading authentication...</div>
   if (promotersLoading) return <div className="p-8 text-center">Loading promoters...</div>
