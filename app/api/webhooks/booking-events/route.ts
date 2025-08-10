@@ -3,29 +3,41 @@ import { createClient } from '@/lib/supabase/server'
 import { sendToMakeWebhookWithRetry, updateWebhookStats } from '@/lib/webhooks/make-integration'
 import type { BookingEventPayload } from '@/lib/realtime/booking-subscriptions'
 
+import { verifyWebhook } from '@/lib/webhooks/verify'
+
 // This API route can be triggered by Supabase Edge Functions or database triggers
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
     
-    // Verify the request is from a trusted source (Supabase webhook)
-    const authHeader = request.headers.get('authorization')
-    const webhookSecret = process.env.SUPABASE_WEBHOOK_SECRET
+    const rawBody = await request.text();
     
-    if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
-      console.warn('❌ Unauthorized webhook request')
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const verification = await verifyWebhook({
+      rawBody,
+      signature: request.headers.get('x-signature') || '',
+      timestamp: request.headers.get('x-timestamp') || '',
+      idempotencyKey: request.headers.get('x-idempotency-key') || '',
+      secret: process.env.SUPABASE_WEBHOOK_SECRET || ''
+    });
+    
+    if (!verification.verified) {
+      console.warn('❌ Invalid webhook request');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const body = await request.json()
-    const bookingEvent: BookingEventPayload = body.record || body
-
+    
+    if (verification.idempotent) {
+      console.log('🔄 Idempotent webhook - already processed');
+      return NextResponse.json({ success: true, message: 'Already processed' });
+    }
+    
+    const bookingEvent: BookingEventPayload = verification.payload.record || verification.payload;
+    
     console.log('📨 Received booking event webhook:', {
       event_id: bookingEvent.id,
       event_type: bookingEvent.event_type,
       booking_id: bookingEvent.booking_id
     })
-
+    
     // Validate the booking event
     if (!bookingEvent.id || !bookingEvent.booking_id || !bookingEvent.event_type) {
       return NextResponse.json({ 
@@ -45,6 +57,16 @@ export async function POST(request: NextRequest) {
     updateWebhookStats(result.success, responseTime, result.error)
     
     if (result.success) {
+      // Record the successful processing for idempotency
+      await supabase.from('tracking_events').insert({
+        actor_user_id: null,
+        subject_type: 'webhook',
+        subject_id: bookingEvent.booking_id,
+        event_type: 'webhook_processed',
+        metadata: { webhook_type: 'booking_event' },
+        idempotency_key: request.headers.get('x-idempotency-key') || ''
+      });
+    
       console.log(`✅ Booking event forwarded to Make.com successfully (${result.attempts} attempts)`)
       return NextResponse.json({ 
         success: true,

@@ -8,6 +8,9 @@ import {
   PaymentSucceededSchema 
 } from '@/lib/schemas/webhooks'
 
+import { verifyWebhook } from '@/lib/webhooks/verify'
+import { createClient } from '@/lib/supabase/server'
+
 const schemaMap = {
   serviceCreation: ServiceCreatedSchema,
   bookingCreated: BookingCreatedSchema,
@@ -20,6 +23,31 @@ export async function POST(
   { params }: { params: { type: string } }
 ) {
   try {
+    const rawBody = await request.text();
+
+    const verification = await verifyWebhook({
+      rawBody,
+      signature: request.headers.get('x-signature') || '',
+      timestamp: request.headers.get('x-timestamp') || '',
+      idempotencyKey: request.headers.get('x-idempotency-key') || '',
+      secret: process.env.WEBHOOK_SECRET || ''
+    });
+
+    if (!verification.verified) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (verification.idempotent) {
+      return NextResponse.json({ success: true });
+    }
+
+    const body = verification.payload;
+
+    const supabase = createClient();
+
     // Validate webhook type
     const typeResult = WebhookTypeSchema.safeParse(params.type)
     if (!typeResult.success) {
@@ -32,7 +60,6 @@ export async function POST(
     const webhookType = typeResult.data
 
     // Parse and validate request body
-    const body = await request.json()
     const schema = schemaMap[webhookType]
     const validationResult = schema.safeParse(body)
 
@@ -50,6 +77,15 @@ export async function POST(
     const result = await dispatchWebhook(webhookType, validationResult.data)
 
     if (result.success) {
+      await supabase.from('tracking_events').insert({
+        actor_user_id: null,
+        subject_type: webhookType,
+        subject_id: null,
+        event_type: 'webhook_processed',
+        metadata: { type: webhookType },
+        idempotency_key: request.headers.get('x-idempotency-key') || ''
+      });
+
       return NextResponse.json({ success: true })
     } else {
       return NextResponse.json(

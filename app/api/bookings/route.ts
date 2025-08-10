@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { triggerBookingCreatedWebhook } from "@/lib/webhook-helpers"
 
+import { BookingCreateSchema } from '@/lib/validation/bookings'
+
+import { Sentry } from '@/lib/sentry'
+
 export async function GET(request: NextRequest) {
   try {
     console.log("🔍 Bookings API: Starting request...")
@@ -159,6 +163,18 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const body = await request.json()
 
+    const validated = BookingCreateSchema.safeParse(body);
+    if (!validated.success) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Invalid input",
+          details: validated.error.errors 
+        },
+        { status: 400 }
+      );
+    }
+
     // Get user session
     const {
       data: { session },
@@ -175,14 +191,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    Sentry.setUser({ id: session.user.id });
+
     // Prepare booking data
     const bookingData = {
-      resource_id: body.resource_id,
-      title: body.title,
-      description: body.description,
-      start_time: body.start_time,
-      end_time: body.end_time,
-      status: body.status || 'confirmed',
+      ...validated.data,
       user_id: session.user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -209,6 +222,15 @@ export async function POST(request: NextRequest) {
 
     console.log("✅ Booking created successfully:", booking.id)
 
+    // Insert tracking event
+    await supabase.from('tracking_events').insert({
+      actor_user_id: session.user.id,
+      subject_type: 'booking',
+      subject_id: booking.id,
+      event_type: 'created',
+      metadata: { booking_number: booking.booking_number }
+    });
+
     // Trigger Make.com webhook for automation
     try {
       console.log("🔔 Triggering booking created webhook...")
@@ -230,6 +252,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Create booking error:", error)
+    Sentry.captureException(error);
     return NextResponse.json(
       {
         success: false,

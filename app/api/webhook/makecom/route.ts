@@ -2,11 +2,32 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getEnhancedContractTypeConfig } from "@/lib/contract-type-config"
 
+import { verifyWebhook } from '@/lib/webhooks/verify'
+
 export async function POST(request: NextRequest) {
   try {
     console.log("🔗 Make.com webhook received")
 
-    const body = await request.json()
+    const rawBody = await request.text();
+
+    const verification = await verifyWebhook({
+      rawBody,
+      signature: request.headers.get('x-signature') || '',
+      timestamp: request.headers.get('x-timestamp') || '',
+      idempotencyKey: request.headers.get('x-idempotency-key') || '',
+      secret: process.env.MAKE_WEBHOOK_SECRET || ''
+    });
+
+    if (!verification.verified) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (verification.idempotent) {
+      return NextResponse.json({ success: true, message: 'Already processed' });
+    }
+
+    const body = verification.payload;
+
     console.log("📤 Webhook payload:", body)
 
     // Validate required fields
@@ -186,6 +207,16 @@ export async function POST(request: NextRequest) {
       job_title: cleanedData.job_title,
       template_id: cleanedData.template_id,
     })
+
+    // Record successful processing
+    await supabase.from('tracking_events').insert({
+      actor_user_id: null,
+      subject_type: 'webhook',
+      subject_id: contract_id,
+      event_type: 'webhook_processed',
+      metadata: { webhook_type: 'makecom' },
+      idempotency_key: request.headers.get('x-idempotency-key') || ''
+    });
 
     // Return the cleaned data for Make.com to use with Google Docs templates
     return NextResponse.json({
