@@ -1,190 +1,254 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from './supabaseClient';
+import type { 
+  BookingWithDetails, 
+  BucketKPI, 
+  BookingFilters, 
+  PaginationParams,
+  RecentBookingsResult,
+  BucketKPIResult,
+  BookingPageResult
+} from '@/types/booking';
 
-export interface BookingPayload {
-  service_id: string
-  provider_company_id: string
-  client_id: string
-  scheduled_start: string
-  scheduled_end: string
-  total_price: number
-  currency: string
-  booking_number: string
-  status: 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'refunded'
-  notes?: string
-  metadata?: Record<string, any>
+// 4) Read patterns (frontend)
+
+// A) Recent bookings (ordered by bucket then time)
+export async function fetchRecentBookings(params?: {
+  limit?: number;
+  providerName?: string;
+  clientName?: string;
+  onlyUpcoming?: boolean;
+}): Promise<RecentBookingsResult> {
+  const { limit = 50, providerName, clientName, onlyUpcoming } = params ?? {};
   
-  // Backward compatibility fields (will be auto-calculated by trigger)
-  scheduled_at?: string
-  duration_minutes?: number
-}
+  let q = supabase
+    .from('v_bookings_recent_omt')
+    .select('*', { count: 'exact' })
+    .order('start_bucket_order', { ascending: true })
+    .order('start_time_omt', { ascending: true })
+    .order('id', { ascending: true })
+    .limit(limit);
 
-export interface BookingResult {
-  id: string
-  booking_number: string
-  status: string
-  created_at?: string
-  updated_at?: string
-}
+  if (providerName) q = q.eq('provider_name', providerName);
+  if (clientName)   q = q.eq('client_name', clientName);
+  if (onlyUpcoming) q = q.eq('is_upcoming', true);
 
-/**
- * Upsert a booking using booking_number as the conflict target
- * This allows updating existing bookings or creating new ones seamlessly
- */
-export async function upsertBooking(payload: BookingPayload): Promise<BookingResult> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const { data, error, count } = await q;
+  if (error) throw error;
   
-  try {
-    console.log('🔄 Upserting booking:', payload.booking_number)
-    
-    // Validate required fields
-    if (!payload.booking_number) {
-      throw new Error('booking_number is required for upsert operations')
-    }
-    
-    if (!payload.service_id || !payload.provider_company_id || !payload.client_id) {
-      throw new Error('service_id, provider_company_id, and client_id are required')
-    }
-    
-    // Ensure we have the required unique constraint field
-    const cleanPayload = {
-      ...payload,
-      // Ensure metadata is valid JSON
-      metadata: payload.metadata || {}
-    }
-    
-    const { data, error } = await supabase
-      .from('bookings')
-      .upsert(cleanPayload, { 
-        onConflict: 'booking_number', 
-        ignoreDuplicates: false 
-      })
-      .select('id, booking_number, status, scheduled_start, scheduled_end, created_at, updated_at')
-      .single()
-
-    if (error) {
-      console.error('❌ Booking upsert error:', error)
-      
-      // Provide helpful error messages for common issues
-      if (error.message.includes('unique constraint') || error.message.includes('booking_number')) {
-        throw new Error(`Booking number conflict: ${error.message}. The unique constraint on booking_number may be missing.`)
-      }
-      
-      if (error.message.includes('foreign key') || error.message.includes('violates')) {
-        throw new Error(`Invalid reference: ${error.message}. Check that service_id, provider_company_id, and client_id exist.`)
-      }
-      
-      throw new Error(`Failed to upsert booking: ${error.message}`)
-    }
-
-    if (!data) {
-      throw new Error('No data returned from booking upsert')
-    }
-
-    console.log('✅ Booking upserted successfully:', data.booking_number)
-    return data
-  } catch (error) {
-    console.error('❌ Booking service error:', error)
-    throw error instanceof Error ? error : new Error('Unknown booking upsert error')
-  }
+  return { 
+    data: data as BookingWithDetails[], 
+    count: count || 0 
+  };
 }
 
-/**
- * Generate a unique booking number
- * Format: BK-YYYY-XXXXXXXX (where X is random alphanumeric)
- */
-export function generateBookingNumber(): string {
-  const year = new Date().getFullYear()
-  const randomSuffix = Math.random().toString(36).substring(2, 10).toUpperCase()
-  return `BK-${year}-${randomSuffix}`
+// B) KPI widget (stable buckets)
+export async function fetchBucketKpis(): Promise<BucketKPI[]> {
+  const { data, error } = await supabase
+    .from('mv_bucket_kpis_full')
+    .select('*')
+    .order('bucket_order', { ascending: true });
+    
+  if (error) throw error;
+  return data as BucketKPI[];
 }
 
-/**
- * Create a booking payload with default values
- */
-export function createBookingPayload(
-  overrides: Partial<BookingPayload> & Pick<BookingPayload, 'service_id' | 'provider_company_id' | 'client_id'>
-): BookingPayload {
-  const now = new Date()
-  const scheduledStart = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000) // 4 days from now
-  const scheduledEnd = new Date(scheduledStart.getTime() + 2 * 60 * 60 * 1000) // 2 hours duration
-
-  return {
-    scheduled_start: scheduledStart.toISOString(),
-    scheduled_end: scheduledEnd.toISOString(),
-    total_price: 25.000,
-    currency: 'OMR',
-    booking_number: generateBookingNumber(),
-    status: 'pending',
-    ...overrides
-  }
-}
-
-/**
- * Bulk upsert multiple bookings
- */
-export async function upsertBookings(bookings: BookingPayload[]): Promise<BookingResult[]> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+// C) Pagination (keyset or range)
+export async function fetchBookingsPage({ from = 0, to = 49 }: PaginationParams): Promise<BookingPageResult> {
+  const { data, error, count } = await supabase
+    .from('v_bookings_recent_omt')
+    .select('*', { count: 'exact' })
+    .order('start_bucket_order', { ascending: true })
+    .order('start_time_omt', { ascending: true })
+    .range(from, to);
+    
+  if (error) throw error;
   
-  try {
-    console.log(`🔄 Bulk upserting ${bookings.length} bookings`)
-    
-    const { data, error } = await supabase
-      .from('bookings')
-      .upsert(bookings, { 
-        onConflict: 'booking_number', 
-        ignoreDuplicates: false 
-      })
-      .select('id, booking_number, status, created_at, updated_at')
-
-    if (error) {
-      console.error('❌ Bulk booking upsert error:', error)
-      throw new Error(`Failed to bulk upsert bookings: ${error.message}`)
-    }
-
-    if (!data) {
-      throw new Error('No data returned from bulk booking upsert')
-    }
-
-    console.log(`✅ ${data.length} bookings upserted successfully`)
-    return data
-  } catch (error) {
-    console.error('❌ Bulk booking service error:', error)
-    throw error instanceof Error ? error : new Error('Unknown bulk booking upsert error')
-  }
+  return { 
+    data: data as BookingWithDetails[], 
+    count: count || 0 
+  };
 }
 
-/**
- * Get booking by booking number
- */
-export async function getBookingByNumber(bookingNumber: string): Promise<BookingResult | null> {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+// Enhanced functions using the database functions we created
+
+export async function fetchBookingsWithFilters(filters: BookingFilters): Promise<RecentBookingsResult> {
+  const { 
+    limit = 50, 
+    providerName, 
+    clientName, 
+    onlyUpcoming, 
+    status, 
+    serviceCategory, 
+    dateFrom, 
+    dateTo 
+  } = filters;
+
+  let q = supabase
+    .rpc('get_recent_bookings', {
+      limit_count: limit,
+      provider_name_filter: providerName || null,
+      client_name_filter: clientName || null,
+      only_upcoming_filter: onlyUpcoming || null,
+      status_filter: status || null,
+      service_category_filter: serviceCategory || null,
+      date_from_filter: dateFrom || null,
+      date_to_filter: dateTo || null
+    })
+    .select('*', { count: 'exact' });
+
+  const { data, error, count } = await q;
+  if (error) throw error;
   
-  try {
-    const { data, error } = await supabase
-      .from('bookings')
-      .select('id, booking_number, status, created_at, updated_at')
-      .eq('booking_number', bookingNumber)
-      .single()
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return null // No rows found
-      }
-      throw new Error(`Failed to get booking: ${error.message}`)
-    }
-
-    return data
-  } catch (error) {
-    console.error('❌ Get booking error:', error)
-    throw error instanceof Error ? error : new Error('Unknown get booking error')
-  }
+  return { 
+    data: data as BookingWithDetails[], 
+    count: count || 0 
+  };
 }
+
+export async function fetchBookingsPageWithFilters(
+  pagination: PaginationParams, 
+  filters: Omit<BookingFilters, 'limit'>
+): Promise<BookingPageResult> {
+  const { from = 0, to = 49 } = pagination;
+  const { 
+    providerName, 
+    clientName, 
+    onlyUpcoming, 
+    status, 
+    serviceCategory, 
+    dateFrom, 
+    dateTo 
+  } = filters;
+
+  let q = supabase
+    .rpc('get_bookings_page', {
+      page_from: from,
+      page_to: to,
+      provider_name_filter: providerName || null,
+      client_name_filter: clientName || null,
+      only_upcoming_filter: onlyUpcoming || null,
+      status_filter: status || null,
+      service_category_filter: serviceCategory || null,
+      date_from_filter: dateFrom || null,
+      date_to_filter: dateTo || null
+    })
+    .select('*', { count: 'exact' });
+
+  const { data, error, count } = await q;
+  if (error) throw error;
+  
+  return { 
+    data: data as BookingWithDetails[], 
+    count: count || 0 
+  };
+}
+
+export async function getBookingsCount(filters: Omit<BookingFilters, 'limit'>): Promise<number> {
+  const { 
+    providerName, 
+    clientName, 
+    onlyUpcoming, 
+    status, 
+    serviceCategory, 
+    dateFrom, 
+    dateTo 
+  } = filters;
+
+  const { data, error } = await supabase
+    .rpc('get_bookings_count', {
+      provider_name_filter: providerName || null,
+      client_name_filter: clientName || null,
+      only_upcoming_filter: onlyUpcoming || null,
+      status_filter: status || null,
+      service_category_filter: serviceCategory || null,
+      date_from_filter: dateFrom || null,
+      date_to_filter: dateTo || null
+    });
+
+  if (error) throw error;
+  return data || 0;
+}
+
+export async function getBucketKpisWithFilters(filters?: {
+  providerFilter?: string;
+  clientFilter?: string;
+  serviceFilter?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<BucketKPI[]> {
+  const { data, error } = await supabase
+    .rpc('get_bucket_kpis', {
+      provider_filter: filters?.providerFilter || null,
+      client_filter: filters?.clientFilter || null,
+      service_filter: filters?.serviceFilter || null,
+      date_from: filters?.dateFrom || null,
+      date_to: filters?.dateTo || null
+    });
+
+  if (error) throw error;
+  return data as BucketKPI[];
+}
+
+export async function refreshBucketKpis(): Promise<void> {
+  const { error } = await supabase.rpc('refresh_bucket_kpis_concurrently');
+  if (error) throw error;
+}
+
+// 5) Write patterns (frontend)
+
+// A) Update booking status
+export async function setBookingStatus(id: string, status: string) {
+  const { error } = await supabase.rpc('update_booking_status', { 
+    p_id: id, 
+    p_status: status 
+  });
+  if (error) throw error;
+}
+
+// B) Create new booking
+export async function createBooking(params: {
+  serviceId: string;
+  clientId: string;
+  scheduledAt: string;
+  durationMinutes?: number;
+  participantCount?: number;
+  totalPrice?: number;
+  currency?: string;
+  notes?: string;
+  clientNotes?: string;
+}): Promise<string> {
+  const { data, error } = await supabase.rpc('create_booking', {
+    p_service_id: params.serviceId,
+    p_client_id: params.clientId,
+    p_scheduled_at: params.scheduledAt,
+    p_duration_minutes: params.durationMinutes || null,
+    p_participant_count: params.participantCount || 1,
+    p_total_price: params.totalPrice || null,
+    p_currency: params.currency || 'USD',
+    p_notes: params.notes || null,
+    p_client_notes: params.clientNotes || null
+  });
+  
+  if (error) throw error;
+  return data;
+}
+
+// C) Cancel booking (convenience function)
+export async function cancelBooking(id: string): Promise<void> {
+  await setBookingStatus(id, 'cancelled');
+}
+
+// D) Confirm booking (convenience function)
+export async function confirmBooking(id: string): Promise<void> {
+  await setBookingStatus(id, 'confirmed');
+}
+
+// E) Mark booking as in progress
+export async function startBooking(id: string): Promise<void> {
+  await setBookingStatus(id, 'in_progress');
+}
+
+// F) Complete booking
+export async function completeBooking(id: string): Promise<void> {
+  await setBookingStatus(id, 'completed');
+} 
