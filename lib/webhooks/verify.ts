@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { createClient } from '@/utils/supabase/server'; // Assuming a server client utility
+import { createClient } from '@/lib/supabase/server'; // Fixed import path
 
 interface VerifyParams {
   rawBody: string;
