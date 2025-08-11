@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withRBAC, withAnyRBAC } from "@/lib/rbac/guard"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
@@ -11,7 +12,7 @@ const notificationSchema = z.object({
   is_read: z.boolean().default(false),
 })
 
-export async function GET(request: NextRequest) {
+export const GET = withAnyRBAC(['notification:read:own', 'notification:read:organization'], async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get("page") || "1")
@@ -86,9 +87,9 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('notification:create:own', async (request: NextRequest) => {
   try {
     const body = await request.json()
     const validatedData = notificationSchema.parse(body)
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
 export async function PATCH(request: NextRequest) {
   try {

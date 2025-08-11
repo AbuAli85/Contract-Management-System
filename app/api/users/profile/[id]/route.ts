@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { withAnyRBAC } from '@/lib/rbac/guard';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAnyRBAC(['profile:read:own', 'profile:read:all'], async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id: targetUserId } = await params;
     const supabase = await createClient();
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
     });
   }
-}
+});
 
 // Handle OPTIONS for CORS
 export async function OPTIONS() {

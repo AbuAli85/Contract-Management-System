@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('system:backup:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
 
@@ -21,23 +22,6 @@ export async function POST(request: NextRequest) {
           error: "Unauthorized - Please log in",
         },
         { status: 401 },
-      )
-    }
-
-    // Check if user has admin role
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    if (!userProfile || userProfile.role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Access denied - Admin role required",
-        },
-        { status: 403 },
       )
     }
 
@@ -99,12 +83,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: "Internal server error",
+        error: "Internal server error during backup",
       },
       { status: 500 },
     )
   }
-}
+})
 
 export async function GET(request: NextRequest) {
   try {

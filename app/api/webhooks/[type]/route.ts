@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRBAC } from '@/lib/rbac/guard'
 import { dispatchWebhook } from '@/lib/makeWebhooks'
 import { WebhookTypeSchema } from '@/lib/schemas/webhooks'
 import { 
@@ -18,10 +19,10 @@ const schemaMap = {
   paymentSucceeded: PaymentSucceededSchema,
 }
 
-export async function POST(
+export const POST = withRBAC('webhook:ingest:public', async (
   request: NextRequest,
   { params }: { params: { type: string } }
-) {
+) => {
   try {
     const rawBody = await request.text();
 
@@ -100,7 +101,7 @@ export async function POST(
       { status: 500 }
     )
   }
-}
+})
 
 // Only allow POST requests
 export async function GET() {

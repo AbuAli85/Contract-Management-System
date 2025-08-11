@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withRBAC('contract:read:own', async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const supabase = await createClient()
     const { id } = await params
@@ -61,9 +62,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 },
     )
   }
-}
+})
 
-export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withRBAC('contract:update:own', async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const supabase = await createClient()
     const { id } = await params
@@ -170,4 +171,4 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       { status: 500 },
     )
   }
-}
+})

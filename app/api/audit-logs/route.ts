@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRBAC } from '@/lib/rbac/guard'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('audit:read:all', async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const timeframe = searchParams.get('timeframe') || '24h'
@@ -107,4 +108,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

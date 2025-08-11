@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { withAnyRBAC } from "@/lib/rbac/guard"
 
-export async function GET(request: NextRequest) {
+export const GET = withAnyRBAC(['company:read:own', 'company:read:organization', 'company:read:all'], async (request: NextRequest) => {
   try {
     console.log("🔍 Companies API: Starting request...")
     
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
       { status: 200 },
     )
   }
-}
+})
 
 export async function POST(request: NextRequest) {
   try {

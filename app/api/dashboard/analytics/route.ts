@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('analytics:read:all', async (request: NextRequest) => {
   try {
     console.log("🔧 Dashboard analytics API called")
     const supabase = await createClient()
@@ -148,4 +149,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})

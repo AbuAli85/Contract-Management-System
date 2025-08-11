@@ -1,24 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withRBAC } from '@/lib/rbac/guard'
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('data:seed:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    // Check if user is admin (optional security check)
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-    
-    if (userProfile?.role !== 'admin') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
     
     // Get existing parties and promoters
@@ -149,4 +139,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

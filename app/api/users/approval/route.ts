@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withRBAC } from "@/lib/rbac/guard"
 import { createClient } from "@/lib/supabase/server"
 
 // GET - Fetch pending users for approval
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('user:approve:all', async (request: NextRequest) => {
   try {
     console.log("🔧 User approval API called")
     const supabase = createClient()
@@ -75,12 +76,12 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error in GET /api/users/approval:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 }    )
   }
-}
+})
 
 // POST - Approve or reject users
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('user:approve:all', async (request: NextRequest) => {
   try {
     const supabase = createClient()
 
@@ -202,4 +203,4 @@ export async function POST(request: NextRequest) {
     console.error("Error in POST /api/users/approval:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})

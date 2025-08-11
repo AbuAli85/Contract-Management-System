@@ -18,7 +18,21 @@
     "db:seed": "supabase db seed",
     "functions:deploy": "supabase functions deploy",
     "vercel-build": "npm run build",
-    "vercel-dev": "npm run dev"
+    "vercel-dev": "npm run dev",
+    "rbac:migrate": "supabase db push",
+    "rbac:seed": "supabase db query < scripts/seed_rbac.sql",
+    "rbac:test": "jest --testPathPattern=rbac",
+    "rbac:docs": "echo 'RBAC docs updated'",
+    "rbac:drift": "tsx scripts/rbac_drift_check.ts",
+    "rbac:lint": "tsx scripts/rbac_guard_lint.ts",
+    "rbac:test": "tsx scripts/rbac_test.ts",
+    "rbac:smoke": "tsx scripts/rbac_smoke_test.ts",
+    "rbac:fix": "node scripts/apply_rbac_fixes.js",
+    "rbac:fix:simple": "node scripts/apply_rbac_fixes_simple.js",
+    "rbac:help": "node scripts/get_supabase_keys.js",
+    "rbac:check": "node scripts/check_current_permissions.js",
+    "rbac:flip:enforce": "echo 'Set RBAC_ENFORCEMENT=enforce in env and redeploy'",
+    "rbac:flip:dryrun": "echo 'Set RBAC_ENFORCEMENT=dry-run in env and redeploy'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -58,6 +72,7 @@
     "date-fns": "^2.30.0",
     "dotenv": "^17.2.1",
     "framer-motion": "^10.16.5",
+    "glob": "^10.4.5",
     "jspdf": "^2.5.2",
     "lucide-react": "^0.294.0",
     "next": "14.0.3",
@@ -101,6 +116,7 @@
     "prettier-plugin-tailwindcss": "^0.6.14",
     "supabase": "^1.127.3",
     "tailwindcss": "^3.3.0",
+    "tsx": "^4.20.3",
     "typescript": "^5.3.3"
   },
   "engines": {
@@ -112,17 +128,31 @@
     "setupFilesAfterEnv": [
       "<rootDir>/jest.setup.js"
     ],
-    "moduleNameMapping": {
+    "moduleNameMapper": {
       "^@/(.*)$": "<rootDir>/$1",
       "^@/components/(.*)$": "<rootDir>/components/$1",
       "^@/lib/(.*)$": "<rootDir>/lib/$1",
       "^@/hooks/(.*)$": "<rootDir>/hooks/$1"
     },
     "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
+      "lib/**/*.{js,jsx,ts,tsx}",
       "components/**/*.{js,jsx,ts,tsx}",
       "!**/*.d.ts",
       "!**/node_modules/**"
-    ]
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/.next/",
+      "<rootDir>/node_modules/"
+    ],
+    "transform": {
+      "^.+\\.(js|jsx|ts|tsx)$": [
+        "babel-jest",
+        {
+          "presets": [
+            "next/babel"
+          ]
+        }
+      ]
+    }
   }
 }

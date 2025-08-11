@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
   try {
     console.log("🔍 Contracts API: Starting request...")
     
@@ -176,9 +177,9 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:create:own', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
     const body = await request.json()
@@ -251,4 +252,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
