@@ -156,3 +156,17 @@ jobs:
           echo "✅ RBAC Weekly Drift Monitor: All checks passed - system is healthy"
           echo "Week of: ${{ steps.weekly-report.outputs.week_start }}"
           echo "Timestamp: ${{ steps.weekly-report.outputs.timestamp }}"
+          
+      - name: Post Slack Notification
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RBAC_LINT_STATUS: ${{ steps.guard-check.outputs.guard_exit_code == '0' && '✅ PASS' || '❌ FAIL' }}
+          RBAC_TEST_STATUS: ${{ steps.drift-analysis.outputs.drift_exit_code == '0' && '✅ PASS' || '❌ FAIL' }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "Posting to Slack..."
+            node scripts/rbac_slack_notify.ts
+          else
+            echo "SLACK_WEBHOOK_URL not set, skipping Slack notification"
+          fi
