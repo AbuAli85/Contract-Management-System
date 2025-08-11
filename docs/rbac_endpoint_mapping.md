@@ -17,8 +17,10 @@ This document maps API endpoints to their required RBAC permissions. All endpoin
 
 | Endpoint | Method | Required Permission | Description |
 |----------|--------|-------------------|-------------|
-| `/api/users` | GET | `user:view:all` | List all users |
+| `/api/users` | GET | `user:read:all` | List all users |
 | `/api/users` | POST | `user:create:all` | Create new user |
+| `/api/users` | PUT | `user:update:all` | Bulk update users |
+| `/api/users` | DELETE | `user:delete:all` | Bulk delete users |
 | `/api/users/[id]` | GET | `user:view:own` or `user:view:all` | Get user profile |
 | `/api/users/[id]` | PUT | `user:edit:own` or `user:edit:all` | Update user profile |
 | `/api/users/[id]` | DELETE | `user:delete:all` | Delete user |

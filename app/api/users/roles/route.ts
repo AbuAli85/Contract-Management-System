@@ -152,4 +152,4 @@ export const POST = withRBAC('role:assign:all', async (request: NextRequest) => 
     console.error("Error in POST /api/users/roles:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})

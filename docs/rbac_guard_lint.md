@@ -1,6 +1,6 @@
 # 🛡️ RBAC Guard Lint Report
 
-Generated: 2025-08-11T21:05:07.643Z
+Generated: 2025-08-11T21:38:58.766Z
 
 ## 📊 Executive Summary
 
@@ -58,11 +58,11 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\users-fixed\route.ts`
     - Issues: No HTTP method handlers found
 
-### ✅ `app\api\users\route.ts`
-    - Guarded: GET, POST, PUT, DELETE
-
 ### ❌ `app\api\user-role\route.ts`
     - Issues: No HTTP method handlers found
+
+### ✅ `app\api\users\route.ts`
+    - Guarded: GET, POST, PUT, DELETE
 
 ### ✅ `app\api\upload\route.ts`
     - Guarded: POST
@@ -70,10 +70,10 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\test-session-persistence\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\test-i18n\route.ts`
+### ❌ `app\api\test-contracts-schema\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\test-contracts-schema\route.ts`
+### ❌ `app\api\test-i18n\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\test-booking-upsert\route.ts`
@@ -112,17 +112,17 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\permissions\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\pdf-generation\route.ts`
-    - Issues: No HTTP method handlers found
-
 ### ✅ `app\api\parties\route.ts`
     - Guarded: GET
 
-### ✅ `app\api\notifications\route.ts`
-    - Guarded: GET, POST
+### ❌ `app\api\pdf-generation\route.ts`
+    - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\health\route.ts`
     - Issues: No HTTP method handlers found
+
+### ✅ `app\api\notifications\route.ts`
+    - Guarded: GET, POST
 
 ### ❌ `app\api\get-user-role\route.ts`
     - Issues: No HTTP method handlers found
@@ -154,10 +154,10 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\check-user-role\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\bookings\route.ts`
+### ❌ `app\api\booking-resources\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\booking-resources\route.ts`
+### ❌ `app\api\bookings\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ✅ `app\api\audit-logs\route.ts`
@@ -166,11 +166,11 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\workflow\config\route.ts`
     - Issues: No HTTP method handlers found
 
-### ✅ `app\api\webhooks\[type]\route.ts`
-    - Guarded: POST
-
 ### ❌ `app\api\webhooks\booking-events\route.ts`
     - Issues: No HTTP method handlers found
+
+### ✅ `app\api\webhooks\[type]\route.ts`
+    - Guarded: POST
 
 ### ❌ `app\api\webhook\makecom\route.ts`
     - Issues: No HTTP method handlers found
@@ -178,11 +178,11 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\webhook\contract-pdf-ready\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\users\sync\route.ts`
-    - Issues: No HTTP method handlers found
-
 ### ✅ `app\api\users\roles\route.ts`
     - Guarded: GET, POST
+
+### ❌ `app\api\users\sync\route.ts`
+    - Issues: No HTTP method handlers found
 
 ### ✅ `app\api\users\profile\route.ts`
     - Guarded: GET, PUT
@@ -223,12 +223,6 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\provider\orders\route.ts`
     - Issues: No HTTP method handlers found
 
-### ✅ `app\api\promoters\[id]\route.ts`
-    - Guarded: GET
-
-### ❌ `app\api\promoters\dashboard\route.ts`
-    - Issues: No HTTP method handlers found
-
 ### ❌ `app\api\promoter\tasks\route.ts`
     - Issues: No HTTP method handlers found
 
@@ -236,6 +230,12 @@ Generated: 2025-08-11T21:05:07.643Z
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\promoter\achievements\route.ts`
+    - Issues: No HTTP method handlers found
+
+### ✅ `app\api\promoters\[id]\route.ts`
+    - Guarded: GET
+
+### ❌ `app\api\promoters\dashboard\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\enhanced\services\route.ts`
@@ -256,6 +256,9 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\debug\supabase\route.ts`
     - Issues: No HTTP method handlers found
 
+### ❌ `app\api\debug\tables\route.ts`
+    - Issues: No HTTP method handlers found
+
 ### ❌ `app\api\debug\session-direct\route.ts`
     - Issues: No HTTP method handlers found
 
@@ -265,19 +268,16 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\debug\env\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\debug\tables\route.ts`
-    - Issues: No HTTP method handlers found
-
 ### ❌ `app\api\debug\cookies-server\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\debug\cookies\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\debug\booking-schema\route.ts`
+### ❌ `app\api\debug\cookie-values\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\debug\cookie-values\route.ts`
+### ❌ `app\api\debug\booking-schema\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\debug\apply-booking-fix\route.ts`
@@ -295,10 +295,10 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\dashboard\notifications-clean\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\dashboard\notifications\route.ts`
+### ❌ `app\api\dashboard\metrics\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\dashboard\metrics\route.ts`
+### ❌ `app\api\dashboard\notifications\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\dashboard\env-check\route.ts`
@@ -316,16 +316,19 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ✅ `app\api\contracts\[id]\route.ts`
     - Guarded: GET, PUT
 
-### ✅ `app\api\contracts\generate\route.ts`
-    - Guarded: POST
-
 ### ✅ `app\api\contracts\paginated\route.ts`
     - Guarded: POST
 
 ### ✅ `app\api\contracts\download-pdf\route.ts`
     - Guarded: GET, POST
 
+### ✅ `app\api\contracts\generate\route.ts`
+    - Guarded: POST
+
 ### ❌ `app\api\bookings\[id]\route.ts`
+    - Issues: No HTTP method handlers found
+
+### ❌ `app\api\bookings\upsert\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\bookings\webhook\route.ts`
@@ -334,22 +337,19 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\bookings\direct-webhook\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\bookings\upsert\route.ts`
-    - Issues: No HTTP method handlers found
-
 ### ❌ `app\api\auth\status\route.ts`
-    - Issues: No HTTP method handlers found
-
-### ❌ `app\api\auth\security\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\auth\sessions\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\auth\refresh-session\route.ts`
+### ❌ `app\api\auth\security\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\auth\register-new\route.ts`
+    - Issues: No HTTP method handlers found
+
+### ❌ `app\api\auth\refresh-session\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\auth\professional\route.ts`
@@ -361,12 +361,12 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\auth\manual-sync\route.ts`
     - Issues: No HTTP method handlers found
 
+### ❌ `app\api\auth\logout\route.ts`
+    - Issues: No HTTP method handlers found
+
 ### ❌ `app\api\auth\login\route.ts`
     - Issues: Missing RBAC guards for: POST (line 146)
     - Missing Guards: POST
-
-### ❌ `app\api\auth\logout\route.ts`
-    - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\auth\helper\route.ts`
     - Issues: No HTTP method handlers found
@@ -398,10 +398,10 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\admin\check-schema\route.ts`
     - Issues: No HTTP method handlers found
 
-### ✅ `app\api\admin\backup\route.ts`
+### ✅ `app\api\admin\bulk-import\route.ts`
     - Guarded: POST
 
-### ✅ `app\api\admin\bulk-import\route.ts`
+### ✅ `app\api\admin\backup\route.ts`
     - Guarded: POST
 
 ### ❌ `app\api\users\[id]\permissions\route.ts`
@@ -416,7 +416,7 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ✅ `app\api\users\profile\[id]\route.ts`
     - Guarded: GET
 
-### ❌ `app\api\promoters\[id]\reports\route.ts`
+### ❌ `app\api\promoters\[id]\skills\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\promoters\[id]\tasks\route.ts`
@@ -425,13 +425,13 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\promoters\[id]\scores\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\promoters\[id]\skills\route.ts`
-    - Issues: No HTTP method handlers found
-
-### ❌ `app\api\promoters\[id]\notes\route.ts`
+### ❌ `app\api\promoters\[id]\reports\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\promoters\[id]\performance-metrics\route.ts`
+    - Issues: No HTTP method handlers found
+
+### ❌ `app\api\promoters\[id]\notes\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\promoters\[id]\leave-requests\route.ts`
@@ -473,22 +473,22 @@ Generated: 2025-08-11T21:05:07.643Z
 ### ❌ `app\api\contracts\[id]\fix-processing\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\contracts\[id]\download-pdf\route.ts`
+### ❌ `app\api\contracts\[id]\download\route.ts`
     - Issues: No HTTP method handlers found
 
-### ❌ `app\api\contracts\[id]\download\route.ts`
+### ❌ `app\api\contracts\[id]\download-pdf\route.ts`
     - Issues: No HTTP method handlers found
 
 ### ❌ `app\api\contracts\[id]\activity\route.ts`
     - Issues: No HTTP method handlers found
 
+### ✅ `app\api\contracts\makecom\generate\route.ts`
+    - Guarded: POST
+
 ### ✅ `app\api\contracts\approval\submit\route.ts`
     - Guarded: POST
 
 ### ✅ `app\api\contracts\approval\approve\route.ts`
-    - Guarded: POST
-
-### ✅ `app\api\contracts\makecom\generate\route.ts`
     - Guarded: POST
 
 ### ❌ `app\api\bookings\webhook\test\route.ts`
@@ -505,8 +505,8 @@ Generated: 2025-08-11T21:05:07.643Z
         - `app\api\users-fixed\route.ts`
         - `app\api\user-role\route.ts`
         - `app\api\test-session-persistence\route.ts`
-        - `app\api\test-i18n\route.ts`
         - `app\api\test-contracts-schema\route.ts`
+        - `app\api\test-i18n\route.ts`
         - `app\api\test-booking-upsert\route.ts`
         - `app\api\test-authentication-flow\route.ts`
         - `app\api\test-auth-security\route.ts`
@@ -528,8 +528,8 @@ Generated: 2025-08-11T21:05:07.643Z
         - `app\api\contract-generation\route.ts`
         - `app\api\clear-cookies\route.ts`
         - `app\api\check-user-role\route.ts`
-        - `app\api\bookings\route.ts`
         - `app\api\booking-resources\route.ts`
+        - `app\api\bookings\route.ts`
         - `app\api\workflow\config\route.ts`
         - `app\api\webhooks\booking-events\route.ts`
         - `app\api\webhook\makecom\route.ts`
@@ -544,47 +544,47 @@ Generated: 2025-08-11T21:05:07.643Z
         - `app\api\reviews\pending\route.ts`
         - `app\api\provider\stats\route.ts`
         - `app\api\provider\orders\route.ts`
-        - `app\api\promoters\dashboard\route.ts`
         - `app\api\promoter\tasks\route.ts`
         - `app\api\promoter\metrics\route.ts`
         - `app\api\promoter\achievements\route.ts`
+        - `app\api\promoters\dashboard\route.ts`
         - `app\api\enhanced\services\route.ts`
         - `app\api\enhanced\bookings\route.ts`
         - `app\api\debug\user-role\route.ts`
         - `app\api\debug\test-cookie-setting\route.ts`
         - `app\api\debug\supabase\route.ts`
+        - `app\api\debug\tables\route.ts`
         - `app\api\debug\session-direct\route.ts`
         - `app\api\debug\session\route.ts`
         - `app\api\debug\env\route.ts`
-        - `app\api\debug\tables\route.ts`
         - `app\api\debug\cookies-server\route.ts`
         - `app\api\debug\cookies\route.ts`
-        - `app\api\debug\booking-schema\route.ts`
         - `app\api\debug\cookie-values\route.ts`
+        - `app\api\debug\booking-schema\route.ts`
         - `app\api\debug\apply-booking-fix\route.ts`
         - `app\api\dashboard\test\route.ts`
         - `app\api\dashboard\stats\route.ts`
         - `app\api\dashboard\public-stats\route.ts`
         - `app\api\dashboard\notifications-clean\route.ts`
-        - `app\api\dashboard\notifications\route.ts`
         - `app\api\dashboard\metrics\route.ts`
+        - `app\api\dashboard\notifications\route.ts`
         - `app\api\dashboard\env-check\route.ts`
         - `app\api\dashboard\attendance\route.ts`
         - `app\api\dashboard\activities\route.ts`
         - `app\api\bookings\[id]\route.ts`
+        - `app\api\bookings\upsert\route.ts`
         - `app\api\bookings\webhook\route.ts`
         - `app\api\bookings\direct-webhook\route.ts`
-        - `app\api\bookings\upsert\route.ts`
         - `app\api\auth\status\route.ts`
-        - `app\api\auth\security\route.ts`
         - `app\api\auth\sessions\route.ts`
-        - `app\api\auth\refresh-session\route.ts`
+        - `app\api\auth\security\route.ts`
         - `app\api\auth\register-new\route.ts`
+        - `app\api\auth\refresh-session\route.ts`
         - `app\api\auth\professional\route.ts`
         - `app\api\auth\mfa\route.ts`
         - `app\api\auth\manual-sync\route.ts`
-        - `app\api\auth\login\route.ts`
         - `app\api\auth\logout\route.ts`
+        - `app\api\auth\login\route.ts`
         - `app\api\auth\helper\route.ts`
         - `app\api\auth\devices\route.ts`
         - `app\api\auth\check-session\route.ts`
@@ -596,12 +596,12 @@ Generated: 2025-08-11T21:05:07.643Z
         - `app\api\users\[id]\permissions\route.ts`
         - `app\api\users\[id]\approve\route.ts`
         - `app\api\users\roles\[id]\route.ts`
-        - `app\api\promoters\[id]\reports\route.ts`
+        - `app\api\promoters\[id]\skills\route.ts`
         - `app\api\promoters\[id]\tasks\route.ts`
         - `app\api\promoters\[id]\scores\route.ts`
-        - `app\api\promoters\[id]\skills\route.ts`
-        - `app\api\promoters\[id]\notes\route.ts`
+        - `app\api\promoters\[id]\reports\route.ts`
         - `app\api\promoters\[id]\performance-metrics\route.ts`
+        - `app\api\promoters\[id]\notes\route.ts`
         - `app\api\promoters\[id]\leave-requests\route.ts`
         - `app\api\promoters\[id]\feedback\route.ts`
         - `app\api\promoters\[id]\experience\route.ts`
@@ -614,8 +614,8 @@ Generated: 2025-08-11T21:05:07.643Z
         - `app\api\contracts\[id]\test-pdf\route.ts`
         - `app\api\contracts\[id]\generate-pdf\route.ts`
         - `app\api\contracts\[id]\fix-processing\route.ts`
-        - `app\api\contracts\[id]\download-pdf\route.ts`
         - `app\api\contracts\[id]\download\route.ts`
+        - `app\api\contracts\[id]\download-pdf\route.ts`
         - `app\api\contracts\[id]\activity\route.ts`
         - `app\api\bookings\webhook\test\route.ts`
         - `app\api\admin\users\[userId]\roles\route.ts`

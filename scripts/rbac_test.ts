@@ -173,7 +173,7 @@ class RBACTester {
 
   private async findGuardedRoutes(): Promise<string[]> {
     // This would find routes with RBAC guards
-    return ['/api/admin', '/api/contracts'];
+    return ['/api/admin', '/api/contracts', '/api/users'];
   }
 
   private isValidPermissionFormat(permission: string): boolean {

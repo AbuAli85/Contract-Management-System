@@ -1,12 +1,12 @@
 # 🛡️ RBAC Drift Report
 
-Generated: 2025-08-11T21:04:59.699Z
+Generated: 2025-08-11T21:39:06.838Z
 
 ## 📊 Executive Summary
 
 - **Total Seeded Permissions**: 97
 - **Total Used in Code**: 39
-- **Total in Documentation**: 87
+- **Total in Documentation**: 88
 
 ## 🔴 P0 Critical Issues (Used in Code but NOT Seeded)
 
@@ -371,6 +371,7 @@ When adding new endpoints:
 - `user:edit:all`
 - `user:edit:own`
 - `user:read:all`
+- `user:update:all`
 - `user:view:all`
 - `user:view:own`
 - `{resource}:{action}:{scope}`
