@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { WebhookService } from "@/lib/webhook-service"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:approve:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
     const body = await request.json()
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
 function determineNextStatus(currentStatus: string, action: string): string {
   if (action === "rejected") {

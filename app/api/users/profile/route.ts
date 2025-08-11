@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { withRBAC } from '@/lib/rbac/guard'
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('profile:read:own', async (request: NextRequest) => {
   try {
     console.log('🔍 User Profile API: Starting request...')
     
@@ -64,9 +65,9 @@ export async function GET(request: NextRequest) {
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-}
+})
 
-export async function PUT(request: NextRequest) {
+export const PUT = withRBAC('profile:update:own', async (request: NextRequest) => {
   try {
     console.log('🔍 User Profile API: Starting PUT request...')
     
@@ -116,4 +117,4 @@ export async function PUT(request: NextRequest) {
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-} 
+}) 

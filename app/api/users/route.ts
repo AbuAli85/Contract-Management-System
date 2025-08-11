@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient as createServerClient } from "@/lib/supabase/server"
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // GET - Fetch all users
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('user:read:all', async (request: NextRequest) => {
   try {
     // Parse query parameters for filtering
     const { searchParams } = new URL(request.url)
@@ -333,10 +334,10 @@ export async function GET(request: NextRequest) {
     console.error("Error in GET /api/users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 // POST - Create new user with password
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('user:create:all', async (request: NextRequest) => {
   try {
     // First try with session-based auth
     const supabase = createServerClient()
@@ -700,12 +701,12 @@ export async function POST(request: NextRequest) {
     console.error("Error in POST /api/users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 
 
 // DELETE - Delete user
-export async function DELETE(request: NextRequest) {
+export const DELETE = withRBAC('user:delete:all', async (request: NextRequest) => {
   try {
     const supabase = createServerClient()
 
@@ -827,10 +828,10 @@ export async function DELETE(request: NextRequest) {
     console.error("Error in DELETE /api/users:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 // PUT - Update user (for permissions and other updates)
-export async function PUT(request: NextRequest) {
+export const PUT = withRBAC('user:update:all', async (request: NextRequest) => {
   try {
     console.log("🔍 API Users PUT: Starting user update request")
     
@@ -923,4 +924,4 @@ export async function PUT(request: NextRequest) {
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
-}
+})

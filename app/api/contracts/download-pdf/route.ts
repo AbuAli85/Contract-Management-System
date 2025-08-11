@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { WebhookService } from "@/lib/webhook-service"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:download:own', async (request: NextRequest) => {
   try {
     const { contractId } = await request.json()
     const supabase = await createClient()
@@ -86,9 +87,9 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('contract:download:own', async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url)
     const contractId = searchParams.get("contractId")
@@ -151,4 +152,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})

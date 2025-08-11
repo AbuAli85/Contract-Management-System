@@ -6,9 +6,10 @@ import {
   listCompanies,
   CompanyCreateData 
 } from '@/lib/company-service'
+import { withRBAC } from '@/lib/rbac/guard'
 
 // GET - List companies with filtering and pagination
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('company:manage:all', async (request: NextRequest) => {
   try {
     const supabase = createClient()
     const { searchParams } = new URL(request.url)
@@ -49,10 +50,10 @@ export async function GET(request: NextRequest) {
       error: error.message || 'Internal server error' 
     }, { status: 500 })
   }
-}
+})
 
 // POST - Create or update company using upsert
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('company:manage:all', async (request: NextRequest) => {
   try {
     const supabase = createClient()
     
@@ -127,7 +128,7 @@ export async function POST(request: NextRequest) {
       error: error.message || 'Internal server error' 
     }, { status: 500 })
   }
-}
+})
 
 // PUT - Update existing company
 export async function PUT(request: NextRequest) {

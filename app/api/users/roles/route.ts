@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withRBAC } from "@/lib/rbac/guard"
 import { createClient } from "@/lib/supabase/server"
 
 // GET - Fetch all roles with user counts
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('role:read:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
 
@@ -56,10 +57,10 @@ export async function GET(request: NextRequest) {
     console.error("Error in GET /api/users/roles:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 // POST - Create new role
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('role:assign:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { z } from "zod"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('data:import:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
 
@@ -19,23 +20,6 @@ export async function POST(request: NextRequest) {
           error: "Unauthorized - Please log in",
         },
         { status: 401 },
-      )
-    }
-
-    // Check if user has admin role
-    const { data: userProfile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    if (!userProfile || userProfile.role !== "admin") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Access denied - Admin role required",
-        },
-        { status: 403 },
       )
     }
 
@@ -167,4 +151,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})

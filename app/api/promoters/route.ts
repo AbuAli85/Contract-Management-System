@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
@@ -48,7 +49,7 @@ const promoterSchema = z.object({
     notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 })
 
-export async function GET() {
+export const GET = withRBAC('promoter:read:own', async () => {
   try {
     const cookieStore = await cookies()
 
@@ -142,7 +143,7 @@ export async function GET() {
     console.error("API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 export async function POST(request: Request) {
   try {

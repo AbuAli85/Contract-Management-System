@@ -4,6 +4,7 @@
  * Implements server-side pagination with caching and query optimization
  */
 import { NextRequest, NextResponse } from 'next/server'
+import { withRBAC } from '@/lib/rbac/guard'
 import { createClient } from '@/lib/supabase/server'
 
 interface PaginationRequest {
@@ -88,7 +89,7 @@ function setCache(key: string, data: any) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:read:own', async (request: NextRequest) => {
   const startTime = Date.now()
   
   try {
@@ -255,7 +256,7 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})
 
 // GET endpoint for simple pagination without complex filtering
 export async function GET(request: NextRequest) {

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withRBAC } from "@/lib/rbac/guard"
 import { createClient } from "@/lib/supabase/server"
 
 // Force dynamic rendering for this API route
 export const dynamic = "force-dynamic"
 
 // GET - Fetch all permissions
-export async function GET(request: NextRequest) {
+export const GET = withRBAC('permission:manage:all', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
 
@@ -60,4 +61,4 @@ export async function GET(request: NextRequest) {
     console.error("Error in GET /api/users/permissions:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})

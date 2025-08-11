@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
+import { withRBAC } from "@/lib/rbac/guard"
 import { createClient } from "@/lib/supabase/server"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:submit:own', async (request: NextRequest) => {
   try {
     const supabase = await createClient()
     const body = await request.json()
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
 async function hasAdminRole(userId: string, supabase: any): Promise<boolean> {
   const { data: user } = await supabase.from("users").select("role").eq("id", userId).single()

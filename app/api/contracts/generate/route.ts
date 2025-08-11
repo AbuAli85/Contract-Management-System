@@ -4,8 +4,9 @@ import {
   contractGenerationService,
   type ContractGenerationRequest,
 } from "@/lib/contract-generation-service"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('contract:generate:own', async (request: NextRequest) => {
   try {
     console.log("🔄 Contract generation API called")
 
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
-}
+})
 
 export async function GET(request: NextRequest) {
   try {

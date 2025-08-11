@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
+import { withRBAC } from '@/lib/rbac/guard'
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withRBAC('service:create:own', async (request: NextRequest) => {
   try {
     const supabase = createClient()
     
@@ -142,9 +143,9 @@ export async function POST(request: NextRequest) {
     console.error('Error in create service API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function PUT(request: NextRequest) {
+export const PUT = withRBAC('service:update:own', async (request: NextRequest) => {
   try {
     const supabase = createClient()
     
@@ -190,4 +191,4 @@ export async function PUT(request: NextRequest) {
     console.error('Error in update service API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { withRBAC } from "@/lib/rbac/guard"
 
-export async function POST(request: Request) {
+export const POST = withRBAC('file:upload:own', async (request: Request) => {
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -180,7 +181,7 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+})
 
 // Handle file deletion
 export async function DELETE(request: Request) {

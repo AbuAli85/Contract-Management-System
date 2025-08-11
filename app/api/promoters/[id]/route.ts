@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { withRBAC } from "@/lib/rbac/guard"
 
 // Validation schema for promoter updates
 const promoterUpdateSchema = z.object({
@@ -45,7 +46,7 @@ const promoterUpdateSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
 })
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withRBAC('promoter:manage:own', async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
     const cookieStore = await cookies()
@@ -167,7 +168,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     console.error("API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-}
+})
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
