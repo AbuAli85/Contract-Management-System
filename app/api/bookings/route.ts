@@ -5,7 +5,7 @@ import { withRBAC } from "@/lib/rbac/guard"
 
 import { BookingCreateSchema } from '@/lib/validation/bookings'
 
-import { Sentry } from '@/lib/sentry'
+import Sentry from '@/lib/sentry'
 
 async function bookingsGET(request: NextRequest) {
   try {
