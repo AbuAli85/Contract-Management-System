@@ -2,6 +2,7 @@
   "name": "contract-management-system",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -32,7 +33,19 @@
     "rbac:help": "node scripts/get_supabase_keys.js",
     "rbac:check": "node scripts/check_current_permissions.js",
     "rbac:flip:enforce": "echo 'Set RBAC_ENFORCEMENT=enforce in env and redeploy'",
-    "rbac:flip:dryrun": "echo 'Set RBAC_ENFORCEMENT=dry-run in env and redeploy'"
+    "rbac:flip:dryrun": "echo 'Set RBAC_ENFORCEMENT=dry-run in env and redeploy'",
+    "fix:luxsess2001": "node scripts/fix_luxsess2001_role.js",
+    "sync:roles": "node scripts/sync_all_user_roles.js",
+    "sync:roles:simple": "node scripts/sync_all_user_roles_simple.js",
+    "sync:roles:fixed": "node scripts/sync_all_user_roles_fixed.js",
+    "sync:roles:final": "node scripts/sync_all_user_roles_final.js",
+    "sync:roles:perfect": "node scripts/sync_all_user_roles_constraint_fixed.js",
+    "sync:roles:100": "node scripts/sync_all_user_roles_final_perfect.js",
+    "sync:roles:upsert": "node scripts/sync_all_user_roles_upsert.js",
+    "debug:cleaning": "node scripts/debug_cleaning_provider.js",
+    "fix:corrupted": "node scripts/fix_corrupted_user.js",
+    "fix:corrupted:update": "node scripts/fix_corrupted_user_update.js",
+    "sync:roles:skip": "node scripts/sync_all_user_roles_skip_problematic.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
