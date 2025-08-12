@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { getSupabaseClient } from './supabaseClient';
 import type { 
   BookingWithDetails, 
   BucketKPI, 
@@ -20,7 +20,7 @@ export async function fetchRecentBookings(params?: {
 }): Promise<RecentBookingsResult> {
   const { limit = 50, providerName, clientName, onlyUpcoming } = params ?? {};
   
-  let q = supabase
+  let q = getSupabaseClient()
     .from('v_bookings_recent_omt')
     .select('*', { count: 'exact' })
     .order('start_bucket_order', { ascending: true })
@@ -43,7 +43,7 @@ export async function fetchRecentBookings(params?: {
 
 // B) KPI widget (stable buckets)
 export async function fetchBucketKpis(): Promise<BucketKPI[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from('mv_bucket_kpis_full')
     .select('*')
     .order('bucket_order', { ascending: true });
@@ -54,7 +54,7 @@ export async function fetchBucketKpis(): Promise<BucketKPI[]> {
 
 // C) Pagination (keyset or range)
 export async function fetchBookingsPage({ from = 0, to = 49 }: PaginationParams): Promise<BookingPageResult> {
-  const { data, error, count } = await supabase
+  const { data, error, count } = await getSupabaseClient()
     .from('v_bookings_recent_omt')
     .select('*', { count: 'exact' })
     .order('start_bucket_order', { ascending: true })
@@ -83,7 +83,7 @@ export async function fetchBookingsWithFilters(filters: BookingFilters): Promise
     dateTo 
   } = filters;
 
-  let q = supabase
+  let q = getSupabaseClient()
     .rpc('get_recent_bookings', {
       limit_count: limit,
       provider_name_filter: providerName || null,
@@ -251,4 +251,74 @@ export async function startBooking(id: string): Promise<void> {
 // F) Complete booking
 export async function completeBooking(id: string): Promise<void> {
   await setBookingStatus(id, 'completed');
+} 
+
+// Utility functions for booking operations
+
+/**
+ * Generate a unique booking number
+ */
+export function generateBookingNumber(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `BK-${timestamp}-${random}`.toUpperCase();
+}
+
+/**
+ * Create a booking payload from partial data
+ */
+export function createBookingPayload(data: Partial<BookingWithDetails> & Pick<BookingWithDetails, 'service_id' | 'provider_company_id' | 'client_id'>): BookingWithDetails {
+  const now = new Date().toISOString();
+  
+  return {
+    id: data.id || crypto.randomUUID(),
+    booking_number: data.booking_number || generateBookingNumber(),
+    service_id: data.service_id,
+    provider_company_id: data.provider_company_id,
+    client_id: data.client_id,
+    status: data.status || 'pending',
+    start_time: data.start_time || now,
+    end_time: data.end_time || now,
+    notes: data.notes || '',
+    created_at: data.created_at || now,
+    updated_at: data.updated_at || now,
+    // Add other required fields with defaults
+    provider_name: data.provider_name || '',
+    client_name: data.client_name || '',
+    service_name: data.service_name || '',
+    service_category: data.service_category || '',
+    start_bucket_order: data.start_bucket_order || 0,
+    start_time_omt: data.start_time_omt || now,
+    is_upcoming: data.is_upcoming || false,
+    total_amount: data.total_amount || 0,
+    currency: data.currency || 'USD'
+  };
+}
+
+/**
+ * Upsert a booking (create or update)
+ */
+export async function upsertBooking(bookingData: Partial<BookingWithDetails> & Pick<BookingWithDetails, 'service_id' | 'provider_company_id' | 'client_id'>): Promise<{ success: boolean; data?: any; error?: any }> {
+  try {
+    const payload = createBookingPayload(bookingData);
+    
+    const { data, error } = await getSupabaseClient()
+      .from('bookings')
+      .upsert(payload, {
+        onConflict: 'id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error upserting booking:', error);
+      return { success: false, error };
+    }
+    
+    return { success: true, data };
+  } catch (error) {
+    console.error('Exception in upsertBooking:', error);
+    return { success: false, error };
+  }
 } 
