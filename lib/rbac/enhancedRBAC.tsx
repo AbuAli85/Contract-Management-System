@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { PermissionUtils, canPerformAction, hasPermission } from '@/lib/permissions/permissionMatrix';
 
 interface EnhancedRBACProps {
@@ -33,7 +33,8 @@ export function EnhancedRBAC({
   fallback = null,
   showUnauthorized = false
 }: EnhancedRBACProps) {
-  const { user, loading } = useAuth();
+  const { user, role } = useUserRole();
+  const loading = !user;
 
   if (loading) {
     return <div className="animate-pulse">Loading...</div>;
@@ -44,7 +45,7 @@ export function EnhancedRBAC({
   }
 
   // Check role-based access
-  if (requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
+  if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
     if (showUnauthorized) {
       return (
         <div className="p-4 border border-red-200 bg-red-50 rounded-md">
@@ -66,7 +67,7 @@ export function EnhancedRBAC({
   // Check specific permissions
   if (requiredPermissions.length > 0) {
     const hasAllPermissions = requiredPermissions.every(permission => 
-      hasPermission(user.role, permission)
+      hasPermission(role, permission)
     );
     
     if (!hasAllPermissions) {
@@ -91,7 +92,7 @@ export function EnhancedRBAC({
 
   // Check resource-action based access
   if (requiredResource && requiredAction) {
-    if (!canPerformAction(user.role, requiredResource, requiredAction)) {
+    if (!canPerformAction(role, requiredResource, requiredAction)) {
       if (showUnauthorized) {
         return (
           <div className="p-4 border border-red-200 bg-red-50 rounded-md">
@@ -140,7 +141,7 @@ export function withEnhancedRBAC<P extends object>(
   );
 
   EnhancedComponent.displayName = `withEnhancedRBAC(${Component.displayName || Component.name})`;
-  
+
   return EnhancedComponent;
 }
 
@@ -162,20 +163,19 @@ export function PermissionGate({
   fallback?: React.ReactNode;
   showUnauthorized?: boolean;
 }) {
-  const { user, loading } = useAuth();
-
-  if (loading) return null;
+  const { user, role: userRole } = useUserRole();
+  const loading = !user;
 
   if (!user) return fallback;
 
   let hasAccess = false;
 
   if (permission) {
-    hasAccess = hasPermission(user.role, permission);
+    hasAccess = hasPermission(userRole, permission);
   } else if (resource && action) {
-    hasAccess = canPerformAction(user.role, resource, action);
+    hasAccess = canPerformAction(userRole, resource, action);
   } else if (role) {
-    hasAccess = user.role === role;
+    hasAccess = userRole === role;
   }
 
   if (!hasAccess) {
@@ -204,11 +204,12 @@ export function RoleGate({
   fallback?: React.ReactNode;
   showUnauthorized?: boolean;
 }) {
-  const { user, loading } = useAuth();
+  const { user, role: userRole } = useUserRole();
+  const loading = !user;
 
   if (loading) return null;
 
-  if (!user || !roles.includes(user.role)) {
+  if (!user || !roles.includes(userRole)) {
     if (showUnauthorized) {
       return (
         <div className="text-sm text-muted-foreground">
@@ -238,18 +239,18 @@ export function PermissionButton({
   action?: string;
   role?: string;
 }) {
-  const { user } = useAuth();
+  const { user, role: userRole } = useUserRole();
 
   if (!user) return null;
 
   let hasAccess = false;
 
   if (permission) {
-    hasAccess = hasPermission(user.role, permission);
+    hasAccess = hasPermission(userRole, permission);
   } else if (resource && action) {
-    hasAccess = canPerformAction(user.role, resource, action);
+    hasAccess = canPerformAction(userRole, resource, action);
   } else if (role) {
-    hasAccess = user.role === role;
+    hasAccess = userRole === role;
   }
 
   if (!hasAccess) return null;
@@ -269,8 +270,5 @@ export function PermissionButton({
 export {
   PermissionUtils,
   canPerformAction,
-  hasPermission,
-  getUserPermissions,
-  getRoleLevel,
-  canManageRole
+  hasPermission
 };
