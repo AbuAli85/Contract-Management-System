@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals'
 import { PermissionCache } from '@/lib/rbac/cache'
 
@@ -432,3 +433,25 @@ describe('RBAC Permission Cache', () => {
     })
   })
 })
+=======
+import { PermissionCache } from '@/lib/rbac/cache'
+
+describe('PermissionCache', () => {
+  beforeEach(() => {
+    PermissionCache.invalidateAll()
+  })
+
+  it('has basic cache methods', () => {
+    expect(PermissionCache.cache).toBeDefined()
+    expect(PermissionCache.invalidateUser).toBeDefined()
+    expect(PermissionCache.invalidateAll).toBeDefined()
+  })
+
+  it('can invalidate cache', () => {
+    PermissionCache.invalidateAll()
+    expect(PermissionCache.cache.size).toBe(0)
+  })
+})
+
+
+>>>>>>> Stashed changes

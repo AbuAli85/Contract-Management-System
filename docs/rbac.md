@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # 🛡️ RBAC (Role-Based Access Control) System
 
 ## Overview
@@ -371,3 +372,39 @@ The RBAC system includes comprehensive tests covering:
 - **Advanced Scoping**: Time-based and location-based permissions
 - **Machine Learning**: Automated permission optimization
 - **Integration**: SSO and external identity provider support
+=======
+### RBAC Overview
+
+- Permission format: `{resource}:{action}:{scope}` with scopes: own | provider | organization | booking | public | all
+- Role categories: client | provider | admin
+- Inheritance: higher roles include lower via seeds/mappings
+- Feature flag: `RBAC_ENFORCEMENT=dry-run|enforce` (default dry-run)
+
+Modules
+- `lib/rbac/permissions.ts` — parse and types
+- `lib/rbac/cache.ts` — MV-backed permission cache
+- `lib/rbac/context/*` — ownership/provider/org/booking evaluators
+- `lib/rbac/guard.ts` — `withRBAC()` wrapper for App Router handlers
+- `lib/rbac/audit.ts` — audit logger
+
+Schema
+- Tables: `rbac_roles`, `rbac_permissions`, `rbac_role_permissions`, `rbac_user_role_assignments`, `rbac_audit_logs`
+- MV: `rbac_user_permissions_mv` + refresh function `rbac_refresh_user_permissions_mv`
+
+Commands
+- rbac:migrate — include RBAC migration in normal pipeline (supabase migrate)
+- rbac:seed — seeds roles/permissions and mappings
+- rbac:test — run RBAC unit/integration tests (to be added)
+
+Rollout
+- Start with `RBAC_ENFORCEMENT=dry-run` for one full cycle; inspect `rbac_audit_logs`
+- Flip to `enforce` once WOULD_BLOCK rates are acceptable
+- Rollback: switch back to `dry-run`; schema is additive
+
+How to extend
+- Add new permission string → insert via seed using `rbac_upsert_permission`
+- Map to roles → attach via `rbac_attach_permission`
+- Guard endpoint → wrap handler with `withRBAC('resource:action:scope', handler)`
+
+
+>>>>>>> Stashed changes

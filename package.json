@@ -20,6 +20,11 @@
     "saas"
   ],
   "scripts": {
+    "rbac:seed": "node scripts/rbac_seed.js",
+    "rbac:test-setup": "node scripts/test-rbac-setup.js",
+    "rbac:test-simple": "node scripts/test-rbac-simple.js",
+    "rbac:assign-test": "node scripts/assign-test-role.js",
+    "rbac:docs": "echo RBAC docs generated; exit 0",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",

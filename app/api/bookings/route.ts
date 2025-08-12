@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { triggerBookingCreatedWebhook } from "@/lib/webhook-helpers"
+import { withRBAC } from "@/lib/rbac/guard"
 
 import { BookingCreateSchema } from '@/lib/validation/bookings'
 
 import { Sentry } from '@/lib/sentry'
 
-export async function GET(request: NextRequest) {
+async function bookingsGET(request: NextRequest) {
   try {
     console.log("🔍 Bookings API: Starting request...")
     
@@ -158,7 +159,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function bookingsPOST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const body = await request.json()
@@ -263,3 +264,6 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+export const GET = withRBAC('booking:read:own', async (req) => bookingsGET(req))
+export const POST = withRBAC('booking:create:own', async (req) => bookingsPOST(req))

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC AUDIT LOGGING
 // ========================================
@@ -481,4 +482,41 @@ export class AuditLogger {
 // Export singleton instance
 export const auditLogger = new AuditLogger()
 
+=======
+import { createClient } from '@/lib/supabase/server'
+
+export const AuditLogger = {
+  async logPermissionUsage(userId: string, permission: string, path: string, result: 'ALLOW'|'DENY'|'WOULD_BLOCK', ip?: string, userAgent?: string, context?: any) {
+    try {
+      const supabase = await createClient()
+      await supabase.from('rbac_audit_logs').insert({
+        user_id: userId || null,
+        event_type: 'permission_usage',
+        permission,
+        resource: path,
+        action: permission.split(':')[1] || null,
+        result,
+        ip_address: ip || null,
+        user_agent: userAgent || null,
+        new_value: context || null,
+      })
+    } catch (_) {
+      // best-effort
+    }
+  },
+  async logRoleChange(userId: string, oldRoles: string[], newRoles: string[], changedBy?: string) {
+    try {
+      const supabase = await createClient()
+      await supabase.from('rbac_audit_logs').insert({
+        user_id: userId || null,
+        event_type: 'role_change',
+        old_value: { roles: oldRoles },
+        new_value: { roles: newRoles },
+        changed_by: changedBy || null,
+      })
+    } catch (_) {}
+  }
+}
+
+>>>>>>> Stashed changes
 

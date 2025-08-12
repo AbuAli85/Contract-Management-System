@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # 🛡️ RBAC Project Map
 
 ## Overview
@@ -446,3 +447,57 @@ tail -f logs/application.log | grep "PERMISSION_CHECK"
 - **Issues**: GitHub issue tracker
 - **Discussions**: GitHub discussions
 - **Contributions**: Pull request guidelines
+=======
+### Project Map — RBAC Survey
+
+- Framework: Next.js App Router (Next 14/15), TypeScript, Tailwind + shadcn/ui
+- Runtime: Node 18+
+- Auth: Supabase Auth (client and server helpers via `@supabase/supabase-js`, `@supabase/ssr`), auth context in `app/providers*.tsx`
+- DB: Supabase PostgreSQL; SQL migrations in `supabase/migrations/`
+- Realtime: Supabase Realtime
+- Tests: Jest (+ RTL) and Cypress; scripts defined in `package.json`
+
+Key domain tables (observed):
+- `profiles(id, user_id FK auth.users, email, full_name, …)`
+- `companies(id, name, slug, …)` — acts as provider org
+- `user_roles(id, user_id, company_id, role ENUM user_role, permissions JSONB, is_active, …)`
+- `services(id, company_id, name, category, price_base, status, …)`
+- `bookings(id, service_id, client_id, provider_company_id, status, scheduled_at, duration_minutes, participant_count, total_price, currency, …)`
+- `booking_events(id, booking_id, event_type, old_value, new_value, …)`
+- `notifications(id, user_id, type, title, message, …)`
+- `audit_logs(id, user_id, action ENUM audit_action, table_name, record_id, old_values, new_values, …)`
+
+Existing views/functions of note:
+- View: `user_permissions` (from `user_roles`), not the RBAC one; name conflict risk with proposed RBAC MV
+- Functions: `get_user_role`, `user_has_permission`, triggers to create profiles, RLS policies
+
+Types and models (code):
+- Booking types in `types/booking.ts`
+- Supabase generated types in `types/supabase.ts`
+
+API routes (non-exhaustive examples):
+- `app/api/bookings/route.ts` — GET list, POST create
+- `app/api/users/route.ts`, `app/api/users/simple-route.ts`, `app/api/users/profile/route.ts`
+- `app/api/provider/services/route.ts`
+- `app/api/auth/*` (login, sessions, devices, mfa, professional) — wrapped by `professionalSecurityMiddleware`
+- `app/api/webhooks/*` — booking events, Make.com integrations
+- Contracts and promoters modules under `app/api/contracts/*`, `app/api/promoters/*`
+
+Suggested injection points for RBAC:
+- Non-destructive wrapper for App Router handlers: `withRBAC(requiredPermission, handler)` in `lib/rbac/guard.ts`
+- Shared permission evaluation, cache, and audit modules under `lib/rbac/*`
+- Optional global usage alongside existing `professionalSecurityMiddleware` where applicable
+
+Test setup:
+- Jest configured via `package.json` (jsdom); tests under `tests/` and `__tests__/`
+- Cypress for E2E in `cypress/`
+
+Risk notes:
+- Name collision: existing view `user_permissions` conflicts with the specification’s MV name. Plan: create `rbac_user_permissions_mv` instead and index it.
+- Existing tables `user_roles` and `audit_logs` are already in use. To avoid disruption, introduce new RBAC tables prefixed `rbac_*` and keep current behavior intact. Migration is strictly additive.
+
+RBAC rollout flag:
+- `RBAC_ENFORCEMENT` to support `dry-run` (default) and `enforce`. Default behavior will log ALLOW/DENY/WOULD_BLOCK without blocking in dry-run.
+
+
+>>>>>>> Stashed changes
