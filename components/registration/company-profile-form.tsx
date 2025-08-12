@@ -47,7 +47,7 @@ import {
   BUSINESS_CATEGORIES,
   PROVIDER_SERVICES,
 } from '@/types/company';
-// import { CompanyService } from '@/lib/company-service'
+import { CompanyService } from '@/lib/company-service';
 
 interface CompanyProfileFormProps {
   userId: string;
@@ -195,11 +195,38 @@ export function CompanyProfileForm({
 
       const result = await response.json();
 
+      // If this is a provider registration, ensure the role is properly set up
+      if (role === 'provider') {
+        console.log('Setting up provider role...');
+        try {
+          const roleSetupResponse = await fetch('/api/setup-user-role', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: userId,
+              role: 'provider',
+            }),
+          });
+
+          if (roleSetupResponse.ok) {
+            const roleSetupResult = await roleSetupResponse.json();
+            console.log('Provider role setup successful:', roleSetupResult);
+          } else {
+            console.warn('Provider role setup failed, but continuing...');
+          }
+        } catch (roleError) {
+          console.warn('Provider role setup error:', roleError);
+          // Don't fail the whole process if role setup fails
+        }
+      }
+
       setSubmitMessage({
         type: 'success',
         text: initialData?.id
           ? 'Company profile updated successfully!'
-          : 'Company profile created successfully!',
+          : `Company profile created successfully! ${role === 'provider' ? 'You now have provider access.' : ''}`,
       });
 
       if (onSuccess && result) {

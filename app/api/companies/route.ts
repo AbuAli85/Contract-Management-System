@@ -106,6 +106,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Extract role from the request body
+    const { role } = body;
+
     // Prepare company data
     const companyData = {
       company_name: body.company_name,
@@ -115,6 +118,17 @@ export async function POST(request: NextRequest) {
       address: body.address,
       promoter_id: body.promoter_id,
       user_id: session.user.id,
+      role: role, // Include role in company data
+      business_category: body.business_category,
+      description: body.description,
+      website: body.website,
+      country: body.country,
+      city: body.city,
+      postal_code: body.postal_code,
+      tax_number: body.tax_number,
+      commercial_registration: body.commercial_registration,
+      license_number: body.license_number,
+      logo_url: body.logo_url,
     };
 
     // Insert the company
@@ -136,9 +150,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // If this is a provider registration, update the user's role
+    if (role === 'provider') {
+      console.log('Assigning provider role to user:', session.user.id);
+      
+      // Update users table
+      const { error: userRoleError } = await supabase
+        .from('users')
+        .upsert({
+          id: session.user.id,
+          email: session.user.email,
+          full_name: body.contact_name || session.user.user_metadata?.full_name,
+          role: 'provider',
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        });
+
+      if (userRoleError) {
+        console.error('Error updating user role:', userRoleError);
+      }
+
+      // Also update user_roles table for redundancy
+      const { error: userRolesError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: session.user.id,
+          role: 'provider',
+          assigned_at: new Date().toISOString(),
+          assigned_by: session.user.id,
+        });
+
+      if (userRolesError) {
+        console.error('Error updating user_roles:', userRolesError);
+      }
+
+      console.log('Provider role assignment completed');
+    }
+
     return NextResponse.json({
       success: true,
       company,
+      message: role === 'provider' ? 'Company registered and provider role assigned successfully' : 'Company registered successfully',
     });
   } catch (error) {
     console.error('Create company error:', error);

@@ -90,6 +90,7 @@ export default function DashboardRoleRouter() {
       if (!user) return;
 
       try {
+        console.log('Fetching user role for dashboard routing...');
         const response = await fetch('/api/get-user-role');
         if (!response.ok) {
           throw new Error('Failed to fetch user role');
@@ -97,16 +98,34 @@ export default function DashboardRoleRouter() {
 
         const data = await response.json();
         const role = data.role || 'user';
+        console.log('User role detected:', role);
         setUserRole(role as UserRole);
+
+        // Show role info for a moment before redirecting
+        setTimeout(() => {
+          setRedirecting(true);
+          const targetPath = roleConfig[role as UserRole]?.dashboardPath || '/dashboard/user';
+          console.log('Redirecting to:', targetPath);
+          
+          // Force a small delay to show the role confirmation
+          setTimeout(() => {
+            router.push(targetPath);
+          }, 1000);
+        }, 2000);
+
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error('Failed to fetch user role:', error);
         setUserRole('user'); // Default to user role
         toast({
-          title: 'Role Detection Issue',
-          description:
-            'Using default user role. Please contact support if this persists.',
+          title: 'Error',
+          description: 'Failed to detect user role. Redirecting to default dashboard.',
           variant: 'destructive',
         });
+        
+        // Fallback to default dashboard
+        setTimeout(() => {
+          router.push('/dashboard/user');
+        }, 2000);
       } finally {
         setLoading(false);
       }
@@ -117,9 +136,7 @@ export default function DashboardRoleRouter() {
     } else if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [user, authLoading, router, toast]);
-
-  // Auto-redirect to role-specific dashboard
+  }, [user, authLoading, router, toast]);  // Auto-redirect to role-specific dashboard
   useEffect(() => {
     if (userRole && !redirecting) {
       const config = roleConfig[userRole];
