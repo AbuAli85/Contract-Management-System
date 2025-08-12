@@ -3,7 +3,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
@@ -77,7 +83,8 @@ export class DOMErrorBoundary extends Component<Props, State> {
     };
 
     // Copy error report to clipboard
-    navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
+    navigator.clipboard
+      .writeText(JSON.stringify(errorReport, null, 2))
       .then(() => {
         alert('Error report copied to clipboard. Please send this to support.');
       })
@@ -85,7 +92,9 @@ export class DOMErrorBoundary extends Component<Props, State> {
         // Fallback: open email client
         const subject = encodeURIComponent(`Error Report - ${errorId}`);
         const body = encodeURIComponent(JSON.stringify(errorReport, null, 2));
-        window.open(`mailto:support@example.com?subject=${subject}&body=${body}`);
+        window.open(
+          `mailto:support@example.com?subject=${subject}&body=${body}`
+        );
       });
   };
 
@@ -96,32 +105,34 @@ export class DOMErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-          <Card className="w-full max-w-2xl">
-            <CardHeader className="text-center">
-              <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
-                <AlertTriangle className="w-8 h-8 text-destructive" />
+        <div className='min-h-screen bg-background flex items-center justify-center p-4'>
+          <Card className='w-full max-w-2xl'>
+            <CardHeader className='text-center'>
+              <div className='mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4'>
+                <AlertTriangle className='w-8 h-8 text-destructive' />
               </div>
-              <CardTitle className="text-2xl font-bold text-destructive">
+              <CardTitle className='text-2xl font-bold text-destructive'>
                 Something went wrong
               </CardTitle>
               <CardDescription>
                 We encountered an unexpected error. Our team has been notified.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <h4 className="font-semibold mb-2">Error Details (Development)</h4>
-                  <pre className="text-sm text-muted-foreground overflow-auto">
+                <div className='bg-muted p-4 rounded-lg'>
+                  <h4 className='font-semibold mb-2'>
+                    Error Details (Development)
+                  </h4>
+                  <pre className='text-sm text-muted-foreground overflow-auto'>
                     {this.state.error.message}
                   </pre>
                   {this.state.errorInfo?.componentStack && (
-                    <details className="mt-2">
-                      <summary className="cursor-pointer text-sm font-medium">
+                    <details className='mt-2'>
+                      <summary className='cursor-pointer text-sm font-medium'>
                         Component Stack
                       </summary>
-                      <pre className="text-xs text-muted-foreground mt-2 overflow-auto">
+                      <pre className='text-xs text-muted-foreground mt-2 overflow-auto'>
                         {this.state.errorInfo.componentStack}
                       </pre>
                     </details>
@@ -129,22 +140,34 @@ export class DOMErrorBoundary extends Component<Props, State> {
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={this.handleRetry} variant="default" className="flex-1 sm:flex-none">
-                  <RefreshCw className="w-4 h-4 mr-2" />
+              <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+                <Button
+                  onClick={this.handleRetry}
+                  variant='default'
+                  className='flex-1 sm:flex-none'
+                >
+                  <RefreshCw className='w-4 h-4 mr-2' />
                   Try Again
                 </Button>
-                <Button onClick={this.handleGoHome} variant="outline" className="flex-1 sm:flex-none">
-                  <Home className="w-4 h-4 mr-2" />
+                <Button
+                  onClick={this.handleGoHome}
+                  variant='outline'
+                  className='flex-1 sm:flex-none'
+                >
+                  <Home className='w-4 h-4 mr-2' />
                   Go Home
                 </Button>
-                <Button onClick={this.handleReportError} variant="outline" className="flex-1 sm:flex-none">
-                  <Mail className="w-4 h-4 mr-2" />
+                <Button
+                  onClick={this.handleReportError}
+                  variant='outline'
+                  className='flex-1 sm:flex-none'
+                >
+                  <Mail className='w-4 h-4 mr-2' />
                   Report Error
                 </Button>
               </div>
 
-              <div className="text-center text-sm text-muted-foreground">
+              <div className='text-center text-sm text-muted-foreground'>
                 <p>Error ID: {this.state.errorId}</p>
                 <p>If this problem persists, please contact support.</p>
               </div>
@@ -176,9 +199,12 @@ export function useErrorHandler() {
 
     return () => {
       window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      window.removeEventListener(
+        'unhandledrejection',
+        handleUnhandledRejection
+      );
     };
   }, []);
 
   return error;
-} 
+}

@@ -5,7 +5,8 @@ const https = require('https');
 const http = require('http');
 
 // Configuration
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 // If you're testing locally, use: const BASE_URL = 'http://localhost:3000';
 
 // Helper function to make HTTP requests
@@ -14,7 +15,7 @@ function makeRequest(url, options = {}) {
     const urlObj = new URL(url);
     const isHttps = urlObj.protocol === 'https:';
     const client = isHttps ? https : http;
-    
+
     const requestOptions = {
       hostname: urlObj.hostname,
       port: urlObj.port || (isHttps ? 443 : 80),
@@ -22,38 +23,38 @@ function makeRequest(url, options = {}) {
       method: options.method || 'GET',
       headers: {
         'User-Agent': 'Dashboard-Test-Script/1.0',
-        'Accept': 'application/json',
-        ...options.headers
-      }
+        Accept: 'application/json',
+        ...options.headers,
+      },
     };
 
-    const req = client.request(requestOptions, (res) => {
+    const req = client.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            headers: res.headers
+            headers: res.headers,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data,
             headers: res.headers,
-            parseError: error.message
+            parseError: error.message,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -69,30 +70,37 @@ function makeRequest(url, options = {}) {
 async function runDashboardTests() {
   console.log('🧪 Starting Dashboard Tests (Node.js)...');
   console.log(`🔗 Testing against: ${BASE_URL}`);
-  
+
   const results = {
     envCheck: null,
     publicStats: null,
     testEndpoint: null,
     statsEndpoint: null,
     authCheck: null,
-    errors: []
+    errors: [],
   };
 
   // Test 1: Environment Check
   console.log('\n🔍 Test 1: Environment Variables');
   try {
-    const envResponse = await makeRequest(`${BASE_URL}/api/dashboard/env-check`);
+    const envResponse = await makeRequest(
+      `${BASE_URL}/api/dashboard/env-check`
+    );
     results.envCheck = envResponse;
-    
+
     console.log('Environment Check Status:', envResponse.status);
     console.log('Environment Check Data:', envResponse.data);
-    
+
     if (envResponse.status === 200 && envResponse.data.hasAllRequiredVars) {
       console.log('✅ All environment variables present');
     } else {
-      console.error('❌ Missing environment variables:', envResponse.data.missingVariables);
-      results.errors.push(`Missing env vars: ${envResponse.data.missingVariables?.join(', ')}`);
+      console.error(
+        '❌ Missing environment variables:',
+        envResponse.data.missingVariables
+      );
+      results.errors.push(
+        `Missing env vars: ${envResponse.data.missingVariables?.join(', ')}`
+      );
     }
   } catch (error) {
     console.error('❌ Environment check failed:', error.message);
@@ -102,18 +110,32 @@ async function runDashboardTests() {
   // Test 2: Public Stats (No Authentication)
   console.log('\n🔍 Test 2: Public Stats (No Auth)');
   try {
-    const publicResponse = await makeRequest(`${BASE_URL}/api/dashboard/public-stats`);
+    const publicResponse = await makeRequest(
+      `${BASE_URL}/api/dashboard/public-stats`
+    );
     results.publicStats = publicResponse;
-    
+
     console.log('Public Stats Status:', publicResponse.status);
     console.log('Public Stats Data:', publicResponse.data);
-    
+
     if (publicResponse.status === 200 && !publicResponse.data.error) {
       console.log('✅ Public stats successful');
       console.log('📊 Public data counts:');
-      console.log('- Promoters:', publicResponse.data.totalPromoters, '(expected: 158)');
-      console.log('- Parties:', publicResponse.data.totalParties, '(expected: 16)');
-      console.log('- Contracts:', publicResponse.data.totalContracts, '(expected: 0)');
+      console.log(
+        '- Promoters:',
+        publicResponse.data.totalPromoters,
+        '(expected: 158)'
+      );
+      console.log(
+        '- Parties:',
+        publicResponse.data.totalParties,
+        '(expected: 16)'
+      );
+      console.log(
+        '- Contracts:',
+        publicResponse.data.totalContracts,
+        '(expected: 0)'
+      );
     } else {
       console.error('❌ Public stats failed:', publicResponse.data.error);
       results.errors.push(`Public stats error: ${publicResponse.data.error}`);
@@ -128,17 +150,29 @@ async function runDashboardTests() {
   try {
     const testResponse = await makeRequest(`${BASE_URL}/api/dashboard/test`);
     results.testEndpoint = testResponse;
-    
+
     console.log('Test Endpoint Status:', testResponse.status);
     console.log('Test Endpoint Data:', testResponse.data);
-    
+
     if (testResponse.status === 200 && !testResponse.data.error) {
       console.log('✅ Test endpoint successful');
       console.log('🔐 Authentication:', testResponse.data.authentication);
       console.log('📊 Database counts:');
-      console.log('- Promoters:', testResponse.data.database?.promoters?.count, '(expected: 158)');
-      console.log('- Parties:', testResponse.data.database?.parties?.count, '(expected: 16)');
-      console.log('- Contracts:', testResponse.data.database?.contracts?.count, '(expected: 0)');
+      console.log(
+        '- Promoters:',
+        testResponse.data.database?.promoters?.count,
+        '(expected: 158)'
+      );
+      console.log(
+        '- Parties:',
+        testResponse.data.database?.parties?.count,
+        '(expected: 16)'
+      );
+      console.log(
+        '- Contracts:',
+        testResponse.data.database?.contracts?.count,
+        '(expected: 0)'
+      );
     } else {
       console.error('❌ Test endpoint failed:', testResponse.data.error);
       results.errors.push(`Test endpoint error: ${testResponse.data.error}`);
@@ -153,17 +187,29 @@ async function runDashboardTests() {
   try {
     const statsResponse = await makeRequest(`${BASE_URL}/api/dashboard/stats`);
     results.statsEndpoint = statsResponse;
-    
+
     console.log('Stats Endpoint Status:', statsResponse.status);
     console.log('Stats Endpoint Data:', statsResponse.data);
-    
+
     if (statsResponse.status === 200 && !statsResponse.data.error) {
       console.log('✅ Stats endpoint successful');
       console.log('🔐 Debug info:', statsResponse.data.debug);
       console.log('📊 Dashboard stats:');
-      console.log('- Total Promoters:', statsResponse.data.totalPromoters, '(expected: 158)');
-      console.log('- Total Parties:', statsResponse.data.totalParties, '(expected: 16)');
-      console.log('- Total Contracts:', statsResponse.data.totalContracts, '(expected: 0)');
+      console.log(
+        '- Total Promoters:',
+        statsResponse.data.totalPromoters,
+        '(expected: 158)'
+      );
+      console.log(
+        '- Total Parties:',
+        statsResponse.data.totalParties,
+        '(expected: 16)'
+      );
+      console.log(
+        '- Total Contracts:',
+        statsResponse.data.totalContracts,
+        '(expected: 0)'
+      );
     } else {
       console.error('❌ Stats endpoint failed:', statsResponse.data.error);
       results.errors.push(`Stats endpoint error: ${statsResponse.data.error}`);
@@ -178,10 +224,10 @@ async function runDashboardTests() {
   try {
     const authResponse = await makeRequest(`${BASE_URL}/api/auth/user`);
     results.authCheck = authResponse;
-    
+
     console.log('Auth Check Status:', authResponse.status);
     console.log('Auth Check Data:', authResponse.data);
-    
+
     if (authResponse.status === 401) {
       console.warn('⚠️ User not authenticated (expected for server-side test)');
     } else if (authResponse.status === 200) {
@@ -197,12 +243,29 @@ async function runDashboardTests() {
 
   // Summary
   console.log('\n📋 Test Summary:');
-  console.log('- Environment Check:', results.envCheck?.status === 200 ? '✅ Pass' : '❌ Fail');
-  console.log('- Public Stats:', results.publicStats?.status === 200 ? '✅ Pass' : '❌ Fail');
-  console.log('- Test Endpoint:', results.testEndpoint?.status === 200 ? '✅ Pass' : '❌ Fail');
-  console.log('- Stats Endpoint:', results.statsEndpoint?.status === 200 ? '✅ Pass' : '❌ Fail');
-  console.log('- Auth Check:', results.authCheck?.status === 200 || results.authCheck?.status === 401 ? '✅ Pass' : '❌ Fail');
-  
+  console.log(
+    '- Environment Check:',
+    results.envCheck?.status === 200 ? '✅ Pass' : '❌ Fail'
+  );
+  console.log(
+    '- Public Stats:',
+    results.publicStats?.status === 200 ? '✅ Pass' : '❌ Fail'
+  );
+  console.log(
+    '- Test Endpoint:',
+    results.testEndpoint?.status === 200 ? '✅ Pass' : '❌ Fail'
+  );
+  console.log(
+    '- Stats Endpoint:',
+    results.statsEndpoint?.status === 200 ? '✅ Pass' : '❌ Fail'
+  );
+  console.log(
+    '- Auth Check:',
+    results.authCheck?.status === 200 || results.authCheck?.status === 401
+      ? '✅ Pass'
+      : '❌ Fail'
+  );
+
   if (results.errors.length > 0) {
     console.log('\n❌ Errors Found:');
     results.errors.forEach(error => console.log('-', error));
@@ -217,11 +280,16 @@ async function runDashboardTests() {
   } else {
     console.log('❌ Database connectivity issue (public endpoint fails)');
   }
-  
+
   if (results.testEndpoint?.data?.authentication) {
-    console.log('🔐 Authentication status:', results.testEndpoint.data.authentication.authenticated ? 'Authenticated' : 'Not authenticated');
+    console.log(
+      '🔐 Authentication status:',
+      results.testEndpoint.data.authentication.authenticated
+        ? 'Authenticated'
+        : 'Not authenticated'
+    );
   }
-  
+
   if (results.statsEndpoint?.data?.debug) {
     console.log('🔍 Stats API debug:', results.statsEndpoint.data.debug);
   }
@@ -230,10 +298,12 @@ async function runDashboardTests() {
 }
 
 // Run the tests
-runDashboardTests().then(results => {
-  console.log('\n🏁 Testing completed.');
-  process.exit(results.errors.length > 0 ? 1 : 0);
-}).catch(error => {
-  console.error('❌ Test runner failed:', error);
-  process.exit(1);
-}); 
+runDashboardTests()
+  .then(results => {
+    console.log('\n🏁 Testing completed.');
+    process.exit(results.errors.length > 0 ? 1 : 0);
+  })
+  .catch(error => {
+    console.error('❌ Test runner failed:', error);
+    process.exit(1);
+  });

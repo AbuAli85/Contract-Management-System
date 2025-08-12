@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+
 # 🛡️ RBAC (Role-Based Access Control) System
 
 ## Overview
@@ -23,6 +24,7 @@ The RBAC system provides fine-grained access control using a `{resource}:{action
 ```
 
 **Examples:**
+
 - `user:view:own` - View own user profile
 - `service:create:own` - Create own services
 - `booking:view:all` - View all bookings
@@ -30,30 +32,33 @@ The RBAC system provides fine-grained access control using a `{resource}:{action
 
 ### Scopes
 
-| Scope | Description | Example |
-|-------|-------------|---------|
-| `own` | User owns the resource | User's own profile |
-| `provider` | User is in same provider org | Provider's services |
-| `organization` | User is in same organization | Company resources |
-| `booking` | User has access to the booking | Booking participants |
-| `public` | Publicly accessible | Service discovery |
-| `all` | System-wide access | Admin operations |
+| Scope          | Description                    | Example              |
+| -------------- | ------------------------------ | -------------------- |
+| `own`          | User owns the resource         | User's own profile   |
+| `provider`     | User is in same provider org   | Provider's services  |
+| `organization` | User is in same organization   | Company resources    |
+| `booking`      | User has access to the booking | Booking participants |
+| `public`       | Publicly accessible            | Service discovery    |
+| `all`          | System-wide access             | Admin operations     |
 
 ## Role Families
 
 ### Client Roles
+
 - **Basic Client**: Core booking and service discovery
 - **Premium Client**: Enhanced features + MFA
 - **Enterprise Client**: Multi-user management
 - **Client Administrator**: Organization management
 
 ### Provider Roles
+
 - **Individual Provider**: Service management and bookings
 - **Provider Team Member**: Limited service access
 - **Provider Manager**: Team and financial management
 - **Provider Administrator**: Organization management
 
 ### Admin Roles
+
 - **Support Agent**: User and system access
 - **Content Moderator**: Content and communication moderation
 - **Platform Administrator**: Full platform management
@@ -90,7 +95,7 @@ user_permissions        -- Optimized permission lookups
 ### Basic Permission Check
 
 ```typescript
-import { checkPermission } from '@/lib/rbac/guard'
+import { checkPermission } from '@/lib/rbac/guard';
 
 // Check if user has permission
 const result = await checkPermission('user:view:own', {
@@ -98,9 +103,9 @@ const result = await checkPermission('user:view:own', {
     user: { id: 'user-123' },
     params: { id: 'user-123' },
     resourceType: 'user',
-    resourceId: 'user-123'
-  }
-})
+    resourceId: 'user-123',
+  },
+});
 
 if (result.allowed) {
   // User has permission
@@ -112,28 +117,28 @@ if (result.allowed) {
 ### API Route Protection
 
 ```typescript
-import { withRBAC } from '@/lib/rbac/guard'
+import { withRBAC } from '@/lib/rbac/guard';
 
 // Protect API route
-export const GET = withRBAC('user:read:all', async (request) => {
+export const GET = withRBAC('user:read:all', async request => {
   // Your handler code here
-  return NextResponse.json({ data: 'protected' })
-})
+  return NextResponse.json({ data: 'protected' });
+});
 ```
 
 ### Context-Based Permissions
 
 ```typescript
-import { checkPermission } from '@/lib/rbac/guard'
+import { checkPermission } from '@/lib/rbac/guard';
 
 const result = await checkPermission('booking:edit:provider', {
   context: {
     user: { id: 'user-123', provider_id: 'provider-456' },
     params: { bookingId: 'booking-789' },
     resourceType: 'booking',
-    resourceId: 'booking-789'
-  }
-})
+    resourceId: 'booking-789',
+  },
+});
 ```
 
 ## Configuration
@@ -200,8 +205,8 @@ INSERT INTO permissions (resource, action, scope, name, description) VALUES
 ```sql
 -- Assign to Basic Client role
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id 
-FROM roles r, permissions p 
+SELECT r.id, p.id
+FROM roles r, permissions p
 WHERE r.name = 'Basic Client' AND p.name = 'invoice:view:own';
 ```
 
@@ -224,38 +229,41 @@ All permission checks and role changes are logged to `audit_logs`:
 ### Metrics
 
 ```typescript
-import { auditLogger } from '@/lib/rbac/audit'
+import { auditLogger } from '@/lib/rbac/audit';
 
 // Get audit statistics
-const stats = await auditLogger.getAuditStats()
-console.log(`Total logs: ${stats.total_logs}`)
-console.log(`Allow rate: ${stats.allow_count / stats.total_logs * 100}%`)
+const stats = await auditLogger.getAuditStats();
+console.log(`Total logs: ${stats.total_logs}`);
+console.log(`Allow rate: ${(stats.allow_count / stats.total_logs) * 100}%`);
 ```
 
 ### Cache Statistics
 
 ```typescript
-import { permissionCache } from '@/lib/rbac/cache'
+import { permissionCache } from '@/lib/rbac/cache';
 
 // Get cache performance metrics
-const stats = permissionCache.getStats()
-console.log(`Cached users: ${stats.totalCachedUsers}`)
-console.log(`Redis enabled: ${stats.redisEnabled}`)
+const stats = permissionCache.getStats();
+console.log(`Cached users: ${stats.totalCachedUsers}`);
+console.log(`Redis enabled: ${stats.redisEnabled}`);
 ```
 
 ## Security Considerations
 
 ### Default Deny
+
 - Users have no permissions by default
 - All access must be explicitly granted
 - Role assignments are validated and audited
 
 ### Principle of Least Privilege
+
 - Users receive only necessary permissions
 - Scopes are as restrictive as possible
 - Regular permission reviews recommended
 
 ### Audit Trail
+
 - All permission checks are logged
 - Role changes are tracked with attribution
 - Logs include IP addresses and user agents
@@ -293,16 +301,19 @@ console.log('🔐 RBAC: Debug mode enabled')
 ## Rollout Plan
 
 ### Phase 1: Dry-Run (Current)
+
 - RBAC system logs all permission checks
 - No requests are blocked
 - Monitor permission usage patterns
 
 ### Phase 2: Gradual Enforcement
+
 - Enable enforcement for non-critical endpoints
 - Monitor deny rates and user impact
 - Adjust permissions based on usage data
 
 ### Phase 3: Full Enforcement
+
 - All endpoints protected by RBAC
 - Regular permission audits
 - Performance monitoring and optimization
@@ -371,8 +382,8 @@ The RBAC system includes comprehensive tests covering:
 - **Permission Inheritance**: Hierarchical permission structures
 - **Advanced Scoping**: Time-based and location-based permissions
 - **Machine Learning**: Automated permission optimization
-- **Integration**: SSO and external identity provider support
-=======
+- # **Integration**: SSO and external identity provider support
+
 ### RBAC Overview
 
 - Permission format: `{resource}:{action}:{scope}` with scopes: own | provider | organization | booking | public | all
@@ -381,6 +392,7 @@ The RBAC system includes comprehensive tests covering:
 - Feature flag: `RBAC_ENFORCEMENT=dry-run|enforce` (default dry-run)
 
 Modules
+
 - `lib/rbac/permissions.ts` — parse and types
 - `lib/rbac/cache.ts` — MV-backed permission cache
 - `lib/rbac/context/*` — ownership/provider/org/booking evaluators
@@ -388,24 +400,26 @@ Modules
 - `lib/rbac/audit.ts` — audit logger
 
 Schema
+
 - Tables: `rbac_roles`, `rbac_permissions`, `rbac_role_permissions`, `rbac_user_role_assignments`, `rbac_audit_logs`
 - MV: `rbac_user_permissions_mv` + refresh function `rbac_refresh_user_permissions_mv`
 
 Commands
+
 - rbac:migrate — include RBAC migration in normal pipeline (supabase migrate)
 - rbac:seed — seeds roles/permissions and mappings
 - rbac:test — run RBAC unit/integration tests (to be added)
 
 Rollout
+
 - Start with `RBAC_ENFORCEMENT=dry-run` for one full cycle; inspect `rbac_audit_logs`
 - Flip to `enforce` once WOULD_BLOCK rates are acceptable
 - Rollback: switch back to `dry-run`; schema is additive
 
 How to extend
+
 - Add new permission string → insert via seed using `rbac_upsert_permission`
 - Map to roles → attach via `rbac_attach_permission`
 - Guard endpoint → wrap handler with `withRBAC('resource:action:scope', handler)`
 
-
->>>>>>> Stashed changes
-
+> > > > > > > Stashed changes

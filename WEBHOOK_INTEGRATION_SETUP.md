@@ -72,14 +72,14 @@ curl -X POST "http://localhost:3000/api/bookings/webhook/test" \
 Check your webhook execution logs in the database:
 
 ```sql
-SELECT 
+SELECT
     webhook_type,
     status,
     created_at,
     processed_at,
     error_message
-FROM webhook_logs 
-ORDER BY created_at DESC 
+FROM webhook_logs
+ORDER BY created_at DESC
 LIMIT 10;
 ```
 
@@ -110,12 +110,12 @@ The system automatically triggers webhooks for:
 You can also manually trigger webhooks in your code:
 
 ```typescript
-import { triggerBookingCreatedWebhook } from '@/lib/webhook-helpers'
+import { triggerBookingCreatedWebhook } from '@/lib/webhook-helpers';
 
 // After creating a booking
-const webhookResult = await triggerBookingCreatedWebhook(booking)
+const webhookResult = await triggerBookingCreatedWebhook(booking);
 if (!webhookResult.success) {
-  console.warn('Webhook failed:', webhookResult.error)
+  console.warn('Webhook failed:', webhookResult.error);
 }
 ```
 

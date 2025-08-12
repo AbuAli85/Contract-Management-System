@@ -1,27 +1,27 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get current session
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getSession();
 
     // Get user if session exists
-    let user = null
+    let user = null;
     if (session?.user) {
       const {
         data: { user: userData },
         error: userError,
-      } = await supabase.auth.getUser()
-      user = userData
+      } = await supabase.auth.getUser();
+      user = userData;
     }
 
     return NextResponse.json({
@@ -52,15 +52,15 @@ export async function GET(request: NextRequest) {
             createdAt: user.created_at,
           }
         : null,
-    })
+    });
   } catch (error) {
-    console.error("Supabase config check error:", error)
+    console.error('Supabase config check error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

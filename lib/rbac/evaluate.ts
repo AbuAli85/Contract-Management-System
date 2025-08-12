@@ -2,41 +2,41 @@
 // 🛡️ RBAC PERMISSION EVALUATION
 // ========================================
 
-import { parsePermission } from './permissions'
-import { ownershipEvaluator, OwnershipContext } from './context/ownership'
-import { permissionCache } from './cache'
-import { auditLogger } from './audit'
-import { NextRequest } from 'next/server'
+import { parsePermission } from './permissions';
+import { ownershipEvaluator, OwnershipContext } from './context/ownership';
+import { permissionCache } from './cache';
+import { auditLogger } from './audit';
+import { NextRequest } from 'next/server';
 
 export type PermissionDecision = {
   allowed: boolean;
-  reason?: string;                  // e.g., 'NO_BASE_PERMISSION' | 'SCOPE_CHECK_FAILED'
-  permission: string;               // original requested key e.g., 'user:read:own'
+  reason?: string; // e.g., 'NO_BASE_PERMISSION' | 'SCOPE_CHECK_FAILED'
+  permission: string; // original requested key e.g., 'user:read:own'
   resource: string;
   action: string;
-  scope: 'own'|'provider'|'organization'|'booking'|'public'|'all';
+  scope: 'own' | 'provider' | 'organization' | 'booking' | 'public' | 'all';
   user_id?: string;
   user_roles?: string[];
-  user_permissions?: { resource:string; action:string; scope:string }[];
+  user_permissions?: { resource: string; action: string; scope: string }[];
 };
 
 export interface PermissionContext {
   user: {
-    id: string
-    email?: string
-    provider_id?: string
-    organization_id?: string
-  }
-  params: Record<string, any>
-  resourceType?: string
-  resourceId?: string
-  request?: NextRequest
+    id: string;
+    email?: string;
+    provider_id?: string;
+    organization_id?: string;
+  };
+  params: Record<string, any>;
+  resourceType?: string;
+  resourceId?: string;
+  request?: NextRequest;
 }
 
 export interface EvaluationOptions {
-  skipAudit?: boolean
-  skipCache?: boolean
-  context?: PermissionContext
+  skipAudit?: boolean;
+  skipCache?: boolean;
+  context?: PermissionContext;
 }
 
 export class PermissionEvaluator {
@@ -50,7 +50,7 @@ export class PermissionEvaluator {
   ): Promise<PermissionDecision> {
     try {
       // Parse the required permission
-      const parsed = parsePermission(requiredPermission)
+      const parsed = parsePermission(requiredPermission);
       if (!parsed) {
         return {
           allowed: false,
@@ -61,24 +61,33 @@ export class PermissionEvaluator {
           scope: 'public',
           user_id: userId,
           user_roles: [],
-          user_permissions: []
-        }
+          user_permissions: [],
+        };
       }
 
       // Get user permissions from cache
-      const { permissions: userPermissions, roles: userRoles } = options.skipCache
-        ? await this.fetchUserPermissionsDirectly(userId)
-        : await permissionCache.getUserPermissions(userId)
+      const { permissions: userPermissions, roles: userRoles } =
+        options.skipCache
+          ? await this.fetchUserPermissionsDirectly(userId)
+          : await permissionCache.getUserPermissions(userId);
 
       // Convert string permissions to structured format for evaluation
-      const structuredPermissions = userPermissions.map(perm => {
-        const parsed = parsePermission(perm)
-        return parsed ? {
-          resource: parsed.resource,
-          action: parsed.action,
-          scope: parsed.scope
-        } : null
-      }).filter(Boolean) as { resource: string; action: string; scope: string }[]
+      const structuredPermissions = userPermissions
+        .map(perm => {
+          const parsed = parsePermission(perm);
+          return parsed
+            ? {
+                resource: parsed.resource,
+                action: parsed.action,
+                scope: parsed.scope,
+              }
+            : null;
+        })
+        .filter(Boolean) as {
+        resource: string;
+        action: string;
+        scope: string;
+      }[];
 
       // Check base permission
       const baseCheck = await this.checkBasePermission(
@@ -86,28 +95,27 @@ export class PermissionEvaluator {
         requiredPermission,
         parsed,
         options.context
-      )
+      );
 
       // Audit the permission check
       if (!options.skipAudit) {
         await this.auditPermissionCheck(
-          userId, 
-          requiredPermission, 
-          baseCheck.allowed ? 'ALLOW' : 'DENY', 
+          userId,
+          requiredPermission,
+          baseCheck.allowed ? 'ALLOW' : 'DENY',
           options.context?.request
-        )
+        );
       }
 
       return {
         ...baseCheck,
         user_id: userId,
         user_roles: userRoles,
-        user_permissions: structuredPermissions
-      }
-
+        user_permissions: structuredPermissions,
+      };
     } catch (error) {
-      console.error('🔐 RBAC: Error evaluating permission:', error)
-      
+      console.error('🔐 RBAC: Error evaluating permission:', error);
+
       const result: PermissionDecision = {
         allowed: false,
         reason: 'Error evaluating permission',
@@ -117,15 +125,20 @@ export class PermissionEvaluator {
         scope: 'public',
         user_id: userId,
         user_roles: [],
-        user_permissions: []
-      }
+        user_permissions: [],
+      };
 
       // Audit the error
       if (!options.skipAudit) {
-        await this.auditPermissionCheck(userId, requiredPermission, 'DENY', options.context?.request)
+        await this.auditPermissionCheck(
+          userId,
+          requiredPermission,
+          'DENY',
+          options.context?.request
+        );
       }
 
-      return result
+      return result;
     }
   }
 
@@ -137,15 +150,15 @@ export class PermissionEvaluator {
     requiredPermission: string,
     parsed: { resource: string; action: string; scope: string },
     context?: PermissionContext
-  ): Promise<Omit<PermissionDecision, 'user_id' | 'user_roles' | 'user_permissions'>> {
-    const { resource, action, scope } = parsed
+  ): Promise<
+    Omit<PermissionDecision, 'user_id' | 'user_roles' | 'user_permissions'>
+  > {
+    const { resource, action, scope } = parsed;
 
     // Check if user has the exact permission
-    const exactMatch = userPerms.some(p => 
-      p.resource === resource && 
-      p.action === action && 
-      p.scope === scope
-    )
+    const exactMatch = userPerms.some(
+      p => p.resource === resource && p.action === action && p.scope === scope
+    );
 
     if (exactMatch) {
       return {
@@ -154,16 +167,17 @@ export class PermissionEvaluator {
         permission: requiredPermission,
         resource,
         action,
-        scope
-      }
+        scope,
+      };
     }
 
     // Check if user has a broader scope permission
-    const broaderPermission = userPerms.find(p => 
-      p.resource === resource && 
-      p.action === action && 
-      this.isScopeSufficient(p.scope, scope)
-    )
+    const broaderPermission = userPerms.find(
+      p =>
+        p.resource === resource &&
+        p.action === action &&
+        this.isScopeSufficient(p.scope, scope)
+    );
 
     if (broaderPermission) {
       return {
@@ -172,8 +186,8 @@ export class PermissionEvaluator {
         permission: requiredPermission,
         resource,
         action,
-        scope
-      }
+        scope,
+      };
     }
 
     // Check context-based permissions if context is provided
@@ -182,7 +196,7 @@ export class PermissionEvaluator {
         userPerms,
         parsed,
         context
-      )
+      );
 
       if (contextResult.allowed) {
         return {
@@ -191,8 +205,8 @@ export class PermissionEvaluator {
           permission: requiredPermission,
           resource,
           action,
-          scope
-        }
+          scope,
+        };
       }
     }
 
@@ -203,8 +217,8 @@ export class PermissionEvaluator {
       permission: requiredPermission,
       resource,
       action,
-      scope
-    }
+      scope,
+    };
   }
 
   /**
@@ -212,15 +226,17 @@ export class PermissionEvaluator {
    */
   private isScopeSufficient(userScope: string, requiredScope: string): boolean {
     const scopeHierarchy: Record<string, number> = {
-      'public': 1,
-      'own': 2,
-      'booking': 3,
-      'organization': 4,
-      'provider': 5,
-      'all': 6
-    }
+      public: 1,
+      own: 2,
+      booking: 3,
+      organization: 4,
+      provider: 5,
+      all: 6,
+    };
 
-    return (scopeHierarchy[userScope] || 0) >= (scopeHierarchy[requiredScope] || 0)
+    return (
+      (scopeHierarchy[userScope] || 0) >= (scopeHierarchy[requiredScope] || 0)
+    );
   }
 
   /**
@@ -231,7 +247,7 @@ export class PermissionEvaluator {
     parsed: { resource: string; action: string; scope: string },
     context: PermissionContext
   ): Promise<{ allowed: boolean; reason?: string }> {
-    const { resourceType, resourceId, user } = context
+    const { resourceType, resourceId, user } = context;
 
     // Check ownership-based permissions
     if (parsed.scope === 'own' && resourceId && resourceType) {
@@ -239,71 +255,84 @@ export class PermissionEvaluator {
         user,
         params: context.params,
         resourceType,
-        resourceId
-      }
+        resourceId,
+      };
 
-      const ownershipResult = await ownershipEvaluator.checkOwnership(resourceType, ownershipContext)
-      
+      const ownershipResult = await ownershipEvaluator.checkOwnership(
+        resourceType,
+        ownershipContext
+      );
+
       if (ownershipResult.isOwner) {
         return {
           allowed: true,
-          reason: `User owns this ${resourceType}`
-        }
+          reason: `User owns this ${resourceType}`,
+        };
       }
     }
 
     // Check organization-based permissions
     if (parsed.scope === 'organization' && resourceId && user.organization_id) {
-      const ownershipResult = await ownershipEvaluator.checkOrganizationOwnership(resourceType || 'unknown', {
-        user,
-        params: context.params,
-        resourceType: resourceType || 'unknown',
-        resourceId
-      })
+      const ownershipResult =
+        await ownershipEvaluator.checkOrganizationOwnership(
+          resourceType || 'unknown',
+          {
+            user,
+            params: context.params,
+            resourceType: resourceType || 'unknown',
+            resourceId,
+          }
+        );
 
       if (ownershipResult.isOwner) {
         return {
           allowed: true,
-          reason: 'User in same organization'
-        }
+          reason: 'User in same organization',
+        };
       }
     }
 
     // Check provider-based permissions
     if (parsed.scope === 'provider' && resourceId && user.provider_id) {
-      const ownershipResult = await ownershipEvaluator.checkProviderOwnership(resourceType || 'unknown', {
-        user,
-        params: context.params,
-        resourceType: resourceType || 'unknown',
-        resourceId
-      })
+      const ownershipResult = await ownershipEvaluator.checkProviderOwnership(
+        resourceType || 'unknown',
+        {
+          user,
+          params: context.params,
+          resourceType: resourceType || 'unknown',
+          resourceId,
+        }
+      );
 
       if (ownershipResult.isOwner) {
         return {
           allowed: true,
-          reason: 'User in same provider organization'
-        }
+          reason: 'User in same provider organization',
+        };
       }
     }
 
     // Check booking-based permissions
     if (parsed.scope === 'booking' && resourceId) {
-      const ownershipResult = await ownershipEvaluator.checkOwnership('booking', {
-        user,
-        params: context.params,
-        resourceType: 'booking',
-        resourceId
-      })
+      const ownershipResult = await ownershipEvaluator.checkOwnership(
+        'booking',
+        {
+          user,
+          params: context.params,
+          resourceType: 'booking',
+          resourceId,
+        }
+      );
 
       if (ownershipResult.isOwner) {
         return {
           allowed: true,
-          reason: 'User has access to this booking'
-        }
+          reason: 'User has access to this booking',
+        };
       }
     }
 
-    return { allowed: false, reason: 'Context-based permission check failed' }
+    return { allowed: false, reason: 'Context-based permission check failed' };
   }
 
   /**
@@ -315,13 +344,21 @@ export class PermissionEvaluator {
     options: EvaluationOptions = {}
   ): Promise<PermissionDecision> {
     for (const permission of requiredPermissions) {
-      const result = await this.evaluatePermission(userId, permission, { ...options, skipAudit: true })
+      const result = await this.evaluatePermission(userId, permission, {
+        ...options,
+        skipAudit: true,
+      });
       if (result.allowed) {
         // Audit the successful check
         if (!options.skipAudit) {
-          await this.auditPermissionCheck(userId, permission, 'ALLOW', options.context?.request)
+          await this.auditPermissionCheck(
+            userId,
+            permission,
+            'ALLOW',
+            options.context?.request
+          );
         }
-        return result
+        return result;
       }
     }
 
@@ -334,15 +371,20 @@ export class PermissionEvaluator {
       scope: 'public',
       user_id: userId,
       user_roles: [],
-      user_permissions: []
-    }
+      user_permissions: [],
+    };
 
     // Audit the failed check
     if (!options.skipAudit) {
-      await this.auditPermissionCheck(userId, requiredPermissions.join(' OR '), 'DENY', options.context?.request)
+      await this.auditPermissionCheck(
+        userId,
+        requiredPermissions.join(' OR '),
+        'DENY',
+        options.context?.request
+      );
     }
 
-    return result
+    return result;
   }
 
   /**
@@ -354,13 +396,16 @@ export class PermissionEvaluator {
     options: EvaluationOptions = {}
   ): Promise<PermissionDecision> {
     const results = await Promise.all(
-      requiredPermissions.map(permission => 
-        this.evaluatePermission(userId, permission, { ...options, skipAudit: true })
+      requiredPermissions.map(permission =>
+        this.evaluatePermission(userId, permission, {
+          ...options,
+          skipAudit: true,
+        })
       )
-    )
+    );
 
-    const deniedPermissions = results.filter(result => !result.allowed)
-    
+    const deniedPermissions = results.filter(result => !result.allowed);
+
     if (deniedPermissions.length === 0) {
       const result: PermissionDecision = {
         allowed: true,
@@ -371,15 +416,20 @@ export class PermissionEvaluator {
         scope: 'public',
         user_id: userId,
         user_roles: results[0]?.user_roles || [],
-        user_permissions: results[0]?.user_permissions || []
-      }
+        user_permissions: results[0]?.user_permissions || [],
+      };
 
       // Audit the permission check
       if (!options.skipAudit) {
-        await this.auditPermissionCheck(userId, requiredPermissions.join(' AND '), 'ALLOW', options.context?.request)
+        await this.auditPermissionCheck(
+          userId,
+          requiredPermissions.join(' AND '),
+          'ALLOW',
+          options.context?.request
+        );
       }
 
-      return result
+      return result;
     }
 
     const result: PermissionDecision = {
@@ -391,64 +441,82 @@ export class PermissionEvaluator {
       scope: 'public',
       user_id: userId,
       user_roles: results[0]?.user_roles || [],
-      user_permissions: results[0]?.user_permissions || []
-    }
+      user_permissions: results[0]?.user_permissions || [],
+    };
 
     // Audit the permission check
     if (!options.skipAudit) {
-      await this.auditPermissionCheck(userId, requiredPermissions.join(' AND '), 'DENY', options.context?.request)
+      await this.auditPermissionCheck(
+        userId,
+        requiredPermissions.join(' AND '),
+        'DENY',
+        options.context?.request
+      );
     }
 
-    return result
+    return result;
   }
 
   /**
    * Fetch user permissions directly from database (bypass cache)
    */
-  private async fetchUserPermissionsDirectly(userId: string): Promise<{ permissions: string[]; roles: string[] }> {
+  private async fetchUserPermissionsDirectly(
+    userId: string
+  ): Promise<{ permissions: string[]; roles: string[] }> {
     try {
-      const { data: roleAssignments, error: roleError } = await permissionCache['supabase']
+      const { data: roleAssignments, error: roleError } = await permissionCache[
+        'supabase'
+      ]
         .from('user_role_assignments')
-        .select(`
+        .select(
+          `
           role_id,
           roles!inner(
             name,
             category
           )
-        `)
+        `
+        )
         .eq('user_id', userId)
         .eq('is_active', true)
-        .is('valid_until', null)
+        .is('valid_until', null);
 
       if (roleError || !roleAssignments) {
-        return { permissions: [], roles: [] }
+        return { permissions: [], roles: [] };
       }
 
-      const roleIds = roleAssignments.map(ra => ra.role_id)
-      const roles = roleAssignments.map(ra => ra.roles.name)
+      const roleIds = roleAssignments.map(ra => ra.role_id);
+      const roles = roleAssignments.map(ra => ra.roles.name);
 
-      const { data: permissions, error: permError } = await permissionCache['supabase']
+      const { data: permissions, error: permError } = await permissionCache[
+        'supabase'
+      ]
         .from('role_permissions')
-        .select(`
+        .select(
+          `
           permissions!inner(
             name
           )
-        `)
-        .in('role_id', roleIds)
+        `
+        )
+        .in('role_id', roleIds);
 
       if (permError) {
-        return { permissions: [], roles }
+        return { permissions: [], roles };
       }
 
-      const permissionNames = permissions?.map(p => p.permissions.name) || []
+      const permissionNames = permissions?.map(p => p.permissions.name) || [];
 
       return {
         permissions: permissionNames,
-        roles
-      }
+        roles,
+      };
     } catch (error) {
-      console.error('🔐 RBAC: Error fetching user permissions directly:', error)
-      return { permissions: [], roles: [] }
+      console.error(
+        '🔐 RBAC: Error fetching user permissions directly:',
+        error
+      );
+      return { permissions: [], roles: [] };
     }
   }
 
@@ -467,11 +535,15 @@ export class PermissionEvaluator {
         permission,
         path: request?.url || 'unknown',
         result,
-        ip_address: request ? auditLogger.constructor.getClientIP(request) : undefined,
-        user_agent: request ? auditLogger.constructor.getUserAgent(request) : undefined
-      })
+        ip_address: request
+          ? auditLogger.constructor.getClientIP(request)
+          : undefined,
+        user_agent: request
+          ? auditLogger.constructor.getUserAgent(request)
+          : undefined,
+      });
     } catch (error) {
-      console.warn('🔐 RBAC: Failed to audit permission check:', error)
+      console.warn('🔐 RBAC: Failed to audit permission check:', error);
     }
   }
 
@@ -482,11 +554,11 @@ export class PermissionEvaluator {
     userId: string,
     resource: string
   ): Promise<string[]> {
-    const { permissions } = await permissionCache.getUserPermissions(userId)
+    const { permissions } = await permissionCache.getUserPermissions(userId);
     return permissions.filter(permission => {
-      const parsed = parsePermission(permission)
-      return parsed && parsed.resource === resource
-    })
+      const parsed = parsePermission(permission);
+      return parsed && parsed.resource === resource;
+    });
   }
 
   /**
@@ -497,15 +569,13 @@ export class PermissionEvaluator {
     resource: string,
     action: string
   ): Promise<string[]> {
-    const { permissions } = await permissionCache.getUserPermissions(userId)
+    const { permissions } = await permissionCache.getUserPermissions(userId);
     return permissions.filter(permission => {
-      const parsed = parsePermission(permission)
-      return parsed && parsed.resource === resource && parsed.action === action
-    })
+      const parsed = parsePermission(permission);
+      return parsed && parsed.resource === resource && parsed.action === action;
+    });
   }
 }
 
 // Export singleton instance
-export const permissionEvaluator = new PermissionEvaluator()
-
-
+export const permissionEvaluator = new PermissionEvaluator();

@@ -1,34 +1,36 @@
-"use client"
+'use client';
 
-import { useEffect } from 'react'
-import { useSupabase } from '@/app/providers'
-import { useRouter, usePathname } from '@/navigation'
+import { useEffect } from 'react';
+import { useSupabase } from '@/app/providers';
+import { useRouter, usePathname } from '@/navigation';
 
 export function AuthRedirect() {
-  const { session, loading } = useSupabase()
-  const router = useRouter()
-  const pathname = usePathname()
+  const { session, loading } = useSupabase();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     // Only redirect if we have a session and we're on an auth page
     if (!loading && session && pathname) {
-      const isAuthPage = pathname.includes('/auth/')
-      
+      const isAuthPage = pathname.includes('/auth/');
+
       if (isAuthPage) {
-        console.log("🔐 AuthRedirect: User is authenticated on auth page, redirecting...")
-        
+        console.log(
+          '🔐 AuthRedirect: User is authenticated on auth page, redirecting...'
+        );
+
         // Get locale from pathname
-        const segments = pathname.split('/')
-        const locale = segments[1] || 'en'
-        
+        const segments = pathname.split('/');
+        const locale = segments[1] || 'en';
+
         // Use next-intl aware router for proper locale handling
-        console.log("🔐 AuthRedirect: Redirecting to dashboard")
-        
+        console.log('🔐 AuthRedirect: Redirecting to dashboard');
+
         // Use router.replace to avoid adding to browser history
-        router.replace('/dashboard')
+        router.replace('/dashboard');
       }
     }
-  }, [session, loading, pathname, router])
+  }, [session, loading, pathname, router]);
 
-  return null // This component doesn't render anything
+  return null; // This component doesn't render anything
 }

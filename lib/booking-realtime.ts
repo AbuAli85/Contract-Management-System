@@ -7,11 +7,15 @@ import type { BookingChangeEvent, KpiRefreshEvent } from '@/types/booking';
 export function subscribeBookings(onChange: () => void) {
   const channel = supabase
     .channel('bookings_changes')
-    .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
-        () => onChange())
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'bookings' },
+      () => onChange()
+    )
     .subscribe();
-  return () => { supabase.removeChannel(channel); };
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 // B) (Optional) MV refresh notifications
@@ -34,28 +38,32 @@ export function subscribeBookingsWithDetails(
   }
 ) {
   const { event = '*', filter } = options ?? {};
-  
+
   const channel = supabase
     .channel('bookings_detailed_changes')
-    .on('postgres_changes',
-        { 
-          event, 
-          schema: 'public', 
+    .on(
+      'postgres_changes',
+      {
+        event,
+        schema: 'public',
+        table: 'bookings',
+        filter,
+      },
+      payload => {
+        const changeEvent: BookingChangeEvent = {
+          eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
           table: 'bookings',
-          filter
-        },
-        (payload) => {
-          const changeEvent: BookingChangeEvent = {
-            eventType: payload.eventType as 'INSERT' | 'UPDATE' | 'DELETE',
-            table: 'bookings',
-            record: payload.new || {},
-            oldRecord: payload.old || {}
-          };
-          onChange(changeEvent);
-        })
+          record: payload.new || {},
+          oldRecord: payload.old || {},
+        };
+        onChange(changeEvent);
+      }
+    )
     .subscribe();
-    
-  return () => { supabase.removeChannel(channel); };
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 export function subscribeBucketKpisRefresh(
@@ -64,23 +72,23 @@ export function subscribeBucketKpisRefresh(
 ) {
   const channel = supabase
     .channel('bucket_kpis_refresh')
-    .on('broadcast', 
-        { event: 'mv_bucket_kpis_refreshed' }, 
-        (payload) => {
-          const refreshEvent: KpiRefreshEvent = {
-            event: 'mv_bucket_kpis_refreshed',
-            data: payload.payload as string
-          };
-          onRefresh(refreshEvent);
-        })
-    .on('system', { event: 'error' }, (payload) => {
+    .on('broadcast', { event: 'mv_bucket_kpis_refreshed' }, payload => {
+      const refreshEvent: KpiRefreshEvent = {
+        event: 'mv_bucket_kpis_refreshed',
+        data: payload.payload as string,
+      };
+      onRefresh(refreshEvent);
+    })
+    .on('system', { event: 'error' }, payload => {
       if (onError) {
         onError(new Error(`Subscription error: ${payload.error}`));
       }
     })
     .subscribe();
-    
-  return () => { supabase.removeChannel(channel); };
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 // Combined subscription for both bookings and KPIs
@@ -92,29 +100,33 @@ export function subscribeBookingSystem(
   }
 ) {
   const { enableKpiNotifications = true } = options ?? {};
-  
+
   const channels: string[] = [];
-  
+
   // Subscribe to booking changes
   const bookingsChannel = supabase
     .channel('bookings_system_changes')
-    .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'bookings' },
-        () => onBookingsChange())
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'bookings' },
+      () => onBookingsChange()
+    )
     .subscribe();
-  
+
   channels.push(bookingsChannel);
-  
+
   // Optionally subscribe to KPI refresh notifications
   if (enableKpiNotifications) {
     const kpiChannel = supabase
       .channel('kpi_system_notify')
-      .on('broadcast', { event: 'mv_bucket_kpis_refreshed' }, () => onKpisRefresh())
+      .on('broadcast', { event: 'mv_bucket_kpis_refreshed' }, () =>
+        onKpisRefresh()
+      )
       .subscribe();
-    
+
     channels.push(kpiChannel);
   }
-  
+
   // Return cleanup function
   return () => {
     channels.forEach(channelId => {
@@ -138,12 +150,12 @@ export function createDebouncedSubscription(
   delay: number = 300
 ) {
   let timeoutId: NodeJS.Timeout;
-  
+
   const debouncedCallback = () => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(callback, delay);
   };
-  
+
   return debouncedCallback;
 }
 
@@ -153,11 +165,12 @@ export function subscribeBookingsWithDebouncedKpiRefresh(
   onKpisRefresh: () => void,
   debounceDelay: number = 1000
 ) {
-  const debouncedKpiRefresh = createDebouncedSubscription(onKpisRefresh, debounceDelay);
-  
-  return subscribeBookingSystem(
-    onBookingsChange,
-    debouncedKpiRefresh,
-    { enableKpiNotifications: true }
+  const debouncedKpiRefresh = createDebouncedSubscription(
+    onKpisRefresh,
+    debounceDelay
   );
-} 
+
+  return subscribeBookingSystem(onBookingsChange, debouncedKpiRefresh, {
+    enableKpiNotifications: true,
+  });
+}

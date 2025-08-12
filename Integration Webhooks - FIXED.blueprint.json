@@ -233,7 +233,15 @@
             "label": "Method",
             "required": true,
             "validate": {
-              "enum": ["get", "head", "post", "put", "patch", "delete", "options"]
+              "enum": [
+                "get",
+                "head",
+                "post",
+                "put",
+                "patch",
+                "delete",
+                "options"
+              ]
             }
           },
           {
@@ -473,7 +481,15 @@
             "label": "Method",
             "required": true,
             "validate": {
-              "enum": ["get", "head", "post", "put", "patch", "delete", "options"]
+              "enum": [
+                "get",
+                "head",
+                "post",
+                "put",
+                "patch",
+                "delete",
+                "options"
+              ]
             }
           },
           {
@@ -797,7 +813,15 @@
             "label": "Method",
             "required": true,
             "validate": {
-              "enum": ["get", "head", "post", "put", "patch", "delete", "options"]
+              "enum": [
+                "get",
+                "head",
+                "post",
+                "put",
+                "patch",
+                "delete",
+                "options"
+              ]
             }
           },
           {
@@ -1117,7 +1141,20 @@
             },
             "requests": {
               "mode": "chose",
-              "items": [null, null, null, null, null, null, null, null, null, null, null, null]
+              "items": [
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+              ]
             },
             "imageReplacement": {
               "mode": "chose",

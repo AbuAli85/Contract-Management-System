@@ -2,10 +2,10 @@
 
 /**
  * 🧪 RBAC Test Suite
- * 
+ *
  * This script runs comprehensive RBAC tests in enforce mode
  * for CI/CD validation and production hardening.
- * 
+ *
  * Usage: npm run rbac:test
  */
 
@@ -24,11 +24,14 @@ class RBACTester {
   private enforcementMode: 'dry-run' | 'enforce';
 
   constructor() {
-    this.enforcementMode = (process.env.RBAC_ENFORCEMENT as 'dry-run' | 'enforce') || 'dry-run';
+    this.enforcementMode =
+      (process.env.RBAC_ENFORCEMENT as 'dry-run' | 'enforce') || 'dry-run';
   }
 
   async runAllTests(): Promise<void> {
-    console.log(`🧪 Running RBAC Tests (Mode: ${this.enforcementMode.toUpperCase()})...\n`);
+    console.log(
+      `🧪 Running RBAC Tests (Mode: ${this.enforcementMode.toUpperCase()})...\n`
+    );
 
     await this.testPermissionConsistency();
     await this.testGuardCoverage();
@@ -41,22 +44,29 @@ class RBACTester {
 
   private async testPermissionConsistency(): Promise<void> {
     console.log('🔍 Testing Permission Consistency...');
-    
+
     try {
       // Test 1: Verify all code-guarded permissions exist in database
       const codePermissions = await this.extractCodePermissions();
       const dbPermissions = await this.getDatabasePermissions();
-      
-      const missingPermissions = codePermissions.filter(p => !dbPermissions.includes(p));
-      
+
+      const missingPermissions = codePermissions.filter(
+        p => !dbPermissions.includes(p)
+      );
+
       if (missingPermissions.length === 0) {
         this.recordTest('Permission Consistency', true);
         console.log('   ✅ All code permissions exist in database');
       } else {
-        this.recordTest('Permission Consistency', false, 
-          `${missingPermissions.length} permissions missing from database`, 
-          missingPermissions);
-        console.log(`   ❌ ${missingPermissions.length} permissions missing from database`);
+        this.recordTest(
+          'Permission Consistency',
+          false,
+          `${missingPermissions.length} permissions missing from database`,
+          missingPermissions
+        );
+        console.log(
+          `   ❌ ${missingPermissions.length} permissions missing from database`
+        );
       }
     } catch (error) {
       this.recordTest('Permission Consistency', false, error.message);
@@ -66,24 +76,29 @@ class RBACTester {
 
   private async testGuardCoverage(): Promise<void> {
     console.log('🔒 Testing Guard Coverage...');
-    
+
     try {
       // Test 2: Verify critical API routes are guarded
       const criticalRoutes = await this.findCriticalRoutes();
       const guardedRoutes = await this.findGuardedRoutes();
-      
-      const unguardedRoutes = criticalRoutes.filter(route => 
-        !guardedRoutes.some(guarded => route.includes(guarded))
+
+      const unguardedRoutes = criticalRoutes.filter(
+        route => !guardedRoutes.some(guarded => route.includes(guarded))
       );
-      
+
       if (unguardedRoutes.length === 0) {
         this.recordTest('Guard Coverage', true);
         console.log('   ✅ All critical routes are properly guarded');
       } else {
-        this.recordTest('Guard Coverage', false,
+        this.recordTest(
+          'Guard Coverage',
+          false,
           `${unguardedRoutes.length} critical routes unguarded`,
-          unguardedRoutes);
-        console.log(`   ❌ ${unguardedRoutes.length} critical routes unguarded`);
+          unguardedRoutes
+        );
+        console.log(
+          `   ❌ ${unguardedRoutes.length} critical routes unguarded`
+        );
       }
     } catch (error) {
       this.recordTest('Guard Coverage', false, error.message);
@@ -93,20 +108,27 @@ class RBACTester {
 
   private async testPermissionValidation(): Promise<void> {
     console.log('✅ Testing Permission Validation...');
-    
+
     try {
       // Test 3: Verify permission format validation
       const dbPermissions = await this.getDatabasePermissions();
-      const invalidPermissions = dbPermissions.filter(p => !this.isValidPermissionFormat(p));
-      
+      const invalidPermissions = dbPermissions.filter(
+        p => !this.isValidPermissionFormat(p)
+      );
+
       if (invalidPermissions.length === 0) {
         this.recordTest('Permission Validation', true);
         console.log('   ✅ All permissions have valid format');
       } else {
-        this.recordTest('Permission Validation', false,
+        this.recordTest(
+          'Permission Validation',
+          false,
           `${invalidPermissions.length} permissions have invalid format`,
-          invalidPermissions);
-        console.log(`   ❌ ${invalidPermissions.length} permissions have invalid format`);
+          invalidPermissions
+        );
+        console.log(
+          `   ❌ ${invalidPermissions.length} permissions have invalid format`
+        );
       }
     } catch (error) {
       this.recordTest('Permission Validation', false, error.message);
@@ -116,16 +138,20 @@ class RBACTester {
 
   private async testRoleAssignment(): Promise<void> {
     console.log('👥 Testing Role Assignment...');
-    
+
     try {
       // Test 4: Verify role-permission relationships
       const hasValidRoles = await this.verifyRolePermissions();
-      
+
       if (hasValidRoles) {
         this.recordTest('Role Assignment', true);
         console.log('   ✅ Role-permission relationships are valid');
       } else {
-        this.recordTest('Role Assignment', false, 'Invalid role-permission relationships');
+        this.recordTest(
+          'Role Assignment',
+          false,
+          'Invalid role-permission relationships'
+        );
         console.log('   ❌ Invalid role-permission relationships');
       }
     } catch (error) {
@@ -136,16 +162,20 @@ class RBACTester {
 
   private async testAuditLogging(): Promise<void> {
     console.log('📝 Testing Audit Logging...');
-    
+
     try {
       // Test 5: Verify audit logging configuration
       const auditConfig = await this.checkAuditLogging();
-      
+
       if (auditConfig.enabled) {
         this.recordTest('Audit Logging', true);
         console.log('   ✅ Audit logging is properly configured');
       } else {
-        this.recordTest('Audit Logging', false, 'Audit logging not properly configured');
+        this.recordTest(
+          'Audit Logging',
+          false,
+          'Audit logging not properly configured'
+        );
         console.log('   ❌ Audit logging not properly configured');
       }
     } catch (error) {
@@ -163,7 +193,12 @@ class RBACTester {
   private async getDatabasePermissions(): Promise<string[]> {
     // This would query the database
     // For now, return a mock list
-    return ['user:read:all', 'contract:create:own', 'company:read:own', 'audit:read:all'];
+    return [
+      'user:read:all',
+      'contract:create:own',
+      'company:read:own',
+      'audit:read:all',
+    ];
   }
 
   private async findCriticalRoutes(): Promise<string[]> {
@@ -191,21 +226,26 @@ class RBACTester {
     return { enabled: true }; // Mock result
   }
 
-  private recordTest(name: string, passed: boolean, error?: string, details?: any): void {
+  private recordTest(
+    name: string,
+    passed: boolean,
+    error?: string,
+    details?: any
+  ): void {
     this.testResults.push({ name, passed, error, details });
   }
 
   private generateReport(): void {
     console.log('\n📊 RBAC Test Results:');
     console.log('======================');
-    
+
     let passedCount = 0;
     let failedCount = 0;
-    
+
     this.testResults.forEach(result => {
       const status = result.passed ? '✅' : '❌';
       console.log(`${status} ${result.name}`);
-      
+
       if (result.passed) {
         passedCount++;
       } else {
@@ -218,14 +258,16 @@ class RBACTester {
         }
       }
     });
-    
+
     console.log(`\n📈 Summary: ${passedCount} passed, ${failedCount} failed`);
-    
+
     if (failedCount === 0) {
       console.log('\n🎉 All RBAC tests passed! System is production-ready.');
       process.exit(0);
     } else {
-      console.log('\n🚨 Some RBAC tests failed. Review issues before production deployment.');
+      console.log(
+        '\n🚨 Some RBAC tests failed. Review issues before production deployment.'
+      );
       process.exit(1);
     }
   }

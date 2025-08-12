@@ -9,6 +9,7 @@ This document outlines the refactoring of the Make.com webhook integration to im
 ### 1. Environment Variables
 
 **Before:**
+
 ```env
 NEXT_PUBLIC_MAKE_SERVICE_CREATION_WEBHOOK=https://hook.eu2.make.com/...
 NEXT_PUBLIC_MAKE_BOOKING_CREATED_WEBHOOK=https://hook.eu2.make.com/...
@@ -17,6 +18,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/...
 ```
 
 **After:**
+
 ```env
 MAKE_SERVICE_CREATION_WEBHOOK=https://hook.eu2.make.com/...
 MAKE_BOOKING_CREATED_WEBHOOK=https://hook.eu2.make.com/...
@@ -28,18 +30,21 @@ WEBHOOK_SECRET=your-shared-secret-here
 ### 2. New Architecture
 
 #### Central Webhook Dispatcher (`lib/makeWebhooks.ts`)
+
 - Handles all webhook dispatches with retry logic
 - Exponential backoff (1s, 2s, 4s delays)
 - Automatic logging to `webhook_logs` table
 - Webhook signature generation for security
 
 #### API Routes (`app/api/webhooks/[type]/route.ts`)
+
 - Validates webhook types and payloads using Zod schemas
 - Provides consistent error handling
 - Only accepts POST requests
 - Returns standardized responses
 
 #### Database Logging (`webhook_logs` table)
+
 ```sql
 CREATE TABLE webhook_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -56,59 +61,63 @@ CREATE TABLE webhook_logs (
 All webhook payloads are now strictly typed and validated:
 
 #### Service Creation
+
 ```typescript
 interface ServiceCreatedPayload {
-  serviceId: string
-  name: string
-  providerId: string
-  createdAt: string
-  description?: string
-  category?: string
-  price?: number
-  currency?: string
+  serviceId: string;
+  name: string;
+  providerId: string;
+  createdAt: string;
+  description?: string;
+  category?: string;
+  price?: number;
+  currency?: string;
 }
 ```
 
 #### Booking Created
+
 ```typescript
 interface BookingCreatedPayload {
-  bookingId: string
-  serviceId: string
-  userId: string
-  bookingDate: string
-  status: string
-  amount?: number
-  currency?: string
-  notes?: string
+  bookingId: string;
+  serviceId: string;
+  userId: string;
+  bookingDate: string;
+  status: string;
+  amount?: number;
+  currency?: string;
+  notes?: string;
 }
 ```
 
 #### Tracking Updated
+
 ```typescript
 interface TrackingUpdatedPayload {
-  trackingId: string
-  status: string
-  location?: string
-  updatedAt: string
-  bookingId?: string
-  serviceId?: string
-  estimatedDelivery?: string
-  notes?: string
+  trackingId: string;
+  status: string;
+  location?: string;
+  updatedAt: string;
+  bookingId?: string;
+  serviceId?: string;
+  estimatedDelivery?: string;
+  notes?: string;
 }
 ```
 
 #### Payment Succeeded
+
 ```typescript
 interface PaymentSucceededPayload {
-  paymentId: string
-  amount: number
-  currency: string
-  userId: string
-  serviceId?: string
-  bookingId?: string
-  paymentDate: string
-  paymentMethod?: string
-  transactionId?: string
+  paymentId: string;
+  amount: number;
+  currency: string;
+  userId: string;
+  serviceId?: string;
+  bookingId?: string;
+  paymentDate: string;
+  paymentMethod?: string;
+  transactionId?: string;
 }
 ```
 
@@ -136,33 +145,35 @@ WEBHOOK_SECRET
 ### 2. Update Frontend Code
 
 **Before:**
+
 ```typescript
-import { sendServiceCreation } from "@/lib/webhooks/make-webhooks"
+import { sendServiceCreation } from '@/lib/webhooks/make-webhooks';
 
 const result = await sendServiceCreation({
-  service_id: "123",
-  provider_id: "456",
-  service_name: "Test Service",
-  created_at: new Date().toISOString()
-})
+  service_id: '123',
+  provider_id: '456',
+  service_name: 'Test Service',
+  created_at: new Date().toISOString(),
+});
 ```
 
 **After:**
+
 ```typescript
-const response = await fetch("/api/webhooks/serviceCreation", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
+const response = await fetch('/api/webhooks/serviceCreation', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    serviceId: "123",
-    name: "Test Service",
-    providerId: "456",
-    createdAt: new Date().toISOString()
-  })
-})
+    serviceId: '123',
+    name: 'Test Service',
+    providerId: '456',
+    createdAt: new Date().toISOString(),
+  }),
+});
 
 if (!response.ok) {
-  const error = await response.json()
-  throw new Error(error.error)
+  const error = await response.json();
+  throw new Error(error.error);
 }
 ```
 
@@ -172,12 +183,12 @@ Update your Make.com scenarios to verify the webhook signature:
 
 ```javascript
 // In your Make.com scenario
-const payload = JSON.stringify(data.body)
-const signature = data.headers['X-Webhook-Signature']
-const expectedSignature = btoa(payload + 'your-webhook-secret')
+const payload = JSON.stringify(data.body);
+const signature = data.headers['X-Webhook-Signature'];
+const expectedSignature = btoa(payload + 'your-webhook-secret');
 
 if (signature !== expectedSignature) {
-  throw new Error('Invalid webhook signature')
+  throw new Error('Invalid webhook signature');
 }
 ```
 
@@ -186,6 +197,7 @@ if (signature !== expectedSignature) {
 ### 1. Admin Dashboard
 
 Access webhook logs at `/admin/integrations`:
+
 - View recent webhook dispatches
 - Filter by type and status
 - Search through payloads and errors
@@ -208,16 +220,19 @@ Access webhook logs at `/admin/integrations`:
 ## Testing
 
 ### Unit Tests
+
 ```bash
 npm test __tests__/webhook-dispatcher.test.ts
 ```
 
 ### Integration Tests
+
 ```bash
 npm test __tests__/webhook-api-integration.test.ts
 ```
 
 ### Manual Testing
+
 1. Create a service via the form
 2. Check the webhook logs in `/admin/integrations`
 3. Verify the Make.com scenario receives the webhook
@@ -243,6 +258,7 @@ npm test __tests__/webhook-api-integration.test.ts
 ### Debug Mode
 
 Enable debug logging by setting:
+
 ```env
 DEBUG_WEBHOOKS=true
 ```
@@ -270,4 +286,4 @@ This will log detailed information about webhook dispatches to the console.
 2. **Webhook templates** - Predefined payload structures
 3. **Webhook analytics** - Success rates, response times, etc.
 4. **Webhook scheduling** - Delayed webhook dispatches
-5. **Webhook encryption** - End-to-end encryption of payloads 
+5. **Webhook encryption** - End-to-end encryption of payloads

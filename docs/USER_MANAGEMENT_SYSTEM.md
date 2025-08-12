@@ -364,7 +364,7 @@ const customPermissions = {
     write: false,
     delete: false,
   },
-}
+};
 ```
 
 ### Custom User Fields
@@ -420,7 +420,7 @@ Enable debug logging:
 
 ```typescript
 // In development
-console.log("User management debug:", { users, filters, pagination })
+console.log('User management debug:', { users, filters, pagination });
 ```
 
 ## 🔄 Maintenance
@@ -449,30 +449,30 @@ SELECT cleanup_expired_invitations();
 
 ```typescript
 interface User {
-  id: string
-  email: string
-  role: string
-  status: string
-  full_name?: string
-  phone?: string
-  department?: string
-  position?: string
-  avatar_url?: string
-  notes?: string
-  permissions?: Record<string, boolean>
-  created_at: string
-  updated_at?: string
-  last_login?: string
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  full_name?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  avatar_url?: string;
+  notes?: string;
+  permissions?: Record<string, boolean>;
+  created_at: string;
+  updated_at?: string;
+  last_login?: string;
 }
 
 interface UserFilters {
-  search?: string
-  role?: string
-  status?: string
-  page?: number
-  limit?: number
-  sortBy?: string
-  sortOrder?: "asc" | "desc"
+  search?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 ```
 
@@ -495,7 +495,7 @@ const {
   getUserById,
   getUserStats,
   getUserActivity,
-} = useUserManagement()
+} = useUserManagement();
 ```
 
 ## 🎉 Conclusion

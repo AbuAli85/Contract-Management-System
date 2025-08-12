@@ -1,130 +1,143 @@
-"use client"
+'use client';
 
-import { useState, useEffect, use } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, use } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeftIcon, Save, Loader2 } from "lucide-react"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { ArrowLeftIcon, Save, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 
 interface Contract {
-  id: string
-  contract_number?: string | null
-  job_title?: string | null
-  work_location?: string | null
-  department?: string | null
-  contract_type?: string | null
-  currency?: string | null
-  basic_salary?: number | null
-  allowances?: number | null
-  special_terms?: string | null
-  contract_start_date?: string | null
-  contract_end_date?: string | null
-  status?: string | null
-  first_party_id?: string | null
-  second_party_id?: string | null
-  promoter_id?: string | null
-  first_party?: { name_en: string } | null
-  second_party?: { name_en: string } | null
-  promoter?: { name_en: string } | null
+  id: string;
+  contract_number?: string | null;
+  job_title?: string | null;
+  work_location?: string | null;
+  department?: string | null;
+  contract_type?: string | null;
+  currency?: string | null;
+  basic_salary?: number | null;
+  allowances?: number | null;
+  special_terms?: string | null;
+  contract_start_date?: string | null;
+  contract_end_date?: string | null;
+  status?: string | null;
+  first_party_id?: string | null;
+  second_party_id?: string | null;
+  promoter_id?: string | null;
+  first_party?: { name_en: string } | null;
+  second_party?: { name_en: string } | null;
+  promoter?: { name_en: string } | null;
 }
 
-export default function EditContractPage({ params }: { params: Promise<{ id: string }> }) {
-  const [contract, setContract] = useState<Contract | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [parties, setParties] = useState<any[]>([])
-  const [promoters, setPromoters] = useState<any[]>([])
-  const { toast } = useToast()
+export default function EditContractPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const [contract, setContract] = useState<Contract | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [parties, setParties] = useState<any[]>([]);
+  const [promoters, setPromoters] = useState<any[]>([]);
+  const { toast } = useToast();
 
   // Unwrap params using React.use() for Next.js 15 compatibility
-  const { id } = use(params)
+  const { id } = use(params);
 
   useEffect(() => {
     const init = async () => {
-      await fetchContract(id)
-      await fetchParties()
-      await fetchPromoters()
-    }
-    init()
-  }, [id])
+      await fetchContract(id);
+      await fetchParties();
+      await fetchPromoters();
+    };
+    init();
+  }, [id]);
 
   const fetchContract = async (contractId: string) => {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { data, error } = await supabase
-        .from("contracts")
+        .from('contracts')
         .select(
           `
           *,
           first_party:parties!contracts_first_party_id_fkey(name_en),
           second_party:parties!contracts_second_party_id_fkey(name_en),
           promoter:promoters(name_en)
-        `,
+        `
         )
-        .eq("id", contractId)
-        .single()
+        .eq('id', contractId)
+        .single();
 
-      if (error) throw error
-      setContract(data as Contract)
+      if (error) throw error;
+      setContract(data as Contract);
     } catch (error) {
-      console.error("Error fetching contract:", error)
+      console.error('Error fetching contract:', error);
       toast({
-        title: "Error",
-        description: "Failed to load contract details",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to load contract details',
+        variant: 'destructive',
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchParties = async () => {
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase.from("parties").select("id, name_en").order("name_en")
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('parties')
+        .select('id, name_en')
+        .order('name_en');
 
-      if (error) throw error
-      setParties(data || [])
+      if (error) throw error;
+      setParties(data || []);
     } catch (error) {
-      console.error("Error fetching parties:", error)
+      console.error('Error fetching parties:', error);
     }
-  }
+  };
 
   const fetchPromoters = async () => {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { data, error } = await supabase
-        .from("promoters")
-        .select("id, name_en")
-        .order("name_en")
+        .from('promoters')
+        .select('id, name_en')
+        .order('name_en');
 
-      if (error) throw error
-      setPromoters(data || [])
+      if (error) throw error;
+      setPromoters(data || []);
     } catch (error) {
-      console.error("Error fetching promoters:", error)
+      console.error('Error fetching promoters:', error);
     }
-  }
+  };
 
   const handleSave = async () => {
-    if (!contract) return
+    if (!contract) return;
 
-    setSaving(true)
+    setSaving(true);
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase
-        .from("contracts")
+        .from('contracts')
         .update({
           job_title: contract.job_title,
           work_location: contract.work_location,
@@ -141,59 +154,61 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
           promoter_id: contract.promoter_id,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", contract.id)
+        .eq('id', contract.id);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Contract updated successfully",
-      })
+        title: 'Success',
+        description: 'Contract updated successfully',
+      });
     } catch (error) {
-      console.error("Error updating contract:", error)
+      console.error('Error updating contract:', error);
       toast({
-        title: "Error",
-        description: "Failed to update contract",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to update contract',
+        variant: 'destructive',
+      });
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex min-h-screen items-center justify-center'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
-    )
+    );
   }
 
   if (!contract) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Card className="w-full max-w-lg">
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">Contract not found</p>
-            <Button asChild className="mt-4">
-              <Link href="/contracts">Back to Contracts</Link>
+      <div className='flex min-h-screen items-center justify-center'>
+        <Card className='w-full max-w-lg'>
+          <CardContent className='p-6 text-center'>
+            <p className='text-muted-foreground'>Contract not found</p>
+            <Button asChild className='mt-4'>
+              <Link href='/contracts'>Back to Contracts</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="container mx-auto space-y-6 py-8">
-      <div className="flex items-center justify-between">
+    <div className='container mx-auto space-y-6 py-8'>
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Edit Contract</h1>
-          <p className="text-muted-foreground">Contract: {contract.contract_number || id}</p>
+          <h1 className='text-3xl font-bold'>Edit Contract</h1>
+          <p className='text-muted-foreground'>
+            Contract: {contract.contract_number || id}
+          </p>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant='outline'>
           <Link href={`/contracts/${id}`}>
-            <ArrowLeftIcon className="mr-2 h-4 w-4" />
+            <ArrowLeftIcon className='mr-2 h-4 w-4' />
             Back to Details
           </Link>
         </Button>
@@ -204,125 +219,155 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
           <CardTitle>Contract Details</CardTitle>
           <CardDescription>Update contract information</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="job_title">Job Title</Label>
+        <CardContent className='space-y-6'>
+          <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div className='space-y-2'>
+              <Label htmlFor='job_title'>Job Title</Label>
               <Input
-                id="job_title"
-                value={contract.job_title || ""}
-                onChange={(e) => setContract({ ...contract, job_title: e.target.value })}
+                id='job_title'
+                value={contract.job_title || ''}
+                onChange={e =>
+                  setContract({ ...contract, job_title: e.target.value })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="work_location">Work Location</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='work_location'>Work Location</Label>
               <Input
-                id="work_location"
-                value={contract.work_location || ""}
-                onChange={(e) => setContract({ ...contract, work_location: e.target.value })}
+                id='work_location'
+                value={contract.work_location || ''}
+                onChange={e =>
+                  setContract({ ...contract, work_location: e.target.value })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='department'>Department</Label>
               <Input
-                id="department"
-                value={contract.department || ""}
-                onChange={(e) => setContract({ ...contract, department: e.target.value })}
+                id='department'
+                value={contract.department || ''}
+                onChange={e =>
+                  setContract({ ...contract, department: e.target.value })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contract_type">Contract Type</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='contract_type'>Contract Type</Label>
               <Select
-                value={contract.contract_type || ""}
-                onValueChange={(value) => setContract({ ...contract, contract_type: value })}
+                value={contract.contract_type || ''}
+                onValueChange={value =>
+                  setContract({ ...contract, contract_type: value })
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select contract type" />
+                  <SelectValue placeholder='Select contract type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full-time-permanent">Full Time Permanent</SelectItem>
-                  <SelectItem value="part-time">Part Time</SelectItem>
-                  <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="temporary">Temporary</SelectItem>
+                  <SelectItem value='full-time-permanent'>
+                    Full Time Permanent
+                  </SelectItem>
+                  <SelectItem value='part-time'>Part Time</SelectItem>
+                  <SelectItem value='contract'>Contract</SelectItem>
+                  <SelectItem value='temporary'>Temporary</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='currency'>Currency</Label>
               <Select
-                value={contract.currency || "OMR"}
-                onValueChange={(value) => setContract({ ...contract, currency: value })}
+                value={contract.currency || 'OMR'}
+                onValueChange={value =>
+                  setContract({ ...contract, currency: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="OMR">OMR</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value='OMR'>OMR</SelectItem>
+                  <SelectItem value='USD'>USD</SelectItem>
+                  <SelectItem value='EUR'>EUR</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="basic_salary">Basic Salary</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='basic_salary'>Basic Salary</Label>
               <Input
-                id="basic_salary"
-                type="number"
-                value={contract.basic_salary || ""}
-                onChange={(e) =>
-                  setContract({ ...contract, basic_salary: parseFloat(e.target.value) || 0 })
+                id='basic_salary'
+                type='number'
+                value={contract.basic_salary || ''}
+                onChange={e =>
+                  setContract({
+                    ...contract,
+                    basic_salary: parseFloat(e.target.value) || 0,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="allowances">Allowances</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='allowances'>Allowances</Label>
               <Input
-                id="allowances"
-                type="number"
-                value={contract.allowances || ""}
-                onChange={(e) =>
-                  setContract({ ...contract, allowances: parseFloat(e.target.value) || 0 })
+                id='allowances'
+                type='number'
+                value={contract.allowances || ''}
+                onChange={e =>
+                  setContract({
+                    ...contract,
+                    allowances: parseFloat(e.target.value) || 0,
+                  })
                 }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contract_start_date">Start Date</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='contract_start_date'>Start Date</Label>
               <Input
-                id="contract_start_date"
-                type="date"
-                value={contract.contract_start_date || ""}
-                onChange={(e) => setContract({ ...contract, contract_start_date: e.target.value })}
+                id='contract_start_date'
+                type='date'
+                value={contract.contract_start_date || ''}
+                onChange={e =>
+                  setContract({
+                    ...contract,
+                    contract_start_date: e.target.value,
+                  })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="contract_end_date">End Date</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='contract_end_date'>End Date</Label>
               <Input
-                id="contract_end_date"
-                type="date"
-                value={contract.contract_end_date || ""}
-                onChange={(e) => setContract({ ...contract, contract_end_date: e.target.value })}
+                id='contract_end_date'
+                type='date'
+                value={contract.contract_end_date || ''}
+                onChange={e =>
+                  setContract({
+                    ...contract,
+                    contract_end_date: e.target.value,
+                  })
+                }
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="first_party">First Party</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='first_party'>First Party</Label>
               <Select
-                value={contract.first_party_id || ""}
-                onValueChange={(value) => setContract({ ...contract, first_party_id: value })}
+                value={contract.first_party_id || ''}
+                onValueChange={value =>
+                  setContract({ ...contract, first_party_id: value })
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select first party" />
+                  <SelectValue placeholder='Select first party' />
                 </SelectTrigger>
                 <SelectContent>
-                  {parties.map((party) => (
+                  {parties.map(party => (
                     <SelectItem key={party.id} value={party.id}>
                       {party.name_en}
                     </SelectItem>
@@ -331,17 +376,19 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="second_party">Second Party</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='second_party'>Second Party</Label>
               <Select
-                value={contract.second_party_id || ""}
-                onValueChange={(value) => setContract({ ...contract, second_party_id: value })}
+                value={contract.second_party_id || ''}
+                onValueChange={value =>
+                  setContract({ ...contract, second_party_id: value })
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select second party" />
+                  <SelectValue placeholder='Select second party' />
                 </SelectTrigger>
                 <SelectContent>
-                  {parties.map((party) => (
+                  {parties.map(party => (
                     <SelectItem key={party.id} value={party.id}>
                       {party.name_en}
                     </SelectItem>
@@ -350,17 +397,19 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="promoter">Promoter</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='promoter'>Promoter</Label>
               <Select
-                value={contract.promoter_id || ""}
-                onValueChange={(value) => setContract({ ...contract, promoter_id: value })}
+                value={contract.promoter_id || ''}
+                onValueChange={value =>
+                  setContract({ ...contract, promoter_id: value })
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select promoter" />
+                  <SelectValue placeholder='Select promoter' />
                 </SelectTrigger>
                 <SelectContent>
-                  {promoters.map((promoter) => (
+                  {promoters.map(promoter => (
                     <SelectItem key={promoter.id} value={promoter.id}>
                       {promoter.name_en}
                     </SelectItem>
@@ -370,29 +419,31 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="special_terms">Special Terms</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='special_terms'>Special Terms</Label>
             <Textarea
-              id="special_terms"
-              value={contract.special_terms || ""}
-              onChange={(e) => setContract({ ...contract, special_terms: e.target.value })}
+              id='special_terms'
+              value={contract.special_terms || ''}
+              onChange={e =>
+                setContract({ ...contract, special_terms: e.target.value })
+              }
               rows={4}
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button asChild variant="outline">
+          <div className='flex justify-end space-x-2'>
+            <Button asChild variant='outline'>
               <Link href={`/contracts/${id}`}>Cancel</Link>
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Saving...
                 </>
               ) : (
                 <>
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className='mr-2 h-4 w-4' />
                   Save Changes
                 </>
               )}
@@ -401,5 +452,5 @@ export default function EditContractPage({ params }: { params: Promise<{ id: str
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

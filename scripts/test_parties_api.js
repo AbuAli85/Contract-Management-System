@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,36 +16,36 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            isJson: true
+            isJson: true,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data.substring(0, 200) + '...',
-            isJson: false
+            isJson: false,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -61,39 +62,48 @@ async function testPartiesAPI() {
   console.log('🧪 Testing Parties API...');
   console.log(`🔗 Base URL: ${BASE_URL}\n`);
 
-  const endpoints = [
-    '/api/parties',
-    '/en/manage-parties'
-  ];
+  const endpoints = ['/api/parties', '/en/manage-parties'];
 
   for (const endpoint of endpoints) {
     try {
       console.log(`🔍 Testing: ${endpoint}`);
       const result = await makeRequest(`${BASE_URL}${endpoint}`);
-      
+
       if (result.status === 200) {
         console.log(`✅ ${endpoint} - Status: ${result.status} (PASS)`);
-        
+
         if (result.isJson && result.data) {
           if (Array.isArray(result.data)) {
             console.log(`   📊 Found ${result.data.length} parties`);
             if (result.data.length > 0) {
               const firstParty = result.data[0];
-              console.log(`   📋 Sample party: ${firstParty.name_en || firstParty.name}`);
-              console.log(`   🔍 Has cr_expiry_date: ${firstParty.cr_expiry_date ? 'Yes' : 'No'}`);
-              console.log(`   🔍 Has license_expiry_date: ${firstParty.license_expiry_date ? 'Yes' : 'No'}`);
+              console.log(
+                `   📋 Sample party: ${firstParty.name_en || firstParty.name}`
+              );
+              console.log(
+                `   🔍 Has cr_expiry_date: ${firstParty.cr_expiry_date ? 'Yes' : 'No'}`
+              );
+              console.log(
+                `   🔍 Has license_expiry_date: ${firstParty.license_expiry_date ? 'Yes' : 'No'}`
+              );
             }
           } else if (result.data.error) {
             console.log(`   ❌ API Error: ${result.data.error}`);
           }
         }
       } else if (result.status === 401) {
-        console.log(`🔐 ${endpoint} - Status: ${result.status} (Authentication required)`);
+        console.log(
+          `🔐 ${endpoint} - Status: ${result.status} (Authentication required)`
+        );
       } else if (result.status === 404) {
         console.log(`❌ ${endpoint} - Status: ${result.status} (Not found)`);
       } else if (result.status === 500) {
         console.log(`❌ ${endpoint} - Status: ${result.status} (Server error)`);
-        if (result.data && typeof result.data === 'string' && result.data.includes('cr_expiry')) {
+        if (
+          result.data &&
+          typeof result.data === 'string' &&
+          result.data.includes('cr_expiry')
+        ) {
           console.log(`   ❌ Still has cr_expiry column error`);
         }
       } else {
@@ -118,4 +128,4 @@ async function testPartiesAPI() {
   console.log('4. Confirm parties data loads correctly');
 }
 
-testPartiesAPI().catch(console.error); 
+testPartiesAPI().catch(console.error);

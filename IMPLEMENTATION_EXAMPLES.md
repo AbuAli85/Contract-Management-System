@@ -6,54 +6,68 @@
 
 ```typescript
 // lib/rbac-middleware.ts
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
-export type Permission = 
-  | 'bookings:read' | 'bookings:write' | 'bookings:delete'
-  | 'services:read' | 'services:write' | 'services:delete'
-  | 'users:read' | 'users:write' | 'users:delete'
-  | 'analytics:read' | 'reports:read'
+export type Permission =
+  | 'bookings:read'
+  | 'bookings:write'
+  | 'bookings:delete'
+  | 'services:read'
+  | 'services:write'
+  | 'services:delete'
+  | 'users:read'
+  | 'users:write'
+  | 'users:delete'
+  | 'analytics:read'
+  | 'reports:read';
 
-export type UserRole = 'admin' | 'client' | 'provider' | 'manager' | 'user'
+export type UserRole = 'admin' | 'client' | 'provider' | 'manager' | 'user';
 
 // Role-permission matrix
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin: [
-    'bookings:read', 'bookings:write', 'bookings:delete',
-    'services:read', 'services:write', 'services:delete',
-    'users:read', 'users:write', 'users:delete',
-    'analytics:read', 'reports:read'
+    'bookings:read',
+    'bookings:write',
+    'bookings:delete',
+    'services:read',
+    'services:write',
+    'services:delete',
+    'users:read',
+    'users:write',
+    'users:delete',
+    'analytics:read',
+    'reports:read',
   ],
   manager: [
-    'bookings:read', 'bookings:write',
-    'services:read', 'services:write',
-    'users:read', 'analytics:read', 'reports:read'
+    'bookings:read',
+    'bookings:write',
+    'services:read',
+    'services:write',
+    'users:read',
+    'analytics:read',
+    'reports:read',
   ],
   provider: [
-    'bookings:read', 'bookings:write',
-    'services:read', 'services:write'
-  ],
-  client: [
-    'bookings:read', 'bookings:write',
-    'services:read'
-  ],
-  user: [
     'bookings:read',
-    'services:read'
-  ]
-}
+    'bookings:write',
+    'services:read',
+    'services:write',
+  ],
+  client: ['bookings:read', 'bookings:write', 'services:read'],
+  user: ['bookings:read', 'services:read'],
+};
 
 export interface AuthContext {
-  user: any
-  profile: any
-  role: UserRole
-  permissions: Permission[]
+  user: any;
+  profile: any;
+  role: UserRole;
+  permissions: Permission[];
 }
 
 export function hasPermission(role: UserRole, permission: Permission): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission)
+  return ROLE_PERMISSIONS[role].includes(permission);
 }
 
 export function withRBAC(
@@ -62,13 +76,16 @@ export function withRBAC(
 ) {
   return async (req: NextRequest) => {
     try {
-      const supabase = createServerComponentClient({ cookies })
-      
+      const supabase = createServerComponentClient({ cookies });
+
       // Get session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError || !session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       // Get user profile with role
@@ -76,25 +93,31 @@ export function withRBAC(
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single()
+        .single();
 
       if (profileError || !profile || profile.status !== 'active') {
-        return NextResponse.json({ error: 'Profile not found or inactive' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'Profile not found or inactive' },
+          { status: 403 }
+        );
       }
 
-      const userRole = profile.role as UserRole
-      const userPermissions = ROLE_PERMISSIONS[userRole]
+      const userRole = profile.role as UserRole;
+      const userPermissions = ROLE_PERMISSIONS[userRole];
 
       // Check required permissions
       const missingPermissions = requiredPermissions.filter(
         permission => !hasPermission(userRole, permission)
-      )
+      );
 
       if (missingPermissions.length > 0) {
-        return NextResponse.json({ 
-          error: 'Insufficient permissions',
-          missing: missingPermissions 
-        }, { status: 403 })
+        return NextResponse.json(
+          {
+            error: 'Insufficient permissions',
+            missing: missingPermissions,
+          },
+          { status: 403 }
+        );
       }
 
       // Create auth context
@@ -102,15 +125,18 @@ export function withRBAC(
         user: session.user,
         profile,
         role: userRole,
-        permissions: userPermissions
-      }
+        permissions: userPermissions,
+      };
 
-      return handler(req, context)
+      return handler(req, context);
     } catch (error) {
-      console.error('RBAC middleware error:', error)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      console.error('RBAC middleware error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
     }
-  }
+  };
 }
 ```
 
@@ -118,64 +144,102 @@ export function withRBAC(
 
 ```typescript
 // app/api/dashboard/stats/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { withRBAC } from '@/lib/rbac-middleware'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { unstable_cache } from 'next/cache'
+import { NextRequest, NextResponse } from 'next/server';
+import { withRBAC } from '@/lib/rbac-middleware';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { unstable_cache } from 'next/cache';
 
 // Cache configuration
-const CACHE_TTL = 300 // 5 minutes
-const CACHE_TAG = 'dashboard-stats'
+const CACHE_TTL = 300; // 5 minutes
+const CACHE_TAG = 'dashboard-stats';
 
 // Cached stats function
 const getCachedStats = unstable_cache(
   async (userId: string, role: string) => {
-    const supabase = createServerComponentClient({ cookies })
-    
+    const supabase = createServerComponentClient({ cookies });
+
     const stats = {
       totalBookings: 0,
       activeServices: 0,
       totalRevenue: 0,
       pendingApprovals: 0,
-      recentActivity: []
-    }
+      recentActivity: [],
+    };
 
     try {
       // Get role-specific stats
       if (role === 'admin' || role === 'manager') {
         // Admin/Manager: Get all stats
-        const [bookingsResult, servicesResult, revenueResult] = await Promise.all([
-          supabase.from('bookings').select('id', { count: 'exact', head: true }),
-          supabase.from('services').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-          supabase.from('bookings').select('quoted_price').eq('status', 'completed')
-        ])
+        const [bookingsResult, servicesResult, revenueResult] =
+          await Promise.all([
+            supabase
+              .from('bookings')
+              .select('id', { count: 'exact', head: true }),
+            supabase
+              .from('services')
+              .select('id', { count: 'exact', head: true })
+              .eq('status', 'active'),
+            supabase
+              .from('bookings')
+              .select('quoted_price')
+              .eq('status', 'completed'),
+          ]);
 
-        stats.totalBookings = bookingsResult.count || 0
-        stats.activeServices = servicesResult.count || 0
-        stats.totalRevenue = revenueResult.data?.reduce((sum, booking) => sum + (booking.quoted_price || 0), 0) || 0
-
+        stats.totalBookings = bookingsResult.count || 0;
+        stats.activeServices = servicesResult.count || 0;
+        stats.totalRevenue =
+          revenueResult.data?.reduce(
+            (sum, booking) => sum + (booking.quoted_price || 0),
+            0
+          ) || 0;
       } else if (role === 'provider') {
         // Provider: Get their stats
-        const [bookingsResult, servicesResult, revenueResult] = await Promise.all([
-          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('provider_id', userId),
-          supabase.from('services').select('id', { count: 'exact', head: true }).eq('provider_id', userId).eq('status', 'active'),
-          supabase.from('bookings').select('quoted_price').eq('provider_id', userId).eq('status', 'completed')
-        ])
+        const [bookingsResult, servicesResult, revenueResult] =
+          await Promise.all([
+            supabase
+              .from('bookings')
+              .select('id', { count: 'exact', head: true })
+              .eq('provider_id', userId),
+            supabase
+              .from('services')
+              .select('id', { count: 'exact', head: true })
+              .eq('provider_id', userId)
+              .eq('status', 'active'),
+            supabase
+              .from('bookings')
+              .select('quoted_price')
+              .eq('provider_id', userId)
+              .eq('status', 'completed'),
+          ]);
 
-        stats.totalBookings = bookingsResult.count || 0
-        stats.activeServices = servicesResult.count || 0
-        stats.totalRevenue = revenueResult.data?.reduce((sum, booking) => sum + (booking.quoted_price || 0), 0) || 0
-
+        stats.totalBookings = bookingsResult.count || 0;
+        stats.activeServices = servicesResult.count || 0;
+        stats.totalRevenue =
+          revenueResult.data?.reduce(
+            (sum, booking) => sum + (booking.quoted_price || 0),
+            0
+          ) || 0;
       } else if (role === 'client') {
         // Client: Get their bookings
         const [bookingsResult, totalSpentResult] = await Promise.all([
-          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('client_id', userId),
-          supabase.from('bookings').select('quoted_price').eq('client_id', userId).eq('status', 'completed')
-        ])
+          supabase
+            .from('bookings')
+            .select('id', { count: 'exact', head: true })
+            .eq('client_id', userId),
+          supabase
+            .from('bookings')
+            .select('quoted_price')
+            .eq('client_id', userId)
+            .eq('status', 'completed'),
+        ]);
 
-        stats.totalBookings = bookingsResult.count || 0
-        stats.totalRevenue = totalSpentResult.data?.reduce((sum, booking) => sum + (booking.quoted_price || 0), 0) || 0
+        stats.totalBookings = bookingsResult.count || 0;
+        stats.totalRevenue =
+          totalSpentResult.data?.reduce(
+            (sum, booking) => sum + (booking.quoted_price || 0),
+            0
+          ) || 0;
       }
 
       // Get recent activity for all roles
@@ -184,42 +248,47 @@ const getCachedStats = unstable_cache(
         .select('action, resource_type, created_at, details')
         .or(role === 'admin' ? undefined : `user_id.eq.${userId}`)
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(10);
 
-      stats.recentActivity = recentActivity || []
-
+      stats.recentActivity = recentActivity || [];
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
+      console.error('Error fetching dashboard stats:', error);
     }
 
-    return stats
+    return stats;
   },
   [CACHE_TAG],
   {
     revalidate: CACHE_TTL,
-    tags: [CACHE_TAG]
+    tags: [CACHE_TAG],
   }
-)
+);
 
-export const GET = withRBAC(async (req: NextRequest, context) => {
-  const stats = await getCachedStats(context.user.id, context.role)
-  
-  return NextResponse.json({ 
-    stats,
-    cached_at: new Date().toISOString(),
-    user_role: context.role
-  })
-}, ['analytics:read'])
+export const GET = withRBAC(
+  async (req: NextRequest, context) => {
+    const stats = await getCachedStats(context.user.id, context.role);
+
+    return NextResponse.json({
+      stats,
+      cached_at: new Date().toISOString(),
+      user_role: context.role,
+    });
+  },
+  ['analytics:read']
+);
 
 // Invalidate cache when data changes
-export const POST = withRBAC(async (req: NextRequest, context) => {
-  const { revalidate } = await import('next/cache')
-  
-  // Invalidate dashboard stats cache
-  revalidate(CACHE_TAG)
-  
-  return NextResponse.json({ message: 'Cache invalidated' })
-}, ['analytics:read'])
+export const POST = withRBAC(
+  async (req: NextRequest, context) => {
+    const { revalidate } = await import('next/cache');
+
+    // Invalidate dashboard stats cache
+    revalidate(CACHE_TAG);
+
+    return NextResponse.json({ message: 'Cache invalidated' });
+  },
+  ['analytics:read']
+);
 ```
 
 ### 3. Real-time Booking Status Updates
@@ -352,7 +421,7 @@ export function BookingStatusTracker({ bookingId, userRole }: BookingStatusTrack
 
   const getAvailableActions = () => {
     const actions = []
-    
+
     if (userRole === 'provider') {
       if (booking.status === 'pending') {
         actions.push({ label: 'Confirm', status: 'confirmed', variant: 'default' })
@@ -365,13 +434,13 @@ export function BookingStatusTracker({ bookingId, userRole }: BookingStatusTrack
         actions.push({ label: 'Complete', status: 'completed', variant: 'default' })
       }
     }
-    
+
     if (userRole === 'client') {
       if (['pending', 'confirmed'].includes(booking.status)) {
         actions.push({ label: 'Cancel', status: 'cancelled', variant: 'destructive' })
       }
     }
-    
+
     if (['admin', 'manager'].includes(userRole)) {
       actions.push({ label: 'Mark Completed', status: 'completed', variant: 'default' })
       actions.push({ label: 'Cancel', status: 'cancelled', variant: 'destructive' })
@@ -379,7 +448,7 @@ export function BookingStatusTracker({ bookingId, userRole }: BookingStatusTrack
         actions.push({ label: 'Refund', status: 'refunded', variant: 'secondary' })
       }
     }
-    
+
     return actions
   }
 
@@ -507,19 +576,19 @@ export function ServiceSearch({ onResults }: ServiceSearchProps) {
     setLoading(true)
     try {
       const searchParams = new URLSearchParams()
-      
+
       if (filters.query) searchParams.set('q', filters.query)
       if (filters.category) searchParams.set('category', filters.category)
       if (filters.location) searchParams.set('location', filters.location)
       if (filters.rating > 0) searchParams.set('min_rating', filters.rating.toString())
       if (filters.sortBy) searchParams.set('sort', filters.sortBy)
-      
+
       searchParams.set('min_price', filters.priceRange[0].toString())
       searchParams.set('max_price', filters.priceRange[1].toString())
 
       const response = await fetch(`/api/services/search?${searchParams}`)
       const data = await response.json()
-      
+
       setServices(data.services || [])
       onResults(data.services || [])
     } catch (error) {
@@ -550,7 +619,7 @@ export function ServiceSearch({ onResults }: ServiceSearchProps) {
     })
   }
 
-  const activeFiltersCount = Object.values(filters).filter(value => 
+  const activeFiltersCount = Object.values(filters).filter(value =>
     value !== '' && value !== 0 && value !== 'relevance' && !Array.isArray(value)
   ).length
 
@@ -630,7 +699,7 @@ export function ServiceSearch({ onResults }: ServiceSearchProps) {
           {filters.category && (
             <Badge variant="secondary">
               Category: {filters.category}
-              <button 
+              <button
                 onClick={() => setFilters({ ...filters, category: '' })}
                 className="ml-2 hover:text-red-600"
               >
@@ -641,7 +710,7 @@ export function ServiceSearch({ onResults }: ServiceSearchProps) {
           {filters.location && (
             <Badge variant="secondary">
               Location: {filters.location}
-              <button 
+              <button
                 onClick={() => setFilters({ ...filters, location: '' })}
                 className="ml-2 hover:text-red-600"
               >
@@ -652,7 +721,7 @@ export function ServiceSearch({ onResults }: ServiceSearchProps) {
           {filters.rating > 0 && (
             <Badge variant="secondary">
               {filters.rating}+ Stars
-              <button 
+              <button
                 onClick={() => setFilters({ ...filters, rating: 0 })}
                 className="ml-2 hover:text-red-600"
               >

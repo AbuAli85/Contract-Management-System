@@ -1,16 +1,16 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client';
 
 // Role hierarchy system - higher roles inherit all lower role permissions
 export const ROLE_HIERARCHY = {
-  'super_admin': 5,  // Highest level - can do everything
-  'admin': 4,        // Can manage users, system settings
-  'manager': 3,      // Can manage teams, promoters
-  'moderator': 2,    // Can moderate content, basic admin tasks  
-  'user': 1,         // Basic user permissions
-  'guest': 0         // Lowest level - read-only
-} as const
+  super_admin: 5, // Highest level - can do everything
+  admin: 4, // Can manage users, system settings
+  manager: 3, // Can manage teams, promoters
+  moderator: 2, // Can moderate content, basic admin tasks
+  user: 1, // Basic user permissions
+  guest: 0, // Lowest level - read-only
+} as const;
 
-export type UserRole = keyof typeof ROLE_HIERARCHY
+export type UserRole = keyof typeof ROLE_HIERARCHY;
 
 /**
  * Check if user has permission for a specific role level
@@ -18,11 +18,14 @@ export type UserRole = keyof typeof ROLE_HIERARCHY
  * @param requiredRole - Required role for the action
  * @returns boolean - true if user has permission
  */
-export function hasRolePermission(userRole: string, requiredRole: string): boolean {
-  const userLevel = ROLE_HIERARCHY[userRole as UserRole] ?? 0
-  const requiredLevel = ROLE_HIERARCHY[requiredRole as UserRole] ?? 0
-  
-  return userLevel >= requiredLevel
+export function hasRolePermission(
+  userRole: string,
+  requiredRole: string
+): boolean {
+  const userLevel = ROLE_HIERARCHY[userRole as UserRole] ?? 0;
+  const requiredLevel = ROLE_HIERARCHY[requiredRole as UserRole] ?? 0;
+
+  return userLevel >= requiredLevel;
 }
 
 /**
@@ -31,11 +34,11 @@ export function hasRolePermission(userRole: string, requiredRole: string): boole
  * @returns Array of role names the user can access
  */
 export function getAccessibleRoles(userRole: string): string[] {
-  const userLevel = ROLE_HIERARCHY[userRole as UserRole] ?? 0
-  
+  const userLevel = ROLE_HIERARCHY[userRole as UserRole] ?? 0;
+
   return Object.entries(ROLE_HIERARCHY)
     .filter(([_, level]) => userLevel >= level)
-    .map(([role]) => role)
+    .map(([role]) => role);
 }
 
 /**
@@ -44,7 +47,7 @@ export function getAccessibleRoles(userRole: string): string[] {
  * @returns boolean
  */
 export function canPerformAdminActions(userRole: string): boolean {
-  return hasRolePermission(userRole, 'admin')
+  return hasRolePermission(userRole, 'admin');
 }
 
 /**
@@ -53,7 +56,7 @@ export function canPerformAdminActions(userRole: string): boolean {
  * @returns boolean
  */
 export function canPerformUserActions(userRole: string): boolean {
-  return hasRolePermission(userRole, 'user')
+  return hasRolePermission(userRole, 'user');
 }
 
 /**
@@ -62,34 +65,34 @@ export function canPerformUserActions(userRole: string): boolean {
  * @returns object with display info
  */
 export function getRoleDisplay(userRole: string) {
-  const accessibleRoles = getAccessibleRoles(userRole)
-  const isAdmin = canPerformAdminActions(userRole)
-  const isUser = canPerformUserActions(userRole)
-  
+  const accessibleRoles = getAccessibleRoles(userRole);
+  const isAdmin = canPerformAdminActions(userRole);
+  const isUser = canPerformUserActions(userRole);
+
   // Determine the best display name for the role
-  let displayText = userRole
+  let displayText = userRole;
   if (userRole === 'super_admin') {
-    displayText = 'Super Admin'
+    displayText = 'Super Admin';
   } else if (userRole === 'admin') {
-    displayText = 'Admin'
+    displayText = 'Admin';
   } else if (userRole === 'manager') {
-    displayText = 'Manager'
+    displayText = 'Manager';
   } else if (userRole === 'moderator') {
-    displayText = 'Moderator'
+    displayText = 'Moderator';
   } else if (userRole === 'user') {
-    displayText = 'User'
+    displayText = 'User';
   } else if (userRole === 'guest') {
-    displayText = 'Guest'
+    displayText = 'Guest';
   }
-  
+
   return {
     primary: userRole,
     accessible: accessibleRoles,
-    displayText: displayText, // Show only the primary role name
+    displayText, // Show only the primary role name
     badges: [], // No additional badges, just the primary role
     canDoAdmin: isAdmin,
-    canDoUser: isUser
-  }
+    canDoUser: isUser,
+  };
 }
 
 /**
@@ -99,25 +102,28 @@ export function getRoleDisplay(userRole: string) {
  * @returns Promise with result
  */
 export async function updateUserRole(userId: string, newRole: UserRole) {
-  const supabase = createClient()
+  const supabase = createClient();
   if (!supabase) {
-    console.error("Supabase client is not available.")
-    return { success: false, error: "Supabase client is not available." }
+    console.error('Supabase client is not available.');
+    return { success: false, error: 'Supabase client is not available.' };
   }
-  
+
   try {
     const { data, error } = await supabase
       .from('profiles')
       .update({ role: newRole })
       .eq('id', userId)
-      .select()
-    
-    if (error) throw error
-    
-    return { success: true, data }
+      .select();
+
+    if (error) throw error;
+
+    return { success: true, data };
   } catch (error) {
-    console.error('Error updating user role:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    console.error('Error updating user role:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
@@ -126,28 +132,31 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
  * @returns Promise with users and their role capabilities
  */
 export async function getUsersWithRoleInfo() {
-  const supabase = createClient()
+  const supabase = createClient();
   if (!supabase) {
-    console.error("Supabase client is not available.")
-    return { success: false, error: "Supabase client is not available." }
+    console.error('Supabase client is not available.');
+    return { success: false, error: 'Supabase client is not available.' };
   }
-  
+
   try {
     const { data: users, error } = await supabase
       .from('profiles')
       .select('*')
-      .order('role', { ascending: false })
-    
-    if (error) throw error
-    
+      .order('role', { ascending: false });
+
+    if (error) throw error;
+
     const usersWithRoleInfo = users?.map(user => ({
       ...user,
-      roleInfo: getRoleDisplay(user.role || 'user')
-    }))
-    
-    return { success: true, data: usersWithRoleInfo }
+      roleInfo: getRoleDisplay(user.role || 'user'),
+    }));
+
+    return { success: true, data: usersWithRoleInfo };
   } catch (error) {
-    console.error('Error fetching users with role info:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    console.error('Error fetching users with role info:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }

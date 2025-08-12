@@ -32,27 +32,27 @@ This guide outlines the performance optimizations implemented for the User Manag
 
 ```typescript
 // Before: No filtering support
-const { data: users } = await supabase.from("app_users").select("*")
+const { data: users } = await supabase.from('app_users').select('*');
 
 // After: Full filtering, pagination, and sorting
-const params = new URLSearchParams()
-if (filters.search) params.append("search", filters.search)
-if (filters.role) params.append("role", filters.role)
-if (filters.status) params.append("status", filters.status)
-if (filters.page) params.append("page", filters.page.toString())
-if (filters.limit) params.append("limit", filters.limit.toString())
-if (filters.sortBy) params.append("sortBy", filters.sortBy)
-if (filters.sortOrder) params.append("sortOrder", filters.sortOrder)
+const params = new URLSearchParams();
+if (filters.search) params.append('search', filters.search);
+if (filters.role) params.append('role', filters.role);
+if (filters.status) params.append('status', filters.status);
+if (filters.page) params.append('page', filters.page.toString());
+if (filters.limit) params.append('limit', filters.limit.toString());
+if (filters.sortBy) params.append('sortBy', filters.sortBy);
+if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 ```
 
 #### Intelligent Caching
 
 ```typescript
 // Cache key based on all filter parameters
-const cacheKey = `users_${page}_${limit}_${search}_${role}_${status}_${sortBy}_${sortOrder}`
-const cached = userCache.get(cacheKey)
+const cacheKey = `users_${page}_${limit}_${search}_${role}_${status}_${sortBy}_${sortOrder}`;
+const cached = userCache.get(cacheKey);
 if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-  return cached.data
+  return cached.data;
 }
 ```
 
@@ -61,26 +61,26 @@ if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
 ```typescript
 // Build query with proper filtering and pagination
 let query = supabase
-  .from("app_users")
+  .from('app_users')
   .select(
-    "id, email, role, status, avatar_url, full_name, department, position, created_at, last_login",
-    { count: "exact" },
-  )
+    'id, email, role, status, avatar_url, full_name, department, position, created_at, last_login',
+    { count: 'exact' }
+  );
 
 // Apply filters
 if (search) {
-  query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`)
+  query = query.or(`email.ilike.%${search}%,full_name.ilike.%${search}%`);
 }
 if (role) {
-  query = query.eq("role", role)
+  query = query.eq('role', role);
 }
 if (status) {
-  query = query.eq("status", status)
+  query = query.eq('status', status);
 }
 
 // Apply sorting and pagination
-query = query.order(sortBy, { ascending: sortOrder === "asc" })
-query = query.range(offset, offset + limit - 1)
+query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+query = query.range(offset, offset + limit - 1);
 ```
 
 ### 2. **Frontend Optimizations**
@@ -89,21 +89,21 @@ query = query.range(offset, offset + limit - 1)
 
 ```typescript
 // Cancel previous requests to prevent race conditions
-const abortControllerRef = useRef<AbortController | null>(null)
+const abortControllerRef = useRef<AbortController | null>(null);
 
 const fetchUsers = useCallback(async (filters: UserFilters = {}) => {
   // Cancel previous request if still pending
   if (abortControllerRef.current) {
-    abortControllerRef.current.abort()
+    abortControllerRef.current.abort();
   }
 
   // Create new abort controller
-  abortControllerRef.current = new AbortController()
+  abortControllerRef.current = new AbortController();
 
   const response = await fetch(`/api/users?${params.toString()}`, {
     signal: abortControllerRef.current.signal,
-  })
-}, [])
+  });
+}, []);
 ```
 
 #### Memoized Statistics
@@ -111,19 +111,21 @@ const fetchUsers = useCallback(async (filters: UserFilters = {}) => {
 ```typescript
 // Memoized statistics to prevent recalculation
 const statistics = useMemo(() => {
-  const activeUsers = users.filter((u) => u.status === "active").length
-  const adminUsers = users.filter((u) => u.role === "admin").length
+  const activeUsers = users.filter(u => u.status === 'active').length;
+  const adminUsers = users.filter(u => u.role === 'admin').length;
   const recentActivity = users.filter(
-    (u) => u.last_login && new Date(u.last_login) > new Date(Date.now() - 24 * 60 * 60 * 1000),
-  ).length
+    u =>
+      u.last_login &&
+      new Date(u.last_login) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+  ).length;
 
   return {
     total: pagination.total,
     active: activeUsers,
     admins: adminUsers,
     recentActivity,
-  }
-}, [users, pagination.total])
+  };
+}, [users, pagination.total]);
 ```
 
 #### Optimized Event Handlers
@@ -131,16 +133,17 @@ const statistics = useMemo(() => {
 ```typescript
 // Memoized handlers to prevent re-renders
 const handlePageChange = useCallback((newPage: number) => {
-  setFilters((prev) => ({ ...prev, page: newPage }))
-}, [])
+  setFilters(prev => ({ ...prev, page: newPage }));
+}, []);
 
 const handleSort = useCallback((sortBy: string) => {
-  setFilters((prev) => ({
+  setFilters(prev => ({
     ...prev,
     sortBy,
-    sortOrder: prev.sortBy === sortBy && prev.sortOrder === "asc" ? "desc" : "asc",
-  }))
-}, [])
+    sortOrder:
+      prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc',
+  }));
+}, []);
 ```
 
 #### Debounced Search
@@ -149,11 +152,11 @@ const handleSort = useCallback((sortBy: string) => {
 // Handle search with debounce to reduce API calls
 useEffect(() => {
   const timeoutId = setTimeout(() => {
-    setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }))
-  }, 500)
+    setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+  }, 500);
 
-  return () => clearTimeout(timeoutId)
-}, [searchTerm])
+  return () => clearTimeout(timeoutId);
+}, [searchTerm]);
 ```
 
 ### 3. **Database Optimizations**
@@ -293,10 +296,10 @@ SET max_parallel_workers_per_gather = 4;
 
 ```typescript
 // Add performance monitoring
-const startTime = performance.now()
-const result = await fetchUsers(filters)
-const endTime = performance.now()
-console.log(`User fetch took ${endTime - startTime}ms`)
+const startTime = performance.now();
+const result = await fetchUsers(filters);
+const endTime = performance.now();
+console.log(`User fetch took ${endTime - startTime}ms`);
 ```
 
 ### Database Query Monitoring
@@ -336,15 +339,15 @@ LIMIT 10;
 
 ```typescript
 // Enable debug logging
-const DEBUG_MODE = process.env.NODE_ENV === "development"
+const DEBUG_MODE = process.env.NODE_ENV === 'development';
 
 if (DEBUG_MODE) {
-  console.log("User management debug:", {
+  console.log('User management debug:', {
     filters,
     pagination,
     loading,
     usersCount: users.length,
-  })
+  });
 }
 ```
 

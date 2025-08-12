@@ -1,40 +1,44 @@
-"use client"
+'use client';
 
-import { useRouter } from "@/navigation"
-import { useEffect } from "react"
-import { useAuth } from "@/lib/auth-service"
+import { useRouter } from '@/navigation';
+import { useEffect } from 'react';
+import { useAuth } from '@/lib/auth-service';
 
-export function withAuth<P extends object>(WrappedComponent: React.ComponentType<P>) {
+export function withAuth<P extends object>(
+  WrappedComponent: React.ComponentType<P>
+) {
   return function ProtectedRoute(props: P) {
-    const { user, loading } = useAuth()
-    const router = useRouter()
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
     useEffect(() => {
       if (!loading && !user) {
         // Only run in browser environment
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           // Get the current locale from the URL
-          const locale = window.location.pathname.split("/")[1]
-          const isValidLocale = locale && locale.length === 2
+          const locale = window.location.pathname.split('/')[1];
+          const isValidLocale = locale && locale.length === 2;
 
           // Construct the login URL with the current locale
-          const loginPath = "/" + (isValidLocale ? locale : "en") + "/auth/login"
-          const redirectTo = window.location.href
+          const loginPath = `/${isValidLocale ? locale : 'en'}/auth/login`;
+          const redirectTo = window.location.href;
 
           // Redirect to login with the current URL as the redirect target
-          router.push(loginPath + "?redirectTo=" + encodeURIComponent(redirectTo))
+          router.push(
+            `${loginPath}?redirectTo=${encodeURIComponent(redirectTo)}`
+          );
         }
       }
-    }, [user, loading, router])
+    }, [user, loading, router]);
 
     if (loading) {
-      return <div>Loading...</div>
+      return <div>Loading...</div>;
     }
 
     if (!user) {
-      return null
+      return null;
     }
 
-    return <WrappedComponent {...props} />
-  }
+    return <WrappedComponent {...props} />;
+  };
 }

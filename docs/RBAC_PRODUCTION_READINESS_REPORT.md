@@ -11,6 +11,7 @@ The RBAC system has **CRITICAL SECURITY VULNERABILITIES** that must be resolved 
 ## 🚨 Critical Findings
 
 ### ❌ P0 Critical Issues (33 permissions)
+
 - **User Management**: `user:read:all`, `user:create:all`, `user:delete:all`, `user:update:all`
 - **Contract Operations**: `contract:read:own`, `contract:create:own`, `contract:update:own`, `contract:generate:own`, `contract:download:own`, `contract:approve:all`, `contract:message:own`
 - **Company Management**: `company:read:own`, `company:read:organization`, `company:read:all`, `company:manage:all`
@@ -24,9 +25,10 @@ The RBAC system has **CRITICAL SECURITY VULNERABILITIES** that must be resolved 
 - **Analytics**: `analytics:read:all`
 
 ### ✅ Security Strengths
+
 - **All Critical API Routes Properly Guarded**: 147 route files scanned, 100% compliance
 - **Admin Routes**: ✅ Secure
-- **Contract Routes**: ✅ Secure  
+- **Contract Routes**: ✅ Secure
 - **User Routes**: ✅ Secure
 - **Audit Log Routes**: ✅ Secure
 - **Upload Routes**: ✅ Secure
@@ -35,35 +37,41 @@ The RBAC system has **CRITICAL SECURITY VULNERABILITIES** that must be resolved 
 ## 🔍 Root Cause Analysis
 
 ### Permission Naming Convention Mismatch
+
 The system has two different permission naming conventions:
 
 1. **Seeded Permissions** (18): Use format like `user:view:own`, `service:view:public`
 2. **Code Permissions** (39): Use format like `user:read:all`, `service:create:own`
 
 **Key Differences**:
+
 - `view` vs `read` (action naming)
 - `own` vs `all` (scope consistency)
 - Missing critical permissions entirely
 
 ### Database vs Code Synchronization
+
 - **Seeded**: 18 permissions
-- **Used in Code**: 39 permissions  
+- **Used in Code**: 39 permissions
 - **Overlap**: Only 6 permissions match exactly
 - **Missing**: 33 permissions (87% mismatch)
 
 ## 🚨 Production Risks
 
 ### Immediate Failures
+
 - **Runtime Errors**: API calls will fail with "permission not found" errors
 - **Service Outage**: Core functionality will be completely broken
 - **User Lockout**: All authenticated users will be unable to access features
 
 ### Security Vulnerabilities
+
 - **Permission Bypass**: Guards may fail silently, allowing unauthorized access
 - **Role Escalation**: Users may gain unintended permissions
 - **Data Exposure**: Sensitive endpoints may become accessible
 
 ### Business Impact
+
 - **User Experience**: Complete system failure
 - **Compliance**: Security audit failures
 - **Reputation**: Loss of customer trust
@@ -71,16 +79,19 @@ The system has two different permission naming conventions:
 ## 🔧 Required Fixes
 
 ### Phase 1: Critical Permission Alignment (IMMEDIATE)
+
 1. **Update Seed Script**: Add missing permissions to `scripts/seed_rbac.sql`
 2. **Standardize Naming**: Choose consistent action/scope terminology
 3. **Test Permissions**: Verify all seeded permissions work correctly
 
 ### Phase 2: Permission Cleanup (HIGH)
+
 1. **Remove Unused**: Clean up 12 unused seeded permissions
 2. **Update Documentation**: Align docs with actual implementation
 3. **Permission Audit**: Review and validate all permission assignments
 
 ### Phase 3: Testing & Validation (MEDIUM)
+
 1. **Integration Tests**: Verify RBAC guards work end-to-end
 2. **Permission Tests**: Test all permission combinations
 3. **Security Tests**: Penetration testing of RBAC system
@@ -88,6 +99,7 @@ The system has two different permission naming conventions:
 ## 📋 Implementation Plan
 
 ### Step 1: Fix Critical Permissions (1-2 hours)
+
 ```sql
 -- Add to scripts/seed_rbac.sql
 INSERT INTO permissions (resource, action, scope, name, description) VALUES
@@ -132,6 +144,7 @@ ON CONFLICT (name) DO UPDATE SET
 ```
 
 ### Step 2: Clean Up Unused Permissions (30 minutes)
+
 ```sql
 -- Remove unused permissions
 DELETE FROM permissions WHERE name IN (
@@ -151,6 +164,7 @@ DELETE FROM permissions WHERE name IN (
 ```
 
 ### Step 3: Test & Validate (1-2 hours)
+
 1. Run `npm run rbac:drift` - should show 0 P0 issues
 2. Run `npm run rbac:lint` - should show 100% compliance
 3. Test critical user flows (login, contract creation, user management)
@@ -163,8 +177,9 @@ DELETE FROM permissions WHERE name IN (
 **Reason**: Critical permission mismatches will cause complete system failure
 
 **Required Actions**:
+
 1. ✅ Fix all 33 missing permissions
-2. ✅ Clean up 12 unused permissions  
+2. ✅ Clean up 12 unused permissions
 3. ✅ Test RBAC system end-to-end
 4. ✅ Re-run drift and lint checks
 5. ✅ Security review and approval
@@ -177,11 +192,13 @@ DELETE FROM permissions WHERE name IN (
 If issues are discovered after deployment:
 
 ### Immediate Rollback
+
 1. **Database Rollback**: Restore previous permission schema
 2. **Code Rollback**: Revert to previous RBAC implementation
 3. **Service Restart**: Restart all services with previous configuration
 
 ### Emergency Fixes
+
 1. **Permission Hotfix**: Add missing permissions via database update
 2. **Guard Disable**: Temporarily disable RBAC guards (SECURITY RISK)
 3. **Feature Flags**: Disable RBAC-dependent features
@@ -189,6 +206,7 @@ If issues are discovered after deployment:
 ## 📊 Success Metrics
 
 ### Pre-Deployment Checklist
+
 - [ ] 0 P0 critical issues in drift report
 - [ ] 100% API route guard compliance
 - [ ] All permission tests passing
@@ -196,6 +214,7 @@ If issues are discovered after deployment:
 - [ ] Rollback plan tested
 
 ### Post-Deployment Validation
+
 - [ ] User authentication working
 - [ ] Contract operations functional
 - [ ] Admin functions accessible

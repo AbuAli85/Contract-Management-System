@@ -4,28 +4,30 @@
  */
 
 export interface WebhookTriggerOptions {
-  event: string
-  data: any
-  retries?: number
-  delay?: number
+  event: string;
+  data: any;
+  retries?: number;
+  delay?: number;
 }
 
 export interface WebhookResponse {
-  success: boolean
-  error?: string
-  details?: any
-  timestamp: string
+  success: boolean;
+  error?: string;
+  details?: any;
+  timestamp: string;
 }
 
 /**
  * Trigger a webhook with the specified event and data
  */
-export async function triggerWebhook(options: WebhookTriggerOptions): Promise<WebhookResponse> {
-  const { event, data, retries = 3, delay = 1000 } = options
+export async function triggerWebhook(
+  options: WebhookTriggerOptions
+): Promise<WebhookResponse> {
+  const { event, data, retries = 3, delay = 1000 } = options;
 
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`Triggering webhook (attempt ${attempt}/${retries}):`, event)
+      console.log(`Triggering webhook (attempt ${attempt}/${retries}):`, event);
 
       const response = await fetch('/api/bookings/webhook', {
         method: 'POST',
@@ -36,60 +38,62 @@ export async function triggerWebhook(options: WebhookTriggerOptions): Promise<We
           event,
           ...data,
           attempt,
-          max_retries: retries
-        })
-      })
+          max_retries: retries,
+        }),
+      });
 
       if (response.ok) {
-        const result = await response.json()
-        console.log(`✅ Webhook triggered successfully:`, event)
+        const result = await response.json();
+        console.log(`✅ Webhook triggered successfully:`, event);
         return {
           success: true,
           details: result,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        };
       } else {
-        const errorText = await response.text()
-        console.error(`❌ Webhook failed (attempt ${attempt}):`, errorText)
-        
+        const errorText = await response.text();
+        console.error(`❌ Webhook failed (attempt ${attempt}):`, errorText);
+
         if (attempt === retries) {
           return {
             success: false,
             error: `Webhook failed after ${retries} attempts`,
             details: errorText,
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          };
         }
       }
     } catch (error) {
-      console.error(`❌ Webhook error (attempt ${attempt}):`, error)
-      
+      console.error(`❌ Webhook error (attempt ${attempt}):`, error);
+
       if (attempt === retries) {
         return {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        };
       }
     }
 
     // Wait before retrying
     if (attempt < retries) {
-      await new Promise(resolve => setTimeout(resolve, delay * attempt))
+      await new Promise(resolve => setTimeout(resolve, delay * attempt));
     }
   }
 
   return {
     success: false,
     error: 'Maximum retries exceeded',
-    timestamp: new Date().toISOString()
-  }
+    timestamp: new Date().toISOString(),
+  };
 }
 
 /**
  * Trigger booking created webhook
  */
-export async function triggerBookingCreatedWebhook(booking: any): Promise<WebhookResponse> {
+export async function triggerBookingCreatedWebhook(
+  booking: any
+): Promise<WebhookResponse> {
   return triggerWebhook({
     event: 'booking.created',
     data: {
@@ -104,9 +108,9 @@ export async function triggerBookingCreatedWebhook(booking: any): Promise<Webhoo
       scheduled_end: booking.scheduled_end,
       quoted_price: booking.quoted_price,
       status: booking.status,
-      created_at: booking.created_at
-    }
-  })
+      created_at: booking.created_at,
+    },
+  });
 }
 
 /**
@@ -127,15 +131,17 @@ export async function triggerBookingStatusChangeWebhook(
       client_email: booking.client_email,
       provider_id: booking.provider_id,
       service_id: booking.service_id,
-      updated_at: new Date().toISOString()
-    }
-  })
+      updated_at: new Date().toISOString(),
+    },
+  });
 }
 
 /**
  * Trigger service created webhook
  */
-export async function triggerServiceCreatedWebhook(service: any): Promise<WebhookResponse> {
+export async function triggerServiceCreatedWebhook(
+  service: any
+): Promise<WebhookResponse> {
   return triggerWebhook({
     event: 'service.created',
     data: {
@@ -148,15 +154,18 @@ export async function triggerServiceCreatedWebhook(service: any): Promise<Webhoo
       currency: service.currency,
       status: service.status,
       location_type: service.location_type,
-      created_at: service.created_at
-    }
-  })
+      created_at: service.created_at,
+    },
+  });
 }
 
 /**
  * Trigger user registration webhook
  */
-export async function triggerUserRegistrationWebhook(user: any, profile: any): Promise<WebhookResponse> {
+export async function triggerUserRegistrationWebhook(
+  user: any,
+  profile: any
+): Promise<WebhookResponse> {
   return triggerWebhook({
     event: 'user.registered',
     data: {
@@ -167,29 +176,34 @@ export async function triggerUserRegistrationWebhook(user: any, profile: any): P
       status: profile.status,
       company_name: profile.company_name,
       business_type: profile.business_type,
-      created_at: profile.created_at
-    }
-  })
+      created_at: profile.created_at,
+    },
+  });
 }
 
 /**
  * Batch trigger multiple webhooks
  */
-export async function triggerMultipleWebhooks(webhooks: WebhookTriggerOptions[]): Promise<WebhookResponse[]> {
+export async function triggerMultipleWebhooks(
+  webhooks: WebhookTriggerOptions[]
+): Promise<WebhookResponse[]> {
   const results = await Promise.allSettled(
     webhooks.map(webhook => triggerWebhook(webhook))
-  )
+  );
 
   return results.map((result, index) => {
     if (result.status === 'fulfilled') {
-      return result.value
+      return result.value;
     } else {
-      console.error(`Webhook ${index} failed:`, result.reason)
+      console.error(`Webhook ${index} failed:`, result.reason);
       return {
         success: false,
-        error: result.reason instanceof Error ? result.reason.message : 'Unknown error',
-        timestamp: new Date().toISOString()
-      }
+        error:
+          result.reason instanceof Error
+            ? result.reason.message
+            : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      };
     }
-  })
+  });
 }

@@ -1,30 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import type { UserProfile } from '@/types/custom'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import type { UserProfile } from '@/types/custom';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError || !user) {
-      console.error('Auth error:', userError)
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      console.error('Auth error:', userError);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const targetUserId = params.id
+    const targetUserId = params.id;
 
     // Check if user is admin or requesting their own profile
-    const isAdmin = user.user_metadata?.role === 'admin'
-    const isOwnProfile = targetUserId === user.id
+    const isAdmin = user.user_metadata?.role === 'admin';
+    const isOwnProfile = targetUserId === user.id;
 
     if (!isAdmin && !isOwnProfile) {
-      return NextResponse.json({ error: 'Forbidden - insufficient permissions' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden - insufficient permissions' },
+        { status: 403 }
+      );
     }
 
     // Get user profile from profiles table with explicit error handling
@@ -32,7 +38,7 @@ export async function GET(
       .from('profiles')
       .select('*')
       .eq('id', targetUserId)
-      .single()
+      .single();
 
     // Handle profile not found with better error logging
     if (profileError) {
@@ -40,18 +46,22 @@ export async function GET(
         code: profileError.code,
         message: profileError.message,
         details: profileError.details,
-        hint: profileError.hint
-      })
+        hint: profileError.hint,
+      });
 
       if (profileError.code === 'PGRST116') {
-        console.log('Profile not found, attempting to create one...')
-        
+        console.log('Profile not found, attempting to create one...');
+
         // Get user from auth.users for additional data
-        const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(targetUserId)
+        const { data: authUser, error: authError } =
+          await supabase.auth.admin.getUserById(targetUserId);
 
         if (authError) {
-          console.error('Error fetching auth user:', authError)
-          return NextResponse.json({ error: 'User not found in authentication system' }, { status: 404 })
+          console.error('Error fetching auth user:', authError);
+          return NextResponse.json(
+            { error: 'User not found in authentication system' },
+            { status: 404 }
+          );
         }
 
         // Create a new profile
@@ -62,17 +72,17 @@ export async function GET(
           avatar_url: authUser.user?.user_metadata?.avatar_url || null,
           role: authUser.user?.user_metadata?.role || 'user',
           created_at: authUser.user?.created_at || new Date().toISOString(),
-          last_login: authUser.user?.last_sign_in_at || null
-        }
+          last_login: authUser.user?.last_sign_in_at || null,
+        };
 
         const { data: createdProfile, error: createError } = await supabase
           .from('profiles')
           .insert(newProfile)
           .select()
-          .single()
+          .single();
 
         if (createError) {
-          console.error('Error creating profile:', createError)
+          console.error('Error creating profile:', createError);
           // Return fallback profile from auth data
           const fallbackProfile: UserProfile = {
             id: targetUserId,
@@ -81,21 +91,22 @@ export async function GET(
             avatar_url: authUser.user?.user_metadata?.avatar_url || null,
             role: authUser.user?.user_metadata?.role || 'user',
             created_at: authUser.user?.created_at || null,
-            last_login: authUser.user?.last_sign_in_at || null
-          }
-          return NextResponse.json(fallbackProfile)
+            last_login: authUser.user?.last_sign_in_at || null,
+          };
+          return NextResponse.json(fallbackProfile);
         }
 
-        return NextResponse.json(createdProfile)
+        return NextResponse.json(createdProfile);
       }
 
       // If other profileError, return error response
-      console.error('Error fetching profile:', profileError)
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+      console.error('Error fetching profile:', profileError);
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
     // Get user from auth.users for additional data
-    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(targetUserId)
+    const { data: authUser, error: authError } =
+      await supabase.auth.admin.getUserById(targetUserId);
 
     if (authError) {
       console.error('Error fetching auth user:', authError);
@@ -105,17 +116,22 @@ export async function GET(
     const userProfile: UserProfile = {
       id: profile.id,
       email: authUser?.user?.email || profile.email || '',
-      full_name: profile.full_name || authUser?.user?.user_metadata?.full_name || null,
-      avatar_url: profile.avatar_url || authUser?.user?.user_metadata?.avatar_url || null,
+      full_name:
+        profile.full_name || authUser?.user?.user_metadata?.full_name || null,
+      avatar_url:
+        profile.avatar_url || authUser?.user?.user_metadata?.avatar_url || null,
       role: profile.role || 'user',
       created_at: profile.created_at || authUser?.user?.created_at || null,
-      last_login: profile.last_login || authUser?.user?.last_sign_in_at || null
+      last_login: profile.last_login || authUser?.user?.last_sign_in_at || null,
     };
 
     return NextResponse.json(userProfile);
   } catch (error) {
     console.error('User profile GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -124,37 +140,40 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const targetUserId = params.id
+    const targetUserId = params.id;
 
     // Check if user is admin or requesting their own profile
-    const isAdmin = user.user_metadata?.role === 'admin'
-    const isOwnProfile = targetUserId === user.id
+    const isAdmin = user.user_metadata?.role === 'admin';
+    const isOwnProfile = targetUserId === user.id;
 
     if (!isAdmin && !isOwnProfile) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    const body = await request.json()
-    const { full_name, avatar_url, role, status } = body
+    const body = await request.json();
+    const { full_name, avatar_url, role, status } = body;
 
     // Only allow admins to change role and status
     const updateData: any = {
       full_name,
       avatar_url,
-    }
+    };
 
     if (isAdmin) {
-      if (role) updateData.role = role
-      if (status) updateData.status = status
+      if (role) updateData.role = role;
+      if (status) updateData.status = status;
     }
 
     // Update the profile
@@ -163,29 +182,36 @@ export async function PUT(
       .update(updateData)
       .eq('id', targetUserId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      console.error('Error updating profile:', updateError)
-      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+      console.error('Error updating profile:', updateError);
+      return NextResponse.json(
+        { error: 'Failed to update profile' },
+        { status: 500 }
+      );
     }
 
     // If admin is updating user role, also update auth metadata
     if (isAdmin && role) {
-      const { error: authUpdateError } = await supabase.auth.admin.updateUserById(targetUserId, {
-        user_metadata: { role }
-      })
+      const { error: authUpdateError } =
+        await supabase.auth.admin.updateUserById(targetUserId, {
+          user_metadata: { role },
+        });
 
       if (authUpdateError) {
-        console.error('Error updating auth metadata:', authUpdateError)
+        console.error('Error updating auth metadata:', authUpdateError);
         // Continue even if auth update fails
       }
     }
 
-    return NextResponse.json(updatedProfile)
+    return NextResponse.json(updatedProfile);
   } catch (error) {
-    console.error('User profile PUT error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('User profile PUT error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -194,38 +220,50 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const targetUserId = params.id
+    const targetUserId = params.id;
 
     // Only admins can delete profiles
-    const isAdmin = user.user_metadata?.role === 'admin'
+    const isAdmin = user.user_metadata?.role === 'admin';
 
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
     // Delete the profile
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
-      .eq('id', targetUserId)
+      .eq('id', targetUserId);
 
     if (deleteError) {
-      console.error('Error deleting profile:', deleteError)
-      return NextResponse.json({ error: 'Failed to delete profile' }, { status: 500 })
+      console.error('Error deleting profile:', deleteError);
+      return NextResponse.json(
+        { error: 'Failed to delete profile' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ message: 'Profile deleted successfully' })
+    return NextResponse.json({ message: 'Profile deleted successfully' });
   } catch (error) {
-    console.error('User profile DELETE error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('User profile DELETE error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

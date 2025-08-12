@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+
 # 🛡️ RBAC Project Map
 
 ## Overview
@@ -58,6 +59,7 @@ Contract-Management-System/
 **Purpose**: Defines the complete RBAC database schema
 
 **Key Tables**:
+
 - `roles` - Role definitions with categories
 - `permissions` - Granular permissions (resource:action:scope)
 - `role_permissions` - Role-permission mappings
@@ -66,6 +68,7 @@ Contract-Management-System/
 - `user_permissions` - Materialized view for performance
 
 **Features**:
+
 - Row Level Security (RLS) policies
 - Automatic triggers for materialized view refresh
 - Optimized indexes for fast lookups
@@ -78,6 +81,7 @@ Contract-Management-System/
 **Purpose**: Populates the RBAC system with initial roles and permissions
 
 **Content**:
+
 - 12 predefined roles (Client, Provider, Admin families)
 - 80+ granular permissions covering all system resources
 - Role-permission mappings for each role family
@@ -86,36 +90,42 @@ Contract-Management-System/
 ### 3. Permission Engine (`lib/rbac/`)
 
 #### `permissions.ts`
+
 - Permission string parsing and validation
 - Scope hierarchy management
 - Permission pattern matching
 - Input validation and sanitization
 
 #### `cache.ts`
+
 - 15-minute TTL permission caching
 - Redis integration (optional)
 - Memory cache fallback
 - Automatic cleanup and invalidation
 
 #### `audit.ts`
+
 - Comprehensive audit logging
 - Permission check tracking
 - Role change logging
 - IP address and user agent capture
 
 #### `context/ownership.ts`
+
 - Resource ownership evaluation
 - Organization and provider access checking
 - Dynamic permission context evaluation
 - Support for all resource types
 
 #### `evaluate.ts`
+
 - Main permission evaluation engine
 - Context-based permission checking
 - Scope hierarchy resolution
 - Performance optimization
 
 #### `guard.ts`
+
 - API route protection functions
 - Higher-order function wrappers
 - Enforcement mode handling (dry-run/enforce)
@@ -124,11 +134,13 @@ Contract-Management-System/
 ### 4. Admin APIs (`app/api/admin/`)
 
 #### `roles/route.ts`
+
 - **GET**: List all roles with permissions and user counts
 - **POST**: Create new roles
 - **Required**: `role:read:all`, `role:create:all`
 
 #### `users/[userId]/roles/route.ts`
+
 - **GET**: Get user's current roles
 - **POST**: Assign role to user
 - **DELETE**: Remove role from user
@@ -137,17 +149,20 @@ Contract-Management-System/
 ### 5. Documentation (`docs/`)
 
 #### `rbac.md`
+
 - Complete system overview
 - Usage examples and best practices
 - Configuration and deployment guide
 - Troubleshooting and support
 
 #### `rbac_endpoint_mapping.md`
+
 - Comprehensive API endpoint mapping
 - Required permissions for each endpoint
 - Implementation notes and examples
 
 #### `rbac_project_map.md`
+
 - This file - system architecture overview
 - Component relationships and dependencies
 - Development and deployment workflow
@@ -161,9 +176,12 @@ Contract-Management-System/
 **Purpose**: User authentication and session management
 
 **RBAC Integration**:
+
 ```typescript
-import { createClient } from '@/lib/supabase/server'
-const { data: { user } } = await supabase.auth.getUser()
+import { createClient } from '@/lib/supabase/server';
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 ```
 
 ### 2. Existing Auth Middleware
@@ -173,8 +191,9 @@ const { data: { user } } = await supabase.auth.getUser()
 **Purpose**: Existing authentication and authorization
 
 **RBAC Integration**:
+
 ```typescript
-import { checkPermission } from '@/lib/rbac/guard'
+import { checkPermission } from '@/lib/rbac/guard';
 // Delegate permission checks to RBAC system
 ```
 
@@ -185,6 +204,7 @@ import { checkPermission } from '@/lib/rbac/guard'
 **Purpose**: Database queries and operations
 
 **Key Operations**:
+
 - User permission lookups
 - Role assignments
 - Audit logging
@@ -197,9 +217,10 @@ import { checkPermission } from '@/lib/rbac/guard'
 **Purpose**: Route-level permission enforcement
 
 **Implementation**:
+
 ```typescript
-import { withRBAC } from '@/lib/rbac/guard'
-export const GET = withRBAC('user:read:all', handler)
+import { withRBAC } from '@/lib/rbac/guard';
+export const GET = withRBAC('user:read:all', handler);
 ```
 
 ## Data Flow
@@ -275,7 +296,7 @@ INSERT INTO permissions (resource, action, scope, name, description) VALUES
 
 -- 2. Assign to roles
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r, permissions p 
+SELECT r.id, p.id FROM roles r, permissions p
 WHERE r.name = 'Basic Client' AND p.name = 'invoice:view:own';
 
 -- 3. Refresh materialized view
@@ -286,11 +307,11 @@ SELECT refresh_user_permissions();
 
 ```typescript
 // 1. Define required permission
-const requiredPermission = 'invoice:view:own'
+const requiredPermission = 'invoice:view:own';
 
 // 2. Implement permission check
-import { withRBAC } from '@/lib/rbac/guard'
-export const GET = withRBAC(requiredPermission, handler)
+import { withRBAC } from '@/lib/rbac/guard';
+export const GET = withRBAC(requiredPermission, handler);
 
 // 3. Update endpoint mapping
 // Add to docs/rbac_endpoint_mapping.md
@@ -446,8 +467,8 @@ tail -f logs/application.log | grep "PERMISSION_CHECK"
 
 - **Issues**: GitHub issue tracker
 - **Discussions**: GitHub discussions
-- **Contributions**: Pull request guidelines
-=======
+- # **Contributions**: Pull request guidelines
+
 ### Project Map — RBAC Survey
 
 - Framework: Next.js App Router (Next 14/15), TypeScript, Tailwind + shadcn/ui
@@ -458,6 +479,7 @@ tail -f logs/application.log | grep "PERMISSION_CHECK"
 - Tests: Jest (+ RTL) and Cypress; scripts defined in `package.json`
 
 Key domain tables (observed):
+
 - `profiles(id, user_id FK auth.users, email, full_name, …)`
 - `companies(id, name, slug, …)` — acts as provider org
 - `user_roles(id, user_id, company_id, role ENUM user_role, permissions JSONB, is_active, …)`
@@ -468,14 +490,17 @@ Key domain tables (observed):
 - `audit_logs(id, user_id, action ENUM audit_action, table_name, record_id, old_values, new_values, …)`
 
 Existing views/functions of note:
+
 - View: `user_permissions` (from `user_roles`), not the RBAC one; name conflict risk with proposed RBAC MV
 - Functions: `get_user_role`, `user_has_permission`, triggers to create profiles, RLS policies
 
 Types and models (code):
+
 - Booking types in `types/booking.ts`
 - Supabase generated types in `types/supabase.ts`
 
 API routes (non-exhaustive examples):
+
 - `app/api/bookings/route.ts` — GET list, POST create
 - `app/api/users/route.ts`, `app/api/users/simple-route.ts`, `app/api/users/profile/route.ts`
 - `app/api/provider/services/route.ts`
@@ -484,21 +509,23 @@ API routes (non-exhaustive examples):
 - Contracts and promoters modules under `app/api/contracts/*`, `app/api/promoters/*`
 
 Suggested injection points for RBAC:
+
 - Non-destructive wrapper for App Router handlers: `withRBAC(requiredPermission, handler)` in `lib/rbac/guard.ts`
 - Shared permission evaluation, cache, and audit modules under `lib/rbac/*`
 - Optional global usage alongside existing `professionalSecurityMiddleware` where applicable
 
 Test setup:
+
 - Jest configured via `package.json` (jsdom); tests under `tests/` and `__tests__/`
 - Cypress for E2E in `cypress/`
 
 Risk notes:
+
 - Name collision: existing view `user_permissions` conflicts with the specification’s MV name. Plan: create `rbac_user_permissions_mv` instead and index it.
 - Existing tables `user_roles` and `audit_logs` are already in use. To avoid disruption, introduce new RBAC tables prefixed `rbac_*` and keep current behavior intact. Migration is strictly additive.
 
 RBAC rollout flag:
+
 - `RBAC_ENFORCEMENT` to support `dry-run` (default) and `enforce`. Default behavior will log ALLOW/DENY/WOULD_BLOCK without blocking in dry-run.
 
-
->>>>>>> Stashed changes
-
+> > > > > > > Stashed changes

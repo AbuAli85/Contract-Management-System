@@ -1,29 +1,62 @@
-"use client"
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { 
-  Search, Plus, Filter, Calendar, Star, Clock, DollarSign,
-  Users, TrendingUp, CheckCircle, AlertCircle, MessageCircle,
-  Eye, Edit, Download, Archive, RefreshCw, BarChart3,
-  FileText, Briefcase, Target, Award, MapPin, Phone, Mail,
-  Heart, Share2, Settings, Bell, Activity, Zap, Package
-} from 'lucide-react'
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  Search,
+  Plus,
+  Filter,
+  Calendar,
+  Star,
+  Clock,
+  DollarSign,
+  Users,
+  TrendingUp,
+  CheckCircle,
+  AlertCircle,
+  MessageCircle,
+  Eye,
+  Edit,
+  Download,
+  Archive,
+  RefreshCw,
+  BarChart3,
+  FileText,
+  Briefcase,
+  Target,
+  Award,
+  MapPin,
+  Phone,
+  Mail,
+  Heart,
+  Share2,
+  Settings,
+  Bell,
+  Activity,
+  Zap,
+  Package,
+} from 'lucide-react';
 
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Progress } from '@/components/ui/progress'
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select'
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -31,105 +64,106 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { 
+} from '@/components/ui/table';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { toast } from 'sonner'
-import Link from 'next/link'
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import Link from 'next/link';
 
 interface ClientDashboardData {
   overview: {
-    activeProjects: number
-    completedProjects: number
-    totalSpent: number
-    savedProviders: number
-    pendingReviews: number
-    avgProjectRating: number
-  }
-  
+    activeProjects: number;
+    completedProjects: number;
+    totalSpent: number;
+    savedProviders: number;
+    pendingReviews: number;
+    avgProjectRating: number;
+  };
+
   recentProjects: {
-    id: string
-    title: string
+    id: string;
+    title: string;
     provider: {
-      id: string
-      name: string
-      avatar: string
-      rating: number
-    }
-    status: 'active' | 'completed' | 'pending' | 'cancelled' | 'in_review'
-    progress: number
-    budget: number
-    deadline: string
-    category: string
-    lastUpdate: string
-  }[]
-  
+      id: string;
+      name: string;
+      avatar: string;
+      rating: number;
+    };
+    status: 'active' | 'completed' | 'pending' | 'cancelled' | 'in_review';
+    progress: number;
+    budget: number;
+    deadline: string;
+    category: string;
+    lastUpdate: string;
+  }[];
+
   availableServices: {
-    id: string
-    title: string
-    description: string
+    id: string;
+    title: string;
+    description: string;
     provider: {
-      id: string
-      name: string
-      avatar: string
-      rating: number
-      responseTime: string
-    }
-    price: number
-    duration: string
-    category: string
-    featured: boolean
-    tags: string[]
-  }[]
-  
+      id: string;
+      name: string;
+      avatar: string;
+      rating: number;
+      responseTime: string;
+    };
+    price: number;
+    duration: string;
+    category: string;
+    featured: boolean;
+    tags: string[];
+  }[];
+
   messages: {
-    id: string
-    providerId: string
-    providerName: string
-    providerAvatar: string
-    lastMessage: string
-    timestamp: string
-    unread: boolean
-    projectId: string
-    projectTitle: string
-  }[]
-  
+    id: string;
+    providerId: string;
+    providerName: string;
+    providerAvatar: string;
+    lastMessage: string;
+    timestamp: string;
+    unread: boolean;
+    projectId: string;
+    projectTitle: string;
+  }[];
+
   savedProviders: {
-    id: string
-    name: string
-    avatar: string
-    specialization: string
-    rating: number
-    completedProjects: number
-    responseTime: string
-    lastActive: string
-  }[]
+    id: string;
+    name: string;
+    avatar: string;
+    specialization: string;
+    rating: number;
+    completedProjects: number;
+    responseTime: string;
+    lastActive: string;
+  }[];
 }
 
 export function ComprehensiveClientDashboard() {
-  const [dashboardData, setDashboardData] = useState<ClientDashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('overview')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filterCategory, setFilterCategory] = useState('all')
-  const [showBookingModal, setShowBookingModal] = useState(false)
-  const [selectedService, setSelectedService] = useState<any>(null)
+  const [dashboardData, setDashboardData] =
+    useState<ClientDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<any>(null);
 
   // Load dashboard data
   useEffect(() => {
-    loadDashboardData()
-  }, [])
+    loadDashboardData();
+  }, []);
 
   const loadDashboardData = async () => {
     try {
-      setLoading(true)
-      
+      setLoading(true);
+
       // Mock data - replace with actual API calls
       const mockData: ClientDashboardData = {
         overview: {
@@ -138,9 +172,9 @@ export function ComprehensiveClientDashboard() {
           totalSpent: 15750,
           savedProviders: 12,
           pendingReviews: 3,
-          avgProjectRating: 4.7
+          avgProjectRating: 4.7,
         },
-        
+
         recentProjects: [
           {
             id: 'proj_1',
@@ -148,15 +182,16 @@ export function ComprehensiveClientDashboard() {
             provider: {
               id: 'prov_1',
               name: 'Sarah Johnson',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-              rating: 4.9
+              avatar:
+                'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+              rating: 4.9,
             },
             status: 'active',
             progress: 75,
             budget: 1500,
             deadline: '2024-02-15',
             category: 'Digital Marketing',
-            lastUpdate: '2024-01-20T14:30:00Z'
+            lastUpdate: '2024-01-20T14:30:00Z',
           },
           {
             id: 'proj_2',
@@ -164,15 +199,16 @@ export function ComprehensiveClientDashboard() {
             provider: {
               id: 'prov_2',
               name: 'Alex Chen',
-              avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-              rating: 4.8
+              avatar:
+                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+              rating: 4.8,
             },
             status: 'in_review',
             progress: 100,
             budget: 850,
             deadline: '2024-01-25',
             category: 'Graphic Design',
-            lastUpdate: '2024-01-19T16:45:00Z'
+            lastUpdate: '2024-01-19T16:45:00Z',
           },
           {
             id: 'proj_3',
@@ -180,178 +216,203 @@ export function ComprehensiveClientDashboard() {
             provider: {
               id: 'prov_3',
               name: 'Maria Rodriguez',
-              avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
-              rating: 5.0
+              avatar:
+                'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
+              rating: 5.0,
             },
             status: 'active',
             progress: 45,
             budget: 3200,
             deadline: '2024-03-01',
             category: 'Web Development',
-            lastUpdate: '2024-01-20T10:15:00Z'
-          }
+            lastUpdate: '2024-01-20T10:15:00Z',
+          },
         ],
-        
+
         availableServices: [
           {
             id: 'serv_1',
             title: 'Complete SEO Audit & Strategy',
-            description: 'Comprehensive SEO analysis with actionable recommendations to boost rankings',
+            description:
+              'Comprehensive SEO analysis with actionable recommendations to boost rankings',
             provider: {
               id: 'prov_4',
               name: 'David Park',
-              avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
+              avatar:
+                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
               rating: 4.9,
-              responseTime: '2 hours'
+              responseTime: '2 hours',
             },
             price: 299,
             duration: '5-7 days',
             category: 'Digital Marketing',
             featured: true,
-            tags: ['SEO', 'Analytics', 'Strategy']
+            tags: ['SEO', 'Analytics', 'Strategy'],
           },
           {
             id: 'serv_2',
             title: 'Professional Logo Design',
-            description: 'Custom logo design with unlimited revisions and brand guidelines',
+            description:
+              'Custom logo design with unlimited revisions and brand guidelines',
             provider: {
               id: 'prov_5',
               name: 'Lisa Wang',
-              avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+              avatar:
+                'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
               rating: 4.7,
-              responseTime: '1 hour'
+              responseTime: '1 hour',
             },
             price: 199,
             duration: '3-5 days',
             category: 'Graphic Design',
             featured: false,
-            tags: ['Logo', 'Branding', 'Design']
-          }
+            tags: ['Logo', 'Branding', 'Design'],
+          },
         ],
-        
+
         messages: [
           {
             id: 'msg_1',
             providerId: 'prov_1',
             providerName: 'Sarah Johnson',
-            providerAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
-            lastMessage: 'I\'ve completed the keyword research phase. Please review the attached report.',
+            providerAvatar:
+              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+            lastMessage:
+              "I've completed the keyword research phase. Please review the attached report.",
             timestamp: '2024-01-20T14:30:00Z',
             unread: true,
             projectId: 'proj_1',
-            projectTitle: 'SEO Optimization'
+            projectTitle: 'SEO Optimization',
           },
           {
             id: 'msg_2',
             providerId: 'prov_2',
             providerName: 'Alex Chen',
-            providerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
-            lastMessage: 'The final logo designs are ready for your review. What do you think?',
+            providerAvatar:
+              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
+            lastMessage:
+              'The final logo designs are ready for your review. What do you think?',
             timestamp: '2024-01-19T16:45:00Z',
             unread: true,
             projectId: 'proj_2',
-            projectTitle: 'Brand Identity Design'
-          }
+            projectTitle: 'Brand Identity Design',
+          },
         ],
-        
+
         savedProviders: [
           {
             id: 'prov_1',
             name: 'Sarah Johnson',
-            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
+            avatar:
+              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face',
             specialization: 'SEO & Digital Marketing',
             rating: 4.9,
             completedProjects: 127,
             responseTime: '2 hours',
-            lastActive: '2 hours ago'
+            lastActive: '2 hours ago',
           },
           {
             id: 'prov_3',
             name: 'Maria Rodriguez',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
+            avatar:
+              'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
             specialization: 'Full-Stack Development',
             rating: 5.0,
             completedProjects: 89,
             responseTime: '1 hour',
-            lastActive: '30 minutes ago'
-          }
-        ]
-      }
-      
-      setDashboardData(mockData)
-      setLoading(false)
+            lastActive: '30 minutes ago',
+          },
+        ],
+      };
+
+      setDashboardData(mockData);
+      setLoading(false);
     } catch (error) {
-      console.error('Error loading dashboard data:', error)
-      toast.error('Failed to load dashboard data')
-      setLoading(false)
+      console.error('Error loading dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+      setLoading(false);
     }
-  }
+  };
 
   const handleBookService = (service: any) => {
-    setSelectedService(service)
-    setShowBookingModal(true)
-  }
+    setSelectedService(service);
+    setShowBookingModal(true);
+  };
 
   const handleStartProject = () => {
-    toast.success('Project booking initiated! Redirecting to booking form...')
-    setShowBookingModal(false)
-  }
+    toast.success('Project booking initiated! Redirecting to booking form...');
+    setShowBookingModal(false);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-blue-100 text-blue-700'
-      case 'completed': return 'bg-green-100 text-green-700'
-      case 'pending': return 'bg-yellow-100 text-yellow-700'
-      case 'in_review': return 'bg-purple-100 text-purple-700'
-      case 'cancelled': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
+      case 'active':
+        return 'bg-blue-100 text-blue-700';
+      case 'completed':
+        return 'bg-green-100 text-green-700';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'in_review':
+        return 'bg-purple-100 text-purple-700';
+      case 'cancelled':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
-  }
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <Activity className="h-4 w-4" />
-      case 'completed': return <CheckCircle className="h-4 w-4" />
-      case 'pending': return <Clock className="h-4 w-4" />
-      case 'in_review': return <Eye className="h-4 w-4" />
-      case 'cancelled': return <AlertCircle className="h-4 w-4" />
-      default: return <Package className="h-4 w-4" />
+      case 'active':
+        return <Activity className='h-4 w-4' />;
+      case 'completed':
+        return <CheckCircle className='h-4 w-4' />;
+      case 'pending':
+        return <Clock className='h-4 w-4' />;
+      case 'in_review':
+        return <Eye className='h-4 w-4' />;
+      case 'cancelled':
+        return <AlertCircle className='h-4 w-4' />;
+      default:
+        return <Package className='h-4 w-4' />;
     }
-  }
+  };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-8">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className='container mx-auto px-4 py-8'>
+        <div className='animate-pulse space-y-8'>
+          <div className='h-8 bg-gray-200 rounded w-1/3'></div>
+          <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+              <div key={i} className='h-32 bg-gray-200 rounded'></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className='h-96 bg-gray-200 rounded'></div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className='container mx-auto px-4 py-8 space-y-8'>
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Client Dashboard</h1>
-          <p className="text-gray-600">Manage your projects, discover services, and track progress</p>
+          <h1 className='text-3xl font-bold text-gray-900'>Client Dashboard</h1>
+          <p className='text-gray-600'>
+            Manage your projects, discover services, and track progress
+          </p>
         </div>
-        
-        <div className="flex space-x-3">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Plus className="h-4 w-4 mr-2" />
+
+        <div className='flex space-x-3'>
+          <Button className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'>
+            <Plus className='h-4 w-4 mr-2' />
             New Project
           </Button>
-          <Link href="/marketplace/services">
-            <Button variant="outline">
-              <Search className="h-4 w-4 mr-2" />
+          <Link href='/marketplace/services'>
+            <Button variant='outline'>
+              <Search className='h-4 w-4 mr-2' />
               Browse Services
             </Button>
           </Link>
@@ -359,86 +420,98 @@ export function ComprehensiveClientDashboard() {
       </div>
 
       {/* Overview Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4'>
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Activity className="h-5 w-5 text-blue-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-blue-100 rounded-lg'>
+                <Activity className='h-5 w-5 text-blue-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Active Projects</p>
-                <p className="text-2xl font-bold">{dashboardData?.overview.activeProjects}</p>
+                <p className='text-sm text-gray-600'>Active Projects</p>
+                <p className='text-2xl font-bold'>
+                  {dashboardData?.overview.activeProjects}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-green-100 rounded-lg'>
+                <CheckCircle className='h-5 w-5 text-green-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Completed</p>
-                <p className="text-2xl font-bold">{dashboardData?.overview.completedProjects}</p>
+                <p className='text-sm text-gray-600'>Completed</p>
+                <p className='text-2xl font-bold'>
+                  {dashboardData?.overview.completedProjects}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-purple-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-purple-100 rounded-lg'>
+                <DollarSign className='h-5 w-5 text-purple-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Total Spent</p>
-                <p className="text-2xl font-bold">${dashboardData?.overview.totalSpent.toLocaleString()}</p>
+                <p className='text-sm text-gray-600'>Total Spent</p>
+                <p className='text-2xl font-bold'>
+                  ${dashboardData?.overview.totalSpent.toLocaleString()}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Heart className="h-5 w-5 text-yellow-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-yellow-100 rounded-lg'>
+                <Heart className='h-5 w-5 text-yellow-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Saved Providers</p>
-                <p className="text-2xl font-bold">{dashboardData?.overview.savedProviders}</p>
+                <p className='text-sm text-gray-600'>Saved Providers</p>
+                <p className='text-2xl font-bold'>
+                  {dashboardData?.overview.savedProviders}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Star className="h-5 w-5 text-orange-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-orange-100 rounded-lg'>
+                <Star className='h-5 w-5 text-orange-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Avg Rating</p>
-                <p className="text-2xl font-bold">{dashboardData?.overview.avgProjectRating}</p>
+                <p className='text-sm text-gray-600'>Avg Rating</p>
+                <p className='text-2xl font-bold'>
+                  {dashboardData?.overview.avgProjectRating}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-red-600" />
+          <CardContent className='p-4'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-red-100 rounded-lg'>
+                <AlertCircle className='h-5 w-5 text-red-600' />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Pending Reviews</p>
-                <p className="text-2xl font-bold">{dashboardData?.overview.pendingReviews}</p>
+                <p className='text-sm text-gray-600'>Pending Reviews</p>
+                <p className='text-2xl font-bold'>
+                  {dashboardData?.overview.pendingReviews}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -446,50 +519,74 @@ export function ComprehensiveClientDashboard() {
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="projects">My Projects</TabsTrigger>
-          <TabsTrigger value="services">Discover Services</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-          <TabsTrigger value="providers">Saved Providers</TabsTrigger>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className='space-y-6'
+      >
+        <TabsList className='grid w-full grid-cols-5'>
+          <TabsTrigger value='overview'>Overview</TabsTrigger>
+          <TabsTrigger value='projects'>My Projects</TabsTrigger>
+          <TabsTrigger value='services'>Discover Services</TabsTrigger>
+          <TabsTrigger value='messages'>Messages</TabsTrigger>
+          <TabsTrigger value='providers'>Saved Providers</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value='overview' className='space-y-6'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             {/* Recent Projects */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+                <CardTitle className='flex items-center justify-between'>
                   Recent Projects
-                  <Link href="#" onClick={() => setActiveTab('projects')}>
-                    <Button variant="ghost" size="sm">View All</Button>
+                  <Link href='#' onClick={() => setActiveTab('projects')}>
+                    <Button variant='ghost' size='sm'>
+                      View All
+                    </Button>
                   </Link>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {dashboardData?.recentProjects.slice(0, 3).map((project) => (
-                    <div key={project.id} className="flex items-center space-x-4 p-3 rounded-lg border">
+                <div className='space-y-4'>
+                  {dashboardData?.recentProjects.slice(0, 3).map(project => (
+                    <div
+                      key={project.id}
+                      className='flex items-center space-x-4 p-3 rounded-lg border'
+                    >
                       <Avatar>
                         <AvatarImage src={project.provider.avatar} />
-                        <AvatarFallback>{project.provider.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>
+                          {project.provider.name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-gray-900 truncate">{project.title}</h4>
-                        <p className="text-sm text-gray-600">{project.provider.name}</p>
-                        <div className="flex items-center space-x-2 mt-1">
+                      <div className='flex-1 min-w-0'>
+                        <h4 className='font-medium text-sm text-gray-900 truncate'>
+                          {project.title}
+                        </h4>
+                        <p className='text-sm text-gray-600'>
+                          {project.provider.name}
+                        </p>
+                        <div className='flex items-center space-x-2 mt-1'>
                           <Badge className={getStatusColor(project.status)}>
                             {getStatusIcon(project.status)}
-                            <span className="ml-1 capitalize">{project.status}</span>
+                            <span className='ml-1 capitalize'>
+                              {project.status}
+                            </span>
                           </Badge>
-                          <span className="text-xs text-gray-500">${project.budget}</span>
+                          <span className='text-xs text-gray-500'>
+                            ${project.budget}
+                          </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">{project.progress}%</div>
-                        <Progress value={project.progress} className="w-16 h-2 mt-1" />
+                      <div className='text-right'>
+                        <div className='text-sm font-medium'>
+                          {project.progress}%
+                        </div>
+                        <Progress
+                          value={project.progress}
+                          className='w-16 h-2 mt-1'
+                        />
                       </div>
                     </div>
                   ))}
@@ -503,21 +600,21 @@ export function ComprehensiveClientDashboard() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="h-16 flex-col">
-                    <Search className="h-6 w-6 mb-2" />
+                <div className='grid grid-cols-2 gap-4'>
+                  <Button variant='outline' className='h-16 flex-col'>
+                    <Search className='h-6 w-6 mb-2' />
                     Find Services
                   </Button>
-                  <Button variant="outline" className="h-16 flex-col">
-                    <MessageCircle className="h-6 w-6 mb-2" />
+                  <Button variant='outline' className='h-16 flex-col'>
+                    <MessageCircle className='h-6 w-6 mb-2' />
                     Contact Provider
                   </Button>
-                  <Button variant="outline" className="h-16 flex-col">
-                    <BarChart3 className="h-6 w-6 mb-2" />
+                  <Button variant='outline' className='h-16 flex-col'>
+                    <BarChart3 className='h-6 w-6 mb-2' />
                     View Reports
                   </Button>
-                  <Button variant="outline" className="h-16 flex-col">
-                    <Calendar className="h-6 w-6 mb-2" />
+                  <Button variant='outline' className='h-16 flex-col'>
+                    <Calendar className='h-6 w-6 mb-2' />
                     Schedule Meeting
                   </Button>
                 </div>
@@ -528,36 +625,49 @@ export function ComprehensiveClientDashboard() {
           {/* Recent Messages */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className='flex items-center justify-between'>
                 Recent Messages
-                <Link href="#" onClick={() => setActiveTab('messages')}>
-                  <Button variant="ghost" size="sm">View All</Button>
+                <Link href='#' onClick={() => setActiveTab('messages')}>
+                  <Button variant='ghost' size='sm'>
+                    View All
+                  </Button>
                 </Link>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {dashboardData?.messages.slice(0, 3).map((message) => (
-                  <div key={message.id} className="flex items-start space-x-3 p-3 rounded-lg border">
+              <div className='space-y-3'>
+                {dashboardData?.messages.slice(0, 3).map(message => (
+                  <div
+                    key={message.id}
+                    className='flex items-start space-x-3 p-3 rounded-lg border'
+                  >
                     <Avatar>
                       <AvatarImage src={message.providerAvatar} />
-                      <AvatarFallback>{message.providerName.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>
+                        {message.providerName.charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2">
-                        <h4 className="font-medium text-sm">{message.providerName}</h4>
-                        <span className="text-xs text-gray-500">{message.projectTitle}</span>
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-center space-x-2'>
+                        <h4 className='font-medium text-sm'>
+                          {message.providerName}
+                        </h4>
+                        <span className='text-xs text-gray-500'>
+                          {message.projectTitle}
+                        </span>
                         {message.unread && (
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          <div className='w-2 h-2 bg-blue-600 rounded-full'></div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{message.lastMessage}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className='text-sm text-gray-600 mt-1 line-clamp-2'>
+                        {message.lastMessage}
+                      </p>
+                      <p className='text-xs text-gray-500 mt-1'>
                         {new Date(message.timestamp).toLocaleDateString()}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <MessageCircle className="h-4 w-4" />
+                    <Button variant='ghost' size='sm'>
+                      <MessageCircle className='h-4 w-4' />
                     </Button>
                   </div>
                 ))}
@@ -567,84 +677,95 @@ export function ComprehensiveClientDashboard() {
         </TabsContent>
 
         {/* Projects Tab */}
-        <TabsContent value="projects" className="space-y-6">
-          <div className="flex items-center space-x-4">
+        <TabsContent value='projects' className='space-y-6'>
+          <div className='flex items-center space-x-4'>
             <Input
-              placeholder="Search projects..."
+              placeholder='Search projects...'
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
+              onChange={e => setSearchTerm(e.target.value)}
+              className='max-w-sm'
             />
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className='w-48'>
+                <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Projects</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_review">In Review</SelectItem>
+                <SelectItem value='all'>All Projects</SelectItem>
+                <SelectItem value='active'>Active</SelectItem>
+                <SelectItem value='completed'>Completed</SelectItem>
+                <SelectItem value='pending'>Pending</SelectItem>
+                <SelectItem value='in_review'>In Review</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dashboardData?.recentProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {dashboardData?.recentProjects.map(project => (
+              <Card
+                key={project.id}
+                className='hover:shadow-lg transition-shadow'
+              >
+                <CardHeader className='pb-3'>
+                  <div className='flex items-start justify-between'>
                     <Badge className={getStatusColor(project.status)}>
                       {getStatusIcon(project.status)}
-                      <span className="ml-1 capitalize">{project.status}</span>
+                      <span className='ml-1 capitalize'>{project.status}</span>
                     </Badge>
-                    <span className="text-sm text-gray-500">{project.category}</span>
+                    <span className='text-sm text-gray-500'>
+                      {project.category}
+                    </span>
                   </div>
-                  <h3 className="font-semibold text-lg">{project.title}</h3>
+                  <h3 className='font-semibold text-lg'>{project.title}</h3>
                 </CardHeader>
-                
+
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
+                  <div className='space-y-4'>
+                    <div className='flex items-center space-x-3'>
                       <Avatar>
                         <AvatarImage src={project.provider.avatar} />
-                        <AvatarFallback>{project.provider.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>
+                          {project.provider.name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm">{project.provider.name}</p>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                        <p className='font-medium text-sm'>
+                          {project.provider.name}
+                        </p>
+                        <div className='flex items-center text-xs text-gray-500'>
+                          <Star className='h-3 w-3 fill-yellow-400 text-yellow-400 mr-1' />
                           {project.provider.rating}
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
-                      <div className="flex justify-between text-sm mb-2">
+                      <div className='flex justify-between text-sm mb-2'>
                         <span>Progress</span>
                         <span>{project.progress}%</span>
                       </div>
-                      <Progress value={project.progress} className="h-2" />
+                      <Progress value={project.progress} className='h-2' />
                     </div>
-                    
-                    <div className="flex items-center justify-between text-sm">
+
+                    <div className='flex items-center justify-between text-sm'>
                       <div>
-                        <span className="text-gray-600">Budget: </span>
-                        <span className="font-medium">${project.budget}</span>
+                        <span className='text-gray-600'>Budget: </span>
+                        <span className='font-medium'>${project.budget}</span>
                       </div>
                       <div>
-                        <span className="text-gray-600">Due: </span>
-                        <span className="font-medium">{new Date(project.deadline).toLocaleDateString()}</span>
+                        <span className='text-gray-600'>Due: </span>
+                        <span className='font-medium'>
+                          {new Date(project.deadline).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
-                    
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
+
+                    <div className='flex space-x-2'>
+                      <Button variant='outline' size='sm' className='flex-1'>
+                        <Eye className='h-4 w-4 mr-1' />
                         View
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <MessageCircle className="h-4 w-4 mr-1" />
+                      <Button variant='outline' size='sm' className='flex-1'>
+                        <MessageCircle className='h-4 w-4 mr-1' />
                         Message
                       </Button>
                     </div>
@@ -656,87 +777,108 @@ export function ComprehensiveClientDashboard() {
         </TabsContent>
 
         {/* Discover Services Tab */}
-        <TabsContent value="services" className="space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div className="flex items-center space-x-4">
+        <TabsContent value='services' className='space-y-6'>
+          <div className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'>
+            <div className='flex items-center space-x-4'>
               <Input
-                placeholder="Search services..."
+                placeholder='Search services...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='max-w-sm'
               />
               <Select>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Category" />
+                <SelectTrigger className='w-48'>
+                  <SelectValue placeholder='Category' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="digital-marketing">Digital Marketing</SelectItem>
-                  <SelectItem value="web-development">Web Development</SelectItem>
-                  <SelectItem value="graphic-design">Graphic Design</SelectItem>
-                  <SelectItem value="writing">Content Writing</SelectItem>
+                  <SelectItem value='all'>All Categories</SelectItem>
+                  <SelectItem value='digital-marketing'>
+                    Digital Marketing
+                  </SelectItem>
+                  <SelectItem value='web-development'>
+                    Web Development
+                  </SelectItem>
+                  <SelectItem value='graphic-design'>Graphic Design</SelectItem>
+                  <SelectItem value='writing'>Content Writing</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
-            <Link href="/marketplace/services">
-              <Button variant="outline">
+
+            <Link href='/marketplace/services'>
+              <Button variant='outline'>
                 Browse All Services
-                <Search className="h-4 w-4 ml-2" />
+                <Search className='h-4 w-4 ml-2' />
               </Button>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dashboardData?.availableServices.map((service) => (
-              <Card key={service.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex space-x-2">
-                      <Badge variant="outline">{service.category}</Badge>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {dashboardData?.availableServices.map(service => (
+              <Card
+                key={service.id}
+                className='hover:shadow-lg transition-shadow'
+              >
+                <CardHeader className='pb-3'>
+                  <div className='flex items-start justify-between'>
+                    <div className='flex space-x-2'>
+                      <Badge variant='outline'>{service.category}</Badge>
                       {service.featured && (
-                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                          <Star className="h-3 w-3 mr-1" />
+                        <Badge className='bg-gradient-to-r from-purple-500 to-pink-500 text-white'>
+                          <Star className='h-3 w-3 mr-1' />
                           Featured
                         </Badge>
                       )}
                     </div>
                   </div>
-                  <h3 className="font-semibold text-lg">{service.title}</h3>
-                  <p className="text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                  <h3 className='font-semibold text-lg'>{service.title}</h3>
+                  <p className='text-sm text-gray-600 line-clamp-2'>
+                    {service.description}
+                  </p>
                 </CardHeader>
-                
+
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
+                  <div className='space-y-4'>
+                    <div className='flex items-center space-x-3'>
                       <Avatar>
                         <AvatarImage src={service.provider.avatar} />
-                        <AvatarFallback>{service.provider.name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>
+                          {service.provider.name.charAt(0)}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-sm">{service.provider.name}</p>
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                        <p className='font-medium text-sm'>
+                          {service.provider.name}
+                        </p>
+                        <div className='flex items-center text-xs text-gray-500'>
+                          <Star className='h-3 w-3 fill-yellow-400 text-yellow-400 mr-1' />
                           {service.provider.rating}
-                          <span className="mx-1">•</span>
-                          <Clock className="h-3 w-3 mr-1" />
+                          <span className='mx-1'>•</span>
+                          <Clock className='h-3 w-3 mr-1' />
                           {service.provider.responseTime}
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="flex flex-wrap gap-1">
+
+                    <div className='flex flex-wrap gap-1'>
                       {service.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant='secondary'
+                          className='text-xs'
+                        >
                           {tag}
                         </Badge>
                       ))}
                     </div>
-                    
-                    <div className="flex items-center justify-between">
+
+                    <div className='flex items-center justify-between'>
                       <div>
-                        <span className="text-2xl font-bold">${service.price}</span>
-                        <span className="text-sm text-gray-500 ml-1">/ {service.duration}</span>
+                        <span className='text-2xl font-bold'>
+                          ${service.price}
+                        </span>
+                        <span className='text-sm text-gray-500 ml-1'>
+                          / {service.duration}
+                        </span>
                       </div>
                       <Button onClick={() => handleBookService(service)}>
                         Book Now
@@ -750,7 +892,7 @@ export function ComprehensiveClientDashboard() {
         </TabsContent>
 
         {/* Messages Tab */}
-        <TabsContent value="messages" className="space-y-6">
+        <TabsContent value='messages' className='space-y-6'>
           <Card>
             <CardHeader>
               <CardTitle>Project Messages</CardTitle>
@@ -759,28 +901,37 @@ export function ComprehensiveClientDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {dashboardData?.messages.map((message) => (
-                  <div key={message.id} className="flex items-start space-x-4 p-4 rounded-lg border hover:bg-gray-50 cursor-pointer">
+              <div className='space-y-4'>
+                {dashboardData?.messages.map(message => (
+                  <div
+                    key={message.id}
+                    className='flex items-start space-x-4 p-4 rounded-lg border hover:bg-gray-50 cursor-pointer'
+                  >
                     <Avatar>
                       <AvatarImage src={message.providerAvatar} />
-                      <AvatarFallback>{message.providerName.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>
+                        {message.providerName.charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h4 className="font-medium">{message.providerName}</h4>
-                        <Badge variant="outline" className="text-xs">{message.projectTitle}</Badge>
+                    <div className='flex-1 min-w-0'>
+                      <div className='flex items-center space-x-2 mb-1'>
+                        <h4 className='font-medium'>{message.providerName}</h4>
+                        <Badge variant='outline' className='text-xs'>
+                          {message.projectTitle}
+                        </Badge>
                         {message.unread && (
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          <div className='w-2 h-2 bg-blue-600 rounded-full'></div>
                         )}
                       </div>
-                      <p className="text-sm text-gray-700">{message.lastMessage}</p>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className='text-sm text-gray-700'>
+                        {message.lastMessage}
+                      </p>
+                      <p className='text-xs text-gray-500 mt-1'>
                         {new Date(message.timestamp).toLocaleString()}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      <MessageCircle className="h-4 w-4" />
+                    <Button variant='ghost' size='sm'>
+                      <MessageCircle className='h-4 w-4' />
                     </Button>
                   </div>
                 ))}
@@ -790,46 +941,53 @@ export function ComprehensiveClientDashboard() {
         </TabsContent>
 
         {/* Saved Providers Tab */}
-        <TabsContent value="providers" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dashboardData?.savedProviders.map((provider) => (
-              <Card key={provider.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <Avatar className="h-12 w-12">
+        <TabsContent value='providers' className='space-y-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {dashboardData?.savedProviders.map(provider => (
+              <Card
+                key={provider.id}
+                className='hover:shadow-lg transition-shadow'
+              >
+                <CardContent className='p-6'>
+                  <div className='flex items-center space-x-4 mb-4'>
+                    <Avatar className='h-12 w-12'>
                       <AvatarImage src={provider.avatar} />
                       <AvatarFallback>{provider.name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{provider.name}</h3>
-                      <p className="text-sm text-gray-600">{provider.specialization}</p>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
+                    <div className='flex-1'>
+                      <h3 className='font-semibold'>{provider.name}</h3>
+                      <p className='text-sm text-gray-600'>
+                        {provider.specialization}
+                      </p>
+                      <div className='flex items-center text-sm text-gray-500 mt-1'>
+                        <Star className='h-3 w-3 fill-yellow-400 text-yellow-400 mr-1' />
                         {provider.rating}
-                        <span className="mx-2">•</span>
+                        <span className='mx-2'>•</span>
                         {provider.completedProjects} projects
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Response time:</span>
-                      <span className="font-medium">{provider.responseTime}</span>
+
+                  <div className='space-y-2 text-sm'>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-gray-600'>Response time:</span>
+                      <span className='font-medium'>
+                        {provider.responseTime}
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600">Last active:</span>
-                      <span className="font-medium">{provider.lastActive}</span>
+                    <div className='flex items-center justify-between'>
+                      <span className='text-gray-600'>Last active:</span>
+                      <span className='font-medium'>{provider.lastActive}</span>
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-2 mt-4">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="h-4 w-4 mr-1" />
+
+                  <div className='flex space-x-2 mt-4'>
+                    <Button variant='outline' size='sm' className='flex-1'>
+                      <Eye className='h-4 w-4 mr-1' />
                       View Profile
                     </Button>
-                    <Button size="sm" className="flex-1">
-                      <MessageCircle className="h-4 w-4 mr-1" />
+                    <Button size='sm' className='flex-1'>
+                      <MessageCircle className='h-4 w-4 mr-1' />
                       Contact
                     </Button>
                   </div>
@@ -842,36 +1000,40 @@ export function ComprehensiveClientDashboard() {
 
       {/* Booking Modal */}
       <Dialog open={showBookingModal} onOpenChange={setShowBookingModal}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className='sm:max-w-[500px]'>
           <DialogHeader>
             <DialogTitle>Book Service</DialogTitle>
             <DialogDescription>
               {selectedService?.title} by {selectedService?.provider.name}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Project Description</label>
-              <textarea 
-                className="w-full h-24 px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Describe your project requirements..."
+          <div className='space-y-4 py-4'>
+            <div className='space-y-2'>
+              <label className='text-sm font-medium'>Project Description</label>
+              <textarea
+                className='w-full h-24 px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500'
+                placeholder='Describe your project requirements...'
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Budget</label>
-                <Input placeholder="$500" />
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Budget</label>
+                <Input placeholder='$500' />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Deadline</label>
-                <Input type="date" />
+              <div className='space-y-2'>
+                <label className='text-sm font-medium'>Deadline</label>
+                <Input type='date' />
               </div>
             </div>
-            <div className="flex space-x-3">
-              <Button onClick={() => setShowBookingModal(false)} variant="outline" className="flex-1">
+            <div className='flex space-x-3'>
+              <Button
+                onClick={() => setShowBookingModal(false)}
+                variant='outline'
+                className='flex-1'
+              >
                 Cancel
               </Button>
-              <Button onClick={handleStartProject} className="flex-1">
+              <Button onClick={handleStartProject} className='flex-1'>
                 Start Project
               </Button>
             </div>
@@ -879,5 +1041,5 @@ export function ComprehensiveClientDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

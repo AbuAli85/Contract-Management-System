@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get current session
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getSession();
 
     // Get current user
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser();
 
     const authStatus = {
       hasSession: !!session,
@@ -28,20 +28,20 @@ export async function GET(request: NextRequest) {
       sessionError: sessionError?.message || null,
       userError: userError?.message || null,
       timestamp: new Date().toISOString(),
-    }
+    };
 
     return NextResponse.json({
       success: true,
       auth: authStatus,
-    })
+    });
   } catch (error) {
-    console.error("Auth status error:", error)
+    console.error('Auth status error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to check authentication status",
+        error: 'Failed to check authentication status',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

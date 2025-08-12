@@ -58,10 +58,13 @@ The authentication system has been enhanced with the following key improvements:
 ### Usage
 
 ```typescript
-import { formatAuthError, isNetworkError } from "@/src/lib/actions/cookie-actions"
+import {
+  formatAuthError,
+  isNetworkError,
+} from '@/src/lib/actions/cookie-actions';
 
 // Format any auth error
-const userMessage = formatAuthError(error)
+const userMessage = formatAuthError(error);
 
 // Check error type
 if (isNetworkError(error)) {
@@ -118,16 +121,19 @@ SELECT * FROM profiles WHERE is_admin(auth.uid());
 ### Usage
 
 ```typescript
-import { createClientWithRefresh, refreshTokenWithRetry } from "@/lib/supabase/server"
+import {
+  createClientWithRefresh,
+  refreshTokenWithRetry,
+} from '@/lib/supabase/server';
 
 // Get client with refresh capabilities
-const client = await createClientWithRefresh()
+const client = await createClientWithRefresh();
 
 // Refresh token with retry logic
-const result = await refreshTokenWithRetry(client, 3, 1000)
+const result = await refreshTokenWithRetry(client, 3, 1000);
 
 // Get valid session (auto-refresh if needed)
-const { session, user, error } = await getValidSession()
+const { session, user, error } = await getValidSession();
 ```
 
 ## 5. Error Boundary Integration

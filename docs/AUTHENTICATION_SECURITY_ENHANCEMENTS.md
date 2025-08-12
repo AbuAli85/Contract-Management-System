@@ -24,7 +24,7 @@ const SESSION_CONFIG = {
   maxRefreshAttempts: 3,
   refreshDelay: 1000, // 1 second base delay
   sessionTimeout: 60 * 60 * 1000, // 1 hour
-}
+};
 ```
 
 **Session Security Features:**
@@ -48,9 +48,15 @@ const SESSION_CONFIG = {
 
 ```typescript
 // MFA Methods
-enableMFA: () => Promise<{ success: boolean; error?: string; secret?: string; qrCode?: string }>
-verifyMFA: (code: string) => Promise<{ success: boolean; error?: string }>
-disableMFA: (code: string) => Promise<{ success: boolean; error?: string }>
+enableMFA: () =>
+  Promise<{
+    success: boolean;
+    error?: string;
+    secret?: string;
+    qrCode?: string;
+  }>;
+verifyMFA: (code: string) => Promise<{ success: boolean; error?: string }>;
+disableMFA: (code: string) => Promise<{ success: boolean; error?: string }>;
 ```
 
 **MFA Security Benefits:**
@@ -75,14 +81,14 @@ disableMFA: (code: string) => Promise<{ success: boolean; error?: string }>
 ```typescript
 const PROVIDER_CONFIGS = {
   github: {
-    name: "GitHub",
+    name: 'GitHub',
     icon: Github,
-    color: "text-white",
-    bgColor: "bg-gray-900 hover:bg-gray-800",
-    description: "Sign in with your GitHub account",
+    color: 'text-white',
+    bgColor: 'bg-gray-900 hover:bg-gray-800',
+    description: 'Sign in with your GitHub account',
   },
   // ... other providers
-}
+};
 ```
 
 **OAuth Security Features:**
@@ -107,16 +113,19 @@ const PROVIDER_CONFIGS = {
 ```typescript
 // Enhanced callback with security checks
 export async function GET(request: NextRequest) {
-  const requestId = `auth_callback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  const requestId = `auth_callback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   // Validate redirect URL for security
-  const validatedNext = validateRedirectUrl(next, origin)
+  const validatedNext = validateRedirectUrl(next, origin);
 
   // Check if user needs profile setup
-  const needsProfileSetup = await checkProfileSetup(data.session.user.id, supabase)
+  const needsProfileSetup = await checkProfileSetup(
+    data.session.user.id,
+    supabase
+  );
 
   // Check if MFA is required
-  const mfaRequired = await checkMFARequirement(data.session.user.id, supabase)
+  const mfaRequired = await checkMFARequirement(data.session.user.id, supabase);
 }
 ```
 
@@ -215,7 +224,7 @@ const RATE_LIMIT_CONFIG = {
   windowMs: 15 * 60 * 1000, // 15 minutes
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-}
+};
 ```
 
 ### 4. Security Headers
@@ -224,14 +233,14 @@ const RATE_LIMIT_CONFIG = {
 
 ```typescript
 const securityHeaders = {
-  "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "X-XSS-Protection": "1; mode=block",
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-  "Content-Security-Policy":
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-XSS-Protection': '1; mode=block',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy':
     "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.supabase.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
-}
+};
 ```
 
 ## 📋 Implementation Guide
@@ -373,24 +382,24 @@ function LoginPage() {
 
 ```typescript
 // Test session management
-it("should automatically refresh sessions before expiry", async () => {
+it('should automatically refresh sessions before expiry', async () => {
   // Test session refresh logic
-})
+});
 
 // Test MFA functionality
-it("should require MFA verification when enabled", async () => {
+it('should require MFA verification when enabled', async () => {
   // Test MFA flow
-})
+});
 
 // Test social login
-it("should handle OAuth callback securely", async () => {
+it('should handle OAuth callback securely', async () => {
   // Test OAuth flow
-})
+});
 
 // Test rate limiting
-it("should enforce rate limits on authentication endpoints", async () => {
+it('should enforce rate limits on authentication endpoints', async () => {
   // Test rate limiting
-})
+});
 ```
 
 ### 2. Security Testing
@@ -431,20 +440,20 @@ it("should enforce rate limits on authentication endpoints", async () => {
 const securityAlerts = {
   failedLogins: {
     threshold: 10,
-    window: "15m",
-    action: "block_ip",
+    window: '15m',
+    action: 'block_ip',
   },
   mfaFailures: {
     threshold: 5,
-    window: "15m",
-    action: "require_captcha",
+    window: '15m',
+    action: 'require_captcha',
   },
   sessionExpiry: {
     threshold: 100,
-    window: "1h",
-    action: "investigate",
+    window: '1h',
+    action: 'investigate',
   },
-}
+};
 ```
 
 ### 2. Audit Logging

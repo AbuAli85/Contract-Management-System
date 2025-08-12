@@ -1,9 +1,9 @@
-import React from "react"
-import type { Metadata } from "next"
-import { Inter, Lexend } from "next/font/google"
-import "./globals.css"
-import Providers from "./providers"
-import { DOMErrorBoundary } from "@/components/dom-error-boundary"
+import React from 'react';
+import type { Metadata } from 'next';
+import { Inter, Lexend } from 'next/font/google';
+import './globals.css';
+import Providers from './providers';
+import { DOMErrorBoundary } from '@/components/dom-error-boundary';
 
 // 🔥 TEMPORARY TEST - Global Settings Fix for Root Layout (DISABLED FOR DEBUGGING)
 // import { Settings, UserPlus, Menu, Search, HelpCircle } from "lucide-react"
@@ -18,33 +18,40 @@ import { DOMErrorBoundary } from "@/components/dom-error-boundary"
 // }
 
 const fontInter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-})
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
 
 const fontLexend = Lexend({
-  subsets: ["latin"],
-  variable: "--font-lexend",
-})
+  subsets: ['latin'],
+  variable: '--font-lexend',
+});
 
 // Build timestamp for cache busting - simplified approach
-const buildTimestamp = { buildId: process.env.BUILD_ID || "dev" }
+const buildTimestamp = { buildId: process.env.BUILD_ID || 'dev' };
 
 export const metadata: Metadata = {
-  title: "Contract Management System",
-  description: "Professional contract management and generation system (Build: " + (buildTimestamp.buildId) + ")",
-}
+  title: 'Contract Management System',
+  description: `Professional contract management and generation system (Build: ${
+    buildTimestamp.buildId
+  })`,
+};
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${fontInter.variable} ${fontLexend.variable} min-h-screen bg-background font-sans antialiased`} suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning>
+      <body
+        className={`${fontInter.variable} ${fontLexend.variable} min-h-screen bg-background font-sans antialiased`}
+        suppressHydrationWarning
+      >
         <DOMErrorBoundary>
-          <Providers>
-            {children}
-          </Providers>
+          <Providers>{children}</Providers>
         </DOMErrorBoundary>
       </body>
     </html>
-  )
-} 
+  );
+}

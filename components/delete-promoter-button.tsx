@@ -1,11 +1,11 @@
-"use client"
+'use client';
 
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-import { deletePromoter } from "@/app/actions/promoters"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2, Trash2 } from "lucide-react"
-import { useTranslations } from "next-intl"
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { deletePromoter } from '@/app/actions/promoters';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Loader2, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,75 +16,83 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 
 interface DeletePromoterButtonProps {
-  promoterId: string
+  promoterId: string;
 }
 
-export function DeletePromoterButton({ promoterId }: DeletePromoterButtonProps) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const t = useTranslations("DeletePromoterButton")
+export function DeletePromoterButton({
+  promoterId,
+}: DeletePromoterButtonProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const t = useTranslations('DeletePromoterButton');
 
   const deleteMutation = useMutation({
     mutationFn: deletePromoter,
-    onSuccess: (response) => {
+    onSuccess: response => {
       if (response.success) {
         toast({
-          title: t("successTitle"),
+          title: t('successTitle'),
           description: response.message,
-        })
-        queryClient.invalidateQueries({ queryKey: ["promoters"] })
-        queryClient.invalidateQueries({ queryKey: ["contracts"] }) // Invalidate contracts as well
+        });
+        queryClient.invalidateQueries({ queryKey: ['promoters'] });
+        queryClient.invalidateQueries({ queryKey: ['contracts'] }); // Invalidate contracts as well
       } else {
         toast({
-          title: t("errorTitle"),
+          title: t('errorTitle'),
           description: response.message,
-          variant: "destructive",
-        })
+          variant: 'destructive',
+        });
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: t("errorTitle"),
-        description: error.message || t("unknownError"),
-        variant: "destructive",
-      })
+        title: t('errorTitle'),
+        description: error.message || t('unknownError'),
+        variant: 'destructive',
+      });
     },
-  })
+  });
 
   const handleDelete = () => {
-    deleteMutation.mutate(promoterId)
-  }
+    deleteMutation.mutate(promoterId);
+  };
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="sm" disabled={deleteMutation.isPending}>
+        <Button
+          variant='destructive'
+          size='sm'
+          disabled={deleteMutation.isPending}
+        >
           {deleteMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className='h-4 w-4 animate-spin' />
           ) : (
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className='h-4 w-4' />
           )}
-          <span className="sr-only">{t("delete")}</span>
+          <span className='sr-only'>{t('delete')}</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("confirmDeleteTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>{t("confirmDeleteDescription")}</AlertDialogDescription>
+          <AlertDialogTitle>{t('confirmDeleteTitle')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('confirmDeleteDescription')}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+          <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
           >
-            {t("delete")}
+            {t('delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }

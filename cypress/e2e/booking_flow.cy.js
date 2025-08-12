@@ -24,9 +24,11 @@ describe('Booking Flow', () => {
 
     // Approve the booking
     cy.visit('/bookings');
-    cy.get('.booking-item').first().within(() => {
-      cy.get('button.approve').click();
-    });
+    cy.get('.booking-item')
+      .first()
+      .within(() => {
+        cy.get('button.approve').click();
+      });
 
     // Verify tracking event
     cy.visit('/tracking-events');

@@ -22,12 +22,16 @@ This document outlines the comprehensive improvements made to the Promoter Manag
 **Usage:**
 
 ```typescript
-import { validateEmail, validatePhone, validateNationality } from "@/lib/promoter-profile-schema"
+import {
+  validateEmail,
+  validatePhone,
+  validateNationality,
+} from '@/lib/promoter-profile-schema';
 
 // Real-time validation
-const emailValidation = validateEmail("user@example.com")
-const phoneValidation = validatePhone("+1234567890")
-const nationalityValidation = validateNationality("American")
+const emailValidation = validateEmail('user@example.com');
+const phoneValidation = validatePhone('+1234567890');
+const nationalityValidation = validateNationality('American');
 ```
 
 ### **2. Server-Side Pagination & Lazy Loading** ✅
@@ -45,12 +49,16 @@ const nationalityValidation = validateNationality("American")
 **Usage:**
 
 ```typescript
-import { fetchPromotersWithPagination } from "@/lib/promoter-service"
+import { fetchPromotersWithPagination } from '@/lib/promoter-service';
 
-const result = await fetchPromotersWithPagination({ page: 1, limit: 25 }, "search term", {
-  status: "active",
-  documentStatus: "valid",
-})
+const result = await fetchPromotersWithPagination(
+  { page: 1, limit: 25 },
+  'search term',
+  {
+    status: 'active',
+    documentStatus: 'valid',
+  }
+);
 ```
 
 ### **3. Error Recovery & Retry Logic** ✅
@@ -73,7 +81,7 @@ const RETRY_CONFIG = {
   maxAttempts: 3,
   baseDelay: 1000, // 1 second
   maxDelay: 10000, // 10 seconds
-}
+};
 ```
 
 ### **4. RLS Policy Tightening** ✅
@@ -200,17 +208,17 @@ CREATE POLICY "Users can update own CV" ON promoter_cvs
 async function withRetry<T>(
   operation: () => Promise<T>,
   maxAttempts: number = 3,
-  baseDelay: number = 1000,
+  baseDelay: number = 1000
 ): Promise<T> {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await operation()
+      return await operation();
     } catch (error) {
       if (attempt === maxAttempts || !isRetryableError(error)) {
-        throw error
+        throw error;
       }
-      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 10000)
-      await new Promise((resolve) => setTimeout(resolve, delay))
+      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 10000);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 }
@@ -223,19 +231,22 @@ export async function fetchPromotersAnalytics(
   params: PaginationParams,
   searchTerm?: string,
   filters?: {
-    status?: string
-    overallStatus?: string
-    workLocation?: string
-  },
+    status?: string;
+    overallStatus?: string;
+    workLocation?: string;
+  }
 ): Promise<PaginatedResult<any>> {
-  const { data, error } = await supabaseClient.rpc("get_promoter_analytics_paginated", {
-    p_page: params.page,
-    p_limit: params.limit,
-    p_search: searchTerm || null,
-    p_status: filters?.status || null,
-    p_overall_status: filters?.overallStatus || null,
-    p_work_location: filters?.workLocation || null,
-  })
+  const { data, error } = await supabaseClient.rpc(
+    'get_promoter_analytics_paginated',
+    {
+      p_page: params.page,
+      p_limit: params.limit,
+      p_search: searchTerm || null,
+      p_status: filters?.status || null,
+      p_overall_status: filters?.overallStatus || null,
+      p_work_location: filters?.workLocation || null,
+    }
+  );
 
   return {
     data: data[0].data || [],
@@ -245,7 +256,7 @@ export async function fetchPromotersAnalytics(
     totalPages: data[0].total_pages || 0,
     hasNext: data[0].total_pages > data[0].page,
     hasPrev: data[0].page > 1,
-  }
+  };
 }
 ```
 

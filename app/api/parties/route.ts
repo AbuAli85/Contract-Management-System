@@ -1,18 +1,18 @@
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
-import { z } from "zod"
-import { withRBAC } from "@/lib/rbac/guard"
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { withRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 // Validation schema for party data
 const partySchema = z.object({
-  name_en: z.string().min(1, "English name is required"),
-  name_ar: z.string().min(1, "Arabic name is required"),
-  crn: z.string().min(1, "CRN is required"),
-  type: z.enum(["Employer", "Client", "Generic"]).default("Generic"),
+  name_en: z.string().min(1, 'English name is required'),
+  name_ar: z.string().min(1, 'Arabic name is required'),
+  crn: z.string().min(1, 'CRN is required'),
+  type: z.enum(['Employer', 'Client', 'Generic']).default('Generic'),
   role: z.string().optional(),
   cr_expiry_date: z.string().optional(),
   contact_person: z.string().optional(),
@@ -23,13 +23,13 @@ const partySchema = z.object({
   tax_number: z.string().optional(),
   license_number: z.string().optional(),
   license_expiry_date: z.string().optional(),
-  status: z.enum(["Active", "Inactive", "Suspended"]).default("Active"),
+  status: z.enum(['Active', 'Inactive', 'Suspended']).default('Active'),
   notes: z.string().optional(),
-})
+});
 
 export const GET = withRBAC('party:read:own', async () => {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = await cookies();
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -37,7 +37,7 @@ export const GET = withRBAC('party:read:own', async () => {
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll()
+            return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
             try {
@@ -46,15 +46,15 @@ export const GET = withRBAC('party:read:own', async () => {
                   name,
                   value,
                   options as {
-                    path?: string
-                    domain?: string
-                    maxAge?: number
-                    secure?: boolean
-                    httpOnly?: boolean
-                    sameSite?: "strict" | "lax" | "none"
-                  },
-                )
-              })
+                    path?: string;
+                    domain?: string;
+                    maxAge?: number;
+                    secure?: boolean;
+                    httpOnly?: boolean;
+                    sameSite?: 'strict' | 'lax' | 'none';
+                  }
+                );
+              });
             } catch {
               // The `setAll` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
@@ -62,22 +62,22 @@ export const GET = withRBAC('party:read:own', async () => {
             }
           },
         },
-      },
-    )
+      }
+    );
 
     // Get user session
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getSession();
 
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Fetch parties from the database with related data
     const { data: parties, error } = await supabase
-      .from("parties")
+      .from('parties')
       .select(
         `
         *,
@@ -95,40 +95,50 @@ export const GET = withRBAC('party:read:own', async () => {
           contract_start_date,
           contract_end_date
         )
-      `,
+      `
       )
-      .order("created_at", { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Error fetching parties:", error)
-      return NextResponse.json({ error: "Failed to fetch parties" }, { status: 500 })
+      console.error('Error fetching parties:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch parties' },
+        { status: 500 }
+      );
     }
 
     // Transform data to include contract counts
-    const partiesWithCounts = parties?.map((party) => ({
+    const partiesWithCounts = parties?.map(party => ({
       ...party,
       total_contracts:
         (party.contracts_as_first_party?.length || 0) +
         (party.contracts_as_second_party?.length || 0),
       active_contracts: [
-        ...(party.contracts_as_first_party?.filter((c: any) => c.status === "active") || []),
-        ...(party.contracts_as_second_party?.filter((c: any) => c.status === "active") || []),
+        ...(party.contracts_as_first_party?.filter(
+          (c: any) => c.status === 'active'
+        ) || []),
+        ...(party.contracts_as_second_party?.filter(
+          (c: any) => c.status === 'active'
+        ) || []),
       ].length,
-    }))
+    }));
 
     return NextResponse.json({
       success: true,
       parties: partiesWithCounts || [],
-    })
+    });
   } catch (error) {
-    console.error("API error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-})
+});
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies()
+    const cookieStore = await cookies();
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -136,7 +146,7 @@ export async function POST(request: Request) {
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll()
+            return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
             try {
@@ -145,15 +155,15 @@ export async function POST(request: Request) {
                   name,
                   value,
                   options as {
-                    path?: string
-                    domain?: string
-                    maxAge?: number
-                    secure?: boolean
-                    httpOnly?: boolean
-                    sameSite?: "strict" | "lax" | "none"
-                  },
-                )
-              })
+                    path?: string;
+                    domain?: string;
+                    maxAge?: number;
+                    secure?: boolean;
+                    httpOnly?: boolean;
+                    sameSite?: 'strict' | 'lax' | 'none';
+                  }
+                );
+              });
             } catch {
               // The `setAll` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
@@ -161,63 +171,66 @@ export async function POST(request: Request) {
             }
           },
         },
-      },
-    )
+      }
+    );
 
     // Get user session
     const {
       data: { session },
       error: sessionError,
-    } = await supabase.auth.getSession()
+    } = await supabase.auth.getSession();
 
     if (sessionError || !session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Parse and validate request body
-    const body = await request.json()
-    const validatedData = partySchema.parse(body)
+    const body = await request.json();
+    const validatedData = partySchema.parse(body);
 
     // Add owner_id field
     const partyData = {
       ...validatedData,
       owner_id: session.user.id,
-    }
+    };
 
     // Insert party into database
     const { data: party, error } = await supabase
-      .from("parties")
+      .from('parties')
       .insert([partyData])
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error("Error creating party:", error)
+      console.error('Error creating party:', error);
       return NextResponse.json(
         {
-          error: "Failed to create party",
+          error: 'Failed to create party',
           details: error.message,
         },
-        { status: 500 },
-      )
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
       party,
-    })
+    });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
-          error: "Validation error",
+          error: 'Validation error',
           details: error.issues,
         },
-        { status: 400 },
-      )
+        { status: 400 }
+      );
     }
 
-    console.error("API error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('API error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

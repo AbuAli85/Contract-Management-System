@@ -1,39 +1,45 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log("🔧 Test cookie setting API called")
+    console.log('🔧 Test cookie setting API called');
 
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Try to set a test cookie
-    const response = NextResponse.json({ success: true, message: "Test cookie setting" })
+    const response = NextResponse.json({
+      success: true,
+      message: 'Test cookie setting',
+    });
 
     // Test setting a cookie manually
     response.cookies.set({
-      name: "test-cookie",
-      value: "test-value",
-      path: "/",
+      name: 'test-cookie',
+      value: 'test-value',
+      path: '/',
       httpOnly: false,
-    })
+    });
 
     // Check what cookies are in the response
-    const responseCookies = response.cookies.getAll()
+    const responseCookies = response.cookies.getAll();
     console.log(
-      "🔧 Response cookies after manual set:",
-      responseCookies.map((c) => c.name),
-    )
+      '🔧 Response cookies after manual set:',
+      responseCookies.map(c => c.name)
+    );
 
-    return response
+    return response;
   } catch (error) {
-    console.error("❌ Test cookie setting API error:", error)
+    console.error('❌ Test cookie setting API error:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
-      { status: 500 },
-    )
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 }

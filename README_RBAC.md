@@ -22,6 +22,7 @@ npm test -- --coverage --testPathPattern=rbac
 ## 📋 What's Been Implemented
 
 ### ✅ **COMPLETE** - Database & Schema
+
 - **Migration**: `supabase/migrations/20250120_rbac_schema.sql`
 - **Tables**: `roles`, `permissions`, `role_permissions`, `user_role_assignments`, `audit_logs`
 - **Materialized View**: `user_permissions` for optimized lookups
@@ -30,6 +31,7 @@ npm test -- --coverage --testPathPattern=rbac
 - **Functions**: Built-in permission checking functions
 
 ### ✅ **COMPLETE** - Seed Data
+
 - **File**: `scripts/seed_rbac.sql`
 - **Roles**: 12 predefined roles (Client, Provider, Admin families)
 - **Permissions**: 80+ granular permissions
@@ -37,6 +39,7 @@ npm test -- --coverage --testPathPattern=rbac
 - **Idempotent**: Safe to re-run
 
 ### ✅ **COMPLETE** - Core RBAC Engine
+
 - **Permissions**: `lib/rbac/permissions.ts` - Parsing & validation
 - **Cache**: `lib/rbac/cache.ts` - 15-min TTL + Redis support
 - **Audit**: `lib/rbac/audit.ts` - Comprehensive logging
@@ -45,18 +48,21 @@ npm test -- --coverage --testPathPattern=rbac
 - **Guard**: `lib/rbac/guard.ts` - Main protection functions
 
 ### ✅ **COMPLETE** - Admin APIs
+
 - **Roles**: `app/api/admin/roles/route.ts` - Role management
 - **User Roles**: `app/api/admin/users/[userId]/roles/route.ts` - Assignments
 - **Protected**: All endpoints require appropriate permissions
 - **Audit**: Role changes are logged
 
 ### ✅ **COMPLETE** - Documentation
+
 - **Main Guide**: `docs/rbac.md` - Complete system overview
 - **API Mapping**: `docs/rbac_endpoint_mapping.md` - Endpoint permissions
 - **Project Map**: `docs/rbac_project_map.md` - Architecture overview
 - **Examples**: Usage patterns and best practices
 
 ### ✅ **COMPLETE** - Testing & Scripts
+
 - **Tests**: Comprehensive test suite covering all RBAC components
   - `tests/rbac/permissions.spec.ts` - Permission parsing & validation
   - `tests/rbac/db.idempotency.spec.ts` - Database idempotency
@@ -112,16 +118,16 @@ REDIS_URL=redis://localhost:6379
 ### Basic Permission Check
 
 ```typescript
-import { checkPermission } from '@/lib/rbac/guard'
+import { checkPermission } from '@/lib/rbac/guard';
 
 const result = await checkPermission('user:view:own', {
   context: {
     user: { id: 'user-123' },
     params: { id: 'user-123' },
     resourceType: 'user',
-    resourceId: 'user-123'
-  }
-})
+    resourceId: 'user-123',
+  },
+});
 
 if (result.allowed) {
   // User has permission
@@ -133,12 +139,12 @@ if (result.allowed) {
 ### API Route Protection
 
 ```typescript
-import { withRBAC } from '@/lib/rbac/guard'
+import { withRBAC } from '@/lib/rbac/guard';
 
-export const GET = withRBAC('user:read:all', async (request) => {
+export const GET = withRBAC('user:read:all', async request => {
   // Your handler code here
-  return NextResponse.json({ data: 'protected' })
-})
+  return NextResponse.json({ data: 'protected' });
+});
 ```
 
 ### Context-Based Permissions
@@ -149,9 +155,9 @@ const result = await checkPermission('booking:edit:provider', {
     user: { id: 'user-123', provider_id: 'provider-456' },
     params: { bookingId: 'booking-789' },
     resourceType: 'booking',
-    resourceId: 'booking-789'
-  }
-})
+    resourceId: 'booking-789',
+  },
+});
 ```
 
 ## 🗄️ Database Schema
@@ -161,7 +167,7 @@ const result = await checkPermission('booking:edit:provider', {
 ```sql
 -- Roles and permissions
 roles                    -- Role definitions
-permissions             -- Permission definitions  
+permissions             -- Permission definitions
 role_permissions        -- Role-permission mappings
 
 -- User assignments
@@ -184,6 +190,7 @@ user_permissions        -- Materialized view for fast lookups
 ### Format: `{resource}:{action}:{scope}`
 
 **Examples:**
+
 - `user:view:own` - View own user profile
 - `service:create:own` - Create own services
 - `booking:view:all` - View all bookings
@@ -191,30 +198,33 @@ user_permissions        -- Materialized view for fast lookups
 
 ### Scopes
 
-| Scope | Description | Example |
-|-------|-------------|---------|
-| `own` | User owns the resource | User's own profile |
-| `provider` | Same provider organization | Provider's services |
-| `organization` | Same company | Company resources |
-| `booking` | Booking participants | Booking access |
-| `public` | Publicly accessible | Service discovery |
-| `all` | System-wide access | Admin operations |
+| Scope          | Description                | Example             |
+| -------------- | -------------------------- | ------------------- |
+| `own`          | User owns the resource     | User's own profile  |
+| `provider`     | Same provider organization | Provider's services |
+| `organization` | Same company               | Company resources   |
+| `booking`      | Booking participants       | Booking access      |
+| `public`       | Publicly accessible        | Service discovery   |
+| `all`          | System-wide access         | Admin operations    |
 
 ## 👥 Role Families
 
 ### Client Roles
+
 - **Basic Client**: Core booking and discovery
 - **Premium Client**: Enhanced features + MFA
 - **Enterprise Client**: Multi-user management
 - **Client Administrator**: Organization management
 
 ### Provider Roles
+
 - **Individual Provider**: Service management
 - **Provider Team Member**: Limited access
 - **Provider Manager**: Team and financial management
 - **Provider Administrator**: Organization management
 
 ### Admin Roles
+
 - **Support Agent**: User and system access
 - **Content Moderator**: Content moderation
 - **Platform Administrator**: Full platform management
@@ -265,21 +275,21 @@ tail -f logs/application.log | grep "PERMISSION_CHECK"
 ### Audit Statistics
 
 ```typescript
-import { auditLogger } from '@/lib/rbac/audit'
+import { auditLogger } from '@/lib/rbac/audit';
 
-const stats = await auditLogger.getAuditStats()
-console.log(`Total logs: ${stats.total_logs}`)
-console.log(`Allow rate: ${stats.allow_count / stats.total_logs * 100}%`)
+const stats = await auditLogger.getAuditStats();
+console.log(`Total logs: ${stats.total_logs}`);
+console.log(`Allow rate: ${(stats.allow_count / stats.total_logs) * 100}%`);
 ```
 
 ### Cache Performance
 
 ```typescript
-import { permissionCache } from '@/lib/rbac/cache'
+import { permissionCache } from '@/lib/rbac/cache';
 
-const stats = permissionCache.getStats()
-console.log(`Cached users: ${stats.totalCachedUsers}`)
-console.log(`Redis enabled: ${stats.redisEnabled}`)
+const stats = permissionCache.getStats();
+console.log(`Cached users: ${stats.totalCachedUsers}`);
+console.log(`Redis enabled: ${stats.redisEnabled}`);
 ```
 
 ## 🔍 Troubleshooting
@@ -316,16 +326,19 @@ SELECT * FROM audit_logs ORDER BY timestamp DESC LIMIT 10;
 ## 📈 Rollout Plan
 
 ### Phase 1: Dry-Run (Current)
+
 - ✅ RBAC system logs all permission checks
 - ✅ No requests are blocked
 - ✅ Monitor permission usage patterns
 
 ### Phase 2: Gradual Enforcement
+
 - 🔄 Enable enforcement for non-critical endpoints
 - 🔄 Monitor deny rates and user impact
 - 🔄 Adjust permissions based on usage data
 
 ### Phase 3: Full Enforcement
+
 - 🔄 All endpoints protected by RBAC
 - 🔄 Regular permission audits
 - 🔄 Performance monitoring and optimization
@@ -366,16 +379,19 @@ npm run test:coverage
 ## 📚 Additional Resources
 
 ### Documentation
+
 - **Main Guide**: `docs/rbac.md`
 - **API Reference**: `docs/rbac_endpoint_mapping.md`
 - **Architecture**: `docs/rbac_project_map.md`
 
 ### Code Examples
+
 - **Basic Usage**: See `lib/rbac/guard.ts`
 - **Context Evaluation**: See `lib/rbac/context/ownership.ts`
 - **Admin APIs**: See `app/api/admin/`
 
 ### Database Operations
+
 - **Manual Queries**: See `scripts/seed_rbac.sql`
 - **Functions**: Built-in database functions
 - **Triggers**: Automatic materialized view refresh

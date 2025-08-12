@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 import {
   MoreHorizontal,
   Edit3,
@@ -33,16 +33,16 @@ import {
   FileText,
   Calendar,
   Users,
-} from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { createClient } from "@/lib/supabase/client"
-import Link from "next/link"
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
+import Link from 'next/link';
 
 interface ContractActionsProps {
-  contractId: string
-  status: string
-  onStatusChange?: () => void
-  onDelete?: () => void
+  contractId: string;
+  status: string;
+  onStatusChange?: () => void;
+  onDelete?: () => void;
 }
 
 export function ContractActions({
@@ -51,126 +51,138 @@ export function ContractActions({
   onStatusChange,
   onDelete,
 }: ContractActionsProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const handleStatusUpdate = async (newStatus: string) => {
-    setIsUpdatingStatus(true)
+    setIsUpdatingStatus(true);
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase
-        .from("contracts")
+        .from('contracts')
         .update({ status: newStatus })
-        .eq("id", contractId)
+        .eq('id', contractId);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
-        title: "Status Updated",
+        title: 'Status Updated',
         description: `Contract status changed to ${newStatus}`,
-      })
+      });
 
-      onStatusChange?.()
+      onStatusChange?.();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update contract status",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to update contract status',
+        variant: 'destructive',
+      });
     } finally {
-      setIsUpdatingStatus(false)
+      setIsUpdatingStatus(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from("contracts").delete().eq("id", contractId)
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('contracts')
+        .delete()
+        .eq('id', contractId);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
-        title: "Contract Deleted",
-        description: "Contract has been permanently deleted",
-      })
+        title: 'Contract Deleted',
+        description: 'Contract has been permanently deleted',
+      });
 
-      onDelete?.()
+      onDelete?.();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete contract",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to delete contract',
+        variant: 'destructive',
+      });
     }
-    setShowDeleteDialog(false)
-  }
+    setShowDeleteDialog(false);
+  };
 
   const handleDuplicate = async () => {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { data: originalContract, error: fetchError } = await supabase
-        .from("contracts")
-        .select("*")
-        .eq("id", contractId)
-        .single()
+        .from('contracts')
+        .select('*')
+        .eq('id', contractId)
+        .single();
 
-      if (fetchError) throw fetchError
-      if (!originalContract) return
+      if (fetchError) throw fetchError;
+      if (!originalContract) return;
 
-      const { id, created_at, updated_at, user_id, ...contractData } = originalContract
+      const { id, created_at, updated_at, user_id, ...contractData } =
+        originalContract;
       const duplicatedContract = {
         ...contractData,
         user_id: user_id ?? undefined, // Ensure user_id is not null
-        status: "draft",
-        contract_number: `${contractData.contract_number || "Contract"} (Copy)`,
-      }
+        status: 'draft',
+        contract_number: `${contractData.contract_number || 'Contract'} (Copy)`,
+      };
 
-      const { error: insertError } = await supabase.from("contracts").insert([duplicatedContract]) // insert expects an array
+      const { error: insertError } = await supabase
+        .from('contracts')
+        .insert([duplicatedContract]); // insert expects an array
 
-      if (insertError) throw insertError
+      if (insertError) throw insertError;
 
       toast({
-        title: "Contract Duplicated",
-        description: "A copy of the contract has been created",
-      })
+        title: 'Contract Duplicated',
+        description: 'A copy of the contract has been created',
+      });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to duplicate contract",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to duplicate contract',
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
-  const canEdit = ["draft", "pending_review"].includes(status)
-  const canActivate = ["draft", "pending_review", "suspended"].includes(status)
-  const canSuspend = ["active"].includes(status)
-  const canArchive = ["expired", "terminated"].includes(status)
+  const canEdit = ['draft', 'pending_review'].includes(status);
+  const canActivate = ['draft', 'pending_review', 'suspended'].includes(status);
+  const canSuspend = ['active'].includes(status);
+  const canArchive = ['expired', 'terminated'].includes(status);
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant='ghost' className='h-8 w-8 p-0'>
+            <span className='sr-only'>Open menu</span>
+            <MoreHorizontal className='h-4 w-4' />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align='end' className='w-56'>
           <DropdownMenuLabel>Contract Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
 
           {/* View Actions */}
           <DropdownMenuItem asChild>
-            <Link href={`/contracts/${contractId}`} className="flex items-center">
-              <Eye className="mr-2 h-4 w-4" />
+            <Link
+              href={`/contracts/${contractId}`}
+              className='flex items-center'
+            >
+              <Eye className='mr-2 h-4 w-4' />
               View Details
             </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
-            <Link href={`/contracts/${contractId}/pdf`} className="flex items-center">
-              <Download className="mr-2 h-4 w-4" />
+            <Link
+              href={`/contracts/${contractId}/pdf`}
+              className='flex items-center'
+            >
+              <Download className='mr-2 h-4 w-4' />
               Download PDF
             </Link>
           </DropdownMenuItem>
@@ -178,15 +190,18 @@ export function ContractActions({
           {/* Edit Actions */}
           {canEdit && (
             <DropdownMenuItem asChild>
-              <Link href={`/edit-contract/${contractId}`} className="flex items-center">
-                <Edit3 className="mr-2 h-4 w-4" />
+              <Link
+                href={`/edit-contract/${contractId}`}
+                className='flex items-center'
+              >
+                <Edit3 className='mr-2 h-4 w-4' />
                 Edit Contract
               </Link>
             </DropdownMenuItem>
           )}
 
           <DropdownMenuItem onClick={handleDuplicate}>
-            <Copy className="mr-2 h-4 w-4" />
+            <Copy className='mr-2 h-4 w-4' />
             Duplicate Contract
           </DropdownMenuItem>
 
@@ -195,30 +210,30 @@ export function ContractActions({
           {/* Status Actions */}
           {canActivate && (
             <DropdownMenuItem
-              onClick={() => handleStatusUpdate("active")}
+              onClick={() => handleStatusUpdate('active')}
               disabled={isUpdatingStatus}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className='mr-2 h-4 w-4' />
               Activate Contract
             </DropdownMenuItem>
           )}
 
           {canSuspend && (
             <DropdownMenuItem
-              onClick={() => handleStatusUpdate("suspended")}
+              onClick={() => handleStatusUpdate('suspended')}
               disabled={isUpdatingStatus}
             >
-              <Archive className="mr-2 h-4 w-4" />
+              <Archive className='mr-2 h-4 w-4' />
               Suspend Contract
             </DropdownMenuItem>
           )}
 
           {canArchive && (
             <DropdownMenuItem
-              onClick={() => handleStatusUpdate("archived")}
+              onClick={() => handleStatusUpdate('archived')}
               disabled={isUpdatingStatus}
             >
-              <Archive className="mr-2 h-4 w-4" />
+              <Archive className='mr-2 h-4 w-4' />
               Archive Contract
             </DropdownMenuItem>
           )}
@@ -227,15 +242,21 @@ export function ContractActions({
 
           {/* Related Actions */}
           <DropdownMenuItem asChild>
-            <Link href={`/contracts/${contractId}/parties`} className="flex items-center">
-              <Users className="mr-2 h-4 w-4" />
+            <Link
+              href={`/contracts/${contractId}/parties`}
+              className='flex items-center'
+            >
+              <Users className='mr-2 h-4 w-4' />
               Manage Parties
             </Link>
           </DropdownMenuItem>
 
           <DropdownMenuItem asChild>
-            <Link href={`/contracts/${contractId}/schedule`} className="flex items-center">
-              <Calendar className="mr-2 h-4 w-4" />
+            <Link
+              href={`/contracts/${contractId}/schedule`}
+              className='flex items-center'
+            >
+              <Calendar className='mr-2 h-4 w-4' />
               View Schedule
             </Link>
           </DropdownMenuItem>
@@ -245,9 +266,9 @@ export function ContractActions({
           {/* Danger Zone */}
           <DropdownMenuItem
             onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 focus:text-red-600"
+            className='text-red-600 focus:text-red-600'
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className='mr-2 h-4 w-4' />
             Delete Contract
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -258,18 +279,21 @@ export function ContractActions({
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the contract and remove all
-              associated data from our servers.
+              This action cannot be undone. This will permanently delete the
+              contract and remove all associated data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleDelete}
+              className='bg-red-600 hover:bg-red-700'
+            >
               Delete Contract
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

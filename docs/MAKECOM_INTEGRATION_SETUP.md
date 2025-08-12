@@ -211,15 +211,15 @@ Edit `lib/contract-type-config.ts`:
 ```typescript
 export const enhancedContractTypes: ContractTypeConfig[] = [
   {
-    id: "full-time-permanent",
-    name: "Full-Time Permanent Employment",
+    id: 'full-time-permanent',
+    name: 'Full-Time Permanent Employment',
     // ... other properties
-    makecomTemplateId: "YOUR_ACTUAL_MAKECOM_TEMPLATE_ID",
-    googleDocsTemplateId: "YOUR_ACTUAL_GOOGLE_DOCS_TEMPLATE_ID",
+    makecomTemplateId: 'YOUR_ACTUAL_MAKECOM_TEMPLATE_ID',
+    googleDocsTemplateId: 'YOUR_ACTUAL_GOOGLE_DOCS_TEMPLATE_ID',
     // ... rest of configuration
   },
   // ... other contract types
-]
+];
 ```
 
 #### **4.2 Replace Placeholder IDs**

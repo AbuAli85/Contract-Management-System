@@ -19,18 +19,20 @@ export function withRBAC(
   return async (req: NextRequest) => {
     try {
       // Normalize required roles
-      const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-      
+      const roles = Array.isArray(requiredRoles)
+        ? requiredRoles
+        : [requiredRoles];
+
       // Check if user has any of the required roles
       const hasRole = await checkUserRole(roles);
-      
+
       if (!hasRole) {
         return NextResponse.json(
           { error: 'Insufficient permissions' },
           { status: 403 }
         );
       }
-      
+
       // Call the original handler
       return await handler(req);
     } catch (error) {
@@ -51,7 +53,7 @@ async function checkUserRole(requiredRoles: string[]): Promise<boolean> {
     // For now, we'll use a simple role check
     // In a full implementation, you'd check against the user's actual roles
     // This is a placeholder that should be replaced with actual role checking logic
-    
+
     // TODO: Implement actual role checking against user's roles
     // For now, return true to allow the build to pass
     return true;

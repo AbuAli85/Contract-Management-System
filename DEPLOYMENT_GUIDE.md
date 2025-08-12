@@ -7,18 +7,21 @@ This guide provides step-by-step instructions for deploying the enhanced client/
 ## 📋 Pre-Deployment Checklist
 
 ### Database Setup
+
 - [ ] Run the enhanced migration: `supabase/migrations/20250117_enhance_client_provider_system.sql`
 - [ ] Verify RLS policies are enabled
 - [ ] Test database connections
 - [ ] Backup existing data
 
 ### Environment Configuration
+
 - [ ] Update environment variables
 - [ ] Configure Supabase settings
 - [ ] Set up authentication providers
 - [ ] Configure webhook endpoints
 
 ### Code Integration
+
 - [ ] Update providers in your main app
 - [ ] Replace old RBAC with enhanced RBAC
 - [ ] Update routing configuration
@@ -47,25 +50,23 @@ Update your main layout file (e.g., `app/layout.tsx`):
 
 ```tsx
 // Before
-import Providers from '@/app/providers'
+import Providers from '@/app/providers';
 
 // After
-import EnhancedProviders from '@/app/providers-enhanced'
+import EnhancedProviders from '@/app/providers-enhanced';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang='en'>
       <body>
-        <EnhancedProviders>
-          {children}
-        </EnhancedProviders>
+        <EnhancedProviders>{children}</EnhancedProviders>
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -75,13 +76,13 @@ Replace existing RBAC usage:
 
 ```tsx
 // Before
-import { useRBAC } from '@/src/components/auth/rbac-provider'
+import { useRBAC } from '@/src/components/auth/rbac-provider';
 
 // After
-import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider'
+import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
 
 // Update hook usage
-const { userRole, hasPermission } = useEnhancedRBAC()
+const { userRole, hasPermission } = useEnhancedRBAC();
 ```
 
 ### Step 3: Configure Role-Based Routing
@@ -107,13 +108,13 @@ Replace existing sidebar with enhanced navigation:
 
 ```tsx
 // Before
-import { Sidebar } from '@/components/sidebar'
+import { Sidebar } from '@/components/sidebar';
 
 // After
-import { EnhancedSidebar } from '@/components/navigation/enhanced-sidebar'
+import { EnhancedSidebar } from '@/components/navigation/enhanced-sidebar';
 
 // In your layout component
-<EnhancedSidebar className="w-64" />
+<EnhancedSidebar className='w-64' />;
 ```
 
 ### Step 4: API Integration
@@ -124,10 +125,10 @@ Replace existing API calls with enhanced endpoints:
 
 ```tsx
 // Before
-const response = await fetch('/api/bookings')
+const response = await fetch('/api/bookings');
 
 // After
-const response = await fetch('/api/enhanced/bookings')
+const response = await fetch('/api/enhanced/bookings');
 ```
 
 #### 4.2 Configure New API Routes
@@ -193,13 +194,13 @@ INSERT INTO companies (name, slug, description, business_type, is_active, is_ver
 ('Tech Solutions Inc', 'tech-solutions', 'Technology consulting services', 'enterprise', true, true);
 
 -- Update existing users with enhanced roles
-UPDATE users SET role = 'provider', company_id = (SELECT id FROM companies WHERE slug = 'demo-services' LIMIT 1) 
+UPDATE users SET role = 'provider', company_id = (SELECT id FROM companies WHERE slug = 'demo-services' LIMIT 1)
 WHERE email = 'provider@example.com';
 
-UPDATE users SET role = 'client' 
+UPDATE users SET role = 'client'
 WHERE email = 'client@example.com';
 
-UPDATE users SET role = 'admin' 
+UPDATE users SET role = 'admin'
 WHERE email = 'admin@example.com';
 ```
 
@@ -208,13 +209,13 @@ WHERE email = 'admin@example.com';
 ```sql
 -- Create sample services
 INSERT INTO provider_services (
-  provider_id, 
-  company_id, 
-  name, 
-  description, 
-  category, 
-  price_base, 
-  duration_minutes, 
+  provider_id,
+  company_id,
+  name,
+  description,
+  category,
+  price_base,
+  duration_minutes,
   status
 ) VALUES (
   (SELECT id FROM users WHERE email = 'provider@example.com'),
@@ -282,13 +283,17 @@ CREATE INDEX CONCURRENTLY idx_services_provider_status ON provider_services(prov
 
 ```tsx
 // Implement code splitting for role-specific components
-const ClientDashboard = lazy(() => import('@/components/dashboards/client-dashboard'))
-const ProviderDashboard = lazy(() => import('@/components/dashboards/provider-dashboard'))
+const ClientDashboard = lazy(
+  () => import('@/components/dashboards/client-dashboard')
+);
+const ProviderDashboard = lazy(
+  () => import('@/components/dashboards/provider-dashboard')
+);
 
 // Use React.memo for expensive components
 export const ServiceCard = React.memo(({ service }) => {
   // Component implementation
-})
+});
 ```
 
 ### Step 9: Security Hardening
@@ -310,12 +315,12 @@ SELECT * FROM bookings; -- Should return empty
 
 ```tsx
 // Rate limiting middleware
-import rateLimit from 'express-rate-limit'
+import rateLimit from 'express-rate-limit';
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-})
+  max: 100, // limit each IP to 100 requests per windowMs
+});
 ```
 
 ### Step 10: Production Deployment
@@ -344,19 +349,19 @@ vercel --prod
 
 ```typescript
 // Add error tracking
-import * as Sentry from '@sentry/nextjs'
+import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   environment: process.env.NODE_ENV,
-})
+});
 ```
 
 #### 11.2 Analytics Integration
 
 ```tsx
 // Add analytics tracking
-import { Analytics } from '@vercel/analytics/react'
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App({ Component, pageProps }) {
   return (
@@ -364,7 +369,7 @@ export default function App({ Component, pageProps }) {
       <Component {...pageProps} />
       <Analytics />
     </>
-  )
+  );
 }
 ```
 
@@ -373,28 +378,33 @@ export default function App({ Component, pageProps }) {
 ### Common Issues
 
 1. **RLS Policy Errors**:
+
    ```sql
    -- Check policy conflicts
    SELECT * FROM pg_policies WHERE tablename = 'bookings';
    ```
 
 2. **Role Permission Issues**:
+
    ```typescript
    // Debug permission checks
-   console.log('User role:', userRole)
-   console.log('Has permission:', hasPermission('bookings.create'))
+   console.log('User role:', userRole);
+   console.log('Has permission:', hasPermission('bookings.create'));
    ```
 
 3. **API Authentication Errors**:
    ```typescript
    // Verify token validity
-   const { data: { user } } = await supabase.auth.getUser()
-   console.log('Authenticated user:', user)
+   const {
+     data: { user },
+   } = await supabase.auth.getUser();
+   console.log('Authenticated user:', user);
    ```
 
 ### Performance Issues
 
 1. **Slow Queries**:
+
    ```sql
    -- Check query performance
    EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM bookings WHERE client_id = $1;
@@ -406,7 +416,7 @@ export default function App({ Component, pageProps }) {
    const { data, count } = await supabase
      .from('bookings')
      .select('*', { count: 'exact' })
-     .range(0, 19)
+     .range(0, 19);
    ```
 
 ## 📞 Support

@@ -2,7 +2,7 @@ name: RBAC Gate
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,32 +13,32 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       RBAC_ENFORCEMENT: enforce
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: RBAC Drift Check
         run: npm run rbac:drift
         continue-on-error: false
-        
+
       - name: RBAC Guard Lint
         run: npm run rbac:lint
         continue-on-error: false
-        
+
       - name: RBAC Tests (enforce mode)
         run: npm run rbac:test
         continue-on-error: false
-        
+
       - name: Upload RBAC reports
         uses: actions/upload-artifact@v4
         if: always()
@@ -48,16 +48,16 @@ jobs:
             docs/rbac_drift_report.md
             docs/rbac_guard_lint.md
             docs/rbac_release_readiness.md
-            
+
       - name: Comment PR with results
         if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            
+
             let comment = '## 🛡️ RBAC Gate Results\n\n';
-            
+
             try {
               // Read drift report
               const driftReport = fs.readFileSync('docs/rbac_drift_report.md', 'utf8');
@@ -94,7 +94,7 @@ jobs:
               comment += '⚠️ **Error reading reports**: ' + error.message + '\n';
               comment += '🚨 **RBAC Gate: FAILED** - Unable to verify RBAC status.';
             }
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

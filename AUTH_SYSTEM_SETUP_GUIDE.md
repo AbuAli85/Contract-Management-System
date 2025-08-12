@@ -234,7 +234,7 @@ const {
   signOut, // Logout function
   hasRole, // Role checking function
   hasPermission, // Permission checking function
-} = useAuth()
+} = useAuth();
 ```
 
 ### Protected Routes

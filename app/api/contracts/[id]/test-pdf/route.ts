@@ -1,61 +1,64 @@
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id: contractId } = await params
-    const supabase = await createClient()
+    const { id: contractId } = await params;
+    const supabase = await createClient();
 
     // Fetch contract with all related data
     const { data: contract, error: contractError } = await supabase
-      .from("contracts")
+      .from('contracts')
       .select(
         `
         *,
         first_party:parties!first_party_id(*),
         second_party:parties!second_party_id(*),
         promoter:promoters(*)
-      `,
+      `
       )
-      .eq("id", contractId)
-      .single()
+      .eq('id', contractId)
+      .single();
 
     if (contractError || !contract) {
       return NextResponse.json(
         {
           success: false,
-          error: "Contract not found",
+          error: 'Contract not found',
         },
-        { status: 404 },
-      )
+        { status: 404 }
+      );
     }
 
     // Generate HTML content for the contract
-    const htmlContent = generateContractHTML(contract)
+    const htmlContent = generateContractHTML(contract);
 
     return new NextResponse(htmlContent, {
       status: 200,
       headers: {
-        "Content-Type": "text/html",
-        "Cache-Control": "no-cache",
+        'Content-Type': 'text/html',
+        'Cache-Control': 'no-cache',
       },
-    })
+    });
   } catch (error) {
-    console.error("Test PDF API error:", error)
+    console.error('Test PDF API error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Internal server error",
+        error: 'Internal server error',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }
 
 // Function to generate HTML content for testing
 function generateContractHTML(contract: any): string {
-  const contractNumber = contract.contract_number || "N/A"
-  const currentDate = new Date().toLocaleDateString()
+  const contractNumber = contract.contract_number || 'N/A';
+  const currentDate = new Date().toLocaleDateString();
 
   return `
 <!DOCTYPE html>
@@ -152,11 +155,11 @@ function generateContractHTML(contract: any): string {
         <div class="contract-number">Contract Number: ${contractNumber}</div>
         <div>Date: ${currentDate}</div>
         <div style="margin-top: 10px;">
-            <span class="status-badge status-${contract.status || "draft"}">
-                ${contract.status || "Draft"}
+            <span class="status-badge status-${contract.status || 'draft'}">
+                ${contract.status || 'Draft'}
             </span>
-            <span class="status-badge status-${contract.approval_status || "pending"}">
-                ${contract.approval_status || "Pending"}
+            <span class="status-badge status-${contract.approval_status || 'pending'}">
+                ${contract.approval_status || 'Pending'}
             </span>
         </div>
     </div>
@@ -172,23 +175,23 @@ function generateContractHTML(contract: any): string {
             </div>
             <div class="field">
                 <span class="field-label">CRN:</span>
-                <span class="field-value">${contract.first_party.crn || "N/A"}</span>
+                <span class="field-value">${contract.first_party.crn || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Address:</span>
-                <span class="field-value">${contract.first_party.address_en || "N/A"}</span>
+                <span class="field-value">${contract.first_party.address_en || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Person:</span>
-                <span class="field-value">${contract.first_party.contact_person || "N/A"}</span>
+                <span class="field-value">${contract.first_party.contact_person || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Email:</span>
-                <span class="field-value">${contract.first_party.contact_email || "N/A"}</span>
+                <span class="field-value">${contract.first_party.contact_email || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Phone:</span>
-                <span class="field-value">${contract.first_party.contact_phone || "N/A"}</span>
+                <span class="field-value">${contract.first_party.contact_phone || 'N/A'}</span>
             </div>
         `
             : '<div class="field"><span class="field-value">Employer: Not specified</span></div>'
@@ -203,19 +206,19 @@ function generateContractHTML(contract: any): string {
             </div>
             <div class="field">
                 <span class="field-label">Email:</span>
-                <span class="field-value">${contract.email || "N/A"}</span>
+                <span class="field-value">${contract.email || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Person:</span>
-                <span class="field-value">${contract.second_party.contact_person || "N/A"}</span>
+                <span class="field-value">${contract.second_party.contact_person || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Email:</span>
-                <span class="field-value">${contract.second_party.contact_email || "N/A"}</span>
+                <span class="field-value">${contract.second_party.contact_email || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Contact Phone:</span>
-                <span class="field-value">${contract.second_party.contact_phone || "N/A"}</span>
+                <span class="field-value">${contract.second_party.contact_phone || 'N/A'}</span>
             </div>
         `
             : '<div class="field"><span class="field-value">Employee: Not specified</span></div>'
@@ -226,15 +229,15 @@ function generateContractHTML(contract: any): string {
         <div class="section-title">JOB DETAILS</div>
         <div class="field">
             <span class="field-label">Position:</span>
-            <span class="field-value">${contract.job_title || "N/A"}</span>
+            <span class="field-value">${contract.job_title || 'N/A'}</span>
         </div>
         <div class="field">
             <span class="field-label">Department:</span>
-            <span class="field-value">${contract.department || "N/A"}</span>
+            <span class="field-value">${contract.department || 'N/A'}</span>
         </div>
         <div class="field">
             <span class="field-label">Work Location:</span>
-            <span class="field-value">${contract.work_location || "N/A"}</span>
+            <span class="field-value">${contract.work_location || 'N/A'}</span>
         </div>
     </div>
 
@@ -242,15 +245,15 @@ function generateContractHTML(contract: any): string {
         <div class="section-title">CONTRACT TERMS</div>
         <div class="field">
             <span class="field-label">Contract Type:</span>
-            <span class="field-value">${contract.contract_type || "N/A"}</span>
+            <span class="field-value">${contract.contract_type || 'N/A'}</span>
         </div>
         <div class="field">
             <span class="field-label">Start Date:</span>
-            <span class="field-value">${contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : "N/A"}</span>
+            <span class="field-value">${contract.contract_start_date ? new Date(contract.contract_start_date).toLocaleDateString() : 'N/A'}</span>
         </div>
         <div class="field">
             <span class="field-label">End Date:</span>
-            <span class="field-value">${contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : "N/A"}</span>
+            <span class="field-value">${contract.contract_end_date ? new Date(contract.contract_end_date).toLocaleDateString() : 'N/A'}</span>
         </div>
     </div>
 
@@ -258,11 +261,11 @@ function generateContractHTML(contract: any): string {
         <div class="section-title">COMPENSATION</div>
         <div class="field">
             <span class="field-label">Basic Salary:</span>
-            <span class="field-value">${contract.basic_salary || "N/A"} ${contract.currency || "SAR"}</span>
+            <span class="field-value">${contract.basic_salary || 'N/A'} ${contract.currency || 'SAR'}</span>
         </div>
         <div class="field">
             <span class="field-label">Allowances:</span>
-            <span class="field-value">${contract.allowances || "N/A"} ${contract.currency || "SAR"}</span>
+            <span class="field-value">${contract.allowances || 'N/A'} ${contract.currency || 'SAR'}</span>
         </div>
     </div>
 
@@ -277,34 +280,34 @@ function generateContractHTML(contract: any): string {
             </div>
             <div class="field">
                 <span class="field-label">Contact:</span>
-                <span class="field-value">${contract.promoter.mobile_number || "N/A"}</span>
+                <span class="field-value">${contract.promoter.mobile_number || 'N/A'}</span>
             </div>
             <div class="field">
                 <span class="field-label">Email:</span>
-                <span class="field-value">${contract.promoter.email || "N/A"}</span>
+                <span class="field-value">${contract.promoter.email || 'N/A'}</span>
             </div>
         </div>
     `
-        : ""
+        : ''
     }
 
     <div class="section">
         <div class="section-title">CONTRACT STATUS</div>
         <div class="field">
             <span class="field-label">Status:</span>
-            <span class="field-value">${contract.status || "Draft"}</span>
+            <span class="field-value">${contract.status || 'Draft'}</span>
         </div>
         <div class="field">
             <span class="field-label">Approval Status:</span>
-            <span class="field-value">${contract.approval_status || "Pending"}</span>
+            <span class="field-value">${contract.approval_status || 'Pending'}</span>
         </div>
         <div class="field">
             <span class="field-label">Created:</span>
-            <span class="field-value">${contract.created_at ? new Date(contract.created_at).toLocaleDateString() : "N/A"}</span>
+            <span class="field-value">${contract.created_at ? new Date(contract.created_at).toLocaleDateString() : 'N/A'}</span>
         </div>
         <div class="field">
             <span class="field-label">Last Updated:</span>
-            <span class="field-value">${contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : "N/A"}</span>
+            <span class="field-value">${contract.updated_at ? new Date(contract.updated_at).toLocaleDateString() : 'N/A'}</span>
         </div>
     </div>
 
@@ -315,5 +318,5 @@ function generateContractHTML(contract: any): string {
     </div>
 </body>
 </html>
-  `
+  `;
 }

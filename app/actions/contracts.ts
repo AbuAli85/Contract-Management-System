@@ -1,26 +1,29 @@
-"use server"
+'use server';
 
-import { createServerComponentClient } from "@/lib/supabaseServer"
-import type { Database } from "@/types/supabase"
-import { getContractGenerationService } from "@/lib/contract-generation-service"
-import { ensureUserProfile } from "@/lib/ensure-user-profile"
-import { createClient } from "@/lib/supabase/server"
+import { createServerComponentClient } from '@/lib/supabaseServer';
+import type { Database } from '@/types/supabase';
+import { getContractGenerationService } from '@/lib/contract-generation-service';
+import { ensureUserProfile } from '@/lib/ensure-user-profile';
+import { createClient } from '@/lib/supabase/server';
 
-export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
+export type ContractInsert =
+  Database['public']['Tables']['contracts']['Insert'];
 
 export async function createContract(newContract: ContractInsert) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("User must be authenticated to create a contract.")
+    throw new Error('User must be authenticated to create a contract.');
   }
 
   // Ensure the user has a profile before proceeding
-  await ensureUserProfile(user)
+  await ensureUserProfile(user);
 
   const { data, error } = await supabase
-    .from("contracts")
+    .from('contracts')
     .insert(newContract)
     .select(
       `id,
@@ -38,67 +41,79 @@ export async function createContract(newContract: ContractInsert) {
        promoter_id,
        first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
        second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`,
+       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
     )
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Contract creation failed, no data returned.")
-  return data
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Contract creation failed, no data returned.');
+  return data;
 }
 
 export async function generateContractWithMakecom(contractData: {
-  first_party_id: string
-  second_party_id: string
-  promoter_id: string
-  contract_start_date: Date
-  contract_end_date?: Date
-  email: string
-  job_title: string
-  work_location: string
-  department: string
-  contract_type: string
-  currency: string
-  basic_salary?: number
-  allowances?: number
-  special_terms?: string
+  first_party_id: string;
+  second_party_id: string;
+  promoter_id: string;
+  contract_start_date: Date;
+  contract_end_date?: Date;
+  email: string;
+  job_title: string;
+  work_location: string;
+  department: string;
+  contract_type: string;
+  currency: string;
+  basic_salary?: number;
+  allowances?: number;
+  special_terms?: string;
 }) {
   try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
-      throw new Error("User must be authenticated to generate a contract.")
+      throw new Error('User must be authenticated to generate a contract.');
     }
 
     // Ensure the user has a profile before proceeding
-    await ensureUserProfile(user)
+    await ensureUserProfile(user);
 
     // Basic validation to prevent common errors
-    if (!contractData.first_party_id || !contractData.second_party_id || !contractData.promoter_id) {
-      throw new Error("Missing required party or promoter information.");
+    if (
+      !contractData.first_party_id ||
+      !contractData.second_party_id ||
+      !contractData.promoter_id
+    ) {
+      throw new Error('Missing required party or promoter information.');
     }
     if (!contractData.contract_start_date) {
-      throw new Error("Contract start date is required.");
+      throw new Error('Contract start date is required.');
     }
 
-    const contractService = getContractGenerationService()
+    const contractService = getContractGenerationService();
 
     // Convert to the expected format, handling optional contract_end_date
     const generationData = {
       ...contractData,
       // Dates should be Date objects as expected by the service
       contract_start_date: new Date(contractData.contract_start_date),
-      contract_end_date: contractData.contract_end_date 
+      contract_end_date: contractData.contract_end_date
         ? new Date(contractData.contract_end_date)
-        : new Date(new Date(contractData.contract_start_date).setFullYear(new Date(contractData.contract_start_date).getFullYear() + 1)), // Default to 1 year if not provided
-    }
+        : new Date(
+            new Date(contractData.contract_start_date).setFullYear(
+              new Date(contractData.contract_start_date).getFullYear() + 1
+            )
+          ), // Default to 1 year if not provided
+    };
 
-    const result = await contractService.generateContract(generationData)
+    const result = await contractService.generateContract(generationData);
 
     if (!result.success) {
       // Provide a more specific error message if available
-      throw new Error(result.message || "Contract generation failed in the service layer.");
+      throw new Error(
+        result.message || 'Contract generation failed in the service layer.'
+      );
     }
 
     // Return the contract data in the expected format
@@ -108,31 +123,40 @@ export async function generateContractWithMakecom(contractData: {
       status: result.status,
       pdf_url: result.pdf_url,
       google_drive_url: result.google_drive_url,
-      message: result.message || "Contract generated successfully.",
+      message: result.message || 'Contract generated successfully.',
       success: true,
-    }
+    };
   } catch (error) {
-    console.error("[generateContractWithMakecom] Error:", error);
+    console.error('[generateContractWithMakecom] Error:', error);
     // Re-throw a structured error to be caught by the client
     return {
       success: false,
-      message: error instanceof Error ? error.message : "An unknown error occurred during contract generation.",
+      message:
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred during contract generation.',
     };
   }
 }
 
 export async function deleteContract(contractId: string) {
-  const supabase = await createServerComponentClient()
-  const { error } = await supabase.from("contracts").delete().eq("id", contractId)
-  if (error) throw new Error(error.message)
+  const supabase = await createServerComponentClient();
+  const { error } = await supabase
+    .from('contracts')
+    .delete()
+    .eq('id', contractId);
+  if (error) throw new Error(error.message);
 }
 
-export async function updateContract(contractId: string, updatedContract: Partial<ContractInsert>) {
-  const supabase = await createServerComponentClient()
+export async function updateContract(
+  contractId: string,
+  updatedContract: Partial<ContractInsert>
+) {
+  const supabase = await createServerComponentClient();
   const { data, error } = await supabase
-    .from("contracts")
+    .from('contracts')
     .update(updatedContract)
-    .eq("id", contractId)
+    .eq('id', contractId)
     .select(
       `id,
        created_at,
@@ -149,19 +173,19 @@ export async function updateContract(contractId: string, updatedContract: Partia
        promoter_id,
        first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
        second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`,
+       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
     )
-    .single()
+    .single();
 
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error("Contract update failed, no data returned.")
-  return data
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error('Contract update failed, no data returned.');
+  return data;
 }
 
 export async function getContractById(contractId: string) {
-  const supabase = await createServerComponentClient()
+  const supabase = await createServerComponentClient();
   const { data, error } = await supabase
-    .from("contracts")
+    .from('contracts')
     .select(
       `id,
        created_at,
@@ -178,12 +202,12 @@ export async function getContractById(contractId: string) {
        promoter_id,
        first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
        second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`,
+       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
     )
-    .eq("id", contractId)
-    .single()
+    .eq('id', contractId)
+    .single();
 
-  if (error) throw new Error(error.message)
-  if (!data) throw new Error(`Contract with id ${contractId} not found.`)
-  return data
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error(`Contract with id ${contractId} not found.`);
+  return data;
 }

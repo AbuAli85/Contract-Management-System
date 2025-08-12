@@ -7,11 +7,13 @@ The Service Management System provides a complete workflow for creating, managin
 ## 🏗️ Architecture
 
 ### Frontend Components
+
 - **Service Creation Form** (`/en/services/new`) - Create new services
 - **Services List** (`/en/services`) - View and manage all services
 - **Real-time Updates** - Live status updates via Supabase subscriptions
 
 ### Backend Integration
+
 - **Supabase Database** - Stores service data and provider information
 - **Make.com Webhook** - Handles approval workflows and notifications
 - **API Fallback** - Direct database insertion if webhook unavailable
@@ -19,6 +21,7 @@ The Service Management System provides a complete workflow for creating, managin
 ## 📋 Database Schema
 
 ### Services Table
+
 ```sql
 CREATE TABLE services (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -31,6 +34,7 @@ CREATE TABLE services (
 ```
 
 ### Profiles Table (Providers)
+
 ```sql
 -- Existing profiles table with role field
 -- Providers are profiles with role = 'provider'
@@ -39,6 +43,7 @@ CREATE TABLE services (
 ## 🚀 Features
 
 ### 1. Service Creation
+
 - **Form Validation** - Ensures required fields are provided
 - **Provider Selection** - Dropdown populated from Supabase profiles table
 - **UUID Generation** - Pre-generates service ID for webhook targeting
@@ -47,6 +52,7 @@ CREATE TABLE services (
 - **Error Boundaries** - Graceful error handling with retry options
 
 ### 2. Real-time Service List
+
 - **Live Updates** - Real-time status changes via Supabase subscriptions
 - **Status Indicators** - Visual badges for different service states
 - **Statistics Dashboard** - Overview of service statuses
@@ -55,6 +61,7 @@ CREATE TABLE services (
 - **Role-based Actions** - Admin-only approval/rejection buttons
 
 ### 3. Approval Workflow
+
 - **Pending Status** - New services start as "pending"
 - **Make.com Integration** - Automated approval process with dual webhooks
 - **Status Updates** - Real-time status changes
@@ -64,7 +71,9 @@ CREATE TABLE services (
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Add to `.env.local`:
+
 ```bash
 # Make.com Webhook Configuration
 NEXT_PUBLIC_MAKE_SERVICE_CREATION_WEBHOOK=https://hook.eu2.make.com/ckseohqanys963qtkf773le623k2up7l
@@ -75,6 +84,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ```
 
 ### Webhook Payload Format
+
 ```json
 {
   "service_id": "uuid-generated-client-side",
@@ -87,6 +97,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ## 📱 User Interface
 
 ### Service Creation Form
+
 - **Service Name Input** - Text field with validation
 - **Provider Dropdown** - Populated from profiles with role="provider"
 - **Submit Button** - Creates service and sends to approval
@@ -96,6 +107,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 - **Error Boundary** - Graceful error handling
 
 ### Services List
+
 - **Service Cards** - Individual cards for each service
 - **Status Badges** - Color-coded status indicators
 - **Provider Info** - Shows provider name
@@ -107,6 +119,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ## 🔄 Workflow
 
 ### 1. Service Creation
+
 1. User fills out service form
 2. Form validates required fields
 3. System generates UUID for service
@@ -116,6 +129,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 7. Resets form on success
 
 ### 2. Approval Process
+
 1. Service created with "pending" status
 2. Make.com webhook receives service data
 3. Automated approval workflow runs
@@ -124,6 +138,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 6. Toast notification shows status change
 
 ### 3. Real-time Updates
+
 1. Supabase subscription listens for changes
 2. INSERT events add new services to list
 3. UPDATE events update existing services
@@ -131,6 +146,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 5. Toast notifications for status changes
 
 ### 4. Search & Filtering
+
 1. Client-side search by service name or provider
 2. Status filtering (pending, approved, rejected, active, inactive)
 3. Real-time filtering as user types
@@ -138,6 +154,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 5. Active filter indicators
 
 ### 5. Role-based Approval
+
 1. Admin users see approve/reject buttons
 2. Buttons only appear for pending services
 3. Webhook-based status updates
@@ -149,12 +166,14 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ### Testing the System
 
 1. **Create a Service**
+
    ```bash
    # Visit the service creation page
    http://localhost:3000/en/services/new
    ```
 
 2. **View Services List**
+
    ```bash
    # Visit the services list page
    http://localhost:3000/en/services
@@ -166,6 +185,7 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
    - Check browser console for subscription logs
 
 4. **Test Enhancements**
+
    ```bash
    # Visit the test page
    http://localhost:3000/en/test-service-enhancements
@@ -180,12 +200,14 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ### Debugging
 
 1. **Check Environment Variables**
+
    ```bash
    # Visit debug page
    http://localhost:3000/en/debug-env
    ```
 
 2. **Test Authentication**
+
    ```bash
    # Visit auth debug page
    http://localhost:3000/en/debug-auth
@@ -199,16 +221,19 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ## 🔒 Security Considerations
 
 ### Data Validation
+
 - Client-side form validation
 - Server-side API validation
 - Database constraints
 
 ### Authentication
+
 - Uses existing auth system
 - Provider selection limited to authenticated users
 - Service creation requires valid session
 
 ### Error Handling
+
 - Graceful fallback from webhook to API
 - User-friendly error messages
 - Console logging for debugging
@@ -216,12 +241,14 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ## 📊 Monitoring
 
 ### Key Metrics
+
 - Service creation success rate
 - Webhook vs API fallback usage
 - Real-time update performance
 - User engagement with service features
 
 ### Logging
+
 - Service creation attempts
 - Webhook responses
 - Real-time subscription events
@@ -230,12 +257,14 @@ NEXT_PUBLIC_MAKE_PAYMENT_SUCCEEDED_WEBHOOK=https://hook.eu2.make.com/947cw5hvnj2
 ## 🚀 Deployment
 
 ### Prerequisites
+
 1. Supabase database with services table
 2. Make.com webhook configured
 3. Environment variables set
 4. Provider profiles in database
 
 ### Steps
+
 1. Deploy Next.js application
 2. Configure Make.com webhook URL
 3. Test service creation workflow
@@ -286,6 +315,7 @@ SELECT * FROM profiles WHERE role = 'provider' LIMIT 5;
 ## 📈 Future Enhancements
 
 ### Planned Features
+
 - Service editing capabilities
 - Bulk service operations
 - Advanced filtering and search
@@ -294,6 +324,7 @@ SELECT * FROM profiles WHERE role = 'provider' LIMIT 5;
 - Service templates
 
 ### Integration Opportunities
+
 - Contract generation from services
 - Service-based pricing
 - Provider performance metrics
@@ -302,4 +333,4 @@ SELECT * FROM profiles WHERE role = 'provider' LIMIT 5;
 
 ---
 
-This service management system provides a robust foundation for managing services in the Contract Management System, with real-time updates, proper error handling, and integration with external approval workflows. 
+This service management system provides a robust foundation for managing services in the Contract Management System, with real-time updates, proper error handling, and integration with external approval workflows.

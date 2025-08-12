@@ -1,203 +1,247 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 
-import { 
-  Save, User, Phone, FileText, Settings, Star, X,
-  CheckCircle, Shield, Edit3, Plus, Building, Upload, Eye, Download
-} from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import { createClient } from "@/lib/supabase/client"
-import { formatDateForDatabase } from "@/lib/date-utils"
-import { PROMOTER_NOTIFICATION_DAYS } from "@/constants/notification-days"
-import DocumentUpload from "@/components/document-upload"
+import {
+  Save,
+  User,
+  Phone,
+  FileText,
+  Settings,
+  Star,
+  X,
+  CheckCircle,
+  Shield,
+  Edit3,
+  Plus,
+  Building,
+  Upload,
+  Eye,
+  Download,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
+import { formatDateForDatabase } from '@/lib/date-utils';
+import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
+import DocumentUpload from '@/components/document-upload';
 
 // Simple Label component to avoid the import issue
 const Label = ({ children, className, ...props }: any) => (
-  <label className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className || ''}`} {...props}>
+  <label
+    className={`text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${className || ''}`}
+    {...props}
+  >
     {children}
   </label>
-)
+);
 
 // Simple DateInput component to avoid the import issue
-const DateInput = ({ value, onChange, placeholder, ...props }: {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  [key: string]: any
+const DateInput = ({
+  value,
+  onChange,
+  placeholder,
+  ...props
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  [key: string]: any;
 }) => (
   <Input
-    type="date"
+    type='date'
     value={value}
-    onChange={(e) => onChange(e.target.value)}
+    onChange={e => onChange(e.target.value)}
     placeholder={placeholder}
     {...props}
   />
-)
+);
 
 interface PromoterFormProfessionalProps {
-  promoterToEdit?: any | null
-  onFormSubmit: () => void
-  onCancel?: () => void
+  promoterToEdit?: any | null;
+  onFormSubmit: () => void;
+  onCancel?: () => void;
 }
 
-export default function PromoterFormProfessional(props: PromoterFormProfessionalProps) {
-  const { promoterToEdit, onFormSubmit, onCancel } = props
-  const { toast } = useToast()
-  const isEditMode = Boolean(promoterToEdit)
-  const [isLoading, setIsLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState("personal")
-  const [formProgress, setFormProgress] = useState(0)
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-  const [isClient, setIsClient] = useState(false)
-  const [employers, setEmployers] = useState<{ id: string; name_en: string; name_ar: string }[]>([])
-  const [employersLoading, setEmployersLoading] = useState(false)
-  const [showDocumentUpload, setShowDocumentUpload] = useState(false)
+export default function PromoterFormProfessional(
+  props: PromoterFormProfessionalProps
+) {
+  const { promoterToEdit, onFormSubmit, onCancel } = props;
+  const { toast } = useToast();
+  const isEditMode = Boolean(promoterToEdit);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
+  const [formProgress, setFormProgress] = useState(0);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
+  const [isClient, setIsClient] = useState(false);
+  const [employers, setEmployers] = useState<
+    { id: string; name_en: string; name_ar: string }[]
+  >([]);
+  const [employersLoading, setEmployersLoading] = useState(false);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
 
   // Safe initialization with fallbacks
-  const safeGetValue = (obj: any, key: string, defaultValue: string = "") => {
+  const safeGetValue = (obj: any, key: string, defaultValue: string = '') => {
     try {
-      if (!obj || typeof obj !== 'object') return defaultValue
-      const value = obj[key]
-      if (value == null || value === undefined) return defaultValue
-      return String(value || "")
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const value = obj[key];
+      if (value == null || value === undefined) return defaultValue;
+      return String(value || '');
     } catch {
-      return defaultValue
+      return defaultValue;
     }
-  }
+  };
 
-  const safeGetNumber = (obj: any, key: string, defaultValue: number = PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY as number) => {
+  const safeGetNumber = (
+    obj: any,
+    key: string,
+    defaultValue: number = PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY as number
+  ) => {
     try {
-      if (!obj || typeof obj !== 'object') return defaultValue
-      const value = obj[key]
-      if (value == null || value === undefined) return defaultValue
-      const num = Number(value)
-      return isNaN(num) ? defaultValue : num
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const value = obj[key];
+      if (value == null || value === undefined) return defaultValue;
+      const num = Number(value);
+      return isNaN(num) ? defaultValue : num;
     } catch {
-      return defaultValue
+      return defaultValue;
     }
-  }
+  };
 
   const [formData, setFormData] = useState({
     // Personal Information
-    full_name: "",
-    name_ar: "",
-    email: "",
-    phone: "",
-    mobile_number: "",
-    date_of_birth: "",
-    gender: "",
-    marital_status: "",
-    nationality: "",
-    
+    full_name: '',
+    name_ar: '',
+    email: '',
+    phone: '',
+    mobile_number: '',
+    date_of_birth: '',
+    gender: '',
+    marital_status: '',
+    nationality: '',
+
     // Address Information
-    address: "",
-    city: "",
-    state: "",
-    country: "",
-    postal_code: "",
-    emergency_contact: "",
-    emergency_phone: "",
-    
+    address: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
+    emergency_contact: '',
+    emergency_phone: '',
+
     // Document Information
-    id_number: "",
-    passport_number: "",
-    id_expiry_date: "",
-    passport_expiry_date: "",
-    visa_number: "",
-    visa_expiry_date: "",
-    work_permit_number: "",
-    work_permit_expiry_date: "",
-    
+    id_number: '',
+    passport_number: '',
+    id_expiry_date: '',
+    passport_expiry_date: '',
+    visa_number: '',
+    visa_expiry_date: '',
+    work_permit_number: '',
+    work_permit_expiry_date: '',
+
     // Professional Information
-    job_title: "",
-    company: "",
-    department: "",
-    specialization: "",
-    experience_years: "",
-    education_level: "",
-    university: "",
-    graduation_year: "",
-    skills: "",
-    certifications: "",
-    
+    job_title: '',
+    company: '',
+    department: '',
+    specialization: '',
+    experience_years: '',
+    education_level: '',
+    university: '',
+    graduation_year: '',
+    skills: '',
+    certifications: '',
+
     // Financial Information
-    bank_name: "",
-    account_number: "",
-    iban: "",
-    swift_code: "",
-    tax_id: "",
-    
+    bank_name: '',
+    account_number: '',
+    iban: '',
+    swift_code: '',
+    tax_id: '',
+
     // Status and Preferences
-    status: "active",
-    rating: "",
-    availability: "",
-    preferred_language: "",
-    timezone: "",
-    special_requirements: "",
-    
-         // Additional Information
-     notes: "",
-     profile_picture_url: "",
-     
-     // Document URLs
-     id_card_url: "",
-     passport_url: "",
-     
-     // Notification settings
-     notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
-     notify_days_before_passport_expiry: PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
-     
-     // Employer assignment
-     employer_id: "",
-  })
+    status: 'active',
+    rating: '',
+    availability: '',
+    preferred_language: '',
+    timezone: '',
+    special_requirements: '',
+
+    // Additional Information
+    notes: '',
+    profile_picture_url: '',
+
+    // Document URLs
+    id_card_url: '',
+    passport_url: '',
+
+    // Notification settings
+    notify_days_before_id_expiry: PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY,
+    notify_days_before_passport_expiry:
+      PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY,
+
+    // Employer assignment
+    employer_id: '',
+  });
 
   // Fetch employers for dropdown
   const fetchEmployers = useCallback(async () => {
-    setEmployersLoading(true)
+    setEmployersLoading(true);
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       if (!supabase) {
-        throw new Error("Failed to create Supabase client")
+        throw new Error('Failed to create Supabase client');
       }
 
       const { data, error } = await supabase
         .from('parties')
         .select('id, name_en, name_ar')
         .eq('type', 'Employer')
-        .order('name_en')
+        .order('name_en');
 
       if (error) {
-        throw error
+        throw error;
       }
 
-      setEmployers(data || [])
+      setEmployers(data || []);
     } catch (error) {
-      console.error('Error fetching employers:', error)
+      console.error('Error fetching employers:', error);
       toast({
-        title: "Error",
-        description: "Failed to load employers",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to load employers',
+        variant: 'destructive',
+      });
     } finally {
-      setEmployersLoading(false)
+      setEmployersLoading(false);
     }
-  }, [toast])
+  }, [toast]);
 
   // Initialize form data after client-side hydration
   useEffect(() => {
-    setIsClient(true)
-    fetchEmployers()
-    
+    setIsClient(true);
+    fetchEmployers();
+
     if (promoterToEdit) {
       setFormData({
         full_name: safeGetValue(promoterToEdit, 'name_en'),
@@ -219,11 +263,17 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         id_number: safeGetValue(promoterToEdit, 'id_card_number'),
         passport_number: safeGetValue(promoterToEdit, 'passport_number'),
         id_expiry_date: safeGetValue(promoterToEdit, 'id_card_expiry_date'),
-        passport_expiry_date: safeGetValue(promoterToEdit, 'passport_expiry_date'),
+        passport_expiry_date: safeGetValue(
+          promoterToEdit,
+          'passport_expiry_date'
+        ),
         visa_number: safeGetValue(promoterToEdit, 'visa_number'),
         visa_expiry_date: safeGetValue(promoterToEdit, 'visa_expiry_date'),
         work_permit_number: safeGetValue(promoterToEdit, 'work_permit_number'),
-        work_permit_expiry_date: safeGetValue(promoterToEdit, 'work_permit_expiry_date'),
+        work_permit_expiry_date: safeGetValue(
+          promoterToEdit,
+          'work_permit_expiry_date'
+        ),
         job_title: safeGetValue(promoterToEdit, 'job_title'),
         company: safeGetValue(promoterToEdit, 'company'),
         department: safeGetValue(promoterToEdit, 'department'),
@@ -244,135 +294,163 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         availability: safeGetValue(promoterToEdit, 'availability'),
         preferred_language: safeGetValue(promoterToEdit, 'preferred_language'),
         timezone: safeGetValue(promoterToEdit, 'timezone'),
-        special_requirements: safeGetValue(promoterToEdit, 'special_requirements'),
-                 notes: safeGetValue(promoterToEdit, 'notes'),
-         profile_picture_url: safeGetValue(promoterToEdit, 'profile_picture_url'),
-         id_card_url: safeGetValue(promoterToEdit, 'id_card_url'),
-         passport_url: safeGetValue(promoterToEdit, 'passport_url'),
-         notify_days_before_id_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_id_expiry', 100),
-         notify_days_before_passport_expiry: safeGetNumber(promoterToEdit, 'notify_days_before_passport_expiry', 210),
-         employer_id: safeGetValue(promoterToEdit, 'employer_id') || "none",
-      })
+        special_requirements: safeGetValue(
+          promoterToEdit,
+          'special_requirements'
+        ),
+        notes: safeGetValue(promoterToEdit, 'notes'),
+        profile_picture_url: safeGetValue(
+          promoterToEdit,
+          'profile_picture_url'
+        ),
+        id_card_url: safeGetValue(promoterToEdit, 'id_card_url'),
+        passport_url: safeGetValue(promoterToEdit, 'passport_url'),
+        notify_days_before_id_expiry: safeGetNumber(
+          promoterToEdit,
+          'notify_days_before_id_expiry',
+          100
+        ),
+        notify_days_before_passport_expiry: safeGetNumber(
+          promoterToEdit,
+          'notify_days_before_passport_expiry',
+          210
+        ),
+        employer_id: safeGetValue(promoterToEdit, 'employer_id') || 'none',
+      });
     }
-  }, [promoterToEdit, fetchEmployers])
+  }, [promoterToEdit, fetchEmployers]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    
+    setFormData(prev => ({ ...prev, [field]: value }));
+
     // Clear validation error for this field
     if (validationErrors[field]) {
       setValidationErrors(prev => {
-        const newErrors = { ...prev }
-        delete newErrors[field]
-        return newErrors
-      })
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
-  }
+  };
 
   const validateForm = () => {
-    const errors: Record<string, string> = {}
+    const errors: Record<string, string> = {};
 
     // Required fields validation
     if (!formData.full_name?.trim()) {
-      errors.full_name = "Full name is required"
+      errors.full_name = 'Full name is required';
     }
 
     if (!formData.name_ar?.trim()) {
-      errors.name_ar = "Arabic name is required"
+      errors.name_ar = 'Arabic name is required';
     }
 
     if (!formData.id_number?.trim()) {
-      errors.id_number = "ID number is required"
+      errors.id_number = 'ID number is required';
     }
 
     // Email validation
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
+      errors.email = 'Please enter a valid email address';
     }
 
     // Phone validation
     if (formData.phone && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.phone)) {
-      errors.phone = "Please enter a valid phone number"
+      errors.phone = 'Please enter a valid phone number';
     }
 
     // Mobile validation
-    if (formData.mobile_number && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.mobile_number)) {
-      errors.mobile_number = "Please enter a valid mobile number"
+    if (
+      formData.mobile_number &&
+      !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.mobile_number)
+    ) {
+      errors.mobile_number = 'Please enter a valid mobile number';
     }
 
     // Date validation
     if (formData.id_expiry_date) {
-      const idDate = new Date(formData.id_expiry_date)
+      const idDate = new Date(formData.id_expiry_date);
       if (isNaN(idDate.getTime())) {
-        errors.id_expiry_date = "Please enter a valid ID expiry date"
+        errors.id_expiry_date = 'Please enter a valid ID expiry date';
       }
     }
 
     if (formData.passport_expiry_date) {
-      const passportDate = new Date(formData.passport_expiry_date)
+      const passportDate = new Date(formData.passport_expiry_date);
       if (isNaN(passportDate.getTime())) {
-        errors.passport_expiry_date = "Please enter a valid passport expiry date"
+        errors.passport_expiry_date =
+          'Please enter a valid passport expiry date';
       }
     }
 
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!formData) {
       toast({
-        title: "Error",
-        description: "Form data is not initialized",
-        variant: "destructive",
-      })
-      return
+        title: 'Error',
+        description: 'Form data is not initialized',
+        variant: 'destructive',
+      });
+      return;
     }
-    
+
     if (!validateForm()) {
       toast({
-        title: "Validation Error",
-        description: "Please fix the errors in the form",
-        variant: "destructive",
-      })
-      return
+        title: 'Validation Error',
+        description: 'Please fix the errors in the form',
+        variant: 'destructive',
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       if (!supabase) {
-        throw new Error("Failed to create Supabase client")
+        throw new Error('Failed to create Supabase client');
       }
 
       // Map form data to database schema - include only existing fields
       const promoterData: any = {
-        name_en: formData.full_name?.trim() || "",
-        name_ar: formData.name_ar?.trim() || "",
-        id_card_number: formData.id_number?.trim() || "",
-        mobile_number: formData.mobile_number?.trim() || "",
-        id_card_expiry_date: formData.id_expiry_date ? formatDateForDatabase(formData.id_expiry_date) : null,
-        passport_expiry_date: formData.passport_expiry_date ? formatDateForDatabase(formData.passport_expiry_date) : null,
-        email: formData.email?.trim() || "",
-        phone: formData.phone?.trim() || "",
-        status: formData.status || "active",
-        notes: formData.notes?.trim() || "",
+        name_en: formData.full_name?.trim() || '',
+        name_ar: formData.name_ar?.trim() || '',
+        id_card_number: formData.id_number?.trim() || '',
+        mobile_number: formData.mobile_number?.trim() || '',
+        id_card_expiry_date: formData.id_expiry_date
+          ? formatDateForDatabase(formData.id_expiry_date)
+          : null,
+        passport_expiry_date: formData.passport_expiry_date
+          ? formatDateForDatabase(formData.passport_expiry_date)
+          : null,
+        email: formData.email?.trim() || '',
+        phone: formData.phone?.trim() || '',
+        status: formData.status || 'active',
+        notes: formData.notes?.trim() || '',
         id_card_url: formData.id_card_url?.trim() || null,
         passport_url: formData.passport_url?.trim() || null,
         passport_number: formData.passport_number?.trim() || null,
         profile_picture_url: formData.profile_picture_url?.trim() || null,
-         notify_days_before_id_expiry: parseInt(String(formData.notify_days_before_id_expiry || 90)),
-         notify_days_before_passport_expiry: parseInt(String(formData.notify_days_before_passport_expiry || 210)),
-        
+        notify_days_before_id_expiry: parseInt(
+          String(formData.notify_days_before_id_expiry || 90)
+        ),
+        notify_days_before_passport_expiry: parseInt(
+          String(formData.notify_days_before_passport_expiry || 210)
+        ),
+
         // Personal Information
-        date_of_birth: formData.date_of_birth ? formatDateForDatabase(formData.date_of_birth) : null,
+        date_of_birth: formData.date_of_birth
+          ? formatDateForDatabase(formData.date_of_birth)
+          : null,
         gender: formData.gender?.trim() || null,
         marital_status: formData.marital_status?.trim() || null,
         nationality: formData.nationality?.trim() || null,
-        
+
         // Address Information
         address: formData.address?.trim() || null,
         city: formData.city?.trim() || null,
@@ -381,73 +459,84 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         postal_code: formData.postal_code?.trim() || null,
         emergency_contact: formData.emergency_contact?.trim() || null,
         emergency_phone: formData.emergency_phone?.trim() || null,
-        
+
         // Document Information
         visa_number: formData.visa_number?.trim() || null,
-        visa_expiry_date: formData.visa_expiry_date ? formatDateForDatabase(formData.visa_expiry_date) : null,
+        visa_expiry_date: formData.visa_expiry_date
+          ? formatDateForDatabase(formData.visa_expiry_date)
+          : null,
         work_permit_number: formData.work_permit_number?.trim() || null,
-        work_permit_expiry_date: formData.work_permit_expiry_date ? formatDateForDatabase(formData.work_permit_expiry_date) : null,
-        
+        work_permit_expiry_date: formData.work_permit_expiry_date
+          ? formatDateForDatabase(formData.work_permit_expiry_date)
+          : null,
+
         // Professional Information
         job_title: formData.job_title?.trim() || null,
         company: formData.company?.trim() || null,
         department: formData.department?.trim() || null,
         specialization: formData.specialization?.trim() || null,
-        experience_years: formData.experience_years ? parseInt(String(formData.experience_years)) : null,
+        experience_years: formData.experience_years
+          ? parseInt(String(formData.experience_years))
+          : null,
         education_level: formData.education_level?.trim() || null,
         university: formData.university?.trim() || null,
-        graduation_year: formData.graduation_year ? parseInt(String(formData.graduation_year)) : null,
+        graduation_year: formData.graduation_year
+          ? parseInt(String(formData.graduation_year))
+          : null,
         skills: formData.skills?.trim() || null,
         certifications: formData.certifications?.trim() || null,
-        
+
         // Financial Information
         bank_name: formData.bank_name?.trim() || null,
         account_number: formData.account_number?.trim() || null,
         iban: formData.iban?.trim() || null,
         swift_code: formData.swift_code?.trim() || null,
         tax_id: formData.tax_id?.trim() || null,
-        
+
         // Preferences and Ratings
         rating: formData.rating ? parseFloat(String(formData.rating)) : null,
         availability: formData.availability?.trim() || null,
         preferred_language: formData.preferred_language?.trim() || null,
         timezone: formData.timezone?.trim() || null,
         special_requirements: formData.special_requirements?.trim() || null,
-      }
+      };
 
       // Add employer_id if selected (but not "none")
-      if (formData.employer_id && formData.employer_id !== "none") {
-        promoterData.employer_id = formData.employer_id
+      if (formData.employer_id && formData.employer_id !== 'none') {
+        promoterData.employer_id = formData.employer_id;
       } else {
         // Set to null if "none" is selected or no employer is selected
-        promoterData.employer_id = null
+        promoterData.employer_id = null;
       }
 
-      let result
+      let result;
       if (isEditMode && promoterToEdit) {
-        const idCardNumberChanged = formData.id_number !== safeGetValue(promoterToEdit, 'id_card_number')
-        
+        const idCardNumberChanged =
+          formData.id_number !== safeGetValue(promoterToEdit, 'id_card_number');
+
         if (idCardNumberChanged && formData.id_number) {
           const { data: existingPromoter, error: checkError } = await supabase
             .from('promoters')
             .select('id')
             .eq('id_card_number', formData.id_number)
             .neq('id', promoterToEdit.id)
-            .single()
+            .single();
 
           if (checkError && checkError.code !== 'PGRST116') {
-            throw new Error(checkError.message)
+            throw new Error(checkError.message);
           }
 
           if (existingPromoter) {
-            throw new Error(`ID card number ${formData.id_number} already exists for another promoter`)
+            throw new Error(
+              `ID card number ${formData.id_number} already exists for another promoter`
+            );
           }
         }
 
         result = await supabase
           .from('promoters')
           .update(promoterData)
-          .eq('id', promoterToEdit.id)
+          .eq('id', promoterToEdit.id);
       } else {
         // For new promoters, check if ID card number already exists
         if (formData.id_number) {
@@ -455,185 +544,223 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
             .from('promoters')
             .select('id')
             .eq('id_card_number', formData.id_number)
-            .single()
+            .single();
 
           if (checkError && checkError.code !== 'PGRST116') {
-            throw new Error(checkError.message)
+            throw new Error(checkError.message);
           }
 
           if (existingPromoter) {
-            throw new Error(`ID card number ${formData.id_number} already exists for another promoter`)
+            throw new Error(
+              `ID card number ${formData.id_number} already exists for another promoter`
+            );
           }
         }
 
         result = await supabase
           .from('promoters')
-          .insert([{ ...promoterData, created_at: new Date().toISOString() }])
+          .insert([{ ...promoterData, created_at: new Date().toISOString() }]);
       }
 
       if (result.error) {
-        throw new Error(result.error.message)
+        throw new Error(result.error.message);
       }
 
       toast({
-        title: isEditMode ? "Promoter Updated" : "Promoter Added",
-        description: isEditMode 
-          ? "Promoter details have been updated successfully."
-          : "New promoter has been added successfully.",
-      })
+        title: isEditMode ? 'Promoter Updated' : 'Promoter Added',
+        description: isEditMode
+          ? 'Promoter details have been updated successfully.'
+          : 'New promoter has been added successfully.',
+      });
 
-      onFormSubmit()
+      onFormSubmit();
     } catch (error) {
-      console.error('Error saving promoter:', error)
-      
-      let errorMessage = "Failed to save promoter"
+      console.error('Error saving promoter:', error);
+
+      let errorMessage = 'Failed to save promoter';
       if (error instanceof Error) {
-        if (error.message.includes('column') && error.message.includes('does not exist')) {
-          errorMessage = "Database schema is not up to date. Please contact administrator to apply database migrations."
-        } else if (error.message.includes('permission') || error.message.includes('unauthorized')) {
-          errorMessage = "Permission denied. Please check your access rights."
+        if (
+          error.message.includes('column') &&
+          error.message.includes('does not exist')
+        ) {
+          errorMessage =
+            'Database schema is not up to date. Please contact administrator to apply database migrations.';
+        } else if (
+          error.message.includes('permission') ||
+          error.message.includes('unauthorized')
+        ) {
+          errorMessage = 'Permission denied. Please check your access rights.';
         } else {
-          errorMessage = error.message
+          errorMessage = error.message;
         }
       }
-      
+
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorMessage,
-        variant: "destructive",
-      })
+        variant: 'destructive',
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Show loading state during SSR or when formData is not initialized
   if (!isClient || !formData) {
     return (
-      <div className="space-y-6">
-        <div className="text-center">
+      <div className='space-y-6'>
+        <div className='text-center'>
           <p>Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
+      <div className='space-y-2'>
+        <div className='flex items-center justify-between text-sm'>
           <span>Form Completion</span>
           <span>{formProgress}%</span>
         </div>
-        <Progress value={formProgress} className="h-2" />
+        <Progress value={formProgress} className='h-2' />
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="personal">Personal</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
-            <TabsTrigger value="professional">Professional</TabsTrigger>
-            <TabsTrigger value="financial">Financial</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+      <form onSubmit={handleSubmit} className='space-y-6'>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='w-full'>
+          <TabsList className='grid w-full grid-cols-6'>
+            <TabsTrigger value='personal'>Personal</TabsTrigger>
+            <TabsTrigger value='documents'>Documents</TabsTrigger>
+            <TabsTrigger value='contact'>Contact</TabsTrigger>
+            <TabsTrigger value='professional'>Professional</TabsTrigger>
+            <TabsTrigger value='financial'>Financial</TabsTrigger>
+            <TabsTrigger value='settings'>Settings</TabsTrigger>
           </TabsList>
 
           {/* Personal Information Tab */}
-          <TabsContent value="personal" className="space-y-6">
+          <TabsContent value='personal' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <User className='h-5 w-5' />
                   Personal Information
                 </CardTitle>
                 <CardDescription>
                   Basic personal details and identification information
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name (English) *</Label>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='full_name'>Full Name (English) *</Label>
                     <Input
-                      id="full_name"
+                      id='full_name'
                       value={formData.full_name}
-                      onChange={(e) => handleInputChange('full_name', e.target.value)}
-                      placeholder="Enter full name in English"
-                      className={validationErrors.full_name ? 'border-red-500' : ''}
+                      onChange={e =>
+                        handleInputChange('full_name', e.target.value)
+                      }
+                      placeholder='Enter full name in English'
+                      className={
+                        validationErrors.full_name ? 'border-red-500' : ''
+                      }
                     />
                     {validationErrors.full_name && (
-                      <p className="text-sm text-red-500">{validationErrors.full_name}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.full_name}
+                      </p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="name_ar">Full Name (Arabic) *</Label>
+                  <div className='space-y-2'>
+                    <Label htmlFor='name_ar'>Full Name (Arabic) *</Label>
                     <Input
-                      id="name_ar"
+                      id='name_ar'
                       value={formData.name_ar}
-                      onChange={(e) => handleInputChange('name_ar', e.target.value)}
-                      placeholder="Enter full name in Arabic"
-                      className={validationErrors.name_ar ? 'border-red-500' : ''}
+                      onChange={e =>
+                        handleInputChange('name_ar', e.target.value)
+                      }
+                      placeholder='Enter full name in Arabic'
+                      className={
+                        validationErrors.name_ar ? 'border-red-500' : ''
+                      }
                     />
                     {validationErrors.name_ar && (
-                      <p className="text-sm text-red-500">{validationErrors.name_ar}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.name_ar}
+                      </p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="date_of_birth">Date of Birth</Label>
+                  <div className='space-y-2'>
+                    <Label htmlFor='date_of_birth'>Date of Birth</Label>
                     <DateInput
                       value={formData.date_of_birth}
-                      onChange={(value) => handleInputChange('date_of_birth', value)}
-                      placeholder="DD/MM/YYYY"
+                      onChange={value =>
+                        handleInputChange('date_of_birth', value)
+                      }
+                      placeholder='DD/MM/YYYY'
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
-                    <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
+                  <div className='space-y-2'>
+                    <Label htmlFor='gender'>Gender</Label>
+                    <Select
+                      value={formData.gender}
+                      onValueChange={value =>
+                        handleInputChange('gender', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder='Select gender' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='male'>Male</SelectItem>
+                        <SelectItem value='female'>Female</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="marital_status">Marital Status</Label>
-                    <Select value={formData.marital_status} onValueChange={(value) => handleInputChange('marital_status', value)}>
+                  <div className='space-y-2'>
+                    <Label htmlFor='marital_status'>Marital Status</Label>
+                    <Select
+                      value={formData.marital_status}
+                      onValueChange={value =>
+                        handleInputChange('marital_status', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select marital status" />
+                        <SelectValue placeholder='Select marital status' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="single">Single</SelectItem>
-                        <SelectItem value="married">Married</SelectItem>
-                        <SelectItem value="divorced">Divorced</SelectItem>
-                        <SelectItem value="widowed">Widowed</SelectItem>
+                        <SelectItem value='single'>Single</SelectItem>
+                        <SelectItem value='married'>Married</SelectItem>
+                        <SelectItem value='divorced'>Divorced</SelectItem>
+                        <SelectItem value='widowed'>Widowed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="nationality">Nationality</Label>
-                    <Select value={formData.nationality} onValueChange={(value) => handleInputChange('nationality', value)}>
+                  <div className='space-y-2'>
+                    <Label htmlFor='nationality'>Nationality</Label>
+                    <Select
+                      value={formData.nationality}
+                      onValueChange={value =>
+                        handleInputChange('nationality', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select nationality" />
+                        <SelectValue placeholder='Select nationality' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="pakistani">Pakistani</SelectItem>
-                        <SelectItem value="indian">Indian</SelectItem>
-                        <SelectItem value="bangladeshi">Bangladeshi</SelectItem>
-                        <SelectItem value="nepali">Nepali</SelectItem>
-                        <SelectItem value="sri_lankan">Sri Lankan</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='pakistani'>Pakistani</SelectItem>
+                        <SelectItem value='indian'>Indian</SelectItem>
+                        <SelectItem value='bangladeshi'>Bangladeshi</SelectItem>
+                        <SelectItem value='nepali'>Nepali</SelectItem>
+                        <SelectItem value='sri_lankan'>Sri Lankan</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -643,232 +770,272 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
           </TabsContent>
 
           {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-6">
+          <TabsContent value='documents' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <FileText className='h-5 w-5' />
                   Document Information
                 </CardTitle>
-                <CardDescription>
-                  ID and passport details
-                </CardDescription>
+                <CardDescription>ID and passport details</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="id_number">ID Number *</Label>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='id_number'>ID Number *</Label>
                     <Input
-                      id="id_number"
+                      id='id_number'
                       value={formData.id_number}
-                      onChange={(e) => handleInputChange('id_number', e.target.value)}
-                      placeholder="Enter ID number"
-                      className={validationErrors.id_number ? "border-red-500" : ""}
+                      onChange={e =>
+                        handleInputChange('id_number', e.target.value)
+                      }
+                      placeholder='Enter ID number'
+                      className={
+                        validationErrors.id_number ? 'border-red-500' : ''
+                      }
                     />
                     {validationErrors.id_number && (
-                      <p className="text-sm text-red-500">{validationErrors.id_number}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.id_number}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
+
+                  <div className='space-y-2'>
                     <DateInput
-                      id="id_expiry_date"
-                      label="ID Expiry Date"
+                      id='id_expiry_date'
+                      label='ID Expiry Date'
                       value={formData.id_expiry_date}
-                      onChange={(value) => handleInputChange('id_expiry_date', value)}
-                      placeholder="DD/MM/YYYY"
+                      onChange={value =>
+                        handleInputChange('id_expiry_date', value)
+                      }
+                      placeholder='DD/MM/YYYY'
                     />
                     {validationErrors.id_expiry_date && (
-                      <p className="text-sm text-red-500">{validationErrors.id_expiry_date}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.id_expiry_date}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="passport_number">Passport Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='passport_number'>Passport Number</Label>
                     <Input
-                      id="passport_number"
+                      id='passport_number'
                       value={formData.passport_number}
-                      onChange={(e) => handleInputChange('passport_number', e.target.value)}
-                      placeholder="Enter passport number"
+                      onChange={e =>
+                        handleInputChange('passport_number', e.target.value)
+                      }
+                      placeholder='Enter passport number'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
+
+                  <div className='space-y-2'>
                     <DateInput
-                      id="passport_expiry_date"
-                      label="Passport Expiry Date"
+                      id='passport_expiry_date'
+                      label='Passport Expiry Date'
                       value={formData.passport_expiry_date}
-                      onChange={(value) => handleInputChange('passport_expiry_date', value)}
-                      placeholder="DD/MM/YYYY"
+                      onChange={value =>
+                        handleInputChange('passport_expiry_date', value)
+                      }
+                      placeholder='DD/MM/YYYY'
                     />
                     {validationErrors.passport_expiry_date && (
-                      <p className="text-sm text-red-500">{validationErrors.passport_expiry_date}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.passport_expiry_date}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="visa_number">Visa Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='visa_number'>Visa Number</Label>
                     <Input
-                      id="visa_number"
+                      id='visa_number'
                       value={formData.visa_number}
-                      onChange={(e) => handleInputChange('visa_number', e.target.value)}
-                      placeholder="Enter visa number"
+                      onChange={e =>
+                        handleInputChange('visa_number', e.target.value)
+                      }
+                      placeholder='Enter visa number'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
+
+                  <div className='space-y-2'>
                     <DateInput
-                      id="visa_expiry_date"
-                      label="Visa Expiry Date"
+                      id='visa_expiry_date'
+                      label='Visa Expiry Date'
                       value={formData.visa_expiry_date}
-                      onChange={(value) => handleInputChange('visa_expiry_date', value)}
-                      placeholder="DD/MM/YYYY"
+                      onChange={value =>
+                        handleInputChange('visa_expiry_date', value)
+                      }
+                      placeholder='DD/MM/YYYY'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="work_permit_number">Work Permit Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='work_permit_number'>
+                      Work Permit Number
+                    </Label>
                     <Input
-                      id="work_permit_number"
+                      id='work_permit_number'
                       value={formData.work_permit_number}
-                      onChange={(e) => handleInputChange('work_permit_number', e.target.value)}
-                      placeholder="Enter work permit number"
+                      onChange={e =>
+                        handleInputChange('work_permit_number', e.target.value)
+                      }
+                      placeholder='Enter work permit number'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
+
+                  <div className='space-y-2'>
                     <DateInput
-                      id="work_permit_expiry_date"
-                      label="Work Permit Expiry Date"
+                      id='work_permit_expiry_date'
+                      label='Work Permit Expiry Date'
                       value={formData.work_permit_expiry_date}
-                      onChange={(value) => handleInputChange('work_permit_expiry_date', value)}
-                      placeholder="DD/MM/YYYY"
+                      onChange={value =>
+                        handleInputChange('work_permit_expiry_date', value)
+                      }
+                      placeholder='DD/MM/YYYY'
                     />
                   </div>
                 </div>
-                
+
                 {/* Document Upload Section */}
-                <div className="mt-6 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-medium">Document Upload</h4>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      size="sm"
+                <div className='mt-6 space-y-4'>
+                  <div className='flex items-center justify-between'>
+                    <h4 className='text-lg font-medium'>Document Upload</h4>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      size='sm'
                       onClick={() => setShowDocumentUpload(!showDocumentUpload)}
                     >
-                      <Upload className="mr-2 h-4 w-4" />
-                      {showDocumentUpload ? "Hide Upload" : "Upload Documents"}
+                      <Upload className='mr-2 h-4 w-4' />
+                      {showDocumentUpload ? 'Hide Upload' : 'Upload Documents'}
                     </Button>
                   </div>
-                  
+
                   {/* Display current documents */}
                   {(formData.id_card_url || formData.passport_url) && (
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                       {formData.id_card_url && (
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium">ID Card Document</h5>
-                            <div className="flex gap-2">
+                        <div className='p-4 border rounded-lg'>
+                          <div className='flex items-center justify-between mb-2'>
+                            <h5 className='font-medium'>ID Card Document</h5>
+                            <div className='flex gap-2'>
                               <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => window.open(formData.id_card_url, '_blank')}
+                                type='button'
+                                variant='outline'
+                                size='sm'
+                                onClick={() =>
+                                  window.open(formData.id_card_url, '_blank')
+                                }
                               >
-                                <Eye className="mr-1 h-3 w-3" />
+                                <Eye className='mr-1 h-3 w-3' />
                                 View
                               </Button>
                               <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
+                                type='button'
+                                variant='outline'
+                                size='sm'
                                 onClick={() => {
-                                  const link = document.createElement('a')
-                                  link.href = formData.id_card_url
-                                  link.download = 'id_card_document'
-                                  link.click()
+                                  const link = document.createElement('a');
+                                  link.href = formData.id_card_url;
+                                  link.download = 'id_card_document';
+                                  link.click();
                                 }}
                               >
-                                <Download className="mr-1 h-3 w-3" />
+                                <Download className='mr-1 h-3 w-3' />
                                 Download
                               </Button>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">ID card document uploaded</p>
+                          <p className='text-sm text-muted-foreground'>
+                            ID card document uploaded
+                          </p>
                         </div>
                       )}
-                      
+
                       {formData.passport_url && (
-                        <div className="p-4 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h5 className="font-medium">Passport Document</h5>
-                            <div className="flex gap-2">
+                        <div className='p-4 border rounded-lg'>
+                          <div className='flex items-center justify-between mb-2'>
+                            <h5 className='font-medium'>Passport Document</h5>
+                            <div className='flex gap-2'>
                               <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => window.open(formData.passport_url, '_blank')}
+                                type='button'
+                                variant='outline'
+                                size='sm'
+                                onClick={() =>
+                                  window.open(formData.passport_url, '_blank')
+                                }
                               >
-                                <Eye className="mr-1 h-3 w-3" />
+                                <Eye className='mr-1 h-3 w-3' />
                                 View
                               </Button>
                               <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
+                                type='button'
+                                variant='outline'
+                                size='sm'
                                 onClick={() => {
-                                  const link = document.createElement('a')
-                                  link.href = formData.passport_url
-                                  link.download = 'passport_document'
-                                  link.click()
+                                  const link = document.createElement('a');
+                                  link.href = formData.passport_url;
+                                  link.download = 'passport_document';
+                                  link.click();
                                 }}
                               >
-                                <Download className="mr-1 h-3 w-3" />
+                                <Download className='mr-1 h-3 w-3' />
                                 Download
                               </Button>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">Passport document uploaded</p>
+                          <p className='text-sm text-muted-foreground'>
+                            Passport document uploaded
+                          </p>
                         </div>
                       )}
                     </div>
                   )}
-                  
+
                   {showDocumentUpload && (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                       <DocumentUpload
                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
-                        promoterName={formData.full_name || promoterToEdit?.name_en || 'Unknown'}
+                        promoterName={
+                          formData.full_name ||
+                          promoterToEdit?.name_en ||
+                          'Unknown'
+                        }
                         idCardNumber={formData.id_number}
                         passportNumber={formData.passport_number}
-                        documentType="id_card"
+                        documentType='id_card'
                         currentUrl={formData.id_card_url}
-                        onUploadComplete={(url) => {
+                        onUploadComplete={url => {
                           // Update the form data with the new URL
-                          setFormData(prev => ({ ...prev, id_card_url: url }))
-                          setShowDocumentUpload(false)
+                          setFormData(prev => ({ ...prev, id_card_url: url }));
+                          setShowDocumentUpload(false);
                         }}
                         onDelete={() => {
                           // Clear the URL from form data
-                          setFormData(prev => ({ ...prev, id_card_url: "" }))
+                          setFormData(prev => ({ ...prev, id_card_url: '' }));
                         }}
                       />
                       <DocumentUpload
                         promoterId={isEditMode ? promoterToEdit?.id : 'new'}
-                        promoterName={formData.full_name || promoterToEdit?.name_en || 'Unknown'}
+                        promoterName={
+                          formData.full_name ||
+                          promoterToEdit?.name_en ||
+                          'Unknown'
+                        }
                         idCardNumber={formData.id_number}
                         passportNumber={formData.passport_number}
-                        documentType="passport"
+                        documentType='passport'
                         currentUrl={formData.passport_url}
-                        onUploadComplete={(url) => {
+                        onUploadComplete={url => {
                           // Update the form data with the new URL
-                          setFormData(prev => ({ ...prev, passport_url: url }))
-                          setShowDocumentUpload(false)
+                          setFormData(prev => ({ ...prev, passport_url: url }));
+                          setShowDocumentUpload(false);
                         }}
                         onDelete={() => {
                           // Clear the URL from form data
-                          setFormData(prev => ({ ...prev, passport_url: "" }))
+                          setFormData(prev => ({ ...prev, passport_url: '' }));
                         }}
                       />
                     </div>
@@ -879,134 +1046,158 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
           </TabsContent>
 
           {/* Contact Information Tab */}
-          <TabsContent value="contact" className="space-y-6">
+          <TabsContent value='contact' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Phone className='h-5 w-5' />
                   Contact Information
                 </CardTitle>
                 <CardDescription>
                   Email, phone, and address contact details
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='email'>Email Address</Label>
                     <Input
-                      id="email"
-                      type="email"
+                      id='email'
+                      type='email'
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="Enter email address"
-                      className={validationErrors.email ? "border-red-500" : ""}
+                      onChange={e => handleInputChange('email', e.target.value)}
+                      placeholder='Enter email address'
+                      className={validationErrors.email ? 'border-red-500' : ''}
                     />
                     {validationErrors.email && (
-                      <p className="text-sm text-red-500">{validationErrors.email}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.email}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='phone'>Phone Number</Label>
                     <Input
-                      id="phone"
+                      id='phone'
                       value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      placeholder="Enter phone number"
-                      className={validationErrors.phone ? "border-red-500" : ""}
+                      onChange={e => handleInputChange('phone', e.target.value)}
+                      placeholder='Enter phone number'
+                      className={validationErrors.phone ? 'border-red-500' : ''}
                     />
                     {validationErrors.phone && (
-                      <p className="text-sm text-red-500">{validationErrors.phone}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.phone}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="mobile_number">Mobile Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='mobile_number'>Mobile Number</Label>
                     <Input
-                      id="mobile_number"
+                      id='mobile_number'
                       value={formData.mobile_number}
-                      onChange={(e) => handleInputChange('mobile_number', e.target.value)}
-                      placeholder="Enter mobile number"
-                      className={validationErrors.mobile_number ? "border-red-500" : ""}
+                      onChange={e =>
+                        handleInputChange('mobile_number', e.target.value)
+                      }
+                      placeholder='Enter mobile number'
+                      className={
+                        validationErrors.mobile_number ? 'border-red-500' : ''
+                      }
                     />
                     {validationErrors.mobile_number && (
-                      <p className="text-sm text-red-500">{validationErrors.mobile_number}</p>
+                      <p className='text-sm text-red-500'>
+                        {validationErrors.mobile_number}
+                      </p>
                     )}
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_contact">Emergency Contact</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='emergency_contact'>Emergency Contact</Label>
                     <Input
-                      id="emergency_contact"
+                      id='emergency_contact'
                       value={formData.emergency_contact}
-                      onChange={(e) => handleInputChange('emergency_contact', e.target.value)}
-                      placeholder="Emergency contact person name"
+                      onChange={e =>
+                        handleInputChange('emergency_contact', e.target.value)
+                      }
+                      placeholder='Emergency contact person name'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="emergency_phone">Emergency Phone</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='emergency_phone'>Emergency Phone</Label>
                     <Input
-                      id="emergency_phone"
+                      id='emergency_phone'
                       value={formData.emergency_phone}
-                      onChange={(e) => handleInputChange('emergency_phone', e.target.value)}
-                      placeholder="Emergency contact phone number"
+                      onChange={e =>
+                        handleInputChange('emergency_phone', e.target.value)
+                      }
+                      placeholder='Emergency contact phone number'
                     />
                   </div>
                 </div>
-                
-                <div className="space-y-4">
-                  <h4 className="text-lg font-medium">Address Information</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Full Address</Label>
+
+                <div className='space-y-4'>
+                  <h4 className='text-lg font-medium'>Address Information</h4>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div className='space-y-2'>
+                      <Label htmlFor='address'>Full Address</Label>
                       <Textarea
-                        id="address"
+                        id='address'
                         value={formData.address}
-                        onChange={(e) => handleInputChange('address', e.target.value)}
-                        placeholder="Enter full address"
+                        onChange={e =>
+                          handleInputChange('address', e.target.value)
+                        }
+                        placeholder='Enter full address'
                         rows={3}
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='city'>City</Label>
                       <Input
-                        id="city"
+                        id='city'
                         value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        placeholder="Enter city"
+                        onChange={e =>
+                          handleInputChange('city', e.target.value)
+                        }
+                        placeholder='Enter city'
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="state">State/Province</Label>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='state'>State/Province</Label>
                       <Input
-                        id="state"
+                        id='state'
                         value={formData.state}
-                        onChange={(e) => handleInputChange('state', e.target.value)}
-                        placeholder="Enter state or province"
+                        onChange={e =>
+                          handleInputChange('state', e.target.value)
+                        }
+                        placeholder='Enter state or province'
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="country">Country</Label>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='country'>Country</Label>
                       <Input
-                        id="country"
+                        id='country'
                         value={formData.country}
-                        onChange={(e) => handleInputChange('country', e.target.value)}
-                        placeholder="Enter country"
+                        onChange={e =>
+                          handleInputChange('country', e.target.value)
+                        }
+                        placeholder='Enter country'
                       />
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="postal_code">Postal Code</Label>
+
+                    <div className='space-y-2'>
+                      <Label htmlFor='postal_code'>Postal Code</Label>
                       <Input
-                        id="postal_code"
+                        id='postal_code'
                         value={formData.postal_code}
-                        onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                        placeholder="Enter postal code"
+                        onChange={e =>
+                          handleInputChange('postal_code', e.target.value)
+                        }
+                        placeholder='Enter postal code'
                       />
                     </div>
                   </div>
@@ -1016,360 +1207,554 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
           </TabsContent>
 
           {/* Professional Information Tab */}
-          <TabsContent value="professional" className="space-y-6">
+          <TabsContent value='professional' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Building className='h-5 w-5' />
                   Professional Information
                 </CardTitle>
                 <CardDescription>
                   Job details, education, and professional background
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="job_title">Job Title</Label>
-                    <Select value={formData.job_title} onValueChange={(value) => handleInputChange('job_title', value)}>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='job_title'>Job Title</Label>
+                    <Select
+                      value={formData.job_title}
+                      onValueChange={value =>
+                        handleInputChange('job_title', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select job title" />
+                        <SelectValue placeholder='Select job title' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="accountant">Accountant</SelectItem>
-                        <SelectItem value="administrative_assistant">Administrative Assistant</SelectItem>
-                        <SelectItem value="analyst">Analyst</SelectItem>
-                        <SelectItem value="architect">Architect</SelectItem>
-                        <SelectItem value="assistant_manager">Assistant Manager</SelectItem>
-                        <SelectItem value="business_analyst">Business Analyst</SelectItem>
-                        <SelectItem value="cashier">Cashier</SelectItem>
-                        <SelectItem value="ceo">CEO</SelectItem>
-                        <SelectItem value="cfo">CFO</SelectItem>
-                        <SelectItem value="consultant">Consultant</SelectItem>
-                        <SelectItem value="coordinator">Coordinator</SelectItem>
-                        <SelectItem value="customer_service">Customer Service Representative</SelectItem>
-                        <SelectItem value="data_analyst">Data Analyst</SelectItem>
-                        <SelectItem value="designer">Designer</SelectItem>
-                        <SelectItem value="developer">Developer</SelectItem>
-                        <SelectItem value="director">Director</SelectItem>
-                        <SelectItem value="engineer">Engineer</SelectItem>
-                        <SelectItem value="executive">Executive</SelectItem>
-                        <SelectItem value="finance_manager">Finance Manager</SelectItem>
-                        <SelectItem value="graphic_designer">Graphic Designer</SelectItem>
-                        <SelectItem value="hr_manager">HR Manager</SelectItem>
-                        <SelectItem value="intern">Intern</SelectItem>
-                        <SelectItem value="it_manager">IT Manager</SelectItem>
-                        <SelectItem value="junior_developer">Junior Developer</SelectItem>
-                        <SelectItem value="lawyer">Lawyer</SelectItem>
-                        <SelectItem value="marketing_manager">Marketing Manager</SelectItem>
-                        <SelectItem value="nurse">Nurse</SelectItem>
-                        <SelectItem value="operations_manager">Operations Manager</SelectItem>
-                        <SelectItem value="project_manager">Project Manager</SelectItem>
-                        <SelectItem value="receptionist">Receptionist</SelectItem>
-                        <SelectItem value="researcher">Researcher</SelectItem>
-                        <SelectItem value="sales_manager">Sales Manager</SelectItem>
-                        <SelectItem value="sales_promoter">Sales promoter</SelectItem>
-                        <SelectItem value="sales_representative">Sales Representative</SelectItem>
-                        <SelectItem value="senior_developer">Senior Developer</SelectItem>
-                        <SelectItem value="software_engineer">Software Engineer</SelectItem>
-                        <SelectItem value="supervisor">Supervisor</SelectItem>
-                        <SelectItem value="teacher">Teacher</SelectItem>
-                        <SelectItem value="technician">Technician</SelectItem>
-                        <SelectItem value="trainee">Trainee</SelectItem>
-                        <SelectItem value="translator">Translator</SelectItem>
-                        <SelectItem value="web_developer">Web Developer</SelectItem>
-                        <SelectItem value="writer">Writer</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='accountant'>Accountant</SelectItem>
+                        <SelectItem value='administrative_assistant'>
+                          Administrative Assistant
+                        </SelectItem>
+                        <SelectItem value='analyst'>Analyst</SelectItem>
+                        <SelectItem value='architect'>Architect</SelectItem>
+                        <SelectItem value='assistant_manager'>
+                          Assistant Manager
+                        </SelectItem>
+                        <SelectItem value='business_analyst'>
+                          Business Analyst
+                        </SelectItem>
+                        <SelectItem value='cashier'>Cashier</SelectItem>
+                        <SelectItem value='ceo'>CEO</SelectItem>
+                        <SelectItem value='cfo'>CFO</SelectItem>
+                        <SelectItem value='consultant'>Consultant</SelectItem>
+                        <SelectItem value='coordinator'>Coordinator</SelectItem>
+                        <SelectItem value='customer_service'>
+                          Customer Service Representative
+                        </SelectItem>
+                        <SelectItem value='data_analyst'>
+                          Data Analyst
+                        </SelectItem>
+                        <SelectItem value='designer'>Designer</SelectItem>
+                        <SelectItem value='developer'>Developer</SelectItem>
+                        <SelectItem value='director'>Director</SelectItem>
+                        <SelectItem value='engineer'>Engineer</SelectItem>
+                        <SelectItem value='executive'>Executive</SelectItem>
+                        <SelectItem value='finance_manager'>
+                          Finance Manager
+                        </SelectItem>
+                        <SelectItem value='graphic_designer'>
+                          Graphic Designer
+                        </SelectItem>
+                        <SelectItem value='hr_manager'>HR Manager</SelectItem>
+                        <SelectItem value='intern'>Intern</SelectItem>
+                        <SelectItem value='it_manager'>IT Manager</SelectItem>
+                        <SelectItem value='junior_developer'>
+                          Junior Developer
+                        </SelectItem>
+                        <SelectItem value='lawyer'>Lawyer</SelectItem>
+                        <SelectItem value='marketing_manager'>
+                          Marketing Manager
+                        </SelectItem>
+                        <SelectItem value='nurse'>Nurse</SelectItem>
+                        <SelectItem value='operations_manager'>
+                          Operations Manager
+                        </SelectItem>
+                        <SelectItem value='project_manager'>
+                          Project Manager
+                        </SelectItem>
+                        <SelectItem value='receptionist'>
+                          Receptionist
+                        </SelectItem>
+                        <SelectItem value='researcher'>Researcher</SelectItem>
+                        <SelectItem value='sales_manager'>
+                          Sales Manager
+                        </SelectItem>
+                        <SelectItem value='sales_promoter'>
+                          Sales promoter
+                        </SelectItem>
+                        <SelectItem value='sales_representative'>
+                          Sales Representative
+                        </SelectItem>
+                        <SelectItem value='senior_developer'>
+                          Senior Developer
+                        </SelectItem>
+                        <SelectItem value='software_engineer'>
+                          Software Engineer
+                        </SelectItem>
+                        <SelectItem value='supervisor'>Supervisor</SelectItem>
+                        <SelectItem value='teacher'>Teacher</SelectItem>
+                        <SelectItem value='technician'>Technician</SelectItem>
+                        <SelectItem value='trainee'>Trainee</SelectItem>
+                        <SelectItem value='translator'>Translator</SelectItem>
+                        <SelectItem value='web_developer'>
+                          Web Developer
+                        </SelectItem>
+                        <SelectItem value='writer'>Writer</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='company'>Company</Label>
                     <Input
-                      id="company"
+                      id='company'
                       value={formData.company}
-                      onChange={(e) => handleInputChange('company', e.target.value)}
-                      placeholder="Enter company name"
+                      onChange={e =>
+                        handleInputChange('company', e.target.value)
+                      }
+                      placeholder='Enter company name'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
-                    <Select value={formData.department} onValueChange={(value) => handleInputChange('department', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='department'>Department</Label>
+                    <Select
+                      value={formData.department}
+                      onValueChange={value =>
+                        handleInputChange('department', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
+                        <SelectValue placeholder='Select department' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="accounting">Accounting</SelectItem>
-                        <SelectItem value="administration">Administration</SelectItem>
-                        <SelectItem value="business_development">Business Development</SelectItem>
-                        <SelectItem value="customer_service">Customer Service</SelectItem>
-                        <SelectItem value="engineering">Engineering</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="human_resources">Human Resources</SelectItem>
-                        <SelectItem value="information_technology">Information Technology</SelectItem>
-                        <SelectItem value="legal">Legal</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                        <SelectItem value="product">Product</SelectItem>
-                        <SelectItem value="quality_assurance">Quality Assurance</SelectItem>
-                        <SelectItem value="research_and_development">Research & Development</SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
-                        <SelectItem value="security">Security</SelectItem>
-                        <SelectItem value="supply_chain">Supply Chain</SelectItem>
-                        <SelectItem value="training">Training</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='accounting'>Accounting</SelectItem>
+                        <SelectItem value='administration'>
+                          Administration
+                        </SelectItem>
+                        <SelectItem value='business_development'>
+                          Business Development
+                        </SelectItem>
+                        <SelectItem value='customer_service'>
+                          Customer Service
+                        </SelectItem>
+                        <SelectItem value='engineering'>Engineering</SelectItem>
+                        <SelectItem value='finance'>Finance</SelectItem>
+                        <SelectItem value='human_resources'>
+                          Human Resources
+                        </SelectItem>
+                        <SelectItem value='information_technology'>
+                          Information Technology
+                        </SelectItem>
+                        <SelectItem value='legal'>Legal</SelectItem>
+                        <SelectItem value='marketing'>Marketing</SelectItem>
+                        <SelectItem value='operations'>Operations</SelectItem>
+                        <SelectItem value='product'>Product</SelectItem>
+                        <SelectItem value='quality_assurance'>
+                          Quality Assurance
+                        </SelectItem>
+                        <SelectItem value='research_and_development'>
+                          Research & Development
+                        </SelectItem>
+                        <SelectItem value='sales'>Sales</SelectItem>
+                        <SelectItem value='security'>Security</SelectItem>
+                        <SelectItem value='supply_chain'>
+                          Supply Chain
+                        </SelectItem>
+                        <SelectItem value='training'>Training</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="specialization">Specialization</Label>
-                    <Select value={formData.specialization} onValueChange={(value) => handleInputChange('specialization', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='specialization'>Specialization</Label>
+                    <Select
+                      value={formData.specialization}
+                      onValueChange={value =>
+                        handleInputChange('specialization', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select specialization" />
+                        <SelectValue placeholder='Select specialization' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="accounting">Accounting</SelectItem>
-                        <SelectItem value="administration">Administration</SelectItem>
-                        <SelectItem value="advertising">Advertising</SelectItem>
-                        <SelectItem value="agriculture">Agriculture</SelectItem>
-                        <SelectItem value="architecture">Architecture</SelectItem>
-                        <SelectItem value="artificial_intelligence">Artificial Intelligence</SelectItem>
-                        <SelectItem value="banking">Banking</SelectItem>
-                        <SelectItem value="biotechnology">Biotechnology</SelectItem>
-                        <SelectItem value="business_analysis">Business Analysis</SelectItem>
-                        <SelectItem value="chemistry">Chemistry</SelectItem>
-                        <SelectItem value="civil_engineering">Civil Engineering</SelectItem>
-                        <SelectItem value="communications">Communications</SelectItem>
-                        <SelectItem value="computer_science">Computer Science</SelectItem>
-                        <SelectItem value="construction">Construction</SelectItem>
-                        <SelectItem value="consulting">Consulting</SelectItem>
-                        <SelectItem value="customer_service">Customer Service</SelectItem>
-                        <SelectItem value="data_science">Data Science</SelectItem>
-                        <SelectItem value="design">Design</SelectItem>
-                        <SelectItem value="economics">Economics</SelectItem>
-                        <SelectItem value="education">Education</SelectItem>
-                        <SelectItem value="electrical_engineering">Electrical Engineering</SelectItem>
-                        <SelectItem value="environmental_science">Environmental Science</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="healthcare">Healthcare</SelectItem>
-                        <SelectItem value="human_resources">Human Resources</SelectItem>
-                        <SelectItem value="information_technology">Information Technology</SelectItem>
-                        <SelectItem value="journalism">Journalism</SelectItem>
-                        <SelectItem value="law">Law</SelectItem>
-                        <SelectItem value="logistics">Logistics</SelectItem>
-                        <SelectItem value="management">Management</SelectItem>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="mathematics">Mathematics</SelectItem>
-                        <SelectItem value="mechanical_engineering">Mechanical Engineering</SelectItem>
-                        <SelectItem value="medicine">Medicine</SelectItem>
-                        <SelectItem value="nursing">Nursing</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                        <SelectItem value="pharmacy">Pharmacy</SelectItem>
-                        <SelectItem value="physics">Physics</SelectItem>
-                        <SelectItem value="psychology">Psychology</SelectItem>
-                        <SelectItem value="public_relations">Public Relations</SelectItem>
-                        <SelectItem value="real_estate">Real Estate</SelectItem>
-                        <SelectItem value="research">Research</SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
-                        <SelectItem value="social_work">Social Work</SelectItem>
-                        <SelectItem value="software_development">Software Development</SelectItem>
-                        <SelectItem value="statistics">Statistics</SelectItem>
-                        <SelectItem value="supply_chain">Supply Chain</SelectItem>
-                        <SelectItem value="training">Training</SelectItem>
-                        <SelectItem value="tourism">Tourism</SelectItem>
-                        <SelectItem value="transportation">Transportation</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='accounting'>Accounting</SelectItem>
+                        <SelectItem value='administration'>
+                          Administration
+                        </SelectItem>
+                        <SelectItem value='advertising'>Advertising</SelectItem>
+                        <SelectItem value='agriculture'>Agriculture</SelectItem>
+                        <SelectItem value='architecture'>
+                          Architecture
+                        </SelectItem>
+                        <SelectItem value='artificial_intelligence'>
+                          Artificial Intelligence
+                        </SelectItem>
+                        <SelectItem value='banking'>Banking</SelectItem>
+                        <SelectItem value='biotechnology'>
+                          Biotechnology
+                        </SelectItem>
+                        <SelectItem value='business_analysis'>
+                          Business Analysis
+                        </SelectItem>
+                        <SelectItem value='chemistry'>Chemistry</SelectItem>
+                        <SelectItem value='civil_engineering'>
+                          Civil Engineering
+                        </SelectItem>
+                        <SelectItem value='communications'>
+                          Communications
+                        </SelectItem>
+                        <SelectItem value='computer_science'>
+                          Computer Science
+                        </SelectItem>
+                        <SelectItem value='construction'>
+                          Construction
+                        </SelectItem>
+                        <SelectItem value='consulting'>Consulting</SelectItem>
+                        <SelectItem value='customer_service'>
+                          Customer Service
+                        </SelectItem>
+                        <SelectItem value='data_science'>
+                          Data Science
+                        </SelectItem>
+                        <SelectItem value='design'>Design</SelectItem>
+                        <SelectItem value='economics'>Economics</SelectItem>
+                        <SelectItem value='education'>Education</SelectItem>
+                        <SelectItem value='electrical_engineering'>
+                          Electrical Engineering
+                        </SelectItem>
+                        <SelectItem value='environmental_science'>
+                          Environmental Science
+                        </SelectItem>
+                        <SelectItem value='finance'>Finance</SelectItem>
+                        <SelectItem value='healthcare'>Healthcare</SelectItem>
+                        <SelectItem value='human_resources'>
+                          Human Resources
+                        </SelectItem>
+                        <SelectItem value='information_technology'>
+                          Information Technology
+                        </SelectItem>
+                        <SelectItem value='journalism'>Journalism</SelectItem>
+                        <SelectItem value='law'>Law</SelectItem>
+                        <SelectItem value='logistics'>Logistics</SelectItem>
+                        <SelectItem value='management'>Management</SelectItem>
+                        <SelectItem value='marketing'>Marketing</SelectItem>
+                        <SelectItem value='mathematics'>Mathematics</SelectItem>
+                        <SelectItem value='mechanical_engineering'>
+                          Mechanical Engineering
+                        </SelectItem>
+                        <SelectItem value='medicine'>Medicine</SelectItem>
+                        <SelectItem value='nursing'>Nursing</SelectItem>
+                        <SelectItem value='operations'>Operations</SelectItem>
+                        <SelectItem value='pharmacy'>Pharmacy</SelectItem>
+                        <SelectItem value='physics'>Physics</SelectItem>
+                        <SelectItem value='psychology'>Psychology</SelectItem>
+                        <SelectItem value='public_relations'>
+                          Public Relations
+                        </SelectItem>
+                        <SelectItem value='real_estate'>Real Estate</SelectItem>
+                        <SelectItem value='research'>Research</SelectItem>
+                        <SelectItem value='sales'>Sales</SelectItem>
+                        <SelectItem value='social_work'>Social Work</SelectItem>
+                        <SelectItem value='software_development'>
+                          Software Development
+                        </SelectItem>
+                        <SelectItem value='statistics'>Statistics</SelectItem>
+                        <SelectItem value='supply_chain'>
+                          Supply Chain
+                        </SelectItem>
+                        <SelectItem value='training'>Training</SelectItem>
+                        <SelectItem value='tourism'>Tourism</SelectItem>
+                        <SelectItem value='transportation'>
+                          Transportation
+                        </SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="experience_years">Years of Experience</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='experience_years'>
+                      Years of Experience
+                    </Label>
                     <Input
-                      id="experience_years"
-                      type="number"
-                      min="0"
-                      max="50"
+                      id='experience_years'
+                      type='number'
+                      min='0'
+                      max='50'
                       value={formData.experience_years}
-                      onChange={(e) => handleInputChange('experience_years', e.target.value)}
-                      placeholder="Enter years of experience"
+                      onChange={e =>
+                        handleInputChange('experience_years', e.target.value)
+                      }
+                      placeholder='Enter years of experience'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="education_level">Education Level</Label>
-                    <Select value={formData.education_level} onValueChange={(value) => handleInputChange('education_level', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='education_level'>Education Level</Label>
+                    <Select
+                      value={formData.education_level}
+                      onValueChange={value =>
+                        handleInputChange('education_level', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select education level" />
+                        <SelectValue placeholder='Select education level' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="high_school">High School</SelectItem>
-                        <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-                        <SelectItem value="master">Master's Degree</SelectItem>
-                        <SelectItem value="phd">PhD</SelectItem>
-                        <SelectItem value="diploma">Diploma</SelectItem>
-                        <SelectItem value="certificate">Certificate</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='high_school'>High School</SelectItem>
+                        <SelectItem value='bachelor'>
+                          Bachelor's Degree
+                        </SelectItem>
+                        <SelectItem value='master'>Master's Degree</SelectItem>
+                        <SelectItem value='phd'>PhD</SelectItem>
+                        <SelectItem value='diploma'>Diploma</SelectItem>
+                        <SelectItem value='certificate'>Certificate</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="university">University/Institution</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='university'>University/Institution</Label>
                     <Input
-                      id="university"
+                      id='university'
                       value={formData.university}
-                      onChange={(e) => handleInputChange('university', e.target.value)}
-                      placeholder="Enter university or institution"
+                      onChange={e =>
+                        handleInputChange('university', e.target.value)
+                      }
+                      placeholder='Enter university or institution'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="graduation_year">Graduation Year</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='graduation_year'>Graduation Year</Label>
                     <Input
-                      id="graduation_year"
-                      type="number"
-                      min="1950"
+                      id='graduation_year'
+                      type='number'
+                      min='1950'
                       max={new Date().getFullYear()}
                       value={formData.graduation_year}
-                      onChange={(e) => handleInputChange('graduation_year', e.target.value)}
-                      placeholder="Enter graduation year"
+                      onChange={e =>
+                        handleInputChange('graduation_year', e.target.value)
+                      }
+                      placeholder='Enter graduation year'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="skills">Skills</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='skills'>Skills</Label>
                     <Textarea
-                      id="skills"
+                      id='skills'
                       value={formData.skills}
-                      onChange={(e) => handleInputChange('skills', e.target.value)}
-                      placeholder="Enter skills (comma-separated)"
+                      onChange={e =>
+                        handleInputChange('skills', e.target.value)
+                      }
+                      placeholder='Enter skills (comma-separated)'
                       rows={3}
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="certifications">Certifications</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='certifications'>Certifications</Label>
                     <Textarea
-                      id="certifications"
+                      id='certifications'
                       value={formData.certifications}
-                      onChange={(e) => handleInputChange('certifications', e.target.value)}
-                      placeholder="Enter certifications (comma-separated)"
+                      onChange={e =>
+                        handleInputChange('certifications', e.target.value)
+                      }
+                      placeholder='Enter certifications (comma-separated)'
                       rows={3}
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rating">Performance Rating</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='rating'>Performance Rating</Label>
                     <Input
-                      id="rating"
-                      type="number"
-                      min="0"
-                      max="5"
-                      step="0.1"
+                      id='rating'
+                      type='number'
+                      min='0'
+                      max='5'
+                      step='0.1'
                       value={formData.rating}
-                      onChange={(e) => handleInputChange('rating', e.target.value)}
-                      placeholder="Enter rating (0-5)"
+                      onChange={e =>
+                        handleInputChange('rating', e.target.value)
+                      }
+                      placeholder='Enter rating (0-5)'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="availability">Availability</Label>
-                    <Select value={formData.availability} onValueChange={(value) => handleInputChange('availability', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='availability'>Availability</Label>
+                    <Select
+                      value={formData.availability}
+                      onValueChange={value =>
+                        handleInputChange('availability', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select availability" />
+                        <SelectValue placeholder='Select availability' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="full_time">Full Time</SelectItem>
-                        <SelectItem value="part_time">Part Time</SelectItem>
-                        <SelectItem value="contract">Contract</SelectItem>
-                        <SelectItem value="freelance">Freelance</SelectItem>
-                        <SelectItem value="unavailable">Unavailable</SelectItem>
+                        <SelectItem value='full_time'>Full Time</SelectItem>
+                        <SelectItem value='part_time'>Part Time</SelectItem>
+                        <SelectItem value='contract'>Contract</SelectItem>
+                        <SelectItem value='freelance'>Freelance</SelectItem>
+                        <SelectItem value='unavailable'>Unavailable</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="preferred_language">Preferred Language</Label>
-                    <Select value={formData.preferred_language} onValueChange={(value) => handleInputChange('preferred_language', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='preferred_language'>
+                      Preferred Language
+                    </Label>
+                    <Select
+                      value={formData.preferred_language}
+                      onValueChange={value =>
+                        handleInputChange('preferred_language', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select preferred language" />
+                        <SelectValue placeholder='Select preferred language' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="arabic">Arabic</SelectItem>
-                        <SelectItem value="english">English</SelectItem>
-                        <SelectItem value="french">French</SelectItem>
-                        <SelectItem value="spanish">Spanish</SelectItem>
-                        <SelectItem value="german">German</SelectItem>
-                        <SelectItem value="italian">Italian</SelectItem>
-                        <SelectItem value="portuguese">Portuguese</SelectItem>
-                        <SelectItem value="russian">Russian</SelectItem>
-                        <SelectItem value="chinese">Chinese</SelectItem>
-                        <SelectItem value="japanese">Japanese</SelectItem>
-                        <SelectItem value="korean">Korean</SelectItem>
-                        <SelectItem value="hindi">Hindi</SelectItem>
-                        <SelectItem value="urdu">Urdu</SelectItem>
-                        <SelectItem value="turkish">Turkish</SelectItem>
-                        <SelectItem value="persian">Persian</SelectItem>
-                        <SelectItem value="hebrew">Hebrew</SelectItem>
-                        <SelectItem value="thai">Thai</SelectItem>
-                        <SelectItem value="vietnamese">Vietnamese</SelectItem>
-                        <SelectItem value="indonesian">Indonesian</SelectItem>
-                        <SelectItem value="malay">Malay</SelectItem>
-                        <SelectItem value="filipino">Filipino</SelectItem>
-                        <SelectItem value="swahili">Swahili</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='arabic'>Arabic</SelectItem>
+                        <SelectItem value='english'>English</SelectItem>
+                        <SelectItem value='french'>French</SelectItem>
+                        <SelectItem value='spanish'>Spanish</SelectItem>
+                        <SelectItem value='german'>German</SelectItem>
+                        <SelectItem value='italian'>Italian</SelectItem>
+                        <SelectItem value='portuguese'>Portuguese</SelectItem>
+                        <SelectItem value='russian'>Russian</SelectItem>
+                        <SelectItem value='chinese'>Chinese</SelectItem>
+                        <SelectItem value='japanese'>Japanese</SelectItem>
+                        <SelectItem value='korean'>Korean</SelectItem>
+                        <SelectItem value='hindi'>Hindi</SelectItem>
+                        <SelectItem value='urdu'>Urdu</SelectItem>
+                        <SelectItem value='turkish'>Turkish</SelectItem>
+                        <SelectItem value='persian'>Persian</SelectItem>
+                        <SelectItem value='hebrew'>Hebrew</SelectItem>
+                        <SelectItem value='thai'>Thai</SelectItem>
+                        <SelectItem value='vietnamese'>Vietnamese</SelectItem>
+                        <SelectItem value='indonesian'>Indonesian</SelectItem>
+                        <SelectItem value='malay'>Malay</SelectItem>
+                        <SelectItem value='filipino'>Filipino</SelectItem>
+                        <SelectItem value='swahili'>Swahili</SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <Select value={formData.timezone} onValueChange={(value) => handleInputChange('timezone', value)}>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='timezone'>Timezone</Label>
+                    <Select
+                      value={formData.timezone}
+                      onValueChange={value =>
+                        handleInputChange('timezone', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select timezone" />
+                        <SelectValue placeholder='Select timezone' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="UTC-12">UTC-12 (Baker Island)</SelectItem>
-                        <SelectItem value="UTC-11">UTC-11 (Samoa)</SelectItem>
-                        <SelectItem value="UTC-10">UTC-10 (Hawaii)</SelectItem>
-                        <SelectItem value="UTC-9">UTC-9 (Alaska)</SelectItem>
-                        <SelectItem value="UTC-8">UTC-8 (Pacific Time)</SelectItem>
-                        <SelectItem value="UTC-7">UTC-7 (Mountain Time)</SelectItem>
-                        <SelectItem value="UTC-6">UTC-6 (Central Time)</SelectItem>
-                        <SelectItem value="UTC-5">UTC-5 (Eastern Time)</SelectItem>
-                        <SelectItem value="UTC-4">UTC-4 (Atlantic Time)</SelectItem>
-                        <SelectItem value="UTC-3">UTC-3 (Brazil)</SelectItem>
-                        <SelectItem value="UTC-2">UTC-2 (South Georgia)</SelectItem>
-                        <SelectItem value="UTC-1">UTC-1 (Azores)</SelectItem>
-                        <SelectItem value="UTC+0">UTC+0 (London)</SelectItem>
-                        <SelectItem value="UTC+1">UTC+1 (Paris, Berlin)</SelectItem>
-                        <SelectItem value="UTC+2">UTC+2 (Cairo, Helsinki)</SelectItem>
-                        <SelectItem value="UTC+3">UTC+3 (Moscow, Riyadh)</SelectItem>
-                        <SelectItem value="UTC+4">UTC+4 (Dubai, Baku)</SelectItem>
-                        <SelectItem value="UTC+5">UTC+5 (Tashkent, Karachi)</SelectItem>
-                        <SelectItem value="UTC+5:30">UTC+5:30 (Mumbai, New Delhi)</SelectItem>
-                        <SelectItem value="UTC+6">UTC+6 (Dhaka, Almaty)</SelectItem>
-                        <SelectItem value="UTC+7">UTC+7 (Bangkok, Jakarta)</SelectItem>
-                        <SelectItem value="UTC+8">UTC+8 (Beijing, Singapore)</SelectItem>
-                        <SelectItem value="UTC+9">UTC+9 (Tokyo, Seoul)</SelectItem>
-                        <SelectItem value="UTC+10">UTC+10 (Sydney, Melbourne)</SelectItem>
-                        <SelectItem value="UTC+11">UTC+11 (Solomon Islands)</SelectItem>
-                        <SelectItem value="UTC+12">UTC+12 (New Zealand)</SelectItem>
+                        <SelectItem value='UTC-12'>
+                          UTC-12 (Baker Island)
+                        </SelectItem>
+                        <SelectItem value='UTC-11'>UTC-11 (Samoa)</SelectItem>
+                        <SelectItem value='UTC-10'>UTC-10 (Hawaii)</SelectItem>
+                        <SelectItem value='UTC-9'>UTC-9 (Alaska)</SelectItem>
+                        <SelectItem value='UTC-8'>
+                          UTC-8 (Pacific Time)
+                        </SelectItem>
+                        <SelectItem value='UTC-7'>
+                          UTC-7 (Mountain Time)
+                        </SelectItem>
+                        <SelectItem value='UTC-6'>
+                          UTC-6 (Central Time)
+                        </SelectItem>
+                        <SelectItem value='UTC-5'>
+                          UTC-5 (Eastern Time)
+                        </SelectItem>
+                        <SelectItem value='UTC-4'>
+                          UTC-4 (Atlantic Time)
+                        </SelectItem>
+                        <SelectItem value='UTC-3'>UTC-3 (Brazil)</SelectItem>
+                        <SelectItem value='UTC-2'>
+                          UTC-2 (South Georgia)
+                        </SelectItem>
+                        <SelectItem value='UTC-1'>UTC-1 (Azores)</SelectItem>
+                        <SelectItem value='UTC+0'>UTC+0 (London)</SelectItem>
+                        <SelectItem value='UTC+1'>
+                          UTC+1 (Paris, Berlin)
+                        </SelectItem>
+                        <SelectItem value='UTC+2'>
+                          UTC+2 (Cairo, Helsinki)
+                        </SelectItem>
+                        <SelectItem value='UTC+3'>
+                          UTC+3 (Moscow, Riyadh)
+                        </SelectItem>
+                        <SelectItem value='UTC+4'>
+                          UTC+4 (Dubai, Baku)
+                        </SelectItem>
+                        <SelectItem value='UTC+5'>
+                          UTC+5 (Tashkent, Karachi)
+                        </SelectItem>
+                        <SelectItem value='UTC+5:30'>
+                          UTC+5:30 (Mumbai, New Delhi)
+                        </SelectItem>
+                        <SelectItem value='UTC+6'>
+                          UTC+6 (Dhaka, Almaty)
+                        </SelectItem>
+                        <SelectItem value='UTC+7'>
+                          UTC+7 (Bangkok, Jakarta)
+                        </SelectItem>
+                        <SelectItem value='UTC+8'>
+                          UTC+8 (Beijing, Singapore)
+                        </SelectItem>
+                        <SelectItem value='UTC+9'>
+                          UTC+9 (Tokyo, Seoul)
+                        </SelectItem>
+                        <SelectItem value='UTC+10'>
+                          UTC+10 (Sydney, Melbourne)
+                        </SelectItem>
+                        <SelectItem value='UTC+11'>
+                          UTC+11 (Solomon Islands)
+                        </SelectItem>
+                        <SelectItem value='UTC+12'>
+                          UTC+12 (New Zealand)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="special_requirements">Special Requirements</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='special_requirements'>
+                      Special Requirements
+                    </Label>
                     <Textarea
-                      id="special_requirements"
+                      id='special_requirements'
                       value={formData.special_requirements}
-                      onChange={(e) => handleInputChange('special_requirements', e.target.value)}
-                      placeholder="Enter any special requirements or accommodations"
+                      onChange={e =>
+                        handleInputChange(
+                          'special_requirements',
+                          e.target.value
+                        )
+                      }
+                      placeholder='Enter any special requirements or accommodations'
                       rows={3}
                     />
                   </div>
@@ -1379,94 +1764,147 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
           </TabsContent>
 
           {/* Financial Information Tab */}
-          <TabsContent value="financial" className="space-y-6">
+          <TabsContent value='financial' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Star className='h-5 w-5' />
                   Financial Information
                 </CardTitle>
                 <CardDescription>
                   Banking and financial details for payments
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_name">Bank Name</Label>
-                    <Select value={formData.bank_name} onValueChange={(value) => handleInputChange('bank_name', value)}>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='bank_name'>Bank Name</Label>
+                    <Select
+                      value={formData.bank_name}
+                      onValueChange={value =>
+                        handleInputChange('bank_name', value)
+                      }
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select bank" />
+                        <SelectValue placeholder='Select bank' />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="al_ahli_bank">Al Ahli Bank</SelectItem>
-                        <SelectItem value="al_rajhi_bank">Al Rajhi Bank</SelectItem>
-                        <SelectItem value="arab_national_bank">Arab National Bank</SelectItem>
-                        <SelectItem value="bank_al_bilad">Bank Al Bilad</SelectItem>
-                        <SelectItem value="bank_aljazira">Bank Aljazira</SelectItem>
-                        <SelectItem value="bank_albilad">Bank Albilad</SelectItem>
-                        <SelectItem value="bank_muscat">Bank Muscat</SelectItem>
-                        <SelectItem value="banque_saudi_fransi">Banque Saudi Fransi</SelectItem>
-                        <SelectItem value="citibank">Citibank</SelectItem>
-                        <SelectItem value="emirates_nbd">Emirates NBD</SelectItem>
-                        <SelectItem value="first_abu_dhabi_bank">First Abu Dhabi Bank</SelectItem>
-                        <SelectItem value="gulf_bank">Gulf Bank</SelectItem>
-                        <SelectItem value="hsbc">HSBC</SelectItem>
-                        <SelectItem value="kuwait_finance_house">Kuwait Finance House</SelectItem>
-                        <SelectItem value="mashreq_bank">Mashreq Bank</SelectItem>
-                        <SelectItem value="national_bank_of_kuwait">National Bank of Kuwait</SelectItem>
-                        <SelectItem value="national_commercial_bank">National Commercial Bank</SelectItem>
-                        <SelectItem value="qatar_national_bank">Qatar National Bank</SelectItem>
-                        <SelectItem value="riyad_bank">Riyad Bank</SelectItem>
-                        <SelectItem value="samba_financial_group">Samba Financial Group</SelectItem>
-                        <SelectItem value="saudi_british_bank">Saudi British Bank</SelectItem>
-                        <SelectItem value="saudi_french_bank">Saudi French Bank</SelectItem>
-                        <SelectItem value="saudi_investment_bank">Saudi Investment Bank</SelectItem>
-                        <SelectItem value="saudi_national_bank">Saudi National Bank</SelectItem>
-                        <SelectItem value="standard_chartered">Standard Chartered</SelectItem>
-                        <SelectItem value="union_national_bank">Union National Bank</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value='al_ahli_bank'>
+                          Al Ahli Bank
+                        </SelectItem>
+                        <SelectItem value='al_rajhi_bank'>
+                          Al Rajhi Bank
+                        </SelectItem>
+                        <SelectItem value='arab_national_bank'>
+                          Arab National Bank
+                        </SelectItem>
+                        <SelectItem value='bank_al_bilad'>
+                          Bank Al Bilad
+                        </SelectItem>
+                        <SelectItem value='bank_aljazira'>
+                          Bank Aljazira
+                        </SelectItem>
+                        <SelectItem value='bank_albilad'>
+                          Bank Albilad
+                        </SelectItem>
+                        <SelectItem value='bank_muscat'>Bank Muscat</SelectItem>
+                        <SelectItem value='banque_saudi_fransi'>
+                          Banque Saudi Fransi
+                        </SelectItem>
+                        <SelectItem value='citibank'>Citibank</SelectItem>
+                        <SelectItem value='emirates_nbd'>
+                          Emirates NBD
+                        </SelectItem>
+                        <SelectItem value='first_abu_dhabi_bank'>
+                          First Abu Dhabi Bank
+                        </SelectItem>
+                        <SelectItem value='gulf_bank'>Gulf Bank</SelectItem>
+                        <SelectItem value='hsbc'>HSBC</SelectItem>
+                        <SelectItem value='kuwait_finance_house'>
+                          Kuwait Finance House
+                        </SelectItem>
+                        <SelectItem value='mashreq_bank'>
+                          Mashreq Bank
+                        </SelectItem>
+                        <SelectItem value='national_bank_of_kuwait'>
+                          National Bank of Kuwait
+                        </SelectItem>
+                        <SelectItem value='national_commercial_bank'>
+                          National Commercial Bank
+                        </SelectItem>
+                        <SelectItem value='qatar_national_bank'>
+                          Qatar National Bank
+                        </SelectItem>
+                        <SelectItem value='riyad_bank'>Riyad Bank</SelectItem>
+                        <SelectItem value='samba_financial_group'>
+                          Samba Financial Group
+                        </SelectItem>
+                        <SelectItem value='saudi_british_bank'>
+                          Saudi British Bank
+                        </SelectItem>
+                        <SelectItem value='saudi_french_bank'>
+                          Saudi French Bank
+                        </SelectItem>
+                        <SelectItem value='saudi_investment_bank'>
+                          Saudi Investment Bank
+                        </SelectItem>
+                        <SelectItem value='saudi_national_bank'>
+                          Saudi National Bank
+                        </SelectItem>
+                        <SelectItem value='standard_chartered'>
+                          Standard Chartered
+                        </SelectItem>
+                        <SelectItem value='union_national_bank'>
+                          Union National Bank
+                        </SelectItem>
+                        <SelectItem value='other'>Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="account_number">Account Number</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='account_number'>Account Number</Label>
                     <Input
-                      id="account_number"
+                      id='account_number'
                       value={formData.account_number}
-                      onChange={(e) => handleInputChange('account_number', e.target.value)}
-                      placeholder="Enter account number"
+                      onChange={e =>
+                        handleInputChange('account_number', e.target.value)
+                      }
+                      placeholder='Enter account number'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="iban">IBAN</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='iban'>IBAN</Label>
                     <Input
-                      id="iban"
+                      id='iban'
                       value={formData.iban}
-                      onChange={(e) => handleInputChange('iban', e.target.value)}
-                      placeholder="Enter IBAN"
+                      onChange={e => handleInputChange('iban', e.target.value)}
+                      placeholder='Enter IBAN'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="swift_code">SWIFT Code</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='swift_code'>SWIFT Code</Label>
                     <Input
-                      id="swift_code"
+                      id='swift_code'
                       value={formData.swift_code}
-                      onChange={(e) => handleInputChange('swift_code', e.target.value)}
-                      placeholder="Enter SWIFT/BIC code"
+                      onChange={e =>
+                        handleInputChange('swift_code', e.target.value)
+                      }
+                      placeholder='Enter SWIFT/BIC code'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="tax_id">Tax ID</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='tax_id'>Tax ID</Label>
                     <Input
-                      id="tax_id"
+                      id='tax_id'
                       value={formData.tax_id}
-                      onChange={(e) => handleInputChange('tax_id', e.target.value)}
-                      placeholder="Enter tax identification number"
+                      onChange={e =>
+                        handleInputChange('tax_id', e.target.value)
+                      }
+                      placeholder='Enter tax identification number'
                     />
                   </div>
                 </div>
@@ -1475,53 +1913,67 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
           </TabsContent>
 
           {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
+          <TabsContent value='settings' className='space-y-6'>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Settings className='h-5 w-5' />
                   Notification Settings
                 </CardTitle>
                 <CardDescription>
                   Configure notification preferences for document expiry
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="notify_days_before_id_expiry">Days before ID expiry</Label>
+              <CardContent className='space-y-4'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div className='space-y-2'>
+                    <Label htmlFor='notify_days_before_id_expiry'>
+                      Days before ID expiry
+                    </Label>
                     <Input
-                      id="notify_days_before_id_expiry"
-                      type="number"
-                      min="1"
-                      max="365"
+                      id='notify_days_before_id_expiry'
+                      type='number'
+                      min='1'
+                      max='365'
                       value={formData.notify_days_before_id_expiry}
-                      onChange={(e) => handleInputChange('notify_days_before_id_expiry', e.target.value)}
-                      placeholder="30"
+                      onChange={e =>
+                        handleInputChange(
+                          'notify_days_before_id_expiry',
+                          e.target.value
+                        )
+                      }
+                      placeholder='30'
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="notify_days_before_passport_expiry">Days before passport expiry</Label>
+
+                  <div className='space-y-2'>
+                    <Label htmlFor='notify_days_before_passport_expiry'>
+                      Days before passport expiry
+                    </Label>
                     <Input
-                      id="notify_days_before_passport_expiry"
-                      type="number"
-                      min="1"
-                      max="365"
+                      id='notify_days_before_passport_expiry'
+                      type='number'
+                      min='1'
+                      max='365'
                       value={formData.notify_days_before_passport_expiry}
-                      onChange={(e) => handleInputChange('notify_days_before_passport_expiry', e.target.value)}
-                      placeholder="30"
+                      onChange={e =>
+                        handleInputChange(
+                          'notify_days_before_passport_expiry',
+                          e.target.value
+                        )
+                      }
+                      placeholder='30'
                     />
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='notes'>Notes</Label>
                   <Textarea
-                    id="notes"
+                    id='notes'
                     value={formData.notes}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
-                    placeholder="Enter any additional notes"
+                    onChange={e => handleInputChange('notes', e.target.value)}
+                    placeholder='Enter any additional notes'
                     rows={4}
                   />
                 </div>
@@ -1531,26 +1983,26 @@ export default function PromoterFormProfessional(props: PromoterFormProfessional
         </Tabs>
 
         {/* Form Actions */}
-        <div className="flex gap-3 pt-6">
+        <div className='flex gap-3 pt-6'>
           <Button
-            type="button"
-            variant="outline"
+            type='button'
+            variant='outline'
             onClick={onCancel}
             disabled={isLoading}
           >
             Cancel
           </Button>
-          
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {isLoading ? "Saving..." : (isEditMode ? "Update Promoter" : "Add Promoter")}
+
+          <Button type='submit' disabled={isLoading} className='flex-1'>
+            <Save className='mr-2 h-4 w-4' />
+            {isLoading
+              ? 'Saving...'
+              : isEditMode
+                ? 'Update Promoter'
+                : 'Add Promoter'}
           </Button>
         </div>
       </form>
     </div>
-  )
-} 
+  );
+}

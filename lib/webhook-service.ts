@@ -2,64 +2,71 @@
 export class WebhookService {
   // Use NEXT_PUBLIC_ prefixed variables for client-side access
   private static readonly MAIN_WEBHOOK_URL =
-    typeof window !== "undefined"
+    typeof window !== 'undefined'
       ? process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL
-      : process.env.MAKE_WEBHOOK_URL || process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL
+      : process.env.MAKE_WEBHOOK_URL ||
+        process.env.NEXT_PUBLIC_MAKE_WEBHOOK_URL;
 
   private static readonly PDF_READY_WEBHOOK_URL =
-    typeof window !== "undefined"
+    typeof window !== 'undefined'
       ? process.env.NEXT_PUBLIC_PDF_READY_WEBHOOK_URL
-      : process.env.PDF_READY_WEBHOOK_URL || process.env.NEXT_PUBLIC_PDF_READY_WEBHOOK_URL
+      : process.env.PDF_READY_WEBHOOK_URL ||
+        process.env.NEXT_PUBLIC_PDF_READY_WEBHOOK_URL;
 
   private static readonly SLACK_WEBHOOK_URL =
-    typeof window !== "undefined"
+    typeof window !== 'undefined'
       ? process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL
-      : process.env.SLACK_WEBHOOK_URL || process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL
+      : process.env.SLACK_WEBHOOK_URL ||
+        process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL;
 
   /**
    * Send contract data to main Make.com webhook for processing
    */
   static async sendToMainWebhook(contractData: unknown) {
     if (!this.MAIN_WEBHOOK_URL) {
-      throw new Error("Main webhook URL not configured")
+      throw new Error('Main webhook URL not configured');
     }
 
-    console.log("🔄 Sending to main webhook:", this.MAIN_WEBHOOK_URL)
+    console.log('🔄 Sending to main webhook:', this.MAIN_WEBHOOK_URL);
 
     try {
       const response = await fetch(this.MAIN_WEBHOOK_URL, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "ContractGen-App/1.0",
+          'Content-Type': 'application/json',
+          'User-Agent': 'ContractGen-App/1.0',
         },
         body: JSON.stringify({
-          ...(typeof contractData === "object" && contractData !== null ? contractData : {}),
+          ...(typeof contractData === 'object' && contractData !== null
+            ? contractData
+            : {}),
           timestamp: new Date().toISOString(),
-          source: "contract-app",
+          source: 'contract-app',
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Webhook failed: ${response.status} ${response.statusText}`)
+        throw new Error(
+          `Webhook failed: ${response.status} ${response.statusText}`
+        );
       }
 
       // Try to parse as JSON, fallback to text if it fails
-      let result
-      const responseText = await response.text()
+      let result;
+      const responseText = await response.text();
 
       try {
-        result = JSON.parse(responseText)
+        result = JSON.parse(responseText);
       } catch {
         // If JSON parsing fails, treat as plain text response
-        result = { status: "accepted", message: responseText.trim() }
+        result = { status: 'accepted', message: responseText.trim() };
       }
 
-      console.log("✅ Main webhook success:", result)
-      return result
+      console.log('✅ Main webhook success:', result);
+      return result;
     } catch (error) {
-      console.error("❌ Main webhook error:", error)
-      throw error
+      console.error('❌ Main webhook error:', error);
+      throw error;
     }
   }
 
@@ -67,54 +74,58 @@ export class WebhookService {
    * Send PDF ready notification to Slack webhook
    */
   static async sendToSlackWebhook(pdfData: {
-    contract_number: string
-    pdf_url: string
-    status?: string
-    client_name?: string
-    employer_name?: string
+    contract_number: string;
+    pdf_url: string;
+    status?: string;
+    client_name?: string;
+    employer_name?: string;
   }) {
     if (!this.SLACK_WEBHOOK_URL) {
-      console.warn("⚠️ Slack webhook URL not configured, skipping notification")
-      return null
+      console.warn(
+        '⚠️ Slack webhook URL not configured, skipping notification'
+      );
+      return null;
     }
 
-    console.log("📱 Sending to Slack webhook:", this.SLACK_WEBHOOK_URL)
+    console.log('📱 Sending to Slack webhook:', this.SLACK_WEBHOOK_URL);
 
     try {
       const response = await fetch(this.SLACK_WEBHOOK_URL, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          "User-Agent": "ContractGen-App/1.0",
+          'Content-Type': 'application/json',
+          'User-Agent': 'ContractGen-App/1.0',
         },
         body: JSON.stringify({
           ...pdfData,
           timestamp: new Date().toISOString(),
-          source: "contract-app-pdf-ready",
+          source: 'contract-app-pdf-ready',
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`Slack webhook failed: ${response.status} ${response.statusText}`)
+        throw new Error(
+          `Slack webhook failed: ${response.status} ${response.statusText}`
+        );
       }
 
       // Try to parse as JSON, fallback to text if it fails
-      let result
-      const responseText = await response.text()
+      let result;
+      const responseText = await response.text();
 
       try {
-        result = JSON.parse(responseText)
+        result = JSON.parse(responseText);
       } catch {
         // If JSON parsing fails, treat as plain text response
-        result = { status: "accepted", message: responseText.trim() }
+        result = { status: 'accepted', message: responseText.trim() };
       }
 
-      console.log("✅ Slack webhook success:", result)
-      return result
+      console.log('✅ Slack webhook success:', result);
+      return result;
     } catch (error) {
-      console.error("❌ Slack webhook error:", error)
+      console.error('❌ Slack webhook error:', error);
       // Don't throw - Slack notification failure shouldn't break the main flow
-      return null
+      return null;
     }
   }
 
@@ -124,40 +135,44 @@ export class WebhookService {
   static async processContract(contractData: unknown) {
     try {
       // Step 1: Send to main webhook for processing
-      const mainResult = await this.sendToMainWebhook(contractData)
+      const mainResult = await this.sendToMainWebhook(contractData);
 
       // Step 2: If main processing succeeds and we have a PDF URL, notify PDF Ready webhook
       if (mainResult?.pdf_url && this.PDF_READY_WEBHOOK_URL) {
         try {
           await fetch(this.PDF_READY_WEBHOOK_URL, {
-            method: "POST",
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
-              "User-Agent": "ContractGen-App/1.0",
+              'Content-Type': 'application/json',
+              'User-Agent': 'ContractGen-App/1.0',
             },
             body: JSON.stringify({
               contract_number:
-                (contractData as unknown as { contract_number?: string; id?: string })
-                  .contract_number ||
+                (
+                  contractData as unknown as {
+                    contract_number?: string;
+                    id?: string;
+                  }
+                ).contract_number ||
                 (contractData as unknown as { id?: string }).id ||
-                "unknown",
+                'unknown',
               pdf_url: mainResult.pdf_url,
-              status: "ready",
+              status: 'ready',
               timestamp: new Date().toISOString(),
-              source: "contract-app-pdf-ready",
+              source: 'contract-app-pdf-ready',
             }),
-          })
-          console.log("✅ PDF Ready webhook notified")
+          });
+          console.log('✅ PDF Ready webhook notified');
         } catch (pdfReadyError) {
-          console.error("❌ PDF Ready webhook error:", pdfReadyError)
+          console.error('❌ PDF Ready webhook error:', pdfReadyError);
           // Don't fail the main process if PDF Ready webhook fails
         }
       }
 
-      return mainResult
+      return mainResult;
     } catch (error) {
-      console.error("❌ Contract processing failed:", error)
-      throw error
+      console.error('❌ Contract processing failed:', error);
+      throw error;
     }
   }
 
@@ -166,34 +181,37 @@ export class WebhookService {
    */
   static async testWebhooks() {
     const testData = {
-      contract_number: "PAC-23072024-0001",
-      client_name: "Test Client",
-      employer_name: "Test Employer",
+      contract_number: 'PAC-23072024-0001',
+      client_name: 'Test Client',
+      employer_name: 'Test Employer',
       test_mode: true,
-    }
+    };
 
-    console.log("🧪 Testing webhooks...")
+    console.log('🧪 Testing webhooks...');
 
     try {
       // Test main webhook
-      console.log("Testing main webhook...")
-      await this.sendToMainWebhook(testData)
+      console.log('Testing main webhook...');
+      await this.sendToMainWebhook(testData);
 
       // Test Slack webhook
-      console.log("Testing Slack webhook...")
+      console.log('Testing Slack webhook...');
       await this.sendToSlackWebhook({
-        contract_number: "PAC-23072024-0001",
-        pdf_url: "https://example.com/test.pdf",
-        status: "test",
-        client_name: "Test Client",
-        employer_name: "Test Employer",
-      })
+        contract_number: 'PAC-23072024-0001',
+        pdf_url: 'https://example.com/test.pdf',
+        status: 'test',
+        client_name: 'Test Client',
+        employer_name: 'Test Employer',
+      });
 
-      console.log("✅ All webhooks tested successfully")
-      return { success: true, message: "All webhooks working" }
+      console.log('✅ All webhooks tested successfully');
+      return { success: true, message: 'All webhooks working' };
     } catch (error) {
-      console.error("❌ Webhook test failed:", error)
-      return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+      console.error('❌ Webhook test failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   }
 }

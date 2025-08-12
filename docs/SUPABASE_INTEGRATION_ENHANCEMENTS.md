@@ -17,23 +17,23 @@ This document outlines the comprehensive enhancements made to the Supabase integ
 ```typescript
 // Enhanced validation in server.ts
 const validateEnvironmentVariables = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const missingVars = []
-  if (!supabaseUrl) missingVars.push("NEXT_PUBLIC_SUPABASE_URL")
-  if (!supabaseAnonKey) missingVars.push("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  if (!serviceRoleKey) missingVars.push("SUPABASE_SERVICE_ROLE_KEY")
+  const missingVars = [];
+  if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
+  if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  if (!serviceRoleKey) missingVars.push('SUPABASE_SERVICE_ROLE_KEY');
 
   if (missingVars.length > 0) {
     throw new Error(
-      `Missing Supabase environment variables: ${missingVars.join(", ")}. Please check your .env.local file.`,
-    )
+      `Missing Supabase environment variables: ${missingVars.join(', ')}. Please check your .env.local file.`
+    );
   }
 
-  return { supabaseUrl, supabaseAnonKey, serviceRoleKey }
-}
+  return { supabaseUrl, supabaseAnonKey, serviceRoleKey };
+};
 ```
 
 **Required Environment Variables:**
@@ -60,19 +60,19 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 ```typescript
 // Centralized error handling
-import { SupabaseErrorHandler } from "@/lib/supabase-error-handler"
+import { SupabaseErrorHandler } from '@/lib/supabase-error-handler';
 
 // Handle any Supabase error
 const errorDetails = SupabaseErrorHandler.handleError(
   error,
-  "auth.signInWithPassword",
+  'auth.signInWithPassword',
   requestId,
-  userId,
-)
+  userId
+);
 
 // Check if error is retryable
 if (SupabaseErrorHandler.isRetryableError(errorDetails)) {
-  const delay = SupabaseErrorHandler.getRetryDelay(errorDetails, attempt)
+  const delay = SupabaseErrorHandler.getRetryDelay(errorDetails, attempt);
   // Implement retry logic
 }
 ```
@@ -99,7 +99,7 @@ const RATE_LIMIT_CONFIG = {
   windowMs: 15 * 60 * 1000, // 15 minutes
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
-}
+};
 ```
 
 **Rate Limit Headers:**
@@ -115,14 +115,14 @@ const RATE_LIMIT_CONFIG = {
 
 ```typescript
 const securityHeaders = {
-  "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "X-XSS-Protection": "1; mode=block",
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
-  "Content-Security-Policy":
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-XSS-Protection': '1; mode=block',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  'Content-Security-Policy':
     "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://api.supabase.com; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';",
-}
+};
 ```
 
 **Enhanced Client Security:**
@@ -142,7 +142,7 @@ const CONNECTION_POOL_CONFIG = {
   maxConnections: 20,
   idleTimeout: 30000, // 30 seconds
   connectionTimeout: 10000, // 10 seconds
-}
+};
 ```
 
 **Recommendations:**
@@ -158,7 +158,7 @@ const CONNECTION_POOL_CONFIG = {
 ```typescript
 // Unique request tracking
 function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 ```
 
@@ -178,37 +178,37 @@ const createSafeStorage = () => {
   const safeStorage = {
     getItem: (key: string) => {
       try {
-        if (typeof window === "undefined") return null
+        if (typeof window === 'undefined') return null;
 
         // Additional security check for sensitive keys
-        if (key.includes("auth") || key.includes("token")) {
-          const value = localStorage.getItem(key)
+        if (key.includes('auth') || key.includes('token')) {
+          const value = localStorage.getItem(key);
           if (value) {
             // Basic validation of stored auth data
             try {
-              const parsed = JSON.parse(value)
-              if (parsed && typeof parsed === "object") {
-                return value
+              const parsed = JSON.parse(value);
+              if (parsed && typeof parsed === 'object') {
+                return value;
               }
             } catch {
               // Invalid JSON, remove it
-              localStorage.removeItem(key)
-              return null
+              localStorage.removeItem(key);
+              return null;
             }
           }
         }
 
-        return localStorage.getItem(key)
+        return localStorage.getItem(key);
       } catch (error) {
-        console.warn("Storage getItem failed:", error)
-        return null
+        console.warn('Storage getItem failed:', error);
+        return null;
       }
     },
     // ... other methods
-  }
+  };
 
-  return safeStorage
-}
+  return safeStorage;
+};
 ```
 
 **Enhanced SSR Handling:**
@@ -245,39 +245,45 @@ global: {
 ### Server-Side Operations
 
 ```typescript
-import { createClient, executeWithErrorHandling } from "@/lib/supabase/server"
-import { SupabaseErrorHandler } from "@/lib/supabase-error-handler"
+import { createClient, executeWithErrorHandling } from '@/lib/supabase/server';
+import { SupabaseErrorHandler } from '@/lib/supabase-error-handler';
 
 // Enhanced database operation with error handling
 const { data, error } = await executeWithErrorHandling(async () => {
-  const supabase = await createClient()
-  return await supabase.from("contracts").select("*").eq("user_id", userId)
-}, "fetch_user_contracts")
+  const supabase = await createClient();
+  return await supabase.from('contracts').select('*').eq('user_id', userId);
+}, 'fetch_user_contracts');
 
 if (error) {
-  const errorDetails = SupabaseErrorHandler.handleError(error, "fetch_user_contracts")
-  SupabaseErrorHandler.logError(errorDetails)
-  return SupabaseErrorHandler.formatErrorResponse(errorDetails)
+  const errorDetails = SupabaseErrorHandler.handleError(
+    error,
+    'fetch_user_contracts'
+  );
+  SupabaseErrorHandler.logError(errorDetails);
+  return SupabaseErrorHandler.formatErrorResponse(errorDetails);
 }
 ```
 
 ### Client-Side Operations
 
 ```typescript
-import { createClient, executeClientOperation } from "@/lib/supabase/client"
-import { SupabaseErrorHandler } from "@/lib/supabase-error-handler"
+import { createClient, executeClientOperation } from '@/lib/supabase/client';
+import { SupabaseErrorHandler } from '@/lib/supabase-error-handler';
 
 // Enhanced client-side operation
 const { data, error } = await executeClientOperation(async () => {
-  const supabase = createClient()
+  const supabase = createClient();
   return await supabase.auth.signInWithPassword({
     email,
     password,
-  })
-}, "sign_in")
+  });
+}, 'sign_in');
 
 if (error) {
-  const errorDetails = SupabaseErrorHandler.handleError(error, "auth.signInWithPassword")
+  const errorDetails = SupabaseErrorHandler.handleError(
+    error,
+    'auth.signInWithPassword'
+  );
   // Handle error appropriately
 }
 ```
@@ -285,43 +291,53 @@ if (error) {
 ### API Route Implementation
 
 ```typescript
-import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
-import { SupabaseErrorHandler } from "@/lib/supabase-error-handler"
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { SupabaseErrorHandler } from '@/lib/supabase-error-handler';
 
 export async function POST(request: NextRequest) {
-  const requestId = request.headers.get("X-Request-ID") || "unknown"
+  const requestId = request.headers.get('X-Request-ID') || 'unknown';
 
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    })
+    });
 
     if (error) {
       const errorDetails = SupabaseErrorHandler.handleError(
         error,
-        "auth.signInWithPassword",
-        requestId,
-      )
+        'auth.signInWithPassword',
+        requestId
+      );
 
-      SupabaseErrorHandler.logError(errorDetails)
+      SupabaseErrorHandler.logError(errorDetails);
 
-      return NextResponse.json(SupabaseErrorHandler.formatErrorResponse(errorDetails), {
-        status: errorDetails.status,
-      })
+      return NextResponse.json(
+        SupabaseErrorHandler.formatErrorResponse(errorDetails),
+        {
+          status: errorDetails.status,
+        }
+      );
     }
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data });
   } catch (error) {
-    const errorDetails = SupabaseErrorHandler.handleError(error, "api_auth_login", requestId)
+    const errorDetails = SupabaseErrorHandler.handleError(
+      error,
+      'api_auth_login',
+      requestId
+    );
 
-    SupabaseErrorHandler.logError(errorDetails)
+    SupabaseErrorHandler.logError(errorDetails);
 
-    return NextResponse.json(SupabaseErrorHandler.formatErrorResponse(errorDetails), {
-      status: errorDetails.status,
-    })
+    return NextResponse.json(
+      SupabaseErrorHandler.formatErrorResponse(errorDetails),
+      {
+        status: errorDetails.status,
+      }
+    );
   }
 }
 ```
@@ -332,8 +348,8 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // Development logging
-if (process.env.NODE_ENV === "development") {
-  console.error("🔴 Supabase Error:", logEntry)
+if (process.env.NODE_ENV === 'development') {
+  console.error('🔴 Supabase Error:', logEntry);
 }
 
 // Production monitoring (examples)
@@ -345,11 +361,11 @@ if (process.env.NODE_ENV === "development") {
 
 ```typescript
 // Request timing
-const startTime = Date.now()
-const result = await operation()
-const duration = Date.now() - startTime
+const startTime = Date.now();
+const result = await operation();
+const duration = Date.now() - startTime;
 
-console.log(`⏱️ Operation completed in ${duration}ms`)
+console.log(`⏱️ Operation completed in ${duration}ms`);
 ```
 
 ## Best Practices
@@ -399,24 +415,27 @@ console.log(`⏱️ Operation completed in ${duration}ms`)
 
    ```typescript
    // Old
-   import { createClient } from "@/lib/supabase/server"
+   import { createClient } from '@/lib/supabase/server';
 
    // New
-   import { createClient, executeWithErrorHandling } from "@/lib/supabase/server"
-   import { SupabaseErrorHandler } from "@/lib/supabase-error-handler"
+   import {
+     createClient,
+     executeWithErrorHandling,
+   } from '@/lib/supabase/server';
+   import { SupabaseErrorHandler } from '@/lib/supabase-error-handler';
    ```
 
 3. **Wrap Operations:**
 
    ```typescript
    // Old
-   const { data, error } = await supabase.from("table").select("*")
+   const { data, error } = await supabase.from('table').select('*');
 
    // New
    const { data, error } = await executeWithErrorHandling(
-     async () => await supabase.from("table").select("*"),
-     "fetch_table_data",
-   )
+     async () => await supabase.from('table').select('*'),
+     'fetch_table_data'
+   );
    ```
 
 4. **Update Error Handling:**
@@ -424,15 +443,18 @@ console.log(`⏱️ Operation completed in ${duration}ms`)
    ```typescript
    // Old
    if (error) {
-     console.error("Error:", error)
-     return { error: "Operation failed" }
+     console.error('Error:', error);
+     return { error: 'Operation failed' };
    }
 
    // New
    if (error) {
-     const errorDetails = SupabaseErrorHandler.handleError(error, "operation_name")
-     SupabaseErrorHandler.logError(errorDetails)
-     return SupabaseErrorHandler.formatErrorResponse(errorDetails)
+     const errorDetails = SupabaseErrorHandler.handleError(
+       error,
+       'operation_name'
+     );
+     SupabaseErrorHandler.logError(errorDetails);
+     return SupabaseErrorHandler.formatErrorResponse(errorDetails);
    }
    ```
 

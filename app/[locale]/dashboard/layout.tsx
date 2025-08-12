@@ -4,8 +4,8 @@
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  return <>{children}</>
+  return <>{children}</>;
 }

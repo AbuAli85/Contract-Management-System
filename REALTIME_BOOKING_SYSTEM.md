@@ -27,6 +27,7 @@ This document provides comprehensive documentation for the real-time booking eve
 ### 1. **Real-time Subscriptions** (`lib/realtime/booking-subscriptions.ts`)
 
 #### Core Features:
+
 - **Multi-subscription Support**: Handle multiple simultaneous subscriptions
 - **Automatic Reconnection**: Robust connection management
 - **Event Filtering**: Filter events by booking ID, user ID, or provider ID
@@ -36,16 +37,16 @@ This document provides comprehensive documentation for the real-time booking eve
 #### Usage Examples:
 
 ```typescript
-import { subscribeToBookingEvents } from '@/lib/realtime/booking-subscriptions'
+import { subscribeToBookingEvents } from '@/lib/realtime/booking-subscriptions';
 
 // Subscribe to specific booking events
-const unsubscribe = subscribeToBookingEvents('booking-id', (event) => {
-  console.log('Event received:', event)
+const unsubscribe = subscribeToBookingEvents('booking-id', event => {
+  console.log('Event received:', event);
   // Handle the event (update UI, show notifications, etc.)
-})
+});
 
 // Cleanup
-unsubscribe()
+unsubscribe();
 ```
 
 #### React Hook Usage:
@@ -55,10 +56,10 @@ import { useBookingEvents } from '@/lib/realtime/booking-subscriptions'
 
 function BookingComponent({ bookingId }) {
   const { events, isConnected, error, clearEvents } = useBookingEvents(bookingId)
-  
+
   if (error) return <div>Error: {error}</div>
   if (!isConnected) return <div>Connecting...</div>
-  
+
   return (
     <div>
       {events.map(event => (
@@ -75,6 +76,7 @@ function BookingComponent({ bookingId }) {
 ### 2. **Make.com Webhook Integration** (`lib/webhooks/make-integration.ts`)
 
 #### Features:
+
 - **Automatic Retry Logic**: Exponential backoff with configurable retry attempts
 - **Payload Enhancement**: Rich context data for Make.com scenarios
 - **Error Handling**: Comprehensive error logging and recovery
@@ -94,19 +96,19 @@ NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 #### Usage Examples:
 
 ```typescript
-import { sendToMakeWebhookWithRetry } from '@/lib/webhooks/make-integration'
+import { sendToMakeWebhookWithRetry } from '@/lib/webhooks/make-integration';
 
 // Send event with automatic retry
 const result = await sendToMakeWebhookWithRetry(bookingEvent, {
   booking_details: bookingDetails,
   client_info: clientInfo,
-  provider_info: providerInfo
-})
+  provider_info: providerInfo,
+});
 
 if (result.success) {
-  console.log(`Webhook sent successfully in ${result.attempts} attempts`)
+  console.log(`Webhook sent successfully in ${result.attempts} attempts`);
 } else {
-  console.error(`Failed after ${result.attempts} attempts: ${result.error}`)
+  console.error(`Failed after ${result.attempts} attempts: ${result.error}`);
 }
 ```
 
@@ -115,45 +117,45 @@ if (result.success) {
 ```typescript
 interface MakeWebhookPayload {
   // Event metadata
-  event_id: string
-  event_type: string
-  event_time: string
-  source: 'contract-management-system'
-  
+  event_id: string;
+  event_type: string;
+  event_time: string;
+  source: 'contract-management-system';
+
   // Booking event data
-  booking_event: BookingEventPayload
-  
+  booking_event: BookingEventPayload;
+
   // Enhanced context
   booking_details?: {
-    id: string
-    booking_number: string
-    client_id: string
-    provider_id: string
-    status: string
-    total_price: number
+    id: string;
+    booking_number: string;
+    client_id: string;
+    provider_id: string;
+    status: string;
+    total_price: number;
     // ... more fields
-  }
-  
+  };
+
   client_info?: {
-    id: string
-    name: string
-    email: string
-  }
-  
+    id: string;
+    name: string;
+    email: string;
+  };
+
   provider_info?: {
-    id: string
-    name: string
-    email: string
-    company_name?: string
-  }
-  
+    id: string;
+    name: string;
+    email: string;
+    company_name?: string;
+  };
+
   // System metadata
   system: {
-    environment: string
-    timestamp: string
-    user_agent?: string
-    ip_address?: string
-  }
+    environment: string;
+    timestamp: string;
+    user_agent?: string;
+    ip_address?: string;
+  };
 }
 ```
 
@@ -165,6 +167,7 @@ interface MakeWebhookPayload {
 - **GET `/api/webhooks/booking-events`**: Health check and configuration status
 
 #### Security:
+
 - **Bearer Token Authentication**: Validates Supabase webhook secret
 - **Request Validation**: Ensures payload integrity
 - **Error Handling**: Graceful error responses
@@ -175,7 +178,7 @@ interface MakeWebhookPayload {
 
 ```typescript
 // General real-time events component
-<RealTimeBookingEvents 
+<RealTimeBookingEvents
   bookingId="booking-123"
   showUserEvents={false}
   maxEvents={50}
@@ -184,11 +187,12 @@ interface MakeWebhookPayload {
 // Specific booking monitor
 <BookingEventMonitor bookingId="booking-123" />
 
-// User's all events monitor  
+// User's all events monitor
 <UserEventMonitor />
 ```
 
 #### Features:
+
 - **Real-time Updates**: Live event streaming with visual indicators
 - **Event Filtering**: Show events by booking or user
 - **Toast Notifications**: Automatic notifications for new events
@@ -216,6 +220,7 @@ CREATE TRIGGER bookings_webhook_trigger
 ```
 
 #### Webhook Logging:
+
 - **webhook_logs**: Complete audit trail of all webhook attempts
 - **webhook_stats**: Performance statistics view
 - **Retention Management**: Automatic cleanup of old logs
@@ -223,11 +228,13 @@ CREATE TRIGGER bookings_webhook_trigger
 ### 6. **Supabase Edge Function** (`supabase/functions/booking-event-webhook/index.ts`)
 
 #### Purpose:
+
 - Bridge between database triggers and Next.js API routes
 - Forward events to the main application for Make.com processing
 - Provide fallback webhook processing
 
 #### Deployment:
+
 ```bash
 supabase functions deploy booking-event-webhook
 ```
@@ -261,7 +268,7 @@ function BookingPage({ bookingId }) {
     <div>
       <h1>Booking Details</h1>
       {/* Your booking details */}
-      
+
       <RealTimeBookingEvents bookingId={bookingId} />
     </div>
   )
@@ -280,29 +287,29 @@ function BookingPage({ bookingId }) {
 ### Webhook Statistics
 
 ```typescript
-import { getWebhookStats } from '@/lib/webhooks/make-integration'
+import { getWebhookStats } from '@/lib/webhooks/make-integration';
 
-const stats = getWebhookStats()
+const stats = getWebhookStats();
 console.log('Webhook Performance:', {
   totalSent: stats.totalSent,
   successRate: (stats.successfulSent / stats.totalSent) * 100,
-  averageResponseTime: stats.averageResponseTime
-})
+  averageResponseTime: stats.averageResponseTime,
+});
 ```
 
 ### Subscription Management
 
 ```typescript
-import { bookingSubscriptionManager } from '@/lib/realtime/booking-subscriptions'
+import { bookingSubscriptionManager } from '@/lib/realtime/booking-subscriptions';
 
 // Get active subscription count
-const activeCount = bookingSubscriptionManager.getActiveSubscriptionCount()
+const activeCount = bookingSubscriptionManager.getActiveSubscriptionCount();
 
 // Get subscription IDs
-const subscriptions = bookingSubscriptionManager.getActiveSubscriptions()
+const subscriptions = bookingSubscriptionManager.getActiveSubscriptions();
 
 // Cleanup all subscriptions
-bookingSubscriptionManager.unsubscribeAll()
+bookingSubscriptionManager.unsubscribeAll();
 ```
 
 ### Database Monitoring
@@ -324,7 +331,9 @@ SELECT retry_failed_webhooks(3); -- Max 3 retries
 ## 🧪 **Testing**
 
 ### Demo Page
+
 Visit `/demo/real-time-bookings` for a comprehensive testing interface:
+
 - **Live Events**: Monitor real-time events
 - **Webhook Testing**: Test Make.com integration
 - **Subscription Management**: Monitor active connections
@@ -334,24 +343,24 @@ Visit `/demo/real-time-bookings` for a comprehensive testing interface:
 
 ```typescript
 // Test webhook connectivity
-import { testMakeWebhook } from '@/lib/webhooks/make-integration'
+import { testMakeWebhook } from '@/lib/webhooks/make-integration';
 
-const result = await testMakeWebhook()
-console.log('Test result:', result.success ? 'PASS' : 'FAIL')
+const result = await testMakeWebhook();
+console.log('Test result:', result.success ? 'PASS' : 'FAIL');
 ```
 
 ### Subscription Testing
 
 ```typescript
 // Test booking event subscription
-import { subscribeToBookingEvents } from '@/lib/realtime/booking-subscriptions'
+import { subscribeToBookingEvents } from '@/lib/realtime/booking-subscriptions';
 
-const unsubscribe = subscribeToBookingEvents('test-booking-id', (event) => {
-  console.log('Test event received:', event)
-})
+const unsubscribe = subscribeToBookingEvents('test-booking-id', event => {
+  console.log('Test event received:', event);
+});
 
 // Remember to cleanup
-setTimeout(unsubscribe, 10000) // Cleanup after 10 seconds
+setTimeout(unsubscribe, 10000); // Cleanup after 10 seconds
 ```
 
 ## 🔧 **Troubleshooting**
@@ -359,6 +368,7 @@ setTimeout(unsubscribe, 10000) // Cleanup after 10 seconds
 ### Common Issues
 
 #### 1. **Webhook Not Receiving Events**
+
 ```bash
 # Check configuration
 GET /api/webhooks/booking-events
@@ -369,20 +379,22 @@ echo $MAKE_WEBHOOK_SECRET
 ```
 
 #### 2. **Subscription Connection Issues**
+
 ```typescript
 // Check Supabase connection
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client';
 
-const supabase = createClient()
-const { data, error } = await supabase.auth.getSession()
-console.log('Auth status:', error ? 'Failed' : 'Connected')
+const supabase = createClient();
+const { data, error } = await supabase.auth.getSession();
+console.log('Auth status:', error ? 'Failed' : 'Connected');
 ```
 
 #### 3. **Database Trigger Issues**
+
 ```sql
 -- Check trigger status
-SELECT trigger_name, event_manipulation, event_object_table 
-FROM information_schema.triggers 
+SELECT trigger_name, event_manipulation, event_object_table
+FROM information_schema.triggers
 WHERE trigger_name LIKE '%webhook%';
 
 -- Manually trigger webhook
@@ -390,6 +402,7 @@ SELECT manually_trigger_webhook('booking_events', 'your-event-id');
 ```
 
 #### 4. **Performance Issues**
+
 - **Monitor subscription count**: Keep under 10 active subscriptions per user
 - **Cleanup old events**: Use `clearEvents()` function regularly
 - **Check webhook logs**: Monitor for failed deliveries
@@ -399,8 +412,8 @@ SELECT manually_trigger_webhook('booking_events', 'your-event-id');
 ```typescript
 // Enable debug logging in development
 if (process.env.NODE_ENV === 'development') {
-  window.bookingSubscriptionManager = bookingSubscriptionManager
-  console.log('Debug: Subscription manager available in window object')
+  window.bookingSubscriptionManager = bookingSubscriptionManager;
+  console.log('Debug: Subscription manager available in window object');
 }
 ```
 
@@ -408,49 +421,53 @@ if (process.env.NODE_ENV === 'development') {
 
 ### Subscription Functions
 
-| Function | Description | Returns |
-|----------|-------------|---------|
-| `subscribeToBookingEvents(bookingId, callback)` | Subscribe to specific booking events | Unsubscribe function |
-| `subscribeToUserBookingEvents(userId, callback)` | Subscribe to user's booking events | Unsubscribe function |
-| `subscribeToProviderBookingEvents(providerId, callback)` | Subscribe to provider's events | Unsubscribe function |
+| Function                                                 | Description                          | Returns              |
+| -------------------------------------------------------- | ------------------------------------ | -------------------- |
+| `subscribeToBookingEvents(bookingId, callback)`          | Subscribe to specific booking events | Unsubscribe function |
+| `subscribeToUserBookingEvents(userId, callback)`         | Subscribe to user's booking events   | Unsubscribe function |
+| `subscribeToProviderBookingEvents(providerId, callback)` | Subscribe to provider's events       | Unsubscribe function |
 
 ### Webhook Functions
 
-| Function | Description | Returns |
-|----------|-------------|---------|
-| `sendToMakeWebhook(event, data, config)` | Send single event to webhook | `{success, error}` |
-| `sendToMakeWebhookWithRetry(event, data, config)` | Send with retry logic | `{success, error, attempts}` |
-| `testMakeWebhook()` | Test webhook connectivity | `{success, responseTime, error}` |
-| `validateMakeWebhookConfig()` | Validate configuration | `{isValid, errors, warnings}` |
+| Function                                          | Description                  | Returns                          |
+| ------------------------------------------------- | ---------------------------- | -------------------------------- |
+| `sendToMakeWebhook(event, data, config)`          | Send single event to webhook | `{success, error}`               |
+| `sendToMakeWebhookWithRetry(event, data, config)` | Send with retry logic        | `{success, error, attempts}`     |
+| `testMakeWebhook()`                               | Test webhook connectivity    | `{success, responseTime, error}` |
+| `validateMakeWebhookConfig()`                     | Validate configuration       | `{isValid, errors, warnings}`    |
 
 ### React Hooks
 
-| Hook | Purpose | Returns |
-|------|---------|---------|
-| `useBookingEvents(bookingId)` | Monitor booking events | `{events, isConnected, error, clearEvents}` |
-| `useUserBookingEvents(userId)` | Monitor user events | `{events, isConnected, clearEvents}` |
+| Hook                           | Purpose                | Returns                                     |
+| ------------------------------ | ---------------------- | ------------------------------------------- |
+| `useBookingEvents(bookingId)`  | Monitor booking events | `{events, isConnected, error, clearEvents}` |
+| `useUserBookingEvents(userId)` | Monitor user events    | `{events, isConnected, clearEvents}`        |
 
 ## 🚀 **Production Deployment**
 
 ### Performance Optimization
+
 - **Connection Pooling**: Limit concurrent subscriptions
 - **Event Debouncing**: Prevent notification spam
 - **Memory Management**: Regular event cleanup
 - **Error Recovery**: Automatic reconnection logic
 
 ### Security Considerations
+
 - **Webhook Security**: Use webhook secrets
 - **RLS Policies**: Proper database security
 - **Rate Limiting**: Prevent abuse
 - **Input Validation**: Sanitize all inputs
 
 ### Monitoring Setup
+
 - **Health Checks**: Regular webhook testing
 - **Performance Metrics**: Response time monitoring
 - **Error Alerting**: Failed webhook notifications
 - **Usage Analytics**: Subscription patterns
 
 ### Scaling Considerations
+
 - **Event Volume**: Monitor event throughput
 - **Webhook Performance**: Optimize payload size
 - **Database Load**: Index optimization
@@ -466,6 +483,7 @@ if (process.env.NODE_ENV === 'development') {
 ## 🎉 **Success Metrics**
 
 After deployment, monitor these metrics:
+
 - [ ] Real-time subscriptions working
 - [ ] Webhook delivery success rate > 95%
 - [ ] Average webhook response time < 2s

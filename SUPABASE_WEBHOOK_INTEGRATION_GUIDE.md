@@ -9,7 +9,7 @@ This guide sets up automatic webhook triggers from your Supabase database to Mak
 ```
 📊 Supabase Database Changes
     ↓ (Postgres Triggers)
-🔗 Automatic Webhook Calls  
+🔗 Automatic Webhook Calls
     ↓ (HTTP Extension)
 🤖 Make.com Automation
     ↓ (Workflows Execute)
@@ -42,7 +42,7 @@ In Make.com, create scenarios with webhook triggers and copy the webhook URLs:
    - Copy URL: `https://hook.eu1.make.com/abc123xyz/booking-created`
 
 2. **Booking Status Changed Scenario**:
-   - Trigger: Webhook  
+   - Trigger: Webhook
    - Copy URL: `https://hook.eu1.make.com/def456uvw/booking-status-changed`
 
 3. **Payment Processed Scenario**:
@@ -68,7 +68,7 @@ Open `setup-supabase-webhooks.sql` and replace the placeholder URLs:
 'https://hook.eu1.make.com/YOUR_BOOKING_CREATED_WEBHOOK_ID'
 -- Replace with: 'https://hook.eu1.make.com/abc123xyz/booking-created'
 
--- Booking status changed webhook  
+-- Booking status changed webhook
 'https://hook.eu1.make.com/YOUR_BOOKING_STATUS_CHANGED_WEBHOOK_ID'
 -- Replace with: 'https://hook.eu1.make.com/def456uvw/booking-status-changed'
 
@@ -77,7 +77,7 @@ Open `setup-supabase-webhooks.sql` and replace the placeholder URLs:
 -- Replace with: 'https://hook.eu1.make.com/ghi789rst/payment-processed'
 
 -- User registered webhook
-'https://hook.eu1.make.com/YOUR_USER_REGISTERED_WEBHOOK_ID'  
+'https://hook.eu1.make.com/YOUR_USER_REGISTERED_WEBHOOK_ID'
 -- Replace with: 'https://hook.eu1.make.com/jkl012mno/user-registered'
 
 -- Service created webhook
@@ -135,8 +135,8 @@ INSERT INTO bookings (
 
 ```sql
 -- Update booking status to trigger status change webhook
-UPDATE bookings 
-SET status = 'confirmed' 
+UPDATE bookings
+SET status = 'confirmed'
 WHERE client_email = 'test@example.com'
   AND status = 'pending';
 ```
@@ -145,19 +145,20 @@ WHERE client_email = 'test@example.com'
 
 ```sql
 -- View recent webhook calls
-SELECT 
+SELECT
   webhook_type,
   status,
   created_at,
   response
-FROM webhook_logs 
-ORDER BY created_at DESC 
+FROM webhook_logs
+ORDER BY created_at DESC
 LIMIT 10;
 ```
 
 ## Webhook Payloads
 
 ### Booking Created Payload
+
 ```json
 {
   "event": "booking.created",
@@ -169,13 +170,13 @@ LIMIT 10;
   "client_name": "John Doe",
   "scheduled_start": "2025-01-08T10:00:00Z",
   "scheduled_end": "2025-01-08T11:00:00Z",
-  "quoted_price": 150.00,
+  "quoted_price": 150.0,
   "status": "pending",
   "created_at": "2025-01-07T14:30:00Z",
   "service": {
     "title": "Business Consultation",
     "category": "consulting",
-    "base_price": 150.00
+    "base_price": 150.0
   },
   "provider": {
     "full_name": "Jane Smith",
@@ -186,6 +187,7 @@ LIMIT 10;
 ```
 
 ### Booking Status Changed Payload
+
 ```json
 {
   "event": "booking.status_changed",
@@ -229,7 +231,7 @@ SELECT retry_failed_webhooks(3);
 
 ```sql
 -- Delete webhook logs older than 30 days
-DELETE FROM webhook_logs 
+DELETE FROM webhook_logs
 WHERE created_at < NOW() - INTERVAL '30 days';
 ```
 
@@ -292,6 +294,7 @@ CREATE TABLE webhook_rate_limits (
 ### Common Issues
 
 #### 1. HTTP Extension Not Working
+
 ```sql
 -- Check if extension is enabled
 SELECT * FROM pg_extension WHERE extname = 'http';
@@ -301,6 +304,7 @@ CREATE EXTENSION IF NOT EXISTS http;
 ```
 
 #### 2. Permission Denied Errors
+
 ```sql
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA net TO service_role;
@@ -308,6 +312,7 @@ GRANT ALL ON ALL FUNCTIONS IN SCHEMA net TO service_role;
 ```
 
 #### 3. Webhook URLs Not Responding
+
 ```sql
 -- Test webhook URL manually
 SELECT net.http_post(
@@ -317,13 +322,14 @@ SELECT net.http_post(
 ```
 
 #### 4. Triggers Not Firing
+
 ```sql
 -- Check if triggers exist
-SELECT 
-    trigger_name, 
-    event_manipulation, 
-    event_object_table 
-FROM information_schema.triggers 
+SELECT
+    trigger_name,
+    event_manipulation,
+    event_object_table
+FROM information_schema.triggers
 WHERE trigger_schema = 'public';
 ```
 
@@ -351,6 +357,6 @@ RAISE LOG 'Webhook triggered: % with payload: %', webhook_type, webhook_payload;
 ✅ **Comprehensive Logging** - Full audit trail of webhook calls  
 ✅ **Error Recovery** - Automatic retry of failed webhooks  
 ✅ **Rich Payloads** - Enriched data with related records  
-✅ **Scalable Architecture** - Handles high-volume scenarios  
+✅ **Scalable Architecture** - Handles high-volume scenarios
 
 Your database is now fully integrated with Make.com! Every booking, payment, and user action will automatically trigger your automation workflows. 🚀

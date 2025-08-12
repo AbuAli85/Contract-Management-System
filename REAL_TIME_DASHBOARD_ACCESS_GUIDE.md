@@ -9,6 +9,7 @@ This guide will help you properly access the real-time provider dashboard with w
 ## 🔧 **Step 1: Environment Setup**
 
 ### **Verify Environment Variables**
+
 Make sure these are set in your Vercel dashboard or local `.env.local`:
 
 ```bash
@@ -26,6 +27,7 @@ NODE_ENV=production
 ### **Option A: Create New Provider Account**
 
 1. **Go to Registration Page**
+
    ```
    https://your-domain.com/en/register/provider
    ```
@@ -90,15 +92,18 @@ INSERT INTO public.users (
 ## 🔐 **Step 3: Login Process**
 
 ### **Access Login Page**
+
 ```
 https://your-domain.com/en/auth/login
 ```
 
 ### **Login Credentials**
+
 - **Email**: `provider@example.com`
 - **Password**: `SecurePass123!`
 
 ### **Expected Login Flow**
+
 1. **Enter credentials** in login form
 2. **System validates** email and password
 3. **Authentication service** creates session
@@ -110,17 +115,20 @@ https://your-domain.com/en/auth/login
 ## 🏪 **Step 4: Access Provider Dashboard**
 
 ### **Direct Dashboard URL**
+
 ```
 https://your-domain.com/en/dashboard/provider-comprehensive
 ```
 
 ### **Dashboard Access Requirements**
+
 - ✅ **Authenticated User** - Must be logged in
 - ✅ **Provider Role** - `user.role === 'provider'`
 - ✅ **Active Status** - Account must be active
 - ✅ **Environment Variables** - Supabase connection working
 
 ### **Expected Dashboard Features**
+
 - **Real-time Statistics** - Active orders, completed, earnings
 - **Service Management** - Create, edit, pause services
 - **Order Tracking** - Accept, deliver, complete orders
@@ -134,6 +142,7 @@ https://your-domain.com/en/dashboard/provider-comprehensive
 ### **Real-Time Features to Test**
 
 1. **Service Management**
+
    ```
    - Create new service → Should appear immediately in list
    - Update service status → Should reflect change instantly
@@ -141,6 +150,7 @@ https://your-domain.com/en/dashboard/provider-comprehensive
    ```
 
 2. **Order Management**
+
    ```
    - New order arrives → Dashboard shows updated count
    - Change order status → Progress updates in real-time
@@ -157,11 +167,13 @@ https://your-domain.com/en/dashboard/provider-comprehensive
 ### **Testing Real-Time Sync**
 
 **Method 1: Two Browser Windows**
+
 1. Open dashboard in two browser windows
 2. Make changes in one window
 3. Verify changes appear in the other window automatically
 
 **Method 2: Database Changes**
+
 1. Make direct database changes via Supabase
 2. Dashboard should reflect changes immediately
 3. No page refresh needed
@@ -171,22 +183,27 @@ https://your-domain.com/en/dashboard/provider-comprehensive
 ## 🛠 **Step 6: Troubleshooting Common Issues**
 
 ### **Issue: "Access Denied" Message**
+
 **Cause**: User doesn't have provider role
 **Solution**:
+
 ```sql
-UPDATE public.users 
-SET role = 'provider' 
+UPDATE public.users
+SET role = 'provider'
 WHERE email = 'your-email@example.com';
 ```
 
 ### **Issue: "Authentication Required"**
+
 **Cause**: Not logged in or session expired
 **Solution**:
+
 1. Clear browser cookies/localStorage
 2. Log in again with valid credentials
 3. Check if user exists in database
 
 ### **Issue: Dashboard Shows No Data**
+
 **Cause**: No services or orders in database
 **Solution**: Create sample data:
 
@@ -241,16 +258,20 @@ INSERT INTO bookings (
 ```
 
 ### **Issue: Real-Time Updates Not Working**
+
 **Cause**: Supabase subscriptions not connected
 **Solution**:
+
 1. Check browser console for connection errors
 2. Verify Supabase environment variables
 3. Check network connectivity to Supabase
 4. Refresh page to reinitialize subscriptions
 
 ### **Issue: API Endpoints Failing**
+
 **Cause**: Authentication or permission errors
 **Solution**:
+
 1. Check browser network tab for API errors
 2. Verify user has proper role in database
 3. Check API endpoint authentication logic
@@ -261,24 +282,28 @@ INSERT INTO bookings (
 ## 📊 **Step 7: Verify Dashboard Components**
 
 ### **Overview Tab Should Show**
+
 - ✅ 8 real-time statistics cards
 - ✅ Recent orders with live data
 - ✅ Quick action buttons
 - ✅ Performance metrics
 
 ### **Orders Tab Should Show**
+
 - ✅ Live order count in tab title
 - ✅ Real orders from database
 - ✅ Working action buttons (Accept, Deliver, Complete)
 - ✅ Client information and progress tracking
 
 ### **Services Tab Should Show**
+
 - ✅ Live service count in tab title
 - ✅ Your created services from database
 - ✅ Service management buttons (Edit, Pause, Activate)
 - ✅ Service performance metrics
 
 ### **Earnings Tab Should Show**
+
 - ✅ Available balance for withdrawal
 - ✅ Pending payments processing
 - ✅ This month vs last month comparison
@@ -289,17 +314,20 @@ INSERT INTO bookings (
 ## 🚀 **Step 8: Production Deployment**
 
 ### **Vercel Deployment**
+
 1. **Push code** to GitHub repository
 2. **Vercel auto-deploys** from GitHub
 3. **Set environment variables** in Vercel dashboard
 4. **Test live deployment** at your Vercel URL
 
 ### **Environment Variables in Vercel**
+
 1. Go to Vercel Dashboard → Settings → Environment Variables
 2. Add all Supabase variables for all environments
 3. Redeploy to apply changes
 
 ### **Domain Configuration**
+
 ```
 Production URL: https://your-project.vercel.app
 Custom Domain: https://your-domain.com
@@ -311,12 +339,14 @@ Provider Dashboard: https://your-domain.com/en/dashboard/provider-comprehensive
 ## 📱 **Step 9: Mobile & Responsive Testing**
 
 ### **Test Responsive Design**
+
 - ✅ **Mobile phones** - iPhone, Android
-- ✅ **Tablets** - iPad, Android tablets  
+- ✅ **Tablets** - iPad, Android tablets
 - ✅ **Desktop** - Various screen sizes
 - ✅ **Navigation** - Sidebar works on all devices
 
 ### **Real-Time on Mobile**
+
 - ✅ **Live updates** work on mobile browsers
 - ✅ **Touch interactions** for buttons and forms
 - ✅ **Performance** - Fast loading and smooth animations
@@ -326,6 +356,7 @@ Provider Dashboard: https://your-domain.com/en/dashboard/provider-comprehensive
 ## 🔧 **Quick Setup Commands**
 
 ### **Local Development**
+
 ```bash
 # Install dependencies
 npm install
@@ -338,6 +369,7 @@ http://localhost:3000/en/dashboard/provider-comprehensive
 ```
 
 ### **Database Setup**
+
 ```bash
 # Run migrations (if needed)
 npx supabase db reset
@@ -351,12 +383,14 @@ npx supabase db seed
 ## 📞 **Support & Resources**
 
 ### **If You Need Help**
+
 1. **Check browser console** for error messages
 2. **Review network tab** for failed API calls
 3. **Verify database** has required tables and data
 4. **Test Supabase connection** independently
 
 ### **Useful URLs**
+
 - **Login**: `/en/auth/login`
 - **Register Provider**: `/en/register/provider`
 - **Provider Dashboard**: `/en/dashboard/provider-comprehensive`
@@ -364,6 +398,7 @@ npx supabase db seed
 - **Marketplace**: `/marketplace/services`
 
 ### **Database Tables to Check**
+
 - **`users`** - User accounts and roles
 - **`provider_services`** - Provider service offerings
 - **`bookings`** - Client orders and projects

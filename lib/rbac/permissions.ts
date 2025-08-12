@@ -3,117 +3,240 @@
 // ========================================
 
 export interface ParsedPermission {
-  resource: string
-  action: string
-  scope: string
-  original: string
+  resource: string;
+  action: string;
+  scope: string;
+  original: string;
 }
 
-export type PermissionScope = 'own' | 'provider' | 'organization' | 'booking' | 'public' | 'all'
+export type PermissionScope =
+  | 'own'
+  | 'provider'
+  | 'organization'
+  | 'booking'
+  | 'public'
+  | 'all';
 
-export type PermissionResource = 
-  | 'user' | 'profile' | 'auth' | 'security'
-  | 'service' | 'discovery' | 'booking' | 'booking_lifecycle'
-  | 'communication' | 'call' | 'payment' | 'finance'
-  | 'role' | 'system' | 'data' | 'analytics'
-  | 'notification' | 'audit' | 'file' | 'workflow'
-  | 'webhook' | 'contract' | 'permission'
+export type PermissionResource =
+  | 'user'
+  | 'profile'
+  | 'auth'
+  | 'security'
+  | 'service'
+  | 'discovery'
+  | 'booking'
+  | 'booking_lifecycle'
+  | 'communication'
+  | 'call'
+  | 'payment'
+  | 'finance'
+  | 'role'
+  | 'system'
+  | 'data'
+  | 'analytics'
+  | 'notification'
+  | 'audit'
+  | 'file'
+  | 'workflow'
+  | 'webhook'
+  | 'contract'
+  | 'permission';
 
-export type PermissionAction = 
-  | 'view' | 'create' | 'edit' | 'delete' | 'read' | 'update'
-  | 'login' | 'logout' | 'refresh' | 'impersonate'
-  | 'search' | 'browse' | 'filter' | 'recommend'
-  | 'start' | 'pause' | 'resume' | 'complete' | 'extend'
-  | 'send' | 'receive' | 'initiate' | 'join' | 'record'
-  | 'process' | 'refund' | 'export' | 'moderate'
-  | 'assign' | 'revoke' | 'settings' | 'logs' | 'backup' | 'maintenance'
-  | 'upload' | 'download' | 'manage' | 'submit' | 'message'
-  | 'approve' | 'transition' | 'ingest' | 'seed' | 'import'
+export type PermissionAction =
+  | 'view'
+  | 'create'
+  | 'edit'
+  | 'delete'
+  | 'read'
+  | 'update'
+  | 'login'
+  | 'logout'
+  | 'refresh'
+  | 'impersonate'
+  | 'search'
+  | 'browse'
+  | 'filter'
+  | 'recommend'
+  | 'start'
+  | 'pause'
+  | 'resume'
+  | 'complete'
+  | 'extend'
+  | 'send'
+  | 'receive'
+  | 'initiate'
+  | 'join'
+  | 'record'
+  | 'process'
+  | 'refund'
+  | 'export'
+  | 'moderate'
+  | 'assign'
+  | 'revoke'
+  | 'settings'
+  | 'logs'
+  | 'backup'
+  | 'maintenance'
+  | 'upload'
+  | 'download'
+  | 'manage'
+  | 'submit'
+  | 'message'
+  | 'approve'
+  | 'transition'
+  | 'ingest'
+  | 'seed'
+  | 'import';
 
 // Valid permission scopes
-export const VALID_SCOPES: PermissionScope[] = ['own', 'provider', 'organization', 'booking', 'public', 'all']
+export const VALID_SCOPES: PermissionScope[] = [
+  'own',
+  'provider',
+  'organization',
+  'booking',
+  'public',
+  'all',
+];
 
 // Valid permission resources
 export const VALID_RESOURCES: PermissionResource[] = [
-  'user', 'profile', 'auth', 'security',
-  'service', 'discovery', 'booking', 'booking_lifecycle',
-  'communication', 'call', 'payment', 'finance',
-  'role', 'system', 'data', 'analytics',
-  'notification', 'audit', 'file', 'workflow',
-  'webhook', 'contract', 'permission'
-]
+  'user',
+  'profile',
+  'auth',
+  'security',
+  'service',
+  'discovery',
+  'booking',
+  'booking_lifecycle',
+  'communication',
+  'call',
+  'payment',
+  'finance',
+  'role',
+  'system',
+  'data',
+  'analytics',
+  'notification',
+  'audit',
+  'file',
+  'workflow',
+  'webhook',
+  'contract',
+  'permission',
+];
 
 // Valid permission actions
 export const VALID_ACTIONS: PermissionAction[] = [
-  'view', 'create', 'edit', 'delete', 'read', 'update',
-  'login', 'logout', 'refresh', 'impersonate',
-  'search', 'browse', 'filter', 'recommend',
-  'start', 'pause', 'resume', 'complete', 'extend',
-  'send', 'receive', 'initiate', 'join', 'record',
-  'process', 'refund', 'export', 'moderate',
-  'assign', 'revoke', 'settings', 'logs', 'backup', 'maintenance',
-  'upload', 'download', 'manage', 'submit', 'message',
-  'approve', 'transition', 'ingest', 'seed', 'import'
-]
+  'view',
+  'create',
+  'edit',
+  'delete',
+  'read',
+  'update',
+  'login',
+  'logout',
+  'refresh',
+  'impersonate',
+  'search',
+  'browse',
+  'filter',
+  'recommend',
+  'start',
+  'pause',
+  'resume',
+  'complete',
+  'extend',
+  'send',
+  'receive',
+  'initiate',
+  'join',
+  'record',
+  'process',
+  'refund',
+  'export',
+  'moderate',
+  'assign',
+  'revoke',
+  'settings',
+  'logs',
+  'backup',
+  'maintenance',
+  'upload',
+  'download',
+  'manage',
+  'submit',
+  'message',
+  'approve',
+  'transition',
+  'ingest',
+  'seed',
+  'import',
+];
 
 /**
  * Parse a permission string into its components
  * Format: {resource}:{action}:{scope}
- * 
+ *
  * @param permission - Permission string to parse
  * @returns ParsedPermission object or null if invalid
  */
 export function parsePermission(permission: string): ParsedPermission | null {
   if (!permission || typeof permission !== 'string') {
-    return null
+    return null;
   }
 
-  const parts = permission.split(':')
+  const parts = permission.split(':');
   if (parts.length !== 3) {
-    return null
+    return null;
   }
 
-  const [resource, action, scope] = parts
+  const [resource, action, scope] = parts;
 
   // Validate each component
-  if (!isValidResource(resource) || !isValidAction(action) || !isValidScope(scope)) {
-    return null
+  if (
+    !isValidResource(resource) ||
+    !isValidAction(action) ||
+    !isValidScope(scope)
+  ) {
+    return null;
   }
 
   return {
     resource: resource as PermissionResource,
     action: action as PermissionAction,
     scope: scope as PermissionScope,
-    original: permission
-  }
+    original: permission,
+  };
 }
 
 /**
  * Validate if a resource is valid
  */
-export function isValidResource(resource: string): resource is PermissionResource {
-  return VALID_RESOURCES.includes(resource as PermissionResource)
+export function isValidResource(
+  resource: string
+): resource is PermissionResource {
+  return VALID_RESOURCES.includes(resource as PermissionResource);
 }
 
 /**
  * Validate if an action is valid
  */
 export function isValidAction(action: string): action is PermissionAction {
-  return VALID_ACTIONS.includes(action as PermissionAction)
+  return VALID_ACTIONS.includes(action as PermissionAction);
 }
 
 /**
  * Validate if a scope is valid
  */
 export function isValidScope(scope: string): scope is PermissionScope {
-  return VALID_SCOPES.includes(scope as PermissionScope)
+  return VALID_SCOPES.includes(scope as PermissionScope);
 }
 
 /**
  * Validate a complete permission string
  */
 export function isValidPermission(permission: string): boolean {
-  return parsePermission(permission) !== null
+  return parsePermission(permission) !== null;
 }
 
 /**
@@ -124,27 +247,30 @@ export function createPermission(
   action: PermissionAction,
   scope: PermissionScope
 ): string {
-  return `${resource}:${action}:${scope}`
+  return `${resource}:${action}:${scope}`;
 }
 
 /**
  * Check if a permission matches a pattern
  * Pattern can use wildcards (*) for any component
  */
-export function permissionMatches(pattern: string, permission: string): boolean {
-  if (!pattern || !permission) return false
+export function permissionMatches(
+  pattern: string,
+  permission: string
+): boolean {
+  if (!pattern || !permission) return false;
 
-  const patternParts = pattern.split(':')
-  const permissionParts = permission.split(':')
+  const patternParts = pattern.split(':');
+  const permissionParts = permission.split(':');
 
   if (patternParts.length !== 3 || permissionParts.length !== 3) {
-    return false
+    return false;
   }
 
   return patternParts.every((part, index) => {
-    if (part === '*') return true
-    return part === permissionParts[index]
-  })
+    if (part === '*') return true;
+    return part === permissionParts[index];
+  });
 }
 
 /**
@@ -154,7 +280,9 @@ export function getMatchingPermissions(
   pattern: string,
   permissions: string[]
 ): string[] {
-  return permissions.filter(permission => permissionMatches(pattern, permission))
+  return permissions.filter(permission =>
+    permissionMatches(pattern, permission)
+  );
 }
 
 /**
@@ -164,7 +292,7 @@ export function hasMatchingPermission(
   userPermissions: string[],
   pattern: string
 ): boolean {
-  return getMatchingPermissions(pattern, userPermissions).length > 0
+  return getMatchingPermissions(pattern, userPermissions).length > 0;
 }
 
 /**
@@ -173,26 +301,26 @@ export function hasMatchingPermission(
  */
 export function getHighestScope(permissions: string[]): PermissionScope {
   const scopeHierarchy: Record<PermissionScope, number> = {
-    'public': 1,
-    'own': 2,
-    'booking': 3,
-    'organization': 4,
-    'provider': 5,
-    'all': 6
-  }
+    public: 1,
+    own: 2,
+    booking: 3,
+    organization: 4,
+    provider: 5,
+    all: 6,
+  };
 
-  let highestScope: PermissionScope = 'public'
-  let highestLevel = 1
+  let highestScope: PermissionScope = 'public';
+  let highestLevel = 1;
 
   for (const permission of permissions) {
-    const parsed = parsePermission(permission)
+    const parsed = parsePermission(permission);
     if (parsed && scopeHierarchy[parsed.scope] > highestLevel) {
-      highestLevel = scopeHierarchy[parsed.scope]
-      highestScope = parsed.scope
+      highestLevel = scopeHierarchy[parsed.scope];
+      highestScope = parsed.scope;
     }
   }
 
-  return highestScope
+  return highestScope;
 }
 
 /**
@@ -203,15 +331,15 @@ export function scopeIsSufficient(
   requiredScope: PermissionScope
 ): boolean {
   const scopeHierarchy: Record<PermissionScope, number> = {
-    'public': 1,
-    'own': 2,
-    'booking': 3,
-    'organization': 4,
-    'provider': 5,
-    'all': 6
-  }
+    public: 1,
+    own: 2,
+    booking: 3,
+    organization: 4,
+    provider: 5,
+    all: 6,
+  };
 
-  return scopeHierarchy[userScope] >= scopeHierarchy[requiredScope]
+  return scopeHierarchy[userScope] >= scopeHierarchy[requiredScope];
 }
 
 /**
@@ -219,52 +347,55 @@ export function scopeIsSufficient(
  * Converts legacy permission keys to canonical format {resource}:{action}:{scope}
  */
 export function normalizePermission(permission: string): string {
-  const normalized = permission.toLowerCase().trim()
-  
+  const normalized = permission.toLowerCase().trim();
+
   // Legacy permission aliases mapping to canonical format
   const permissionAliases: Record<string, string> = {
     // Dashboard aliases
     'dashboard:analytics:read': 'analytics:read:all',
-    
+
     // Admin aliases
     'admin:backup:all': 'system:backup:all',
     'admin:import:all': 'data:import:all',
     'admin:seed:all': 'data:seed:all',
     'admin:roles:update:all': 'role:update:all',
-    
+
     // Notification aliases
     'notification:send:own': 'notification:create:own',
     'notification:send:provider': 'notification:create:provider',
-    
+
     // Audit aliases
     'audit-logs:view:all': 'audit:read:all',
-    
+
     // Upload aliases
     'upload:*:*': 'file:*:*',
-    
+
     // Workflow aliases
     'workflow:move:organization': 'workflow:transition:organization',
-    
+
     // Webhook aliases
-    'webhook:receive:public': 'webhook:ingest:public'
-  }
-  
+    'webhook:receive:public': 'webhook:ingest:public',
+  };
+
   // Check for exact alias matches first
   if (permissionAliases[normalized]) {
-    return permissionAliases[normalized]
+    return permissionAliases[normalized];
   }
-  
+
   // Handle wildcard patterns
   for (const [pattern, canonical] of Object.entries(permissionAliases)) {
     if (pattern.includes('*')) {
-      const regexPattern = pattern.replace(/\*/g, '.*')
+      const regexPattern = pattern.replace(/\*/g, '.*');
       if (new RegExp(`^${regexPattern}$`).test(normalized)) {
-        return canonical.replace(/\*/g, normalized.split(':')[normalized.split(':').indexOf('*')])
+        return canonical.replace(
+          /\*/g,
+          normalized.split(':')[normalized.split(':').indexOf('*')]
+        );
       }
     }
   }
-  
-  return normalized
+
+  return normalized;
 }
 
 /**
@@ -292,11 +423,11 @@ export function getPossibleScopes(
     'notification:manage': ['all'],
     'workflow:approve': ['all'],
     'role:update': ['all'],
-    'permission:manage': ['all']
-  }
+    'permission:manage': ['all'],
+  };
 
-  const key = `${resource}:${action}`
-  return scopeRestrictions[key] || VALID_SCOPES
+  const key = `${resource}:${action}`;
+  return scopeRestrictions[key] || VALID_SCOPES;
 }
 
 /**
@@ -307,31 +438,33 @@ export function validatePermissionComponents(
   action: string,
   scope: string
 ): { isValid: boolean; errors: string[] } {
-  const errors: string[] = []
+  const errors: string[] = [];
 
   if (!isValidResource(resource)) {
-    errors.push(`Invalid resource: ${resource}`)
+    errors.push(`Invalid resource: ${resource}`);
   }
 
   if (!isValidAction(action)) {
-    errors.push(`Invalid action: ${action}`)
+    errors.push(`Invalid action: ${action}`);
   }
 
   if (!isValidScope(scope)) {
-    errors.push(`Invalid scope: ${scope}`)
+    errors.push(`Invalid scope: ${scope}`);
   }
 
   // Check if the combination makes sense
   if (isValidResource(resource) && isValidAction(action)) {
-    const possibleScopes = getPossibleScopes(resource as PermissionResource, action as PermissionAction)
+    const possibleScopes = getPossibleScopes(
+      resource as PermissionResource,
+      action as PermissionAction
+    );
     if (!possibleScopes.includes(scope as PermissionScope)) {
-      errors.push(`Scope '${scope}' is not valid for ${resource}:${action}`)
+      errors.push(`Scope '${scope}' is not valid for ${resource}:${action}`);
     }
   }
 
   return {
     isValid: errors.length === 0,
-    errors
-  }
+    errors,
+  };
 }
-

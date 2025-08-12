@@ -10,12 +10,14 @@ A professional, enterprise-grade contract management and generation system built
 ## ✨ Features
 
 ### 🔐 **Advanced Security & RBAC**
+
 - Role-Based Access Control (RBAC) with fine-grained permissions
 - Multi-factor authentication support
 - Session management with automatic refresh
 - Audit logging and compliance features
 
 ### 📄 **Contract Management**
+
 - AI-powered contract generation
 - Template management system
 - Digital signature integration
@@ -23,18 +25,21 @@ A professional, enterprise-grade contract management and generation system built
 - Real-time collaboration
 
 ### 👥 **User Management**
+
 - Comprehensive user administration
 - Role assignment and permission management
 - User activity monitoring
 - Bulk operations and reporting
 
 ### 📊 **Analytics & Reporting**
+
 - Real-time dashboard with live data
 - Advanced analytics and insights
 - Custom report generation
 - Export capabilities (PDF, Excel, CSV)
 
 ### 🔄 **Workflow & Automation**
+
 - Approval workflows
 - Automated notifications
 - Task management
@@ -65,35 +70,40 @@ A professional, enterprise-grade contract management and generation system built
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/contract-management-system.git
    cd contract-management-system
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp env.example .env.local
    # Edit .env.local with your Supabase credentials
    ```
 
 4. **Set up Supabase**
+
    ```bash
    # Install Supabase CLI
    npm install -g supabase
-   
+
    # Start local development
    supabase start
-   
+
    # Apply migrations
    npm run db:migrate
    ```
 
 5. **Run the development server**
+
    ```bash
    npm run dev
    ```
@@ -268,16 +278,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 ### Documentation
+
 - [User Guide](docs/USER_GUIDE.md)
 - [API Documentation](docs/API.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 
 ### Community
+
 - [GitHub Issues](https://github.com/yourusername/contract-management-system/issues)
 - [Discussions](https://github.com/yourusername/contract-management-system/discussions)
 - [Wiki](https://github.com/yourusername/contract-management-system/wiki)
 
 ### Professional Support
+
 - **Email**: support@yourdomain.com
 - **Phone**: +1 (555) 123-4567
 - **Hours**: Monday - Friday, 9 AM - 6 PM EST
@@ -293,16 +306,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📈 Roadmap
 
 ### Q1 2025
+
 - [ ] Mobile app (React Native)
 - [ ] Advanced AI contract analysis
 - [ ] Multi-tenant support
 
 ### Q2 2025
+
 - [ ] Blockchain integration
 - [ ] Advanced workflow engine
 - [ ] API marketplace
 
 ### Q3 2025
+
 - [ ] Machine learning insights
 - [ ] Advanced reporting
 - [ ] Enterprise SSO
@@ -311,4 +327,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Built with ❤️ by the Contract Management System Team**
 
-*For enterprise inquiries, contact: enterprise@yourdomain.com*
+_For enterprise inquiries, contact: enterprise@yourdomain.com_

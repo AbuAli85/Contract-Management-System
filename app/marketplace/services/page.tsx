@@ -1,5 +1,5 @@
-import { ServiceMarketplace } from '@/components/marketplace/service-marketplace'
+import { ServiceMarketplace } from '@/components/marketplace/service-marketplace';
 
 export default function ServicesPage() {
-  return <ServiceMarketplace />
+  return <ServiceMarketplace />;
 }

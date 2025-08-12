@@ -63,19 +63,19 @@
 
 ```typescript
 // Contract duration analysis
-analyzeContractDuration(startDate, endDate)
+analyzeContractDuration(startDate, endDate);
 // Returns: { duration, category, warnings, recommendations }
 
 // Compensation analysis
-analyzeContractCompensation(basicSalary, allowances, currency)
+analyzeContractCompensation(basicSalary, allowances, currency);
 // Returns: { totalMonthly, isCompetitive, marketComparison }
 
 // Form validation
-validateContractData(formData)
+validateContractData(formData);
 // Returns: { isValid, errors, warnings, completeness, missingFields }
 
 // CSV export
-exportContractsToCSV(contracts)
+exportContractsToCSV(contracts);
 // Returns: formatted CSV string for download
 ```
 

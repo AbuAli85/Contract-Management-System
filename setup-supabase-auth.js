@@ -6,7 +6,7 @@ const readline = require('readline');
 
 const rl = readline.createInterface({
   input: process.stdin,
-  output: process.stdout
+  output: process.stdout,
 });
 
 console.log('🔐 Setting up Supabase Authentication');
@@ -20,30 +20,33 @@ console.log('3. Go to Settings → API');
 console.log('4. Copy your Project URL and anon public key');
 console.log('');
 
-rl.question('Enter your Supabase Project URL (e.g., https://your-project.supabase.co): ', (supabaseUrl) => {
-  rl.question('Enter your Supabase anon public key (starts with eyJ...): ', (supabaseKey) => {
-    
-    // Validate inputs
-    if (!supabaseUrl || !supabaseKey) {
-      console.log('❌ Please provide both URL and key');
-      rl.close();
-      return;
-    }
+rl.question(
+  'Enter your Supabase Project URL (e.g., https://your-project.supabase.co): ',
+  supabaseUrl => {
+    rl.question(
+      'Enter your Supabase anon public key (starts with eyJ...): ',
+      supabaseKey => {
+        // Validate inputs
+        if (!supabaseUrl || !supabaseKey) {
+          console.log('❌ Please provide both URL and key');
+          rl.close();
+          return;
+        }
 
-    if (!supabaseUrl.includes('supabase.co')) {
-      console.log('❌ Invalid Supabase URL format');
-      rl.close();
-      return;
-    }
+        if (!supabaseUrl.includes('supabase.co')) {
+          console.log('❌ Invalid Supabase URL format');
+          rl.close();
+          return;
+        }
 
-    if (!supabaseKey.startsWith('eyJ')) {
-      console.log('❌ Invalid anon key format (should start with eyJ...)');
-      rl.close();
-      return;
-    }
+        if (!supabaseKey.startsWith('eyJ')) {
+          console.log('❌ Invalid anon key format (should start with eyJ...)');
+          rl.close();
+          return;
+        }
 
-    // Create new .env.local content
-    const envContent = `# Supabase Configuration
+        // Create new .env.local content
+        const envContent = `# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=${supabaseUrl}
 NEXT_PUBLIC_SUPABASE_ANON_KEY=${supabaseKey}
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
@@ -69,23 +72,25 @@ ENABLE_REQUEST_LOGGING=true
 BUILD_ID=dev-$(date +%s)
 `;
 
-    // Write to .env.local
-    const envPath = path.join(process.cwd(), '.env.local');
-    fs.writeFileSync(envPath, envContent);
+        // Write to .env.local
+        const envPath = path.join(process.cwd(), '.env.local');
+        fs.writeFileSync(envPath, envContent);
 
-    console.log('');
-    console.log('✅ Supabase credentials updated!');
-    console.log('');
-    console.log('📋 Next steps:');
-    console.log('1. Restart the development server: npm run dev');
-    console.log('2. Go to http://localhost:3004/en/auth/signup');
-    console.log('3. Create a new account');
-    console.log('4. Then go to http://localhost:3004/en/auth/login');
-    console.log('5. Log in with your credentials');
-    console.log('');
-    console.log('🔗 Supabase Dashboard: https://supabase.com/dashboard');
-    console.log('📧 Check your email for verification (if enabled)');
+        console.log('');
+        console.log('✅ Supabase credentials updated!');
+        console.log('');
+        console.log('📋 Next steps:');
+        console.log('1. Restart the development server: npm run dev');
+        console.log('2. Go to http://localhost:3004/en/auth/signup');
+        console.log('3. Create a new account');
+        console.log('4. Then go to http://localhost:3004/en/auth/login');
+        console.log('5. Log in with your credentials');
+        console.log('');
+        console.log('🔗 Supabase Dashboard: https://supabase.com/dashboard');
+        console.log('📧 Check your email for verification (if enabled)');
 
-    rl.close();
-  });
-}); 
+        rl.close();
+      }
+    );
+  }
+);

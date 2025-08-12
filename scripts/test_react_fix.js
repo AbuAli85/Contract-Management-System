@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,27 +16,28 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-      }
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         resolve({
           status: res.statusCode,
           data: data,
-          headers: res.headers
+          headers: res.headers,
         });
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -54,15 +56,21 @@ async function testReactFix() {
 
   try {
     const result = await makeRequest(`${BASE_URL}/en/generate-contract`);
-    
+
     console.log(`Status: ${result.status}`);
-    
+
     if (result.status === 200) {
       // Check if the page loads without React errors
-      if (result.data.includes('Something went wrong!') || result.data.includes('Minified React error #185')) {
+      if (
+        result.data.includes('Something went wrong!') ||
+        result.data.includes('Minified React error #185')
+      ) {
         console.log('❌ React error still present');
         console.log('   The page is still showing React error #185');
-      } else if (result.data.includes('Create New Contract') || result.data.includes('Generate Contract')) {
+      } else if (
+        result.data.includes('Create New Contract') ||
+        result.data.includes('Generate Contract')
+      ) {
         console.log('✅ React error fixed!');
         console.log('   The generate-contract page is loading correctly');
       } else {
@@ -84,7 +92,9 @@ async function testReactFix() {
   console.log('1. Wait 2-3 minutes for Vercel deployment');
   console.log('2. Open the generate-contract page in your browser');
   console.log('3. Check if the React error is resolved');
-  console.log('4. The page should load without "Something went wrong!" message');
+  console.log(
+    '4. The page should load without "Something went wrong!" message'
+  );
 }
 
-testReactFix().catch(console.error); 
+testReactFix().catch(console.error);

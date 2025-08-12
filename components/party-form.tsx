@@ -1,16 +1,16 @@
-"use client"
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { partyFormSchema, type PartyFormData } from "@/lib/party-schema"
-import type { Party } from "@/lib/types"
-import { createClient } from "@/lib/supabase/client"
-import { toast } from "sonner"
-import { format, parseISO } from "date-fns"
+'use client';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { partyFormSchema, type PartyFormData } from '@/lib/party-schema';
+import type { Party } from '@/lib/types';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
+import { format, parseISO } from 'date-fns';
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
   FormControl,
@@ -19,105 +19,112 @@ import {
   FormLabel,
   FormMessage,
   FormDescription,
-} from "@/components/ui/form"
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Loader2, Building2, Contact, FileText, MapPin } from "lucide-react"
-import { DatePickerWithManualInput } from "./date-picker-with-manual-input"
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, Building2, Contact, FileText, MapPin } from 'lucide-react';
+import { DatePickerWithManualInput } from './date-picker-with-manual-input';
 
 interface PartyFormProps {
-  partyToEdit?: Party | null
-  onFormSubmit: () => void
+  partyToEdit?: Party | null;
+  onFormSubmit: () => void;
 }
 
-export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+export default function PartyForm({
+  partyToEdit,
+  onFormSubmit,
+}: PartyFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<PartyFormData>({
     resolver: zodResolver(partyFormSchema),
     defaultValues: {
-      name_en: "",
-      name_ar: "",
-      crn: "",
-      type: "Employer",
-      role: "",
-      status: "Active",
+      name_en: '',
+      name_ar: '',
+      crn: '',
+      type: 'Employer',
+      role: '',
+      status: 'Active',
       cr_expiry_date: undefined,
-      tax_number: "",
-      license_number: "",
+      tax_number: '',
+      license_number: '',
       license_expiry_date: undefined,
-      contact_person: "",
-      contact_phone: "",
-      contact_email: "",
-      address_en: "",
+      contact_person: '',
+      contact_phone: '',
+      contact_email: '',
+      address_en: '',
       // address_ar: "", // Not available in Party type
-      notes: "",
+      notes: '',
     },
-  })
+  });
 
   useEffect(() => {
     if (partyToEdit) {
       form.reset({
-        name_en: partyToEdit.name_en || "",
-        name_ar: partyToEdit.name_ar || "",
-        crn: partyToEdit.crn || "",
-        type: (partyToEdit.type as "Employer" | "Client") || "Employer",
-        role: partyToEdit.role || "",
+        name_en: partyToEdit.name_en || '',
+        name_ar: partyToEdit.name_ar || '',
+        crn: partyToEdit.crn || '',
+        type: (partyToEdit.type as 'Employer' | 'Client') || 'Employer',
+        role: partyToEdit.role || '',
         cr_expiry_date: partyToEdit.cr_expiry_date
           ? parseISO(partyToEdit.cr_expiry_date)
           : undefined,
-        contact_person: partyToEdit.contact_person || "",
-        contact_email: partyToEdit.contact_email || "",
-        contact_phone: partyToEdit.contact_phone || "",
-        address_en: partyToEdit.address_en || "",
+        contact_person: partyToEdit.contact_person || '',
+        contact_email: partyToEdit.contact_email || '',
+        contact_phone: partyToEdit.contact_phone || '',
+        address_en: partyToEdit.address_en || '',
         // address_ar: partyToEdit.address_ar || "", // Not available in Party type
-        tax_number: partyToEdit.tax_number || "",
-        license_number: partyToEdit.license_number || "",
+        tax_number: partyToEdit.tax_number || '',
+        license_number: partyToEdit.license_number || '',
         license_expiry_date: partyToEdit.license_expiry
           ? parseISO(partyToEdit.license_expiry)
           : undefined,
-        status: (partyToEdit.status as "Active" | "Inactive" | "Suspended") || "Active",
-        notes: partyToEdit.notes || "",
-      })
+        status:
+          (partyToEdit.status as 'Active' | 'Inactive' | 'Suspended') ||
+          'Active',
+        notes: partyToEdit.notes || '',
+      });
     } else {
       form.reset({
-        name_en: "",
-        name_ar: "",
-        crn: "",
-        type: "Employer",
-        role: "",
-        status: "Active",
+        name_en: '',
+        name_ar: '',
+        crn: '',
+        type: 'Employer',
+        role: '',
+        status: 'Active',
         cr_expiry_date: undefined,
-        tax_number: "",
-        license_number: "",
+        tax_number: '',
+        license_number: '',
         license_expiry_date: undefined,
-        contact_person: "",
-        contact_phone: "",
-        contact_email: "",
-        address_en: "",
+        contact_person: '',
+        contact_phone: '',
+        contact_email: '',
+        address_en: '',
         // address_ar: "", // Not available in Party type
-        notes: "",
-      })
+        notes: '',
+      });
     }
-  }, [partyToEdit, form.reset])
+  }, [partyToEdit, form.reset]);
 
   async function onSubmit(values: PartyFormData) {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const partyData: Omit<Party, "id" | "created_at"> = {
-        name_en: values.name_en || "",
-        name_ar: values.name_ar || "",
-        crn: values.crn || "",
-        type: values.type as "Employer" | "Client",
+      const partyData: Omit<Party, 'id' | 'created_at'> = {
+        name_en: values.name_en || '',
+        name_ar: values.name_ar || '',
+        crn: values.crn || '',
+        type: values.type as 'Employer' | 'Client',
         role: values.role || null,
-        cr_expiry_date: values.cr_expiry_date ? format(values.cr_expiry_date, "yyyy-MM-dd") : null,
+        cr_expiry_date: values.cr_expiry_date
+          ? format(values.cr_expiry_date, 'yyyy-MM-dd')
+          : null,
         contact_person: values.contact_person || null,
         contact_email: values.contact_email || null,
         contact_phone: values.contact_phone || null,
@@ -126,63 +133,66 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
         tax_number: values.tax_number || null,
         license_number: values.license_number || null,
         license_expiry: values.license_expiry_date
-          ? format(values.license_expiry_date, "yyyy-MM-dd")
+          ? format(values.license_expiry_date, 'yyyy-MM-dd')
           : null,
         status: values.status,
         notes: values.notes || null,
-      }
+      };
 
-      const supabase = createClient()
+      const supabase = createClient();
       if (!supabase) {
-        throw new Error("Failed to initialize Supabase client")
+        throw new Error('Failed to initialize Supabase client');
       }
 
       if (partyToEdit?.id) {
         const { error } = await supabase
-          .from("parties")
+          .from('parties')
           .update(partyData)
-          .eq("id", partyToEdit.id)
-          .select()
-        if (error) throw error
-        toast.success("Party updated successfully!")
+          .eq('id', partyToEdit.id)
+          .select();
+        if (error) throw error;
+        toast.success('Party updated successfully!');
       } else {
-        const { error } = await supabase.from("parties").insert(partyData).select()
-        if (error) throw error
-        toast.success("Party added successfully!")
+        const { error } = await supabase
+          .from('parties')
+          .insert(partyData)
+          .select();
+        if (error) throw error;
+        toast.success('Party added successfully!');
       }
-      onFormSubmit()
+      onFormSubmit();
     } catch (error: any) {
-      toast.error(error.message || "An unexpected error occurred.")
+      toast.error(error.message || 'An unexpected error occurred.');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <div className="mx-auto max-w-4xl rounded-lg bg-card p-4 text-card-foreground shadow-lg sm:p-6 lg:p-8">
-      <h1 className="mb-6 text-center text-2xl font-bold sm:text-3xl">
-        {partyToEdit ? "Edit Party" : "Add New Party"}
+    <div className='mx-auto max-w-4xl rounded-lg bg-card p-4 text-card-foreground shadow-lg sm:p-6 lg:p-8'>
+      <h1 className='mb-6 text-center text-2xl font-bold sm:text-3xl'>
+        {partyToEdit ? 'Edit Party' : 'Add New Party'}
       </h1>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
           {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Building2 className='h-5 w-5' />
                 Basic Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name="name_en"
+                  name='name_en'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Name (English)</FormLabel>
                       <FormControl>
-                        <Input placeholder="Party Name (EN)" {...field} />
+                        <Input placeholder='Party Name (EN)' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -190,16 +200,16 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="name_ar"
+                  name='name_ar'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>الاسم (عربي)</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="اسم الطرف (AR)"
+                          placeholder='اسم الطرف (AR)'
                           {...field}
-                          dir="rtl"
-                          className="text-right"
+                          dir='rtl'
+                          className='text-right'
                         />
                       </FormControl>
                       <FormMessage />
@@ -208,22 +218,25 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
                 <FormField
                   control={form.control}
-                  name="type"
+                  name='type'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select type" />
+                            <SelectValue placeholder='Select type' />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Employer">Employer</SelectItem>
-                          <SelectItem value="Client">Client</SelectItem>
+                          <SelectItem value='Employer'>Employer</SelectItem>
+                          <SelectItem value='Client'>Client</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -232,12 +245,15 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="role"
+                  name='role'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., CEO, Manager, Director" {...field} />
+                        <Input
+                          placeholder='e.g., CEO, Manager, Director'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -245,20 +261,23 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="status"
+                  name='status'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder='Select status' />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="Inactive">Inactive</SelectItem>
-                          <SelectItem value="Suspended">Suspended</SelectItem>
+                          <SelectItem value='Active'>Active</SelectItem>
+                          <SelectItem value='Inactive'>Inactive</SelectItem>
+                          <SelectItem value='Suspended'>Suspended</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -272,21 +291,23 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
           {/* Registration & Legal Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <FileText className='h-5 w-5' />
                 Registration & Legal Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name="crn"
+                  name='crn'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Commercial Registration Number (CRN)</FormLabel>
+                      <FormLabel>
+                        Commercial Registration Number (CRN)
+                      </FormLabel>
                       <FormControl>
-                        <Input placeholder="1010XXXXXX" {...field} />
+                        <Input placeholder='1010XXXXXX' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -294,7 +315,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="cr_expiry_date"
+                  name='cr_expiry_date'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>CR Expiry Date</FormLabel>
@@ -302,7 +323,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                         <DatePickerWithManualInput
                           date={field.value}
                           setDate={field.onChange}
-                          placeholder="Select expiry date"
+                          placeholder='Select expiry date'
                         />
                       </FormControl>
                       <FormMessage />
@@ -311,15 +332,18 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name="tax_number"
+                  name='tax_number'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tax Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Tax registration number" {...field} />
+                        <Input
+                          placeholder='Tax registration number'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -327,12 +351,15 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="license_number"
+                  name='license_number'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>License Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Business license number" {...field} />
+                        <Input
+                          placeholder='Business license number'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -342,7 +369,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
 
               <FormField
                 control={form.control}
-                name="license_expiry_date"
+                name='license_expiry_date'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>License Expiry Date</FormLabel>
@@ -350,7 +377,7 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                       <DatePickerWithManualInput
                         date={field.value}
                         setDate={field.onChange}
-                        placeholder="Select license expiry date"
+                        placeholder='Select license expiry date'
                       />
                     </FormControl>
                     <FormMessage />
@@ -363,21 +390,24 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
           {/* Contact Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Contact className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <Contact className='h-5 w-5' />
                 Contact Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name="contact_person"
+                  name='contact_person'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contact Person</FormLabel>
                       <FormControl>
-                        <Input placeholder="Full name of contact person" {...field} />
+                        <Input
+                          placeholder='Full name of contact person'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -385,12 +415,12 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
                 />
                 <FormField
                   control={form.control}
-                  name="contact_phone"
+                  name='contact_phone'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Contact Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="+966 50 XXX XXXX" {...field} />
+                        <Input placeholder='+966 50 XXX XXXX' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -400,12 +430,16 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
 
               <FormField
                 control={form.control}
-                name="contact_email"
+                name='contact_email'
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Contact Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="contact@company.com" {...field} />
+                      <Input
+                        type='email'
+                        placeholder='contact@company.com'
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -417,21 +451,24 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
           {/* Address Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
+              <CardTitle className='flex items-center gap-2'>
+                <MapPin className='h-5 w-5' />
                 Address Information
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <CardContent className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name="address_en"
+                  name='address_en'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Address (English)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Complete address in English" {...field} />
+                        <Textarea
+                          placeholder='Complete address in English'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -446,20 +483,21 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
           <Card>
             <CardHeader>
               <CardTitle>Additional Notes</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Any additional information or special requirements for this party.
+              <p className='text-sm text-muted-foreground'>
+                Any additional information or special requirements for this
+                party.
               </p>
             </CardHeader>
             <CardContent>
               <FormField
                 control={form.control}
-                name="notes"
+                name='notes'
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter any additional notes, special requirements, or important information about this party..."
-                        className="min-h-[100px]"
+                        placeholder='Enter any additional notes, special requirements, or important information about this party...'
+                        className='min-h-[100px]'
                         {...field}
                       />
                     </FormControl>
@@ -470,12 +508,12 @@ export default function PartyForm({ partyToEdit, onFormSubmit }: PartyFormProps)
             </CardContent>
           </Card>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {partyToEdit ? "Update Party" : "Add Party"}
+          <Button type='submit' className='w-full' disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+            {partyToEdit ? 'Update Party' : 'Add Party'}
           </Button>
         </form>
       </Form>
     </div>
-  )
+  );
 }

@@ -1,2 +1,2 @@
 // Export all types for deployment
-export type { Database } from './supabase' 
+export type { Database } from './supabase';

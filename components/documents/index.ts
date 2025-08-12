@@ -1,7 +1,7 @@
 // Document Management Components
-export { CompanyDocumentUpload } from './company-document-upload'
-export { ExpiryTracker } from './expiry-tracker'
-export { DocumentDashboard } from './document-dashboard'
+export { CompanyDocumentUpload } from './company-document-upload';
+export { ExpiryTracker } from './expiry-tracker';
+export { DocumentDashboard } from './document-dashboard';
 
 // Re-export document service types for convenience
 export type {
@@ -9,5 +9,5 @@ export type {
   DocumentExpiryStatus,
   ExpiryStatistics,
   DocumentUploadProgress,
-  DocumentServiceResponse
-} from '@/lib/document-service'
+  DocumentServiceResponse,
+} from '@/lib/document-service';

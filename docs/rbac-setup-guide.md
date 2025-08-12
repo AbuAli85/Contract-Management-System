@@ -3,6 +3,7 @@
 ## ✅ Setup Complete!
 
 The RBAC system has been successfully set up with:
+
 - **5 RBAC tables** created and populated
 - **12 pre-defined roles** with proper permission mappings
 - **63 permissions** covering all major resources and actions
@@ -43,16 +44,17 @@ npm run rbac:docs
 The RBAC guard is already wired into `/api/bookings` as an example:
 
 ```typescript
-import { withRBAC } from '@/lib/rbac/guard'
+import { withRBAC } from '@/lib/rbac/guard';
 
-export const GET = withRBAC('booking:read:own', async (req) => {
+export const GET = withRBAC('booking:read:own', async req => {
   // Your handler logic
-})
+});
 ```
 
 ## Next Steps
 
 1. **Set environment variable:**
+
    ```bash
    # .env.local
    RBAC_ENFORCEMENT=dry-run  # Start with dry-run to audit
@@ -74,7 +76,7 @@ Check `rbac_audit_logs` table to see permission checks during dry-run mode.
 ## Current Status
 
 - ✅ **Phase 0**: Project survey complete
-- ✅ **Phase 1**: Database schema & seeds complete  
+- ✅ **Phase 1**: Database schema & seeds complete
 - ✅ **Phase 2**: Enforcement layer implemented
 - ✅ **Phase 3**: Route protection started (bookings API)
 - ✅ **Phase 4**: Caching implemented

@@ -1,25 +1,25 @@
 /**
  * Comprehensive Icon Library
- * 
+ *
  * This file provides a centralized export of all commonly used Lucide React icons
  * to prevent ReferenceError issues across the application.
- * 
+ *
  * Usage: import { Search, UserPlus, Menu, Settings } from "@/lib/icons"
  */
 
 // Re-export all commonly used icons from lucide-react
 export {
   // ⚡ CRITICAL ICONS (Fix for ReferenceErrors)
-  Settings,        // ← MAIN ERROR CAUSING ICON
-  UserPlus,        // ← Previously missing
-  Menu,            // ← Previously missing  
-  Search,          // ← Previously missing
-  
+  Settings, // ← MAIN ERROR CAUSING ICON
+  UserPlus, // ← Previously missing
+  Menu, // ← Previously missing
+  Search, // ← Previously missing
+
   // Alternative Settings Icons (in case naming conflicts)
-  Cog,             // ← Alternative to Settings
-  Sliders,         // ← Alternative settings icon
-  
-  // Core Navigation & UI Icons  
+  Cog, // ← Alternative to Settings
+  Sliders, // ← Alternative settings icon
+
+  // Core Navigation & UI Icons
   X,
   ChevronDown,
   ChevronUp,
@@ -32,14 +32,14 @@ export {
   ArrowUp,
   ArrowDown,
   Home,
-  
+
   // User & People Icons
   Users,
   User,
   UserMinus,
   UserCheck,
   UserX,
-  
+
   // Action Icons
   Plus,
   Minus,
@@ -55,7 +55,7 @@ export {
   Filter,
   SortAsc,
   SortDesc,
-  
+
   // File & Document Icons
   FileText,
   File,
@@ -67,7 +67,7 @@ export {
   FolderOpen,
   FolderPlus,
   FileSearch,
-  
+
   // Status & Feedback Icons
   CheckCircle,
   Check,
@@ -79,7 +79,7 @@ export {
   Heart,
   ThumbsUp,
   HelpCircle,
-  
+
   // Business & Analytics Icons
   TrendingUp,
   TrendingDown,
@@ -94,7 +94,7 @@ export {
   Briefcase,
   Building,
   Building2,
-  
+
   // Technology & Features Icons
   Sparkles,
   Zap,
@@ -109,7 +109,7 @@ export {
   Lock,
   Unlock,
   Key,
-  
+
   // Interface Elements
   Calendar,
   CalendarDays,
@@ -123,7 +123,7 @@ export {
   Image,
   Camera,
   Video,
-  
+
   // Communication Icons
   Mail,
   Phone,
@@ -134,14 +134,14 @@ export {
   MicOff,
   Volume2,
   VolumeX,
-  
+
   // Workflow & Process Icons
   Workflow,
   GitBranch,
   Repeat,
   Play,
   Pause,
-  
+
   // Layout & Design Icons
   Layout,
   Grid,
@@ -149,18 +149,18 @@ export {
   Columns,
   Rows,
   Layers,
-  
+
   // Location & Contact Icons
   MapPin,
   Map,
   Compass,
   Navigation,
-  
+
   // Financial Icons
   DollarSign,
   CreditCard,
   Banknote,
-  
+
   // Utility Icons
   Sun,
   Moon,
@@ -173,30 +173,29 @@ export {
   Link,
   Maximize,
   Minimize,
-  
+
   // Loading & States
   Loader2,
-  
+
   // Legal & Compliance Icons
   Gavel,
-  
+
   // System & Settings Icons
   // Cog,           // ← Moved to CRITICAL ICONS section
-  
+
   // Miscellaneous
   Palette,
   Monitor,
   Lightbulb,
-  
-} from "lucide-react"
+} from 'lucide-react';
 
 // Type definitions for icon props
 export type IconProps = {
-  size?: number | string
-  color?: string
-  strokeWidth?: number
-  className?: string
-}
+  size?: number | string;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+};
 
 // Common icon sizes
 export const IconSizes = {
@@ -206,15 +205,15 @@ export const IconSizes = {
   lg: 24,
   xl: 32,
   xxl: 48,
-} as const
+} as const;
 
 // Default icon props
 export const defaultIconProps: Partial<IconProps> = {
   size: IconSizes.md,
   strokeWidth: 2,
-}
+};
 
 // Alternative Settings exports (APPROACH 3)
-export { Settings as SettingsIcon } from "lucide-react"
-export { Cog as SettingsAlt } from "lucide-react"
-export { Sliders as SettingsSliders } from "lucide-react"
+export { Settings as SettingsIcon } from 'lucide-react';
+export { Cog as SettingsAlt } from 'lucide-react';
+export { Sliders as SettingsSliders } from 'lucide-react';

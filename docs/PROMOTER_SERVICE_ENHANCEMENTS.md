@@ -12,68 +12,68 @@ This document provides a comprehensive overview of the enhancements made to the 
 
 ```typescript
 export interface RetryConfig {
-  maxAttempts: number
-  baseDelay: number
-  maxDelay: number
+  maxAttempts: number;
+  baseDelay: number;
+  maxDelay: number;
 }
 
 export interface PaginationParams {
-  page: number
-  limit: number
-  offset?: number
+  page: number;
+  limit: number;
+  offset?: number;
 }
 
 export interface PaginatedResult<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
-  hasNext: boolean
-  hasPrev: boolean
-  error?: ServiceError
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  error?: ServiceError;
 }
 
 export interface ServiceError {
-  message: string
-  code?: string
-  details?: any
-  retryable: boolean
+  message: string;
+  code?: string;
+  details?: any;
+  retryable: boolean;
 }
 
 export interface PromoterFilters {
-  status?: string
-  documentStatus?: string
-  hasContracts?: boolean
-  overallStatus?: string
-  workLocation?: string
+  status?: string;
+  documentStatus?: string;
+  hasContracts?: boolean;
+  overallStatus?: string;
+  workLocation?: string;
 }
 
 export interface PromoterAnalyticsFilters {
-  status?: string
-  overallStatus?: string
-  workLocation?: string
+  status?: string;
+  overallStatus?: string;
+  workLocation?: string;
 }
 
 export interface PromoterPerformanceStats {
-  total_promoters: number
-  active_promoters: number
-  inactive_promoters: number
-  critical_status_count: number
-  warning_status_count: number
-  total_contracts: number
-  total_contract_value: number
-  avg_contract_duration: number
-  avg_completion_rate: number
-  expiring_documents_count: number
-  expired_documents_count: number
+  total_promoters: number;
+  active_promoters: number;
+  inactive_promoters: number;
+  critical_status_count: number;
+  warning_status_count: number;
+  total_contracts: number;
+  total_contract_value: number;
+  avg_contract_duration: number;
+  avg_completion_rate: number;
+  expiring_documents_count: number;
+  expired_documents_count: number;
 }
 
 export interface ImportResult {
-  success: boolean
-  imported: number
-  errors: string[]
-  total: number
+  success: boolean;
+  imported: number;
+  errors: string[];
+  total: number;
 }
 ```
 
@@ -99,33 +99,36 @@ export interface ImportResult {
 // Enhanced retry helper with better error handling
 async function withRetry<T>(
   operation: () => Promise<T>,
-  config: Partial<RetryConfig> = {},
+  config: Partial<RetryConfig> = {}
 ): Promise<T> {
-  const finalConfig = { ...RETRY_CONFIG, ...config }
-  let lastError: Error
+  const finalConfig = { ...RETRY_CONFIG, ...config };
+  let lastError: Error;
 
   for (let attempt = 1; attempt <= finalConfig.maxAttempts; attempt++) {
     try {
-      return await operation()
+      return await operation();
     } catch (error) {
-      lastError = error as Error
+      lastError = error as Error;
 
       if (attempt === finalConfig.maxAttempts) {
-        throw lastError
+        throw lastError;
       }
 
-      const isRetryable = isRetryableError(error)
+      const isRetryable = isRetryableError(error);
       if (!isRetryable) {
-        throw lastError
+        throw lastError;
       }
 
-      const delay = Math.min(finalConfig.baseDelay * Math.pow(2, attempt - 1), finalConfig.maxDelay)
+      const delay = Math.min(
+        finalConfig.baseDelay * Math.pow(2, attempt - 1),
+        finalConfig.maxDelay
+      );
 
-      await new Promise((resolve) => setTimeout(resolve, delay))
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  throw lastError!
+  throw lastError!;
 }
 ```
 
@@ -133,46 +136,52 @@ async function withRetry<T>(
 
 ```typescript
 // Enhanced query builder with type safety
-function buildPromoterQuery(supabaseClient: any, searchTerm?: string, filters?: PromoterFilters) {
-  let query = supabaseClient.from("promoters").select("*", { count: "exact" })
+function buildPromoterQuery(
+  supabaseClient: any,
+  searchTerm?: string,
+  filters?: PromoterFilters
+) {
+  let query = supabaseClient.from('promoters').select('*', { count: 'exact' });
 
   // Apply search filter
   if (searchTerm?.trim()) {
     query = query.or(
-      `name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`,
-    )
+      `name_en.ilike.%${searchTerm}%,name_ar.ilike.%${searchTerm}%,id_card_number.ilike.%${searchTerm}%`
+    );
   }
 
   // Apply status filter
-  if (filters?.status && filters.status !== "all") {
-    query = query.eq("status", filters.status)
+  if (filters?.status && filters.status !== 'all') {
+    query = query.eq('status', filters.status);
   }
 
   // Apply document status filter
-  if (filters?.documentStatus && filters.documentStatus !== "all") {
-    const today = new Date()
-    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)
+  if (filters?.documentStatus && filters.documentStatus !== 'all') {
+    const today = new Date();
+    const thirtyDaysFromNow = new Date(
+      today.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     switch (filters.documentStatus) {
-      case "expired":
+      case 'expired':
         query = query.or(
-          `id_card_expiry_date.lt.${today.toISOString()},passport_expiry_date.lt.${today.toISOString()}`,
-        )
-        break
-      case "expiring":
+          `id_card_expiry_date.lt.${today.toISOString()},passport_expiry_date.lt.${today.toISOString()}`
+        );
+        break;
+      case 'expiring':
         query = query.or(
-          `id_card_expiry_date.lte.${thirtyDaysFromNow.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()}`,
-        )
-        break
-      case "valid":
+          `id_card_expiry_date.lte.${thirtyDaysFromNow.toISOString()},passport_expiry_date.lte.${thirtyDaysFromNow.toISOString()}`
+        );
+        break;
+      case 'valid':
         query = query.and(
-          `id_card_expiry_date.gt.${thirtyDaysFromNow.toISOString()},passport_expiry_date.gt.${thirtyDaysFromNow.toISOString()}`,
-        )
-        break
+          `id_card_expiry_date.gt.${thirtyDaysFromNow.toISOString()},passport_expiry_date.gt.${thirtyDaysFromNow.toISOString()}`
+        );
+        break;
     }
   }
 
-  return query
+  return query;
 }
 ```
 
@@ -181,54 +190,54 @@ function buildPromoterQuery(supabaseClient: any, searchTerm?: string, filters?: 
 ```typescript
 // Enhanced error classification with better type safety
 function isRetryableError(error: any): boolean {
-  if (!error) return false
+  if (!error) return false;
 
-  const message = error.message?.toLowerCase() || ""
-  const code = error.code?.toString() || ""
+  const message = error.message?.toLowerCase() || '';
+  const code = error.code?.toString() || '';
 
   // Network errors
   const networkErrors = [
-    "network",
-    "fetch",
-    "connection",
-    "econnrefused",
-    "etimedout",
-    "dns",
-    "ssl",
-    "timeout",
-    "timed out",
-  ]
+    'network',
+    'fetch',
+    'connection',
+    'econnrefused',
+    'etimedout',
+    'dns',
+    'ssl',
+    'timeout',
+    'timed out',
+  ];
 
-  if (networkErrors.some((term) => message.includes(term))) {
-    return true
+  if (networkErrors.some(term => message.includes(term))) {
+    return true;
   }
 
   // HTTP 5xx errors (server errors)
-  if (code.startsWith("5")) {
-    return true
+  if (code.startsWith('5')) {
+    return true;
   }
 
   // Supabase specific retryable errors
-  const retryableCodes = ["PGRST301", "PGRST302"] // Rate limiting
+  const retryableCodes = ['PGRST301', 'PGRST302']; // Rate limiting
   if (retryableCodes.includes(code)) {
-    return true
+    return true;
   }
 
   // Check for specific error types that are not retryable
   const nonRetryablePatterns = [
-    "invalid input",
-    "validation error",
-    "unauthorized",
-    "forbidden",
-    "not found",
-    "bad request",
-  ]
+    'invalid input',
+    'validation error',
+    'unauthorized',
+    'forbidden',
+    'not found',
+    'bad request',
+  ];
 
-  if (nonRetryablePatterns.some((pattern) => message.includes(pattern))) {
-    return false
+  if (nonRetryablePatterns.some(pattern => message.includes(pattern))) {
+    return false;
   }
 
-  return false
+  return false;
 }
 ```
 
@@ -237,15 +246,15 @@ function isRetryableError(error: any): boolean {
 ```typescript
 // Enhanced error creation utility
 function createServiceError(error: any, context: string): ServiceError {
-  const message = error?.message || "Unknown error"
-  const code = error?.code || "UNKNOWN"
+  const message = error?.message || 'Unknown error';
+  const code = error?.code || 'UNKNOWN';
 
   return {
     message: `${context}: ${message}`,
     code,
     details: error,
     retryable: isRetryableError(error),
-  }
+  };
 }
 ```
 
@@ -270,22 +279,22 @@ function createServiceError(error: any, context: string): ServiceError {
 ```typescript
 // Standardized error response format
 export interface ServiceError {
-  message: string
-  code?: string
-  details?: any
-  retryable: boolean
+  message: string;
+  code?: string;
+  details?: any;
+  retryable: boolean;
 }
 
 // Example usage in functions
 export async function fetchPromotersWithPagination(
   params: PaginationParams,
   searchTerm?: string,
-  filters?: PromoterFilters,
+  filters?: PromoterFilters
 ): Promise<PaginatedResult<Promoter>> {
   try {
     return await withRetry(async () => {
       // ... implementation
-    })
+    });
   } catch (error: any) {
     return {
       data: [],
@@ -295,8 +304,8 @@ export async function fetchPromotersWithPagination(
       totalPages: 0,
       hasNext: false,
       hasPrev: false,
-      error: createServiceError(error, "Error fetching promoters"),
-    }
+      error: createServiceError(error, 'Error fetching promoters'),
+    };
   }
 }
 ```
@@ -428,33 +437,37 @@ export async function fetchPromotersWithPagination(
 
 ```typescript
 // Fetch promoters with pagination and error handling
-const result = await fetchPromotersWithPagination({ page: 1, limit: 10 }, "search term", {
-  status: "active",
-  documentStatus: "valid",
-})
+const result = await fetchPromotersWithPagination(
+  { page: 1, limit: 10 },
+  'search term',
+  {
+    status: 'active',
+    documentStatus: 'valid',
+  }
+);
 
 if (result.error) {
-  console.error("Error fetching promoters:", result.error.message)
+  console.error('Error fetching promoters:', result.error.message);
   // Handle error appropriately
 } else {
-  console.log(`Found ${result.total} promoters`)
+  console.log(`Found ${result.total} promoters`);
   // Process promoters
 }
 
 // Get performance stats with error handling
 try {
-  const stats = await getPromoterPerformanceStats()
-  console.log(`Total promoters: ${stats.total_promoters}`)
+  const stats = await getPromoterPerformanceStats();
+  console.log(`Total promoters: ${stats.total_promoters}`);
 } catch (error) {
-  console.error("Failed to get performance stats:", error.message)
+  console.error('Failed to get performance stats:', error.message);
 }
 
 // Export promoters with error handling
 try {
-  const csvContent = await exportPromotersToCSV("search", { status: "active" })
+  const csvContent = await exportPromotersToCSV('search', { status: 'active' });
   // Save CSV content
 } catch (error) {
-  console.error("Failed to export promoters:", error.message)
+  console.error('Failed to export promoters:', error.message);
 }
 ```
 
@@ -466,23 +479,23 @@ const params: PaginationParams = {
   page: 1,
   limit: 10,
   offset: 0,
-}
+};
 
 // Strict typing for filters
 const filters: PromoterFilters = {
-  status: "active",
-  documentStatus: "valid",
+  status: 'active',
+  documentStatus: 'valid',
   hasContracts: true,
-  overallStatus: "good",
-  workLocation: "Muscat",
-}
+  overallStatus: 'good',
+  workLocation: 'Muscat',
+};
 
 // Strict typing for analytics filters
 const analyticsFilters: PromoterAnalyticsFilters = {
-  status: "active",
-  overallStatus: "good",
-  workLocation: "Muscat",
-}
+  status: 'active',
+  overallStatus: 'good',
+  workLocation: 'Muscat',
+};
 ```
 
 ## Testing Strategy

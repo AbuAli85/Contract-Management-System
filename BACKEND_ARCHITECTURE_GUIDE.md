@@ -1,6 +1,7 @@
 # Role-Based Backend Architecture: Next.js + Make.com + Supabase
 
 ## Table of Contents
+
 1. [Architecture Overview](#architecture-overview)
 2. [Supabase Setup & Authentication](#supabase-setup--authentication)
 3. [Database Schema Design](#database-schema-design)
@@ -44,7 +45,7 @@ First, let's extend the default Supabase auth with custom roles:
 -- Create custom user roles enum
 CREATE TYPE user_role AS ENUM ('admin', 'client', 'provider', 'manager', 'user');
 
--- Create custom user status enum  
+-- Create custom user status enum
 CREATE TYPE user_status AS ENUM ('active', 'pending', 'inactive', 'suspended');
 
 -- Extend the default profiles table
@@ -98,7 +99,7 @@ BEGIN
     SELECT role INTO user_role_result
     FROM public.profiles
     WHERE id = user_id;
-    
+
     RETURN COALESCE(user_role_result, 'user'::user_role);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -131,7 +132,7 @@ BEGIN
         WHEN 'user' THEN 1
         ELSE 0
     END;
-    
+
     min_role_level := CASE min_role
         WHEN 'admin' THEN 5
         WHEN 'manager' THEN 4
@@ -140,7 +141,7 @@ BEGIN
         WHEN 'user' THEN 1
         ELSE 0
     END;
-    
+
     RETURN user_role_level >= min_role_level;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -187,38 +188,38 @@ CREATE TABLE public.bookings (
     provider_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
     booking_number TEXT UNIQUE NOT NULL,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'refunded')),
-    
+
     -- Booking details
     scheduled_start TIMESTAMP WITH TIME ZONE NOT NULL,
     scheduled_end TIMESTAMP WITH TIME ZONE NOT NULL,
     actual_start TIMESTAMP WITH TIME ZONE,
     actual_end TIMESTAMP WITH TIME ZONE,
-    
+
     -- Pricing
     quoted_price DECIMAL(10,2) NOT NULL,
     final_price DECIMAL(10,2),
     currency TEXT DEFAULT 'USD',
-    
+
     -- Client information
     client_name TEXT NOT NULL,
     client_email TEXT NOT NULL,
     client_phone TEXT,
     client_notes TEXT,
-    
+
     -- Service details
     service_details JSONB DEFAULT '{}',
     location_details JSONB DEFAULT '{}',
     participants INTEGER DEFAULT 1,
-    
+
     -- Payment tracking
     payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'partial', 'refunded', 'failed')),
     payment_method TEXT,
     payment_reference TEXT,
-    
+
     -- Automation tracking
     make_scenario_id TEXT, -- Track which Make.com scenario processed this
     webhook_responses JSONB DEFAULT '[]',
-    
+
     -- Metadata
     cancellation_reason TEXT,
     provider_notes TEXT,
@@ -436,10 +437,10 @@ BEGIN
     INSERT INTO public.webhook_logs (webhook_type, payload, status)
     VALUES (webhook_type, payload, 'pending')
     RETURNING id INTO log_id;
-    
+
     -- The actual webhook call will be handled by Make.com's database trigger
     -- or by Next.js API routes that call Make.com
-    
+
     RETURN log_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -470,10 +471,10 @@ BEGIN
         'status', NEW.status,
         'created_at', NEW.created_at
     );
-    
+
     -- Log the webhook
     PERFORM trigger_make_webhook('booking_created', webhook_payload);
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -501,10 +502,10 @@ BEGIN
             'service_id', NEW.service_id,
             'updated_at', NEW.updated_at
         );
-        
+
         PERFORM trigger_make_webhook('booking_status_changed', webhook_payload);
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -543,6 +544,7 @@ Here's the flow for a **New Booking Scenario**:
 ### 4. Make.com Webhook Configuration
 
 In Make.com, create these webhook URLs:
+
 - `https://hook.eu1.make.com/YOUR_WEBHOOK_ID/booking-created`
 - `https://hook.eu1.make.com/YOUR_WEBHOOK_ID/booking-status-changed`
 - `https://hook.eu1.make.com/YOUR_WEBHOOK_ID/service-created`

@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC PERMISSIONS TESTS
 // ========================================
@@ -156,24 +155,5 @@ describe('RBAC Permissions', () => {
     })
   })
 })
-=======
-import { describe, it, expect } from 'jest-without-globals'
-import { parsePermission } from '@/lib/rbac/permissions'
 
-describe('parsePermission', () => {
-  it('parses valid permission', () => {
-    expect(parsePermission('user:read:own')).toEqual({ resource: 'user', action: 'read', scope: 'own' })
-  })
-
-  it('throws on invalid format', () => {
-    expect(() => parsePermission('invalid')).toThrow()
-  })
-
-  it('throws on invalid scope', () => {
-    expect(() => parsePermission('user:read:invalid')).toThrow()
-  })
-})
-
-
->>>>>>> Stashed changes
 

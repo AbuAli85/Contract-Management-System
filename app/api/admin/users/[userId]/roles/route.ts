@@ -2,11 +2,11 @@
 // 🛡️ ADMIN USER ROLE ASSIGNMENT API
 // ========================================
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { guardPermission } from '@/lib/rbac/guard'
-import { auditLogger } from '@/lib/rbac/audit'
-import { permissionCache } from '@/lib/rbac/cache'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { guardPermission } from '@/lib/rbac/guard';
+import { auditLogger } from '@/lib/rbac/audit';
+import { permissionCache } from '@/lib/rbac/cache';
 
 /**
  * GET /api/admin/users/[userId]/roles
@@ -19,18 +19,19 @@ export async function GET(
 ) {
   try {
     // Check permission
-    const guardResult = await guardPermission('user:read:all', request)
+    const guardResult = await guardPermission('user:read:all', request);
     if (guardResult) {
-      return guardResult
+      return guardResult;
     }
 
-    const { userId } = params
-    const supabase = await createClient()
+    const { userId } = params;
+    const supabase = await createClient();
 
     // Get user's current role assignments
     const { data: roleAssignments, error: roleError } = await supabase
       .from('user_role_assignments')
-      .select(`
+      .select(
+        `
         id,
         role_id,
         assigned_by,
@@ -46,17 +47,18 @@ export async function GET(
           category,
           description
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('is_active', true)
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (roleError) {
-      console.error('🔐 RBAC: Error fetching user roles:', roleError)
+      console.error('🔐 RBAC: Error fetching user roles:', roleError);
       return NextResponse.json(
         { error: 'Failed to fetch user roles' },
         { status: 500 }
-      )
+      );
     }
 
     // Get user info
@@ -64,14 +66,11 @@ export async function GET(
       .from('users')
       .select('id, email, created_at')
       .eq('id', userId)
-      .single()
+      .single();
 
     if (userError) {
-      console.error('🔐 RBAC: Error fetching user:', userError)
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
+      console.error('🔐 RBAC: Error fetching user:', userError);
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -80,7 +79,7 @@ export async function GET(
         user: {
           id: user.id,
           email: user.email,
-          created_at: user.created_at
+          created_at: user.created_at,
         },
         roles: roleAssignments.map(ra => ({
           assignment_id: ra.id,
@@ -91,17 +90,20 @@ export async function GET(
           valid_until: ra.valid_until,
           is_active: ra.is_active,
           created_at: ra.created_at,
-          updated_at: ra.updated_at
+          updated_at: ra.updated_at,
         })),
-        total_roles: roleAssignments.length
-      }
-    })
+        total_roles: roleAssignments.length,
+      },
+    });
   } catch (error) {
-    console.error('🔐 RBAC: Error in GET /api/admin/users/[userId]/roles:', error)
+    console.error(
+      '🔐 RBAC: Error in GET /api/admin/users/[userId]/roles:',
+      error
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -116,32 +118,35 @@ export async function POST(
 ) {
   try {
     // Check permission
-    const guardResult = await guardPermission('role:assign:all', request)
+    const guardResult = await guardPermission('role:assign:all', request);
     if (guardResult) {
-      return guardResult
+      return guardResult;
     }
 
-    const { userId } = params
-    const body = await request.json()
-    const { role_id, context, valid_until, assigned_by } = body
+    const { userId } = params;
+    const body = await request.json();
+    const { role_id, context, valid_until, assigned_by } = body;
 
     // Validate required fields
     if (!role_id) {
       return NextResponse.json(
         { error: 'Role ID is required' },
         { status: 400 }
-      )
+      );
     }
 
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get current user (who is making the assignment)
-    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user: currentUser },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !currentUser) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
-      )
+      );
     }
 
     // Verify the role exists
@@ -149,13 +154,10 @@ export async function POST(
       .from('roles')
       .select('id, name, category')
       .eq('id', role_id)
-      .single()
+      .single();
 
     if (roleError || !role) {
-      return NextResponse.json(
-        { error: 'Role not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Role not found' }, { status: 404 });
     }
 
     // Verify the target user exists
@@ -163,13 +165,13 @@ export async function POST(
       .from('users')
       .select('id, email')
       .eq('id', userId)
-      .single()
+      .single();
 
     if (userError || !targetUser) {
       return NextResponse.json(
         { error: 'Target user not found' },
         { status: 404 }
-      )
+      );
     }
 
     // Check if role is already assigned
@@ -179,34 +181,39 @@ export async function POST(
       .eq('user_id', userId)
       .eq('role_id', role_id)
       .eq('is_active', true)
-      .single()
+      .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('🔐 RBAC: Error checking existing role assignment:', checkError)
+      console.error(
+        '🔐 RBAC: Error checking existing role assignment:',
+        checkError
+      );
       return NextResponse.json(
         { error: 'Failed to check existing role assignment' },
         { status: 500 }
-      )
+      );
     }
 
     if (existingAssignment) {
       return NextResponse.json(
         { error: 'User already has this role assigned' },
         { status: 409 }
-      )
+      );
     }
 
     // Get user's current roles for audit
     const { data: currentRoles, error: currentRolesError } = await supabase
       .from('user_role_assignments')
-      .select(`
+      .select(
+        `
         roles!inner(name)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('is_active', true)
-      .is('valid_until', null)
+      .is('valid_until', null);
 
-    const oldRoleNames = currentRoles?.map(r => r.roles.name) || []
+    const oldRoleNames = currentRoles?.map(r => r.roles.name) || [];
 
     // Create the role assignment
     const { data: newAssignment, error: createError } = await supabase
@@ -218,9 +225,10 @@ export async function POST(
         context: context || {},
         valid_from: new Date().toISOString(),
         valid_until: valid_until || null,
-        is_active: true
+        is_active: true,
       })
-      .select(`
+      .select(
+        `
         id,
         user_id,
         role_id,
@@ -231,19 +239,20 @@ export async function POST(
         is_active,
         created_at,
         updated_at
-      `)
-      .single()
+      `
+      )
+      .single();
 
     if (createError) {
-      console.error('🔐 RBAC: Error creating role assignment:', createError)
+      console.error('🔐 RBAC: Error creating role assignment:', createError);
       return NextResponse.json(
         { error: 'Failed to assign role' },
         { status: 500 }
-      )
+      );
     }
 
     // Get new role names for audit
-    const newRoleNames = [...oldRoleNames, role.name]
+    const newRoleNames = [...oldRoleNames, role.name];
 
     // Audit the role change
     try {
@@ -253,48 +262,57 @@ export async function POST(
         new_roles: newRoleNames,
         changed_by: currentUser.id,
         ip_address: auditLogger.constructor.getClientIP(request),
-        user_agent: auditLogger.constructor.getUserAgent(request)
-      })
+        user_agent: auditLogger.constructor.getUserAgent(request),
+      });
     } catch (auditError) {
-      console.warn('🔐 RBAC: Failed to audit role change:', auditError)
+      console.warn('🔐 RBAC: Failed to audit role change:', auditError);
     }
 
     // Invalidate user's permission cache
     try {
-      await permissionCache.invalidateUser(userId)
+      await permissionCache.invalidateUser(userId);
     } catch (cacheError) {
-      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError)
+      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError);
     }
 
     // Refresh materialized view
     try {
-      await supabase.rpc('refresh_user_permissions')
+      await supabase.rpc('refresh_user_permissions');
     } catch (refreshError) {
-      console.warn('🔐 RBAC: Failed to refresh materialized view:', refreshError)
+      console.warn(
+        '🔐 RBAC: Failed to refresh materialized view:',
+        refreshError
+      );
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        assignment: newAssignment,
-        role: {
-          id: role.id,
-          name: role.name,
-          category: role.category
+    return NextResponse.json(
+      {
+        success: true,
+        data: {
+          assignment: newAssignment,
+          role: {
+            id: role.id,
+            name: role.name,
+            category: role.category,
+          },
+          user: {
+            id: targetUser.id,
+            email: targetUser.email,
+          },
         },
-        user: {
-          id: targetUser.id,
-          email: targetUser.email
-        }
+        message: 'Role assigned successfully',
       },
-      message: 'Role assigned successfully'
-    }, { status: 201 })
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('🔐 RBAC: Error in POST /api/admin/users/[userId]/roles:', error)
+    console.error(
+      '🔐 RBAC: Error in POST /api/admin/users/[userId]/roles:',
+      error
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -309,71 +327,79 @@ export async function DELETE(
 ) {
   try {
     // Check permission
-    const guardResult = await guardPermission('role:assign:all', request)
+    const guardResult = await guardPermission('role:assign:all', request);
     if (guardResult) {
-      return guardResult
+      return guardResult;
     }
 
-    const { userId } = params
-    const { searchParams } = new URL(request.url)
-    const roleId = searchParams.get('role_id')
+    const { userId } = params;
+    const { searchParams } = new URL(request.url);
+    const roleId = searchParams.get('role_id');
 
     if (!roleId) {
       return NextResponse.json(
         { error: 'Role ID is required as query parameter' },
         { status: 400 }
-      )
+      );
     }
 
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get current user (who is making the removal)
-    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user: currentUser },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !currentUser) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
-      )
+      );
     }
 
     // Get user's current roles for audit
     const { data: currentRoles, error: currentRolesError } = await supabase
       .from('user_role_assignments')
-      .select(`
+      .select(
+        `
         roles!inner(name)
-      `)
+      `
+      )
       .eq('user_id', userId)
       .eq('is_active', true)
-      .is('valid_until', null)
+      .is('valid_until', null);
 
-    const oldRoleNames = currentRoles?.map(r => r.roles.name) || []
+    const oldRoleNames = currentRoles?.map(r => r.roles.name) || [];
 
     // Deactivate the role assignment
     const { data: updatedAssignment, error: updateError } = await supabase
       .from('user_role_assignments')
       .update({
         is_active: false,
-        valid_until: new Date().toISOString()
+        valid_until: new Date().toISOString(),
       })
       .eq('user_id', userId)
       .eq('role_id', roleId)
       .eq('is_active', true)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      console.error('🔐 RBAC: Error deactivating role assignment:', updateError)
+      console.error(
+        '🔐 RBAC: Error deactivating role assignment:',
+        updateError
+      );
       return NextResponse.json(
         { error: 'Failed to remove role' },
         { status: 500 }
-      )
+      );
     }
 
     if (!updatedAssignment) {
       return NextResponse.json(
         { error: 'Role assignment not found or already inactive' },
         { status: 404 }
-      )
+      );
     }
 
     // Get role name for audit
@@ -381,10 +407,10 @@ export async function DELETE(
       .from('roles')
       .select('name')
       .eq('id', roleId)
-      .single()
+      .single();
 
-    const roleName = role?.name || 'Unknown'
-    const newRoleNames = oldRoleNames.filter(name => name !== roleName)
+    const roleName = role?.name || 'Unknown';
+    const newRoleNames = oldRoleNames.filter(name => name !== roleName);
 
     // Audit the role change
     try {
@@ -394,39 +420,45 @@ export async function DELETE(
         new_roles: newRoleNames,
         changed_by: currentUser.id,
         ip_address: auditLogger.constructor.getClientIP(request),
-        user_agent: auditLogger.constructor.getUserAgent(request)
-      })
+        user_agent: auditLogger.constructor.getUserAgent(request),
+      });
     } catch (auditError) {
-      console.warn('🔐 RBAC: Failed to audit role change:', auditError)
+      console.warn('🔐 RBAC: Failed to audit role change:', auditError);
     }
 
     // Invalidate user's permission cache
     try {
-      await permissionCache.invalidateUser(userId)
+      await permissionCache.invalidateUser(userId);
     } catch (cacheError) {
-      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError)
+      console.warn('🔐 RBAC: Failed to invalidate user cache:', cacheError);
     }
 
     // Refresh materialized view
     try {
-      await supabase.rpc('refresh_user_permissions')
+      await supabase.rpc('refresh_user_permissions');
     } catch (refreshError) {
-      console.warn('🔐 RBAC: Failed to refresh materialized view:', refreshError)
+      console.warn(
+        '🔐 RBAC: Failed to refresh materialized view:',
+        refreshError
+      );
     }
 
     return NextResponse.json({
       success: true,
       data: {
         removed_role: roleName,
-        user_id: userId
+        user_id: userId,
       },
-      message: 'Role removed successfully'
-    })
+      message: 'Role removed successfully',
+    });
   } catch (error) {
-    console.error('🔐 RBAC: Error in DELETE /api/admin/users/[userId]/roles:', error)
+    console.error(
+      '🔐 RBAC: Error in DELETE /api/admin/users/[userId]/roles:',
+      error
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 }

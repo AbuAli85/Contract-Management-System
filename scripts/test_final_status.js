@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,36 +16,36 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            isJson: true
+            isJson: true,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data.substring(0, 200) + '...',
-            isJson: false
+            isJson: false,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -65,7 +66,7 @@ async function testFinalStatus() {
     '/api/dashboard/stats',
     '/api/dashboard/notifications',
     '/api/dashboard/activities',
-    '/api/health'
+    '/api/health',
   ];
 
   let passedTests = 0;
@@ -75,24 +76,30 @@ async function testFinalStatus() {
     try {
       console.log(`🔍 Testing: ${endpoint}`);
       const result = await makeRequest(`${BASE_URL}${endpoint}`);
-      
+
       if (result.status === 200) {
         console.log(`✅ ${endpoint} - Status: ${result.status} (PASS)`);
         passedTests++;
-        
+
         if (result.isJson && result.data) {
           if (endpoint === '/api/dashboard/stats') {
-            console.log(`   📊 Data: ${result.data.totalPromoters} promoters, ${result.data.totalParties} parties`);
+            console.log(
+              `   📊 Data: ${result.data.totalPromoters} promoters, ${result.data.totalParties} parties`
+            );
           } else if (Array.isArray(result.data)) {
             console.log(`   📊 Items: ${result.data.length}`);
           }
         }
       } else if (result.status === 401) {
-        console.log(`🔐 ${endpoint} - Status: ${result.status} (Authentication required)`);
+        console.log(
+          `🔐 ${endpoint} - Status: ${result.status} (Authentication required)`
+        );
       } else if (result.status === 500) {
         console.log(`❌ ${endpoint} - Status: ${result.status} (FAIL)`);
       } else if (result.status === 503) {
-        console.log(`⚠️ ${endpoint} - Status: ${result.status} (Service unavailable)`);
+        console.log(
+          `⚠️ ${endpoint} - Status: ${result.status} (Service unavailable)`
+        );
       } else {
         console.log(`⚠️ ${endpoint} - Status: ${result.status}`);
       }
@@ -105,19 +112,23 @@ async function testFinalStatus() {
   console.log('📋 Final Results:');
   console.log(`✅ Passed: ${passedTests}/${totalTests} tests`);
   console.log(`❌ Failed: ${totalTests - passedTests}/${totalTests} tests`);
-  
+
   if (passedTests === totalTests) {
     console.log('\n🎉 ALL TESTS PASSED! Dashboard is fully functional!');
     console.log('✅ Dashboard data is working correctly');
     console.log('✅ All API endpoints are responding');
     console.log('✅ Real data is being displayed (158 promoters, 16 parties)');
   } else if (passedTests >= 3) {
-    console.log('\n✅ MOSTLY WORKING! Dashboard is functional with minor issues');
+    console.log(
+      '\n✅ MOSTLY WORKING! Dashboard is functional with minor issues'
+    );
     console.log('✅ Core dashboard functionality is working');
     console.log('✅ Real data is being displayed');
     console.log('⚠️ Some minor endpoints may have issues');
   } else {
-    console.log('\n❌ NEEDS ATTENTION! Some dashboard features are not working');
+    console.log(
+      '\n❌ NEEDS ATTENTION! Some dashboard features are not working'
+    );
     console.log('⚠️ Core functionality may be affected');
   }
 
@@ -128,4 +139,4 @@ async function testFinalStatus() {
   console.log('4. Dashboard should display real data without errors');
 }
 
-testFinalStatus().catch(console.error); 
+testFinalStatus().catch(console.error);

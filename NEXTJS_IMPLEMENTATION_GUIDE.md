@@ -6,34 +6,37 @@
 
 ```typescript
 // lib/auth-middleware.ts
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { NextRequest, NextResponse } from 'next/server'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
-export type UserRole = 'admin' | 'client' | 'provider' | 'manager' | 'user'
+export type UserRole = 'admin' | 'client' | 'provider' | 'manager' | 'user';
 
 export interface AuthContext {
-  user: any
-  profile: any
-  role: UserRole
+  user: any;
+  profile: any;
+  role: UserRole;
 }
 
 export async function withAuth(
   handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
   options: {
-    requiredRole?: UserRole
-    allowedRoles?: UserRole[]
+    requiredRole?: UserRole;
+    allowedRoles?: UserRole[];
   } = {}
 ) {
   return async (req: NextRequest) => {
     try {
-      const supabase = createServerComponentClient({ cookies })
-      
+      const supabase = createServerComponentClient({ cookies });
+
       // Get session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-      
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
       if (sessionError || !session) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
       // Get user profile with role
@@ -41,34 +44,49 @@ export async function withAuth(
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
-        .single()
+        .single();
 
       if (profileError || !profile) {
-        return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+        return NextResponse.json(
+          { error: 'Profile not found' },
+          { status: 404 }
+        );
       }
 
       // Check role requirements
       if (options.requiredRole && profile.role !== options.requiredRole) {
-        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'Insufficient permissions' },
+          { status: 403 }
+        );
       }
 
-      if (options.allowedRoles && !options.allowedRoles.includes(profile.role)) {
-        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      if (
+        options.allowedRoles &&
+        !options.allowedRoles.includes(profile.role)
+      ) {
+        return NextResponse.json(
+          { error: 'Insufficient permissions' },
+          { status: 403 }
+        );
       }
 
       // Create auth context
       const context: AuthContext = {
         user: session.user,
         profile,
-        role: profile.role
-      }
+        role: profile.role,
+      };
 
-      return handler(req, context)
+      return handler(req, context);
     } catch (error) {
-      console.error('Auth middleware error:', error)
-      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+      console.error('Auth middleware error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
     }
-  }
+  };
 }
 ```
 
@@ -76,216 +94,257 @@ export async function withAuth(
 
 ```typescript
 // app/api/bookings/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { withAuth } from '@/lib/auth-middleware'
+import { NextRequest, NextResponse } from 'next/server';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { withAuth } from '@/lib/auth-middleware';
 
 // GET /api/bookings - Get user's bookings based on role
-export const GET = withAuth(async (req: NextRequest, context) => {
-  const supabase = createServerComponentClient({ cookies })
-  const { searchParams } = new URL(req.url)
-  const status = searchParams.get('status')
-  const limit = parseInt(searchParams.get('limit') || '10')
-  const offset = parseInt(searchParams.get('offset') || '0')
+export const GET = withAuth(
+  async (req: NextRequest, context) => {
+    const supabase = createServerComponentClient({ cookies });
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get('status');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-  let query = supabase.from('bookings').select(`
+    let query = supabase.from('bookings').select(`
     *,
     service:services(title, category, provider_id),
     client:profiles!client_id(full_name, email),
     provider:profiles!provider_id(full_name, email, company_name)
-  `)
+  `);
 
-  // Apply role-based filtering (RLS handles this, but we can optimize queries)
-  switch (context.role) {
-    case 'client':
-      query = query.eq('client_id', context.user.id)
-      break
-    case 'provider':
-      query = query.eq('provider_id', context.user.id)
-      break
-    case 'admin':
-    case 'manager':
-      // No additional filtering - can see all bookings
-      break
-    default:
-      return NextResponse.json({ error: 'Invalid role' }, { status: 403 })
-  }
+    // Apply role-based filtering (RLS handles this, but we can optimize queries)
+    switch (context.role) {
+      case 'client':
+        query = query.eq('client_id', context.user.id);
+        break;
+      case 'provider':
+        query = query.eq('provider_id', context.user.id);
+        break;
+      case 'admin':
+      case 'manager':
+        // No additional filtering - can see all bookings
+        break;
+      default:
+        return NextResponse.json({ error: 'Invalid role' }, { status: 403 });
+    }
 
-  if (status) {
-    query = query.eq('status', status)
-  }
+    if (status) {
+      query = query.eq('status', status);
+    }
 
-  const { data: bookings, error } = await query
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+    const { data: bookings, error } = await query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (error) {
-    console.error('Error fetching bookings:', error)
-    return NextResponse.json({ error: 'Failed to fetch bookings' }, { status: 500 })
-  }
+    if (error) {
+      console.error('Error fetching bookings:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch bookings' },
+        { status: 500 }
+      );
+    }
 
-  return NextResponse.json({ bookings })
-}, { allowedRoles: ['client', 'provider', 'manager', 'admin'] })
+    return NextResponse.json({ bookings });
+  },
+  { allowedRoles: ['client', 'provider', 'manager', 'admin'] }
+);
 
 // POST /api/bookings - Create new booking
-export const POST = withAuth(async (req: NextRequest, context) => {
-  const supabase = createServerComponentClient({ cookies })
-  
-  try {
-    const body = await req.json()
-    const {
-      service_id,
-      scheduled_start,
-      scheduled_end,
-      client_name,
-      client_email,
-      client_phone,
-      client_notes,
-      participants = 1
-    } = body
+export const POST = withAuth(
+  async (req: NextRequest, context) => {
+    const supabase = createServerComponentClient({ cookies });
 
-    // Validate required fields
-    if (!service_id || !scheduled_start || !scheduled_end || !client_name || !client_email) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+    try {
+      const body = await req.json();
+      const {
+        service_id,
+        scheduled_start,
+        scheduled_end,
+        client_name,
+        client_email,
+        client_phone,
+        client_notes,
+        participants = 1,
+      } = body;
 
-    // Get service details to validate and get provider
-    const { data: service, error: serviceError } = await supabase
-      .from('services')
-      .select('*, provider:profiles!provider_id(full_name, email)')
-      .eq('id', service_id)
-      .eq('status', 'active')
-      .single()
+      // Validate required fields
+      if (
+        !service_id ||
+        !scheduled_start ||
+        !scheduled_end ||
+        !client_name ||
+        !client_email
+      ) {
+        return NextResponse.json(
+          { error: 'Missing required fields' },
+          { status: 400 }
+        );
+      }
 
-    if (serviceError || !service) {
-      return NextResponse.json({ error: 'Service not found or inactive' }, { status: 404 })
-    }
+      // Get service details to validate and get provider
+      const { data: service, error: serviceError } = await supabase
+        .from('services')
+        .select('*, provider:profiles!provider_id(full_name, email)')
+        .eq('id', service_id)
+        .eq('status', 'active')
+        .single();
 
-    // Create booking
-    const bookingData = {
-      service_id,
-      client_id: context.user.id,
-      provider_id: service.provider_id,
-      scheduled_start,
-      scheduled_end,
-      quoted_price: service.base_price,
-      client_name,
-      client_email,
-      client_phone,
-      client_notes,
-      participants,
-      status: 'pending',
-      currency: service.currency || 'USD'
-    }
+      if (serviceError || !service) {
+        return NextResponse.json(
+          { error: 'Service not found or inactive' },
+          { status: 404 }
+        );
+      }
 
-    const { data: booking, error: bookingError } = await supabase
-      .from('bookings')
-      .insert(bookingData)
-      .select(`
+      // Create booking
+      const bookingData = {
+        service_id,
+        client_id: context.user.id,
+        provider_id: service.provider_id,
+        scheduled_start,
+        scheduled_end,
+        quoted_price: service.base_price,
+        client_name,
+        client_email,
+        client_phone,
+        client_notes,
+        participants,
+        status: 'pending',
+        currency: service.currency || 'USD',
+      };
+
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings')
+        .insert(bookingData)
+        .select(
+          `
         *,
         service:services(title, category),
         provider:profiles!provider_id(full_name, email, company_name)
-      `)
-      .single()
+      `
+        )
+        .single();
 
-    if (bookingError) {
-      console.error('Error creating booking:', bookingError)
-      return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
+      if (bookingError) {
+        console.error('Error creating booking:', bookingError);
+        return NextResponse.json(
+          { error: 'Failed to create booking' },
+          { status: 500 }
+        );
+      }
+
+      // Trigger Make.com webhook manually if needed
+      await triggerMakeWebhook('booking_created', {
+        booking_id: booking.id,
+        booking_number: booking.booking_number,
+        service: service,
+        client: context.profile,
+        provider: service.provider,
+      });
+
+      return NextResponse.json({ booking }, { status: 201 });
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
     }
-
-    // Trigger Make.com webhook manually if needed
-    await triggerMakeWebhook('booking_created', {
-      booking_id: booking.id,
-      booking_number: booking.booking_number,
-      service: service,
-      client: context.profile,
-      provider: service.provider
-    })
-
-    return NextResponse.json({ booking }, { status: 201 })
-  } catch (error) {
-    console.error('Booking creation error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}, { allowedRoles: ['client', 'admin'] })
+  },
+  { allowedRoles: ['client', 'admin'] }
+);
 ```
 
 ### 3. Services API Routes
 
 ```typescript
 // app/api/services/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import { withAuth } from '@/lib/auth-middleware'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/auth-middleware';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // GET /api/services - Get services based on role and filters
 export const GET = async (req: NextRequest) => {
-  const supabase = createServerComponentClient({ cookies })
-  const { searchParams } = new URL(req.url)
-  
-  const category = searchParams.get('category')
-  const provider_id = searchParams.get('provider_id')
-  const featured = searchParams.get('featured') === 'true'
-  const location = searchParams.get('location')
-  const limit = parseInt(searchParams.get('limit') || '20')
-  const offset = parseInt(searchParams.get('offset') || '0')
+  const supabase = createServerComponentClient({ cookies });
+  const { searchParams } = new URL(req.url);
+
+  const category = searchParams.get('category');
+  const provider_id = searchParams.get('provider_id');
+  const featured = searchParams.get('featured') === 'true';
+  const location = searchParams.get('location');
+  const limit = parseInt(searchParams.get('limit') || '20');
+  const offset = parseInt(searchParams.get('offset') || '0');
 
   let query = supabase.from('services').select(`
     *,
     provider:profiles!provider_id(full_name, company_name, avatar_url)
-  `)
+  `);
 
   // Public endpoint - only show active services
-  query = query.eq('status', 'active')
+  query = query.eq('status', 'active');
 
-  if (category) query = query.eq('category', category)
-  if (provider_id) query = query.eq('provider_id', provider_id)
-  if (featured) query = query.eq('featured', true)
+  if (category) query = query.eq('category', category);
+  if (provider_id) query = query.eq('provider_id', provider_id);
+  if (featured) query = query.eq('featured', true);
   if (location) {
-    query = query.contains('service_area', [location])
+    query = query.contains('service_area', [location]);
   }
 
   const { data: services, error } = await query
     .order('featured', { ascending: false })
     .order('rating', { ascending: false })
-    .range(offset, offset + limit - 1)
+    .range(offset, offset + limit - 1);
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to fetch services' },
+      { status: 500 }
+    );
   }
 
-  return NextResponse.json({ services })
-}
+  return NextResponse.json({ services });
+};
 
 // POST /api/services - Create new service (providers only)
-export const POST = withAuth(async (req: NextRequest, context) => {
-  const supabase = createServerComponentClient({ cookies })
-  
-  try {
-    const body = await req.json()
-    const serviceData = {
-      ...body,
-      provider_id: context.user.id,
-      status: 'draft' // New services start as draft
+export const POST = withAuth(
+  async (req: NextRequest, context) => {
+    const supabase = createServerComponentClient({ cookies });
+
+    try {
+      const body = await req.json();
+      const serviceData = {
+        ...body,
+        provider_id: context.user.id,
+        status: 'draft', // New services start as draft
+      };
+
+      const { data: service, error } = await supabase
+        .from('services')
+        .insert(serviceData)
+        .select('*')
+        .single();
+
+      if (error) {
+        return NextResponse.json(
+          { error: 'Failed to create service' },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ service }, { status: 201 });
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
     }
-
-    const { data: service, error } = await supabase
-      .from('services')
-      .insert(serviceData)
-      .select('*')
-      .single()
-
-    if (error) {
-      return NextResponse.json({ error: 'Failed to create service' }, { status: 500 })
-    }
-
-    return NextResponse.json({ service }, { status: 201 })
-  } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}, { allowedRoles: ['provider', 'admin'] })
+  },
+  { allowedRoles: ['provider', 'admin'] }
+);
 ```
 
 ### 4. Make.com Webhook Helper
@@ -297,14 +356,14 @@ export async function triggerMakeWebhook(event: string, data: any) {
     booking_created: process.env.MAKE_WEBHOOK_BOOKING_CREATED,
     booking_status_changed: process.env.MAKE_WEBHOOK_BOOKING_STATUS,
     service_created: process.env.MAKE_WEBHOOK_SERVICE_CREATED,
-    user_registered: process.env.MAKE_WEBHOOK_USER_REGISTERED
-  }
+    user_registered: process.env.MAKE_WEBHOOK_USER_REGISTERED,
+  };
 
-  const webhookUrl = webhookUrls[event as keyof typeof webhookUrls]
-  
+  const webhookUrl = webhookUrls[event as keyof typeof webhookUrls];
+
   if (!webhookUrl) {
-    console.warn(`No webhook URL configured for event: ${event}`)
-    return
+    console.warn(`No webhook URL configured for event: ${event}`);
+    return;
   }
 
   try {
@@ -316,17 +375,20 @@ export async function triggerMakeWebhook(event: string, data: any) {
       body: JSON.stringify({
         event,
         data,
-        timestamp: new Date().toISOString()
-      })
-    })
+        timestamp: new Date().toISOString(),
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`Webhook failed: ${response.status}`)
+      throw new Error(`Webhook failed: ${response.status}`);
     }
 
-    console.log(`Make.com webhook triggered successfully for event: ${event}`)
+    console.log(`Make.com webhook triggered successfully for event: ${event}`);
   } catch (error) {
-    console.error(`Failed to trigger Make.com webhook for event ${event}:`, error)
+    console.error(
+      `Failed to trigger Make.com webhook for event ${event}:`,
+      error
+    );
   }
 }
 ```
@@ -337,82 +399,80 @@ export async function triggerMakeWebhook(event: string, data: any) {
 
 ```typescript
 // hooks/use-dashboard-data.ts
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth-service'
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-service';
 
 interface DashboardData {
-  bookings: any[]
-  services: any[]
-  notifications: any[]
-  stats: any
+  bookings: any[];
+  services: any[];
+  notifications: any[];
+  stats: any;
 }
 
 export function useDashboardData() {
-  const { user, profile } = useAuth()
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { user, profile } = useAuth();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDashboardData() {
-      if (!user || !profile) return
+      if (!user || !profile) return;
 
       try {
-        setLoading(true)
-        setError(null)
+        setLoading(true);
+        setError(null);
 
         // Fetch role-specific data
         const endpoints = {
           client: [
             '/api/bookings?limit=5',
             '/api/services?featured=true&limit=6',
-            '/api/notifications?limit=5'
+            '/api/notifications?limit=5',
           ],
           provider: [
             '/api/bookings?limit=10',
             '/api/services?provider_id=' + user.id,
-            '/api/notifications?limit=5'
+            '/api/notifications?limit=5',
           ],
           admin: [
             '/api/admin/dashboard-stats',
             '/api/bookings?limit=10',
-            '/api/notifications?limit=10'
+            '/api/notifications?limit=10',
           ],
           manager: [
             '/api/manager/team-stats',
             '/api/bookings?limit=10',
-            '/api/notifications?limit=5'
+            '/api/notifications?limit=5',
           ],
-          user: [
-            '/api/bookings?limit=5',
-            '/api/notifications?limit=5'
-          ]
-        }
+          user: ['/api/bookings?limit=5', '/api/notifications?limit=5'],
+        };
 
-        const userEndpoints = endpoints[profile.role as keyof typeof endpoints] || endpoints.user
+        const userEndpoints =
+          endpoints[profile.role as keyof typeof endpoints] || endpoints.user;
 
         const responses = await Promise.all(
           userEndpoints.map(endpoint => fetch(endpoint).then(res => res.json()))
-        )
+        );
 
         setData({
           bookings: responses[0]?.bookings || [],
           services: responses[1]?.services || [],
           notifications: responses[2]?.notifications || [],
-          stats: responses[0]?.stats || {}
-        })
+          stats: responses[0]?.stats || {},
+        });
       } catch (err) {
-        setError('Failed to fetch dashboard data')
-        console.error('Dashboard data fetch error:', err)
+        setError('Failed to fetch dashboard data');
+        console.error('Dashboard data fetch error:', err);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchDashboardData()
-  }, [user, profile])
+    fetchDashboardData();
+  }, [user, profile]);
 
-  return { data, loading, error, refetch: () => fetchDashboardData() }
+  return { data, loading, error, refetch: () => fetchDashboardData() };
 }
 ```
 
@@ -467,7 +527,7 @@ export function BookingForm({ service, onSuccess }: BookingFormProps) {
       }
 
       const { booking } = await response.json()
-      
+
       toast({
         title: 'Booking Created!',
         description: `Your booking ${booking.booking_number} has been submitted.`,
@@ -583,10 +643,10 @@ export function ServiceManagement() {
 
   const fetchServices = async () => {
     try {
-      const endpoint = profile?.role === 'provider' 
+      const endpoint = profile?.role === 'provider'
         ? `/api/services?provider_id=${profile.id}`
         : '/api/services'
-        
+
       const response = await fetch(endpoint)
       const data = await response.json()
       setServices(data.services || [])
@@ -651,16 +711,16 @@ export function ServiceManagement() {
                 {profile?.role === 'provider' && (
                   <div className="space-x-2">
                     {service.status === 'draft' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateServiceStatus(service.id, 'active')}
                       >
                         Publish
                       </Button>
                     )}
                     {service.status === 'active' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => updateServiceStatus(service.id, 'paused')}
                       >
@@ -687,7 +747,9 @@ export function ServiceManagement() {
 // Example: Complete booking workflow from client perspective
 
 // 1. Client browses services
-const services = await fetch('/api/services?category=consulting').then(r => r.json())
+const services = await fetch('/api/services?category=consulting').then(r =>
+  r.json()
+);
 
 // 2. Client creates booking
 const booking = await fetch('/api/bookings', {
@@ -699,9 +761,9 @@ const booking = await fetch('/api/bookings', {
     scheduled_end: '2024-08-15T11:00:00Z',
     client_name: 'John Doe',
     client_email: 'john@example.com',
-    client_notes: 'First time consultation'
-  })
-}).then(r => r.json())
+    client_notes: 'First time consultation',
+  }),
+}).then(r => r.json());
 
 // 3. This triggers:
 //    - Database insert with RLS protection
@@ -714,8 +776,8 @@ const booking = await fetch('/api/bookings', {
 await fetch(`/api/bookings/${booking.id}`, {
   method: 'PATCH',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ status: 'confirmed' })
-})
+  body: JSON.stringify({ status: 'confirmed' }),
+});
 
 // 5. Status change triggers more Make.com workflows
 ```

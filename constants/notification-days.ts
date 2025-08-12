@@ -6,41 +6,43 @@ export const PROMOTER_NOTIFICATION_DAYS = {
   PASSPORT_EXPIRY: 60,
   CONTRACT_EXPIRY: 7,
   DOCUMENT_EXPIRY: 14,
-} as const
+} as const;
 
 // Company/Party document notification days (if different from promoters)
 export const COMPANY_NOTIFICATION_DAYS = {
-  CR_EXPIRY: 30,         // Days before CR expiry to notify (company documents)
-  LICENSE_EXPIRY: 30,    // Days before license expiry to notify (company documents)
-} as const
+  CR_EXPIRY: 30, // Days before CR expiry to notify (company documents)
+  LICENSE_EXPIRY: 30, // Days before license expiry to notify (company documents)
+} as const;
 
 // Contract notification days
 export const CONTRACT_NOTIFICATION_DAYS = {
-  EXPIRY: 30,            // Days before contract expiry to notify
-  RENEWAL: 60,           // Days before contract renewal to notify
-} as const
+  EXPIRY: 30, // Days before contract expiry to notify
+  RENEWAL: 60, // Days before contract renewal to notify
+} as const;
 
 // Default notification days for different document types
 export const DEFAULT_NOTIFICATION_DAYS = {
   ...PROMOTER_NOTIFICATION_DAYS,
   ...COMPANY_NOTIFICATION_DAYS,
   ...CONTRACT_NOTIFICATION_DAYS,
-} as const
+} as const;
 
 // Helper function to get notification days for a specific document type
-export function getNotificationDays(documentType: 'id' | 'passport' | 'cr' | 'license' | 'contract'): number {
+export function getNotificationDays(
+  documentType: 'id' | 'passport' | 'cr' | 'license' | 'contract'
+): number {
   switch (documentType) {
     case 'id':
-      return PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY
+      return PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY;
     case 'passport':
-      return PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY
+      return PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY;
     case 'cr':
-      return COMPANY_NOTIFICATION_DAYS.CR_EXPIRY
+      return COMPANY_NOTIFICATION_DAYS.CR_EXPIRY;
     case 'license':
-      return COMPANY_NOTIFICATION_DAYS.LICENSE_EXPIRY
+      return COMPANY_NOTIFICATION_DAYS.LICENSE_EXPIRY;
     case 'contract':
-      return CONTRACT_NOTIFICATION_DAYS.EXPIRY
+      return CONTRACT_NOTIFICATION_DAYS.EXPIRY;
     default:
-      return 30 // Fallback default
+      return 30; // Fallback default
   }
-} 
+}

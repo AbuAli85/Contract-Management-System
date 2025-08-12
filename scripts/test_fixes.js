@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,36 +16,36 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            isJson: true
+            isJson: true,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data.substring(0, 200) + '...',
-            isJson: false
+            isJson: false,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -65,14 +66,14 @@ async function testFixes() {
     '/api/dashboard/stats',
     '/api/dashboard/notifications',
     '/api/dashboard/activities',
-    '/api/health'
+    '/api/health',
   ];
 
   for (const endpoint of endpoints) {
     try {
       console.log(`🔍 Testing: ${endpoint}`);
       const result = await makeRequest(`${BASE_URL}${endpoint}`);
-      
+
       if (result.status === 200) {
         console.log(`✅ ${endpoint} - Status: ${result.status} (Fixed!)`);
         if (result.isJson && result.data) {
@@ -80,15 +81,23 @@ async function testFixes() {
             console.log(`   Items: ${result.data.length}`);
           } else if (typeof result.data === 'object') {
             const keys = Object.keys(result.data);
-            console.log(`   Keys: ${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}`);
+            console.log(
+              `   Keys: ${keys.slice(0, 5).join(', ')}${keys.length > 5 ? '...' : ''}`
+            );
           }
         }
       } else if (result.status === 401) {
-        console.log(`🔐 ${endpoint} - Status: ${result.status} (Authentication required)`);
+        console.log(
+          `🔐 ${endpoint} - Status: ${result.status} (Authentication required)`
+        );
       } else if (result.status === 500) {
-        console.log(`❌ ${endpoint} - Status: ${result.status} (Still failing)`);
+        console.log(
+          `❌ ${endpoint} - Status: ${result.status} (Still failing)`
+        );
       } else if (result.status === 503) {
-        console.log(`⚠️ ${endpoint} - Status: ${result.status} (Service unavailable)`);
+        console.log(
+          `⚠️ ${endpoint} - Status: ${result.status} (Service unavailable)`
+        );
       } else {
         console.log(`⚠️ ${endpoint} - Status: ${result.status}`);
       }
@@ -105,4 +114,4 @@ async function testFixes() {
   console.log('- The main dashboard data should now be working correctly!');
 }
 
-testFixes().catch(console.error); 
+testFixes().catch(console.error);

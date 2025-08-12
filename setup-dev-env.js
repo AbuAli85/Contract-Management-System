@@ -35,16 +35,26 @@ BUILD_ID=dev-$(date +%s)
 
 if (fs.existsSync(envPath)) {
   console.log('⚠️  .env.local already exists. Skipping creation.');
-  console.log('📝 Please update your .env.local file with real Supabase credentials.');
+  console.log(
+    '📝 Please update your .env.local file with real Supabase credentials.'
+  );
 } else {
   fs.writeFileSync(envPath, envContent);
   console.log('✅ Created .env.local file');
-  console.log('📝 Please update the Supabase credentials in .env.local with your actual values');
+  console.log(
+    '📝 Please update the Supabase credentials in .env.local with your actual values'
+  );
 }
 
 console.log('\n📋 Next steps:');
-console.log('1. Get your Supabase project URL and anon key from your Supabase dashboard');
-console.log('2. Update NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local');
+console.log(
+  '1. Get your Supabase project URL and anon key from your Supabase dashboard'
+);
+console.log(
+  '2. Update NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local'
+);
 console.log('3. Restart the development server: npm run dev');
 console.log('\n🔗 Supabase Dashboard: https://supabase.com/dashboard');
-console.log('\n💡 For development without Supabase, the app will work in "safe mode"'); 
+console.log(
+  '\n💡 For development without Supabase, the app will work in "safe mode"'
+);

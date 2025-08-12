@@ -1,18 +1,18 @@
-"use client"
+'use client';
 
-import { useState, useEffect, useMemo, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -20,8 +20,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Checkbox } from "@/components/ui/checkbox"
+} from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   UserPlus,
   Edit,
@@ -39,50 +39,54 @@ import {
   ChevronRight,
   ChevronDown,
   ChevronUp,
-} from "lucide-react"
-import { useUserManagement, type User, type UserFilters } from "@/hooks/use-user-management"
-import { UserProfileModal } from "./user-profile-modal"
-import { useToast } from "@/hooks/use-toast"
-import { getRoleDisplay, ROLE_HIERARCHY } from "@/lib/role-hierarchy"
-import { usePermissions } from "@/hooks/use-permissions"
+} from 'lucide-react';
+import {
+  useUserManagement,
+  type User,
+  type UserFilters,
+} from '@/hooks/use-user-management';
+import { UserProfileModal } from './user-profile-modal';
+import { useToast } from '@/hooks/use-toast';
+import { getRoleDisplay, ROLE_HIERARCHY } from '@/lib/role-hierarchy';
+import { usePermissions } from '@/hooks/use-permissions';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { ACTIONS } from "@/lib/permissions" // We'll define this as an array of all Action strings
+} from '@/components/ui/dialog';
+import { ACTIONS } from '@/lib/permissions'; // We'll define this as an array of all Action strings
 
 const ROLES = [
-  { value: "", label: "All Roles" },
-  { value: "admin", label: "Administrator" },
-  { value: "manager", label: "Manager" },
-  { value: "user", label: "User" },
-  { value: "viewer", label: "Viewer" },
-]
+  { value: '', label: 'All Roles' },
+  { value: 'admin', label: 'Administrator' },
+  { value: 'manager', label: 'Manager' },
+  { value: 'user', label: 'User' },
+  { value: 'viewer', label: 'Viewer' },
+];
 
 const STATUS_OPTIONS = [
-  { value: "", label: "All Status" },
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "suspended", label: "Suspended" },
-  { value: "pending", label: "Pending" },
-]
+  { value: '', label: 'All Status' },
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' },
+  { value: 'suspended', label: 'Suspended' },
+  { value: 'pending', label: 'Pending' },
+];
 
 export function UserManagementDashboard() {
   const [filters, setFilters] = useState<UserFilters>({
     page: 1,
     limit: 10,
-    sortBy: "created_at",
-    sortOrder: "desc",
-  })
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([])
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [profileMode, setProfileMode] = useState<"view" | "edit">("view")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showFilters, setShowFilters] = useState(false)
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+  });
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [profileMode, setProfileMode] = useState<'view' | 'edit'>('view');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
 
   const {
     loading,
@@ -93,275 +97,320 @@ export function UserManagementDashboard() {
     deleteUser,
     bulkUpdateUsers,
     bulkDeleteUsers,
-  } = useUserManagement()
+  } = useUserManagement();
 
-  const { toast } = useToast()
-  const permissions = usePermissions()
+  const { toast } = useToast();
+  const permissions = usePermissions();
   // Permissions modal state
-  const [showPermModal, setShowPermModal] = useState(false)
-  const [permUser, setPermUser] = useState<User | null>(null)
-  const [permLoading, setPermLoading] = useState(false)
-  const [permState, setPermState] = useState<Record<string, boolean>>({})
+  const [showPermModal, setShowPermModal] = useState(false);
+  const [permUser, setPermUser] = useState<User | null>(null);
+  const [permLoading, setPermLoading] = useState(false);
+  const [permState, setPermState] = useState<Record<string, boolean>>({});
 
   // Open permissions modal and load current custom permissions
   const openPermissionsModal = async (user: User) => {
-    setPermUser(user)
-    setShowPermModal(true)
-    setPermLoading(true)
+    setPermUser(user);
+    setShowPermModal(true);
+    setPermLoading(true);
     // Fetch custom permissions
-    const res = await fetch(`/api/users/${user.id}/permissions`)
-    const data = await res.json()
-    const custom: Record<string, boolean> = {}
+    const res = await fetch(`/api/users/${user.id}/permissions`);
+    const data = await res.json();
+    const custom: Record<string, boolean> = {};
     if (data.permissions) {
-      for (const p of data.permissions) custom[p.permission] = !!p.granted
+      for (const p of data.permissions) custom[p.permission] = !!p.granted;
     }
-    setPermState(custom)
-    setPermLoading(false)
-  }
+    setPermState(custom);
+    setPermLoading(false);
+  };
 
   // Save permissions
   const savePermissions = async () => {
-    if (!permUser) return
-    setPermLoading(true)
+    if (!permUser) return;
+    setPermLoading(true);
     const permsArr = Object.entries(permState).map(([permission, granted]) => ({
       permission,
       granted,
-    }))
+    }));
     await fetch(`/api/users/${permUser.id}/permissions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ permissions: permsArr }),
-    })
-    setPermLoading(false)
-    setShowPermModal(false)
-    toast({ title: "Permissions updated", description: "User permissions updated successfully." })
-  }
+    });
+    setPermLoading(false);
+    setShowPermModal(false);
+    toast({
+      title: 'Permissions updated',
+      description: 'User permissions updated successfully.',
+    });
+  };
 
   // Memoized filter changes to prevent unnecessary API calls
   const memoizedFilters = useMemo(
     () => filters,
-    [filters.page, filters.limit, filters.sortBy, filters.sortOrder, filters.role, filters.status],
-  )
+    [
+      filters.page,
+      filters.limit,
+      filters.sortBy,
+      filters.sortOrder,
+      filters.role,
+      filters.status,
+    ]
+  );
 
   useEffect(() => {
-    fetchUsers(memoizedFilters)
-  }, [memoizedFilters, fetchUsers])
+    fetchUsers(memoizedFilters);
+  }, [memoizedFilters, fetchUsers]);
 
   // Handle search with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setFilters((prev) => ({ ...prev, search: searchTerm, page: 1 }))
-    }, 500)
+      setFilters(prev => ({ ...prev, search: searchTerm, page: 1 }));
+    }, 500);
 
-    return () => clearTimeout(timeoutId)
-  }, [searchTerm])
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   // Memoized handlers to prevent re-renders
   const handlePageChange = useCallback((newPage: number) => {
-    setFilters((prev) => ({ ...prev, page: newPage }))
-  }, [])
+    setFilters(prev => ({ ...prev, page: newPage }));
+  }, []);
 
   const handleSort = useCallback((sortBy: string) => {
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       sortBy,
-      sortOrder: prev.sortBy === sortBy && prev.sortOrder === "asc" ? "desc" : "asc",
-    }))
-  }, [])
+      sortOrder:
+        prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc',
+    }));
+  }, []);
 
   const handleUserSelect = useCallback((userId: string, checked: boolean) => {
     if (checked) {
-      setSelectedUsers((prev) => [...prev, userId])
+      setSelectedUsers(prev => [...prev, userId]);
     } else {
-      setSelectedUsers((prev) => prev.filter((id) => id !== userId))
+      setSelectedUsers(prev => prev.filter(id => id !== userId));
     }
-  }, [])
+  }, []);
 
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setSelectedUsers(users.map((user) => user.id))
+        setSelectedUsers(users.map(user => user.id));
       } else {
-        setSelectedUsers([])
+        setSelectedUsers([]);
       }
     },
-    [users],
-  )
+    [users]
+  );
 
   const handleBulkAction = useCallback(
-    async (action: "activate" | "deactivate" | "delete" | "changeRole") => {
+    async (action: 'activate' | 'deactivate' | 'delete' | 'changeRole') => {
       if (selectedUsers.length === 0) {
         toast({
-          title: "No users selected",
-          description: "Please select users to perform bulk actions.",
-          variant: "destructive",
-        })
-        return
+          title: 'No users selected',
+          description: 'Please select users to perform bulk actions.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       try {
         switch (action) {
-          case "activate":
-            await bulkUpdateUsers(selectedUsers, { status: "active" })
-            break
-          case "deactivate":
-            await bulkUpdateUsers(selectedUsers, { status: "inactive" })
-            break
-          case "delete":
-            if (confirm(`Are you sure you want to delete ${selectedUsers.length} users?`)) {
-              await bulkDeleteUsers(selectedUsers)
+          case 'activate':
+            await bulkUpdateUsers(selectedUsers, { status: 'active' });
+            break;
+          case 'deactivate':
+            await bulkUpdateUsers(selectedUsers, { status: 'inactive' });
+            break;
+          case 'delete':
+            if (
+              confirm(
+                `Are you sure you want to delete ${selectedUsers.length} users?`
+              )
+            ) {
+              await bulkDeleteUsers(selectedUsers);
             }
-            break
-          case "changeRole":
+            break;
+          case 'changeRole':
             // This would open a modal to select new role
             toast({
-              title: "Role change",
-              description: "Role change functionality would be implemented here.",
-            })
-            break
+              title: 'Role change',
+              description:
+                'Role change functionality would be implemented here.',
+            });
+            break;
         }
-        setSelectedUsers([])
+        setSelectedUsers([]);
       } catch (error) {
-        console.error("Bulk action error:", error)
+        console.error('Bulk action error:', error);
       }
     },
-    [selectedUsers, bulkUpdateUsers, bulkDeleteUsers, toast],
-  )
+    [selectedUsers, bulkUpdateUsers, bulkDeleteUsers, toast]
+  );
 
-  const openUserProfile = useCallback((user: User, mode: "view" | "edit" = "view") => {
-    setSelectedUser(user)
-    setProfileMode(mode)
-    setShowProfileModal(true)
-  }, [])
+  const openUserProfile = useCallback(
+    (user: User, mode: 'view' | 'edit' = 'view') => {
+      setSelectedUser(user);
+      setProfileMode(mode);
+      setShowProfileModal(true);
+    },
+    []
+  );
 
   // Add handler for role change
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const res = await fetch("/api/users/assign-role", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/users/assign-role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, newRole }),
-      })
-      if (!res.ok) throw new Error("Failed to update role")
-      toast({ title: "Role updated", description: "User role updated successfully." })
-      fetchUsers(filters)
+      });
+      if (!res.ok) throw new Error('Failed to update role');
+      toast({
+        title: 'Role updated',
+        description: 'User role updated successfully.',
+      });
+      fetchUsers(filters);
     } catch (err) {
-      toast({ title: "Error", description: "Failed to update user role", variant: "destructive" })
+      toast({
+        title: 'Error',
+        description: 'Failed to update user role',
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   // Memoized utility functions
   const getInitials = useCallback((name: string) => {
-    if (!name) return "?"
+    if (!name) return '?';
     return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
+      .split(' ')
+      .map(n => n[0])
+      .join('')
       .toUpperCase()
-      .slice(0, 2)
-  }, [])
+      .slice(0, 2);
+  }, []);
 
   const getStatusBadge = useCallback((status: string) => {
     const colors = {
-      active: "bg-green-100 text-green-800",
-      inactive: "bg-gray-100 text-gray-800",
-      suspended: "bg-red-100 text-red-800",
-      pending: "bg-yellow-100 text-yellow-800",
-    }
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-gray-100 text-gray-800',
+      suspended: 'bg-red-100 text-red-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+    };
 
     return (
-      <Badge className={colors[status as keyof typeof colors] || colors.inactive}>{status}</Badge>
-    )
-  }, [])
+      <Badge
+        className={colors[status as keyof typeof colors] || colors.inactive}
+      >
+        {status}
+      </Badge>
+    );
+  }, []);
 
   const getRoleBadge = useCallback((role: string) => {
     const colors = {
-      super_admin: "bg-red-100 text-red-800",
-      admin: "bg-purple-100 text-purple-800",
-      manager: "bg-blue-100 text-blue-800",
-      moderator: "bg-indigo-100 text-indigo-800",
-      user: "bg-green-100 text-green-800",
-      guest: "bg-gray-100 text-gray-800",
-    }
+      super_admin: 'bg-red-100 text-red-800',
+      admin: 'bg-purple-100 text-purple-800',
+      manager: 'bg-blue-100 text-blue-800',
+      moderator: 'bg-indigo-100 text-indigo-800',
+      user: 'bg-green-100 text-green-800',
+      guest: 'bg-gray-100 text-gray-800',
+    };
 
-    return <Badge className={colors[role as keyof typeof colors] || colors.user}>{getRoleDisplay(role).displayText}</Badge>
-  }, [])
+    return (
+      <Badge className={colors[role as keyof typeof colors] || colors.user}>
+        {getRoleDisplay(role).displayText}
+      </Badge>
+    );
+  }, []);
 
   const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
-  }, [])
+    return new Date(dateString).toLocaleDateString();
+  }, []);
 
   // Memoized statistics cards
   const statisticsCards = useMemo(
     () => (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-4'>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold">{statistics.total}</p>
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <Users className='h-8 w-8 text-blue-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>Total Users</p>
+                <p className='text-2xl font-bold'>{statistics.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserCheck className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold">{statistics.active}</p>
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <UserCheck className='h-8 w-8 text-green-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>
+                  Active Users
+                </p>
+                <p className='text-2xl font-bold'>{statistics.active}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Shield className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Admins</p>
-                <p className="text-2xl font-bold">{statistics.admins}</p>
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <Shield className='h-8 w-8 text-purple-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>Admins</p>
+                <p className='text-2xl font-bold'>{statistics.admins}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Activity className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Recent Activity</p>
-                <p className="text-2xl font-bold">{statistics.recentActivity}</p>
+          <CardContent className='p-6'>
+            <div className='flex items-center'>
+              <Activity className='h-8 w-8 text-orange-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-gray-600'>
+                  Recent Activity
+                </p>
+                <p className='text-2xl font-bold'>
+                  {statistics.recentActivity}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
     ),
-    [statistics],
-  )
+    [statistics]
+  );
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-gray-600">Manage system users, roles, and permissions</p>
+          <h1 className='text-3xl font-bold'>User Management</h1>
+          <p className='text-gray-600'>
+            Manage system users, roles, and permissions
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-            <Filter className="mr-2 h-4 w-4" />
+        <div className='flex gap-2'>
+          <Button
+            variant='outline'
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter className='mr-2 h-4 w-4' />
             Filters
           </Button>
           <Button onClick={() => setShowProfileModal(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className='mr-2 h-4 w-4' />
             Add User
           </Button>
         </div>
@@ -372,33 +421,33 @@ export function UserManagementDashboard() {
 
       {/* Search and Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col gap-4 md:flex-row">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
+        <CardContent className='p-6'>
+          <div className='flex flex-col gap-4 md:flex-row'>
+            <div className='flex-1'>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400' />
                 <Input
-                  placeholder="Search users by email or name..."
+                  placeholder='Search users by email or name...'
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className='pl-10'
                 />
               </div>
             </div>
 
             {showFilters && (
-              <div className="flex gap-2">
+              <div className='flex gap-2'>
                 <Select
-                  value={filters.role || ""}
-                  onValueChange={(value) =>
-                    setFilters((prev) => ({ ...prev, role: value, page: 1 }))
+                  value={filters.role || ''}
+                  onValueChange={value =>
+                    setFilters(prev => ({ ...prev, role: value, page: 1 }))
                   }
                 >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Role" />
+                  <SelectTrigger className='w-40'>
+                    <SelectValue placeholder='Role' />
                   </SelectTrigger>
                   <SelectContent>
-                    {ROLES.map((role) => (
+                    {ROLES.map(role => (
                       <SelectItem key={role.value} value={role.value}>
                         {role.label}
                       </SelectItem>
@@ -407,16 +456,16 @@ export function UserManagementDashboard() {
                 </Select>
 
                 <Select
-                  value={filters.status || ""}
-                  onValueChange={(value) =>
-                    setFilters((prev) => ({ ...prev, status: value, page: 1 }))
+                  value={filters.status || ''}
+                  onValueChange={value =>
+                    setFilters(prev => ({ ...prev, status: value, page: 1 }))
                   }
                 >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className='w-40'>
+                    <SelectValue placeholder='Status' />
                   </SelectTrigger>
                   <SelectContent>
-                    {STATUS_OPTIONS.map((status) => (
+                    {STATUS_OPTIONS.map(status => (
                       <SelectItem key={status.value} value={status.value}>
                         {status.label}
                       </SelectItem>
@@ -432,29 +481,51 @@ export function UserManagementDashboard() {
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{selectedUsers.length} user(s) selected</span>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedUsers([])}>
+          <CardContent className='p-4'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center gap-2'>
+                <span className='text-sm font-medium'>
+                  {selectedUsers.length} user(s) selected
+                </span>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  onClick={() => setSelectedUsers([])}
+                >
                   Clear
                 </Button>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleBulkAction("activate")}>
-                  <UserCheck className="mr-2 h-4 w-4" />
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handleBulkAction('activate')}
+                >
+                  <UserCheck className='mr-2 h-4 w-4' />
                   Activate
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleBulkAction("deactivate")}>
-                  <UserX className="mr-2 h-4 w-4" />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handleBulkAction('deactivate')}
+                >
+                  <UserX className='mr-2 h-4 w-4' />
                   Deactivate
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleBulkAction("changeRole")}>
-                  <Shield className="mr-2 h-4 w-4" />
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => handleBulkAction('changeRole')}
+                >
+                  <Shield className='mr-2 h-4 w-4' />
                   Change Role
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => handleBulkAction("delete")}>
-                  <Trash2 className="mr-2 h-4 w-4" />
+                <Button
+                  variant='destructive'
+                  size='sm'
+                  onClick={() => handleBulkAction('delete')}
+                >
+                  <Trash2 className='mr-2 h-4 w-4' />
                   Delete
                 </Button>
               </div>
@@ -469,134 +540,152 @@ export function UserManagementDashboard() {
           <CardTitle>Users</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className='overflow-x-auto'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12">
+                  <TableHead className='w-12'>
                     <Checkbox
-                      checked={selectedUsers.length === users.length && users.length > 0}
+                      checked={
+                        selectedUsers.length === users.length &&
+                        users.length > 0
+                      }
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>
                     <Button
-                      variant="ghost"
-                      onClick={() => handleSort("role")}
-                      className="h-auto p-0"
+                      variant='ghost'
+                      onClick={() => handleSort('role')}
+                      className='h-auto p-0'
                     >
                       Role
-                      {filters.sortBy === "role" &&
-                        (filters.sortOrder === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
+                      {filters.sortBy === 'role' &&
+                        (filters.sortOrder === 'asc' ? (
+                          <ChevronUp className='ml-1 h-4 w-4' />
                         ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
+                          <ChevronDown className='ml-1 h-4 w-4' />
                         ))}
                     </Button>
                   </TableHead>
                   <TableHead>
                     <Button
-                      variant="ghost"
-                      onClick={() => handleSort("status")}
-                      className="h-auto p-0"
+                      variant='ghost'
+                      onClick={() => handleSort('status')}
+                      className='h-auto p-0'
                     >
                       Status
-                      {filters.sortBy === "status" &&
-                        (filters.sortOrder === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
+                      {filters.sortBy === 'status' &&
+                        (filters.sortOrder === 'asc' ? (
+                          <ChevronUp className='ml-1 h-4 w-4' />
                         ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
+                          <ChevronDown className='ml-1 h-4 w-4' />
                         ))}
                     </Button>
                   </TableHead>
                   <TableHead>
                     <Button
-                      variant="ghost"
-                      onClick={() => handleSort("created_at")}
-                      className="h-auto p-0"
+                      variant='ghost'
+                      onClick={() => handleSort('created_at')}
+                      className='h-auto p-0'
                     >
                       Created
-                      {filters.sortBy === "created_at" &&
-                        (filters.sortOrder === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
+                      {filters.sortBy === 'created_at' &&
+                        (filters.sortOrder === 'asc' ? (
+                          <ChevronUp className='ml-1 h-4 w-4' />
                         ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
+                          <ChevronDown className='ml-1 h-4 w-4' />
                         ))}
                     </Button>
                   </TableHead>
                   <TableHead>
                     <Button
-                      variant="ghost"
-                      onClick={() => handleSort("last_login")}
-                      className="h-auto p-0"
+                      variant='ghost'
+                      onClick={() => handleSort('last_login')}
+                      className='h-auto p-0'
                     >
                       Last Login
-                      {filters.sortBy === "last_login" &&
-                        (filters.sortOrder === "asc" ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
+                      {filters.sortBy === 'last_login' &&
+                        (filters.sortOrder === 'asc' ? (
+                          <ChevronUp className='ml-1 h-4 w-4' />
                         ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
+                          <ChevronDown className='ml-1 h-4 w-4' />
                         ))}
                     </Button>
                   </TableHead>
-                  <TableHead className="w-20">Actions</TableHead>
+                  <TableHead className='w-20'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                    <TableCell colSpan={7} className='py-8 text-center'>
+                      <Loader2 className='mx-auto h-6 w-6 animate-spin' />
                     </TableCell>
                   </TableRow>
                 ) : users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-gray-500">
+                    <TableCell
+                      colSpan={7}
+                      className='py-8 text-center text-gray-500'
+                    >
                       No users found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => (
+                  users.map(user => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <Checkbox
                           checked={selectedUsers.includes(user.id)}
-                          onCheckedChange={(checked) =>
+                          onCheckedChange={checked =>
                             handleUserSelect(user.id, checked as boolean)
                           }
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={user?.avatar_url || ""} />
+                        <div className='flex items-center gap-3'>
+                          <Avatar className='h-8 w-8'>
+                            <AvatarImage src={user?.avatar_url || ''} />
                             <AvatarFallback>
-                              {getInitials(user?.full_name || user?.email || "")}
+                              {getInitials(
+                                user?.full_name || user?.email || ''
+                              )}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <div className="font-medium">{user?.full_name || "No name"}</div>
-                            <div className="text-sm text-gray-500">{user?.email}</div>
+                            <div className='font-medium'>
+                              {user?.full_name || 'No name'}
+                            </div>
+                            <div className='text-sm text-gray-500'>
+                              {user?.email}
+                            </div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {permissions.role === "admin" ? (
+                        {permissions.role === 'admin' ? (
                           <Select
                             value={user.role}
-                            onValueChange={(value) => handleRoleChange(user.id, value)}
+                            onValueChange={value =>
+                              handleRoleChange(user.id, value)
+                            }
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className='w-32'>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="super_admin">Super Admin</SelectItem>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                              <SelectItem value="moderator">Moderator</SelectItem>
-                              <SelectItem value="user">User</SelectItem>
-                              <SelectItem value="guest">Guest</SelectItem>
+                              <SelectItem value='super_admin'>
+                                Super Admin
+                              </SelectItem>
+                              <SelectItem value='admin'>Admin</SelectItem>
+                              <SelectItem value='manager'>Manager</SelectItem>
+                              <SelectItem value='moderator'>
+                                Moderator
+                              </SelectItem>
+                              <SelectItem value='user'>User</SelectItem>
+                              <SelectItem value='guest'>Guest</SelectItem>
                             </SelectContent>
                           </Select>
                         ) : (
@@ -606,39 +695,45 @@ export function UserManagementDashboard() {
                       <TableCell>{getStatusBadge(user.status)}</TableCell>
                       <TableCell>{formatDate(user.created_at)}</TableCell>
                       <TableCell>
-                        {user.last_login ? formatDate(user.last_login) : "Never"}
+                        {user.last_login
+                          ? formatDate(user.last_login)
+                          : 'Never'}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
+                        <div className='flex items-center gap-1'>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openUserProfile(user, "view")}
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => openUserProfile(user, 'view')}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className='h-4 w-4' />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openUserProfile(user, "edit")}
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => openUserProfile(user, 'edit')}
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className='h-4 w-4' />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            variant='ghost'
+                            size='sm'
                             onClick={() => {
-                              if (confirm("Are you sure you want to delete this user?")) {
-                                deleteUser(user.id)
+                              if (
+                                confirm(
+                                  'Are you sure you want to delete this user?'
+                                )
+                              ) {
+                                deleteUser(user.id);
                               }
                             }}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className='h-4 w-4' />
                           </Button>
-                          {permissions.role === "admin" && (
+                          {permissions.role === 'admin' && (
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant='outline'
+                              size='sm'
                               onClick={() => openPermissionsModal(user)}
                             >
                               Permissions
@@ -655,33 +750,33 @@ export function UserManagementDashboard() {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-sm text-gray-500">
-                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} users
+            <div className='mt-4 flex items-center justify-between'>
+              <div className='text-sm text-gray-500'>
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
+                of {pagination.total} users
               </div>
-              <div className="flex items-center gap-2">
+              <div className='flex items-center gap-2'>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className='h-4 w-4' />
                   Previous
                 </Button>
-                <span className="text-sm">
+                <span className='text-sm'>
                   Page {pagination.page} of {pagination.totalPages}
                 </span>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => handlePageChange(pagination.page + 1)}
                   disabled={pagination.page === pagination.totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className='h-4 w-4' />
                 </Button>
               </div>
             </div>
@@ -696,8 +791,8 @@ export function UserManagementDashboard() {
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
           onUpdate={() => {
-            fetchUsers(filters)
-            setShowProfileModal(false)
+            fetchUsers(filters);
+            setShowProfileModal(false);
           }}
           mode={profileMode}
         />
@@ -705,34 +800,40 @@ export function UserManagementDashboard() {
 
       {/* Permissions Modal */}
       <Dialog open={showPermModal} onOpenChange={setShowPermModal}>
-        <DialogContent className="max-w-lg" aria-describedby="permissions-description">
+        <DialogContent
+          className='max-w-lg'
+          aria-describedby='permissions-description'
+        >
           <DialogHeader>
             <DialogTitle>Manage User Permissions</DialogTitle>
           </DialogHeader>
-          <div id="permissions-description" className="sr-only">
+          <div id='permissions-description' className='sr-only'>
             Manage permissions for user {permUser?.email}
           </div>
-          <div className="space-y-4">
-            <div className="text-sm text-muted-foreground">
+          <div className='space-y-4'>
+            <div className='text-sm text-muted-foreground'>
               Customize permissions for <strong>{permUser?.email}</strong>
             </div>
             {permLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">Loading permissions...</span>
+              <div className='flex items-center justify-center py-8'>
+                <Loader2 className='h-6 w-6 animate-spin' />
+                <span className='ml-2'>Loading permissions...</span>
               </div>
             ) : (
-              <div className="max-h-64 space-y-2 overflow-y-auto">
+              <div className='max-h-64 space-y-2 overflow-y-auto'>
                 {Object.entries(permState).map(([permission, granted]) => (
                   <div
                     key={permission}
-                    className="flex items-center justify-between rounded border p-2"
+                    className='flex items-center justify-between rounded border p-2'
                   >
-                    <span className="text-sm">{permission}</span>
+                    <span className='text-sm'>{permission}</span>
                     <Checkbox
                       checked={granted}
-                      onCheckedChange={(checked) =>
-                        setPermState((prev) => ({ ...prev, [permission]: !!checked }))
+                      onCheckedChange={checked =>
+                        setPermState(prev => ({
+                          ...prev,
+                          [permission]: !!checked,
+                        }))
                       }
                     />
                   </div>
@@ -741,7 +842,7 @@ export function UserManagementDashboard() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPermModal(false)}>
+            <Button variant='outline' onClick={() => setShowPermModal(false)}>
               Cancel
             </Button>
             <Button onClick={savePermissions} disabled={permLoading}>
@@ -751,5 +852,5 @@ export function UserManagementDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

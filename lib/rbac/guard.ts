@@ -2,26 +2,26 @@
 // 🛡️ RBAC GUARD - MAIN PERMISSION CHECKER
 // ========================================
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { permissionEvaluator, PermissionContext } from './evaluate'
-import { auditLogger, AuditLogger } from './audit'
-import { parsePermission } from './permissions'
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { permissionEvaluator, PermissionContext } from './evaluate';
+import { auditLogger, AuditLogger } from './audit';
+import { parsePermission } from './permissions';
 
 export interface GuardOptions {
-  context?: PermissionContext
-  skipAudit?: boolean
-  skipCache?: boolean
+  context?: PermissionContext;
+  skipAudit?: boolean;
+  skipCache?: boolean;
 }
 
 export interface GuardResult {
-  allowed: boolean
-  reason: string
-  required_permission: string
-  user_permissions: string[]
-  user_roles: string[]
-  user_id?: string
-  context?: Record<string, any>
+  allowed: boolean;
+  reason: string;
+  required_permission: string;
+  user_permissions: string[];
+  user_roles: string[];
+  user_id?: string;
+  context?: Record<string, any>;
 }
 
 /**
@@ -34,8 +34,11 @@ export async function checkPermission(
 ): Promise<GuardResult> {
   try {
     // Get current user from Supabase
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return {
@@ -44,8 +47,8 @@ export async function checkPermission(
         required_permission: requiredPermission,
         user_permissions: [],
         user_roles: [],
-        user_id: null
-      }
+        user_id: null,
+      };
     }
 
     // Evaluate permission
@@ -55,25 +58,25 @@ export async function checkPermission(
       {
         skipAudit: options.skipAudit,
         skipCache: options.skipCache,
-        context: options.context
+        context: options.context,
       }
-    )
+    );
 
     // Add user ID to result
     return {
       ...result,
-      user_id: user.id
-    }
+      user_id: user.id,
+    };
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkPermission:', error)
+    console.error('🔐 RBAC: Error in checkPermission:', error);
     return {
       allowed: false,
       reason: 'Error checking permission',
       required_permission: requiredPermission,
       user_permissions: [],
       user_roles: [],
-      user_id: null
-    }
+      user_id: null,
+    };
   }
 }
 
@@ -88,16 +91,16 @@ export async function guardPermission(
 ): Promise<NextResponse | null> {
   try {
     // Get RBAC enforcement mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run'
-    
+    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
+
     // Check permission
     const result = await checkPermission(requiredPermission, {
       ...options,
       context: {
         ...options.context,
-        request
-      }
-    })
+        request,
+      },
+    });
 
     // Log the permission check
     if (!options.skipAudit) {
@@ -107,55 +110,59 @@ export async function guardPermission(
         path: request.url,
         result: result.allowed ? 'ALLOW' : 'DENY',
         ip_address: AuditLogger.getClientIP(request),
-        user_agent: AuditLogger.getUserAgent(request)
-      })
+        user_agent: AuditLogger.getUserAgent(request),
+      });
     }
 
     // Handle dry-run mode
     if (enforcementMode === 'dry-run') {
       if (!result.allowed) {
-        console.log(`🔐 RBAC: WOULD_BLOCK - ${requiredPermission} for ${request.url}`)
+        console.log(
+          `🔐 RBAC: WOULD_BLOCK - ${requiredPermission} for ${request.url}`
+        );
         // In dry-run mode, allow the request but log that it would be blocked
-        return null
+        return null;
       }
-      return null
+      return null;
     }
 
     // Handle enforce mode
     if (enforcementMode === 'enforce') {
       if (!result.allowed) {
-        console.log(`🔐 RBAC: BLOCKED - ${requiredPermission} for ${request.url}`)
+        console.log(
+          `🔐 RBAC: BLOCKED - ${requiredPermission} for ${request.url}`
+        );
         return NextResponse.json(
           {
             error: 'Insufficient permissions',
             required_permission: requiredPermission,
-            reason: result.reason
+            reason: result.reason,
           },
           { status: 403 }
-        )
+        );
       }
-      return null
+      return null;
     }
 
     // Default: allow if no enforcement mode specified
-    return null
+    return null;
   } catch (error) {
-    console.error('🔐 RBAC: Error in guardPermission:', error)
-    
+    console.error('🔐 RBAC: Error in guardPermission:', error);
+
     // In case of error, default to deny in enforce mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run'
+    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
     if (enforcementMode === 'enforce') {
       return NextResponse.json(
         {
           error: 'Permission check failed',
           required_permission: requiredPermission,
-          reason: 'Error checking permissions'
+          reason: 'Error checking permissions',
         },
         { status: 500 }
-      )
+      );
     }
-    
-    return null
+
+    return null;
   }
 }
 
@@ -168,15 +175,15 @@ export function withRBAC<T extends any[]>(
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     // Check permission first
-    const guardResult = await guardPermission(requiredPermission, request)
-    
+    const guardResult = await guardPermission(requiredPermission, request);
+
     if (guardResult) {
-      return guardResult
+      return guardResult;
     }
 
     // Permission check passed, execute handler
-    return handler(request, ...args)
-  }
+    return handler(request, ...args);
+  };
 }
 
 /**
@@ -189,15 +196,15 @@ export function withAnyRBAC<T extends any[]>(
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     // Check if user has any of the required permissions
-    const guardResult = await guardAnyPermission(requiredPermissions, request)
-    
+    const guardResult = await guardAnyPermission(requiredPermissions, request);
+
     if (guardResult) {
-      return guardResult
+      return guardResult;
     }
 
     // Permission check passed, execute handler
-    return handler(request, ...args)
-  }
+    return handler(request, ...args);
+  };
 }
 
 /**
@@ -211,20 +218,20 @@ async function guardAnyPermission(
 ): Promise<NextResponse | null> {
   try {
     // Get RBAC enforcement mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run'
-    
+    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
+
     // Check if user has any of the required permissions
     const result = await checkAnyPermission(requiredPermissions, {
       ...options,
       context: {
         ...options.context,
-        request
-      }
-    })
+        request,
+      },
+    });
 
     // If RBAC is disabled, always allow
     if (enforcementMode === 'disabled') {
-      return null
+      return null;
     }
 
     // If permission check failed
@@ -235,9 +242,9 @@ async function guardAnyPermission(
           required_permissions: requiredPermissions,
           user_permissions: result.user_permissions,
           user_roles: result.user_roles,
-          reason: result.reason
-        })
-        return null
+          reason: result.reason,
+        });
+        return null;
       }
 
       // In enforce mode, deny access
@@ -245,8 +252,8 @@ async function guardAnyPermission(
         required_permissions: requiredPermissions,
         user_permissions: result.user_permissions,
         user_roles: result.user_roles,
-        reason: result.reason
-      })
+        reason: result.reason,
+      });
 
       return NextResponse.json(
         {
@@ -254,31 +261,33 @@ async function guardAnyPermission(
           reason: result.reason,
           required_permissions: requiredPermissions,
           user_permissions: result.user_permissions,
-          user_roles: result.user_roles
+          user_roles: result.user_roles,
         },
         { status: 403 }
-      )
+      );
     }
 
     // Permission check passed
-    return null
+    return null;
   } catch (error) {
-    console.error('🔐 RBAC: Error in guardAnyPermission:', error)
-    
+    console.error('🔐 RBAC: Error in guardAnyPermission:', error);
+
     // In dry-run mode, allow on error
     if (process.env.RBAC_ENFORCEMENT === 'dry-run') {
-      console.warn('🔐 RBAC DRY-RUN: Allowing access due to error in permission check')
-      return null
+      console.warn(
+        '🔐 RBAC DRY-RUN: Allowing access due to error in permission check'
+      );
+      return null;
     }
 
     // In enforce mode, deny on error
     return NextResponse.json(
       {
         error: 'Error checking permissions',
-        details: 'Internal server error during permission validation'
+        details: 'Internal server error during permission validation',
       },
       { status: 500 }
-    )
+    );
   }
 }
 
@@ -290,8 +299,11 @@ export async function checkAnyPermission(
   options: GuardOptions = {}
 ): Promise<GuardResult> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return {
@@ -299,8 +311,8 @@ export async function checkAnyPermission(
         reason: 'User not authenticated',
         required_permission: requiredPermissions.join(' OR '),
         user_permissions: [],
-        user_roles: []
-      }
+        user_roles: [],
+      };
     }
 
     const result = await permissionEvaluator.hasAnyPermission(
@@ -309,20 +321,20 @@ export async function checkAnyPermission(
       {
         skipAudit: options.skipAudit,
         skipCache: options.skipCache,
-        context: options.context
+        context: options.context,
       }
-    )
+    );
 
-    return result
+    return result;
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkAnyPermission:', error)
+    console.error('🔐 RBAC: Error in checkAnyPermission:', error);
     return {
       allowed: false,
       reason: 'Error checking permissions',
       required_permission: requiredPermissions.join(' OR '),
       user_permissions: [],
-      user_roles: []
-    }
+      user_roles: [],
+    };
   }
 }
 
@@ -334,8 +346,11 @@ export async function checkAllPermissions(
   options: GuardOptions = {}
 ): Promise<GuardResult> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return {
@@ -343,8 +358,8 @@ export async function checkAllPermissions(
         reason: 'User not authenticated',
         required_permission: requiredPermissions.join(' AND '),
         user_permissions: [],
-        user_roles: []
-      }
+        user_roles: [],
+      };
     }
 
     const result = await permissionEvaluator.hasAllPermissions(
@@ -353,20 +368,20 @@ export async function checkAllPermissions(
       {
         skipAudit: options.skipAudit,
         skipCache: options.skipCache,
-        context: options.context
+        context: options.context,
       }
-    )
+    );
 
-    return result
+    return result;
   } catch (error) {
-    console.error('🔐 RBAC: Error in checkAllPermissions:', error)
+    console.error('🔐 RBAC: Error in checkAllPermissions:', error);
     return {
       allowed: false,
       reason: 'Error checking permissions',
       required_permission: requiredPermissions.join(' AND '),
       user_permissions: [],
-      user_roles: []
-    }
+      user_roles: [],
+    };
   }
 }
 
@@ -374,23 +389,28 @@ export async function checkAllPermissions(
  * Get current user's permissions
  */
 export async function getCurrentUserPermissions(): Promise<{
-  permissions: string[]
-  roles: string[]
-  userId: string | null
+  permissions: string[];
+  roles: string[];
+  userId: string | null;
 }> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return { permissions: [], roles: [], userId: null }
+      return { permissions: [], roles: [], userId: null };
     }
 
-    const { permissions, roles } = await permissionEvaluator['permissionCache'].getUserPermissions(user.id)
-    return { permissions, roles, userId: user.id }
+    const { permissions, roles } = await permissionEvaluator[
+      'permissionCache'
+    ].getUserPermissions(user.id);
+    return { permissions, roles, userId: user.id };
   } catch (error) {
-    console.error('🔐 RBAC: Error getting current user permissions:', error)
-    return { permissions: [], roles: [], userId: null }
+    console.error('🔐 RBAC: Error getting current user permissions:', error);
+    return { permissions: [], roles: [], userId: null };
   }
 }
 
@@ -399,58 +419,86 @@ export async function getCurrentUserPermissions(): Promise<{
  */
 export async function hasPermission(permission: string): Promise<boolean> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return false
+      return false;
     }
 
-    const result = await permissionEvaluator.evaluatePermission(user.id, permission, { skipAudit: true })
-    return result.allowed
+    const result = await permissionEvaluator.evaluatePermission(
+      user.id,
+      permission,
+      { skipAudit: true }
+    );
+    return result.allowed;
   } catch (error) {
-    console.error('🔐 RBAC: Error checking if user has permission:', error)
-    return false
+    console.error('🔐 RBAC: Error checking if user has permission:', error);
+    return false;
   }
 }
 
 /**
  * Check if current user has any of the specified permissions
  */
-export async function hasAnyPermission(permissions: string[]): Promise<boolean> {
+export async function hasAnyPermission(
+  permissions: string[]
+): Promise<boolean> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return false
+      return false;
     }
 
-    const result = await permissionEvaluator.hasAnyPermission(user.id, permissions, { skipAudit: true })
-    return result.allowed
+    const result = await permissionEvaluator.hasAnyPermission(
+      user.id,
+      permissions,
+      { skipAudit: true }
+    );
+    return result.allowed;
   } catch (error) {
-    console.error('🔐 RBAC: Error checking if user has any permission:', error)
-    return false
+    console.error('🔐 RBAC: Error checking if user has any permission:', error);
+    return false;
   }
 }
 
 /**
  * Check if current user has all of the specified permissions
  */
-export async function hasAllPermissions(permissions: string[]): Promise<boolean> {
+export async function hasAllPermissions(
+  permissions: string[]
+): Promise<boolean> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return false
+      return false;
     }
 
-    const result = await permissionEvaluator.hasAllPermissions(user.id, permissions, { skipAudit: true })
-    return result.allowed
+    const result = await permissionEvaluator.hasAllPermissions(
+      user.id,
+      permissions,
+      { skipAudit: true }
+    );
+    return result.allowed;
   } catch (error) {
-    console.error('🔐 RBAC: Error checking if user has all permissions:', error)
-    return false
+    console.error(
+      '🔐 RBAC: Error checking if user has all permissions:',
+      error
+    );
+    return false;
   }
 }
 
@@ -458,42 +506,43 @@ export async function hasAllPermissions(permissions: string[]): Promise<boolean>
  * Validate permission string format
  */
 export function validatePermission(permission: string): boolean {
-  return parsePermission(permission) !== null
+  return parsePermission(permission) !== null;
 }
 
 /**
  * Get RBAC enforcement mode
  */
 export function getRBACEnforcementMode(): 'dry-run' | 'enforce' | 'disabled' {
-  const mode = process.env.RBAC_ENFORCEMENT || 'dry-run'
-  
+  const mode = process.env.RBAC_ENFORCEMENT || 'dry-run';
+
   if (mode === 'dry-run' || mode === 'enforce' || mode === 'disabled') {
-    return mode
+    return mode;
   }
-  
-  console.warn(`🔐 RBAC: Invalid RBAC_ENFORCEMENT mode: ${mode}, defaulting to dry-run`)
-  return 'dry-run'
+
+  console.warn(
+    `🔐 RBAC: Invalid RBAC_ENFORCEMENT mode: ${mode}, defaulting to dry-run`
+  );
+  return 'dry-run';
 }
 
 /**
  * Check if RBAC is enabled
  */
 export function isRBACEnabled(): boolean {
-  const mode = getRBACEnforcementMode()
-  return mode !== 'disabled'
+  const mode = getRBACEnforcementMode();
+  return mode !== 'disabled';
 }
 
 /**
  * Check if RBAC is in enforce mode
  */
 export function isRBACEnforced(): boolean {
-  return getRBACEnforcementMode() === 'enforce'
+  return getRBACEnforcementMode() === 'enforce';
 }
 
 /**
  * Check if RBAC is in dry-run mode
  */
 export function isRBACDryRun(): boolean {
-  return getRBACEnforcementMode() === 'dry-run'
+  return getRBACEnforcementMode() === 'dry-run';
 }
-

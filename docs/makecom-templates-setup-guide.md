@@ -316,23 +316,23 @@ Update `lib/contract-type-config.ts`:
 
 ```javascript
 // Generate contract with Make.com
-const response = await fetch("/api/contracts/makecom/generate", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
+const response = await fetch('/api/contracts/makecom/generate', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    contractType: "oman-unlimited-makecom",
+    contractType: 'oman-unlimited-makecom',
     contractData: {
-      first_party_id: "company-id",
-      second_party_id: "employer-id",
-      promoter_id: "employee-id",
-      contract_start_date: "2025-01-01",
-      job_title: "Software Engineer",
+      first_party_id: 'company-id',
+      second_party_id: 'employer-id',
+      promoter_id: 'employee-id',
+      contract_start_date: '2025-01-01',
+      job_title: 'Software Engineer',
       basic_salary: 2500,
-      currency: "OMR",
+      currency: 'OMR',
     },
     triggerMakecom: true,
   }),
-})
+});
 ```
 
 ## 🐛 Troubleshooting

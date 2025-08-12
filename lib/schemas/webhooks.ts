@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from 'zod';
 
 export const ServiceCreatedSchema = z.object({
   serviceId: z.string().uuid(),
@@ -9,7 +9,7 @@ export const ServiceCreatedSchema = z.object({
   category: z.string().optional(),
   price: z.number().positive().optional(),
   currency: z.string().length(3).optional(),
-})
+});
 
 export const BookingCreatedSchema = z.object({
   bookingId: z.string().uuid(),
@@ -20,7 +20,7 @@ export const BookingCreatedSchema = z.object({
   amount: z.number().positive().optional(),
   currency: z.string().length(3).optional(),
   notes: z.string().optional(),
-})
+});
 
 export const TrackingUpdatedSchema = z.object({
   trackingId: z.string().uuid(),
@@ -31,7 +31,7 @@ export const TrackingUpdatedSchema = z.object({
   serviceId: z.string().uuid().optional(),
   estimatedDelivery: z.string().datetime().optional(),
   notes: z.string().optional(),
-})
+});
 
 export const PaymentSucceededSchema = z.object({
   paymentId: z.string().uuid(),
@@ -43,13 +43,18 @@ export const PaymentSucceededSchema = z.object({
   paymentDate: z.string().datetime(),
   paymentMethod: z.string().optional(),
   transactionId: z.string().optional(),
-})
+});
 
-export const WebhookTypeSchema = z.enum(['serviceCreation', 'bookingCreated', 'trackingUpdated', 'paymentSucceeded'])
+export const WebhookTypeSchema = z.enum([
+  'serviceCreation',
+  'bookingCreated',
+  'trackingUpdated',
+  'paymentSucceeded',
+]);
 
 export const WebhookPayloadSchema = z.union([
   ServiceCreatedSchema,
   BookingCreatedSchema,
   TrackingUpdatedSchema,
   PaymentSucceededSchema,
-]) 
+]);

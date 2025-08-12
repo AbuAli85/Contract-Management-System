@@ -35,8 +35,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 // Audit logger class
@@ -73,9 +73,7 @@ export class AuditLogger {
       }
 
       // Insert into audit_logs table
-      const { error } = await supabase
-        .from('audit_logs')
-        .insert(entry);
+      const { error } = await supabase.from('audit_logs').insert(entry);
 
       if (error) {
         console.error('Failed to log audit event:', error);
@@ -92,19 +90,28 @@ export class AuditLogger {
   }
 
   // Log user authentication events
-  async logAuthEvent(userId: string, action: 'login' | 'logout' | 'failed_login' | 'password_reset', details?: any): Promise<void> {
+  async logAuthEvent(
+    userId: string,
+    action: 'login' | 'logout' | 'failed_login' | 'password_reset',
+    details?: any
+  ): Promise<void> {
     await this.log({
       user_id: userId,
       action: `AUTH_${action.toUpperCase()}`,
       resource: 'auth',
       severity: action === 'failed_login' ? 'medium' : 'low',
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   // Log user management events
-  async logUserEvent(userId: string, action: string, targetUserId: string, details?: any): Promise<void> {
+  async logUserEvent(
+    userId: string,
+    action: string,
+    targetUserId: string,
+    details?: any
+  ): Promise<void> {
     await this.log({
       user_id: userId,
       action: `USER_${action.toUpperCase()}`,
@@ -112,12 +119,18 @@ export class AuditLogger {
       resource_id: targetUserId,
       severity: this.getUserActionSeverity(action),
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   // Log permission/role changes
-  async logPermissionEvent(userId: string, action: string, targetUserId: string, oldRole: string, newRole: string): Promise<void> {
+  async logPermissionEvent(
+    userId: string,
+    action: string,
+    targetUserId: string,
+    oldRole: string,
+    newRole: string
+  ): Promise<void> {
     await this.log({
       user_id: userId,
       action: `PERMISSION_${action.toUpperCase()}`,
@@ -127,38 +140,52 @@ export class AuditLogger {
       details: {
         old_role: oldRole,
         new_role: newRole,
-        change_type: action
+        change_type: action,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   // Log system events
-  async logSystemEvent(action: string, details?: any, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): Promise<void> {
+  async logSystemEvent(
+    action: string,
+    details?: any,
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+  ): Promise<void> {
     await this.log({
       user_id: 'system',
       action: `SYSTEM_${action.toUpperCase()}`,
       resource: 'system',
       severity,
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   // Log security events
-  async logSecurityEvent(userId: string, action: string, details?: any, severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'): Promise<void> {
+  async logSecurityEvent(
+    userId: string,
+    action: string,
+    details?: any,
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+  ): Promise<void> {
     await this.log({
       user_id: userId,
       action: `SECURITY_${action.toUpperCase()}`,
       resource: 'security',
       severity,
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   // Get audit logs with filtering
-  async getAuditLogs(filter: AuditLogFilter = {}): Promise<{ logs: AuditLogEntry[], total: number, page: number, pages: number }> {
+  async getAuditLogs(filter: AuditLogFilter = {}): Promise<{
+    logs: AuditLogEntry[];
+    total: number;
+    page: number;
+    pages: number;
+  }> {
     try {
       let query = supabase
         .from('audit_logs')
@@ -192,7 +219,7 @@ export class AuditLogger {
       const page = filter.page || 1;
       const limit = filter.limit || 50;
       const offset = (page - 1) * limit;
-      
+
       query = query.range(offset, offset + limit - 1);
 
       const { data: logs, error, count } = await query;
@@ -208,7 +235,7 @@ export class AuditLogger {
         logs: logs || [],
         total,
         page,
-        pages
+        pages,
       };
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -238,7 +265,7 @@ export class AuditLogger {
       }
 
       const events = logs || [];
-      
+
       // Calculate statistics
       const eventsBySeverity: Record<string, number> = {};
       const eventsByAction: Record<string, number> = {};
@@ -247,16 +274,18 @@ export class AuditLogger {
 
       events.forEach(event => {
         // Count by severity
-        eventsBySeverity[event.severity || 'unknown'] = (eventsBySeverity[event.severity || 'unknown'] || 0) + 1;
-        
+        eventsBySeverity[event.severity || 'unknown'] =
+          (eventsBySeverity[event.severity || 'unknown'] || 0) + 1;
+
         // Count by action
         eventsByAction[event.action] = (eventsByAction[event.action] || 0) + 1;
-        
+
         // Count by resource
         if (event.resource) {
-          eventsByResource[event.resource] = (eventsByResource[event.resource] || 0) + 1;
+          eventsByResource[event.resource] =
+            (eventsByResource[event.resource] || 0) + 1;
         }
-        
+
         // Count by user
         userCounts[event.user_id] = (userCounts[event.user_id] || 0) + 1;
       });
@@ -272,7 +301,7 @@ export class AuditLogger {
         events_by_severity: eventsBySeverity,
         events_by_action: eventsByAction,
         events_by_resource: eventsByResource,
-        top_users: topUsers
+        top_users: topUsers,
       };
     } catch (error) {
       console.error('Error getting audit summary:', error);
@@ -293,9 +322,7 @@ export class AuditLogger {
         const entry = this.queue.shift();
         if (entry) {
           try {
-            await supabase
-              .from('audit_logs')
-              .insert(entry);
+            await supabase.from('audit_logs').insert(entry);
           } catch (error) {
             console.error('Failed to process queued audit event:', error);
             // Put it back in the queue for retry
@@ -310,9 +337,11 @@ export class AuditLogger {
   }
 
   // Get default severity for actions
-  private getDefaultSeverity(action: string): 'low' | 'medium' | 'high' | 'critical' {
+  private getDefaultSeverity(
+    action: string
+  ): 'low' | 'medium' | 'high' | 'critical' {
     const actionLower = action.toLowerCase();
-    
+
     if (actionLower.includes('delete') || actionLower.includes('remove')) {
       return 'high';
     }
@@ -325,14 +354,16 @@ export class AuditLogger {
     if (actionLower.includes('read') || actionLower.includes('view')) {
       return 'low';
     }
-    
+
     return 'medium';
   }
 
   // Get severity for user management actions
-  private getUserActionSeverity(action: string): 'low' | 'medium' | 'high' | 'critical' {
+  private getUserActionSeverity(
+    action: string
+  ): 'low' | 'medium' | 'high' | 'critical' {
     const actionLower = action.toLowerCase();
-    
+
     if (actionLower.includes('delete')) {
       return 'critical';
     }
@@ -342,7 +373,7 @@ export class AuditLogger {
     if (actionLower.includes('create') || actionLower.includes('update')) {
       return 'medium';
     }
-    
+
     return 'low';
   }
 }
@@ -353,33 +384,51 @@ export const auditLogger = AuditLogger.getInstance();
 // Convenience functions for common audit events
 export const auditLog = {
   // User actions
-  userCreated: (userId: string, targetUserId: string, details?: any) => 
+  userCreated: (userId: string, targetUserId: string, details?: any) =>
     auditLogger.logUserEvent(userId, 'created', targetUserId, details),
-  
-  userUpdated: (userId: string, targetUserId: string, details?: any) => 
+
+  userUpdated: (userId: string, targetUserId: string, details?: any) =>
     auditLogger.logUserEvent(userId, 'updated', targetUserId, details),
-  
-  userDeleted: (userId: string, targetUserId: string, details?: any) => 
+
+  userDeleted: (userId: string, targetUserId: string, details?: any) =>
     auditLogger.logUserEvent(userId, 'deleted', targetUserId, details),
-  
-  roleChanged: (userId: string, targetUserId: string, oldRole: string, newRole: string) => 
-    auditLogger.logPermissionEvent(userId, 'role_changed', targetUserId, oldRole, newRole),
-  
+
+  roleChanged: (
+    userId: string,
+    targetUserId: string,
+    oldRole: string,
+    newRole: string
+  ) =>
+    auditLogger.logPermissionEvent(
+      userId,
+      'role_changed',
+      targetUserId,
+      oldRole,
+      newRole
+    ),
+
   // Authentication
-  login: (userId: string, details?: any) => 
+  login: (userId: string, details?: any) =>
     auditLogger.logAuthEvent(userId, 'login', details),
-  
-  logout: (userId: string, details?: any) => 
+
+  logout: (userId: string, details?: any) =>
     auditLogger.logAuthEvent(userId, 'logout', details),
-  
-  failedLogin: (userId: string, details?: any) => 
+
+  failedLogin: (userId: string, details?: any) =>
     auditLogger.logAuthEvent(userId, 'failed_login', details),
-  
+
   // System events
-  systemEvent: (action: string, details?: any, severity?: 'low' | 'medium' | 'high' | 'critical') => 
-    auditLogger.logSystemEvent(action, details, severity),
-  
+  systemEvent: (
+    action: string,
+    details?: any,
+    severity?: 'low' | 'medium' | 'high' | 'critical'
+  ) => auditLogger.logSystemEvent(action, details, severity),
+
   // Security events
-  securityEvent: (userId: string, action: string, details?: any, severity?: 'low' | 'medium' | 'high' | 'critical') => 
-    auditLogger.logSecurityEvent(userId, action, details, severity)
+  securityEvent: (
+    userId: string,
+    action: string,
+    details?: any,
+    severity?: 'low' | 'medium' | 'high' | 'critical'
+  ) => auditLogger.logSecurityEvent(userId, action, details, severity),
 };

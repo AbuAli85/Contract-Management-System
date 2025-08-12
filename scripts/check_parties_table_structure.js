@@ -12,7 +12,10 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Missing Supabase environment variables');
   console.log('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'Set' : 'Missing');
-  console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseKey ? 'Set' : 'Missing');
+  console.log(
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY:',
+    supabaseKey ? 'Set' : 'Missing'
+  );
   process.exit(1);
 }
 
@@ -43,10 +46,11 @@ async function checkPartiesTable() {
     columns.forEach(col => console.log(`   - ${col}`));
 
     // Check for expiry-related columns
-    const expiryColumns = columns.filter(col => 
-      col.toLowerCase().includes('expiry') || 
-      col.toLowerCase().includes('expire') ||
-      col.toLowerCase().includes('cr_')
+    const expiryColumns = columns.filter(
+      col =>
+        col.toLowerCase().includes('expiry') ||
+        col.toLowerCase().includes('expire') ||
+        col.toLowerCase().includes('cr_')
     );
 
     console.log('\n🔍 Expiry-related columns:');
@@ -62,9 +66,11 @@ async function checkPartiesTable() {
     } else {
       console.log('\n❌ cr_expiry column does not exist');
       console.log('   Available columns that might be related:');
-      columns.filter(col => col.toLowerCase().includes('cr')).forEach(col => {
-        console.log(`   - ${col}`);
-      });
+      columns
+        .filter(col => col.toLowerCase().includes('cr'))
+        .forEach(col => {
+          console.log(`   - ${col}`);
+        });
     }
 
     // Check for license_expiry
@@ -73,10 +79,9 @@ async function checkPartiesTable() {
     } else {
       console.log('\n❌ license_expiry column does not exist');
     }
-
   } catch (error) {
     console.error('❌ Error:', error.message);
   }
 }
 
-checkPartiesTable().catch(console.error); 
+checkPartiesTable().catch(console.error);

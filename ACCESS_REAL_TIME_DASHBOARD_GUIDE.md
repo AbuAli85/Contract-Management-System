@@ -11,6 +11,7 @@ Follow these steps to access and test your real-time provider dashboard with pro
 ### **Option A: Local Development**
 
 1. **Clone and Setup**
+
    ```bash
    git clone https://github.com/your-repo/Contract-Management-System
    cd Contract-Management-System
@@ -19,6 +20,7 @@ Follow these steps to access and test your real-time provider dashboard with pro
 
 2. **Environment Variables**
    Create `.env.local` file:
+
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=https://reootcngcptfogfozlmz.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlb290Y25nY3B0Zm9nZm96bG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NDQzODIsImV4cCI6MjA2OTAyMDM4Mn0.WQwDpYX2M4pyPaliUqTinwy1xWWFKm4OntN2HUfP6n0
@@ -32,6 +34,7 @@ Follow these steps to access and test your real-time provider dashboard with pro
    ```
 
 ### **Option B: Use Deployed Version**
+
 - Access your deployed Vercel URL directly
 - Environment variables should already be configured
 
@@ -47,31 +50,33 @@ Follow these steps to access and test your real-time provider dashboard with pro
 
 2. **First: Fix Role Constraint**
    Run this SQL to fix the role constraint:
+
    ```sql
    -- Fix role constraint to allow 'provider' and 'client' roles
-   DO $$ 
+   DO $$
    BEGIN
        IF EXISTS (
-           SELECT 1 FROM information_schema.table_constraints 
-           WHERE table_name = 'users' 
+           SELECT 1 FROM information_schema.table_constraints
+           WHERE table_name = 'users'
            AND constraint_name = 'users_role_check'
        ) THEN
            ALTER TABLE users DROP CONSTRAINT users_role_check;
        END IF;
    END $$;
 
-   ALTER TABLE users ADD CONSTRAINT users_role_check 
+   ALTER TABLE users ADD CONSTRAINT users_role_check
    CHECK (role IN ('admin', 'manager', 'user', 'viewer', 'client', 'provider', 'super_admin'));
    ```
 
 3. **Then: Create Test Accounts**
    Run the complete script: `scripts/fix-user-roles-and-create-accounts.sql`
-   
+
    Or run this simplified version:
+
    ```sql
    -- Create Provider Account
    INSERT INTO auth.users (
-     id, email, encrypted_password, email_confirmed_at, 
+     id, email, encrypted_password, email_confirmed_at,
      created_at, updated_at
    ) VALUES (
      '11111111-1111-1111-1111-111111111111',
@@ -90,6 +95,7 @@ Follow these steps to access and test your real-time provider dashboard with pro
    ```
 
 ### **Method 2: Use Registration Form**
+
 1. Go to: `/en/register/provider`
 2. Fill form with provider details
 3. Verify email and complete setup
@@ -99,6 +105,7 @@ Follow these steps to access and test your real-time provider dashboard with pro
 ## 🔐 **Step 3: Login and Access Dashboard**
 
 ### **Login Credentials**
+
 ```
 Email: provider@test.com
 Password: TestPass123!
@@ -107,6 +114,7 @@ Password: TestPass123!
 ### **Access Steps**
 
 1. **Go to Login Page**
+
    ```
    Local: http://localhost:3000/en/auth/login
    Deployed: https://your-domain.com/en/auth/login
@@ -127,12 +135,15 @@ Password: TestPass123!
 ## 🧪 **Step 4: Test Real-Time Functionality**
 
 ### **Use Test Dashboard**
+
 First, verify everything works:
+
 ```
 http://localhost:3000/en/test-dashboard
 ```
 
 This page will:
+
 - ✅ Test Supabase connection
 - ✅ Verify authentication status
 - ✅ Check API endpoints
@@ -163,30 +174,35 @@ This page will:
 ### **Provider Dashboard Tabs**
 
 **Overview Tab:**
+
 - ✅ 8 live statistics cards
 - ✅ Recent orders with progress
 - ✅ Quick action buttons
 - ✅ Performance metrics
 
 **Orders Tab (`My Orders (X)`):**
+
 - ✅ Live order count in tab
 - ✅ Real orders from database
 - ✅ Accept/Deliver/Complete actions
 - ✅ Client information display
 
 **Services Tab (`My Services (X)`):**
+
 - ✅ Live service count
 - ✅ Service management (Create/Edit/Pause)
 - ✅ Performance metrics per service
 - ✅ Digital marketing categories
 
 **Earnings Tab:**
+
 - ✅ Available balance for withdrawal
 - ✅ Pending payments
 - ✅ Monthly earnings comparison
 - ✅ Total lifetime earnings
 
 **Analytics Tab:**
+
 - ✅ Performance visualizations
 - ✅ Completion and response rates
 - ✅ Business growth metrics
@@ -200,7 +216,7 @@ If you want more test data, run this SQL:
 ```sql
 -- Create sample booking/order
 INSERT INTO public.bookings (
-  id, client_id, provider_id, service_id, title, 
+  id, client_id, provider_id, service_id, title,
   status, total_amount, start_date, end_date, created_at
 ) VALUES (
   '77777777-7777-7777-7777-777777777777',
@@ -217,29 +233,37 @@ INSERT INTO public.bookings (
 ## 🚨 **Troubleshooting Common Issues**
 
 ### **Issue: "Access Denied" on Dashboard**
+
 **Solution:**
+
 ```sql
-UPDATE public.users 
+UPDATE public.users
 SET role = 'provider', status = 'active'
 WHERE email = 'provider@test.com';
 ```
 
 ### **Issue: "Authentication Required"**
+
 **Solutions:**
+
 1. Clear browser cookies and localStorage
 2. Log in again with correct credentials
 3. Check if user exists in database
 4. Verify environment variables
 
 ### **Issue: Dashboard Shows No Data**
+
 **Solutions:**
+
 1. Run the sample data SQL scripts
 2. Check if services table has data
 3. Verify provider_id matches in all tables
 4. Check browser console for API errors
 
 ### **Issue: Real-Time Updates Not Working**
+
 **Solutions:**
+
 1. Check browser console for WebSocket errors
 2. Verify Supabase connection
 3. Test network connectivity
@@ -250,6 +274,7 @@ WHERE email = 'provider@test.com';
 ## 🔧 **Development Commands**
 
 ### **Local Development**
+
 ```bash
 # Start development server
 npm run dev
@@ -262,6 +287,7 @@ npm run dev -- -p 3001
 ```
 
 ### **Database Operations**
+
 ```bash
 # Reset database (if using Supabase CLI)
 npx supabase db reset
@@ -275,13 +301,15 @@ npx supabase db push
 ## 📱 **Mobile & Browser Testing**
 
 ### **Recommended Testing**
+
 - ✅ **Chrome/Edge** - Full support
-- ✅ **Firefox** - Full support  
+- ✅ **Firefox** - Full support
 - ✅ **Safari** - Full support
 - ✅ **Mobile Chrome** - Responsive design
 - ✅ **Mobile Safari** - Responsive design
 
 ### **Real-Time on Different Devices**
+
 - ✅ **Desktop** - Full real-time features
 - ✅ **Tablet** - Touch-optimized interface
 - ✅ **Mobile** - Responsive dashboard
@@ -291,6 +319,7 @@ npx supabase db push
 ## 🌐 **Production Deployment**
 
 ### **Vercel Deployment**
+
 1. **Push to GitHub** - Auto-deploys
 2. **Set Environment Variables** in Vercel dashboard
 3. **Access Production URL**:
@@ -299,6 +328,7 @@ npx supabase db push
    ```
 
 ### **Domain Configuration**
+
 - Set custom domain in Vercel
 - Update CORS settings if needed
 - Test all functionality on production
@@ -308,6 +338,7 @@ npx supabase db push
 ## 📞 **Quick Support Checklist**
 
 Before asking for help, check:
+
 - [ ] Environment variables are set correctly
 - [ ] Provider account exists with `role = 'provider'`
 - [ ] Successfully logged in
@@ -320,6 +351,7 @@ Before asking for help, check:
 ## 🎉 **Success Indicators**
 
 You know everything is working when:
+
 - ✅ **Login successful** with provider credentials
 - ✅ **Dashboard loads** with real statistics
 - ✅ **Tab titles show counts** like "My Orders (3)"
@@ -333,12 +365,14 @@ You know everything is working when:
 ## 🚀 **Ready-to-Use URLs**
 
 ### **Local Development**
+
 - **Login**: http://localhost:3000/en/auth/login
 - **Provider Dashboard**: http://localhost:3000/en/dashboard/provider-comprehensive
 - **Test Page**: http://localhost:3000/en/test-dashboard
 - **Marketplace**: http://localhost:3000/marketplace/services
 
 ### **Production**
+
 - **Login**: https://your-domain.com/en/auth/login
 - **Provider Dashboard**: https://your-domain.com/en/dashboard/provider-comprehensive
 - **Test Page**: https://your-domain.com/en/test-dashboard

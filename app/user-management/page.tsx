@@ -12,11 +12,8 @@ export const metadata: Metadata = {
 
 export default function UserManagementPage() {
   return (
-    <EnhancedRBAC
-      requiredPermissions={['users.read']}
-      showUnauthorized={true}
-    >
-      <div className="container mx-auto py-6 px-4">
+    <EnhancedRBAC requiredPermissions={['users.read']} showUnauthorized={true}>
+      <div className='container mx-auto py-6 px-4'>
         <UserManagementDashboard />
       </div>
     </EnhancedRBAC>

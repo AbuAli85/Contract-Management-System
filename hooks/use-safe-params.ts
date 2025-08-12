@@ -1,5 +1,5 @@
-import { useParams as useNextParams } from "next/navigation"
-import { usePathname as useNextPathname } from "next/navigation"
+import { useParams as useNextParams } from 'next/navigation';
+import { usePathname as useNextPathname } from 'next/navigation';
 
 /**
  * Safe wrapper around Next.js useParams that handles edge cases
@@ -7,18 +7,18 @@ import { usePathname as useNextPathname } from "next/navigation"
  */
 export function useSafeParams() {
   try {
-    const params = useNextParams()
-    
+    const params = useNextParams();
+
     // Ensure we always return an object, even if params is undefined
     if (!params || typeof params !== 'object') {
-      console.warn('🚨 useParams returned undefined or invalid value:', params)
-      return {}
+      console.warn('🚨 useParams returned undefined or invalid value:', params);
+      return {};
     }
-    
-    return params
+
+    return params;
   } catch (error) {
-    console.error('🚨 Error in useParams:', error)
-    return {}
+    console.error('🚨 Error in useParams:', error);
+    return {};
   }
 }
 
@@ -28,18 +28,21 @@ export function useSafeParams() {
  */
 export function useSafePathname(): string {
   try {
-    const pathname = useNextPathname()
-    
+    const pathname = useNextPathname();
+
     // Ensure we always return a string, even if pathname is undefined
     if (!pathname || typeof pathname !== 'string') {
-      console.warn('🚨 usePathname returned undefined or invalid value:', pathname)
-      return '/'
+      console.warn(
+        '🚨 usePathname returned undefined or invalid value:',
+        pathname
+      );
+      return '/';
     }
-    
-    return pathname
+
+    return pathname;
   } catch (error) {
-    console.error('🚨 Error in usePathname:', error)
-    return '/'
+    console.error('🚨 Error in usePathname:', error);
+    return '/';
   }
 }
 
@@ -47,14 +50,14 @@ export function useSafePathname(): string {
  * Get locale from params with fallback
  */
 export function useLocaleFromParams(): string {
-  const params = useSafeParams()
-  const locale = (params?.locale as string) || "en"
-  
+  const params = useSafeParams();
+  const locale = (params?.locale as string) || 'en';
+
   // Validate locale is a reasonable value
   if (typeof locale !== 'string' || locale.length > 10) {
-    console.warn('🚨 Invalid locale detected:', locale, 'falling back to "en"')
-    return "en"
+    console.warn('🚨 Invalid locale detected:', locale, 'falling back to "en"');
+    return 'en';
   }
-  
-  return locale
+
+  return locale;
 }

@@ -15,7 +15,8 @@ export async function verifyWebhook(params: VerifyParams) {
   // Timestamp validation
   const now = Math.floor(Date.now() / 1000);
   const ts = parseInt(timestamp, 10);
-  if (isNaN(ts) || Math.abs(now - ts) > 300) { // 5 minutes
+  if (isNaN(ts) || Math.abs(now - ts) > 300) {
+    // 5 minutes
     throw new Error('Invalid timestamp');
   }
 

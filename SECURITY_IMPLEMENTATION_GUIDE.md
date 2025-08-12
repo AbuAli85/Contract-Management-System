@@ -1,11 +1,13 @@
 # 🔐 **Data & API Security Implementation Guide**
 
 ## **Overview**
+
 Comprehensive security system for your Contract Management System protecting data, APIs, and user access.
 
 ## **🛡️ Security Features Implemented**
 
 ### **1. API Security Middleware**
+
 - **Rate Limiting**: Prevents API abuse and DDoS attacks
 - **Authentication**: JWT token validation for all protected routes
 - **Role-Based Access Control**: Granular permissions system
@@ -13,18 +15,21 @@ Comprehensive security system for your Contract Management System protecting dat
 - **Security Headers**: CORS, XSS protection, content security
 
 ### **2. Data Encryption**
+
 - **Field-Level Encryption**: Sensitive data encrypted at rest
 - **Secure Key Management**: Environment-based encryption keys
 - **Hash Functions**: One-way hashing for passwords and indexes
 - **Token Generation**: Secure random token creation
 
 ### **3. Audit & Monitoring**
+
 - **Comprehensive Logging**: All API requests and security events
 - **Audit Trail**: Complete history of data changes
 - **Security Event Tracking**: Failed logins, unauthorized access
 - **Performance Monitoring**: Response times and system health
 
 ### **4. Access Control**
+
 - **API Key Management**: Secure API key generation and validation
 - **Permission System**: Granular access control
 - **Session Management**: Secure session handling
@@ -144,42 +149,45 @@ Example of securing an API route:
 
 ```typescript
 // app/api/contracts/route.ts
-import { withSecurity } from '@/lib/security/api-middleware'
-import { rateLimitPresets } from '@/lib/security/rate-limiter'
+import { withSecurity } from '@/lib/security/api-middleware';
+import { rateLimitPresets } from '@/lib/security/rate-limiter';
 
 export const GET = withSecurity(
-  async (request) => {
+  async request => {
     // Your route logic here
-    return NextResponse.json({ contracts: [] })
+    return NextResponse.json({ contracts: [] });
   },
   {
     requireAuth: true,
     requireRole: ['admin', 'user'],
     rateLimit: rateLimitPresets.api,
     logRequests: true,
-    sanitizeInput: true
+    sanitizeInput: true,
   }
-)
+);
 
 export const POST = withSecurity(
-  async (request) => {
+  async request => {
     // Your route logic here
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   },
   {
     requireAuth: true,
     requireRole: ['admin'],
     rateLimit: rateLimitPresets.api,
     logRequests: true,
-    sanitizeInput: true
+    sanitizeInput: true,
   }
-)
+);
 ```
 
 ### **Step 5: Encrypt Sensitive Data**
 
 ```typescript
-import { databaseSecurity, SENSITIVE_FIELDS } from '@/lib/security/data-encryption'
+import {
+  databaseSecurity,
+  SENSITIVE_FIELDS,
+} from '@/lib/security/data-encryption';
 
 // When creating a contract
 const newContract = await databaseSecurity.secureInsert(
@@ -187,27 +195,30 @@ const newContract = await databaseSecurity.secureInsert(
   contractData,
   SENSITIVE_FIELDS.contracts,
   userId
-)
+);
 
 // When fetching contracts
 const contracts = await databaseSecurity.secureSelect(
   'contracts',
   { user_id: userId },
   SENSITIVE_FIELDS.contracts
-)
+);
 ```
 
 ### **Step 6: Add Security to Forms**
 
 ```typescript
-import { validateInput, VALIDATION_PRESETS } from '@/lib/security/input-sanitizer'
+import {
+  validateInput,
+  VALIDATION_PRESETS,
+} from '@/lib/security/input-sanitizer';
 
 // Validate form input
-const emailValidation = validateInput(email, VALIDATION_PRESETS.email)
-const passwordValidation = validateInput(password, VALIDATION_PRESETS.password)
+const emailValidation = validateInput(email, VALIDATION_PRESETS.email);
+const passwordValidation = validateInput(password, VALIDATION_PRESETS.password);
 
 if (!emailValidation.isValid) {
-  return { error: emailValidation.errors.join(', ') }
+  return { error: emailValidation.errors.join(', ') };
 }
 ```
 
@@ -230,7 +241,7 @@ export function SecurityDashboard() {
   const loadSecurityData = async () => {
     const events = await auditLogger.getSecurityEvents('high')
     const trail = await auditLogger.getAuditTrail()
-    
+
     setSecurityEvents(events)
     setAuditTrail(trail)
   }
@@ -239,7 +250,7 @@ export function SecurityDashboard() {
     <div>
       <h2>Security Events</h2>
       {/* Display security events */}
-      
+
       <h2>Audit Trail</h2>
       {/* Display audit trail */}
     </div>
@@ -250,24 +261,28 @@ export function SecurityDashboard() {
 ## **🔒 Security Best Practices**
 
 ### **1. Authentication & Authorization**
+
 - ✅ Use strong JWT tokens with short expiration
 - ✅ Implement role-based access control (RBAC)
 - ✅ Enable multi-factor authentication for admins
 - ✅ Regular session validation and refresh
 
 ### **2. Data Protection**
+
 - ✅ Encrypt sensitive data at rest
 - ✅ Use HTTPS for all communications
 - ✅ Implement proper input validation
 - ✅ Sanitize all user inputs
 
 ### **3. API Security**
+
 - ✅ Rate limiting on all endpoints
 - ✅ API key authentication for external access
 - ✅ Comprehensive error handling
 - ✅ Security headers on all responses
 
 ### **4. Monitoring & Logging**
+
 - ✅ Log all security events
 - ✅ Monitor for suspicious activity
 - ✅ Regular security audits
@@ -276,6 +291,7 @@ export function SecurityDashboard() {
 ## **🚨 Security Alerts**
 
 ### **High Priority Events**
+
 - Failed login attempts (>5 in 15 minutes)
 - Unauthorized API access attempts
 - Data export/download activities
@@ -283,6 +299,7 @@ export function SecurityDashboard() {
 - Unusual activity patterns
 
 ### **Medium Priority Events**
+
 - Rate limit exceeded
 - Input validation failures
 - Session expired events
@@ -291,16 +308,19 @@ export function SecurityDashboard() {
 ## **🛠️ Maintenance Tasks**
 
 ### **Daily**
+
 - Review security event logs
 - Monitor API usage patterns
 - Check for failed authentication attempts
 
 ### **Weekly**
+
 - Audit user permissions
 - Review API key usage
 - Clean up old log entries
 
 ### **Monthly**
+
 - Security vulnerability assessment
 - Update security policies
 - Review encryption keys
@@ -309,6 +329,7 @@ export function SecurityDashboard() {
 ## **📞 Security Incident Response**
 
 ### **Immediate Actions**
+
 1. Identify the security threat
 2. Isolate affected systems
 3. Preserve evidence (logs, data)
@@ -316,6 +337,7 @@ export function SecurityDashboard() {
 5. Implement containment measures
 
 ### **Investigation Steps**
+
 1. Analyze security logs
 2. Identify attack vectors
 3. Assess data impact
@@ -323,6 +345,7 @@ export function SecurityDashboard() {
 5. Implement fixes
 
 ### **Recovery Process**
+
 1. Patch vulnerabilities
 2. Reset compromised credentials
 3. Update security policies
@@ -345,26 +368,29 @@ Track these key security metrics:
 ### **Common Issues**
 
 **Rate Limiting Too Aggressive**
+
 ```typescript
 // Adjust rate limits in rate-limiter.ts
 export const rateLimitPresets = {
   api: {
     windowMs: 15 * 60 * 1000, // Increase window
-    maxRequests: 200 // Increase limit
-  }
-}
+    maxRequests: 200, // Increase limit
+  },
+};
 ```
 
 **Encryption Key Issues**
+
 ```bash
 # Generate new encryption key
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
 **Database Performance**
+
 ```sql
 -- Add indexes for better performance
-CREATE INDEX CONCURRENTLY idx_audit_logs_user_created 
+CREATE INDEX CONCURRENTLY idx_audit_logs_user_created
 ON audit_logs(user_id, created_at DESC);
 ```
 

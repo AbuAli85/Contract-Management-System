@@ -2,10 +2,10 @@
 
 /**
  * 🛡️ RBAC Guard Lint
- * 
+ *
  * This script walks through API routes and ensures each exported handler
  * is properly wrapped with RBAC guards (withRBAC or withAnyRBAC).
- * 
+ *
  * Critical paths (admin, contracts, users, audit-logs, upload, workflow)
  * must have guards or the script exits with non-zero code.
  */
@@ -40,7 +40,14 @@ interface LintReport {
 }
 
 class RBACGuardLinter {
-  private criticalPaths = ['admin', 'contracts', 'users', 'audit-logs', 'upload', 'workflow'];
+  private criticalPaths = [
+    'admin',
+    'contracts',
+    'users',
+    'audit-logs',
+    'upload',
+    'workflow',
+  ];
   private routeFiles: RouteFile[] = [];
 
   async run(): Promise<void> {
@@ -53,19 +60,19 @@ class RBACGuardLinter {
 
   private async scanAPIRoutes(): Promise<void> {
     console.log('🔍 Scanning API routes...');
-    
+
     try {
       // Find all route.ts files in the API directory
       const routeFiles = await glob('app/api/**/route.ts', {
-        ignore: ['node_modules/**', 'dist/**', 'build/**', '.next/**']
+        ignore: ['node_modules/**', 'dist/**', 'build/**', '.next/**'],
       });
-      
+
       console.log(`   📁 Found ${routeFiles.length} route files`);
-      
+
       for (const filePath of routeFiles) {
         await this.analyzeRouteFile(filePath);
       }
-      
+
       console.log(`   ✅ Analysis complete`);
     } catch (error) {
       console.error('   ❌ Error scanning API routes:', error);
@@ -76,34 +83,45 @@ class RBACGuardLinter {
   private async analyzeRouteFile(filePath: string): Promise<void> {
     const content = readFileSync(filePath, 'utf-8');
     const relativePath = filePath.replace('app/api/', '');
-    
+
     const routeFile: RouteFile = {
       path: relativePath,
       hasGuards: false,
       missingHandlers: [],
       guardedHandlers: [],
-      issues: []
+      issues: [],
     };
 
     // Extract exported HTTP method handlers
-    const httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
+    const httpMethods = [
+      'GET',
+      'POST',
+      'PUT',
+      'DELETE',
+      'PATCH',
+      'HEAD',
+      'OPTIONS',
+    ];
     const handlers: { method: string; line: number; hasGuard: boolean }[] = [];
 
     for (const method of httpMethods) {
-      const methodRegex = new RegExp(`export\\s+const\\s+${method}\\s*=\\s*(\\w+)\\(`, 'g');
+      const methodRegex = new RegExp(
+        `export\\s+const\\s+${method}\\s*=\\s*(\\w+)\\(`,
+        'g'
+      );
       let match;
-      
+
       while ((match = methodRegex.exec(content)) !== null) {
         const wrapper = match[1];
         const lineNumber = content.substring(0, match.index).split('\n').length;
-        
+
         // Check if the handler is wrapped with RBAC guard
         const hasGuard = wrapper === 'withRBAC' || wrapper === 'withAnyRBAC';
-        
+
         handlers.push({
           method,
           line: lineNumber,
-          hasGuard
+          hasGuard,
         });
 
         if (hasGuard) {
@@ -117,7 +135,7 @@ class RBACGuardLinter {
     // Check for any handlers without guards
     if (handlers.length > 0) {
       routeFile.hasGuards = handlers.every(h => h.hasGuard);
-      
+
       if (!routeFile.hasGuards) {
         const missing = handlers.filter(h => !h.hasGuard);
         routeFile.issues.push(
@@ -133,7 +151,7 @@ class RBACGuardLinter {
 
   private async generateReport(): Promise<void> {
     console.log('📋 Generating lint report...');
-    
+
     const report: LintReport = {
       totalFiles: this.routeFiles.length,
       filesWithGuards: this.routeFiles.filter(f => f.hasGuards).length,
@@ -147,14 +165,14 @@ class RBACGuardLinter {
         auditLogs: { total: 0, guarded: 0, missing: 0 },
         upload: { total: 0, guarded: 0, missing: 0 },
         workflow: { total: 0, guarded: 0, missing: 0 },
-        other: { total: 0, guarded: 0, missing: 0 }
-      }
+        other: { total: 0, guarded: 0, missing: 0 },
+      },
     };
 
     // Categorize files and count issues
     for (const file of this.routeFiles) {
       const category = this.categorizeRoute(file.path);
-      
+
       if (category === 'other') {
         report.summary.other.total++;
         if (file.hasGuards) {
@@ -178,21 +196,23 @@ class RBACGuardLinter {
     // Generate markdown report
     const reportContent = this.generateMarkdownReport(report);
     writeFileSync('docs/rbac_guard_lint.md', reportContent);
-    
+
     console.log('   ✅ Report generated: docs/rbac_guard_lint.md');
-    
+
     // Display summary
     console.log('\n📊 GUARD LINT SUMMARY:');
     console.log(`   📁 Total Route Files: ${report.totalFiles}`);
     console.log(`   ✅ Properly Guarded: ${report.filesWithGuards}`);
     console.log(`   ❌ Missing Guards: ${report.filesMissingGuards}`);
     console.log(`   🔴 Critical Issues: ${report.criticalIssues}`);
-    
+
     // Display category breakdown
     for (const [category, stats] of Object.entries(report.summary)) {
       if (stats.total > 0) {
         const status = stats.missing > 0 ? '❌' : '✅';
-        console.log(`   ${status} ${category}: ${stats.guarded}/${stats.total} guarded`);
+        console.log(
+          `   ${status} ${category}: ${stats.guarded}/${stats.total} guarded`
+        );
       }
     }
   }
@@ -209,17 +229,19 @@ class RBACGuardLinter {
 
   private async validateCriticalPaths(): Promise<void> {
     console.log('\n🔍 Validating critical paths...');
-    
+
     let hasCriticalIssues = false;
-    
+
     for (const path of this.criticalPaths) {
       const files = this.routeFiles.filter(f => f.path.startsWith(path + '/'));
       const missingGuards = files.filter(f => !f.hasGuards);
-      
+
       if (missingGuards.length > 0) {
-        console.log(`   ❌ ${path}: ${missingGuards.length} files missing guards`);
+        console.log(
+          `   ❌ ${path}: ${missingGuards.length} files missing guards`
+        );
         hasCriticalIssues = true;
-        
+
         for (const file of missingGuards) {
           console.log(`      - ${file.path}: ${file.issues.join(', ')}`);
         }
@@ -227,19 +249,23 @@ class RBACGuardLinter {
         console.log(`   ✅ ${path}: All files properly guarded`);
       }
     }
-    
+
     if (hasCriticalIssues) {
       console.log('\n❌ CRITICAL: Critical paths have missing RBAC guards!');
-      console.log('   This creates security vulnerabilities. Please fix before production deployment.');
+      console.log(
+        '   This creates security vulnerabilities. Please fix before production deployment.'
+      );
       process.exit(1);
     } else {
-      console.log('\n✅ All critical paths are properly secured with RBAC guards.');
+      console.log(
+        '\n✅ All critical paths are properly secured with RBAC guards.'
+      );
     }
   }
 
   private generateMarkdownReport(report: LintReport): string {
     const timestamp = new Date().toISOString();
-    
+
     return `# 🛡️ RBAC Guard Lint Report
 
 Generated: ${timestamp}
@@ -297,34 +323,53 @@ Generated: ${timestamp}
 
 ## 📋 Detailed File Analysis
 
-${report.routeFiles.map(file => {
-  const status = file.hasGuards ? '✅' : '❌';
-  const issues = file.issues.length > 0 ? `\n    - Issues: ${file.issues.join(', ')}` : '';
-  const handlers = file.guardedHandlers.length > 0 ? 
-    `\n    - Guarded: ${file.guardedHandlers.join(', ')}` : '';
-  const missing = file.missingHandlers.length > 0 ? 
-    `\n    - Missing Guards: ${file.missingHandlers.join(', ')}` : '';
-  
-  return `### ${status} \`${file.path}\`${issues}${handlers}${missing}`;
-}).join('\n\n')}
+${report.routeFiles
+  .map(file => {
+    const status = file.hasGuards ? '✅' : '❌';
+    const issues =
+      file.issues.length > 0 ? `\n    - Issues: ${file.issues.join(', ')}` : '';
+    const handlers =
+      file.guardedHandlers.length > 0
+        ? `\n    - Guarded: ${file.guardedHandlers.join(', ')}`
+        : '';
+    const missing =
+      file.missingHandlers.length > 0
+        ? `\n    - Missing Guards: ${file.missingHandlers.join(', ')}`
+        : '';
+
+    return `### ${status} \`${file.path}\`${issues}${handlers}${missing}`;
+  })
+  .join('\n\n')}
 
 ## 🚨 Action Items
 
-${report.criticalIssues > 0 ? 
-  `1. **IMMEDIATE**: Fix missing RBAC guards in critical paths:
-     ${this.criticalPaths.map(path => {
-       const files = report.routeFiles.filter(f => f.path.startsWith(path + '/') && !f.hasGuards);
-       if (files.length > 0) {
-         return `   - ${path}: ${files.map(f => f.path).join(', ')}`;
-       }
-       return null;
-     }).filter(Boolean).join('\n     ')}` : 
-  '1. ✅ No critical issues to fix'}
+${
+  report.criticalIssues > 0
+    ? `1. **IMMEDIATE**: Fix missing RBAC guards in critical paths:
+     ${this.criticalPaths
+       .map(path => {
+         const files = report.routeFiles.filter(
+           f => f.path.startsWith(path + '/') && !f.hasGuards
+         );
+         if (files.length > 0) {
+           return `   - ${path}: ${files.map(f => f.path).join(', ')}`;
+         }
+         return null;
+       })
+       .filter(Boolean)
+       .join('\n     ')}`
+    : '1. ✅ No critical issues to fix'
+}
 
-${report.filesMissingGuards > 0 ? 
-  `2. **REVIEW**: Add RBAC guards to remaining unsecured routes:
-     ${report.routeFiles.filter(f => !f.hasGuards).map(f => `   - \`${f.path}\``).join('\n     ')}` : 
-  '2. ✅ All routes are properly secured'}
+${
+  report.filesMissingGuards > 0
+    ? `2. **REVIEW**: Add RBAC guards to remaining unsecured routes:
+     ${report.routeFiles
+       .filter(f => !f.hasGuards)
+       .map(f => `   - \`${f.path}\``)
+       .join('\n     ')}`
+    : '2. ✅ All routes are properly secured'
+}
 
 ## 🔧 How to Fix
 

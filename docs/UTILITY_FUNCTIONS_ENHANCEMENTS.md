@@ -80,19 +80,19 @@ calculateDurationLegacy(startDate, endDate) → string
 
 ```typescript
 // Basic usage
-const result = formatCurrency(1234.56)
+const result = formatCurrency(1234.56);
 // { value: '$1,234.56', isValid: true }
 
 // Custom currency and locale
 const result = formatCurrency(1234.56, {
-  currency: "EUR",
-  locale: "de-DE",
+  currency: 'EUR',
+  locale: 'de-DE',
   minimumFractionDigits: 0,
-})
+});
 // { value: '1.235 €', isValid: true }
 
 // Error handling
-const result = formatCurrency(null)
+const result = formatCurrency(null);
 // { value: 'N/A', isValid: false }
 ```
 
@@ -109,18 +109,18 @@ const result = formatCurrency(null)
 
 ```typescript
 // Basic usage
-const result = formatDate("2024-01-15")
+const result = formatDate('2024-01-15');
 // { value: 'Jan 15, 2024', isValid: true }
 
 // Custom locale and style
-const result = formatDate("2024-01-15", {
-  locale: "de-DE",
-  dateStyle: "full",
-})
+const result = formatDate('2024-01-15', {
+  locale: 'de-DE',
+  dateStyle: 'full',
+});
 // { value: 'Montag, 15. Januar 2024', isValid: true }
 
 // Error handling
-const result = formatDate("invalid-date")
+const result = formatDate('invalid-date');
 // { value: 'N/A', error: 'Invalid date string provided', isValid: false }
 ```
 
@@ -146,15 +146,17 @@ const result = formatDate("invalid-date")
 
 ```typescript
 // Basic usage
-const result = calculateDuration("2024-01-01", "2024-01-05")
+const result = calculateDuration('2024-01-01', '2024-01-05');
 // { value: '4 days', isValid: true }
 
 // Short format
-const result = calculateDuration("2024-01-01", "2024-01-05", { shortFormat: true })
+const result = calculateDuration('2024-01-01', '2024-01-05', {
+  shortFormat: true,
+});
 // { value: '4d', isValid: true }
 
 // Complex duration
-const result = calculateDuration("2024-01-01", "2024-01-10")
+const result = calculateDuration('2024-01-01', '2024-01-10');
 // { value: '1 week, 2 days', isValid: true }
 ```
 
@@ -171,11 +173,11 @@ const result = calculateDuration("2024-01-01", "2024-01-10")
 
 ```typescript
 // Successful copy
-const result = await copyToClipboard("text to copy")
+const result = await copyToClipboard('text to copy');
 // { value: 'Copied to clipboard', isValid: true }
 
 // Error handling
-const result = await copyToClipboard("")
+const result = await copyToClipboard('');
 // { value: '', error: 'Invalid text provided for clipboard copy', isValid: false }
 ```
 
@@ -218,14 +220,14 @@ const result = await copyToClipboard("")
 
 ```typescript
 // Old way
-const formatted = formatCurrency(amount, currency)
+const formatted = formatCurrency(amount, currency);
 
 // New way
-const result = formatCurrency(amount, { currency })
+const result = formatCurrency(amount, { currency });
 if (result.isValid) {
-  const formatted = result.value
+  const formatted = result.value;
 } else {
-  console.error(result.error)
+  console.error(result.error);
 }
 ```
 
@@ -233,7 +235,7 @@ if (result.isValid) {
 
 ```typescript
 // Legacy functions maintain exact same API
-const formatted = formatCurrencyLegacy(amount, currency)
+const formatted = formatCurrencyLegacy(amount, currency);
 ```
 
 ### Benefits of Migration
@@ -291,29 +293,29 @@ const formatted = formatCurrencyLegacy(amount, currency)
 
 ```typescript
 // Good: Proper error handling
-const result = formatCurrency(amount, { currency: "EUR" })
+const result = formatCurrency(amount, { currency: 'EUR' });
 if (result.isValid) {
-  displayAmount(result.value)
+  displayAmount(result.value);
 } else {
-  displayAmount("N/A")
-  logError(result.error)
+  displayAmount('N/A');
+  logError(result.error);
 }
 
 // Good: Type-safe configuration
 const dateOptions: DateFormatOptions = {
-  locale: "en-US",
-  dateStyle: "medium",
-}
-const result = formatDate(dateString, dateOptions)
+  locale: 'en-US',
+  dateStyle: 'medium',
+};
+const result = formatDate(dateString, dateOptions);
 
 // Good: Comprehensive testing
-describe("formatCurrency", () => {
-  it("should handle null values", () => {
-    const result = formatCurrency(null)
-    expect(result.isValid).toBe(false)
-    expect(result.value).toBe("N/A")
-  })
-})
+describe('formatCurrency', () => {
+  it('should handle null values', () => {
+    const result = formatCurrency(null);
+    expect(result.isValid).toBe(false);
+    expect(result.value).toBe('N/A');
+  });
+});
 ```
 
 ## Conclusion
