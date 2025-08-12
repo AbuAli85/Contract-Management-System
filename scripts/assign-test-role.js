@@ -111,3 +111,4 @@ assignTestRole().then(success => {
   console.error('❌ Unexpected error:', error)
   process.exit(1)
 })
+

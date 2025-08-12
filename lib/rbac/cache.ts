@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC PERMISSION CACHING
 // ========================================
@@ -343,35 +342,4 @@ export const permissionCache = new PermissionCache({
   enableRedis: !!process.env.REDIS_URL
 })
 
-=======
-import { Permission } from './permissions'
-import { createClient } from '@/lib/supabase/server'
-
-type CacheEntry = { v: Permission[]; t: number }
-
-export const PermissionCache = {
-  cache: new Map<string, CacheEntry>(),
-  ttlMs: 15 * 60 * 1000,
-  key(userId: string) { return `permissions:${userId}` },
-  async getUserPermissions(userId: string): Promise<Permission[]> {
-    const key = this.key(userId)
-    const c = this.cache.get(key)
-    if (c && Date.now() - c.t < this.ttlMs) return c.v
-
-    const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('rbac_user_permissions_mv')
-      .select('resource, action, scope')
-      .eq('user_id', userId)
-
-    if (error) return []
-    const perms: Permission[] = (data || []).map((row: any) => ({ resource: row.resource, action: row.action, scope: row.scope }))
-    this.cache.set(key, { v: perms, t: Date.now() })
-    return perms
-  },
-  invalidateUser(userId: string) { this.cache.delete(this.key(userId)) },
-  invalidateAll() { this.cache.clear() },
-}
-
->>>>>>> Stashed changes
 
