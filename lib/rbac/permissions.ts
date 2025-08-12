@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC PERMISSION PARSING & VALIDATION
 // ========================================
@@ -335,27 +334,4 @@ export function validatePermissionComponents(
     errors
   }
 }
-=======
-export type Scope = 'own' | 'provider' | 'organization' | 'booking' | 'public' | 'all'
 
-export type Permission = {
-  resource: string
-  action: string
-  scope: Scope
-}
-
-export function parsePermission(input: string): Permission {
-  const parts = input.split(':')
-  if (parts.length !== 3) throw new Error(`Invalid permission format: ${input}`)
-  const [resource, action, scope] = parts
-  const validScopes: Scope[] = ['own', 'provider', 'organization', 'booking', 'public', 'all']
-  if (!validScopes.includes(scope as Scope)) throw new Error(`Invalid scope: ${scope}`)
-  return { resource, action, scope: scope as Scope }
-}
-
-export function permissionKey(p: Permission): string {
-  return `${p.resource}:${p.action}:${p.scope}`
-}
-
-
->>>>>>> Stashed changes
