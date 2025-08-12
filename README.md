@@ -1,154 +1,164 @@
-# Contract Management System
+# 🚀 Contract Management System
 
-A modern, secure contract management platform built with Next.js, Supabase, and TypeScript.
+A professional, enterprise-grade contract management and generation system built with Next.js 14, TypeScript, and Supabase.
 
-## 🚀 Features
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-14-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
+![Supabase](https://img.shields.io/badge/Supabase-2.38-green)
 
-### Enhanced Authentication System
+## ✨ Features
 
-- **Automatic Session Refresh**: Seamless session management with automatic token refresh
-- **Memory Leak Prevention**: Proper cleanup of subscriptions and timers
-- **Centralized Error Handling**: User-friendly error messages with toast notifications
-- **Security**: Comprehensive RLS policies and role-based access control
-- **Error Boundaries**: Graceful error handling with recovery options
-- **Automated Reminders**: Email notifications for session expiry
+### 🔐 **Advanced Security & RBAC**
+- Role-Based Access Control (RBAC) with fine-grained permissions
+- Multi-factor authentication support
+- Session management with automatic refresh
+- Audit logging and compliance features
 
-### Core Features
+### 📄 **Contract Management**
+- AI-powered contract generation
+- Template management system
+- Digital signature integration
+- Version control and tracking
+- Real-time collaboration
 
-- Multi-role authentication (Admin, Client, Provider)
-- Contract generation and management
-- Party and promoter management
-- Real-time notifications
-- Advanced search and filtering
-- PDF generation and export
-- Audit logging and analytics
+### 👥 **User Management**
+- Comprehensive user administration
+- Role assignment and permission management
+- User activity monitoring
+- Bulk operations and reporting
 
-## 🛠️ Tech Stack
+### 📊 **Analytics & Reporting**
+- Real-time dashboard with live data
+- Advanced analytics and insights
+- Custom report generation
+- Export capabilities (PDF, Excel, CSV)
 
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Backend**: Supabase (PostgreSQL, Auth, Storage)
-- **UI**: Shadcn/UI, Tailwind CSS, Framer Motion
-- **Testing**: Jest, React Testing Library, Cypress
-- **Deployment**: Vercel, GitHub Actions
+### 🔄 **Workflow & Automation**
+- Approval workflows
+- Automated notifications
+- Task management
+- Integration with external systems
 
-## 📦 Installation
+## 🏗️ Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend       │    │   Database      │
+│   (Next.js)     │◄──►│   (Supabase)    │◄──►│   (PostgreSQL)  │
+│                 │    │                 │    │                 │
+│ • React 18      │    │ • Auth          │    │ • User Data     │
+│ • TypeScript    │    │ • Database      │    │ • Contracts     │
+│ • Tailwind CSS  │    │ • Storage       │    │ • Analytics     │
+│ • Radix UI      │    │ • Functions     │    │ • Audit Logs    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- npm 8+
-- Supabase account
-- Vercel account (for deployment)
+- **Node.js** 18.0.0 or higher
+- **npm** 8.0.0 or higher
+- **Supabase** account and project
 
-### Local Development
+### Installation
 
 1. **Clone the repository**
-
    ```bash
-   git clone https://github.com/your-username/contract-management-system.git
+   git clone https://github.com/yourusername/contract-management-system.git
    cd contract-management-system
    ```
 
 2. **Install dependencies**
-
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
-
    ```bash
-   cp .env.example .env.local
-   ```
-
-   Fill in your environment variables:
-
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-   FRONTEND_URL=http://localhost:3000
+   cp env.example .env.local
+   # Edit .env.local with your Supabase credentials
    ```
 
 4. **Set up Supabase**
-
    ```bash
    # Install Supabase CLI
    npm install -g supabase
-
-   # Link to your project
-   supabase link --project-ref your-project-ref
-
-   # Run migrations
+   
+   # Start local development
+   supabase start
+   
+   # Apply migrations
    npm run db:migrate
    ```
 
-5. **Start development server**
+5. **Run the development server**
    ```bash
    npm run dev
    ```
 
-## 🚀 Deployment
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-### Automatic Deployment (Recommended)
+## 🔧 Configuration
 
-The project is configured for automatic deployment to Vercel using GitHub Actions.
+### Environment Variables
 
-#### 1. Connect to Vercel
+Key environment variables you need to configure:
 
 ```bash
-# Install Vercel CLI
-npm install -g vercel
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
-# Login to Vercel
-vercel login
+# Application Settings
+NODE_ENV=development
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Link your project
-vercel link
+# Security
+RBAC_ENFORCEMENT=true
+NEXT_PUBLIC_SESSION_TIMEOUT=3600000
 ```
 
-#### 2. Set up GitHub Secrets
+### Database Setup
 
-Add the following secrets to your GitHub repository:
+The system uses Supabase with the following key tables:
 
-- `VERCEL_TOKEN`: Your Vercel API token
-- `VERCEL_ORG_ID`: Your Vercel organization ID
-- `VERCEL_PROJECT_ID`: Your Vercel project ID
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key
-- `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase service role key
-- `FRONTEND_URL`: Your production frontend URL
+- `users` - User accounts and profiles
+- `user_roles` - Role assignments
+- `permissions` - Permission definitions
+- `contracts` - Contract data
+- `parties` - Contract parties
+- `audit_logs` - System audit trail
 
-#### 3. Deploy Database Migrations
+## 📁 Project Structure
 
-```bash
-# Deploy Supabase migrations
-npm run db:migrate
-
-# Deploy Edge Functions
-npm run functions:deploy
 ```
-
-#### 4. Push to Deploy
-
-Simply push to the `main` branch to trigger automatic deployment:
-
-```bash
-git add .
-git commit -m "feat: enhanced authentication system"
-git push origin main
-```
-
-### Manual Deployment
-
-If you prefer manual deployment:
-
-```bash
-# Build the project
-npm run build
-
-# Deploy to Vercel
-vercel --prod
+contract-management-system/
+├── app/                    # Next.js 14 app directory
+│   ├── [locale]/          # Internationalization
+│   ├── api/               # API routes
+│   ├── auth/              # Authentication pages
+│   ├── dashboard/         # Dashboard pages
+│   ├── contracts/         # Contract management
+│   └── user-management/   # User administration
+├── components/            # Reusable UI components
+│   ├── ui/               # Base UI components
+│   ├── auth/             # Authentication components
+│   ├── dashboard/        # Dashboard components
+│   └── contracts/        # Contract components
+├── lib/                  # Utility libraries
+│   ├── supabase/         # Supabase client
+│   ├── auth/             # Authentication utilities
+│   ├── rbac/             # RBAC implementation
+│   └── utils/            # General utilities
+├── hooks/                # Custom React hooks
+├── types/                # TypeScript type definitions
+├── database/             # Database migrations
+├── supabase/             # Supabase configuration
+└── tests/                # Test files
 ```
 
 ## 🧪 Testing
@@ -169,107 +179,87 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-### Test Coverage
+### Test Structure
 
-The project includes comprehensive test coverage for:
+- **Unit Tests**: Jest + React Testing Library
+- **E2E Tests**: Cypress
+- **API Tests**: Supertest
+- **Database Tests**: Test database with fixtures
 
-- Authentication system
-- Session management
-- Error handling
-- Memory leak prevention
-- Network failure scenarios
+## 🚀 Deployment
 
-## 🔧 Configuration
+### Vercel (Recommended)
 
-### Environment Variables
+1. **Connect your repository to Vercel**
+2. **Set environment variables in Vercel dashboard**
+3. **Deploy automatically on push to main branch**
 
-| Variable                        | Description                      | Required |
-| ------------------------------- | -------------------------------- | -------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL             | Yes      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key           | Yes      |
-| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key        | Yes      |
-| `FRONTEND_URL`                  | Frontend URL for email links     | Yes      |
-| `SENTRY_DSN`                    | Sentry error tracking (optional) | No       |
+### Manual Deployment
 
-### Database Migrations
+```bash
+# Build the application
+npm run build
 
-The project includes comprehensive database migrations:
-
-1. **RLS Policies** (`20250729090000_enforce_profiles_rls.sql`)
-   - Row-level security for all auth tables
-   - Role-based access control
-   - Admin functions and permissions
-
-2. **Session Reminders** (`20250729090001_session_expiry_cron.sql`)
-   - Automated email reminders
-   - pg_cron scheduling
-   - Audit logging
-
-## 📊 Monitoring
-
-### Session Analytics
-
-```sql
--- Get reminder statistics
-SELECT * FROM get_reminder_statistics(7);
-
--- View recent activity
-SELECT * FROM recent_session_reminders;
+# Start production server
+npm start
 ```
 
-### Error Monitoring
+### Docker Deployment
 
-- Auth errors are logged with context
-- Error boundaries capture JS errors
-- Session refresh failures are tracked
-- Network errors are categorized
+```bash
+# Build Docker image
+docker build -t contract-management-system .
 
-## 🔒 Security
+# Run container
+docker run -p 3000:3000 contract-management-system
+```
 
-### Authentication Security
+## 🔒 Security Features
 
-- **Session Management**: Automatic refresh with retry logic
-- **Token Security**: Secure handling and validation
-- **RLS Policies**: Row-level security on all user data
-- **Error Handling**: No sensitive information in error messages
+- **RBAC**: Role-based access control
+- **Input Validation**: Zod schema validation
+- **SQL Injection Protection**: Parameterized queries
+- **XSS Protection**: Content Security Policy
+- **CSRF Protection**: Token-based validation
+- **Rate Limiting**: API request throttling
+- **Audit Logging**: Comprehensive activity tracking
 
-### Database Security
+## 📊 Performance
 
-- **Row-Level Security**: Users can only access their own data
-- **Admin Access**: Role-based permissions for administrators
-- **Audit Logging**: Comprehensive logging of all operations
-- **Input Validation**: Zod schemas for all user inputs
+- **Bundle Optimization**: Webpack optimization with code splitting
+- **Image Optimization**: Next.js Image component with WebP/AVIF
+- **Caching**: Redis caching for RBAC and API responses
+- **Lazy Loading**: Component and route lazy loading
+- **CDN**: Static asset delivery optimization
 
-## 🚀 Performance
+## 🌍 Internationalization
 
-### Optimizations
+The system supports multiple languages:
 
-- **Code Splitting**: Automatic code splitting with Next.js
-- **Image Optimization**: Next.js Image component
-- **Caching**: Strategic caching for auth data
-- **Memory Management**: Proper cleanup of subscriptions
-
-### Monitoring
-
-- **Bundle Analysis**: Built-in bundle analysis
-- **Performance Metrics**: Core Web Vitals tracking
-- **Error Tracking**: Comprehensive error monitoring
-- **Session Analytics**: User session tracking
+- English (en) - Default
+- Arabic (ar) - RTL support
+- Spanish (es)
+- French (fr)
+- German (de)
 
 ## 🤝 Contributing
 
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Workflow
+
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-### Development Guidelines
+### Code Standards
 
-- Follow TypeScript best practices
-- Write comprehensive tests
-- Use conventional commit messages
-- Ensure all tests pass before submitting PR
+- **TypeScript**: Strict mode enabled
+- **ESLint**: Code quality enforcement
+- **Prettier**: Code formatting
+- **Pre-commit hooks**: Automated quality checks
 
 ## 📝 License
 
@@ -277,25 +267,48 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-For support and questions:
+### Documentation
+- [User Guide](docs/USER_GUIDE.md)
+- [API Documentation](docs/API.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
 
-- Create an issue on GitHub
-- Check the [documentation](docs/)
-- Review the [troubleshooting guide](docs/TROUBLESHOOTING.md)
+### Community
+- [GitHub Issues](https://github.com/yourusername/contract-management-system/issues)
+- [Discussions](https://github.com/yourusername/contract-management-system/discussions)
+- [Wiki](https://github.com/yourusername/contract-management-system/wiki)
 
-## 🔄 Changelog
+### Professional Support
+- **Email**: support@yourdomain.com
+- **Phone**: +1 (555) 123-4567
+- **Hours**: Monday - Friday, 9 AM - 6 PM EST
 
-### v0.1.0 - Enhanced Authentication System
+## 🙏 Acknowledgments
 
-- ✅ Automatic session refresh with retry logic
-- ✅ Memory leak prevention and cleanup
-- ✅ Centralized error handling with user-friendly messages
-- ✅ Comprehensive RLS policies and security
-- ✅ Error boundaries with recovery options
-- ✅ Automated session expiry reminders
-- ✅ Expanded test coverage for edge cases
-- ✅ Production-ready deployment configuration
+- **Next.js Team** for the amazing framework
+- **Supabase Team** for the backend infrastructure
+- **Radix UI** for accessible components
+- **Tailwind CSS** for utility-first CSS
+- **Vercel** for hosting and deployment
+
+## 📈 Roadmap
+
+### Q1 2025
+- [ ] Mobile app (React Native)
+- [ ] Advanced AI contract analysis
+- [ ] Multi-tenant support
+
+### Q2 2025
+- [ ] Blockchain integration
+- [ ] Advanced workflow engine
+- [ ] API marketplace
+
+### Q3 2025
+- [ ] Machine learning insights
+- [ ] Advanced reporting
+- [ ] Enterprise SSO
 
 ---
 
-**Built with ❤️ using Next.js, Supabase, and TypeScript**
+**Built with ❤️ by the Contract Management System Team**
+
+*For enterprise inquiries, contact: enterprise@yourdomain.com*

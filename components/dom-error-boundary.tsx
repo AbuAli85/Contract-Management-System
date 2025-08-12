@@ -1,131 +1,184 @@
-"use client"
+'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Home, Mail } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
+  hasError: boolean;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  errorId: string;
 }
 
 export class DOMErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      errorId: '',
+    };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    // Check if this is a DOM manipulation error
-    const isDOMError = error.message.includes('insertBefore') || 
-                      error.message.includes('removeChild') ||
-                      error.message.includes('replaceChild') ||
-                      error.message.includes('appendChild') ||
-                      error.message.includes('Failed to execute')
-
-    if (isDOMError) {
-      console.warn('DOM manipulation error caught by boundary:', error.message)
-      return { hasError: true, error }
-    }
-
-    // For non-DOM errors, let them propagate
-    return { hasError: false }
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    return {
+      hasError: true,
+      error,
+      errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error for debugging
-    console.error('DOM Error Boundary caught an error:', error, errorInfo)
+    this.setState({
+      error,
+      errorInfo,
+    });
 
-    // Call the onError callback if provided
-    if (this.props.onError) {
-      try {
-        this.props.onError(error, errorInfo)
-      } catch (callbackError) {
-        console.error('Error in onError callback:', callbackError)
-      }
+    // Log error to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error Boundary caught an error:', error, errorInfo);
     }
 
-    // For DOM errors, we can try to recover by forcing a re-render
-    if (error.message.includes('insertBefore') || 
-        error.message.includes('removeChild') ||
-        error.message.includes('replaceChild') ||
-        error.message.includes('appendChild') ||
-        error.message.includes('Failed to execute')) {
-      
-      console.log('Attempting to recover from DOM error...')
-      
-      // Wait a bit and try to recover
-      setTimeout(() => {
-        this.setState({ hasError: false, error: undefined })
-      }, 100)
-    }
+    // In production, you could send this to an error reporting service
+    // Example: Sentry.captureException(error, { extra: errorInfo });
   }
+
+  handleRetry = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      errorId: '',
+    });
+  };
+
+  handleGoHome = () => {
+    window.location.href = '/';
+  };
+
+  handleReportError = () => {
+    const { error, errorInfo, errorId } = this.state;
+    const errorReport = {
+      errorId,
+      message: error?.message,
+      stack: error?.stack,
+      componentStack: errorInfo?.componentStack,
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent,
+    };
+
+    // Copy error report to clipboard
+    navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
+      .then(() => {
+        alert('Error report copied to clipboard. Please send this to support.');
+      })
+      .catch(() => {
+        // Fallback: open email client
+        const subject = encodeURIComponent(`Error Report - ${errorId}`);
+        const body = encodeURIComponent(JSON.stringify(errorReport, null, 2));
+        window.open(`mailto:support@example.com?subject=${subject}&body=${body}`);
+      });
+  };
 
   render() {
     if (this.state.hasError) {
-      // Show fallback UI or a simple error message
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
-        <div className="p-4 border border-red-200 bg-red-50 rounded-md">
-          <h3 className="text-sm font-medium text-red-800">
-            Component temporarily unavailable
-          </h3>
-          <p className="mt-1 text-sm text-red-700">
-            This component encountered a temporary issue and is being restored.
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: undefined })}
-            className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-          >
-            Try again
-          </button>
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <Card className="w-full max-w-2xl">
+            <CardHeader className="text-center">
+              <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+              <CardTitle className="text-2xl font-bold text-destructive">
+                Something went wrong
+              </CardTitle>
+              <CardDescription>
+                We encountered an unexpected error. Our team has been notified.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {process.env.NODE_ENV === 'development' && this.state.error && (
+                <div className="bg-muted p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Error Details (Development)</h4>
+                  <pre className="text-sm text-muted-foreground overflow-auto">
+                    {this.state.error.message}
+                  </pre>
+                  {this.state.errorInfo?.componentStack && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-sm font-medium">
+                        Component Stack
+                      </summary>
+                      <pre className="text-xs text-muted-foreground mt-2 overflow-auto">
+                        {this.state.errorInfo.componentStack}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={this.handleRetry} variant="default" className="flex-1 sm:flex-none">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Try Again
+                </Button>
+                <Button onClick={this.handleGoHome} variant="outline" className="flex-1 sm:flex-none">
+                  <Home className="w-4 h-4 mr-2" />
+                  Go Home
+                </Button>
+                <Button onClick={this.handleReportError} variant="outline" className="flex-1 sm:flex-none">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Report Error
+                </Button>
+              </div>
+
+              <div className="text-center text-sm text-muted-foreground">
+                <p>Error ID: {this.state.errorId}</p>
+                <p>If this problem persists, please contact support.</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )
+      );
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }
 
-// Hook version for functional components
-export function useDOMErrorHandler() {
-  const [hasError, setHasError] = React.useState(false)
-  const [error, setError] = React.useState<Error | null>(null)
+// Hook for functional components to catch errors
+export function useErrorHandler() {
+  const [error, setError] = React.useState<Error | null>(null);
 
-  const handleError = React.useCallback((error: Error) => {
-    const isDOMError = error.message.includes('insertBefore') || 
-                      error.message.includes('removeChild') ||
-                      error.message.includes('replaceChild') ||
-                      error.message.includes('appendChild') ||
-                      error.message.includes('Failed to execute')
+  React.useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      setError(event.error);
+    };
 
-    if (isDOMError) {
-      console.warn('DOM error handled by hook:', error.message)
-      setError(error)
-      setHasError(true)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      setError(new Error(event.reason));
+    };
 
-      // Try to recover after a short delay
-      setTimeout(() => {
-        setHasError(false)
-        setError(null)
-      }, 100)
-    }
-  }, [])
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-  return {
-    hasError,
-    error,
-    handleError,
-    resetError: () => {
-      setHasError(false)
-      setError(null)
-    }
-  }
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
+  return error;
 } 
