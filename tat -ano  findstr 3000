@@ -1,0 +1,15 @@
+warning: in the working copy of 'app/error.tsx', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/loading.tsx', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'components/dom-error-boundary.tsx', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'env.example', CRLF will be replaced by LF the next time Git touches it
+.eslintrc.json
+README.md
+app/error.tsx
+app/loading.tsx
+app/providers.tsx
+components/dom-error-boundary.tsx
+env.example
+next.config.js
+package-lock.json
+package.json
+tsconfig.json
