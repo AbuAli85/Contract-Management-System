@@ -6,4 +6,4 @@ Sentry.init({
   // Add other configurations as needed
 });
 
-export { Sentry };
+export default Sentry;
