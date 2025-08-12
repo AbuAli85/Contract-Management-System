@@ -25,6 +25,10 @@ export default function AuthTestPage() {
     try {
       console.log("🔗 Testing Supabase connection...")
       
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      
       // Test basic connection
       const { data, error } = await supabase.from('users').select('count').limit(1)
       
@@ -58,6 +62,10 @@ export default function AuthTestPage() {
 
   const checkCurrentUser = async () => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      
       const { data: { session } } = await supabase.auth.getSession()
       
       if (session?.user) {
@@ -87,6 +95,10 @@ export default function AuthTestPage() {
     setLoading(true)
     
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      
       // Test basic signup
       const testEmail = `test-${Date.now()}@example.com`
       const testPassword = 'testpass123'
@@ -154,6 +166,10 @@ export default function AuthTestPage() {
     setLoading(true)
     
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      
       // Test with known credentials
       const { data, error } = await supabase.auth.signInWithPassword({
         email: 'provider@test.com',
@@ -187,6 +203,10 @@ export default function AuthTestPage() {
 
   const logout = async () => {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+      
       await supabase.auth.signOut()
       setCurrentUser(null)
       setAuthTests(prev => [...prev, {
