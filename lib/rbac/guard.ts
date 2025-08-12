@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC GUARD - MAIN PERMISSION CHECKER
 // ========================================
@@ -496,3 +497,57 @@ export function isRBACEnforced(): boolean {
 export function isRBACDryRun(): boolean {
   return getRBACEnforcementMode() === 'dry-run'
 }
+=======
+import { NextRequest, NextResponse } from 'next/server'
+import { parsePermission, Permission } from './permissions'
+import { PermissionCache } from './cache'
+import { checkOwnership } from './context/ownership'
+import { checkProviderAccess } from './context/provider'
+import { checkOrganizationAccess } from './context/organization'
+import { checkBookingAccess } from './context/booking'
+import { AuditLogger } from './audit'
+
+async function evaluatePermission(userPerms: Permission[], required: Permission, ctx: any): Promise<boolean> {
+  const base = userPerms.some(p => p.resource === required.resource && p.action === required.action && (p.scope === required.scope || p.scope === 'all'))
+  if (!base) return false
+  switch (required.scope) {
+    case 'all':
+    case 'public':
+      return true
+    case 'own':
+      return checkOwnership(required.resource, ctx)
+    case 'provider':
+      return checkProviderAccess(required.resource, ctx)
+    case 'organization':
+      return checkOrganizationAccess(required.resource, ctx)
+    case 'booking':
+      return checkBookingAccess(required.resource, ctx)
+    default:
+      return false
+  }
+}
+
+export const withRBAC = (requiredPermission: string, handler: (req: NextRequest, ctx: any) => Promise<NextResponse>) => {
+  return async (req: NextRequest, routeCtx: any) => {
+    const mode = process.env.RBAC_ENFORCEMENT || 'dry-run'
+    try {
+      // user is expected to be resolved in existing auth flows inside handler; we best-effort probe header
+      const userHeader = req.headers.get('x-user-id')
+      const userId = userHeader || ''
+      const required = parsePermission(requiredPermission)
+      const perms = userId ? await PermissionCache.getUserPermissions(userId) : []
+      const allowed = await evaluatePermission(perms, required, { user: { id: userId }, params: (routeCtx as any)?.params, body: null, query: Object.fromEntries(new URL(req.url).searchParams), now: new Date() })
+      const result: 'ALLOW'|'DENY'|'WOULD_BLOCK' = allowed ? 'ALLOW' : (mode === 'dry-run' ? 'WOULD_BLOCK' : 'DENY')
+      await AuditLogger.logPermissionUsage(userId, requiredPermission, new URL(req.url).pathname, result, (req as any).ip, req.headers.get('user-agent') || undefined)
+      if (!allowed && mode === 'enforce') {
+        return NextResponse.json({ success: false, error: { code: 'INSUFFICIENT_PERMISSIONS', required_permission: requiredPermission } }, { status: 403 })
+      }
+      return handler(req, routeCtx)
+    } catch (err) {
+      return NextResponse.json({ success: false, error: { code: 'PERMISSION_CHECK_FAILED' } }, { status: 500 })
+    }
+  }
+}
+
+
+>>>>>>> Stashed changes

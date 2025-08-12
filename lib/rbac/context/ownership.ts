@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 // ========================================
 // 🛡️ RBAC OWNERSHIP CONTEXT EVALUATOR
 // ========================================
@@ -496,3 +497,51 @@ export async function checkOwnership(
   const result = await ownershipEvaluator.checkOwnership(resource, context)
   return result.isOwner
 }
+=======
+import { createClient } from '@/lib/supabase/server'
+
+export async function checkOwnership(resource: string, args: any): Promise<boolean> {
+  const { user, params, body, query } = args
+  const supabase = await createClient()
+
+  switch (resource) {
+    case 'user': {
+      const targetUserId = params?.id || body?.user_id || query?.user_id
+      return !!(user?.id && targetUserId && user.id === targetUserId)
+    }
+    case 'service': {
+      const serviceId = params?.id || body?.service_id || query?.service_id
+      if (!serviceId || !user?.id) return false
+      const { data, error } = await supabase
+        .from('services')
+        .select('company_id')
+        .eq('id', serviceId)
+        .single()
+      if (error || !data) return false
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .eq('company_id', data.company_id)
+        .eq('is_active', true)
+        .maybeSingle()
+      return !!role
+    }
+    case 'booking': {
+      const bookingId = params?.id || body?.booking_id || query?.booking_id
+      if (!bookingId || !user?.id) return false
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('client_id')
+        .eq('id', bookingId)
+        .single()
+      if (error || !data) return false
+      return data.client_id === user.id
+    }
+    default:
+      return false
+  }
+}
+
+
+>>>>>>> Stashed changes

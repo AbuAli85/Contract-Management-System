@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # 🛡️ RBAC Endpoint Mapping
 
 ## Overview
@@ -268,3 +269,20 @@ RBAC_ENFORCEMENT=enforce npm run dev
 # Check audit logs
 SELECT * FROM audit_logs WHERE event_type = 'PERMISSION_CHECK' ORDER BY timestamp DESC;
 ```
+=======
+### Proposed Endpoint → Permission Mapping
+
+- GET /api/bookings → booking:read:own (booking:read:provider for provider views; booking:read:all for admin dashboards)
+- POST /api/bookings → booking:create:own
+- GET /api/provider/services → service:read:own (manager/admin may need service:read:all)
+- POST /api/provider/services → service:create:own
+- GET /api/users → user:read:all (admin-only views)
+- POST /api/users/:id/roles (future) → role:assign:all (scoped by org in evaluator)
+- Moderation: service/message moderation routes → service:moderate:all | message:moderate:all
+
+Notes:
+- Ambiguous endpoints will default to most restrictive mapping and be flagged during review.
+- Existing `professionalSecurityMiddleware` remains; RBAC runs in dry-run initially to audit.
+
+
+>>>>>>> Stashed changes
