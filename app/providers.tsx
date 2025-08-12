@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+} from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/theme-provider';
 import { EnhancedRBACProvider } from '@/components/auth/enhanced-rbac-provider';
@@ -81,26 +87,29 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(true);
         const client = createClient();
         setSupabase(client);
-        
+
         // Get initial session
-        const { data: { session }, error } = await client.auth.getSession();
+        const {
+          data: { session },
+          error,
+        } = await client.auth.getSession();
         if (error) {
           console.error('Error getting session:', error);
         } else if (session) {
           setSession(session);
           setUser(session.user);
         }
-        
+
         // Listen for auth changes
-        const { data: { subscription } } = client.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state changed:', event, session?.user?.email);
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-          }
-        );
-        
+        const {
+          data: { subscription },
+        } = client.auth.onAuthStateChange(async (event, session) => {
+          console.log('Auth state changed:', event, session?.user?.email);
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        });
+
         setLoading(false);
         return () => subscription.unsubscribe();
       } catch (error) {
@@ -127,7 +136,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     try {
       if (supabase) {
-        const { data: { session }, error } = await supabase.auth.refreshSession();
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.refreshSession();
         if (error) {
           console.error('Error refreshing session:', error);
         } else if (session) {
@@ -140,19 +152,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [supabase]);
 
-  const authValue = useMemo(() => ({
-    user,
-    session,
-    loading,
-    supabase,
-    signOut,
-    refreshSession,
-  }), [user, session, loading, supabase, signOut, refreshSession]);
+  const authValue = useMemo(
+    () => ({
+      user,
+      session,
+      loading,
+      supabase,
+      signOut,
+      refreshSession,
+    }),
+    [user, session, loading, supabase, signOut, refreshSession]
+  );
 
   return (
-    <AuthContext.Provider value={authValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
   );
 }
 
@@ -174,7 +187,8 @@ export function useRBAC() {
 }
 
 export function usePermissions() {
-  const { permissions, hasPermission, hasAnyPermission, hasAllPermissions } = useRBAC();
+  const { permissions, hasPermission, hasAnyPermission, hasAllPermissions } =
+    useRBAC();
   return { permissions, hasPermission, hasAnyPermission, hasAllPermissions };
 }
 
@@ -188,77 +202,107 @@ function RBACProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       const role = user.user_metadata?.role || 'user';
       setUserRole(role);
-      
+
       const rolePermissions = {
-        'super-admin': ['read', 'write', 'delete', 'manage_users', 'manage_contracts', 'manage_system', 'view_audit_logs'],
-        'admin': ['read', 'write', 'delete', 'manage_users', 'manage_contracts', 'view_audit_logs'],
-        'manager': ['read', 'write', 'manage_contracts', 'view_reports'],
-        'moderator': ['read', 'write', 'moderate_content'],
-        'user': ['read', 'write'],
-        'viewer': ['read']
+        'super-admin': [
+          'read',
+          'write',
+          'delete',
+          'manage_users',
+          'manage_contracts',
+          'manage_system',
+          'view_audit_logs',
+        ],
+        admin: [
+          'read',
+          'write',
+          'delete',
+          'manage_users',
+          'manage_contracts',
+          'view_audit_logs',
+        ],
+        manager: ['read', 'write', 'manage_contracts', 'view_reports'],
+        moderator: ['read', 'write', 'moderate_content'],
+        user: ['read', 'write'],
+        viewer: ['read'],
       };
-      setPermissions(rolePermissions[role as keyof typeof rolePermissions] || ['read']);
+      setPermissions(
+        rolePermissions[role as keyof typeof rolePermissions] || ['read']
+      );
     } else {
       setUserRole(null);
       setPermissions([]);
     }
   }, [user]);
 
-  const hasPermission = useCallback((permission: string) => {
-    return permissions.includes(permission);
-  }, [permissions]);
+  const hasPermission = useCallback(
+    (permission: string) => {
+      return permissions.includes(permission);
+    },
+    [permissions]
+  );
 
-  const hasAnyPermission = useCallback((permissions: string[]) => {
-    return permissions.some(permission => permissions.includes(permission));
-  }, [permissions]);
+  const hasAnyPermission = useCallback(
+    (permissions: string[]) => {
+      return permissions.some(permission => permissions.includes(permission));
+    },
+    [permissions]
+  );
 
-  const hasAllPermissions = useCallback((permissions: string[]) => {
-    return permissions.every(permission => permissions.includes(permission));
-  }, [permissions]);
+  const hasAllPermissions = useCallback(
+    (permissions: string[]) => {
+      return permissions.every(permission => permissions.includes(permission));
+    },
+    [permissions]
+  );
 
-  const rbacValue = useMemo(() => ({
-    userRole,
-    permissions,
-    hasPermission,
-    hasAnyPermission,
-    hasAllPermissions,
-  }), [userRole, permissions, hasPermission, hasAnyPermission, hasAllPermissions]);
+  const rbacValue = useMemo(
+    () => ({
+      userRole,
+      permissions,
+      hasPermission,
+      hasAnyPermission,
+      hasAllPermissions,
+    }),
+    [userRole, permissions, hasPermission, hasAnyPermission, hasAllPermissions]
+  );
 
   return (
-    <RBACContext.Provider value={rbacValue}>
-      {children}
-    </RBACContext.Provider>
+    <RBACContext.Provider value={rbacValue}>{children}</RBACContext.Provider>
   );
 }
 
 // Main Providers Component
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
-        retry: (failureCount, error: any) => {
-          // Don't retry on 4xx errors
-          if (error?.status >= 400 && error?.status < 500) {
-            return false;
-          }
-          return failureCount < 3;
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+            retry: (failureCount, error: any) => {
+              // Don't retry on 4xx errors
+              if (error?.status >= 400 && error?.status < 500) {
+                return false;
+              }
+              return failureCount < 3;
+            },
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+          },
+          mutations: {
+            retry: 1,
+          },
         },
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: true,
-      },
-      mutations: {
-        retry: 1,
-      },
-    },
-  }));
+      })
+  );
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
+        attribute='class'
+        defaultTheme='system'
         enableSystem
         disableTransitionOnChange
       >
@@ -266,8 +310,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           <RBACProvider>
             <EnhancedRBACProvider>
               {children}
-              <Toaster 
-                position="top-right"
+              <Toaster
+                position='top-right'
                 expand={false}
                 richColors
                 closeButton

@@ -19,6 +19,7 @@ node scripts/generate-rbac-endpoints.js
 ```
 
 This will:
+
 - Scan your API directories for endpoints
 - Generate individual stub files for each endpoint
 - Create an index file with coverage statistics
@@ -27,6 +28,7 @@ This will:
 ### 2. Review Generated Stubs
 
 Each generated stub contains:
+
 - **Endpoint information** (file path, HTTP methods, resource type)
 - **Required permissions** with scope suggestions
 - **Implementation example** with permission checks
@@ -43,7 +45,7 @@ import { permissionEvaluator } from '@/lib/rbac/evaluate';
 export async function GET(request: NextRequest, { params }: { params: any }) {
   // Extract user ID from authenticated session
   const userId = await getUserIdFromSession(request);
-  
+
   // Check permission
   const decision = await permissionEvaluator.evaluatePermission(
     userId,
@@ -54,15 +56,15 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
         params,
         resourceType: 'user',
         resourceId: params.id,
-        request
-      }
+        request,
+      },
     }
   );
-  
+
   if (!decision.allowed) {
     return new Response('Forbidden', { status: 403 });
   }
-  
+
   // Proceed with endpoint logic
   // ... your existing code here
 }
@@ -85,6 +87,7 @@ docs/rbac-endpoints/
 Each permission follows the format: `{resource}:{action}:{scope}`
 
 ### Resources
+
 - `user` - User management
 - `contract` - Contract operations
 - `booking` - Booking management
@@ -95,6 +98,7 @@ Each permission follows the format: `{resource}:{action}:{scope}`
 - `permission` - Permission management
 
 ### Actions
+
 - `read` - View resources
 - `create` - Create new resources
 - `edit` - Modify existing resources
@@ -106,6 +110,7 @@ Each permission follows the format: `{resource}:{action}:{scope}`
 - `reject` - Reject actions
 
 ### Scopes
+
 - `own` - User's own resources only
 - `organization` - Resources within user's organization
 - `provider` - Resources within user's provider network
@@ -155,7 +160,7 @@ const context = {
   params,
   resourceType: 'contract',
   resourceId: contractId,
-  request
+  request,
 };
 
 const decision = await permissionEvaluator.evaluatePermission(
@@ -177,7 +182,7 @@ describe('User Endpoint RBAC', () => {
       'user-no-perms',
       'user:read:own'
     );
-    
+
     expect(decision.allowed).toBe(false);
     expect(decision.reason).toBe('NO_BASE_PERMISSION');
   });
@@ -187,9 +192,14 @@ describe('User Endpoint RBAC', () => {
     const decision = await permissionEvaluator.evaluatePermission(
       'user-own-perms',
       'user:read:own',
-      { context: { user: { id: 'user-own-perms' }, resourceId: 'user-own-perms' } }
+      {
+        context: {
+          user: { id: 'user-own-perms' },
+          resourceId: 'user-own-perms',
+        },
+      }
     );
-    
+
     expect(decision.allowed).toBe(true);
   });
 });
@@ -204,7 +214,7 @@ it('should allow broader scope access', async () => {
     'admin-user',
     'user:read:own'
   );
-  
+
   expect(decision.allowed).toBe(true);
   expect(decision.reason).toContain('Broader scope permission');
 });
@@ -232,9 +242,9 @@ Extend the `RESOURCE_MAPPING`:
 ```javascript
 const RESOURCE_MAPPING = {
   // ... existing mappings
-  'invoices': 'invoice',
-  'payments': 'payment',
-  'reports': 'report'
+  invoices: 'invoice',
+  payments: 'payment',
+  reports: 'report',
 };
 ```
 
@@ -245,10 +255,10 @@ Add new actions to `PERMISSION_TEMPLATES`:
 ```javascript
 const PERMISSION_TEMPLATES = {
   // ... existing templates
-  'APPROVE': 'approve',
-  'REJECT': 'reject',
-  'ARCHIVE': 'archive',
-  'RESTORE': 'restore'
+  APPROVE: 'approve',
+  REJECT: 'reject',
+  ARCHIVE: 'archive',
+  RESTORE: 'restore',
 };
 ```
 

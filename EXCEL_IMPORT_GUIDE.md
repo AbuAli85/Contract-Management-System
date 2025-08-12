@@ -7,6 +7,7 @@ Great news! You have Excel/CSV files with your promoters data. Let's import them
 ## 📋 Available Data Files
 
 I found these files in your project:
+
 - ✅ `test-import.csv` - Promoters data
 - ✅ `test-import-with-companies.csv` - Companies data
 - ✅ `test-import.xlsx` - Excel file
@@ -30,11 +31,13 @@ npm install csv-parser
 ### Step 3: Update Import Script
 
 **Edit `import-excel-data.js`** and replace:
+
 ```javascript
 const NEW_PROJECT_KEY = 'YOUR_NEW_ANON_KEY_HERE';
 ```
 
 **With your actual new project API key:**
+
 ```javascript
 const NEW_PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 ```
@@ -56,6 +59,7 @@ node import-excel-data.js
 ```
 
 This will import:
+
 - ✅ All promoters from `test-import.csv`
 - ✅ All companies from `test-import-with-companies.csv`
 - ✅ Map all fields correctly to database columns
@@ -63,12 +67,14 @@ This will import:
 ### Step 6: Update Environment Variables
 
 **Edit your `.env` file** and change:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://ekdjxzhujettocosgzql.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=old_key_here
 ```
 
 **To:**
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://reootcngcptfogfozlmz.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=new_key_here
@@ -85,6 +91,7 @@ npm run dev
 The import script maps these CSV columns to database fields:
 
 **Promoters:**
+
 - `Name (English)` → `name_en`
 - `Name (Arabic)` → `name_ar`
 - `ID Card Number` → `id_card_number`
@@ -95,6 +102,7 @@ The import script maps these CSV columns to database fields:
 - `Passport Expiry` → `passport_expiry_date`
 
 **Companies:**
+
 - `Company Name` → `name`
 - `Email` → `email`
 - `Phone` → `phone`
@@ -112,6 +120,7 @@ After import, verify:
 ## 🎯 Expected Result
 
 After completing import:
+
 - ✅ **All promoters** from CSV in new project
 - ✅ **All companies** from CSV in new project
 - ✅ **Frontend working** with new project
@@ -128,6 +137,7 @@ After completing import:
 ## 📞 If Import Fails
 
 If import fails:
+
 1. Check that new project API key is correct
 2. Verify database schema is restored
 3. Check CSV file format and column names
@@ -136,4 +146,4 @@ If import fails:
 
 ## 🎉 Success!
 
-Once completed, your new project will have all your promoters and companies data restored from your Excel files! 
+Once completed, your new project will have all your promoters and companies data restored from your Excel files!

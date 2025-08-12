@@ -235,21 +235,21 @@ pnpm run deploy
 
 ```typescript
 // Use external URLs for now
-const placeholderImageUrl = "https://via.placeholder.com/300x200"
+const placeholderImageUrl = 'https://via.placeholder.com/300x200';
 ```
 
 ### 2. **Audit Logging Workaround**
 
 ```typescript
 // Use console logging for now
-console.log("Audit:", { action, user, timestamp })
+console.log('Audit:', { action, user, timestamp });
 ```
 
 ### 3. **Email Templates Workaround**
 
 ```typescript
 // Use simple text emails for now
-const emailBody = `Contract ${contractNumber} has been ${status}`
+const emailBody = `Contract ${contractNumber} has been ${status}`;
 ```
 
 ## 📈 NEXT STEPS AFTER DEPLOYMENT

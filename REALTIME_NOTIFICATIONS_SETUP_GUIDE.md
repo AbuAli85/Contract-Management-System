@@ -7,23 +7,27 @@ This guide walks you through implementing a complete real-time notification syst
 ## Architecture Components
 
 ### 1. Database Schema (`create-notifications-schema.sql`)
+
 - **notifications table**: Stores all notification data with metadata
 - **Triggers**: Automatically creates notifications when bookings/payments change
 - **RLS Policies**: Ensures users only see their own notifications
 - **Functions**: Helper functions for creating notifications programmatically
 
 ### 2. Real-Time Component (`components/real-time-notifications.tsx`)
+
 - Real-time subscription to Supabase changes
 - Toast notifications for immediate feedback
 - Browser notifications support
 - Notification management (read/unread, delete)
 
 ### 3. Notification Service (`lib/notification-service.ts`)
+
 - Programmatic notification creation
 - Type-safe notification management
 - Helper functions for different notification types
 
 ### 4. Provider Dashboard (`components/provider-dashboard.tsx`)
+
 - Integrated notification bell with unread count
 - Real-time booking updates
 - Dashboard statistics with live updates
@@ -39,6 +43,7 @@ First, run the notification schema setup:
 ```
 
 This creates:
+
 - `notifications` table with proper indexes
 - RLS policies for security
 - Trigger functions for automatic notifications
@@ -66,20 +71,20 @@ ALTER PUBLICATION supabase_realtime ADD TABLE bookings;
 
 ```tsx
 // app/dashboard/provider/page.tsx
-import { ProviderDashboard } from '@/components/provider-dashboard'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { ProviderDashboard } from '@/components/provider-dashboard';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export default async function ProviderDashboardPage() {
-  const supabase = createServerComponentClient({ cookies })
-  
+  const supabase = createServerComponentClient({ cookies });
+
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession();
 
   if (!session) {
-    redirect('/login')
+    redirect('/login');
   }
 
   // Get user profile
@@ -87,13 +92,13 @@ export default async function ProviderDashboardPage() {
     .from('profiles')
     .select('*')
     .eq('id', session.user.id)
-    .single()
+    .single();
 
   if (!profile || profile.role !== 'provider') {
-    redirect('/dashboard')
+    redirect('/dashboard');
   }
 
-  return <ProviderDashboard user={profile} />
+  return <ProviderDashboard user={profile} />;
 }
 ```
 
@@ -101,15 +106,15 @@ export default async function ProviderDashboardPage() {
 
 ```tsx
 // For any page that needs notifications
-import { RealTimeNotifications } from '@/components/real-time-notifications'
+import { RealTimeNotifications } from '@/components/real-time-notifications';
 
 export function SomeComponent({ user }) {
   return (
-    <div className="flex justify-between items-center">
+    <div className='flex justify-between items-center'>
       <h1>My Dashboard</h1>
       <RealTimeNotifications user={user} />
     </div>
-  )
+  );
 }
 ```
 
@@ -119,18 +124,14 @@ export function SomeComponent({ user }) {
 
 ```tsx
 // Test component or page
-import { createTestNotifications } from '@/lib/notification-service'
+import { createTestNotifications } from '@/lib/notification-service';
 
 export function TestNotifications({ userId }) {
   const handleCreateTest = async () => {
-    await createTestNotifications(userId)
-  }
+    await createTestNotifications(userId);
+  };
 
-  return (
-    <button onClick={handleCreateTest}>
-      Create Test Notifications
-    </button>
-  )
+  return <button onClick={handleCreateTest}>Create Test Notifications</button>;
 }
 ```
 
@@ -141,7 +142,7 @@ export function TestNotifications({ userId }) {
 3. **Watch for real-time notifications** appearing instantly
 4. **Test notification interactions**:
    - Mark as read
-   - Delete notifications  
+   - Delete notifications
    - Mark all as read
 
 ### Step 5: Integration with Webhooks
@@ -154,7 +155,7 @@ The notification system automatically integrates with your webhook system:
 
 ```typescript
 // Example: Manual notification creation
-import { notificationService } from '@/lib/notification-service'
+import { notificationService } from '@/lib/notification-service';
 
 // In your API route or component
 await notificationService.createBookingNotification(
@@ -166,10 +167,10 @@ await notificationService.createBookingNotification(
     service_title: service.title,
     scheduled_start: booking.scheduled_start,
     quoted_price: booking.quoted_price,
-    status: booking.status
+    status: booking.status,
   },
   'created'
-)
+);
 ```
 
 ## Testing Scenarios
@@ -197,6 +198,7 @@ curl -X POST "http://localhost:3000/api/bookings" \
 ```
 
 **Expected Results**:
+
 - ✅ Booking created in database
 - ✅ Webhook triggered to Make.com
 - ✅ Notification appears instantly on provider dashboard
@@ -210,12 +212,13 @@ curl -X POST "http://localhost:3000/api/bookings" \
 
 ```sql
 -- In Supabase SQL editor
-UPDATE bookings 
-SET status = 'confirmed' 
+UPDATE bookings
+SET status = 'confirmed'
 WHERE id = 'your-booking-id';
 ```
 
 **Expected Results**:
+
 - ✅ Real-time status update on dashboard
 - ✅ Status change notification created
 - ✅ Webhook triggered to Make.com
@@ -226,7 +229,7 @@ WHERE id = 'your-booking-id';
 **Test**: Multiple providers receiving different notifications
 
 1. Open dashboard for Provider A
-2. Open dashboard for Provider B  
+2. Open dashboard for Provider B
 3. Create booking for Provider A
 4. Verify only Provider A gets notification
 
@@ -238,8 +241,8 @@ WHERE id = 'your-booking-id';
 // Test in browser console
 if ('Notification' in window) {
   Notification.requestPermission().then(permission => {
-    console.log('Notification permission:', permission)
-  })
+    console.log('Notification permission:', permission);
+  });
 }
 ```
 
@@ -250,36 +253,45 @@ if ('Notification' in window) {
 #### 1. Notifications Not Appearing
 
 **Check Supabase Real-time Status**:
+
 ```javascript
 // In browser console on your app
-console.log('Supabase channels:', window.supabase?._channels)
+console.log('Supabase channels:', window.supabase?._channels);
 ```
 
 **Verify RLS Policies**:
+
 ```sql
 -- Test notification access
 SELECT * FROM notifications WHERE user_id = 'your-user-id';
 ```
 
 **Check Subscription Status**:
+
 ```javascript
 // Component debug
 useEffect(() => {
-  const subscription = supabase.channel('test')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, 
-      payload => console.log('Change received!', payload))
-    .subscribe((status) => console.log('Subscription status:', status))
-}, [])
+  const subscription = supabase
+    .channel('test')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'notifications' },
+      payload => console.log('Change received!', payload)
+    )
+    .subscribe(status => console.log('Subscription status:', status));
+}, []);
 ```
 
 #### 2. Webhook Integration Issues
 
 **Test Webhook Endpoint**:
+
 ```bash
 curl -X GET "http://localhost:3000/api/bookings/webhook/test?event=booking.created"
 ```
 
 **Check Webhook Logs**:
+
 ```sql
 SELECT * FROM webhook_logs ORDER BY created_at DESC LIMIT 10;
 ```
@@ -287,37 +299,40 @@ SELECT * FROM webhook_logs ORDER BY created_at DESC LIMIT 10;
 #### 3. Performance Issues
 
 **Optimize Queries**:
+
 ```sql
 -- Add indexes if needed
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user_created 
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user_created
 ON notifications(user_id, created_at DESC);
 ```
 
 **Limit Subscription Scope**:
+
 ```typescript
 // Only subscribe to user's notifications
-const subscription = supabase
-  .channel(`notifications:${user.id}`)
-  .on('postgres_changes', 
-    { 
-      event: 'INSERT', 
-      schema: 'public', 
-      table: 'notifications',
-      filter: `user_id=eq.${user.id}` // Important: filter by user
-    },
-    handleNotification
-  )
+const subscription = supabase.channel(`notifications:${user.id}`).on(
+  'postgres_changes',
+  {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'notifications',
+    filter: `user_id=eq.${user.id}`, // Important: filter by user
+  },
+  handleNotification
+);
 ```
 
 ## Production Considerations
 
 ### 1. Rate Limiting
+
 ```typescript
 // Add rate limiting for notification creation
-const RATE_LIMIT = 10 // max 10 notifications per minute per user
+const RATE_LIMIT = 10; // max 10 notifications per minute per user
 ```
 
 ### 2. Cleanup Job
+
 ```sql
 -- Schedule cleanup of old notifications
 SELECT cron.schedule(
@@ -328,27 +343,29 @@ SELECT cron.schedule(
 ```
 
 ### 3. Monitoring
+
 ```typescript
 // Add notification metrics
 const notificationMetrics = {
   created: 0,
   failed: 0,
-  delivered: 0
-}
+  delivered: 0,
+};
 ```
 
 ### 4. Error Handling
+
 ```typescript
 // Graceful degradation if real-time fails
-const [isRealtimeConnected, setIsRealtimeConnected] = useState(true)
+const [isRealtimeConnected, setIsRealtimeConnected] = useState(true);
 
 // Fallback to polling if real-time fails
 useEffect(() => {
   if (!isRealtimeConnected) {
-    const interval = setInterval(loadNotifications, 30000) // Poll every 30s
-    return () => clearInterval(interval)
+    const interval = setInterval(loadNotifications, 30000); // Poll every 30s
+    return () => clearInterval(interval);
   }
-}, [isRealtimeConnected])
+}, [isRealtimeConnected]);
 ```
 
 ## Next Steps
@@ -364,16 +381,18 @@ useEffect(() => {
 Your real-time notification system is now ready! 🎉
 
 **Test it now**:
+
 1. Open your provider dashboard
 2. Watch for the notification bell in the top-right
 3. Create a test booking or use the test notification button
 4. See instant notifications appear without page refresh!
 
 The system provides:
+
 - ✅ **Instant real-time updates** via Supabase subscriptions
 - ✅ **Automatic webhook integration** with Make.com
 - ✅ **Professional UI components** with unread counts and actions
-- ✅ **Type-safe notification management** 
+- ✅ **Type-safe notification management**
 - ✅ **Production-ready error handling** and fallbacks
 
 Your providers will love getting immediate notifications for new bookings without ever needing to refresh the page or check email! 🚀

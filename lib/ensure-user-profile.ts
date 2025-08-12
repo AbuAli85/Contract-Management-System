@@ -13,7 +13,9 @@ import { User } from '@supabase/supabase-js';
 export async function ensureUserProfile(user: User) {
   const supabase = await createClient();
 
-  console.log(`[ensureUserProfile] Checking profile for user ${user.id} (${user.email})`);
+  console.log(
+    `[ensureUserProfile] Checking profile for user ${user.id} (${user.email})`
+  );
 
   // First, try to fetch the profile
   const { data: profile, error: fetchError } = await supabase
@@ -25,7 +27,10 @@ export async function ensureUserProfile(user: User) {
   if (fetchError && fetchError.code !== 'PGRST116') {
     // 'PGRST116' is the code for "exact one row not found", which is expected if the profile is new.
     // For any other error, we should throw.
-    console.error(`[ensureUserProfile] Error fetching profile for user ${user.id}:`, fetchError);
+    console.error(
+      `[ensureUserProfile] Error fetching profile for user ${user.id}:`,
+      fetchError
+    );
     throw new Error(`Failed to fetch user profile: ${fetchError.message}`);
   }
 
@@ -36,12 +41,15 @@ export async function ensureUserProfile(user: User) {
   }
 
   // Profile does not exist, so create it
-  console.log(`[ensureUserProfile] No profile found for user ${user.id}. Creating one.`);
-  
+  console.log(
+    `[ensureUserProfile] No profile found for user ${user.id}. Creating one.`
+  );
+
   const newUserProfile = {
     id: user.id,
     email: user.email || '',
-    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+    full_name:
+      user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
     avatar_url: user.user_metadata?.avatar_url || null,
     role: 'user', // Default role
     status: 'active', // Default status
@@ -56,10 +64,15 @@ export async function ensureUserProfile(user: User) {
     .single();
 
   if (createError) {
-    console.error(`[ensureUserProfile] Error creating profile for user ${user.id}:`, createError);
+    console.error(
+      `[ensureUserProfile] Error creating profile for user ${user.id}:`,
+      createError
+    );
     throw new Error(`Failed to create user profile: ${createError.message}`);
   }
 
-  console.log(`[ensureUserProfile] Successfully created profile for user ${user.id}.`);
+  console.log(
+    `[ensureUserProfile] Successfully created profile for user ${user.id}.`
+  );
   return createdProfile;
 }

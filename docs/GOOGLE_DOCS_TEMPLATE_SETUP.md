@@ -82,18 +82,18 @@ Edit `lib/contract-type-config.ts` and update the template IDs:
 ```typescript
 export const enhancedContractTypes: ContractTypeConfig[] = [
   {
-    id: "oman-unlimited-contract",
-    name: "Oman Unlimited Employment Contract",
-    description: "Standard unlimited duration employment contract",
-    category: "employment",
-    googleDocsTemplateId: "YOUR_ACTUAL_TEMPLATE_ID_HERE", // Replace with your template ID
-    makecomTemplateId: "oman-unlimited-contract-template",
+    id: 'oman-unlimited-contract',
+    name: 'Oman Unlimited Employment Contract',
+    description: 'Standard unlimited duration employment contract',
+    category: 'employment',
+    googleDocsTemplateId: 'YOUR_ACTUAL_TEMPLATE_ID_HERE', // Replace with your template ID
+    makecomTemplateId: 'oman-unlimited-contract-template',
     isActive: true,
     requiresApproval: true,
     // ... rest of configuration
   },
   // ... other contract types
-]
+];
 ```
 
 #### **2.2 Get Your Template ID**

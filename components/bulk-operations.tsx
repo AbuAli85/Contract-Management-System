@@ -1,8 +1,8 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,8 +20,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import {
   ChevronDown,
   Archive,
@@ -32,26 +32,26 @@ import {
   FileText,
   CheckCircle2,
   Clock,
-} from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { createClient } from "@/lib/supabase/client"
+} from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { createClient } from '@/lib/supabase/client';
 
 interface ContractForBulkOps {
-  id: string
-  status: string
-  first_party_name?: string
-  second_party_name?: string
-  start_date?: string
-  end_date?: string
-  contract_value?: number
-  created_at?: string
+  id: string;
+  status: string;
+  first_party_name?: string;
+  second_party_name?: string;
+  start_date?: string;
+  end_date?: string;
+  contract_value?: number;
+  created_at?: string;
 }
 
 interface BulkOperationsProps {
-  selectedContracts: string[]
-  allContracts: ContractForBulkOps[]
-  onSelectionChange: (selected: string[]) => void
-  onRefresh: () => void
+  selectedContracts: string[];
+  allContracts: ContractForBulkOps[];
+  onSelectionChange: (selected: string[]) => void;
+  onRefresh: () => void;
 }
 
 export function BulkOperations({
@@ -60,263 +60,288 @@ export function BulkOperations({
   onSelectionChange,
   onRefresh,
 }: BulkOperationsProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [operation, setOperation] = useState<string>("")
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [operation, setOperation] = useState<string>('');
 
-  const selectedCount = selectedContracts.length
-  const totalCount = allContracts.length
-  const isAllSelected = selectedCount === totalCount && totalCount > 0
-  const isIndeterminate = selectedCount > 0 && selectedCount < totalCount
+  const selectedCount = selectedContracts.length;
+  const totalCount = allContracts.length;
+  const isAllSelected = selectedCount === totalCount && totalCount > 0;
+  const isIndeterminate = selectedCount > 0 && selectedCount < totalCount;
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange(allContracts.map((contract) => contract.id))
+      onSelectionChange(allContracts.map(contract => contract.id));
     } else {
-      onSelectionChange([])
+      onSelectionChange([]);
     }
-  }
+  };
 
   const handleBulkStatusUpdate = async (newStatus: string) => {
-    if (selectedContracts.length === 0) return
+    if (selectedContracts.length === 0) return;
 
-    setIsProcessing(true)
-    setOperation(`Updating ${selectedContracts.length} contracts to ${newStatus}...`)
+    setIsProcessing(true);
+    setOperation(
+      `Updating ${selectedContracts.length} contracts to ${newStatus}...`
+    );
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase
-        .from("contracts")
+        .from('contracts')
         .update({ status: newStatus })
-        .in("id", selectedContracts)
+        .in('id', selectedContracts);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
-        title: "Bulk Update Successful",
+        title: 'Bulk Update Successful',
         description: `${selectedContracts.length} contracts updated to ${newStatus}`,
-      })
+      });
 
-      onSelectionChange([])
-      onRefresh()
+      onSelectionChange([]);
+      onRefresh();
     } catch (error) {
       toast({
-        title: "Bulk Update Failed",
-        description: "Some contracts could not be updated",
-        variant: "destructive",
-      })
+        title: 'Bulk Update Failed',
+        description: 'Some contracts could not be updated',
+        variant: 'destructive',
+      });
     } finally {
-      setIsProcessing(false)
-      setOperation("")
+      setIsProcessing(false);
+      setOperation('');
     }
-  }
+  };
 
   const handleBulkDelete = async () => {
-    if (selectedContracts.length === 0) return
+    if (selectedContracts.length === 0) return;
 
-    setIsProcessing(true)
-    setOperation(`Deleting ${selectedContracts.length} contracts...`)
+    setIsProcessing(true);
+    setOperation(`Deleting ${selectedContracts.length} contracts...`);
 
     try {
-      const supabase = createClient()
-      const { error } = await supabase.from("contracts").delete().in("id", selectedContracts)
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('contracts')
+        .delete()
+        .in('id', selectedContracts);
 
-      if (error) throw error
+      if (error) throw error;
 
       toast({
-        title: "Bulk Delete Successful",
+        title: 'Bulk Delete Successful',
         description: `${selectedContracts.length} contracts deleted`,
-      })
+      });
 
-      onSelectionChange([])
-      onRefresh()
+      onSelectionChange([]);
+      onRefresh();
     } catch (error) {
       toast({
-        title: "Bulk Delete Failed",
-        description: "Some contracts could not be deleted",
-        variant: "destructive",
-      })
+        title: 'Bulk Delete Failed',
+        description: 'Some contracts could not be deleted',
+        variant: 'destructive',
+      });
     } finally {
-      setIsProcessing(false)
-      setOperation("")
-      setShowDeleteDialog(false)
+      setIsProcessing(false);
+      setOperation('');
+      setShowDeleteDialog(false);
     }
-  }
+  };
 
   const handleBulkExport = async () => {
-    if (selectedContracts.length === 0) return
+    if (selectedContracts.length === 0) return;
 
-    setIsProcessing(true)
-    setOperation(`Exporting ${selectedContracts.length} contracts...`)
+    setIsProcessing(true);
+    setOperation(`Exporting ${selectedContracts.length} contracts...`);
 
     try {
-      const supabase = createClient()
-      const selectedContractData = allContracts.filter((contract) =>
-        selectedContracts.includes(contract.id),
-      )
+      const supabase = createClient();
+      const selectedContractData = allContracts.filter(contract =>
+        selectedContracts.includes(contract.id)
+      );
 
       // Create CSV content
       const headers = [
-        "ID",
-        "Party A",
-        "Party B",
-        "Status",
-        "Start Date",
-        "End Date",
-        "Contract Value",
-        "Created At",
-      ]
+        'ID',
+        'Party A',
+        'Party B',
+        'Status',
+        'Start Date',
+        'End Date',
+        'Contract Value',
+        'Created At',
+      ];
 
       const csvContent = [
-        headers.join(","),
-        ...selectedContractData.map((contract) =>
+        headers.join(','),
+        ...selectedContractData.map(contract =>
           [
             contract.id,
-            contract.first_party_name || "",
-            contract.second_party_name || "",
-            contract.status || "",
-            contract.start_date || "",
-            contract.end_date || "",
-            contract.contract_value || "",
-            contract.created_at || "",
+            contract.first_party_name || '',
+            contract.second_party_name || '',
+            contract.status || '',
+            contract.start_date || '',
+            contract.end_date || '',
+            contract.contract_value || '',
+            contract.created_at || '',
           ]
-            .map((field) => `"${field}"`)
-            .join(","),
+            .map(field => `"${field}"`)
+            .join(',')
         ),
-      ].join("\n")
+      ].join('\n');
 
       // Download CSV
-      if (typeof window !== "undefined") {
-        const blob = new Blob([csvContent], { type: "text/csv" })
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `contracts_export_${new Date().toISOString().split("T")[0]}.csv`
-        link.click()
-        window.URL.revokeObjectURL(url)
+      if (typeof window !== 'undefined') {
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contracts_export_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        window.URL.revokeObjectURL(url);
       }
 
       toast({
-        title: "Export Successful",
+        title: 'Export Successful',
         description: `${selectedContracts.length} contracts exported to CSV`,
-      })
+      });
     } catch (error) {
       toast({
-        title: "Export Failed",
-        description: "Failed to export contracts",
-        variant: "destructive",
-      })
+        title: 'Export Failed',
+        description: 'Failed to export contracts',
+        variant: 'destructive',
+      });
     } finally {
-      setIsProcessing(false)
-      setOperation("")
+      setIsProcessing(false);
+      setOperation('');
     }
-  }
+  };
 
   const getStatusCounts = () => {
-    const selectedData = allContracts.filter((contract) => selectedContracts.includes(contract.id))
+    const selectedData = allContracts.filter(contract =>
+      selectedContracts.includes(contract.id)
+    );
 
     const counts = selectedData.reduce(
       (acc, contract) => {
-        const status = contract.status || "unknown"
-        acc[status] = (acc[status] || 0) + 1
-        return acc
+        const status = contract.status || 'unknown';
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
       },
-      {} as Record<string, number>,
-    )
+      {} as Record<string, number>
+    );
 
-    return counts
-  }
+    return counts;
+  };
 
   if (selectedCount === 0) {
     return (
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-4'>
+        <div className='flex items-center space-x-2'>
           <Checkbox
-            checked={isIndeterminate ? "indeterminate" : isAllSelected}
+            checked={isIndeterminate ? 'indeterminate' : isAllSelected}
             onCheckedChange={handleSelectAll}
-            aria-label="Select all contracts"
+            aria-label='Select all contracts'
           />
-          <span className="text-sm text-muted-foreground">
+          <span className='text-sm text-muted-foreground'>
             Select contracts for bulk operations
           </span>
         </div>
       </div>
-    )
+    );
   }
 
-  const statusCounts = getStatusCounts()
+  const statusCounts = getStatusCounts();
 
   return (
     <>
-      <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <div className="flex items-center space-x-4">
+      <div className='flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4'>
+        <div className='flex items-center space-x-4'>
           <Checkbox
-            checked={isIndeterminate ? "indeterminate" : isAllSelected}
+            checked={isIndeterminate ? 'indeterminate' : isAllSelected}
             onCheckedChange={handleSelectAll}
-            aria-label="Select all contracts"
-            className="mr-2"
+            aria-label='Select all contracts'
+            className='mr-2'
           />
-          <Badge variant="secondary" className="mr-4">
+          <Badge variant='secondary' className='mr-4'>
             {selectedCount} selected
           </Badge>
 
           {Object.entries(statusCounts).map(([status, count]) => (
-            <Badge key={status} variant="outline" className="text-xs">
+            <Badge key={status} variant='outline' className='text-xs'>
               {status}: {count}
             </Badge>
           ))}
         </div>
 
         {isProcessing ? (
-          <div className="flex items-center space-x-2">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            <span className="text-sm">{operation}</span>
+          <div className='flex items-center space-x-2'>
+            <RefreshCw className='h-4 w-4 animate-spin' />
+            <span className='text-sm'>{operation}</span>
           </div>
         ) : (
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={() => onSelectionChange([])}>
+          <div className='flex items-center space-x-2'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={() => onSelectionChange([])}
+            >
               Clear Selection
             </Button>
 
-            <Button variant="outline" size="sm" onClick={handleBulkExport}>
-              <Download className="mr-2 h-4 w-4" />
+            <Button variant='outline' size='sm' onClick={handleBulkExport}>
+              <Download className='mr-2 h-4 w-4' />
               Export ({selectedCount})
             </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  Update Status <ChevronDown className="ml-2 h-4 w-4" />
+                <Button variant='outline' size='sm'>
+                  Update Status <ChevronDown className='ml-2 h-4 w-4' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuLabel>Change Status To:</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("draft")}>
-                  <FileText className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => handleBulkStatusUpdate('draft')}
+                >
+                  <FileText className='mr-2 h-4 w-4' />
                   Draft
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("pending_review")}>
-                  <Clock className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => handleBulkStatusUpdate('pending_review')}
+                >
+                  <Clock className='mr-2 h-4 w-4' />
                   Pending Review
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("active")}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => handleBulkStatusUpdate('active')}
+                >
+                  <CheckCircle2 className='mr-2 h-4 w-4' />
                   Active
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("suspended")}>
-                  <Archive className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => handleBulkStatusUpdate('suspended')}
+                >
+                  <Archive className='mr-2 h-4 w-4' />
                   Suspended
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleBulkStatusUpdate("archived")}>
-                  <Archive className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={() => handleBulkStatusUpdate('archived')}
+                >
+                  <Archive className='mr-2 h-4 w-4' />
                   Archived
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
-              <Trash2 className="mr-2 h-4 w-4" />
+            <Button
+              variant='destructive'
+              size='sm'
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className='mr-2 h-4 w-4' />
               Delete ({selectedCount})
             </Button>
           </div>
@@ -326,20 +351,26 @@ export function BulkOperations({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedCount} contracts?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete {selectedCount} contracts?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the selected contracts and
-              remove all associated data from our servers.
+              This action cannot be undone. This will permanently delete the
+              selected contracts and remove all associated data from our
+              servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              className='bg-red-600 hover:bg-red-700'
+            >
               Delete {selectedCount} Contracts
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

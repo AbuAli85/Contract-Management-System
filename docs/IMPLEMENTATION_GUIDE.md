@@ -139,7 +139,10 @@ This document outlines the comprehensive enhancement and implementation of the C
 
 ```tsx
 // Modern status badge with error details
-<EnhancedStatusBadge status={contract.status} errorDetails={contract.error_details} />
+<EnhancedStatusBadge
+  status={contract.status}
+  errorDetails={contract.error_details}
+/>
 ```
 
 ### Analytics View

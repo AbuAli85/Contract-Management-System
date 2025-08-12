@@ -20,6 +20,7 @@ This document describes the complete user management system built for the Contra
 ### Permission Structure
 
 Each permission has:
+
 - **ID**: Unique identifier (e.g., `users.create`)
 - **Name**: Human-readable name
 - **Description**: What the permission allows
@@ -31,33 +32,63 @@ Each permission has:
 
 ```typescript
 PERMISSION_GROUPS = {
-  USER_MANAGEMENT: ['users.create', 'users.read', 'users.update', 'users.delete', 'users.manage_roles'],
-  CONTRACT_MANAGEMENT: ['contracts.create', 'contracts.read', 'contracts.update', 'contracts.delete', 'contracts.approve'],
-  PROVIDER_MANAGEMENT: ['providers.create', 'providers.read', 'providers.update', 'providers.delete'],
-  BOOKING_MANAGEMENT: ['bookings.create', 'bookings.read', 'bookings.update', 'bookings.delete'],
+  USER_MANAGEMENT: [
+    'users.create',
+    'users.read',
+    'users.update',
+    'users.delete',
+    'users.manage_roles',
+  ],
+  CONTRACT_MANAGEMENT: [
+    'contracts.create',
+    'contracts.read',
+    'contracts.update',
+    'contracts.delete',
+    'contracts.approve',
+  ],
+  PROVIDER_MANAGEMENT: [
+    'providers.create',
+    'providers.read',
+    'providers.update',
+    'providers.delete',
+  ],
+  BOOKING_MANAGEMENT: [
+    'bookings.create',
+    'bookings.read',
+    'bookings.update',
+    'bookings.delete',
+  ],
   ANALYTICS: ['analytics.read', 'analytics.export'],
   SYSTEM_ADMIN: ['system.settings', 'system.logs', 'system.backup'],
   NOTIFICATIONS: ['notifications.create', 'notifications.read'],
-  MARKETPLACE: ['marketplace.create', 'marketplace.read', 'marketplace.update', 'marketplace.delete']
-}
+  MARKETPLACE: [
+    'marketplace.create',
+    'marketplace.read',
+    'marketplace.update',
+    'marketplace.delete',
+  ],
+};
 ```
 
 ### Role Hierarchy
 
-| Role | Level | Description | Permissions |
-|------|-------|-------------|-------------|
-| **Admin** | 100 | Full system access | All permissions |
-| **Manager** | 80 | High-level management | Most operational permissions |
-| **User** | 60 | Standard user | Basic operational permissions |
-| **Provider** | 40 | Service provider | Limited access |
-| **Client** | 20 | Client | Minimal access |
+| Role         | Level | Description           | Permissions                   |
+| ------------ | ----- | --------------------- | ----------------------------- |
+| **Admin**    | 100   | Full system access    | All permissions               |
+| **Manager**  | 80    | High-level management | Most operational permissions  |
+| **User**     | 60    | Standard user         | Basic operational permissions |
+| **Provider** | 40    | Service provider      | Limited access                |
+| **Client**   | 20    | Client                | Minimal access                |
 
 ## 🎯 Usage Examples
 
 ### Basic Permission Checking
 
 ```typescript
-import { hasPermission, canPerformAction } from '@/lib/permissions/permissionMatrix';
+import {
+  hasPermission,
+  canPerformAction,
+} from '@/lib/permissions/permissionMatrix';
 
 // Check if user has specific permission
 if (hasPermission(user.role, 'users.create')) {
@@ -112,7 +143,7 @@ import { PermissionGate, RoleGate } from '@/lib/rbac/enhancedRBAC';
 ```typescript
 import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 
-<PermissionButton 
+<PermissionButton
   permission="users.delete"
   onClick={handleDelete}
   className="btn btn-danger"
@@ -128,6 +159,7 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 **Purpose**: Fetch users with filtering and pagination
 
 **Query Parameters**:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `search`: Search in email/name
@@ -137,6 +169,7 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 **Required Permissions**: `users.read`
 
 **Response**:
+
 ```json
 {
   "users": [...],
@@ -156,6 +189,7 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 **Required Permissions**: `users.create`
 
 **Body**:
+
 ```json
 {
   "email": "user@example.com",
@@ -173,6 +207,7 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 **Required Permissions**: `users.update`
 
 **Body**:
+
 ```json
 {
   "id": "user-uuid",
@@ -190,9 +225,11 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 **Required Permissions**: `users.delete`
 
 **Query Parameters**:
+
 - `id`: User ID to delete
 
 **Smart Deletion**:
+
 - **Soft Delete**: If user has dependencies (e.g., provider_services)
 - **Hard Delete**: If no dependencies exist
 
@@ -211,6 +248,7 @@ import { PermissionButton } from '@/lib/rbac/enhancedRBAC';
 ### Issue Detection
 
 The dashboard automatically detects and highlights users with:
+
 - Corrupted UUIDs (like `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 - Missing profile or user_roles entries
 - Data integrity issues
@@ -218,6 +256,7 @@ The dashboard automatically detects and highlights users with:
 ### Status Management
 
 Users can have these statuses:
+
 - **Active**: Normal user
 - **Suspended**: Temporarily disabled
 - **Deleted**: Soft-deleted (preserves data)
@@ -273,17 +312,20 @@ await auditLog.systemEvent('backup_started', { type: 'full' }, 'medium');
 This user has a corrupted UUID (`aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`) but is functional in the system.
 
 **Why It's Problematic**:
+
 - UUID format is unusual (though technically valid)
 - Foreign key constraints prevent user_roles sync
 - Has dependencies in provider_services table
 
 **How the System Handles It**:
+
 1. **Detection**: Dashboard highlights with warning icon
 2. **Graceful Handling**: Skips during sync operations
 3. **Documentation**: Clear indication of known issue
 4. **Functional**: User remains operational in other tables
 
 **Resolution Strategy**:
+
 - **Immediate**: Work around the issue, maintain functionality
 - **Long-term**: Database team investigation required
 - **Alternative**: Soft delete and recreate if dependencies allow
@@ -293,6 +335,7 @@ This user has a corrupted UUID (`aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`) but is f
 ### Row-Level Security (RLS)
 
 All database operations respect RLS policies:
+
 - Users can only see their own data
 - Admins can see all data
 - Managers see data within their scope
@@ -300,6 +343,7 @@ All database operations respect RLS policies:
 ### Permission Validation
 
 Every API endpoint validates permissions:
+
 - Server-side permission checks
 - Role-based access control
 - Resource-action validation
@@ -307,6 +351,7 @@ Every API endpoint validates permissions:
 ### Audit Trail
 
 Complete audit trail for compliance:
+
 - All user actions logged
 - IP address tracking
 - Timestamp and user agent
@@ -330,6 +375,7 @@ Complete audit trail for compliance:
 ### State Management
 
 The dashboard uses React state for:
+
 - User list and pagination
 - Search and filter state
 - Form data and validation
@@ -347,6 +393,7 @@ The dashboard uses React state for:
 ### Multi-Table Sync
 
 The system maintains consistency across:
+
 1. **users** table (source of truth)
 2. **profiles** table (user profiles)
 3. **user_roles** table (role assignments)
@@ -354,6 +401,7 @@ The system maintains consistency across:
 ### Role Mapping
 
 Automatic role mapping for compatibility:
+
 - `provider` → `user` (in profiles/user_roles)
 - `client` → `user` (in profiles/user_roles)
 - `admin`, `manager`, `user` → unchanged
@@ -377,6 +425,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ### 2. Database Schema
 
 Ensure these tables exist:
+
 - `users` (with role, status columns)
 - `profiles` (with role column)
 - `user_roles` (with user_id, role columns)

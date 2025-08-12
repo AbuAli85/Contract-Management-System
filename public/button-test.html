@@ -1,60 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Contract Button Test</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
-        .button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
-        .button:hover { background: #0056b3; }
-        .button:disabled { background: #ccc; cursor: not-allowed; }
-        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
-        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
-        .code { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; }
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      .section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      .button {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .button:hover {
+        background: #0056b3;
+      }
+      .button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .success {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+      }
+      .code {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>🔧 Contract Generation Button Test</h1>
-    
+
     <div class="section">
-        <h2>📋 Quick Fix Checklist</h2>
-        <ol>
-            <li><strong>Authentication:</strong> Are you logged in? <span id="auth-status">Checking...</span></li>
-            <li><strong>Form:</strong> Are all required fields filled?</li>
-            <li><strong>Button:</strong> Is the submit button enabled?</li>
-            <li><strong>Network:</strong> Any errors in browser console?</li>
-        </ol>
+      <h2>📋 Quick Fix Checklist</h2>
+      <ol>
+        <li>
+          <strong>Authentication:</strong> Are you logged in?
+          <span id="auth-status">Checking...</span>
+        </li>
+        <li><strong>Form:</strong> Are all required fields filled?</li>
+        <li><strong>Button:</strong> Is the submit button enabled?</li>
+        <li><strong>Network:</strong> Any errors in browser console?</li>
+      </ol>
     </div>
 
     <div class="section">
-        <h2>🔑 Login Test</h2>
-        <p><strong>Test Credentials:</strong></p>
-        <div class="code">
-            Email: test@example.com<br>
-            Password: test123456
-        </div>
-        <p><a href="http://localhost:3002/en/auth/login" target="_blank">→ Go to Login Page</a></p>
+      <h2>🔑 Login Test</h2>
+      <p><strong>Test Credentials:</strong></p>
+      <div class="code">
+        Email: test@example.com<br />
+        Password: test123456
+      </div>
+      <p>
+        <a href="http://localhost:3002/en/auth/login" target="_blank"
+          >→ Go to Login Page</a
+        >
+      </p>
     </div>
 
     <div class="section">
-        <h2>🧪 Button Test</h2>
-        <p>After logging in, go to the contract form and test the button:</p>
-        <p><a href="http://localhost:3002/generate-contract" target="_blank">→ Go to Contract Form</a></p>
-        
-        <h3>Manual Test Steps:</h3>
-        <ol>
-            <li>Fill in all required fields (marked with *)</li>
-            <li>Check if button shows "Create Contract" or "Creating..."</li>
-            <li>Click the button</li>
-            <li>Watch for loading spinner</li>
-            <li>Check for success/error messages</li>
-        </ol>
+      <h2>🧪 Button Test</h2>
+      <p>After logging in, go to the contract form and test the button:</p>
+      <p>
+        <a href="http://localhost:3002/generate-contract" target="_blank"
+          >→ Go to Contract Form</a
+        >
+      </p>
+
+      <h3>Manual Test Steps:</h3>
+      <ol>
+        <li>Fill in all required fields (marked with *)</li>
+        <li>Check if button shows "Create Contract" or "Creating..."</li>
+        <li>Click the button</li>
+        <li>Watch for loading spinner</li>
+        <li>Check for success/error messages</li>
+      </ol>
     </div>
 
     <div class="section">
-        <h2>🛠️ Debug Console Code</h2>
-        <p>Copy and paste this code in your browser console (F12) while on the contract form:</p>
-        <textarea class="code" style="width: 100%; height: 200px; resize: vertical;" readonly>
+      <h2>🛠️ Debug Console Code</h2>
+      <p>
+        Copy and paste this code in your browser console (F12) while on the
+        contract form:
+      </p>
+      <textarea
+        class="code"
+        style="width: 100%; height: 200px; resize: vertical"
+        readonly
+      >
 // === CONTRACT FORM DEBUG ===
 console.log('🔍 Starting contract form debug...');
 
@@ -130,47 +183,71 @@ setTimeout(() => {
     });
   }
 }, 2000);
-        </textarea>
-        <button class="button" onclick="copyDebugCode()">📋 Copy Debug Code</button>
+        </textarea
+      >
+      <button class="button" onclick="copyDebugCode()">
+        📋 Copy Debug Code
+      </button>
     </div>
 
     <div class="section">
-        <h2>🔗 Quick Links</h2>
-        <ul>
-            <li><a href="http://localhost:3002/en/auth/login" target="_blank">Login Page</a></li>
-            <li><a href="http://localhost:3002/generate-contract" target="_blank">Contract Form</a></li>
-            <li><a href="http://localhost:3002/contracts" target="_blank">Contracts List</a></li>
-            <li><a href="http://localhost:3002/dashboard" target="_blank">Dashboard</a></li>
-        </ul>
+      <h2>🔗 Quick Links</h2>
+      <ul>
+        <li>
+          <a href="http://localhost:3002/en/auth/login" target="_blank"
+            >Login Page</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:3002/generate-contract" target="_blank"
+            >Contract Form</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:3002/contracts" target="_blank"
+            >Contracts List</a
+          >
+        </li>
+        <li>
+          <a href="http://localhost:3002/dashboard" target="_blank"
+            >Dashboard</a
+          >
+        </li>
+      </ul>
     </div>
 
     <script>
-        // Check authentication status
-        fetch('http://localhost:3002/api/auth/session', { 
-            credentials: 'include',
-            mode: 'cors'
-        })
+      // Check authentication status
+      fetch('http://localhost:3002/api/auth/session', {
+        credentials: 'include',
+        mode: 'cors',
+      })
         .then(r => r.json())
         .then(data => {
-            const authStatus = document.getElementById('auth-status');
-            if (data.user) {
-                authStatus.innerHTML = '<span style="color: green;">✅ Logged in as ' + data.user.email + '</span>';
-            } else {
-                authStatus.innerHTML = '<span style="color: red;">❌ Not logged in</span>';
-            }
+          const authStatus = document.getElementById('auth-status');
+          if (data.user) {
+            authStatus.innerHTML =
+              '<span style="color: green;">✅ Logged in as ' +
+              data.user.email +
+              '</span>';
+          } else {
+            authStatus.innerHTML =
+              '<span style="color: red;">❌ Not logged in</span>';
+          }
         })
         .catch(e => {
-            const authStatus = document.getElementById('auth-status');
-            authStatus.innerHTML = '<span style="color: orange;">⚠️ Cannot check (CORS or server issue)</span>';
+          const authStatus = document.getElementById('auth-status');
+          authStatus.innerHTML =
+            '<span style="color: orange;">⚠️ Cannot check (CORS or server issue)</span>';
         });
 
-        // Copy debug code function
-        function copyDebugCode() {
-            const textarea = document.querySelector('textarea');
-            textarea.select();
-            document.execCommand('copy');
-            alert('Debug code copied to clipboard!');
-        }
+      // Copy debug code function
+      function copyDebugCode() {
+        const textarea = document.querySelector('textarea');
+        textarea.select();
+        document.execCommand('copy');
+        alert('Debug code copied to clipboard!');
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
-import { professionalSecurityMiddleware, SecurityPolicies } from "@/lib/auth/professional-security-middleware"
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  professionalSecurityMiddleware,
+  SecurityPolicies,
+} from '@/lib/auth/professional-security-middleware';
 
 // ========================================
 // 🏢 PROFESSIONAL AUTHENTICATION API
@@ -17,16 +20,17 @@ import { professionalSecurityMiddleware, SecurityPolicies } from "@/lib/auth/pro
 export const POST = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     try {
-      const { email, password, mfaToken, deviceName, trustDevice } = await req.json()
+      const { email, password, mfaToken, deviceName, trustDevice } =
+        await req.json();
 
       if (!email || !password) {
         return NextResponse.json(
           {
             success: false,
-            error: "Email and password are required"
+            error: 'Email and password are required',
           },
           { status: 400 }
-        )
+        );
       }
 
       // TODO: Implement comprehensive authentication logic
@@ -34,50 +38,49 @@ export const POST = professionalSecurityMiddleware.withSecurity(
 
       return NextResponse.json({
         success: true,
-        message: "Authentication successful",
+        message: 'Authentication successful',
         user: {
-          id: "user_123",
+          id: 'user_123',
           email,
-          role: "user"
+          role: 'user',
         },
         securityContext: context,
-        requiresMFA: false // Based on user's MFA settings and risk assessment
-      })
-
+        requiresMFA: false, // Based on user's MFA settings and risk assessment
+      });
     } catch (error) {
-      console.error("Professional authentication error:", error)
+      console.error('Professional authentication error:', error);
       return NextResponse.json(
         {
           success: false,
-          error: "Authentication failed"
+          error: 'Authentication failed',
         },
         { status: 500 }
-      )
+      );
     }
   },
   SecurityPolicies.PROTECTED
-)
+);
 
 export const GET = professionalSecurityMiddleware.withSecurity(
   async (req: NextRequest, context) => {
     return NextResponse.json({
-      message: "Professional Authentication API",
-      version: "2.0.0",
+      message: 'Professional Authentication API',
+      version: '2.0.0',
       features: [
-        "Multi-factor authentication",
-        "Biometric authentication", 
-        "Risk-based authentication",
-        "Device management",
-        "Session management",
-        "Security monitoring",
-        "Compliance reporting"
+        'Multi-factor authentication',
+        'Biometric authentication',
+        'Risk-based authentication',
+        'Device management',
+        'Session management',
+        'Security monitoring',
+        'Compliance reporting',
       ],
       securityContext: {
         requestId: context.requestId,
         riskScore: context.riskScore,
-        timestamp: context.timestamp
-      }
-    })
+        timestamp: context.timestamp,
+      },
+    });
   },
   SecurityPolicies.PUBLIC
-)
+);

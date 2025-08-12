@@ -1,138 +1,151 @@
 // lib/contract-utils.ts
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 // import { format, differenceInDays, differenceInMonths, parseISO } from "date-fns"
-import type { ContractGeneratorFormData } from "@/lib/schema-generator"
-import type { Database } from "@/types/supabase"
+import type { ContractGeneratorFormData } from '@/lib/schema-generator';
+import type { Database } from '@/types/supabase';
 
 // Utility function for combining classes
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 // Contract-specific types
-export type ContractRow = Database["public"]["Tables"]["contracts"]["Row"]
-export type ContractInsert = Database["public"]["Tables"]["contracts"]["Insert"]
+export type ContractRow = Database['public']['Tables']['contracts']['Row'];
+export type ContractInsert =
+  Database['public']['Tables']['contracts']['Insert'];
 
 // Contract status types
 export type ContractStatus =
-  | "draft"
-  | "pending_approval"
-  | "approved"
-  | "active"
-  | "expired"
-  | "terminated"
-  | "cancelled"
+  | 'draft'
+  | 'pending_approval'
+  | 'approved'
+  | 'active'
+  | 'expired'
+  | 'terminated'
+  | 'cancelled';
 
 // Contract duration analysis
 export interface ContractDurationAnalysis {
-  duration: number // days
-  durationText: string
-  category: "short-term" | "medium-term" | "long-term"
-  isValid: boolean
-  warnings: string[]
-  recommendations: string[]
+  duration: number; // days
+  durationText: string;
+  category: 'short-term' | 'medium-term' | 'long-term';
+  isValid: boolean;
+  warnings: string[];
+  recommendations: string[];
 }
 
 // Contract compensation analysis
 export interface ContractCompensationAnalysis {
-  basicSalary: number
-  allowances: number
-  totalMonthly: number
-  totalAnnual: number
-  currency: string
-  isCompetitive: boolean
-  marketComparison?: "below" | "average" | "above"
+  basicSalary: number;
+  allowances: number;
+  totalMonthly: number;
+  totalAnnual: number;
+  currency: string;
+  isCompetitive: boolean;
+  marketComparison?: 'below' | 'average' | 'above';
 }
 
 // Contract validation result
 export interface ContractValidationResult {
-  isValid: boolean
-  errors: string[]
-  warnings: string[]
-  completeness: number // percentage
-  missingFields: string[]
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  completeness: number; // percentage
+  missingFields: string[];
 }
 
 /**
  * Analyze contract duration and provide insights
  */
-export function analyzeContractDuration(startDate: Date, endDate: Date): ContractDurationAnalysis {
+export function analyzeContractDuration(
+  startDate: Date,
+  endDate: Date
+): ContractDurationAnalysis {
   // Temporary fallback without date-fns
-  const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-  const months = Math.floor(duration / 30)
+  const duration = Math.floor(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const months = Math.floor(duration / 30);
 
   const analysis: ContractDurationAnalysis = {
     duration,
     durationText: formatDuration(duration),
-    category: duration <= 90 ? "short-term" : duration <= 365 ? "medium-term" : "long-term",
+    category:
+      duration <= 90
+        ? 'short-term'
+        : duration <= 365
+          ? 'medium-term'
+          : 'long-term',
     isValid: duration >= 1 && duration <= 5 * 365, // 1 day to 5 years
     warnings: [],
     recommendations: [],
-  }
+  };
 
   // Add warnings based on duration
   if (duration < 7) {
-    analysis.warnings.push("Very short contract duration (less than a week)")
+    analysis.warnings.push('Very short contract duration (less than a week)');
   } else if (duration > 2 * 365) {
-    analysis.warnings.push("Long-term contract (over 2 years)")
+    analysis.warnings.push('Long-term contract (over 2 years)');
   }
 
   // Add recommendations
   if (duration <= 90) {
     analysis.recommendations.push(
-      "Consider probation period of 1-2 months for short-term contracts",
-    )
+      'Consider probation period of 1-2 months for short-term contracts'
+    );
   } else if (duration >= 365) {
-    analysis.recommendations.push("Consider annual performance reviews for long-term contracts")
+    analysis.recommendations.push(
+      'Consider annual performance reviews for long-term contracts'
+    );
   }
 
   if (months >= 12) {
     analysis.recommendations.push(
-      "Consider including salary review clauses for contracts over 1 year",
-    )
+      'Consider including salary review clauses for contracts over 1 year'
+    );
   }
 
-  return analysis
+  return analysis;
 }
 
 /**
  * Format duration in human-readable text
  */
 export function formatDuration(days: number): string {
-  if (days === 1) return "1 day"
-  if (days < 7) return `${days} days`
+  if (days === 1) return '1 day';
+  if (days < 7) return `${days} days`;
   if (days < 30) {
-    const weeks = Math.floor(days / 7)
-    const remainingDays = days % 7
+    const weeks = Math.floor(days / 7);
+    const remainingDays = days % 7;
     return weeks === 1
       ? remainingDays > 0
         ? `1 week, ${remainingDays} days`
-        : "1 week"
+        : '1 week'
       : remainingDays > 0
         ? `${weeks} weeks, ${remainingDays} days`
-        : `${weeks} weeks`
+        : `${weeks} weeks`;
   }
   if (days < 365) {
-    const months = Math.floor(days / 30)
-    const remainingDays = days % 30
+    const months = Math.floor(days / 30);
+    const remainingDays = days % 30;
     return months === 1
       ? remainingDays > 0
         ? `1 month, ${remainingDays} days`
-        : "1 month"
+        : '1 month'
       : remainingDays > 0
         ? `${months} months, ${remainingDays} days`
-        : `${months} months`
+        : `${months} months`;
   }
 
-  const years = Math.floor(days / 365)
-  const remainingDays = days % 365
-  const months = Math.floor(remainingDays / 30)
+  const years = Math.floor(days / 365);
+  const remainingDays = days % 365;
+  const months = Math.floor(remainingDays / 30);
 
   if (years === 1) {
-    return months > 0 ? `1 year, ${months} months` : "1 year"
+    return months > 0 ? `1 year, ${months} months` : '1 year';
   }
-  return months > 0 ? `${years} years, ${months} months` : `${years} years`
+  return months > 0 ? `${years} years, ${months} months` : `${years} years`;
 }
 
 /**
@@ -141,19 +154,19 @@ export function formatDuration(days: number): string {
 export function analyzeContractCompensation(
   basicSalary: number = 0,
   allowances: number = 0,
-  currency: string = "OMR",
+  currency: string = 'OMR'
 ): ContractCompensationAnalysis {
-  const totalMonthly = basicSalary + allowances
-  const totalAnnual = totalMonthly * 12
+  const totalMonthly = basicSalary + allowances;
+  const totalAnnual = totalMonthly * 12;
 
   // Market comparison logic (simplified)
-  let marketComparison: "below" | "average" | "above" | undefined
-  if (currency === "OMR" && totalMonthly > 0) {
+  let marketComparison: 'below' | 'average' | 'above' | undefined;
+  if (currency === 'OMR' && totalMonthly > 0) {
     if (totalMonthly < 1300)
-      marketComparison = "below" // ~325 OMR minimum wage
+      marketComparison = 'below'; // ~325 OMR minimum wage
     else if (totalMonthly < 3900)
-      marketComparison = "average" // Mid-level Oman salaries
-    else marketComparison = "above"
+      marketComparison = 'average'; // Mid-level Oman salaries
+    else marketComparison = 'above';
   }
 
   return {
@@ -162,66 +175,69 @@ export function analyzeContractCompensation(
     totalMonthly,
     totalAnnual,
     currency,
-    isCompetitive: marketComparison === "average" || marketComparison === "above",
+    isCompetitive:
+      marketComparison === 'average' || marketComparison === 'above',
     marketComparison,
-  }
+  };
 }
 
 /**
  * Validate contract form data
  */
 export function validateContractData(
-  data: Partial<ContractGeneratorFormData>,
+  data: Partial<ContractGeneratorFormData>
 ): ContractValidationResult {
-  const errors: string[] = []
-  const warnings: string[] = []
-  const missingFields: string[] = []
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const missingFields: string[] = [];
 
   // Required fields check
   const requiredFields = [
-    "first_party_id",
-    "second_party_id",
-    "promoter_id",
-    "contract_start_date",
-    "contract_end_date",
-    "email",
-    "job_title",
-    "department",
-    "contract_type",
-    "currency",
-    "work_location",
-  ] as const
+    'first_party_id',
+    'second_party_id',
+    'promoter_id',
+    'contract_start_date',
+    'contract_end_date',
+    'email',
+    'job_title',
+    'department',
+    'contract_type',
+    'currency',
+    'work_location',
+  ] as const;
 
-  requiredFields.forEach((field) => {
-    if (!data[field] || data[field] === "") {
-      missingFields.push(field)
+  requiredFields.forEach(field => {
+    if (!data[field] || data[field] === '') {
+      missingFields.push(field);
     }
-  })
+  });
 
   // Business logic validation
   if (data.first_party_id === data.second_party_id) {
-    errors.push("Client and Employer organizations must be different")
+    errors.push('Client and Employer organizations must be different');
   }
 
   if (data.contract_start_date && data.contract_end_date) {
     if (data.contract_end_date < data.contract_start_date) {
-      errors.push("End date must be after start date")
+      errors.push('End date must be after start date');
     }
   }
 
   // Compensation warnings
   if (data.basic_salary && data.basic_salary > 100000) {
-    warnings.push("High salary amount - please verify")
+    warnings.push('High salary amount - please verify');
   }
 
   if (data.allowances && data.allowances > 50000) {
-    warnings.push("High allowances amount - please verify")
+    warnings.push('High allowances amount - please verify');
   }
 
   // Calculate completeness
-  const totalRequiredFields = requiredFields.length
-  const completedFields = totalRequiredFields - missingFields.length
-  const completeness = Math.round((completedFields / totalRequiredFields) * 100)
+  const totalRequiredFields = requiredFields.length;
+  const completedFields = totalRequiredFields - missingFields.length;
+  const completeness = Math.round(
+    (completedFields / totalRequiredFields) * 100
+  );
 
   return {
     isValid: errors.length === 0 && missingFields.length === 0,
@@ -229,61 +245,64 @@ export function validateContractData(
     warnings,
     completeness,
     missingFields,
-  }
+  };
 }
 
 /**
  * Format contract number
  */
-export function generateContractNumber(prefix: string = "PAC"): string {
-  const now = new Date()
-  const day = now.getDate().toString().padStart(2, "0")
-  const month = (now.getMonth() + 1).toString().padStart(2, "0")
-  const year = now.getFullYear()
+export function generateContractNumber(prefix: string = 'PAC'): string {
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const year = now.getFullYear();
   const random = Math.floor(Math.random() * 10000)
     .toString()
-    .padStart(4, "0")
-  return `${prefix}-${day}${month}${year}-${random}`
+    .padStart(4, '0');
+  return `${prefix}-${day}${month}${year}-${random}`;
 }
 
 /**
  * Get contract status badge variant
  */
 export function getStatusBadgeVariant(
-  status: ContractStatus,
-): "default" | "secondary" | "destructive" | "outline" {
+  status: ContractStatus
+): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
-    case "active":
-    case "approved":
-      return "default"
-    case "pending_approval":
-    case "draft":
-      return "secondary"
-    case "expired":
-    case "terminated":
-    case "cancelled":
-      return "destructive"
+    case 'active':
+    case 'approved':
+      return 'default';
+    case 'pending_approval':
+    case 'draft':
+      return 'secondary';
+    case 'expired':
+    case 'terminated':
+    case 'cancelled':
+      return 'destructive';
     default:
-      return "outline"
+      return 'outline';
   }
 }
 
 /**
  * Format contract dates for display
  */
-export function formatContractDates(startDate: string | Date, endDate: string | Date): string {
-  const start = typeof startDate === "string" ? new Date(startDate) : startDate
-  const end = typeof endDate === "string" ? new Date(endDate) : endDate
+export function formatContractDates(
+  startDate: string | Date,
+  endDate: string | Date
+): string {
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      day: '2-digit', 
-      month: 'short', 
-      year: 'numeric' 
-    })
-  }
+    return date.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
-  return `${formatDate(start)} - ${formatDate(end)}`
+  return `${formatDate(start)} - ${formatDate(end)}`;
 }
 
 /**
@@ -292,43 +311,50 @@ export function formatContractDates(startDate: string | Date, endDate: string | 
 export function calculateContractProgress(
   startDate: string | Date,
   endDate: string | Date,
-  currentDate: Date = new Date(),
+  currentDate: Date = new Date()
 ): number {
-  const start = typeof startDate === "string" ? new Date(startDate) : startDate
-  const end = typeof endDate === "string" ? new Date(endDate) : endDate
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
 
-  if (currentDate < start) return 0
-  if (currentDate > end) return 100
+  if (currentDate < start) return 0;
+  if (currentDate > end) return 100;
 
-  const totalDuration = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-  const elapsed = Math.floor((currentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  const totalDuration = Math.floor(
+    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const elapsed = Math.floor(
+    (currentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-  return Math.round((elapsed / totalDuration) * 100)
+  return Math.round((elapsed / totalDuration) * 100);
 }
 
 /**
  * Get contract age in human readable format
  */
 export function getContractAge(createdAt: string | Date): string {
-  const created = typeof createdAt === "string" ? new Date(createdAt) : createdAt
-  const now = new Date()
+  const created =
+    typeof createdAt === 'string' ? new Date(createdAt) : createdAt;
+  const now = new Date();
 
-  const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24))
+  const days = Math.floor(
+    (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-  if (days === 0) return "Today"
-  if (days === 1) return "1 day ago"
-  if (days < 7) return `${days} days ago`
+  if (days === 0) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return `${days} days ago`;
   if (days < 30) {
-    const weeks = Math.floor(days / 7)
-    return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
   }
   if (days < 365) {
-    const months = Math.floor(days / 30)
-    return months === 1 ? "1 month ago" : `${months} months ago`
+    const months = Math.floor(days / 30);
+    return months === 1 ? '1 month ago' : `${months} months ago`;
   }
 
-  const years = Math.floor(days / 365)
-  return years === 1 ? "1 year ago" : `${years} years ago`
+  const years = Math.floor(days / 365);
+  return years === 1 ? '1 year ago' : `${years} years ago`;
 }
 
 /**
@@ -336,57 +362,57 @@ export function getContractAge(createdAt: string | Date): string {
  */
 export function exportContractsToCSV(contracts: ContractRow[]): string {
   const headers = [
-    "ID",
-    "Contract Number",
-    "Client ID",
-    "Employer ID",
-    "Promoter ID",
-    "Job Title",
-    "Start Date",
-    "End Date",
-    "Status",
-    "Work Location",
-    "Email",
-    "Created At",
-  ]
+    'ID',
+    'Contract Number',
+    'Client ID',
+    'Employer ID',
+    'Promoter ID',
+    'Job Title',
+    'Start Date',
+    'End Date',
+    'Status',
+    'Work Location',
+    'Email',
+    'Created At',
+  ];
 
-  const rows = contracts.map((contract) => [
+  const rows = contracts.map(contract => [
     contract.id,
-    contract.contract_number || "",
-    contract.first_party_id || "",
-    contract.second_party_id || "",
-    contract.promoter_id || "",
-    contract.job_title || "",
-    contract.contract_start_date || "",
-    contract.contract_end_date || "",
-    contract.status || "",
-    contract.work_location || "",
-    contract.email || "",
-    contract.created_at || "",
-  ])
+    contract.contract_number || '',
+    contract.first_party_id || '',
+    contract.second_party_id || '',
+    contract.promoter_id || '',
+    contract.job_title || '',
+    contract.contract_start_date || '',
+    contract.contract_end_date || '',
+    contract.status || '',
+    contract.work_location || '',
+    contract.email || '',
+    contract.created_at || '',
+  ]);
 
   const csvContent = [headers, ...rows]
-    .map((row) => row.map((field) => `"${field}"`).join(","))
-    .join("\n")
+    .map(row => row.map(field => `"${field}"`).join(','))
+    .join('\n');
 
-  return csvContent
+  return csvContent;
 }
 
 /**
  * Download CSV file
  */
 export function downloadCSV(csvContent: string, filename: string): void {
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-  const link = document.createElement("a")
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
 
   if (link.download !== undefined) {
-    const url = URL.createObjectURL(blob)
-    link.setAttribute("href", url)
-    link.setAttribute("download", filename)
-    link.style.visibility = "hidden"
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }
 
@@ -396,21 +422,24 @@ export function downloadCSV(csvContent: string, filename: string): void {
 export function getSalaryRecommendations(
   jobTitle: string,
   workLocation: string,
-  currency: string = "OMR",
+  currency: string = 'OMR'
 ): { min: number; max: number; average: number } | null {
   // Simplified salary recommendations for Oman market (in production, this would come from a database)
-  const salaryBands: Record<string, { min: number; max: number; average: number }> = {
-    "senior-software-engineer": { min: 3900, max: 6500, average: 5200 }, // Converted to OMR
-    "software-engineer": { min: 2600, max: 4680, average: 3640 }, // Converted to OMR
-    "junior-software-engineer": { min: 6000, max: 12000, average: 9000 },
-    "project-manager": { min: 12000, max: 22000, average: 17000 },
-    "product-manager": { min: 14000, max: 24000, average: 19000 },
-    "ui-ux-designer": { min: 8000, max: 16000, average: 12000 },
-    "marketing-specialist": { min: 7000, max: 14000, average: 10500 },
-    "business-analyst": { min: 9000, max: 16000, average: 12500 },
-  }
+  const salaryBands: Record<
+    string,
+    { min: number; max: number; average: number }
+  > = {
+    'senior-software-engineer': { min: 3900, max: 6500, average: 5200 }, // Converted to OMR
+    'software-engineer': { min: 2600, max: 4680, average: 3640 }, // Converted to OMR
+    'junior-software-engineer': { min: 6000, max: 12000, average: 9000 },
+    'project-manager': { min: 12000, max: 22000, average: 17000 },
+    'product-manager': { min: 14000, max: 24000, average: 19000 },
+    'ui-ux-designer': { min: 8000, max: 16000, average: 12000 },
+    'marketing-specialist': { min: 7000, max: 14000, average: 10500 },
+    'business-analyst': { min: 9000, max: 16000, average: 12500 },
+  };
 
-  return salaryBands[jobTitle] || null
+  return salaryBands[jobTitle] || null;
 }
 
 /**
@@ -418,11 +447,11 @@ export function getSalaryRecommendations(
  */
 export function getContractTypeRecommendations(duration: number): string[] {
   if (duration <= 90) {
-    return ["temporary", "project-based", "contract"]
+    return ['temporary', 'project-based', 'contract'];
   } else if (duration <= 365) {
-    return ["fixed-term", "contract", "temporary"]
+    return ['fixed-term', 'contract', 'temporary'];
   } else {
-    return ["permanent", "full-time", "fixed-term"]
+    return ['permanent', 'full-time', 'fixed-term'];
   }
 }
 
@@ -431,119 +460,123 @@ export function getContractTypeRecommendations(duration: number): string[] {
  */
 export function calculateSalaryRecommendations(
   salary: number,
-  contractType: string,
+  contractType: string
 ): { min: number; max: number; average: number; recommendations: string[] } {
-  const recommendations: string[] = []
+  const recommendations: string[] = [];
 
   // Base salary recommendations for different contract types
   const baseRecommendations = {
     permanent: { min: 800, max: 2000, average: 1400 },
-    "fixed-term": { min: 600, max: 1800, average: 1200 },
+    'fixed-term': { min: 600, max: 1800, average: 1200 },
     temporary: { min: 500, max: 1500, average: 1000 },
-    "project-based": { min: 700, max: 1900, average: 1300 },
+    'project-based': { min: 700, max: 1900, average: 1300 },
     contract: { min: 600, max: 1700, average: 1150 },
-  }
+  };
 
   const recommendation =
     baseRecommendations[contractType as keyof typeof baseRecommendations] ||
-    baseRecommendations["permanent"]
+    baseRecommendations['permanent'];
 
   // Add specific recommendations based on salary
   if (salary < recommendation.min) {
-    recommendations.push("Consider increasing salary to meet market minimum")
+    recommendations.push('Consider increasing salary to meet market minimum');
   } else if (salary > recommendation.max) {
-    recommendations.push("Salary is above market range - verify justification")
+    recommendations.push('Salary is above market range - verify justification');
   } else if (salary >= recommendation.average) {
-    recommendations.push("Salary is competitive for the market")
+    recommendations.push('Salary is competitive for the market');
   } else {
-    recommendations.push("Consider salary increase to improve competitiveness")
+    recommendations.push('Consider salary increase to improve competitiveness');
   }
 
   // Add contract type specific recommendations
-  if (contractType === "permanent") {
-    recommendations.push("Include annual salary review clause")
-  } else if (contractType === "temporary") {
-    recommendations.push("Consider shorter review periods for temporary contracts")
+  if (contractType === 'permanent') {
+    recommendations.push('Include annual salary review clause');
+  } else if (contractType === 'temporary') {
+    recommendations.push(
+      'Consider shorter review periods for temporary contracts'
+    );
   }
 
   return {
     ...recommendation,
     recommendations,
-  }
+  };
 }
 
 /**
  * Check compliance issues in contract data
  */
 export function checkComplianceIssues(contractData: any): {
-  isCompliant: boolean
-  issues: string[]
-  warnings: string[]
-  recommendations: string[]
+  isCompliant: boolean;
+  issues: string[];
+  warnings: string[];
+  recommendations: string[];
 } {
-  const issues: string[] = []
-  const warnings: string[] = []
-  const recommendations: string[] = []
+  const issues: string[] = [];
+  const warnings: string[] = [];
+  const recommendations: string[] = [];
 
   // Check required fields
   const requiredFields = [
-    "first_party_id",
-    "second_party_id",
-    "promoter_id",
-    "contract_start_date",
-    "contract_end_date",
-    "job_title",
-    "work_location",
-  ]
+    'first_party_id',
+    'second_party_id',
+    'promoter_id',
+    'contract_start_date',
+    'contract_end_date',
+    'job_title',
+    'work_location',
+  ];
 
-  requiredFields.forEach((field) => {
+  requiredFields.forEach(field => {
     if (!contractData[field]) {
-      issues.push(`Missing required field: ${field}`)
+      issues.push(`Missing required field: ${field}`);
     }
-  })
+  });
 
   // Check date validity
   if (contractData.contract_start_date && contractData.contract_end_date) {
-    const startDate = new Date(contractData.contract_start_date)
-    const endDate = new Date(contractData.contract_end_date)
+    const startDate = new Date(contractData.contract_start_date);
+    const endDate = new Date(contractData.contract_end_date);
 
     if (endDate <= startDate) {
-      issues.push("End date must be after start date")
+      issues.push('End date must be after start date');
     }
 
-    const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const duration = Math.floor(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+    );
     if (duration < 1) {
-      issues.push("Contract duration must be at least 1 day")
+      issues.push('Contract duration must be at least 1 day');
     }
   }
 
   // Check salary compliance
   if (contractData.basic_salary) {
-    const salary = parseFloat(contractData.basic_salary)
+    const salary = parseFloat(contractData.basic_salary);
     if (salary < 325) {
       // Minimum wage in Oman
-      issues.push("Salary below minimum wage requirement")
+      issues.push('Salary below minimum wage requirement');
     } else if (salary > 10000) {
-      warnings.push("High salary amount - please verify")
+      warnings.push('High salary amount - please verify');
     }
   }
 
   // Check parties are different
   if (contractData.first_party_id && contractData.second_party_id) {
     if (contractData.first_party_id === contractData.second_party_id) {
-      issues.push("Client and Employer must be different parties")
+      issues.push('Client and Employer must be different parties');
     }
   }
 
   // Add recommendations
   if (issues.length === 0) {
-    recommendations.push("Contract appears to be compliant")
+    recommendations.push('Contract appears to be compliant');
   } else {
-    recommendations.push("Address compliance issues before proceeding")
+    recommendations.push('Address compliance issues before proceeding');
   }
 
   if (warnings.length > 0) {
-    recommendations.push("Review warnings for potential improvements")
+    recommendations.push('Review warnings for potential improvements');
   }
 
   return {
@@ -551,5 +584,5 @@ export function checkComplianceIssues(contractData: any): {
     issues,
     warnings,
     recommendations,
-  }
+  };
 }

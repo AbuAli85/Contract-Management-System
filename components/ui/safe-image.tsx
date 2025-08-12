@@ -1,16 +1,16 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { User } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from 'react';
+import { User } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SafeImageProps {
-  src?: string | null
-  alt: string
-  width?: number
-  height?: number
-  className?: string
-  fallback?: React.ReactNode
+  src?: string | null;
+  alt: string;
+  width?: number;
+  height?: number;
+  className?: string;
+  fallback?: React.ReactNode;
 }
 
 export function SafeImage({
@@ -21,27 +21,27 @@ export function SafeImage({
   className,
   fallback,
 }: SafeImageProps) {
-  const [imageError, setImageError] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [imageError, setImageError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // If no src, invalid URL, or image failed to load, show fallback
   if (!src || imageError || !src.startsWith('http')) {
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-full bg-muted",
-          width && height ? `w-[${width}px] h-[${height}px]` : "",
-          className,
+          'flex items-center justify-center rounded-full bg-muted',
+          width && height ? `w-[${width}px] h-[${height}px]` : '',
+          className
         )}
       >
-        {fallback || <User className="h-1/2 w-1/2 text-muted-foreground" />}
+        {fallback || <User className='h-1/2 w-1/2 text-muted-foreground' />}
       </div>
-    )
+    );
   }
 
   // Use regular img tag to avoid Next.js webpack conflicts
   return (
-    <div className={cn("relative overflow-hidden rounded-full", className)}>
+    <div className={cn('relative overflow-hidden rounded-full', className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -49,17 +49,17 @@ export function SafeImage({
         width={width}
         height={height}
         className={cn(
-          "rounded-full object-cover transition-opacity duration-200",
-          isLoading ? "opacity-0" : "opacity-100",
+          'rounded-full object-cover transition-opacity duration-200',
+          isLoading ? 'opacity-0' : 'opacity-100'
         )}
         onError={() => setImageError(true)}
         onLoad={() => setIsLoading(false)}
       />
       {isLoading && (
-        <div className="absolute inset-0 flex animate-pulse items-center justify-center rounded-full bg-muted">
-          <User className="h-1/2 w-1/2 text-muted-foreground" />
+        <div className='absolute inset-0 flex animate-pulse items-center justify-center rounded-full bg-muted'>
+          <User className='h-1/2 w-1/2 text-muted-foreground' />
         </div>
       )}
     </div>
-  )
+  );
 }

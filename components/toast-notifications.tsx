@@ -1,171 +1,185 @@
-"use client"
+'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  useState,
+  useEffect,
+  createContext,
+  useContext,
+  ReactNode,
+} from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export type ToastType = "success" | "error" | "warning" | "info"
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
 export interface Toast {
-  id: string
-  type: ToastType
-  title: string
-  message?: string
-  duration?: number
+  id: string;
+  type: ToastType;
+  title: string;
+  message?: string;
+  duration?: number;
   action?: {
-    label: string
-    onClick: () => void
-  }
+    label: string;
+    onClick: () => void;
+  };
 }
 
 interface ToastContextType {
-  toasts: Toast[]
-  addToast: (toast: Omit<Toast, "id">) => void
-  removeToast: (id: string) => void
-  clearToasts: () => void
+  toasts: Toast[];
+  addToast: (toast: Omit<Toast, 'id'>) => void;
+  removeToast: (id: string) => void;
+  clearToasts: () => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined)
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = (toast: Omit<Toast, "id">) => {
-    const id = Math.random().toString(36).substr(2, 9)
-    const newToast = { ...toast, id }
+  const addToast = (toast: Omit<Toast, 'id'>) => {
+    const id = Math.random().toString(36).substr(2, 9);
+    const newToast = { ...toast, id };
 
-    setToasts((prev) => [...prev, newToast])
+    setToasts(prev => [...prev, newToast]);
 
     // Auto-remove toast after duration
     if (toast.duration !== 0) {
       setTimeout(() => {
-        removeToast(id)
-      }, toast.duration || 5000)
+        removeToast(id);
+      }, toast.duration || 5000);
     }
-  }
+  };
 
   const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  };
 
   const clearToasts = () => {
-    setToasts([])
-  }
+    setToasts([]);
+  };
 
   return (
-    <ToastContext.Provider value={{ toasts, addToast, removeToast, clearToasts }}>
+    <ToastContext.Provider
+      value={{ toasts, addToast, removeToast, clearToasts }}
+    >
       {children}
       <ToastContainer />
     </ToastContext.Provider>
-  )
+  );
 }
 
 export function useToast() {
-  const context = useContext(ToastContext)
+  const context = useContext(ToastContext);
   if (!context) {
-    throw new Error("useToast must be used within a ToastProvider")
+    throw new Error('useToast must be used within a ToastProvider');
   }
-  return context
+  return context;
 }
 
 function ToastContainer() {
-  const { toasts, removeToast } = useToast()
+  const { toasts, removeToast } = useToast();
 
-  if (toasts.length === 0) return null
+  if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed right-4 top-4 z-50 max-w-sm space-y-2">
-      {toasts.map((toast) => (
+    <div className='fixed right-4 top-4 z-50 max-w-sm space-y-2'>
+      {toasts.map(toast => (
         <ToastItem key={toast.id} toast={toast} onRemove={removeToast} />
       ))}
     </div>
-  )
+  );
 }
 
 interface ToastItemProps {
-  toast: Toast
-  onRemove: (id: string) => void
+  toast: Toast;
+  onRemove: (id: string) => void;
 }
 
 function ToastItem({ toast, onRemove }: ToastItemProps) {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     // Animate in
-    const timer = setTimeout(() => setIsVisible(true), 100)
-    return () => clearTimeout(timer)
-  }, [])
+    const timer = setTimeout(() => setIsVisible(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleRemove = () => {
-    setIsVisible(false)
-    setTimeout(() => onRemove(toast.id), 300)
-  }
+    setIsVisible(false);
+    setTimeout(() => onRemove(toast.id), 300);
+  };
 
   const getToastStyles = (type: ToastType) => {
     switch (type) {
-      case "success":
+      case 'success':
         return {
-          bg: "bg-green-50 border-green-200",
+          bg: 'bg-green-50 border-green-200',
           icon: CheckCircle,
-          iconColor: "text-green-600",
-          titleColor: "text-green-900",
-          messageColor: "text-green-700",
-        }
-      case "error":
+          iconColor: 'text-green-600',
+          titleColor: 'text-green-900',
+          messageColor: 'text-green-700',
+        };
+      case 'error':
         return {
-          bg: "bg-red-50 border-red-200",
+          bg: 'bg-red-50 border-red-200',
           icon: AlertCircle,
-          iconColor: "text-red-600",
-          titleColor: "text-red-900",
-          messageColor: "text-red-700",
-        }
-      case "warning":
+          iconColor: 'text-red-600',
+          titleColor: 'text-red-900',
+          messageColor: 'text-red-700',
+        };
+      case 'warning':
         return {
-          bg: "bg-yellow-50 border-yellow-200",
+          bg: 'bg-yellow-50 border-yellow-200',
           icon: AlertTriangle,
-          iconColor: "text-yellow-600",
-          titleColor: "text-yellow-900",
-          messageColor: "text-yellow-700",
-        }
-      case "info":
+          iconColor: 'text-yellow-600',
+          titleColor: 'text-yellow-900',
+          messageColor: 'text-yellow-700',
+        };
+      case 'info':
         return {
-          bg: "bg-blue-50 border-blue-200",
+          bg: 'bg-blue-50 border-blue-200',
           icon: Info,
-          iconColor: "text-blue-600",
-          titleColor: "text-blue-900",
-          messageColor: "text-blue-700",
-        }
+          iconColor: 'text-blue-600',
+          titleColor: 'text-blue-900',
+          messageColor: 'text-blue-700',
+        };
     }
-  }
+  };
 
-  const styles = getToastStyles(toast.type)
-  const Icon = styles.icon
+  const styles = getToastStyles(toast.type);
+  const Icon = styles.icon;
 
   return (
     <Card
       className={cn(
-        "border shadow-lg transition-all duration-300 ease-in-out",
+        'border shadow-lg transition-all duration-300 ease-in-out',
         styles.bg,
-        isVisible ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+        isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
       )}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Icon className={cn("mt-0.5 h-5 w-5 flex-shrink-0", styles.iconColor)} />
+      <CardContent className='p-4'>
+        <div className='flex items-start gap-3'>
+          <Icon
+            className={cn('mt-0.5 h-5 w-5 flex-shrink-0', styles.iconColor)}
+          />
 
-          <div className="min-w-0 flex-1">
-            <h4 className={cn("text-sm font-medium", styles.titleColor)}>{toast.title}</h4>
+          <div className='min-w-0 flex-1'>
+            <h4 className={cn('text-sm font-medium', styles.titleColor)}>
+              {toast.title}
+            </h4>
             {toast.message && (
-              <p className={cn("mt-1 text-sm", styles.messageColor)}>{toast.message}</p>
+              <p className={cn('mt-1 text-sm', styles.messageColor)}>
+                {toast.message}
+              </p>
             )}
             {toast.action && (
               <Button
-                variant="ghost"
-                size="sm"
+                variant='ghost'
+                size='sm'
                 onClick={toast.action.onClick}
-                className={cn("mt-2 h-6 px-2 text-xs", styles.titleColor)}
+                className={cn('mt-2 h-6 px-2 text-xs', styles.titleColor)}
               >
                 {toast.action.label}
               </Button>
@@ -173,35 +187,35 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
           </div>
 
           <Button
-            variant="ghost"
-            size="sm"
+            variant='ghost'
+            size='sm'
             onClick={handleRemove}
-            className="h-6 w-6 flex-shrink-0 p-0 hover:bg-black/5"
+            className='h-6 w-6 flex-shrink-0 p-0 hover:bg-black/5'
           >
-            <X className="h-3 w-3" />
+            <X className='h-3 w-3' />
           </Button>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Convenience functions for common toast types
 export function useToastHelpers() {
-  const { addToast } = useToast()
+  const { addToast } = useToast();
 
   return {
     success: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: "success", title, message, ...options })
+      addToast({ type: 'success', title, message, ...options });
     },
     error: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: "error", title, message, ...options })
+      addToast({ type: 'error', title, message, ...options });
     },
     warning: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: "warning", title, message, ...options })
+      addToast({ type: 'warning', title, message, ...options });
     },
     info: (title: string, message?: string, options?: Partial<Toast>) => {
-      addToast({ type: "info", title, message, ...options })
+      addToast({ type: 'info', title, message, ...options });
     },
-  }
+  };
 }

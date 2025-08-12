@@ -17,6 +17,7 @@ Your Supabase project shows **"No tables or views"** in the Table Editor. This m
 Copy and paste the entire content from `restore-database-schema.sql` into the SQL Editor and run it.
 
 This will create:
+
 - ✅ `parties` table (companies, individuals, government entities)
 - ✅ `promoters` table (with all fields including new ones)
 - ✅ `contracts` table
@@ -35,6 +36,7 @@ After the schema is restored, run the storage bucket setup:
 3. Run the query
 
 This will create:
+
 - ✅ `promoter-documents` storage bucket
 - ✅ RLS policies for document security
 - ✅ Automatic cleanup of orphaned files
@@ -50,6 +52,7 @@ After running both scripts, check:
 ## 📋 What This Restores
 
 ### Core Tables:
+
 - **`promoters`** - All promoter information with 50+ fields
 - **`parties`** - Companies, individuals, government entities
 - **`contracts`** - Contract management
@@ -57,6 +60,7 @@ After running both scripts, check:
 - **`audit_logs`** - Change tracking
 
 ### Features Restored:
+
 - ✅ All promoter fields (personal, contact, professional, financial)
 - ✅ Document upload functionality
 - ✅ Contract management
@@ -67,6 +71,7 @@ After running both scripts, check:
 ## 🚀 After Restoration
 
 1. **Restart your development server** (if not already running):
+
    ```bash
    npm run dev
    ```
@@ -79,15 +84,18 @@ After running both scripts, check:
 ## 🔍 Troubleshooting
 
 ### If tables still don't appear:
+
 1. Check if you're in the correct project (`reootcngcptfogfozlmz`)
 2. Make sure you're in the `public` schema
 3. Refresh the Table Editor page
 
 ### If you get permission errors:
+
 1. Make sure you're logged in as the project owner
 2. Check that your user has admin privileges
 
 ### If the web app still shows "no data":
+
 1. Restart your development server
 2. Clear browser cache
 3. Check browser console for errors
@@ -95,6 +103,7 @@ After running both scripts, check:
 ## 📞 Need Help?
 
 If you encounter any issues during restoration:
+
 1. Check the Supabase logs for error messages
 2. Verify your environment variables are correct
 3. Make sure you're running the scripts in the correct order
@@ -102,8 +111,9 @@ If you encounter any issues during restoration:
 ## 🎯 Expected Result
 
 After completing these steps:
+
 - ✅ All tables will be visible in Supabase Table Editor
 - ✅ Your web application will connect properly
 - ✅ All promoter management features will work
 - ✅ Document upload functionality will be available
-- ✅ No more "all data from supabase gone" errors 
+- ✅ No more "all data from supabase gone" errors

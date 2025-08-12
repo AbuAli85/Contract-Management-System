@@ -1,117 +1,139 @@
-import { getTranslations } from "next-intl/server"
-import { notFound, redirect } from "next/navigation"
+import { getTranslations } from 'next-intl/server';
+import { notFound, redirect } from 'next/navigation';
 // import Image from "next/image" // Temporarily disabled to avoid webpack conflicts
 
-import { getPromoterById } from "@/app/actions/promoters"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { Edit } from "lucide-react"
-import { Promoter } from "@/lib/types"
+import { getPromoterById } from '@/app/actions/promoters';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Edit } from 'lucide-react';
+import { Promoter } from '@/lib/types';
 
-export default async function PromoterDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PromoterDetailsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   // Redirect to the default locale version if accessed directly without locale
   // redirect("/en/manage-promoters")
 
-  const { id } = await params
+  const { id } = await params;
 
   // Check if the ID is "new" and redirect to the new page
-  if (id === "new") {
-    redirect("/en/manage-promoters/new")
+  if (id === 'new') {
+    redirect('/en/manage-promoters/new');
   }
 
   // Validate UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(id)) {
-    notFound()
-    return null
+    notFound();
+    return null;
   }
 
-  const t = await getTranslations("PromoterDetailsPage")
-  const promoter: Promoter | null = await getPromoterById(id)
+  const t = await getTranslations('PromoterDetailsPage');
+  const promoter: Promoter | null = await getPromoterById(id);
 
   if (!promoter) {
-    notFound()
-    return null // Ensure the function exits here
+    notFound();
+    return null; // Ensure the function exits here
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 md:px-6">
+    <div className='container mx-auto px-4 py-8 md:px-6'>
       <Card>
-        <CardHeader className="flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0">
-          <div className="flex items-center space-x-4">
-            {promoter.profile_picture_url && promoter.profile_picture_url.startsWith('http') ? (
+        <CardHeader className='flex flex-col space-y-2 md:flex-row md:items-center md:justify-between md:space-y-0'>
+          <div className='flex items-center space-x-4'>
+            {promoter.profile_picture_url &&
+            promoter.profile_picture_url.startsWith('http') ? (
               <Image
                 src={promoter.profile_picture_url}
-                alt={promoter.name_en || "Promoter"}
+                alt={promoter.name_en || 'Promoter'}
                 width={80}
                 height={80}
-                className="rounded-full object-cover"
+                className='rounded-full object-cover'
               />
             ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-2xl font-bold text-muted-foreground">
+              <div className='flex h-20 w-20 items-center justify-center rounded-full bg-muted text-2xl font-bold text-muted-foreground'>
                 {promoter.name_en?.charAt(0).toUpperCase()}
               </div>
             )}
-            <div className="space-y-1">
-              <CardTitle className="text-2xl font-bold">{promoter.name_en}</CardTitle>
-              <CardDescription>{promoter.company || "N/A"}</CardDescription>
+            <div className='space-y-1'>
+              <CardTitle className='text-2xl font-bold'>
+                {promoter.name_en}
+              </CardTitle>
+              <CardDescription>{promoter.company || 'N/A'}</CardDescription>
             </div>
           </div>
-          <Button variant="outline" asChild>
+          <Button variant='outline' asChild>
             <Link href={`/manage-promoters/${promoter.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              {t("editProfile")}
+              <Edit className='mr-2 h-4 w-4' />
+              {t('editProfile')}
             </Link>
           </Button>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <CardContent className='space-y-6'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
             <div>
-              <h3 className="mb-2 text-lg font-semibold">{t("contactInformation")}</h3>
+              <h3 className='mb-2 text-lg font-semibold'>
+                {t('contactInformation')}
+              </h3>
               <p>
-                <span className="font-medium">{t("email")}:</span> {promoter.email || "N/A"}
+                <span className='font-medium'>{t('email')}:</span>{' '}
+                {promoter.email || 'N/A'}
               </p>
               <p>
-                <span className="font-medium">{t("phone")}:</span> {promoter.phone || "N/A"}
+                <span className='font-medium'>{t('phone')}:</span>{' '}
+                {promoter.phone || 'N/A'}
               </p>
               <p>
-                <span className="font-medium">{t("website")}:</span>{" "}
+                <span className='font-medium'>{t('website')}:</span>{' '}
                 {promoter.website ? (
                   <a
                     href={promoter.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-blue-500 hover:underline'
                   >
                     {promoter.website}
                   </a>
                 ) : (
-                  "N/A"
+                  'N/A'
                 )}
               </p>
             </div>
             <div>
-              <h3 className="mb-2 text-lg font-semibold">{t("companyAddress")}</h3>
-              <p>{promoter.address || "N/A"}</p>
+              <h3 className='mb-2 text-lg font-semibold'>
+                {t('companyAddress')}
+              </h3>
+              <p>{promoter.address || 'N/A'}</p>
               <p>
                 {promoter.city && `${promoter.city}, `}
                 {promoter.state && `${promoter.state} `}
                 {promoter.zip_code}
               </p>
-              <p>{promoter.country || "N/A"}</p>
+              <p>{promoter.country || 'N/A'}</p>
             </div>
           </div>
 
           <Separator />
 
           <div>
-            <h3 className="mb-2 text-lg font-semibold">{t("aboutPromoter")}</h3>
-            <p className="text-muted-foreground">{promoter.bio || t("noBioAvailable")}</p>
+            <h3 className='mb-2 text-lg font-semibold'>{t('aboutPromoter')}</h3>
+            <p className='text-muted-foreground'>
+              {promoter.bio || t('noBioAvailable')}
+            </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

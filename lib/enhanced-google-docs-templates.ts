@@ -2,71 +2,72 @@
 // These templates provide better formatting and comprehensive contract sections
 
 export interface EnhancedTemplateConfig {
-  id: string
-  name: string
-  description: string
-  googleDocsTemplateId: string
-  sections: TemplateSection[]
-  styling: TemplateStyling
-  placeholders: TemplatePlaceholder[]
+  id: string;
+  name: string;
+  description: string;
+  googleDocsTemplateId: string;
+  sections: TemplateSection[];
+  styling: TemplateStyling;
+  placeholders: TemplatePlaceholder[];
 }
 
 export interface TemplateSection {
-  id: string
-  name: string
-  required: boolean
-  content: string
-  placeholders: string[]
+  id: string;
+  name: string;
+  required: boolean;
+  content: string;
+  placeholders: string[];
 }
 
 export interface TemplateStyling {
-  fontFamily: string
-  fontSize: number
-  lineHeight: number
+  fontFamily: string;
+  fontSize: number;
+  lineHeight: number;
   margins: {
-    top: number
-    bottom: number
-    left: number
-    right: number
-  }
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+  };
   colors: {
-    primary: string
-    secondary: string
-    accent: string
-    text: string
-  }
+    primary: string;
+    secondary: string;
+    accent: string;
+    text: string;
+  };
 }
 
 export interface TemplatePlaceholder {
-  key: string
-  description: string
-  required: boolean
-  defaultValue?: string
-  validation?: string
+  key: string;
+  description: string;
+  required: boolean;
+  defaultValue?: string;
+  validation?: string;
 }
 
 // Enhanced Employment Contract Template
 export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
-  id: "enhanced-employment",
-  name: "Enhanced Employment Contract",
-  description: "Professional employment contract with comprehensive sections and modern formatting",
-  googleDocsTemplateId: "1AbCdEfGhIjKlMnOpQrStUvWxYz123456789",
+  id: 'enhanced-employment',
+  name: 'Enhanced Employment Contract',
+  description:
+    'Professional employment contract with comprehensive sections and modern formatting',
+  googleDocsTemplateId: '1AbCdEfGhIjKlMnOpQrStUvWxYz123456789',
   styling: {
-    fontFamily: "Arial",
+    fontFamily: 'Arial',
     fontSize: 11,
     lineHeight: 1.5,
     margins: { top: 72, bottom: 72, left: 72, right: 72 },
     colors: {
-      primary: "#2c3e50",
-      secondary: "#34495e",
-      accent: "#3498db",
-      text: "#2c3e50",
+      primary: '#2c3e50',
+      secondary: '#34495e',
+      accent: '#3498db',
+      text: '#2c3e50',
     },
   },
   sections: [
     {
-      id: "header",
-      name: "Document Header",
+      id: 'header',
+      name: 'Document Header',
       required: true,
       content: `
         <div style="text-align: center; margin-bottom: 30px;">
@@ -78,8 +79,8 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
       placeholders: [],
     },
     {
-      id: "contract-info",
-      name: "Contract Information",
+      id: 'contract-info',
+      name: 'Contract Information',
       required: true,
       content: `
         <div style="background-color: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -100,11 +101,11 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </table>
         </div>
       `,
-      placeholders: ["contract_number", "contract_date", "contract_type"],
+      placeholders: ['contract_number', 'contract_date', 'contract_type'],
     },
     {
-      id: "parties",
-      name: "Contracting Parties",
+      id: 'parties',
+      name: 'Contracting Parties',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -134,23 +135,23 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
         </div>
       `,
       placeholders: [
-        "first_party_name_en",
-        "first_party_name_ar",
-        "first_party_crn",
-        "first_party_address",
-        "first_party_contact_person",
-        "first_party_contact_email",
-        "first_party_contact_phone",
-        "second_party_name_en",
-        "second_party_name_ar",
-        "second_party_id_number",
-        "employee_email",
-        "second_party_contact_phone",
+        'first_party_name_en',
+        'first_party_name_ar',
+        'first_party_crn',
+        'first_party_address',
+        'first_party_contact_person',
+        'first_party_contact_email',
+        'first_party_contact_phone',
+        'second_party_name_en',
+        'second_party_name_ar',
+        'second_party_id_number',
+        'employee_email',
+        'second_party_contact_phone',
       ],
     },
     {
-      id: "job-details",
-      name: "Job Details",
+      id: 'job-details',
+      name: 'Job Details',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -178,11 +179,16 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </div>
         </div>
       `,
-      placeholders: ["job_title", "department", "work_location", "reporting_to"],
+      placeholders: [
+        'job_title',
+        'department',
+        'work_location',
+        'reporting_to',
+      ],
     },
     {
-      id: "contract-terms",
-      name: "Contract Terms",
+      id: 'contract-terms',
+      name: 'Contract Terms',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -210,11 +216,16 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </div>
         </div>
       `,
-      placeholders: ["start_date", "end_date", "probation_period", "notice_period"],
+      placeholders: [
+        'start_date',
+        'end_date',
+        'probation_period',
+        'notice_period',
+      ],
     },
     {
-      id: "compensation",
-      name: "Compensation & Benefits",
+      id: 'compensation',
+      name: 'Compensation & Benefits',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -257,17 +268,17 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
         </div>
       `,
       placeholders: [
-        "basic_salary",
-        "housing_allowance",
-        "transport_allowance",
-        "other_allowances",
-        "total_compensation",
-        "currency",
+        'basic_salary',
+        'housing_allowance',
+        'transport_allowance',
+        'other_allowances',
+        'total_compensation',
+        'currency',
       ],
     },
     {
-      id: "working-hours",
-      name: "Working Hours & Conditions",
+      id: 'working-hours',
+      name: 'Working Hours & Conditions',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -300,16 +311,16 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
         </div>
       `,
       placeholders: [
-        "working_days",
-        "daily_hours",
-        "weekly_hours",
-        "overtime_policy",
-        "leave_entitlement",
+        'working_days',
+        'daily_hours',
+        'weekly_hours',
+        'overtime_policy',
+        'leave_entitlement',
       ],
     },
     {
-      id: "promoter-info",
-      name: "Promoter Information",
+      id: 'promoter-info',
+      name: 'Promoter Information',
       required: false,
       content: `
         <div style="margin-bottom: 25px;">
@@ -342,16 +353,16 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
         </div>
       `,
       placeholders: [
-        "promoter_name_en",
-        "promoter_name_ar",
-        "promoter_id_number",
-        "promoter_contact",
-        "promoter_email",
+        'promoter_name_en',
+        'promoter_name_ar',
+        'promoter_id_number',
+        'promoter_contact',
+        'promoter_email',
       ],
     },
     {
-      id: "terms-conditions",
-      name: "Terms and Conditions",
+      id: 'terms-conditions',
+      name: 'Terms and Conditions',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -371,11 +382,11 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </div>
         </div>
       `,
-      placeholders: ["job_title", "non_compete_period", "notice_period"],
+      placeholders: ['job_title', 'non_compete_period', 'notice_period'],
     },
     {
-      id: "signatures",
-      name: "Signatures",
+      id: 'signatures',
+      name: 'Signatures',
       required: true,
       content: `
         <div style="margin-bottom: 25px;">
@@ -415,11 +426,15 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </div>
         </div>
       `,
-      placeholders: ["first_party_name_en", "second_party_name_en", "promoter_name_en"],
+      placeholders: [
+        'first_party_name_en',
+        'second_party_name_en',
+        'promoter_name_en',
+      ],
     },
     {
-      id: "footer",
-      name: "Document Footer",
+      id: 'footer',
+      name: 'Document Footer',
       required: true,
       content: `
         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #bdc3c7; text-align: center;">
@@ -434,50 +449,104 @@ export const enhancedEmploymentTemplate: EnhancedTemplateConfig = {
           </p>
         </div>
       `,
-      placeholders: ["generation_date", "contract_id", "contract_number"],
+      placeholders: ['generation_date', 'contract_id', 'contract_number'],
     },
   ],
   placeholders: [
-    { key: "contract_number", description: "Unique contract identifier", required: true },
-    { key: "contract_date", description: "Contract creation date", required: true },
-    { key: "contract_type", description: "Type of employment contract", required: true },
-    { key: "first_party_name_en", description: "Employer company name (English)", required: true },
-    { key: "first_party_name_ar", description: "Employer company name (Arabic)", required: false },
     {
-      key: "first_party_crn",
-      description: "Employer commercial registration number",
+      key: 'contract_number',
+      description: 'Unique contract identifier',
+      required: true,
+    },
+    {
+      key: 'contract_date',
+      description: 'Contract creation date',
+      required: true,
+    },
+    {
+      key: 'contract_type',
+      description: 'Type of employment contract',
+      required: true,
+    },
+    {
+      key: 'first_party_name_en',
+      description: 'Employer company name (English)',
+      required: true,
+    },
+    {
+      key: 'first_party_name_ar',
+      description: 'Employer company name (Arabic)',
       required: false,
     },
-    { key: "second_party_name_en", description: "Employee name (English)", required: true },
-    { key: "second_party_name_ar", description: "Employee name (Arabic)", required: false },
-    { key: "job_title", description: "Position title", required: true },
-    { key: "department", description: "Department or division", required: true },
-    { key: "work_location", description: "Primary work location", required: true },
-    { key: "start_date", description: "Contract start date", required: true },
-    { key: "end_date", description: "Contract end date", required: false },
-    { key: "basic_salary", description: "Monthly basic salary", required: true },
-    { key: "currency", description: "Currency code", required: true, defaultValue: "OMR" },
-    { key: "promoter_name_en", description: "Promoter name (English)", required: false },
-    { key: "promoter_name_ar", description: "Promoter name (Arabic)", required: false },
+    {
+      key: 'first_party_crn',
+      description: 'Employer commercial registration number',
+      required: false,
+    },
+    {
+      key: 'second_party_name_en',
+      description: 'Employee name (English)',
+      required: true,
+    },
+    {
+      key: 'second_party_name_ar',
+      description: 'Employee name (Arabic)',
+      required: false,
+    },
+    { key: 'job_title', description: 'Position title', required: true },
+    {
+      key: 'department',
+      description: 'Department or division',
+      required: true,
+    },
+    {
+      key: 'work_location',
+      description: 'Primary work location',
+      required: true,
+    },
+    { key: 'start_date', description: 'Contract start date', required: true },
+    { key: 'end_date', description: 'Contract end date', required: false },
+    {
+      key: 'basic_salary',
+      description: 'Monthly basic salary',
+      required: true,
+    },
+    {
+      key: 'currency',
+      description: 'Currency code',
+      required: true,
+      defaultValue: 'OMR',
+    },
+    {
+      key: 'promoter_name_en',
+      description: 'Promoter name (English)',
+      required: false,
+    },
+    {
+      key: 'promoter_name_ar',
+      description: 'Promoter name (Arabic)',
+      required: false,
+    },
   ],
-}
+};
 
 // Service Contract Template
 export const serviceContractTemplate: EnhancedTemplateConfig = {
-  id: "service-contract",
-  name: "Service Contract",
-  description: "Professional service contract for business-to-business services",
-  googleDocsTemplateId: "2BcDeFgHiJkLmNoPqRsTuVwXyZ234567890",
+  id: 'service-contract',
+  name: 'Service Contract',
+  description:
+    'Professional service contract for business-to-business services',
+  googleDocsTemplateId: '2BcDeFgHiJkLmNoPqRsTuVwXyZ234567890',
   styling: {
-    fontFamily: "Arial",
+    fontFamily: 'Arial',
     fontSize: 11,
     lineHeight: 1.5,
     margins: { top: 72, bottom: 72, left: 72, right: 72 },
     colors: {
-      primary: "#2c3e50",
-      secondary: "#34495e",
-      accent: "#e67e22",
-      text: "#2c3e50",
+      primary: '#2c3e50',
+      secondary: '#34495e',
+      accent: '#e67e22',
+      text: '#2c3e50',
     },
   },
   sections: [
@@ -485,30 +554,46 @@ export const serviceContractTemplate: EnhancedTemplateConfig = {
     // ... (implement service contract specific sections)
   ],
   placeholders: [
-    { key: "service_provider", description: "Service provider company name", required: true },
-    { key: "service_recipient", description: "Service recipient company name", required: true },
-    { key: "service_description", description: "Detailed service description", required: true },
-    { key: "service_duration", description: "Service duration period", required: true },
-    { key: "service_fee", description: "Service fee amount", required: true },
+    {
+      key: 'service_provider',
+      description: 'Service provider company name',
+      required: true,
+    },
+    {
+      key: 'service_recipient',
+      description: 'Service recipient company name',
+      required: true,
+    },
+    {
+      key: 'service_description',
+      description: 'Detailed service description',
+      required: true,
+    },
+    {
+      key: 'service_duration',
+      description: 'Service duration period',
+      required: true,
+    },
+    { key: 'service_fee', description: 'Service fee amount', required: true },
   ],
-}
+};
 
 // Freelance Contract Template
 export const freelanceContractTemplate: EnhancedTemplateConfig = {
-  id: "freelance-contract",
-  name: "Freelance Contract",
-  description: "Freelance service agreement for independent contractors",
-  googleDocsTemplateId: "3CdEfGhIjKlMnOpQrStUvWxYzA345678901",
+  id: 'freelance-contract',
+  name: 'Freelance Contract',
+  description: 'Freelance service agreement for independent contractors',
+  googleDocsTemplateId: '3CdEfGhIjKlMnOpQrStUvWxYzA345678901',
   styling: {
-    fontFamily: "Arial",
+    fontFamily: 'Arial',
     fontSize: 11,
     lineHeight: 1.5,
     margins: { top: 72, bottom: 72, left: 72, right: 72 },
     colors: {
-      primary: "#2c3e50",
-      secondary: "#34495e",
-      accent: "#9b59b6",
-      text: "#2c3e50",
+      primary: '#2c3e50',
+      secondary: '#34495e',
+      accent: '#9b59b6',
+      text: '#2c3e50',
     },
   },
   sections: [
@@ -516,64 +601,88 @@ export const freelanceContractTemplate: EnhancedTemplateConfig = {
     // ... (implement freelance contract specific sections)
   ],
   placeholders: [
-    { key: "client_name", description: "Client company or individual name", required: true },
-    { key: "freelancer_name", description: "Freelancer name", required: true },
-    { key: "project_description", description: "Project or service description", required: true },
-    { key: "project_duration", description: "Project duration", required: true },
-    { key: "project_fee", description: "Project fee or hourly rate", required: true },
+    {
+      key: 'client_name',
+      description: 'Client company or individual name',
+      required: true,
+    },
+    { key: 'freelancer_name', description: 'Freelancer name', required: true },
+    {
+      key: 'project_description',
+      description: 'Project or service description',
+      required: true,
+    },
+    {
+      key: 'project_duration',
+      description: 'Project duration',
+      required: true,
+    },
+    {
+      key: 'project_fee',
+      description: 'Project fee or hourly rate',
+      required: true,
+    },
   ],
-}
+};
 
 // Export all templates
 export const enhancedTemplates: Record<string, EnhancedTemplateConfig> = {
-  "enhanced-employment": enhancedEmploymentTemplate,
-  "service-contract": serviceContractTemplate,
-  "freelance-contract": freelanceContractTemplate,
-}
+  'enhanced-employment': enhancedEmploymentTemplate,
+  'service-contract': serviceContractTemplate,
+  'freelance-contract': freelanceContractTemplate,
+};
 
 // Helper function to get template by ID
-export function getEnhancedTemplate(templateId: string): EnhancedTemplateConfig | null {
-  return enhancedTemplates[templateId] || null
+export function getEnhancedTemplate(
+  templateId: string
+): EnhancedTemplateConfig | null {
+  return enhancedTemplates[templateId] || null;
 }
 
 // Helper function to get all available templates
 export function getAllEnhancedTemplates(): EnhancedTemplateConfig[] {
-  return Object.values(enhancedTemplates)
+  return Object.values(enhancedTemplates);
 }
 
 // Helper function to validate template data
 export function validateTemplateData(
   templateId: string,
-  data: Record<string, any>,
+  data: Record<string, any>
 ): {
-  isValid: boolean
-  errors: string[]
-  warnings: string[]
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
 } {
-  const template = getEnhancedTemplate(templateId)
+  const template = getEnhancedTemplate(templateId);
   if (!template) {
     return {
       isValid: false,
       errors: [`Template '${templateId}' not found`],
       warnings: [],
-    }
+    };
   }
 
-  const errors: string[] = []
-  const warnings: string[] = []
+  const errors: string[] = [];
+  const warnings: string[] = [];
 
   // Check required placeholders
-  template.placeholders.forEach((placeholder) => {
+  template.placeholders.forEach(placeholder => {
     if (placeholder.required && !data[placeholder.key]) {
-      errors.push(`Required field '${placeholder.key}' is missing`)
-    } else if (!placeholder.required && !data[placeholder.key] && placeholder.defaultValue) {
-      warnings.push(`Optional field '${placeholder.key}' is missing, will use default value`)
+      errors.push(`Required field '${placeholder.key}' is missing`);
+    } else if (
+      !placeholder.required &&
+      !data[placeholder.key] &&
+      placeholder.defaultValue
+    ) {
+      warnings.push(
+        `Optional field '${placeholder.key}' is missing, will use default value`
+      );
     }
-  })
+  });
 
   return {
     isValid: errors.length === 0,
     errors,
     warnings,
-  }
+  };
 }

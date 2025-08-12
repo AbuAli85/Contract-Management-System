@@ -16,10 +16,10 @@ const { data: booking, error: insertError } = await supabase
   .from('bookings')
   .insert([bookingData])
   .select()
-  .single()
+  .single();
 
 if (insertError) {
-  return NextResponse.json({ error: insertError.message }, { status: 500 })
+  return NextResponse.json({ error: insertError.message }, { status: 500 });
 }
 
 // 2) Immediately POST to Make.com webhook
@@ -27,10 +27,10 @@ try {
   await fetch('https://hook.eu2.make.com/1unm44xv23srammipy0j1cauawrkzn32', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(booking)
-  })
+    body: JSON.stringify(booking),
+  });
 } catch (hookError) {
-  console.error('Make webhook failed:', hookError)
+  console.error('Make webhook failed:', hookError);
   // Booking was created successfully, webhook failure is logged but doesn't block
 }
 ```
@@ -38,21 +38,25 @@ try {
 ### 2. Key Features
 
 #### ✅ Immediate Trigger
+
 - Webhook fires instantly after database insert
 - No waiting for Supabase database triggers
 - No reliance on preview features
 
 #### ✅ Full Control
+
 - Complete control over payload shape
 - Custom error handling and logging
 - Retry logic can be added if needed
 
 #### ✅ Reliable Error Handling
+
 - Booking creation succeeds even if webhook fails
 - All webhook attempts are logged to `webhook_logs` table
 - Detailed error messages for debugging
 
 #### ✅ Comprehensive Logging
+
 ```typescript
 // Success logging
 await supabase.from('webhook_logs').insert({
@@ -61,17 +65,17 @@ await supabase.from('webhook_logs').insert({
   payload: webhookPayload,
   response: makeResponseData,
   status: 'success',
-  processed_at: new Date().toISOString()
-})
+  processed_at: new Date().toISOString(),
+});
 
-// Error logging  
+// Error logging
 await supabase.from('webhook_logs').insert({
   webhook_type: 'booking.created',
   booking_id: booking.id,
   payload: webhookPayload,
   status: 'error',
-  error_message: `HTTP ${makeResponse.status}: ${errorText}`
-})
+  error_message: `HTTP ${makeResponse.status}: ${errorText}`,
+});
 ```
 
 ## Usage
@@ -88,19 +92,20 @@ const response = await fetch('/api/bookings/direct-webhook', {
     start_time: '2024-01-22T10:00:00Z',
     end_time: '2024-01-22T11:00:00Z',
     total_cost: 50,
-    attendees: ['john@company.com']
-  })
-})
+    attendees: ['john@company.com'],
+  }),
+});
 
-const result = await response.json()
+const result = await response.json();
 if (result.success) {
-  console.log('Booking created and webhook triggered:', result.booking)
+  console.log('Booking created and webhook triggered:', result.booking);
 }
 ```
 
 ### Test Page
 
 A complete test interface is available at `/test-webhook-integration` that demonstrates:
+
 - Form-based booking creation
 - Real-time result display
 - Error handling visualization
@@ -114,7 +119,7 @@ The Make.com webhook receives a structured payload:
 {
   "event": "booking.created",
   "booking_id": "uuid-here",
-  "resource_id": "conf-room-a", 
+  "resource_id": "conf-room-a",
   "title": "Team Meeting",
   "description": "Weekly team sync",
   "start_time": "2024-01-22T10:00:00Z",
@@ -151,14 +156,14 @@ MAKE_WEBHOOK_SERVICE_CREATED=https://hook.eu2.make.com/your-service-webhook
 
 ## Advantages vs Supabase Triggers
 
-| Feature | Direct Webhook | Supabase Triggers |
-|---------|---------------|-------------------|
-| **Reliability** | ✅ Immediate, server-controlled | ⚠️ Depends on preview features |
-| **Control** | ✅ Full payload customization | ❌ Limited to database changes |
-| **Error Handling** | ✅ Custom retry and logging | ❌ Limited error visibility |
-| **Debugging** | ✅ Full request/response logs | ❌ Limited debugging tools |
-| **Coupling** | ⚠️ Slightly more coupled code | ✅ Decoupled from application |
-| **Performance** | ✅ Single request, immediate | ⚠️ Async, potential delays |
+| Feature            | Direct Webhook                  | Supabase Triggers              |
+| ------------------ | ------------------------------- | ------------------------------ |
+| **Reliability**    | ✅ Immediate, server-controlled | ⚠️ Depends on preview features |
+| **Control**        | ✅ Full payload customization   | ❌ Limited to database changes |
+| **Error Handling** | ✅ Custom retry and logging     | ❌ Limited error visibility    |
+| **Debugging**      | ✅ Full request/response logs   | ❌ Limited debugging tools     |
+| **Coupling**       | ⚠️ Slightly more coupled code   | ✅ Decoupled from application  |
+| **Performance**    | ✅ Single request, immediate    | ⚠️ Async, potential delays     |
 
 ## Existing System Compatibility
 
@@ -177,6 +182,7 @@ The new direct webhook approach can work alongside your existing system, giving 
 ## Monitoring
 
 All webhook attempts are logged to the `webhook_logs` table with:
+
 - Event type and booking ID
 - Full payload sent to Make.com
 - Response received (if successful)

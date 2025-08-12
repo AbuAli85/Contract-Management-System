@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "README.md"
-      - "docs/**"
+      - 'README.md'
+      - 'docs/**'
 
 jobs:
   create-pr:
@@ -22,7 +22,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: auto-sync-${{ github.run_number }}
-          title: "🔄 Auto Sync: ${{ github.run_number }}"
+          title: '🔄 Auto Sync: ${{ github.run_number }}'
           body: |
             ## 🔄 Automatic Sync from Fork
 

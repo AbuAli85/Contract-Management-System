@@ -1,46 +1,46 @@
-"use client"
+'use client';
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Shield, AlertTriangle } from "lucide-react"
-import { usePermissions } from "@/hooks/use-permissions"
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Shield, AlertTriangle } from 'lucide-react';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface PermissionWarningProps {
-  requiredPermission: string
-  featureName: string
-  variant?: "default" | "destructive"
-  className?: string
+  requiredPermission: string;
+  featureName: string;
+  variant?: 'default' | 'destructive';
+  className?: string;
 }
 
 export function PermissionWarning({
   requiredPermission,
   featureName,
-  variant = "default",
-  className = "",
+  variant = 'default',
+  className = '',
 }: PermissionWarningProps) {
-  const { can } = usePermissions()
-  const hasPermission = can(requiredPermission as any)
+  const { can } = usePermissions();
+  const hasPermission = can(requiredPermission as any);
 
   if (hasPermission) {
-    return null
+    return null;
   }
 
   return (
     <Alert variant={variant} className={className}>
-      <AlertTriangle className="h-4 w-4" />
+      <AlertTriangle className='h-4 w-4' />
       <AlertTitle>Access Restricted</AlertTitle>
       <AlertDescription>
-        You don't have permission to access {featureName}. Please contact your administrator if you
-        believe this is an error.
+        You don't have permission to access {featureName}. Please contact your
+        administrator if you believe this is an error.
       </AlertDescription>
     </Alert>
-  )
+  );
 }
 
 interface PermissionGuardProps {
-  permission: string
-  featureName: string
-  children: React.ReactNode
-  fallback?: React.ReactNode
+  permission: string;
+  featureName: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
 export function PermissionGuard({
@@ -49,14 +49,19 @@ export function PermissionGuard({
   children,
   fallback,
 }: PermissionGuardProps) {
-  const { can } = usePermissions()
-  const hasPermission = can(permission as any)
+  const { can } = usePermissions();
+  const hasPermission = can(permission as any);
 
   if (!hasPermission) {
     return (
-      fallback || <PermissionWarning requiredPermission={permission} featureName={featureName} />
-    )
+      fallback || (
+        <PermissionWarning
+          requiredPermission={permission}
+          featureName={featureName}
+        />
+      )
+    );
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

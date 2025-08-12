@@ -2,7 +2,11 @@
 
 import React from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
-import { PermissionUtils, canPerformAction, hasPermission } from '@/lib/permissions/permissionMatrix';
+import {
+  PermissionUtils,
+  canPerformAction,
+  hasPermission,
+} from '@/lib/permissions/permissionMatrix';
 
 interface EnhancedRBACProps {
   children: React.ReactNode;
@@ -31,13 +35,13 @@ export function EnhancedRBAC({
   requiredAction,
   requiredRoles = [],
   fallback = null,
-  showUnauthorized = false
+  showUnauthorized = false,
 }: EnhancedRBACProps) {
   const { user, role } = useUserRole();
   const loading = !user;
 
   if (loading) {
-    return <div className="animate-pulse">Loading...</div>;
+    return <div className='animate-pulse'>Loading...</div>;
   }
 
   if (!user) {
@@ -48,14 +52,18 @@ export function EnhancedRBAC({
   if (requiredRoles.length > 0 && !requiredRoles.includes(role)) {
     if (showUnauthorized) {
       return (
-        <div className="p-4 border border-red-200 bg-red-50 rounded-md">
-          <div className="flex items-center gap-2 text-red-800">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+        <div className='p-4 border border-red-200 bg-red-50 rounded-md'>
+          <div className='flex items-center gap-2 text-red-800'>
+            <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
+              <path
+                fillRule='evenodd'
+                d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                clipRule='evenodd'
+              />
             </svg>
-            <span className="font-medium">Access Denied</span>
+            <span className='font-medium'>Access Denied</span>
           </div>
-          <p className="text-red-700 mt-1">
+          <p className='text-red-700 mt-1'>
             You need one of these roles: {requiredRoles.join(', ')}
           </p>
         </div>
@@ -66,21 +74,25 @@ export function EnhancedRBAC({
 
   // Check specific permissions
   if (requiredPermissions.length > 0) {
-    const hasAllPermissions = requiredPermissions.every(permission => 
+    const hasAllPermissions = requiredPermissions.every(permission =>
       hasPermission(role, permission)
     );
-    
+
     if (!hasAllPermissions) {
       if (showUnauthorized) {
         return (
-          <div className="p-4 border border-red-200 bg-red-50 rounded-md">
-            <div className="flex items-center gap-2 text-red-800">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          <div className='p-4 border border-red-200 bg-red-50 rounded-md'>
+            <div className='flex items-center gap-2 text-red-800'>
+              <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
+                <path
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                  clipRule='evenodd'
+                />
               </svg>
-              <span className="font-medium">Insufficient Permissions</span>
+              <span className='font-medium'>Insufficient Permissions</span>
             </div>
-            <p className="text-red-700 mt-1">
+            <p className='text-red-700 mt-1'>
               Required permissions: {requiredPermissions.join(', ')}
             </p>
           </div>
@@ -95,14 +107,18 @@ export function EnhancedRBAC({
     if (!canPerformAction(role, requiredResource, requiredAction)) {
       if (showUnauthorized) {
         return (
-          <div className="p-4 border border-red-200 bg-red-50 rounded-md">
-            <div className="flex items-center gap-2 text-red-800">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          <div className='p-4 border border-red-200 bg-red-50 rounded-md'>
+            <div className='flex items-center gap-2 text-red-800'>
+              <svg className='w-5 h-5' fill='currentColor' viewBox='0 0 20 20'>
+                <path
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                  clipRule='evenodd'
+                />
               </svg>
-              <span className="font-medium">Action Not Allowed</span>
+              <span className='font-medium'>Action Not Allowed</span>
             </div>
-            <p className="text-red-700 mt-1">
+            <p className='text-red-700 mt-1'>
               You cannot perform {requiredAction} on {requiredResource}
             </p>
           </div>
@@ -124,7 +140,7 @@ export function withEnhancedRBAC<P extends object>(
     requiredAction,
     requiredRoles = [],
     fallback,
-    showUnauthorized = false
+    showUnauthorized = false,
   }: EnhancedRBACHOCProps = {}
 ) {
   const EnhancedComponent = (props: P) => (
@@ -153,7 +169,7 @@ export function PermissionGate({
   action,
   role,
   fallback = null,
-  showUnauthorized = false
+  showUnauthorized = false,
 }: {
   children: React.ReactNode;
   permission?: string;
@@ -181,9 +197,7 @@ export function PermissionGate({
   if (!hasAccess) {
     if (showUnauthorized) {
       return (
-        <div className="text-sm text-muted-foreground">
-          Access restricted
-        </div>
+        <div className='text-sm text-muted-foreground'>Access restricted</div>
       );
     }
     return fallback;
@@ -197,7 +211,7 @@ export function RoleGate({
   children,
   roles,
   fallback = null,
-  showUnauthorized = false
+  showUnauthorized = false,
 }: {
   children: React.ReactNode;
   roles: string[];
@@ -212,7 +226,7 @@ export function RoleGate({
   if (!user || !roles.includes(userRole)) {
     if (showUnauthorized) {
       return (
-        <div className="text-sm text-muted-foreground">
+        <div className='text-sm text-muted-foreground'>
           Role access required: {roles.join(', ')}
         </div>
       );
@@ -256,19 +270,11 @@ export function PermissionButton({
   if (!hasAccess) return null;
 
   return (
-    <button
-      {...props}
-      disabled={disabled}
-      className={className}
-    >
+    <button {...props} disabled={disabled} className={className}>
       {children}
     </button>
   );
 }
 
 // Export all utilities
-export {
-  PermissionUtils,
-  canPerformAction,
-  hasPermission
-};
+export { PermissionUtils, canPerformAction, hasPermission };

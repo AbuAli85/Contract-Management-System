@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { SimpleWorkingLogin } from "@/components/auth/simple-working-login"
+import { SimpleWorkingLogin } from '@/components/auth/simple-working-login';
 
 export default function SimpleLoginPage() {
-  return <SimpleWorkingLogin />
+  return <SimpleWorkingLogin />;
 }

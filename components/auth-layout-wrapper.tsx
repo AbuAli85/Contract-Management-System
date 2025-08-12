@@ -1,44 +1,46 @@
-"use client"
+'use client';
 
-import { usePathname } from "@/navigation"
-import { useMemo } from "react"
-import { AppLayoutSimple } from "@/components/app-layout-simple"
-import { SimpleLayout } from "@/components/simple-layout"
-import ProfileSyncGuard from "@/components/profile-sync-guard"
+import { usePathname } from '@/navigation';
+import { useMemo } from 'react';
+import { AppLayoutSimple } from '@/components/app-layout-simple';
+import { SimpleLayout } from '@/components/simple-layout';
+import ProfileSyncGuard from '@/components/profile-sync-guard';
 
 export function AuthLayoutWrapper({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  
+  const pathname = usePathname();
+
   // Only determine which layout to use - no redirects, no auth checks
   const isAuthPage = useMemo(() => {
-    if (!pathname) return false
-    
+    if (!pathname) return false;
+
     // Check for specific auth paths
     const authPaths = [
       '/login',
-      '/signup', 
+      '/signup',
       '/forgot-password',
       '/reset-password',
-      '/logout'
-    ]
-    
+      '/logout',
+    ];
+
     // Check if pathname contains any auth path
-    const hasAuthPath = authPaths.some(path => pathname.includes(path))
-    
+    const hasAuthPath = authPaths.some(path => pathname.includes(path));
+
     // Check for locale-specific auth paths
-    const hasLocaleAuthPath = pathname.match(/^\/(en|ar)\/auth\/(login|signup|forgot-password|reset-password|logout)/)
-    
-    return hasAuthPath || !!hasLocaleAuthPath
-  }, [pathname])
+    const hasLocaleAuthPath = pathname.match(
+      /^\/(en|ar)\/auth\/(login|signup|forgot-password|reset-password|logout)/
+    );
+
+    return hasAuthPath || !!hasLocaleAuthPath;
+  }, [pathname]);
 
   // Simply return the appropriate layout - no redirects here
   if (isAuthPage) {
-    return <SimpleLayout>{children}</SimpleLayout>
+    return <SimpleLayout>{children}</SimpleLayout>;
   }
 
   return (
     <ProfileSyncGuard>
       <AppLayoutSimple>{children}</AppLayoutSimple>
     </ProfileSyncGuard>
-  )
+  );
 }

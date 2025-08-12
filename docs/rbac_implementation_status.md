@@ -1,11 +1,13 @@
 # RBAC Implementation Status
 
 ## Overview
+
 This document tracks the progress of implementing RBAC (Role-Based Access Control) protection across the Contract Management System API endpoints.
 
 ## Implementation Progress
 
 ### ✅ COMPLETED - Admin Endpoints (Highest Risk)
+
 - **`/api/admin/roles`** - Already had RBAC protection
   - GET → `role:read:all` ✅
   - POST → `role:create:all` ✅
@@ -23,6 +25,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - POST → `role:update:all` ✅
 
 ### ✅ COMPLETED - User Management Endpoints
+
 - **`/api/users`** - RBAC protection implemented
   - GET → `user:read:all` ✅
   - POST → `user:create:all` ✅
@@ -30,6 +33,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - DELETE → `user:delete:all` ✅
 
 ### ✅ COMPLETED - User Profile Endpoints
+
 - **`/api/users/profile`** - RBAC protection implemented ✅
   - GET → `profile:read:own` ✅
   - PUT → `profile:update:own` ✅
@@ -37,6 +41,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - GET → `withAnyRBAC(['profile:read:own','profile:read:all'])` ✅
 
 ### ✅ COMPLETED - Contract Endpoints
+
 - **`/api/contracts`** - RBAC protection implemented
   - GET → `contract:read:own` ✅
   - POST → `contract:create:own` ✅
@@ -52,10 +57,12 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - POST → `contract:download:own` ✅
 
 ### ✅ COMPLETED - Dashboard Endpoints
+
 - **`/api/dashboard/analytics`** - RBAC protection implemented ✅
   - GET → `analytics:read:all` ✅ (updated from `dashboard:analytics:read`)
 
 ### ✅ COMPLETED - Company & Party Endpoints
+
 - **`/api/companies`** - RBAC protection implemented ✅
   - GET → `withAnyRBAC(['company:read:own','company:read:organization','company:read:all'])` ✅
 - **`/api/parties`** - RBAC protection implemented ✅
@@ -69,6 +76,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - GET → `company:manage:all` ✅
 
 ### ✅ COMPLETED - Promoter Endpoints
+
 - **`/api/promoters`** - RBAC protection implemented ✅
   - GET → `promoter:read:own` ✅
 - **`/api/promoters/[id]`** - RBAC protection implemented ✅
@@ -77,6 +85,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
   - DELETE → `promoter:manage:own` ✅
 
 ### ✅ COMPLETED - Provider Service Endpoints
+
 - **`/api/provider/services`** - RBAC protection implemented ✅
   - POST → `service:create:own` ✅
   - PUT → `service:update:own` ✅
@@ -84,6 +93,7 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
 ## 🔄 IN PROGRESS - Next Priority Targets
 
 ### Target 1: Additional API Endpoints
+
 - [ ] `/api/webhooks/*` - Webhook endpoints
 - [ ] `/api/notifications/*` - Notification endpoints
 - [ ] `/api/audit-logs/*` - Audit log endpoints
@@ -91,11 +101,13 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
 - [ ] `/api/workflow/*` - Workflow endpoints
 
 ### Target 2: Additional Contract Endpoints
+
 - [ ] `/api/contracts/approval/submit` - Contract submission
 - [ ] `/api/contracts/makecom` - Contract communication
 - [ ] `/api/contracts/paginated` - Paginated contract listing
 
 ### Target 3: Additional User Endpoints
+
 - [ ] `/api/users/approval/*` - User approval workflows
 - [ ] `/api/users/roles/*` - Role management
 - [ ] `/api/users/permissions/*` - Permission management
@@ -116,20 +128,27 @@ This document tracks the progress of implementing RBAC (Role-Based Access Contro
 All protected endpoints follow this pattern:
 
 ```typescript
-import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard'
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
-export const GET = withRBAC('resource:action:scope', async (request: NextRequest) => {
-  // existing handler logic
-})
+export const GET = withRBAC(
+  'resource:action:scope',
+  async (request: NextRequest) => {
+    // existing handler logic
+  }
+);
 
-export const POST = withAnyRBAC(['permission1', 'permission2'], async (request: NextRequest) => {
-  // existing handler logic
-})
+export const POST = withAnyRBAC(
+  ['permission1', 'permission2'],
+  async (request: NextRequest) => {
+    // existing handler logic
+  }
+);
 ```
 
 ## 🔍 Permission Schema
 
 ### Resource Types
+
 - `admin` - Administrative functions
 - `user` - User management
 - `contract` - Contract operations
@@ -145,6 +164,7 @@ export const POST = withAnyRBAC(['permission1', 'permission2'], async (request: 
 - `analytics` - Analytics access
 
 ### Actions
+
 - `read` - View data
 - `create` - Create new resources
 - `update` - Modify existing resources
@@ -159,6 +179,7 @@ export const POST = withAnyRBAC(['permission1', 'permission2'], async (request: 
 - `seed` - Data seeding operations
 
 ### Scopes
+
 - `own` - User's own resources
 - `organization` - Organization-wide resources
 - `provider` - Provider-level resources

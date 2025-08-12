@@ -1,6 +1,7 @@
 # RBAC Protection for app\api\users\profile\[id]\route-temp-fix.ts
 
 ## Endpoint Information
+
 - **File**: `app\api\users\profile\[id]\route-temp-fix.ts`
 - **Resource Type**: `user`
 - **HTTP Methods**: GET
@@ -20,14 +21,11 @@ The following permissions should be checked before allowing access:
 import { permissionEvaluator } from '@/lib/rbac/evaluate';
 import { NextRequest } from 'next/server';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: any }
-) {
+export async function GET(request: NextRequest, { params }: { params: any }) {
   try {
     // Extract user ID from authenticated session
     const userId = await getUserIdFromSession(request);
-    
+
     // Check permission
     const decision = await permissionEvaluator.evaluatePermission(
       userId,
@@ -38,18 +36,17 @@ export async function GET(
           params,
           resourceType: 'user',
           resourceId: params.id,
-          request
-        }
+          request,
+        },
       }
     );
-    
+
     if (!decision.allowed) {
       return new Response('Forbidden', { status: 403 });
     }
-    
+
     // Proceed with endpoint logic
     // ... your existing code here
-    
   } catch (error) {
     console.error('Permission check failed:', error);
     return new Response('Internal Server Error', { status: 500 });

@@ -94,9 +94,9 @@ This document outlines the comprehensive enhancements made to the contract gener
 export const contractGeneratorSchema = z
   .object({
     // Required core fields
-    first_party_id: z.string().uuid("Please select Party A (Client)."),
-    second_party_id: z.string().uuid("Please select Party B (Employer)."),
-    promoter_id: z.string().uuid("Please select the promoter."),
+    first_party_id: z.string().uuid('Please select Party A (Client).'),
+    second_party_id: z.string().uuid('Please select Party B (Employer).'),
+    promoter_id: z.string().uuid('Please select the promoter.'),
 
     // Auto-filled hidden fields
     first_party_name_en: z.string().optional(),
@@ -104,19 +104,19 @@ export const contractGeneratorSchema = z
 
     // Enhanced date validation
     contract_start_date: z.date({
-      required_error: "Contract start date is required.",
-      invalid_type_error: "Please enter a valid start date.",
+      required_error: 'Contract start date is required.',
+      invalid_type_error: 'Please enter a valid start date.',
     }),
 
     // Required employment details
-    job_title: z.string().min(1, "Job title is required."),
-    department: z.string().min(1, "Department is required."),
+    job_title: z.string().min(1, 'Job title is required.'),
+    department: z.string().min(1, 'Department is required.'),
 
     // Optional advanced fields
     basic_salary: z.number().positive().max(1000000).optional(),
     probation_period_months: z.number().int().min(0).max(12).optional(),
   })
-  .refine(/* business rule validations */)
+  .refine(/* business rule validations */);
 ```
 
 ### Form Sections Configuration
@@ -124,13 +124,13 @@ export const contractGeneratorSchema = z
 ```typescript
 export const CONTRACT_FORM_SECTIONS = [
   {
-    id: "parties",
-    title: "Contracting Parties",
+    id: 'parties',
+    title: 'Contracting Parties',
     required: true,
-    fields: ["first_party_id", "second_party_id"],
+    fields: ['first_party_id', 'second_party_id'],
   },
   // ... other sections
-]
+];
 ```
 
 ### Component Architecture

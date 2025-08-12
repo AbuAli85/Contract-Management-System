@@ -1,50 +1,59 @@
-import { useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
-import { useAuth } from "@/lib/auth-service"
-import { devLog } from "@/lib/dev-log"
-import { RealtimeChannel } from "@supabase/supabase-js"
+import { useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/auth-service';
+import { devLog } from '@/lib/dev-log';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-export function useRealtimeTable(table: string, onChange: (payload: any) => void) {
-  const { user } = useAuth()
+export function useRealtimeTable(
+  table: string,
+  onChange: (payload: any) => void
+) {
+  const { user } = useAuth();
 
   useEffect(() => {
     // Don't set up realtime if user is not authenticated
     if (!user) {
-      return
+      return;
     }
 
-    let channel: RealtimeChannel | null = null
+    let channel: RealtimeChannel | null = null;
 
     try {
-      const supabaseClient = createClient()
+      const supabaseClient = createClient();
       channel = supabaseClient
         .channel(`public:${table}:realtime`)
-        .on("postgres_changes", { event: "*", schema: "public", table }, onChange)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table },
+          onChange
+        )
         .subscribe((status, err) => {
-          if (status === "CHANNEL_ERROR") {
-            const message = err?.message ?? "Unknown channel error"
-            devLog(`${table} channel error (${status}): ${message}`)
+          if (status === 'CHANNEL_ERROR') {
+            const message = err?.message ?? 'Unknown channel error';
+            devLog(`${table} channel error (${status}): ${message}`);
 
             // Check if it's an authentication error
             if (
-              message.includes("JWT") ||
-              message.includes("auth") ||
-              message.includes("permission")
+              message.includes('JWT') ||
+              message.includes('auth') ||
+              message.includes('permission')
             ) {
-              devLog(`Authentication error detected for ${table}, will retry after auth check`)
-              return
+              devLog(
+                `Authentication error detected for ${table}, will retry after auth check`
+              );
+              return;
             }
           }
-        })
+        });
     } catch (error) {
-      devLog(`Error setting up ${table} subscription:`, error)
+      devLog(`Error setting up ${table} subscription:`, error);
     }
 
     return () => {
       if (channel) {
-        const supabaseClient = createClient()
-        supabaseClient.removeChannel(channel as RealtimeChannel)
+        const supabaseClient = createClient();
+        supabaseClient.removeChannel(channel as RealtimeChannel);
       }
-    }
-  }, [table, onChange, user])
+    };
+  }, [table, onChange, user]);
 }

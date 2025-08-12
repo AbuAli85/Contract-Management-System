@@ -43,29 +43,30 @@ I have completed a comprehensive review and enhancement of the Generate Contract
 ```typescript
 // Enhanced date validation
 contract_start_date: z.date({
-  required_error: "Contract start date is required.",
-  invalid_type_error: "Please enter a valid start date.",
+  required_error: 'Contract start date is required.',
+  invalid_type_error: 'Please enter a valid start date.',
 })
 
   // Business logic validation
-  .refine((data) => data.first_party_id !== data.second_party_id, {
-    message: "Party A (Client) and Party B (Employer) must be different organizations.",
-    path: ["second_party_id"],
+  .refine(data => data.first_party_id !== data.second_party_id, {
+    message:
+      'Party A (Client) and Party B (Employer) must be different organizations.',
+    path: ['second_party_id'],
   })
 
   // Contract duration validation
   .refine(
-    (data) => {
+    data => {
       const diffInDays = Math.ceil(
-        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-      )
-      return diffInDays >= 1 && diffInDays <= 5 * 365
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      return diffInDays >= 1 && diffInDays <= 5 * 365;
     },
     {
-      message: "Contract duration must be between 1 day and 5 years.",
-      path: ["contract_end_date"],
-    },
-  )
+      message: 'Contract duration must be between 1 day and 5 years.',
+      path: ['contract_end_date'],
+    }
+  );
 ```
 
 ### 2. Enhanced Form Component (`components/enhanced-contract-generator-form.tsx`)
@@ -101,10 +102,10 @@ contract_start_date: z.date({
 **Example Usage:**
 
 ```typescript
-const analysis = analyzeContractDuration(startDate, endDate)
+const analysis = analyzeContractDuration(startDate, endDate);
 // Returns: { duration: 365, category: "long-term", warnings: [...], recommendations: [...] }
 
-const compensation = analyzeContractCompensation(15000, 2000, "AED")
+const compensation = analyzeContractCompensation(15000, 2000, 'AED');
 // Returns: { totalMonthly: 17000, isCompetitive: true, marketComparison: "average" }
 ```
 

@@ -12,33 +12,33 @@ This document provides a comprehensive overview of the enhancements made to the 
 
 ```typescript
 export interface ValidationResult {
-  isValid: boolean
-  error?: string
-  details?: any
+  isValid: boolean;
+  error?: string;
+  details?: any;
 }
 
 export interface FileValidationConfig {
-  maxSize: number
-  acceptedTypes: string[]
-  maxSizeMessage: string
-  acceptedTypesMessage: string
+  maxSize: number;
+  acceptedTypes: string[];
+  maxSizeMessage: string;
+  acceptedTypesMessage: string;
 }
 
 export interface DateValidationConfig {
-  allowNull: boolean
-  allowUndefined: boolean
-  minDate?: Date
-  maxDate?: Date
-  customErrorMessage?: string
+  allowNull: boolean;
+  allowUndefined: boolean;
+  minDate?: Date;
+  maxDate?: Date;
+  customErrorMessage?: string;
 }
 
 export interface ValidationSummary {
-  isValid: boolean
-  errors: Record<string, string>
-  warnings: string[]
-  fieldCount: number
-  errorCount: number
-  warningCount: number
+  isValid: boolean;
+  errors: Record<string, string>;
+  warnings: string[];
+  fieldCount: number;
+  errorCount: number;
+  warningCount: number;
 }
 ```
 
@@ -65,46 +65,46 @@ export interface ValidationSummary {
 const createEmailSchema = (customErrorMessage?: string) => {
   return z
     .string()
-    .min(1, "Email address is required")
-    .email(customErrorMessage || "Please enter a valid email address")
+    .min(1, 'Email address is required')
+    .email(customErrorMessage || 'Please enter a valid email address')
     .toLowerCase()
     .trim()
-    .refine((email) => {
+    .refine(email => {
       // Additional email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(email)
-    }, "Please enter a valid email address")
-}
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email);
+    }, 'Please enter a valid email address');
+};
 
 const createPhoneSchema = (customErrorMessage?: string) => {
   return z
     .string()
-    .min(1, "Phone number is required")
+    .min(1, 'Phone number is required')
     .regex(
       /^(\+?[1-9]\d{1,14}|[0-9]{10,15})$/,
       customErrorMessage ||
-        "Please enter a valid phone number (10-15 digits, optionally starting with +)",
+        'Please enter a valid phone number (10-15 digits, optionally starting with +)'
     )
-    .transform((val) => val.replace(/\s+/g, "")) // Remove spaces
-    .refine((phone) => {
+    .transform(val => val.replace(/\s+/g, '')) // Remove spaces
+    .refine(phone => {
       // Additional phone validation
-      const cleanPhone = phone.replace(/[^\d+]/g, "")
-      return cleanPhone.length >= 10 && cleanPhone.length <= 15
-    }, "Phone number must be between 10 and 15 digits")
-}
+      const cleanPhone = phone.replace(/[^\d+]/g, '');
+      return cleanPhone.length >= 10 && cleanPhone.length <= 15;
+    }, 'Phone number must be between 10 and 15 digits');
+};
 
 const createNationalitySchema = (customErrorMessage?: string) => {
   return z
     .string()
-    .min(1, "Nationality is required")
-    .min(2, "Nationality must be at least 2 characters")
-    .max(50, "Nationality must be less than 50 characters")
+    .min(1, 'Nationality is required')
+    .min(2, 'Nationality must be at least 2 characters')
+    .max(50, 'Nationality must be less than 50 characters')
     .regex(
       /^[a-zA-Z\s\-']+$/,
       customErrorMessage ||
-        "Nationality can only contain letters, spaces, hyphens, and apostrophes",
-    )
-}
+        'Nationality can only contain letters, spaces, hyphens, and apostrophes'
+    );
+};
 
 const createNameSchema = (fieldName: string, customErrorMessage?: string) => {
   return z
@@ -115,82 +115,89 @@ const createNameSchema = (fieldName: string, customErrorMessage?: string) => {
     .regex(
       /^[a-zA-Z\s\-']+$/,
       customErrorMessage ||
-        `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`,
+        `${fieldName} can only contain letters, spaces, hyphens, and apostrophes`
     )
-    .transform((val) => val.trim()) // Trim whitespace
-}
+    .transform(val => val.trim()); // Trim whitespace
+};
 ```
 
 #### ✅ **Enhanced Date Schema with Configuration**
 
 ```typescript
 // Enhanced date schema with better validation and error handling
-const createDateSchema = (config: DateValidationConfig = DATE_VALIDATION_CONFIG) => {
+const createDateSchema = (
+  config: DateValidationConfig = DATE_VALIDATION_CONFIG
+) => {
   return z.preprocess(
-    (arg) => {
-      if (typeof arg === "string" || arg instanceof Date) {
-        const date = new Date(arg)
+    arg => {
+      if (typeof arg === 'string' || arg instanceof Date) {
+        const date = new Date(arg);
 
         // Check if date is valid
         if (isNaN(date.getTime())) {
-          return config.allowUndefined ? undefined : null
+          return config.allowUndefined ? undefined : null;
         }
 
         // Check min/max date constraints
         if (config.minDate && date < config.minDate) {
-          return config.allowUndefined ? undefined : null
+          return config.allowUndefined ? undefined : null;
         }
 
         if (config.maxDate && date > config.maxDate) {
-          return config.allowUndefined ? undefined : null
+          return config.allowUndefined ? undefined : null;
         }
 
-        return date
+        return date;
       }
 
       if (arg === null && config.allowNull) {
-        return null
+        return null;
       }
 
       if (arg === undefined && config.allowUndefined) {
-        return undefined
+        return undefined;
       }
 
-      return arg
+      return arg;
     },
     z
       .date({
-        invalid_type_error: config.customErrorMessage || "Invalid date format",
+        invalid_type_error: config.customErrorMessage || 'Invalid date format',
       })
       .optional()
-      .nullable(),
-  )
-}
+      .nullable()
+  );
+};
 ```
 
 #### ✅ **Configuration Management**
 
 ```typescript
 // Constants for better maintainability
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+];
 
 // Enhanced file validation configuration
 const FILE_VALIDATION_CONFIG: FileValidationConfig = {
   maxSize: MAX_FILE_SIZE,
   acceptedTypes: ACCEPTED_IMAGE_TYPES,
-  maxSizeMessage: "Max file size is 5MB.",
-  acceptedTypesMessage: ".jpg, .jpeg, .png and .webp files are accepted.",
-}
+  maxSizeMessage: 'Max file size is 5MB.',
+  acceptedTypesMessage: '.jpg, .jpeg, .png and .webp files are accepted.',
+};
 
 // Enhanced date validation configuration
 const DATE_VALIDATION_CONFIG: DateValidationConfig = {
   allowNull: true,
   allowUndefined: true,
-  minDate: new Date("1900-01-01"),
-  maxDate: new Date("2100-12-31"),
-  customErrorMessage: "Invalid date format",
-}
+  minDate: new Date('1900-01-01'),
+  maxDate: new Date('2100-12-31'),
+  customErrorMessage: 'Invalid date format',
+};
 ```
 
 ### 3. Error Handling Enhancements
@@ -208,103 +215,109 @@ const DATE_VALIDATION_CONFIG: DateValidationConfig = {
 // Enhanced validation helpers with better error handling
 export const validateEmail = (email: string): ValidationResult => {
   try {
-    createEmailSchema().parse(email)
-    return { isValid: true }
+    createEmailSchema().parse(email);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
         error: error.errors[0].message,
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
-      error: "Invalid email format",
+      error: 'Invalid email format',
       details: error,
-    }
+    };
   }
-}
+};
 
 export const validatePhone = (phone: string): ValidationResult => {
   try {
-    createPhoneSchema().parse(phone)
-    return { isValid: true }
+    createPhoneSchema().parse(phone);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
         error: error.errors[0].message,
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
-      error: "Invalid phone number format",
+      error: 'Invalid phone number format',
       details: error,
-    }
+    };
   }
-}
+};
 
 export const validateNationality = (nationality: string): ValidationResult => {
   try {
-    createNationalitySchema().parse(nationality)
-    return { isValid: true }
+    createNationalitySchema().parse(nationality);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
         error: error.errors[0].message,
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
-      error: "Invalid nationality format",
+      error: 'Invalid nationality format',
       details: error,
-    }
+    };
   }
-}
+};
 
-export const validateName = (name: string, fieldName: string = "Name"): ValidationResult => {
+export const validateName = (
+  name: string,
+  fieldName: string = 'Name'
+): ValidationResult => {
   try {
-    createNameSchema(fieldName).parse(name)
-    return { isValid: true }
+    createNameSchema(fieldName).parse(name);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
         error: error.errors[0].message,
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
       error: `Invalid ${fieldName.toLowerCase()} format`,
       details: error,
-    }
+    };
   }
-}
+};
 
-export const validateDate = (date: any, config?: DateValidationConfig): ValidationResult => {
+export const validateDate = (
+  date: any,
+  config?: DateValidationConfig
+): ValidationResult => {
   try {
-    createDateSchema(config).parse(date)
-    return { isValid: true }
+    createDateSchema(config).parse(date);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
         error: error.errors[0].message,
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
-      error: "Invalid date format",
+      error: 'Invalid date format',
       details: error,
-    }
+    };
   }
-}
+};
 ```
 
 #### ✅ **Enhanced Profile Validation**
@@ -313,23 +326,23 @@ export const validateDate = (date: any, config?: DateValidationConfig): Validati
 // Enhanced validation for the entire promoter profile
 export const validatePromoterProfile = (data: any): ValidationResult => {
   try {
-    promoterProfileSchema.parse(data)
-    return { isValid: true }
+    promoterProfileSchema.parse(data);
+    return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
         isValid: false,
-        error: "Please fix the validation errors below",
+        error: 'Please fix the validation errors below',
         details: error.errors,
-      }
+      };
     }
     return {
       isValid: false,
-      error: "Invalid promoter profile data",
+      error: 'Invalid promoter profile data',
       details: error,
-    }
+    };
   }
-}
+};
 ```
 
 ## Function-by-Function Analysis
@@ -447,36 +460,36 @@ export const validatePromoterProfile = (data: any): ValidationResult => {
 
 ```typescript
 // Validate individual fields
-const emailResult = validateEmail("john.doe@example.com")
+const emailResult = validateEmail('john.doe@example.com');
 if (!emailResult.isValid) {
-  console.error("Email validation failed:", emailResult.error)
+  console.error('Email validation failed:', emailResult.error);
 }
 
-const phoneResult = validatePhone("+96812345678")
+const phoneResult = validatePhone('+96812345678');
 if (!phoneResult.isValid) {
-  console.error("Phone validation failed:", phoneResult.error)
+  console.error('Phone validation failed:', phoneResult.error);
 }
 
-const nameResult = validateName("John", "First name")
+const nameResult = validateName('John', 'First name');
 if (!nameResult.isValid) {
-  console.error("Name validation failed:", nameResult.error)
+  console.error('Name validation failed:', nameResult.error);
 }
 
 // Validate complete profile
-const profileResult = validatePromoterProfile(promoterData)
+const profileResult = validatePromoterProfile(promoterData);
 if (!profileResult.isValid) {
-  console.error("Profile validation failed:", profileResult.error)
+  console.error('Profile validation failed:', profileResult.error);
   // Handle validation errors
 }
 
 // Get validation summary
-const summary = getValidationSummary(promoterData)
-console.log(`Validation: ${summary.isValid ? "Passed" : "Failed"}`)
-console.log(`Errors: ${summary.errorCount}`)
-console.log(`Warnings: ${summary.warningCount}`)
+const summary = getValidationSummary(promoterData);
+console.log(`Validation: ${summary.isValid ? 'Passed' : 'Failed'}`);
+console.log(`Errors: ${summary.errorCount}`);
+console.log(`Warnings: ${summary.warningCount}`);
 
 // Sanitize data
-const sanitizedData = sanitizePromoterData(rawData)
+const sanitizedData = sanitizePromoterData(rawData);
 // Use sanitized data for further processing
 ```
 
@@ -488,7 +501,7 @@ const result: ValidationResult = {
   isValid: true,
   error: undefined,
   details: undefined,
-}
+};
 
 // Strict typing for validation summaries
 const summary: ValidationSummary = {
@@ -498,16 +511,16 @@ const summary: ValidationSummary = {
   fieldCount: 20,
   errorCount: 0,
   warningCount: 0,
-}
+};
 
 // Strict typing for date validation config
 const dateConfig: DateValidationConfig = {
   allowNull: true,
   allowUndefined: true,
-  minDate: new Date("2024-01-01"),
-  maxDate: new Date("2024-12-31"),
-  customErrorMessage: "Date must be in 2024",
-}
+  minDate: new Date('2024-01-01'),
+  maxDate: new Date('2024-12-31'),
+  customErrorMessage: 'Date must be in 2024',
+};
 ```
 
 ### Schema Validation Examples
@@ -515,34 +528,34 @@ const dateConfig: DateValidationConfig = {
 ```typescript
 // Validate complete promoter profile schema
 const validProfile: PromoterProfileFormData = {
-  firstName: "John",
-  lastName: "Doe",
-  nationality: "Omani",
-  email: "john.doe@example.com",
-  mobile_number: "+96812345678",
-  name_en: "John Doe",
-  name_ar: "جون دو",
-  id_card_number: "1234567890",
-  status: "active",
-  job_title: "Software Developer",
-  department: "IT",
-  work_location: "Muscat",
-  contract_valid_until: new Date("2025-12-31"),
-  id_card_expiry_date: new Date("2025-12-31"),
-  passport_expiry_date: new Date("2025-12-31"),
-  passport_number: "P123456789",
-  notes: "Test promoter",
-          notify_days_before_id_expiry: 100,
-        notify_days_before_passport_expiry: 210,
-}
+  firstName: 'John',
+  lastName: 'Doe',
+  nationality: 'Omani',
+  email: 'john.doe@example.com',
+  mobile_number: '+96812345678',
+  name_en: 'John Doe',
+  name_ar: 'جون دو',
+  id_card_number: '1234567890',
+  status: 'active',
+  job_title: 'Software Developer',
+  department: 'IT',
+  work_location: 'Muscat',
+  contract_valid_until: new Date('2025-12-31'),
+  id_card_expiry_date: new Date('2025-12-31'),
+  passport_expiry_date: new Date('2025-12-31'),
+  passport_number: 'P123456789',
+  notes: 'Test promoter',
+  notify_days_before_id_expiry: 100,
+  notify_days_before_passport_expiry: 210,
+};
 
-const result = promoterProfileSchema.safeParse(validProfile)
+const result = promoterProfileSchema.safeParse(validProfile);
 if (result.success) {
   // Use validated data
-  const validatedData = result.data
+  const validatedData = result.data;
 } else {
   // Handle validation errors
-  console.error("Validation errors:", result.error.errors)
+  console.error('Validation errors:', result.error.errors);
 }
 ```
 

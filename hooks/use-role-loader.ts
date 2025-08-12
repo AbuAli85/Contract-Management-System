@@ -8,7 +8,7 @@ export function useRoleLoader() {
     isLoading: false,
     error: null,
     loadRoleFromAPI: async () => {
-      console.warn("useRoleLoader is disabled to prevent infinite loops")
+      console.warn('useRoleLoader is disabled to prevent infinite loops');
     },
-  }
+  };
 }

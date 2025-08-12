@@ -28,7 +28,7 @@ Open your browser's developer console and run:
 
 ```javascript
 // Copy and paste this into the console
-window.debugDashboard()
+window.debugDashboard();
 ```
 
 ### 3. **Check Network Tab**
@@ -49,8 +49,8 @@ window.debugDashboard()
 
 1. Clear browser storage:
    ```javascript
-   localStorage.clear()
-   sessionStorage.clear()
+   localStorage.clear();
+   sessionStorage.clear();
    ```
 2. Check if Supabase environment variables are set correctly
 3. Verify Supabase project is active and accessible
@@ -92,27 +92,27 @@ window.debugDashboard()
 
 ```javascript
 // Test login
-fetch("/api/auth/status")
-  .then((r) => r.json())
-  .then(console.log)
+fetch('/api/auth/status')
+  .then(r => r.json())
+  .then(console.log);
 ```
 
 ### **Test Analytics API**
 
 ```javascript
 // Test analytics
-fetch("/api/dashboard/analytics")
-  .then((r) => r.json())
-  .then(console.log)
+fetch('/api/dashboard/analytics')
+  .then(r => r.json())
+  .then(console.log);
 ```
 
 ### **Test Supabase Connection**
 
 ```javascript
 // Test Supabase
-fetch("/api/debug/supabase")
-  .then((r) => r.json())
-  .then(console.log)
+fetch('/api/debug/supabase')
+  .then(r => r.json())
+  .then(console.log);
 ```
 
 ## 🚀 Production Deployment Checklist
@@ -152,16 +152,16 @@ If the issue persists:
 
 ```javascript
 // Clear cache and reload
-window.location.reload(true)
+window.location.reload(true);
 ```
 
 ### **Reset Authentication State**
 
 ```javascript
 // Clear auth state
-localStorage.removeItem("sb-auth-token")
-sessionStorage.clear()
-window.location.reload()
+localStorage.removeItem('sb-auth-token');
+sessionStorage.clear();
+window.location.reload();
 ```
 
 ### **Bypass Analytics Loading**

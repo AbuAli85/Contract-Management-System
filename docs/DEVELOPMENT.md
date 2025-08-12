@@ -45,13 +45,13 @@ extra-contracts-yy/
 ```typescript
 // Good
 interface User {
-  id: string
-  name: string
-  email: string
+  id: string;
+  name: string;
+  email: string;
 }
 
 // Bad
-const user: any = { id: 1, name: "John" }
+const user: any = { id: 1, name: 'John' };
 ```
 
 ### React Components
@@ -140,30 +140,33 @@ npx supabase gen types typescript --project-id <YOUR_PROJECT_REF> --schema publi
 
 ```typescript
 // app/api/users/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import { validateCreateUserRequest } from "@/lib/validations/api"
-import type { CreateUserRequest } from "@/lib/types/api"
+import { NextRequest, NextResponse } from 'next/server';
+import { validateCreateUserRequest } from '@/lib/validations/api';
+import type { CreateUserRequest } from '@/lib/types/api';
 
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateUserRequest = await request.json()
+    const body: CreateUserRequest = await request.json();
 
     // Validate request
-    const validation = validateCreateUserRequest(body)
+    const validation = validateCreateUserRequest(body);
     if (!validation.isValid) {
       return NextResponse.json(
-        { message: "Validation failed", errors: validation.errors },
-        { status: 400 },
-      )
+        { message: 'Validation failed', errors: validation.errors },
+        { status: 400 }
+      );
     }
 
     // Process request
     // ...
 
-    return NextResponse.json({ message: "Success" }, { status: 201 })
+    return NextResponse.json({ message: 'Success' }, { status: 201 });
   } catch (error) {
-    console.error("API Error:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 ```
@@ -241,33 +244,35 @@ describe('Button', () => {
 
 ```typescript
 // hooks/use-realtime-contracts.ts
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { Contract } from "@/lib/types"
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { Contract } from '@/lib/types';
 
 export function useRealtimeContracts() {
-  const [contracts, setContracts] = useState<Contract[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Initial fetch
-    fetchContracts()
+    fetchContracts();
 
     // Set up real-time subscription
     const channel = supabase
-      .channel("contracts")
-      .on("postgres_changes", { event: "*", schema: "public", table: "contracts" }, () =>
-        fetchContracts(),
+      .channel('contracts')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'contracts' },
+        () => fetchContracts()
       )
-      .subscribe()
+      .subscribe();
 
     return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
-  return { contracts, loading, error }
+  return { contracts, loading, error };
 }
 ```
 
@@ -411,11 +416,11 @@ docs(readme): update installation instructions
 
 ```typescript
 // Use structured logging
-console.log("API Request:", {
-  method: "POST",
-  endpoint: "/api/contracts",
+console.log('API Request:', {
+  method: 'POST',
+  endpoint: '/api/contracts',
   data: requestBody,
-})
+});
 ```
 
 ### 3. Error Handling

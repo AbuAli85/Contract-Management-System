@@ -1,40 +1,62 @@
-const fs = require("fs")
-const path = require("path")
+const fs = require('fs');
+const path = require('path');
 
 const schema = {
-  contract_name: { type: "text", label: "Contract Name", required: true },
-  contract_type: { type: "text", label: "Contract Type", required: true },
-  party_a_id: { type: "select", label: "Party A", options: [], required: true },
-  party_b_id: { type: "select", label: "Party B", options: [], required: true },
-  promoter_id: { type: "select", label: "Promoter", options: [], required: true },
-  start_date: { type: "date", label: "Start Date", required: false },
-  end_date: { type: "date", label: "End Date", required: false },
-  contract_value: { type: "number", label: "Contract Value", required: false },
-  content_english: { type: "textarea", label: "Content (English)", required: true },
-  content_spanish: { type: "textarea", label: "Content (Spanish)", required: true },
-  status: {
-    type: "select",
-    label: "Status",
-    options: ["Draft", "Pending Review", "Approved", "Signed", "Active", "Completed", "Archived"],
+  contract_name: { type: 'text', label: 'Contract Name', required: true },
+  contract_type: { type: 'text', label: 'Contract Type', required: true },
+  party_a_id: { type: 'select', label: 'Party A', options: [], required: true },
+  party_b_id: { type: 'select', label: 'Party B', options: [], required: true },
+  promoter_id: {
+    type: 'select',
+    label: 'Promoter',
+    options: [],
     required: true,
   },
-}
+  start_date: { type: 'date', label: 'Start Date', required: false },
+  end_date: { type: 'date', label: 'End Date', required: false },
+  contract_value: { type: 'number', label: 'Contract Value', required: false },
+  content_english: {
+    type: 'textarea',
+    label: 'Content (English)',
+    required: true,
+  },
+  content_spanish: {
+    type: 'textarea',
+    label: 'Content (Spanish)',
+    required: true,
+  },
+  status: {
+    type: 'select',
+    label: 'Status',
+    options: [
+      'Draft',
+      'Pending Review',
+      'Approved',
+      'Signed',
+      'Active',
+      'Completed',
+      'Archived',
+    ],
+    required: true,
+  },
+};
 
 function generateFormFields(schema) {
-  let fields = ""
+  let fields = '';
   for (const key in schema) {
-    const field = schema[key]
-    const type = field.type
+    const field = schema[key];
+    const type = field.type;
     const label =
-      field.label || key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
-    const placeholder = field.placeholder || `Enter ${label.toLowerCase()}`
-    const required = field.required ? "required" : ""
+      field.label ||
+      key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+    const placeholder = field.placeholder || `Enter ${label.toLowerCase()}`;
+    const required = field.required ? 'required' : '';
 
     switch (type) {
-      case "text":
-      case "email":
-      case "password":
-      case "number":
+      case 'text':
+      case 'email':
+      case 'password':
+      case 'number':
         fields += `
           <div class="mb-4">
             <label for="${key}" class="block text-sm font-medium text-gray-700">${label}</label>
@@ -47,9 +69,9 @@ function generateFormFields(schema) {
               ${required}
             />
           </div>
-        `
-        break
-      case "textarea":
+        `;
+        break;
+      case 'textarea':
         fields += `
           <div class="mb-4">
             <label for="${key}" class="block text-sm font-medium text-gray-700">${label}</label>
@@ -62,12 +84,12 @@ function generateFormFields(schema) {
               ${required}
             ></textarea>
           </div>
-        `
-        break
-      case "select":
+        `;
+        break;
+      case 'select':
         const optionsHtml = field.options
-          .map((option) => `<option value="${option}">${option}</option>`)
-          .join("")
+          .map(option => `<option value="${option}">${option}</option>`)
+          .join('');
         fields += `
           <div class="mb-4">
             <label for="${key}" class="block text-sm font-medium text-gray-700">${label}</label>
@@ -80,9 +102,9 @@ function generateFormFields(schema) {
               ${optionsHtml}
             </select>
           </div>
-        `
-        break
-      case "date":
+        `;
+        break;
+      case 'date':
         fields += `
           <div class="mb-4">
             <label for="${key}" class="block text-sm font-medium text-gray-700">${label}</label>
@@ -94,13 +116,13 @@ function generateFormFields(schema) {
               ${required}
             />
           </div>
-        `
-        break
+        `;
+        break;
       default:
-        break
+        break;
     }
   }
-  return fields
+  return fields;
 }
 
 const formHtml = `
@@ -120,30 +142,30 @@ const formHtml = `
     </div>
 </body>
 </html>
-`
+`;
 
-const outputPath = path.join(__dirname, "..", "public", "contract-form.html")
-fs.writeFileSync(outputPath, formHtml)
-console.log(`Generated form HTML at ${outputPath}`)
+const outputPath = path.join(__dirname, '..', 'public', 'contract-form.html');
+fs.writeFileSync(outputPath, formHtml);
+console.log(`Generated form HTML at ${outputPath}`);
 
 // Example schema
 const mySchema = {
-  username: { type: "text", label: "Username" },
-  email: { type: "email", label: "Email Address" },
-  password: { type: "password", label: "Password" },
-  bio: { type: "textarea", label: "Biography" },
+  username: { type: 'text', label: 'Username' },
+  email: { type: 'email', label: 'Email Address' },
+  password: { type: 'password', label: 'Password' },
+  bio: { type: 'textarea', label: 'Biography' },
   role: {
-    type: "select",
-    label: "Role",
+    type: 'select',
+    label: 'Role',
     options: [
-      { value: "user", label: "User" },
-      { value: "admin", label: "Admin" },
+      { value: 'user', label: 'User' },
+      { value: 'admin', label: 'Admin' },
     ],
   },
-}
+};
 
-const generatedForm = generateFormFields(mySchema)
-const outputPath2 = path.join(__dirname, "generated-form.html")
+const generatedForm = generateFormFields(mySchema);
+const outputPath2 = path.join(__dirname, 'generated-form.html');
 
-fs.writeFileSync(outputPath2, generatedForm)
-console.log(`Generated form saved to ${outputPath2}`)
+fs.writeFileSync(outputPath2, generatedForm);
+console.log(`Generated form saved to ${outputPath2}`);

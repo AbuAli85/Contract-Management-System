@@ -93,9 +93,9 @@ import {
   SunMedium,
   Twitter,
   ArrowRight,
-} from "lucide-react"
+} from 'lucide-react';
 
-export type Icon = LucideIcon
+export type Icon = LucideIcon;
 
 export const Icons = {
   check: Check,
@@ -199,4 +199,4 @@ export const Icons = {
   moon: Loader2,
   laptop: Laptop,
   twitter: Twitter,
-}
+};

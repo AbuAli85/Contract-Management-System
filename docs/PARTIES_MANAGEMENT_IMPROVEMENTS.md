@@ -171,23 +171,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```typescript
 // Fetch parties with pagination and search
 export async function fetchPartiesWithPagination(
-  params: PartySearchParams,
-): Promise<PaginatedResult<Party>>
+  params: PartySearchParams
+): Promise<PaginatedResult<Party>>;
 
 // Search parties with fuzzy matching
-export async function searchParties(searchText: string): Promise<Party[]>
+export async function searchParties(searchText: string): Promise<Party[]>;
 
 // Bulk delete parties
 export async function bulkDeleteParties(
   partyIds: string[],
-  userId: string,
-): Promise<BulkDeleteResult>
+  userId: string
+): Promise<BulkDeleteResult>;
 
 // Export parties to CSV
 export async function exportPartiesToCSV(
   partyIds?: string[],
-  includeContacts: boolean = true,
-): Promise<string>
+  includeContacts: boolean = true
+): Promise<string>;
 ```
 
 ### **Validation Schemas**
@@ -198,42 +198,45 @@ export async function exportPartiesToCSV(
 export const partySchema = z.object({
   name_en: z
     .string()
-    .min(1, "English name is required")
-    .min(2, "English name must be at least 2 characters")
-    .max(200, "English name must be less than 200 characters")
+    .min(1, 'English name is required')
+    .min(2, 'English name must be at least 2 characters')
+    .max(200, 'English name must be less than 200 characters')
     .regex(
       /^[a-zA-Z0-9\s\-'\.&]+$/,
-      "English name can only contain letters, numbers, spaces, hyphens, apostrophes, periods, and ampersands",
+      'English name can only contain letters, numbers, spaces, hyphens, apostrophes, periods, and ampersands'
     ),
   crn: z
     .string()
-    .min(1, "CRN is required")
-    .min(5, "CRN must be at least 5 characters")
-    .max(50, "CRN must be less than 50 characters")
-    .regex(/^[A-Z0-9\-]+$/, "CRN can only contain uppercase letters, numbers, and hyphens"),
+    .min(1, 'CRN is required')
+    .min(5, 'CRN must be at least 5 characters')
+    .max(50, 'CRN must be less than 50 characters')
+    .regex(
+      /^[A-Z0-9\-]+$/,
+      'CRN can only contain uppercase letters, numbers, and hyphens'
+    ),
   // ... other fields
-})
+});
 ```
 
 #### Contact Schema
 
 ```typescript
 export const contactSchema = z.object({
-  party_id: z.string().uuid().min(1, "Party selection is required"),
+  party_id: z.string().uuid().min(1, 'Party selection is required'),
   name_en: z
     .string()
-    .min(1, "English name is required")
-    .min(2, "English name must be at least 2 characters")
-    .max(100, "English name must be less than 100 characters"),
+    .min(1, 'English name is required')
+    .min(2, 'English name must be at least 2 characters')
+    .max(100, 'English name must be less than 100 characters'),
   email: z
     .string()
-    .email("Please enter a valid email address")
+    .email('Please enter a valid email address')
     .toLowerCase()
     .trim()
     .optional()
-    .or(z.literal("")),
+    .or(z.literal('')),
   // ... other fields
-})
+});
 ```
 
 ## 🧪 **Testing**
@@ -243,29 +246,29 @@ export const contactSchema = z.object({
 Comprehensive test coverage for all service functions:
 
 ```typescript
-describe("Party Service", () => {
-  describe("fetchPartiesWithPagination", () => {
-    it("should fetch parties with pagination successfully", async () => {
+describe('Party Service', () => {
+  describe('fetchPartiesWithPagination', () => {
+    it('should fetch parties with pagination successfully', async () => {
       // Test implementation
-    })
+    });
 
-    it("should handle search with fuzzy matching", async () => {
+    it('should handle search with fuzzy matching', async () => {
       // Test fuzzy search
-    })
-  })
+    });
+  });
 
-  describe("bulkDeleteParties", () => {
-    it("should bulk delete parties via Edge Function", async () => {
+  describe('bulkDeleteParties', () => {
+    it('should bulk delete parties via Edge Function', async () => {
       // Test bulk operations
-    })
-  })
+    });
+  });
 
-  describe("Retry Logic", () => {
-    it("should retry on network errors", async () => {
+  describe('Retry Logic', () => {
+    it('should retry on network errors', async () => {
       // Test retry mechanism
-    })
-  })
-})
+    });
+  });
+});
 ```
 
 ### **Test Coverage**
@@ -301,12 +304,12 @@ const RETRY_CONFIG = {
   maxAttempts: 3,
   baseDelay: 1000, // 1 second
   maxDelay: 10000, // 10 seconds
-}
+};
 
 async function withRetry<T>(
   operation: () => Promise<T>,
   maxAttempts: number = RETRY_CONFIG.maxAttempts,
-  baseDelay: number = RETRY_CONFIG.baseDelay,
+  baseDelay: number = RETRY_CONFIG.baseDelay
 ): Promise<T> {
   // Implementation with exponential backoff
 }
@@ -351,17 +354,17 @@ CREATE POLICY "Users can view communications for accessible parties" ON communic
 
 ```typescript
 // Fuzzy search with debouncing
-const searchResults = await searchParties("test company")
+const searchResults = await searchParties('test company');
 ```
 
 ### **Bulk Operations**
 
 ```typescript
 // Bulk delete with validation
-const result = await bulkDeleteParties(["party1", "party2"], userId)
+const result = await bulkDeleteParties(['party1', 'party2'], userId);
 
 // Export to CSV
-const csvContent = await exportPartiesToCSV(["party1", "party2"], true)
+const csvContent = await exportPartiesToCSV(['party1', 'party2'], true);
 ```
 
 ### **Contact Management**
@@ -369,12 +372,12 @@ const csvContent = await exportPartiesToCSV(["party1", "party2"], true)
 ```typescript
 // Create contact with validation
 const contact = await saveContact({
-  party_id: "party-id",
-  name_en: "John Doe",
-  name_ar: "جون دو",
-  email: "john@example.com",
+  party_id: 'party-id',
+  name_en: 'John Doe',
+  name_ar: 'جون دو',
+  email: 'john@example.com',
   is_primary: true,
-})
+});
 ```
 
 ### **Communications Timeline**

@@ -1,46 +1,47 @@
-import { getRequestConfig } from "next-intl/server"
+import { getRequestConfig } from 'next-intl/server';
 
 // Can be imported from a shared config
-const locales = ["en", "ar"]
+const locales = ['en', 'ar'];
 
 // Import messages statically to avoid dynamic import issues
-import enMessages from "./i18n/messages/en.json"
-import arMessages from "./i18n/messages/ar.json"
+import enMessages from './i18n/messages/en.json';
+import arMessages from './i18n/messages/ar.json';
 
 const messages = {
   en: enMessages,
   ar: arMessages,
-}
+};
 
 export default getRequestConfig(async ({ requestLocale }) => {
   try {
-    const locale = await requestLocale
-    
+    const locale = await requestLocale;
+
     // Validate that the incoming `locale` parameter is valid
     if (!locale || !locales.includes(locale as any)) {
-      console.warn("Invalid locale:", locale, "falling back to 'en'")
+      console.warn('Invalid locale:', locale, "falling back to 'en'");
       return {
-        locale: "en",
+        locale: 'en',
         messages: messages.en,
-        timeZone: "UTC",
-      }
+        timeZone: 'UTC',
+      };
     }
 
     // Get messages for the locale
-    const localeMessages = messages[locale as keyof typeof messages] || messages.en
+    const localeMessages =
+      messages[locale as keyof typeof messages] || messages.en;
 
     return {
       locale,
       messages: localeMessages,
-      timeZone: "UTC",
-    }
+      timeZone: 'UTC',
+    };
   } catch (error) {
-    console.error("Error in i18n config:", error)
+    console.error('Error in i18n config:', error);
     // Return a safe fallback
     return {
-      locale: "en",
+      locale: 'en',
       messages: messages.en,
-      timeZone: "UTC",
-    }
+      timeZone: 'UTC',
+    };
   }
-}) 
+});

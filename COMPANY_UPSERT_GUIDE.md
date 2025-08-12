@@ -7,11 +7,13 @@ This document provides comprehensive documentation for the enhanced company upse
 ## 🎯 Key Features
 
 ### ✅ **Automatic Conflict Resolution**
+
 - **Email-based upsert**: Uses case-insensitive email matching via generated `lower_email` column
 - **Slug-based upsert**: Falls back to URL-friendly slug matching when email is not available
 - **Smart strategy selection**: Automatically chooses the best upsert strategy based on available data
 
 ### ✅ **Production-Ready Implementation**
+
 - **Type-safe**: Full TypeScript support with comprehensive interfaces
 - **RBAC integration**: Role-based permissions for all operations
 - **Error handling**: Comprehensive error handling with user-friendly messages
@@ -19,6 +21,7 @@ This document provides comprehensive documentation for the enhanced company upse
 - **Performance optimized**: Efficient database queries with proper indexing
 
 ### ✅ **Developer Experience**
+
 - **React hooks**: Easy-to-use hooks for React components
 - **API endpoints**: RESTful API for external integrations
 - **Interactive demo**: Full-featured demo component for testing
@@ -48,10 +51,10 @@ CREATE TABLE companies (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     created_by UUID REFERENCES users(id),
-    
+
     -- Generated column for case-insensitive email matching
     lower_email TEXT GENERATED ALWAYS AS (LOWER(email)) STORED,
-    
+
     -- Constraints
     CONSTRAINT companies_slug_unique UNIQUE (slug),
     CONSTRAINT companies_email_unique UNIQUE (email) WHERE email IS NOT NULL,
@@ -71,25 +74,26 @@ CREATE TABLE companies (
 ### 1. Service Layer (`lib/company-service.ts`)
 
 ```typescript
-import { upsertCompany } from '@/lib/company-service'
+import { upsertCompany } from '@/lib/company-service';
 
 // Email-based upsert (recommended when email is available)
 const company = await upsertCompany({
-  name: "Tech Solutions Inc",
-  slug: "tech-solutions",
-  email: "info@techsolutions.com",
-  createdBy: userId
-})
+  name: 'Tech Solutions Inc',
+  slug: 'tech-solutions',
+  email: 'info@techsolutions.com',
+  createdBy: userId,
+});
 
 // Slug-based upsert (fallback when no email)
 const company = await upsertCompanyBySlug({
-  name: "Creative Studio",
-  slug: "creative-studio",
-  createdBy: userId
-})
+  name: 'Creative Studio',
+  slug: 'creative-studio',
+  createdBy: userId,
+});
 ```
 
 **Key Functions:**
+
 - `upsertCompany()` - Email-based upsert with RBAC
 - `upsertCompanyBySlug()` - Slug-based upsert alternative
 - `getCompany()` - Fetch with permission checking
@@ -102,77 +106,89 @@ const company = await upsertCompanyBySlug({
 **Base endpoint**: `/api/enhanced/companies`
 
 #### POST - Create/Update Company
+
 ```typescript
 const response = await fetch('/api/enhanced/companies', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    name: "Tech Solutions Inc",
-    slug: "tech-solutions",
-    email: "info@techsolutions.com",
-    upsert_strategy: "email" // "email" or "slug"
-  })
-})
+    name: 'Tech Solutions Inc',
+    slug: 'tech-solutions',
+    email: 'info@techsolutions.com',
+    upsert_strategy: 'email', // "email" or "slug"
+  }),
+});
 ```
 
 #### GET - List Companies
+
 ```typescript
-const response = await fetch('/api/enhanced/companies?search=tech&business_type=enterprise&page=1&limit=20')
+const response = await fetch(
+  '/api/enhanced/companies?search=tech&business_type=enterprise&page=1&limit=20'
+);
 ```
 
 #### PUT - Update Company
+
 ```typescript
 const response = await fetch('/api/enhanced/companies', {
   method: 'PUT',
-  body: JSON.stringify({ id: companyId, name: "Updated Name" })
-})
+  body: JSON.stringify({ id: companyId, name: 'Updated Name' }),
+});
 ```
 
 #### DELETE - Soft Delete
+
 ```typescript
 const response = await fetch(`/api/enhanced/companies?id=${companyId}`, {
-  method: 'DELETE'
-})
+  method: 'DELETE',
+});
 ```
 
 ### 3. React Hooks (`hooks/use-company.ts`)
 
 ```typescript
-import { useCompanyUpsert, useCompanies, useCompanyForm } from '@/hooks/use-company'
+import {
+  useCompanyUpsert,
+  useCompanies,
+  useCompanyForm,
+} from '@/hooks/use-company';
 
 // Upsert hook
-const { upsertCompany, isLoading } = useCompanyUpsert()
+const { upsertCompany, isLoading } = useCompanyUpsert();
 
 // List hook with filtering
 const { companies, total, isLoading } = useCompanies({
-  search: "tech",
-  business_type: "enterprise",
+  search: 'tech',
+  business_type: 'enterprise',
   page: 1,
-  limit: 20
-})
+  limit: 20,
+});
 
 // Form management hook
-const { formData, updateField, validateForm, isValid } = useCompanyForm()
+const { formData, updateField, validateForm, isValid } = useCompanyForm();
 ```
 
 ### 4. UI Components
 
 #### Company Upsert Form
+
 ```tsx
-import { CompanyUpsertForm } from '@/components/companies/company-upsert-form'
+import { CompanyUpsertForm } from '@/components/companies/company-upsert-form';
 
 <CompanyUpsertForm
   existingCompany={company} // Optional for updates
-  onSuccess={(company) => console.log('Created/updated:', company)}
+  onSuccess={company => console.log('Created/updated:', company)}
   onCancel={() => setFormOpen(false)}
-/>
+/>;
 ```
 
 #### Interactive Demo
-```tsx
-import { CompanyUpsertDemo } from '@/components/companies/company-upsert-demo'
 
-<CompanyUpsertDemo />
+```tsx
+import { CompanyUpsertDemo } from '@/components/companies/company-upsert-demo';
+
+<CompanyUpsertDemo />;
 ```
 
 ## 🚀 Usage Examples
@@ -180,41 +196,44 @@ import { CompanyUpsertDemo } from '@/components/companies/company-upsert-demo'
 ### Basic Upsert Operations
 
 #### 1. Email-Based Upsert
+
 ```typescript
 // First call - creates new company
 const company1 = await upsertCompany({
-  name: "Tech Solutions Inc",
-  slug: "tech-solutions",
-  email: "info@techsolutions.com",
-  createdBy: userId
-})
+  name: 'Tech Solutions Inc',
+  slug: 'tech-solutions',
+  email: 'info@techsolutions.com',
+  createdBy: userId,
+});
 
 // Second call - updates existing company (matches on lower_email)
 const company2 = await upsertCompany({
-  name: "Tech Solutions Corporation", // Updated name
-  slug: "tech-solutions-corp",        // Updated slug  
-  email: "INFO@TECHSOLUTIONS.COM",    // Same email, different case
-  description: "Updated description",  // New field
-  createdBy: userId
-})
+  name: 'Tech Solutions Corporation', // Updated name
+  slug: 'tech-solutions-corp', // Updated slug
+  email: 'INFO@TECHSOLUTIONS.COM', // Same email, different case
+  description: 'Updated description', // New field
+  createdBy: userId,
+});
 
 // company1.id === company2.id (same company, updated)
 ```
 
 #### 2. Slug-Based Upsert
+
 ```typescript
 // When email is not available
 const company = await upsertCompanyBySlug({
-  name: "Creative Studio",
-  slug: "creative-studio", // Unique identifier
-  phone: "+1 (555) 123-4567",
-  createdBy: userId
-})
+  name: 'Creative Studio',
+  slug: 'creative-studio', // Unique identifier
+  phone: '+1 (555) 123-4567',
+  createdBy: userId,
+});
 ```
 
 ### Advanced Usage
 
 #### 1. Form Integration
+
 ```typescript
 const CompanyForm = () => {
   const { upsertCompany, isLoading } = useCompanyUpsert()
@@ -228,13 +247,13 @@ const CompanyForm = () => {
       ...formData,
       upsert_strategy: formData.email ? 'email' : 'slug'
     })
-    
+
     console.log('Company saved:', company)
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <input 
+      <input
         value={formData.name}
         onChange={(e) => updateField('name', e.target.value)}
       />
@@ -245,6 +264,7 @@ const CompanyForm = () => {
 ```
 
 #### 2. API Integration
+
 ```typescript
 const ApiExample = async () => {
   try {
@@ -252,26 +272,25 @@ const ApiExample = async () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: "Demo Company",
-        slug: "demo-company",
-        email: "demo@company.com",
-        business_type: "small_business",
-        upsert_strategy: "email"
-      })
-    })
+        name: 'Demo Company',
+        slug: 'demo-company',
+        email: 'demo@company.com',
+        business_type: 'small_business',
+        upsert_strategy: 'email',
+      }),
+    });
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error)
+      const error = await response.json();
+      throw new Error(error.error);
     }
 
-    const result = await response.json()
-    console.log('Success:', result.data)
-    
+    const result = await response.json();
+    console.log('Success:', result.data);
   } catch (error) {
-    console.error('Error:', error.message)
+    console.error('Error:', error.message);
   }
-}
+};
 ```
 
 ## 🔒 Security & Permissions
@@ -283,7 +302,7 @@ The system integrates with the enhanced RBAC system:
 ```typescript
 // Required permissions
 'companies.create'  // Create new companies
-'companies.view'    // View companies  
+'companies.view'    // View companies
 'companies.edit'    // Edit companies
 'companies.delete'  // Delete companies
 
@@ -353,7 +372,7 @@ The system includes tests for:
 
 1. **Email-based upsert creation**
 2. **Email-based upsert updates (case-insensitive)**
-3. **Slug-based upsert creation**  
+3. **Slug-based upsert creation**
 4. **Slug-based upsert updates**
 5. **Conflict resolution behavior**
 6. **Permission checking**
@@ -388,27 +407,35 @@ psql -f supabase/migrations/20250117_enhance_client_provider_system.sql
 ### Common Issues
 
 #### 1. Unique Constraint Violations
+
 ```
 Error: A company with this email already exists
 ```
+
 **Solution**: This is expected behavior - the upsert will update the existing company
 
 #### 2. Permission Denied
+
 ```
 Error: Insufficient permissions to create/update companies
 ```
+
 **Solution**: Ensure user has the required role and permissions
 
 #### 3. Invalid Slug Format
+
 ```
 Error: Slug must be lowercase, alphanumeric, and hyphen-separated
 ```
+
 **Solution**: Use only lowercase letters, numbers, and hyphens
 
 #### 4. Generated Column Issues
+
 ```
 Error: cannot insert into column "lower_email"
 ```
+
 **Solution**: Don't manually insert into `lower_email` - it's generated automatically
 
 ### Debug Mode
@@ -417,26 +444,28 @@ Enable debug logging:
 
 ```typescript
 // In your component
-const { upsertCompany, isLoading, error } = useCompanyUpsert()
+const { upsertCompany, isLoading, error } = useCompanyUpsert();
 
 useEffect(() => {
   if (error) {
-    console.error('Upsert error:', error)
+    console.error('Upsert error:', error);
   }
-}, [error])
+}, [error]);
 ```
 
 ## 📋 Best Practices
 
 ### 1. Upsert Strategy Selection
+
 - **Use email-based upsert** when email is available and reliable
 - **Use slug-based upsert** for companies without email or when email changes frequently
 - **Validate inputs** before sending to server
 
 ### 2. Error Handling
+
 ```typescript
 try {
-  const company = await upsertCompany(data)
+  const company = await upsertCompany(data);
   // Success
 } catch (error) {
   if (error.message.includes('permissions')) {
@@ -450,12 +479,14 @@ try {
 ```
 
 ### 3. Form Management
+
 - **Use the provided hooks** for consistent behavior
 - **Validate on both client and server**
 - **Provide clear feedback** for validation errors
 - **Handle loading states** appropriately
 
 ### 4. Performance
+
 - **Use pagination** for large lists
 - **Implement debouncing** for search
 - **Cache results** with React Query
@@ -478,7 +509,7 @@ try {
 Monitor these metrics in production:
 
 - **Upsert success rate**
-- **API response times** 
+- **API response times**
 - **Database query performance**
 - **Error rates by operation**
 - **User permission violations**

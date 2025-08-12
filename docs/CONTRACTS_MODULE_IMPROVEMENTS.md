@@ -56,23 +56,23 @@ This document outlines the comprehensive improvements for the Contracts Module, 
 #### Usage Example
 
 ```typescript
-import { validateAndMapContractData } from "@/lib/contract-data-mapping"
+import { validateAndMapContractData } from '@/lib/contract-data-mapping';
 
 const formData = {
-  first_party_id: "party-1",
-  job_title: "Software Developer",
-  contract_start_date: new Date("2024-01-01"),
+  first_party_id: 'party-1',
+  job_title: 'Software Developer',
+  contract_start_date: new Date('2024-01-01'),
   basic_salary: 1000,
-}
+};
 
-const validation = validateAndMapContractData(formData)
+const validation = validateAndMapContractData(formData);
 
 if (validation.isValid) {
-  console.log("Mapped fields:", validation.mappedFields)
+  console.log('Mapped fields:', validation.mappedFields);
   // Proceed with contract generation
 } else {
-  console.error("Validation errors:", validation.errors)
-  console.error("Missing fields:", validation.missingRequiredFields)
+  console.error('Validation errors:', validation.errors);
+  console.error('Missing fields:', validation.missingRequiredFields);
 }
 ```
 
@@ -81,20 +81,20 @@ if (validation.isValid) {
 ```typescript
 export const STANDARD_TEMPLATE_PLACEHOLDERS = [
   {
-    key: "contract_number",
-    description: "Unique contract identifier",
+    key: 'contract_number',
+    description: 'Unique contract identifier',
     required: true,
     sourceField: undefined, // Generated automatically
-    transform: (value: string) => value?.replace(/[^A-Z0-9-]/g, "") || "",
+    transform: (value: string) => value?.replace(/[^A-Z0-9-]/g, '') || '',
   },
   {
-    key: "job_title",
-    description: "Job title/position",
+    key: 'job_title',
+    description: 'Job title/position',
     required: true,
-    sourceField: "job_title",
+    sourceField: 'job_title',
   },
   // ... more placeholders
-]
+];
 ```
 
 ### 2. Export Error Handling
@@ -110,27 +110,26 @@ export const STANDARD_TEMPLATE_PLACEHOLDERS = [
 
 ```typescript
 interface ExportError {
-  code: ExportErrorCode
-  message: string
-  details?: Record<string, any>
-  actionable?: boolean
-  retryable?: boolean
-  suggestions?: string[]
+  code: ExportErrorCode;
+  message: string;
+  details?: Record<string, any>;
+  actionable?: boolean;
+  retryable?: boolean;
+  suggestions?: string[];
 }
 ```
 
 #### UI Error Display
 
 ```tsx
-import { ContractExportError } from "@/components/contract-export-error"
-
-;<ContractExportError
+import { ContractExportError } from '@/components/contract-export-error';
+<ContractExportError
   error={exportError}
   onRetry={handleRetry}
   onFixData={handleFixData}
   contractId={contractId}
   contractNumber={contractNumber}
-/>
+/>;
 ```
 
 ### 3. Automated Approval Reminders
@@ -167,16 +166,15 @@ SELECT escalate_contract('contract-uuid', ARRAY['admin@example.com']);
 #### Signature Component
 
 ```tsx
-import { DigitalSignaturePad } from "@/components/digital-signature-pad"
-
-;<DigitalSignaturePad
+import { DigitalSignaturePad } from '@/components/digital-signature-pad';
+<DigitalSignaturePad
   contractId={contractId}
   signerId={userId}
-  signerType="first_party"
-  signerName="John Doe"
+  signerType='first_party'
+  signerName='John Doe'
   onSignatureComplete={handleSignatureComplete}
   onSignatureError={handleSignatureError}
-/>
+/>;
 ```
 
 #### Features
@@ -216,24 +214,27 @@ CREATE TABLE signatures (
 
 ```typescript
 interface PDFOptions {
-  format?: "A4" | "Letter" | "Legal"
+  format?: 'A4' | 'Letter' | 'Legal';
   margin?: {
-    top?: string
-    right?: string
-    bottom?: string
-    left?: string
-  }
-  includeBackground?: boolean
-  preferCSSPageSize?: boolean
-  printBackground?: boolean
-  landscape?: boolean
+    top?: string;
+    right?: string;
+    bottom?: string;
+    left?: string;
+  };
+  includeBackground?: boolean;
+  preferCSSPageSize?: boolean;
+  printBackground?: boolean;
+  landscape?: boolean;
 }
 ```
 
 #### Template Generation
 
 ```typescript
-function generateContractHTML(templateData: Record<string, any>, options: any): string {
+function generateContractHTML(
+  templateData: Record<string, any>,
+  options: any
+): string {
   return `
     <!DOCTYPE html>
     <html lang="en">
@@ -242,8 +243,8 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
         <title>Contract - ${templateData.contract_number}</title>
         <style>
             @page {
-                size: ${options.format || "A4"};
-                margin: ${options.margin?.top || "20mm"} ${options.margin?.right || "20mm"} ${options.margin?.bottom || "20mm"} ${options.margin?.left || "20mm"};
+                size: ${options.format || 'A4'};
+                margin: ${options.margin?.top || '20mm'} ${options.margin?.right || '20mm'} ${options.margin?.bottom || '20mm'} ${options.margin?.left || '20mm'};
             }
             /* ... CSS styles ... */
         </style>
@@ -252,7 +253,7 @@ function generateContractHTML(templateData: Record<string, any>, options: any): 
         <!-- Contract content with template data -->
     </body>
     </html>
-  `
+  `;
 }
 ```
 
@@ -294,18 +295,23 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```tsx
 // app/[locale]/contracts/analytics/page.tsx
 export default function ContractAnalyticsPage() {
-  const [analytics, setAnalytics] = useState<ContractAnalytics | null>(null)
+  const [analytics, setAnalytics] = useState<ContractAnalytics | null>(null);
 
   const fetchAnalytics = async () => {
-    const { data: submissionsData } = await supabase.rpc("get_contract_submissions_over_time", {
-      start_date: dateRange.startDate.toISOString().split("T")[0],
-      end_date: dateRange.endDate.toISOString().split("T")[0],
-    })
+    const { data: submissionsData } = await supabase.rpc(
+      'get_contract_submissions_over_time',
+      {
+        start_date: dateRange.startDate.toISOString().split('T')[0],
+        end_date: dateRange.endDate.toISOString().split('T')[0],
+      }
+    );
 
-    const { data: approvalData } = await supabase.rpc("get_average_approval_time")
+    const { data: approvalData } = await supabase.rpc(
+      'get_average_approval_time'
+    );
 
     // Process and display data
-  }
+  };
 
   return (
     <div>
@@ -313,7 +319,7 @@ export default function ContractAnalyticsPage() {
       {/* Charts using Recharts */}
       {/* Contracts requiring attention */}
     </div>
-  )
+  );
 }
 ```
 
@@ -366,13 +372,13 @@ CREATE INDEX IF NOT EXISTS idx_contract_activity_log_contract_id ON contract_act
 
 ```typescript
 // __tests__/contracts-module.test.ts
-describe("Contracts Module - Data Mapping Validation", () => {
-  it("should validate and map contract data successfully", () => {
-    const result = validateAndMapContractData(mockFormData)
-    expect(result.isValid).toBe(true)
-    expect(result.errors).toHaveLength(0)
-  })
-})
+describe('Contracts Module - Data Mapping Validation', () => {
+  it('should validate and map contract data successfully', () => {
+    const result = validateAndMapContractData(mockFormData);
+    expect(result.isValid).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+});
 ```
 
 ### Integration Tests
@@ -514,12 +520,12 @@ SELECT * FROM cron.job WHERE jobname = 'contract-reminder-processing';
 
 ```typescript
 // Enable debug logging
-const DEBUG_MODE = process.env.NODE_ENV === "development"
+const DEBUG_MODE = process.env.NODE_ENV === 'development';
 
 if (DEBUG_MODE) {
-  console.log("Contract validation result:", validation)
-  console.log("PDF generation options:", options)
-  console.log("Analytics data:", analyticsData)
+  console.log('Contract validation result:', validation);
+  console.log('PDF generation options:', options);
+  console.log('Analytics data:', analyticsData);
 }
 ```
 

@@ -78,20 +78,20 @@ The system checks for user roles in the following order:
 ```typescript
 // Use the role refresh button in the UI
 // Or call the API directly
-const response = await fetch("/api/refresh-user-role", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-})
+const response = await fetch('/api/refresh-user-role', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+});
 ```
 
 #### Solution 2: Force Admin Role
 
 ```typescript
 // Call the force admin API
-const response = await fetch("/api/force-admin-role", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-})
+const response = await fetch('/api/force-admin-role', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+});
 ```
 
 #### Solution 3: Clear Browser Cache
@@ -221,13 +221,13 @@ Quick way to refresh user role:
 
 ```javascript
 // Check current role in localStorage
-localStorage.getItem("user_role_user-uuid")
+localStorage.getItem('user_role_user-uuid');
 
 // Check permanent role
-localStorage.getItem("permanent_role_user-uuid")
+localStorage.getItem('permanent_role_user-uuid');
 
 // Clear all role cache
-localStorage.clear()
+localStorage.clear();
 ```
 
 ### 4. API Endpoints for Debugging
@@ -261,17 +261,17 @@ POST /api/immediate-role-refresh
 ### 1. Always Use Permission Checks
 
 ```typescript
-import { usePermissions } from "@/hooks/use-permissions"
+import { usePermissions } from '@/hooks/use-permissions';
 
-const permissions = usePermissions()
+const permissions = usePermissions();
 
 // Check specific permission
-if (permissions.can("contract:create")) {
+if (permissions.can('contract:create')) {
   // Show create button
 }
 
 // Check multiple permissions
-if (permissions.canAny(["contract:create", "contract:edit"])) {
+if (permissions.canAny(['contract:create', 'contract:edit'])) {
   // Show action
 }
 ```
@@ -305,7 +305,7 @@ if (!permissions.role) {
 ```typescript
 // Role is automatically cached in localStorage
 // But you can also cache in sessionStorage for session persistence
-sessionStorage.setItem("current_role", permissions.role)
+sessionStorage.setItem('current_role', permissions.role);
 ```
 
 ## 🚀 Production Deployment

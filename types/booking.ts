@@ -29,23 +29,23 @@ export interface BookingWithDetails extends Booking {
   service_subcategory: string | null;
   service_price: number | null;
   service_duration: number | null;
-  
+
   // Client details
   client_email: string | null;
   client_first_name: string | null;
   client_last_name: string | null;
   client_name: string | null;
-  
+
   // Provider details
   provider_name: string | null;
   provider_slug: string | null;
   provider_type: string | null;
-  
+
   // Time-based calculations
   hours_until_booking: number | null;
   days_until_booking: number | null;
   is_upcoming: boolean;
-  
+
   // Bucket ordering
   start_bucket_order: number;
   start_time_omt: number;
@@ -82,7 +82,7 @@ export interface BucketKPI {
   conversion_rate: number | null;
 }
 
-export type BookingStatus = 
+export type BookingStatus =
   | 'pending'
   | 'confirmed'
   | 'in_progress'
@@ -145,4 +145,4 @@ export interface BookingChangeEvent {
 export interface KpiRefreshEvent {
   event: 'mv_bucket_kpis_refreshed';
   data: string;
-} 
+}

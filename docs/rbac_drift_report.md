@@ -15,6 +15,7 @@ Generated: 2025-08-11T21:39:06.838Z
 ## 🟡 P2 Low Priority Issues
 
 ### Seeded but NOT Used in Code
+
 - `user:edit:own`
 - `user:view:all`
 - `user:edit:all`
@@ -75,6 +76,7 @@ Generated: 2025-08-11T21:39:06.838Z
 - `system:maintenance:all`
 
 ### Documented but NOT Implemented
+
 - `{resource}:{action}:{scope}`
 - `auth:login:public`
 - `user:view:own`
@@ -129,6 +131,7 @@ When adding new endpoints:
 ## 📋 Detailed Permission Analysis
 
 ### Seeded Permissions
+
 - `analytics:read:all`
 - `audit:read:all`
 - `auth:impersonate:all`
@@ -228,6 +231,7 @@ When adding new endpoints:
 - `webhook:ingest:public`
 
 ### Used in Code
+
 - `analytics:read:all`
 - `audit:read:all`
 - `company:manage:all`
@@ -269,6 +273,7 @@ When adding new endpoints:
 - `webhook:ingest:public`
 
 ### In Documentation
+
 - `
 
 ### Audit Logging
@@ -288,6 +293,7 @@ All permission checks are logged with:
 When adding new endpoints:
 
 1. **Define required permission** using `
+
 - `audit:view:all`
 - `auth:impersonate:all`
 - `auth:login:public`
@@ -380,99 +386,9 @@ When adding new endpoints:
 
 1. ✅ No immediate action required
 
-2. **REVIEW**: Consider removing unused seeded permissions:
-        - `user:edit:own`
-        - `user:view:all`
-        - `user:edit:all`
-        - `profile:view:own`
-        - `profile:edit:own`
-        - `profile:view:all`
-        - `profile:update:all`
-        - `auth:logout:own`
-        - `auth:refresh:own`
-        - `auth:impersonate:all`
-        - `security:mfa:own`
-        - `security:mfa:all`
-        - `service:view:own`
-        - `service:view:provider`
-        - `service:view:all`
-        - `service:edit:own`
-        - `service:delete:own`
-        - `service:moderate:all`
-        - `discovery:browse:public`
-        - `discovery:filter:public`
-        - `discovery:recommend:own`
-        - `booking:view:provider`
-        - `booking:view:all`
-        - `booking:create:own`
-        - `booking:edit:own`
-        - `booking:edit:provider`
-        - `booking:cancel:own`
-        - `booking:cancel:provider`
-        - `booking:approve:provider`
-        - `booking:reject:provider`
-        - `booking_lifecycle:pause:provider`
-        - `booking_lifecycle:resume:provider`
-        - `booking_lifecycle:complete:provider`
-        - `booking_lifecycle:extend:provider`
-        - `communication:receive:own`
-        - `communication:view:own`
-        - `communication:view:provider`
-        - `communication:moderate:all`
-        - `call:join:own`
-        - `call:record:provider`
-        - `call:view:own`
-        - `call:view:provider`
-        - `payment:view:provider`
-        - `payment:view:all`
-        - `payment:process:provider`
-        - `payment:refund:provider`
-        - `finance:view:own`
-        - `finance:view:provider`
-        - `finance:view:all`
-        - `finance:export:own`
-        - `finance:export:provider`
-        - `role:create:all`
-        - `role:edit:all`
-        - `role:delete:all`
-        - `role:revoke:all`
-        - `system:settings:all`
-        - `system:logs:all`
-        - `system:maintenance:all`
+2. **REVIEW**: Consider removing unused seeded permissions: - `user:edit:own` - `user:view:all` - `user:edit:all` - `profile:view:own` - `profile:edit:own` - `profile:view:all` - `profile:update:all` - `auth:logout:own` - `auth:refresh:own` - `auth:impersonate:all` - `security:mfa:own` - `security:mfa:all` - `service:view:own` - `service:view:provider` - `service:view:all` - `service:edit:own` - `service:delete:own` - `service:moderate:all` - `discovery:browse:public` - `discovery:filter:public` - `discovery:recommend:own` - `booking:view:provider` - `booking:view:all` - `booking:create:own` - `booking:edit:own` - `booking:edit:provider` - `booking:cancel:own` - `booking:cancel:provider` - `booking:approve:provider` - `booking:reject:provider` - `booking_lifecycle:pause:provider` - `booking_lifecycle:resume:provider` - `booking_lifecycle:complete:provider` - `booking_lifecycle:extend:provider` - `communication:receive:own` - `communication:view:own` - `communication:view:provider` - `communication:moderate:all` - `call:join:own` - `call:record:provider` - `call:view:own` - `call:view:provider` - `payment:view:provider` - `payment:view:all` - `payment:process:provider` - `payment:refund:provider` - `finance:view:own` - `finance:view:provider` - `finance:view:all` - `finance:export:own` - `finance:export:provider` - `role:create:all` - `role:edit:all` - `role:delete:all` - `role:revoke:all` - `system:settings:all` - `system:logs:all` - `system:maintenance:all`
 
-3. **REVIEW**: Update documentation or implement missing permissions:
-        - `{resource}:{action}:{scope}`
-        - `auth:login:public`
-        - `user:view:own`
-        - `profile:edit:all`
-        - `service:view:public`
-        - `discovery:search:public`
-        - `booking:view:own`
-        - `booking_lifecycle:start:provider`
-        - `communication:send:own`
-        - `call:initiate:own`
-        - `payment:view:own`
-        - `role:view:all`
-        - `system:view:all`
-        - `audit:view:all`
-        - `company:view:own`
-        - `company:view:all`
-        - `company:create:own`
-        - `company:edit:own`
-        - `company:delete:own`
-        - `promoter:view:own`
-        - `promoter:view:all`
-        - `promoter:create:own`
-        - `promoter:edit:own`
-        - `promoter:delete:own`
-        - `contract:view:own`
-        - `contract:edit:own`
-        - `contract:delete:own`
-        - `party:view:own`
-        - `party:create:own`
-        - `party:edit:own`
-        - `party:delete:own`
-        - `
+3. **REVIEW**: Update documentation or implement missing permissions: - `{resource}:{action}:{scope}` - `auth:login:public` - `user:view:own` - `profile:edit:all` - `service:view:public` - `discovery:search:public` - `booking:view:own` - `booking_lifecycle:start:provider` - `communication:send:own` - `call:initiate:own` - `payment:view:own` - `role:view:all` - `system:view:all` - `audit:view:all` - `company:view:own` - `company:view:all` - `company:create:own` - `company:edit:own` - `company:delete:own` - `promoter:view:own` - `promoter:view:all` - `promoter:create:own` - `promoter:edit:own` - `promoter:delete:own` - `contract:view:own` - `contract:edit:own` - `contract:delete:own` - `party:view:own` - `party:create:own` - `party:edit:own` - `party:delete:own` - `
 
 ### Audit Logging
 
@@ -495,6 +411,7 @@ When adding new endpoints:
 ## 🔧 How to Fix
 
 ### Add Missing Permissions
+
 ```sql
 -- Add to scripts/seed_rbac.sql
 INSERT INTO permissions (resource, action, scope, name, description) VALUES
@@ -502,13 +419,16 @@ INSERT INTO permissions (resource, action, scope, name, description) VALUES
 ```
 
 ### Remove Unused Permissions
+
 ```sql
 -- Remove from scripts/seed_rbac.sql
 DELETE FROM permissions WHERE name = 'unused:permission:name';
 ```
 
 ### Update Documentation
+
 Edit `docs/rbac_endpoint_mapping.md` to reflect actual implementation.
 
 ---
-*Report generated by RBAC Drift Check script*
+
+_Report generated by RBAC Drift Check script_

@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client';
 
 // Multiple roles system - users can have multiple independent roles
 export const AVAILABLE_ROLES = [
   'super_admin',
-  'admin', 
+  'admin',
   'manager',
   'moderator',
   'user',
@@ -11,10 +11,10 @@ export const AVAILABLE_ROLES = [
   'finance_admin',
   'hr_admin',
   'content_manager',
-  'analyst'
-] as const
+  'analyst',
+] as const;
 
-export type MultipleUserRole = typeof AVAILABLE_ROLES[number]
+export type MultipleUserRole = (typeof AVAILABLE_ROLES)[number];
 
 /**
  * Check if user has a specific role
@@ -22,8 +22,11 @@ export type MultipleUserRole = typeof AVAILABLE_ROLES[number]
  * @param requiredRole - Required role for the action
  * @returns boolean
  */
-export function hasSpecificRole(userRoles: string[], requiredRole: string): boolean {
-  return userRoles.includes(requiredRole)
+export function hasSpecificRole(
+  userRoles: string[],
+  requiredRole: string
+): boolean {
+  return userRoles.includes(requiredRole);
 }
 
 /**
@@ -32,8 +35,11 @@ export function hasSpecificRole(userRoles: string[], requiredRole: string): bool
  * @param requiredRoles - Array of required roles (user needs at least one)
  * @returns boolean
  */
-export function hasAnyRole(userRoles: string[], requiredRoles: string[]): boolean {
-  return requiredRoles.some(role => userRoles.includes(role))
+export function hasAnyRole(
+  userRoles: string[],
+  requiredRoles: string[]
+): boolean {
+  return requiredRoles.some(role => userRoles.includes(role));
 }
 
 /**
@@ -42,8 +48,11 @@ export function hasAnyRole(userRoles: string[], requiredRoles: string[]): boolea
  * @param requiredRoles - Array of required roles (user needs all)
  * @returns boolean
  */
-export function hasAllRoles(userRoles: string[], requiredRoles: string[]): boolean {
-  return requiredRoles.every(role => userRoles.includes(role))
+export function hasAllRoles(
+  userRoles: string[],
+  requiredRoles: string[]
+): boolean {
+  return requiredRoles.every(role => userRoles.includes(role));
 }
 
 /**
@@ -52,7 +61,12 @@ export function hasAllRoles(userRoles: string[], requiredRoles: string[]): boole
  * @returns boolean
  */
 export function canPerformAdminActions(userRoles: string[]): boolean {
-  return hasAnyRole(userRoles, ['super_admin', 'admin', 'finance_admin', 'hr_admin'])
+  return hasAnyRole(userRoles, [
+    'super_admin',
+    'admin',
+    'finance_admin',
+    'hr_admin',
+  ]);
 }
 
 /**
@@ -61,7 +75,7 @@ export function canPerformAdminActions(userRoles: string[]): boolean {
  * @returns boolean
  */
 export function canPerformUserActions(userRoles: string[]): boolean {
-  return hasAnyRole(userRoles, ['user', 'admin', 'manager', 'moderator'])
+  return hasAnyRole(userRoles, ['user', 'admin', 'manager', 'moderator']);
 }
 
 /**
@@ -70,28 +84,29 @@ export function canPerformUserActions(userRoles: string[]): boolean {
  * @returns object with display info
  */
 export function getMultipleRoleDisplay(userRoles: string[]) {
-  const isAdmin = canPerformAdminActions(userRoles)
-  const isUser = canPerformUserActions(userRoles)
-  
+  const isAdmin = canPerformAdminActions(userRoles);
+  const isUser = canPerformUserActions(userRoles);
+
   // Sort roles by importance
   const sortedRoles = userRoles.sort((a, b) => {
-    const order = ['super_admin', 'admin', 'manager', 'moderator', 'user']
-    return order.indexOf(a) - order.indexOf(b)
-  })
-  
-  const primaryRole = sortedRoles[0] || 'user'
-  
+    const order = ['super_admin', 'admin', 'manager', 'moderator', 'user'];
+    return order.indexOf(a) - order.indexOf(b);
+  });
+
+  const primaryRole = sortedRoles[0] || 'user';
+
   return {
     primary: primaryRole,
     all: userRoles,
-    displayText: isAdmin && isUser ? 
-      `${primaryRole} + ${userRoles.length - 1} more` : 
-      userRoles.join(', '),
+    displayText:
+      isAdmin && isUser
+        ? `${primaryRole} + ${userRoles.length - 1} more`
+        : userRoles.join(', '),
     badges: userRoles,
     canDoAdmin: isAdmin,
     canDoUser: isUser,
-    roleCount: userRoles.length
-  }
+    roleCount: userRoles.length,
+  };
 }
 
 /**
@@ -101,39 +116,42 @@ export function getMultipleRoleDisplay(userRoles: string[]) {
  * @returns Promise with result
  */
 export async function addRoleToUser(userId: string, newRole: MultipleUserRole) {
-  const supabase = createClient()
-  
+  const supabase = createClient();
+
   try {
     // First get current roles
     const { data: user, error: fetchError } = await supabase
       .from('users')
       .select('roles')
       .eq('id', userId)
-      .single()
-    
-    if (fetchError) throw fetchError
-    
-    const currentRoles = user?.roles || []
-    
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentRoles = user?.roles || [];
+
     // Add new role if not already present
     if (!currentRoles.includes(newRole)) {
-      const updatedRoles = [...currentRoles, newRole]
-      
+      const updatedRoles = [...currentRoles, newRole];
+
       const { data, error } = await supabase
         .from('users')
         .update({ roles: updatedRoles })
         .eq('id', userId)
-        .select()
-      
-      if (error) throw error
-      
-      return { success: true, data }
+        .select();
+
+      if (error) throw error;
+
+      return { success: true, data };
     }
-    
-    return { success: true, data: user, message: 'Role already assigned' }
+
+    return { success: true, data: user, message: 'Role already assigned' };
   } catch (error) {
-    console.error('Error adding role to user:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    console.error('Error adding role to user:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
@@ -144,32 +162,37 @@ export async function addRoleToUser(userId: string, newRole: MultipleUserRole) {
  * @returns Promise with result
  */
 export async function removeRoleFromUser(userId: string, roleToRemove: string) {
-  const supabase = createClient()
-  
+  const supabase = createClient();
+
   try {
     // Get current roles
     const { data: user, error: fetchError } = await supabase
       .from('users')
       .select('roles')
       .eq('id', userId)
-      .single()
-    
-    if (fetchError) throw fetchError
-    
-    const currentRoles = user?.roles || []
-    const updatedRoles = currentRoles.filter((role: string) => role !== roleToRemove)
-    
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const currentRoles = user?.roles || [];
+    const updatedRoles = currentRoles.filter(
+      (role: string) => role !== roleToRemove
+    );
+
     const { data, error } = await supabase
       .from('users')
       .update({ roles: updatedRoles })
       .eq('id', userId)
-      .select()
-    
-    if (error) throw error
-    
-    return { success: true, data }
+      .select();
+
+    if (error) throw error;
+
+    return { success: true, data };
   } catch (error) {
-    console.error('Error removing role from user:', error)
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
+    console.error('Error removing role from user:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }

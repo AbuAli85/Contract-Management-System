@@ -1,79 +1,91 @@
-import { useEffect, useState } from "react"
-import { createClient } from "@/lib/supabase/client"
-import type { Notification } from "../lib/notification-types"
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import type { Notification } from '../lib/notification-types';
 
 export default function Notifications() {
-  const [user, setUser] = useState<any>(null)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [user, setUser] = useState<any>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     // Get current user
     const getUser = async () => {
-      const supabase = createClient()
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
 
     // Listen for auth changes
-    const supabase = createClient()
+    const supabase = createClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null)
-    })
+      setUser(session?.user ?? null);
+    });
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (user) {
-      const supabase = createClient()
+      const supabase = createClient();
       supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("read", false)
-        .order("created_at", { ascending: false })
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
         .then(({ data }) =>
           setNotifications(
-            (data || []).map((n) => ({
+            (data || []).map(n => ({
               ...n,
               id: n.id.toString(), // Convert number to string
-              type: n.type || "notification", // Provide default value for null type
-              message: n.message || "", // Provide default value for null message
+              type: n.type || 'notification', // Provide default value for null type
+              message: n.message || '', // Provide default value for null message
               created_at: n.created_at || new Date().toISOString(), // Provide default value for null created_at
               is_read: n.is_read ?? false, // Provide default value for null is_read
               read: n.read ?? false,
-            })),
-          ),
-        )
+            }))
+          )
+        );
     }
-  }, [user])
+  }, [user]);
 
   const markAsRead = async (id: string) => {
-    const supabase = createClient()
-    await supabase.from("notifications").update({ read: true }).eq("id", parseInt(id))
-    setNotifications(Array.isArray(notifications) ? notifications.filter((n) => n.id !== id) : [])
-  }
+    const supabase = createClient();
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', parseInt(id));
+    setNotifications(
+      Array.isArray(notifications) ? notifications.filter(n => n.id !== id) : []
+    );
+  };
 
-  if (!user) return null
+  if (!user) return null;
   return (
     <div>
       <h3>Notifications</h3>
       <ul>
-        {Array.isArray(notifications) ? notifications.map((n) => (
-          <li key={n.id}>
-            {n.message}
-            <button onClick={() => markAsRead(n.id)} style={{ marginLeft: 8 }}>
-              Mark as read
-            </button>
-          </li>
-        )) : null}
-        {Array.isArray(notifications) && notifications.length === 0 && <li>No new notifications.</li>}
+        {Array.isArray(notifications)
+          ? notifications.map(n => (
+              <li key={n.id}>
+                {n.message}
+                <button
+                  onClick={() => markAsRead(n.id)}
+                  style={{ marginLeft: 8 }}
+                >
+                  Mark as read
+                </button>
+              </li>
+            ))
+          : null}
+        {Array.isArray(notifications) && notifications.length === 0 && (
+          <li>No new notifications.</li>
+        )}
       </ul>
     </div>
-  )
+  );
 }

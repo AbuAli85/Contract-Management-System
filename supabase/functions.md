@@ -18,14 +18,14 @@ This document provides comprehensive documentation for all Supabase Edge Functio
 
 ```typescript
 interface ExportRequest {
-  contractId: string
-  contractType?: string
-  exportMethod?: "puppeteer" | "makecom" | "google_docs"
+  contractId: string;
+  contractType?: string;
+  exportMethod?: 'puppeteer' | 'makecom' | 'google_docs';
   options?: {
-    includeImages?: boolean
-    highQuality?: boolean
-    watermark?: boolean
-  }
+    includeImages?: boolean;
+    highQuality?: boolean;
+    watermark?: boolean;
+  };
 }
 ```
 
@@ -33,23 +33,23 @@ interface ExportRequest {
 
 ```typescript
 interface ExportSuccess {
-  success: true
-  contractId: string
-  contractNumber: string
-  pdfUrl: string
-  googleDriveUrl?: string
-  exportMethod: "puppeteer" | "makecom" | "google_docs"
-  timestamp: string
-  processingTime: number
+  success: true;
+  contractId: string;
+  contractNumber: string;
+  pdfUrl: string;
+  googleDriveUrl?: string;
+  exportMethod: 'puppeteer' | 'makecom' | 'google_docs';
+  timestamp: string;
+  processingTime: number;
 }
 
 interface ExportError {
-  code: ExportErrorCode
-  message: string
-  details?: Record<string, any>
-  actionable?: boolean
-  retryable?: boolean
-  suggestions?: string[]
+  code: ExportErrorCode;
+  message: string;
+  details?: Record<string, any>;
+  actionable?: boolean;
+  retryable?: boolean;
+  suggestions?: string[];
 }
 ```
 
@@ -96,18 +96,18 @@ curl -X POST https://your-project.supabase.co/functions/v1/export-contract \
 
 ```typescript
 interface ReminderResult {
-  success: boolean
-  processed: number
-  remindersSent: number
-  escalationsSent: number
-  skipped: number
+  success: boolean;
+  processed: number;
+  remindersSent: number;
+  escalationsSent: number;
+  skipped: number;
   results: Array<{
-    contractId: string
-    contractNumber: string
-    action: "reminder_sent" | "escalated" | "skipped"
-    recipients: string[]
-    emailSent: boolean
-  }>
+    contractId: string;
+    contractNumber: string;
+    action: 'reminder_sent' | 'escalated' | 'skipped';
+    recipients: string[];
+    emailSent: boolean;
+  }>;
 }
 ```
 
@@ -132,10 +132,10 @@ interface ReminderResult {
 
 ```typescript
 interface SessionReminderResult {
-  success: boolean
-  remindersSent: number
-  sessionsProcessed: number
-  errors: string[]
+  success: boolean;
+  remindersSent: number;
+  sessionsProcessed: number;
+  errors: string[];
 }
 ```
 
@@ -158,12 +158,12 @@ interface SessionReminderResult {
 
 ```typescript
 interface ImportRequest {
-  csvData: string
+  csvData: string;
   options?: {
-    skipHeader?: boolean
-    validateOnly?: boolean
-    updateExisting?: boolean
-  }
+    skipHeader?: boolean;
+    validateOnly?: boolean;
+    updateExisting?: boolean;
+  };
 }
 ```
 
@@ -171,15 +171,15 @@ interface ImportRequest {
 
 ```typescript
 interface ImportResult {
-  success: boolean
-  imported: number
-  updated: number
+  success: boolean;
+  imported: number;
+  updated: number;
   errors: Array<{
-    row: number
-    field: string
-    message: string
-  }>
-  warnings: string[]
+    row: number;
+    field: string;
+    message: string;
+  }>;
+  warnings: string[];
 }
 ```
 
@@ -202,11 +202,11 @@ interface ImportResult {
 
 ```typescript
 interface DeleteRequest {
-  partyIds: string[]
+  partyIds: string[];
   options?: {
-    cascade?: boolean
-    softDelete?: boolean
-  }
+    cascade?: boolean;
+    softDelete?: boolean;
+  };
 }
 ```
 
@@ -214,10 +214,10 @@ interface DeleteRequest {
 
 ```typescript
 interface DeleteResult {
-  success: boolean
-  deleted: number
-  failed: number
-  errors: string[]
+  success: boolean;
+  deleted: number;
+  failed: number;
+  errors: string[];
 }
 ```
 
@@ -240,18 +240,18 @@ interface DeleteResult {
 
 ```typescript
 interface PDFRequest {
-  htmlContent: string
+  htmlContent: string;
   options?: {
-    format?: "A4" | "Letter"
+    format?: 'A4' | 'Letter';
     margin?: {
-      top?: string
-      right?: string
-      bottom?: string
-      left?: string
-    }
-    headerTemplate?: string
-    footerTemplate?: string
-  }
+      top?: string;
+      right?: string;
+      bottom?: string;
+      left?: string;
+    };
+    headerTemplate?: string;
+    footerTemplate?: string;
+  };
 }
 ```
 
@@ -259,10 +259,10 @@ interface PDFRequest {
 
 ```typescript
 interface PDFResult {
-  success: boolean
-  pdfUrl: string
-  processingTime: number
-  error?: string
+  success: boolean;
+  pdfUrl: string;
+  processingTime: number;
+  error?: string;
 }
 ```
 

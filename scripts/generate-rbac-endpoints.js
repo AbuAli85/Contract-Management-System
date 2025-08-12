@@ -2,10 +2,10 @@
 
 /**
  * 🔐 RBAC Endpoint Coverage Generator
- * 
+ *
  * This script analyzes the codebase to identify endpoints that need RBAC protection
  * and generates stub files for implementing permission checks.
- * 
+ *
  * Usage: node scripts/generate-rbac-endpoints.js
  */
 
@@ -20,7 +20,7 @@ const CONFIG = {
     'app/api/**/*.ts',
     'app/api/**/*.tsx',
     'pages/api/**/*.ts',
-    'pages/api/**/*.js'
+    'pages/api/**/*.js',
   ],
   // Output directory for generated stubs
   outputDir: 'docs/rbac-endpoints',
@@ -30,49 +30,49 @@ const CONFIG = {
     '**/dist/**',
     '**/build/**',
     '**/*.test.*',
-    '**/*.spec.*'
-  ]
+    '**/*.spec.*',
+  ],
 };
 
 // RBAC permission templates
 const PERMISSION_TEMPLATES = {
   // CRUD operations
-  'GET': 'read',
-  'POST': 'create',
-  'PUT': 'edit',
-  'PATCH': 'edit',
-  'DELETE': 'delete',
-  
+  GET: 'read',
+  POST: 'create',
+  PUT: 'edit',
+  PATCH: 'edit',
+  DELETE: 'delete',
+
   // Custom operations
-  'SEARCH': 'search',
-  'EXPORT': 'export',
-  'IMPORT': 'import',
-  'APPROVE': 'approve',
-  'REJECT': 'reject'
+  SEARCH: 'search',
+  EXPORT: 'export',
+  IMPORT: 'import',
+  APPROVE: 'approve',
+  REJECT: 'reject',
 };
 
 // Resource mapping based on file paths
 const RESOURCE_MAPPING = {
-  'users': 'user',
-  'user': 'user',
-  'profiles': 'profile',
-  'profile': 'profile',
-  'contracts': 'contract',
-  'contract': 'contract',
-  'bookings': 'booking',
-  'booking': 'booking',
-  'companies': 'company',
-  'company': 'company',
-  'promoters': 'promoter',
-  'promoter': 'promoter',
-  'parties': 'party',
-  'party': 'party',
-  'services': 'service',
-  'service': 'service',
-  'roles': 'role',
-  'role': 'role',
-  'permissions': 'permission',
-  'permission': 'permission'
+  users: 'user',
+  user: 'user',
+  profiles: 'profile',
+  profile: 'profile',
+  contracts: 'contract',
+  contract: 'contract',
+  bookings: 'booking',
+  booking: 'booking',
+  companies: 'company',
+  company: 'company',
+  promoters: 'promoter',
+  promoter: 'promoter',
+  parties: 'party',
+  party: 'party',
+  services: 'service',
+  service: 'service',
+  roles: 'role',
+  role: 'role',
+  permissions: 'permission',
+  permission: 'permission',
 };
 
 // Scope suggestions based on resource and action
@@ -88,7 +88,7 @@ const SCOPE_SUGGESTIONS = {
   'role:assign': ['all'],
   'role:revoke': ['all'],
   'permission:grant': ['all'],
-  'permission:revoke': ['all']
+  'permission:revoke': ['all'],
 };
 
 /**
@@ -97,16 +97,18 @@ const SCOPE_SUGGESTIONS = {
 function extractHttpMethod(content) {
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
   const foundMethods = [];
-  
+
   for (const method of methods) {
-    if (content.includes(`export async function ${method}`) || 
-        content.includes(`export const ${method}`) ||
-        content.includes(`method: '${method}'`) ||
-        content.includes(`method: "${method}"`)) {
+    if (
+      content.includes(`export async function ${method}`) ||
+      content.includes(`export const ${method}`) ||
+      content.includes(`method: '${method}'`) ||
+      content.includes(`method: "${method}"`)
+    ) {
       foundMethods.push(method);
     }
   }
-  
+
   return foundMethods.length > 0 ? foundMethods : ['GET']; // Default to GET
 }
 
@@ -115,19 +117,19 @@ function extractHttpMethod(content) {
  */
 function extractResourceType(filePath) {
   const pathParts = filePath.split('/');
-  
+
   for (const part of pathParts) {
     if (RESOURCE_MAPPING[part]) {
       return RESOURCE_MAPPING[part];
     }
   }
-  
+
   // Try to infer from filename
   const fileName = path.basename(filePath, path.extname(filePath));
   if (RESOURCE_MAPPING[fileName]) {
     return RESOURCE_MAPPING[fileName];
   }
-  
+
   return 'unknown';
 }
 
@@ -136,16 +138,21 @@ function extractResourceType(filePath) {
  */
 function generatePermissionSuggestions(resource, actions) {
   const suggestions = [];
-  
+
   for (const action of actions) {
     const permissionKey = `${resource}:${action}`;
-    const scopes = SCOPE_SUGGESTIONS[permissionKey] || ['own', 'organization', 'provider', 'all'];
-    
+    const scopes = SCOPE_SUGGESTIONS[permissionKey] || [
+      'own',
+      'organization',
+      'provider',
+      'all',
+    ];
+
     for (const scope of scopes) {
       suggestions.push(`${resource}:${action}:${scope}`);
     }
   }
-  
+
   return suggestions;
 }
 
@@ -155,10 +162,12 @@ function generatePermissionSuggestions(resource, actions) {
 function generateRbacStub(filePath, httpMethods, resourceType) {
   const fileName = path.basename(filePath, path.extname(filePath));
   const relativePath = path.relative(process.cwd(), filePath);
-  
-  const actions = httpMethods.map(method => PERMISSION_TEMPLATES[method] || 'read');
+
+  const actions = httpMethods.map(
+    method => PERMISSION_TEMPLATES[method] || 'read'
+  );
   const permissions = generatePermissionSuggestions(resourceType, actions);
-  
+
   return `# RBAC Protection for ${relativePath}
 
 ## Endpoint Information
@@ -271,13 +280,20 @@ ${Object.entries(
     acc[resource].push(endpoint);
     return acc;
   }, {})
-).map(([resource, resourceEndpoints]) => `
+)
+  .map(
+    ([resource, resourceEndpoints]) => `
 ### ${resource.charAt(0).toUpperCase() + resource.slice(1)}
 
-${resourceEndpoints.map(endpoint => 
-  `- [${endpoint.relativePath}](./${endpoint.fileName}.md) - ${endpoint.httpMethods.join(', ')}`
-).join('\n')}
-`).join('\n')}
+${resourceEndpoints
+  .map(
+    endpoint =>
+      `- [${endpoint.relativePath}](./${endpoint.fileName}.md) - ${endpoint.httpMethods.join(', ')}`
+  )
+  .join('\n')}
+`
+  )
+  .join('\n')}
 
 ## Implementation Status
 
@@ -295,9 +311,12 @@ ${Object.entries(
     }
     return acc;
   }, {})
-).map(([resource, stats]) => 
-  `| ${resource} | ${stats.total} | ${stats.protected} | ${stats.pending} |`
-).join('\n')}
+)
+  .map(
+    ([resource, stats]) =>
+      `| ${resource} | ${stats.total} | ${stats.protected} | ${stats.pending} |`
+  )
+  .join('\n')}
 
 ## Next Steps
 
@@ -340,47 +359,47 @@ For questions about RBAC implementation, refer to:
 async function main() {
   console.log('🔐 RBAC Endpoint Coverage Generator');
   console.log('=====================================\n');
-  
+
   // Create output directory
   if (!fs.existsSync(CONFIG.outputDir)) {
     fs.mkdirSync(CONFIG.outputDir, { recursive: true });
     console.log(`✅ Created output directory: ${CONFIG.outputDir}`);
   }
-  
+
   // Find all API endpoints
   const endpoints = [];
-  
+
   for (const pattern of CONFIG.scanDirs) {
     const files = glob.sync(pattern, { ignore: CONFIG.excludePatterns });
-    
+
     for (const file of files) {
       try {
         const content = fs.readFileSync(file, 'utf8');
         const httpMethods = extractHttpMethod(content);
         const resourceType = extractResourceType(file);
-        const hasRbac = content.includes('permissionEvaluator') || 
-                        content.includes('rbac') ||
-                        content.includes('PermissionDecision');
-        
+        const hasRbac =
+          content.includes('permissionEvaluator') ||
+          content.includes('rbac') ||
+          content.includes('PermissionDecision');
+
         endpoints.push({
           filePath: file,
           relativePath: path.relative(process.cwd(), file),
           fileName: path.basename(file, path.extname(file)),
           httpMethods,
           resourceType,
-          hasRbac
+          hasRbac,
         });
-        
+
         console.log(`📁 Found endpoint: ${file} (${httpMethods.join(', ')})`);
-        
       } catch (error) {
         console.warn(`⚠️  Could not read file: ${file}`, error.message);
       }
     }
   }
-  
+
   console.log(`\n📊 Found ${endpoints.length} endpoints to analyze\n`);
-  
+
   // Generate stubs for each endpoint
   for (const endpoint of endpoints) {
     const stubContent = generateRbacStub(
@@ -388,18 +407,18 @@ async function main() {
       endpoint.httpMethods,
       endpoint.resourceType
     );
-    
+
     const outputFile = path.join(CONFIG.outputDir, `${endpoint.fileName}.md`);
     fs.writeFileSync(outputFile, stubContent);
     console.log(`✅ Generated stub: ${outputFile}`);
   }
-  
+
   // Generate index file
   const indexContent = generateIndex(endpoints);
   const indexFile = path.join(CONFIG.outputDir, 'README.md');
   fs.writeFileSync(indexFile, indexContent);
   console.log(`✅ Generated index: ${indexFile}`);
-  
+
   console.log(`\n🎉 RBAC endpoint coverage generation complete!`);
   console.log(`📁 Output directory: ${CONFIG.outputDir}`);
   console.log(`📚 Generated ${endpoints.length} endpoint stubs`);

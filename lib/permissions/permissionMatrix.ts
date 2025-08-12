@@ -26,7 +26,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can create new users in the system',
     resource: 'users',
     action: 'create',
-    roles: ['admin']
+    roles: ['admin'],
   },
   {
     id: 'users.read',
@@ -34,7 +34,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view user information',
     resource: 'users',
     action: 'read',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'users.update',
@@ -42,7 +42,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify user information',
     resource: 'users',
     action: 'update',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'users.delete',
@@ -50,7 +50,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can remove users from the system',
     resource: 'users',
     action: 'delete',
-    roles: ['admin']
+    roles: ['admin'],
   },
   {
     id: 'users.manage_roles',
@@ -58,7 +58,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can assign and change user roles',
     resource: 'users',
     action: 'manage_roles',
-    roles: ['admin']
+    roles: ['admin'],
   },
 
   // Contract Management
@@ -68,7 +68,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can create new contracts',
     resource: 'contracts',
     action: 'create',
-    roles: ['admin', 'manager', 'user']
+    roles: ['admin', 'manager', 'user'],
   },
   {
     id: 'contracts.read',
@@ -76,7 +76,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view contract information',
     resource: 'contracts',
     action: 'read',
-    roles: ['admin', 'manager', 'user', 'provider', 'client']
+    roles: ['admin', 'manager', 'user', 'provider', 'client'],
   },
   {
     id: 'contracts.update',
@@ -84,7 +84,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify contract information',
     resource: 'contracts',
     action: 'update',
-    roles: ['admin', 'manager', 'user']
+    roles: ['admin', 'manager', 'user'],
   },
   {
     id: 'contracts.delete',
@@ -92,7 +92,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can remove contracts',
     resource: 'contracts',
     action: 'delete',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'contracts.approve',
@@ -100,7 +100,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can approve contract workflows',
     resource: 'contracts',
     action: 'approve',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
 
   // Provider Management
@@ -110,7 +110,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can create new provider accounts',
     resource: 'providers',
     action: 'create',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'providers.read',
@@ -118,7 +118,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view provider information',
     resource: 'providers',
     action: 'read',
-    roles: ['admin', 'manager', 'user', 'client']
+    roles: ['admin', 'manager', 'user', 'client'],
   },
   {
     id: 'providers.update',
@@ -126,7 +126,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify provider information',
     resource: 'providers',
     action: 'update',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'providers.delete',
@@ -134,7 +134,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can remove provider accounts',
     resource: 'providers',
     action: 'delete',
-    roles: ['admin']
+    roles: ['admin'],
   },
 
   // Booking Management
@@ -144,7 +144,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can create new bookings',
     resource: 'bookings',
     action: 'create',
-    roles: ['admin', 'manager', 'user', 'client']
+    roles: ['admin', 'manager', 'user', 'client'],
   },
   {
     id: 'bookings.read',
@@ -152,7 +152,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view booking information',
     resource: 'bookings',
     action: 'read',
-    roles: ['admin', 'manager', 'user', 'provider', 'client']
+    roles: ['admin', 'manager', 'user', 'provider', 'client'],
   },
   {
     id: 'bookings.update',
@@ -160,7 +160,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify booking information',
     resource: 'bookings',
     action: 'update',
-    roles: ['admin', 'manager', 'user']
+    roles: ['admin', 'manager', 'user'],
   },
   {
     id: 'bookings.delete',
@@ -168,7 +168,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can remove bookings',
     resource: 'bookings',
     action: 'delete',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
 
   // Analytics & Reporting
@@ -178,7 +178,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can access system analytics and reports',
     resource: 'analytics',
     action: 'read',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'analytics.export',
@@ -186,7 +186,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can export analytics data',
     resource: 'analytics',
     action: 'export',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
 
   // System Administration
@@ -196,7 +196,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify system configuration',
     resource: 'system',
     action: 'settings',
-    roles: ['admin']
+    roles: ['admin'],
   },
   {
     id: 'system.logs',
@@ -204,7 +204,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view system logs and audit trails',
     resource: 'system',
     action: 'logs',
-    roles: ['admin']
+    roles: ['admin'],
   },
   {
     id: 'system.backup',
@@ -212,7 +212,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can perform system backups',
     resource: 'system',
     action: 'backup',
-    roles: ['admin']
+    roles: ['admin'],
   },
 
   // Notifications
@@ -222,7 +222,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can send system notifications',
     resource: 'notifications',
     action: 'create',
-    roles: ['admin', 'manager']
+    roles: ['admin', 'manager'],
   },
   {
     id: 'notifications.read',
@@ -230,7 +230,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view notifications',
     resource: 'notifications',
     action: 'read',
-    roles: ['admin', 'manager', 'user', 'provider', 'client']
+    roles: ['admin', 'manager', 'user', 'provider', 'client'],
   },
 
   // Marketplace
@@ -240,7 +240,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can create marketplace listings',
     resource: 'marketplace',
     action: 'create',
-    roles: ['admin', 'manager', 'provider']
+    roles: ['admin', 'manager', 'provider'],
   },
   {
     id: 'marketplace.read',
@@ -248,7 +248,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can view marketplace',
     resource: 'marketplace',
     action: 'read',
-    roles: ['admin', 'manager', 'user', 'provider', 'client']
+    roles: ['admin', 'manager', 'user', 'provider', 'client'],
   },
   {
     id: 'marketplace.update',
@@ -256,7 +256,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can modify marketplace listings',
     resource: 'marketplace',
     action: 'update',
-    roles: ['admin', 'manager', 'provider']
+    roles: ['admin', 'manager', 'provider'],
   },
   {
     id: 'marketplace.delete',
@@ -264,8 +264,8 @@ export const PERMISSIONS: Permission[] = [
     description: 'Can remove marketplace listings',
     resource: 'marketplace',
     action: 'delete',
-    roles: ['admin', 'manager', 'provider']
-  }
+    roles: ['admin', 'manager', 'provider'],
+  },
 ];
 
 // Define role-based permission sets
@@ -274,47 +274,51 @@ export const ROLE_PERMISSIONS: RolePermissions[] = [
     role: 'admin',
     level: 100,
     description: 'Full system access with all permissions',
-    permissions: PERMISSIONS // Admins get all permissions
+    permissions: PERMISSIONS, // Admins get all permissions
   },
   {
     role: 'manager',
     level: 80,
     description: 'High-level management with most operational permissions',
-    permissions: PERMISSIONS.filter(p => 
-      !p.roles.includes('admin') || p.roles.includes('manager')
-    )
+    permissions: PERMISSIONS.filter(
+      p => !p.roles.includes('admin') || p.roles.includes('manager')
+    ),
   },
   {
     role: 'user',
     level: 60,
     description: 'Standard user with basic operational permissions',
-    permissions: PERMISSIONS.filter(p => 
+    permissions: PERMISSIONS.filter(p =>
       ['user', 'manager', 'admin'].some(role => p.roles.includes(role))
-    )
+    ),
   },
   {
     role: 'provider',
     level: 40,
     description: 'Service provider with limited access',
-    permissions: PERMISSIONS.filter(p => 
-      ['provider', 'user', 'manager', 'admin'].some(role => p.roles.includes(role))
-    )
+    permissions: PERMISSIONS.filter(p =>
+      ['provider', 'user', 'manager', 'admin'].some(role =>
+        p.roles.includes(role)
+      )
+    ),
   },
   {
     role: 'client',
     level: 20,
     description: 'Client with minimal access',
-    permissions: PERMISSIONS.filter(p => 
-      ['client', 'user', 'manager', 'admin'].some(role => p.roles.includes(role))
-    )
-  }
+    permissions: PERMISSIONS.filter(p =>
+      ['client', 'user', 'manager', 'admin'].some(role =>
+        p.roles.includes(role)
+      )
+    ),
+  },
 ];
 
 // Helper functions for permission checking
 export function hasPermission(userRole: string, permissionId: string): boolean {
   const permission = PERMISSIONS.find(p => p.id === permissionId);
   if (!permission) return false;
-  
+
   return permission.roles.includes(userRole);
 }
 
@@ -322,11 +326,16 @@ export function getUserPermissions(userRole: string): Permission[] {
   return PERMISSIONS.filter(p => p.roles.includes(userRole));
 }
 
-export function canPerformAction(userRole: string, resource: string, action: string): boolean {
-  return PERMISSIONS.some(p => 
-    p.resource === resource && 
-    p.action === action && 
-    p.roles.includes(userRole)
+export function canPerformAction(
+  userRole: string,
+  resource: string,
+  action: string
+): boolean {
+  return PERMISSIONS.some(
+    p =>
+      p.resource === resource &&
+      p.action === action &&
+      p.roles.includes(userRole)
   );
 }
 
@@ -338,21 +347,48 @@ export function getRoleLevel(role: string): number {
 export function canManageRole(userRole: string, targetRole: string): boolean {
   const userLevel = getRoleLevel(userRole);
   const targetLevel = getRoleLevel(targetRole);
-  
+
   // Users can only manage roles at or below their level
   return userLevel > targetLevel;
 }
 
 // Permission groups for easier management
 export const PERMISSION_GROUPS = {
-  USER_MANAGEMENT: ['users.create', 'users.read', 'users.update', 'users.delete', 'users.manage_roles'],
-  CONTRACT_MANAGEMENT: ['contracts.create', 'contracts.read', 'contracts.update', 'contracts.delete', 'contracts.approve'],
-  PROVIDER_MANAGEMENT: ['providers.create', 'providers.read', 'providers.update', 'providers.delete'],
-  BOOKING_MANAGEMENT: ['bookings.create', 'bookings.read', 'bookings.update', 'bookings.delete'],
+  USER_MANAGEMENT: [
+    'users.create',
+    'users.read',
+    'users.update',
+    'users.delete',
+    'users.manage_roles',
+  ],
+  CONTRACT_MANAGEMENT: [
+    'contracts.create',
+    'contracts.read',
+    'contracts.update',
+    'contracts.delete',
+    'contracts.approve',
+  ],
+  PROVIDER_MANAGEMENT: [
+    'providers.create',
+    'providers.read',
+    'providers.update',
+    'providers.delete',
+  ],
+  BOOKING_MANAGEMENT: [
+    'bookings.create',
+    'bookings.read',
+    'bookings.update',
+    'bookings.delete',
+  ],
   ANALYTICS: ['analytics.read', 'analytics.export'],
   SYSTEM_ADMIN: ['system.settings', 'system.logs', 'system.backup'],
   NOTIFICATIONS: ['notifications.create', 'notifications.read'],
-  MARKETPLACE: ['marketplace.create', 'marketplace.read', 'marketplace.update', 'marketplace.delete']
+  MARKETPLACE: [
+    'marketplace.create',
+    'marketplace.read',
+    'marketplace.update',
+    'marketplace.delete',
+  ],
 };
 
 // Export permission checking utilities
@@ -364,5 +400,5 @@ export const PermissionUtils = {
   canManageRole,
   PERMISSIONS,
   ROLE_PERMISSIONS,
-  PERMISSION_GROUPS
+  PERMISSION_GROUPS,
 };

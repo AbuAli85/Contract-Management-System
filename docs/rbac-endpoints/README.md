@@ -10,7 +10,6 @@ This document provides an overview of all endpoints that need RBAC protection.
 
 ## Endpoints by Resource Type
 
-
 ### Unknown
 
 - [app\api\admin\backup\route.ts](./route.md) - GET, POST
@@ -94,13 +93,11 @@ This document provides an overview of all endpoints that need RBAC protection.
 - [app\api\webhooks\booking-events\route.ts](./route.md) - GET, POST
 - [app\api\workflow\config\route.ts](./route.md) - GET, POST, PUT, DELETE
 
-
 ### Role
 
 - [app\api\admin\roles\route.ts](./route.md) - GET, POST
 - [app\api\roles\[id]\route.ts](./route.md) - PUT, DELETE
 - [app\api\roles\route.ts](./route.md) - GET, POST
-
 
 ### User
 
@@ -124,7 +121,6 @@ This document provides an overview of all endpoints that need RBAC protection.
 - [app\api\users\sync\route-emergency-fix.ts](./route-emergency-fix.md) - POST
 - [app\api\users\sync\route.ts](./route.md) - POST
 
-
 ### Booking
 
 - [app\api\bookings\[id]\route.ts](./route.md) - GET, PATCH
@@ -135,13 +131,11 @@ This document provides an overview of all endpoints that need RBAC protection.
 - [app\api\bookings\webhook\test\route.ts](./route.md) - GET, POST
 - [app\api\enhanced\bookings\route.ts](./route.md) - GET, POST
 
-
 ### Company
 
 - [app\api\companies\route.ts](./route.md) - GET, POST
 - [app\api\enhanced\companies\[id]\route.ts](./route.md) - GET
 - [app\api\enhanced\companies\route.ts](./route.md) - GET, POST, PUT, DELETE
-
 
 ### Contract
 
@@ -164,23 +158,19 @@ This document provides an overview of all endpoints that need RBAC protection.
 - [app\api\contracts\route.ts](./route.md) - GET, POST
 - [app\api\contracts\secure-route.ts](./secure-route.md) - GET, POST
 
-
 ### Service
 
 - [app\api\enhanced\services\route.ts](./route.md) - GET, POST
 - [app\api\provider\services\route.ts](./route.md) - GET, POST, PUT
 - [app\api\services\route.ts](./route.md) - GET, POST
 
-
 ### Party
 
 - [app\api\parties\route.ts](./route.md) - GET, POST
 
-
 ### Permission
 
 - [app\api\permissions\route.ts](./route.md) - GET
-
 
 ### Promoter
 
@@ -209,21 +199,20 @@ This document provides an overview of all endpoints that need RBAC protection.
 - [app\api\promoters\dashboard\route.ts](./route.md) - GET
 - [app\api\promoters\route.ts](./route.md) - GET, POST
 
-
 ## Implementation Status
 
-| Resource | Total | Protected | Pending |
-|----------|-------|-----------|---------|
-| unknown | 80 | 0 | 80 |
-| role | 3 | 1 | 2 |
-| user | 19 | 1 | 18 |
-| booking | 7 | 1 | 6 |
-| company | 3 | 0 | 3 |
-| contract | 18 | 0 | 18 |
-| service | 3 | 1 | 2 |
-| party | 1 | 0 | 1 |
-| permission | 1 | 0 | 1 |
-| promoter | 24 | 0 | 24 |
+| Resource   | Total | Protected | Pending |
+| ---------- | ----- | --------- | ------- |
+| unknown    | 80    | 0         | 80      |
+| role       | 3     | 1         | 2       |
+| user       | 19    | 1         | 18      |
+| booking    | 7     | 1         | 6       |
+| company    | 3     | 0         | 3       |
+| contract   | 18    | 0         | 18      |
+| service    | 3     | 1         | 2       |
+| party      | 1     | 0         | 1       |
+| permission | 1     | 0         | 1       |
+| promoter   | 24    | 0         | 24      |
 
 ## Next Steps
 
@@ -252,6 +241,7 @@ RBAC_CACHE_MAX_SIZE=1000
 ## Support
 
 For questions about RBAC implementation, refer to:
+
 - [RBAC System Documentation](../rbac-system.md)
 - [Permission Evaluation Guide](../rbac-permissions.md)
 - [Audit Logging Guide](../rbac-audit.md)

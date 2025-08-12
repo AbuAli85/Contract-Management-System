@@ -1,125 +1,161 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fix User Role</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .button { padding: 10px 20px; margin: 10px 0; cursor: pointer; background: #007cba; color: white; border: none; border-radius: 4px; }
-        .result { margin: 20px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px; background: #f9f9f9; }
-        .error { border-color: #f00; background: #fee; }
-        .success { border-color: #0a0; background: #efe; }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .button {
+        padding: 10px 20px;
+        margin: 10px 0;
+        cursor: pointer;
+        background: #007cba;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      .result {
+        margin: 20px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #f9f9f9;
+      }
+      .error {
+        border-color: #f00;
+        background: #fee;
+      }
+      .success {
+        border-color: #0a0;
+        background: #efe;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Fix User Role - Admin Assignment</h1>
-        <p>Current User: <strong>luxsess2001@gmail.com</strong></p>
-        <p>User ID: <strong>3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170</strong></p>
-        
-        <button class="button" onclick="checkCurrentRole()">1. Check Current Role</button>
-        <button class="button" onclick="updateUserRole()">2. Update to Admin Role</button>
-        <button class="button" onclick="verifyFix()">3. Verify Fix</button>
-        
-        <div id="results"></div>
+      <h1>Fix User Role - Admin Assignment</h1>
+      <p>Current User: <strong>luxsess2001@gmail.com</strong></p>
+      <p>User ID: <strong>3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170</strong></p>
+
+      <button class="button" onclick="checkCurrentRole()">
+        1. Check Current Role
+      </button>
+      <button class="button" onclick="updateUserRole()">
+        2. Update to Admin Role
+      </button>
+      <button class="button" onclick="verifyFix()">3. Verify Fix</button>
+
+      <div id="results"></div>
     </div>
 
     <script>
-        const userId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170';
-        const email = 'luxsess2001@gmail.com';
-        
-        function log(message, type = 'info') {
-            const results = document.getElementById('results');
-            const div = document.createElement('div');
-            div.className = `result ${type}`;
-            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
-            results.appendChild(div);
-            console.log(message);
+      const userId = '3f5dea42-c4bd-44bd-bcb9-0ac81e3c8170';
+      const email = 'luxsess2001@gmail.com';
+
+      function log(message, type = 'info') {
+        const results = document.getElementById('results');
+        const div = document.createElement('div');
+        div.className = `result ${type}`;
+        div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+        results.appendChild(div);
+        console.log(message);
+      }
+
+      async function checkCurrentRole() {
+        try {
+          log('Checking current role...', 'info');
+
+          const response = await fetch(`/api/users/profile/${userId}`, {
+            headers: { 'Cache-Control': 'no-cache' },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          log(`Current role: ${data.role || 'undefined'}`, 'info');
+          log(`Full profile: ${JSON.stringify(data, null, 2)}`, 'info');
+        } catch (error) {
+          log(`Error checking role: ${error.message}`, 'error');
         }
-        
-        async function checkCurrentRole() {
-            try {
-                log('Checking current role...', 'info');
-                
-                const response = await fetch(`/api/users/profile/${userId}`, {
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                log(`Current role: ${data.role || 'undefined'}`, 'info');
-                log(`Full profile: ${JSON.stringify(data, null, 2)}`, 'info');
-                
-            } catch (error) {
-                log(`Error checking role: ${error.message}`, 'error');
-            }
+      }
+
+      async function updateUserRole() {
+        try {
+          log('Updating user role to admin...', 'info');
+
+          const response = await fetch(`/api/users/profile/${userId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache',
+            },
+            body: JSON.stringify({
+              role: 'admin',
+              full_name: 'Fahad alamri',
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          log(
+            `Role updated successfully: ${JSON.stringify(data, null, 2)}`,
+            'success'
+          );
+        } catch (error) {
+          log(`Error updating role: ${error.message}`, 'error');
         }
-        
-        async function updateUserRole() {
-            try {
-                log('Updating user role to admin...', 'info');
-                
-                const response = await fetch(`/api/users/profile/${userId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache'
-                    },
-                    body: JSON.stringify({
-                        role: 'admin',
-                        full_name: 'Fahad alamri'
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                log(`Role updated successfully: ${JSON.stringify(data, null, 2)}`, 'success');
-                
-            } catch (error) {
-                log(`Error updating role: ${error.message}`, 'error');
-            }
+      }
+
+      async function verifyFix() {
+        try {
+          log('Verifying role fix...', 'info');
+
+          // Check profile API
+          const profileResponse = await fetch(`/api/users/profile/${userId}`, {
+            headers: { 'Cache-Control': 'no-cache' },
+          });
+
+          if (profileResponse.ok) {
+            const profileData = await profileResponse.json();
+            log(
+              `Profile API role: ${profileData.role}`,
+              profileData.role === 'admin' ? 'success' : 'error'
+            );
+          }
+
+          // Check users list API
+          const usersResponse = await fetch('/api/users', {
+            headers: { 'Cache-Control': 'no-cache' },
+          });
+
+          if (usersResponse.ok) {
+            const usersData = await usersResponse.json();
+            const currentUser = usersData.users?.find(u => u.id === userId);
+            log(
+              `Users API role: ${currentUser?.role || 'not found'}`,
+              currentUser?.role === 'admin' ? 'success' : 'error'
+            );
+          }
+        } catch (error) {
+          log(`Error verifying fix: ${error.message}`, 'error');
         }
-        
-        async function verifyFix() {
-            try {
-                log('Verifying role fix...', 'info');
-                
-                // Check profile API
-                const profileResponse = await fetch(`/api/users/profile/${userId}`, {
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                
-                if (profileResponse.ok) {
-                    const profileData = await profileResponse.json();
-                    log(`Profile API role: ${profileData.role}`, profileData.role === 'admin' ? 'success' : 'error');
-                }
-                
-                // Check users list API
-                const usersResponse = await fetch('/api/users', {
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                
-                if (usersResponse.ok) {
-                    const usersData = await usersResponse.json();
-                    const currentUser = usersData.users?.find(u => u.id === userId);
-                    log(`Users API role: ${currentUser?.role || 'not found'}`, currentUser?.role === 'admin' ? 'success' : 'error');
-                }
-                
-            } catch (error) {
-                log(`Error verifying fix: ${error.message}`, 'error');
-            }
-        }
-        
-        // Auto-check on page load
-        document.addEventListener('DOMContentLoaded', checkCurrentRole);
+      }
+
+      // Auto-check on page load
+      document.addEventListener('DOMContentLoaded', checkCurrentRole);
     </script>
-</body>
+  </body>
 </html>

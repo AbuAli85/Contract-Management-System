@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,20 +13,20 @@ export async function GET(request: NextRequest) {
       vercelEnv: process.env.VERCEL_ENV,
       supabaseUrlLength: process.env.NEXT_PUBLIC_SUPABASE_URL?.length || 0,
       anonKeyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length || 0,
-    }
+    };
 
     return NextResponse.json({
       success: true,
       env: envCheck,
-    })
+    });
   } catch (error) {
-    console.error("Environment debug error:", error)
+    console.error('Environment debug error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to check environment variables",
+        error: 'Failed to check environment variables',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

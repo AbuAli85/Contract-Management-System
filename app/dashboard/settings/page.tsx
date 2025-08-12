@@ -1,70 +1,89 @@
-"use client"
+'use client';
 
 // Force dynamic rendering to avoid build-time Supabase issues
-export const dynamic = "force-dynamic"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+export const dynamic = 'force-dynamic';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 export default function SettingsPage() {
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <Card>
-        <CardHeader className="p-0">
+        <CardHeader className='p-0'>
           <CardTitle>System Settings / إعدادات النظام</CardTitle>
           <CardDescription>
-            Configure application settings and preferences. / تكوين إعدادات وتفضيلات التطبيق.
+            Configure application settings and preferences. / تكوين إعدادات
+            وتفضيلات التطبيق.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="general">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-              <TabsTrigger value="integrations">Integrations</TabsTrigger>
+          <Tabs defaultValue='general'>
+            <TabsList className='grid w-full grid-cols-3'>
+              <TabsTrigger value='general'>General</TabsTrigger>
+              <TabsTrigger value='notifications'>Notifications</TabsTrigger>
+              <TabsTrigger value='integrations'>Integrations</TabsTrigger>
             </TabsList>
-            <TabsContent value="general">
+            <TabsContent value='general'>
               <Card>
                 <CardHeader>
                   <CardTitle>General Settings</CardTitle>
-                  <CardDescription>Manage general application settings.</CardDescription>
+                  <CardDescription>
+                    Manage general application settings.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="appName">Application Name</Label>
-                    <Input id="appName" defaultValue="Contract Management CRM" />
+                <CardContent className='space-y-4'>
+                  <div className='space-y-1'>
+                    <Label htmlFor='appName'>Application Name</Label>
+                    <Input
+                      id='appName'
+                      defaultValue='Contract Management CRM'
+                    />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="defaultCurrency">Default Currency</Label>
-                    <Input id="defaultCurrency" defaultValue="USD" />
+                  <div className='space-y-1'>
+                    <Label htmlFor='defaultCurrency'>Default Currency</Label>
+                    <Input id='defaultCurrency' defaultValue='USD' />
                   </div>
                   <Button>Save Changes</Button>
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="notifications">
+            <TabsContent value='notifications'>
               <Card>
                 <CardHeader>
                   <CardTitle>Notification Settings</CardTitle>
-                  <CardDescription>Configure how you receive notifications.</CardDescription>
+                  <CardDescription>
+                    Configure how you receive notifications.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">Notification preferences will be here.</p>
+                <CardContent className='space-y-4'>
+                  <p className='text-muted-foreground'>
+                    Notification preferences will be here.
+                  </p>
                   <Button>Save Changes</Button>
                 </CardContent>
               </Card>
             </TabsContent>
-            <TabsContent value="integrations">
+            <TabsContent value='integrations'>
               <Card>
                 <CardHeader>
                   <CardTitle>Integrations</CardTitle>
-                  <CardDescription>Manage third-party integrations.</CardDescription>
+                  <CardDescription>
+                    Manage third-party integrations.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Integration settings (e.g., Make.com webhook URL) will be here.
+                <CardContent className='space-y-4'>
+                  <p className='text-muted-foreground'>
+                    Integration settings (e.g., Make.com webhook URL) will be
+                    here.
                   </p>
                   <Button>Save Changes</Button>
                 </CardContent>
@@ -74,5 +93,5 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

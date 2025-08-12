@@ -44,11 +44,11 @@ Our testing strategy follows the testing pyramid approach:
 **Example**:
 
 ```typescript
-describe("Auth Provider", () => {
-  it("should handle auth state changes", async () => {
+describe('Auth Provider', () => {
+  it('should handle auth state changes', async () => {
     // Test implementation
-  })
-})
+  });
+});
 ```
 
 ### 2. Integration Tests
@@ -70,11 +70,11 @@ describe("Auth Provider", () => {
 **Example**:
 
 ```typescript
-describe("Promoter Management - Integration Tests", () => {
-  it("should complete full promoter lifecycle", async () => {
+describe('Promoter Management - Integration Tests', () => {
+  it('should complete full promoter lifecycle', async () => {
     // Test implementation
-  })
-})
+  });
+});
 ```
 
 ### 3. E2E Tests
@@ -96,12 +96,12 @@ describe("Promoter Management - Integration Tests", () => {
 **Example**:
 
 ```typescript
-describe("Authentication Flow", () => {
-  it("should successfully login with valid credentials", () => {
-    cy.login(Cypress.env("TEST_USER_EMAIL"), Cypress.env("TEST_USER_PASSWORD"))
+describe('Authentication Flow', () => {
+  it('should successfully login with valid credentials', () => {
+    cy.login(Cypress.env('TEST_USER_EMAIL'), Cypress.env('TEST_USER_PASSWORD'));
     // Test implementation
-  })
-})
+  });
+});
 ```
 
 ## Test Configuration
@@ -128,12 +128,12 @@ const config = {
     },
   },
   collectCoverageFrom: [
-    "app/**/*.{ts,tsx}",
-    "components/**/*.{ts,tsx}",
-    "lib/**/*.{ts,tsx}",
+    'app/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'lib/**/*.{ts,tsx}',
     // ... more patterns
   ],
-}
+};
 ```
 
 ### Cypress Configuration
@@ -177,9 +177,9 @@ const config = {
 
 ```typescript
 beforeEach(() => {
-  cy.clearTestData()
-  cy.seedTestData()
-})
+  cy.clearTestData();
+  cy.seedTestData();
+});
 ```
 
 ## Custom Commands
@@ -188,25 +188,25 @@ beforeEach(() => {
 
 ```typescript
 // Login with credentials
-cy.login(email, password)
+cy.login(email, password);
 
 // Logout
-cy.logout()
+cy.logout();
 
 // Check permissions
-cy.checkPermissions(["read", "write"])
+cy.checkPermissions(['read', 'write']);
 ```
 
 ### Data Management Commands
 
 ```typescript
 // Create test data
-cy.createTestPromoter()
-cy.createTestContract()
+cy.createTestPromoter();
+cy.createTestContract();
 
 // Clear test data
-cy.clearTestData()
-cy.seedTestData()
+cy.clearTestData();
+cy.seedTestData();
 ```
 
 ### Form Interaction Commands
@@ -214,17 +214,17 @@ cy.seedTestData()
 ```typescript
 // Fill form fields
 cy.fillForm({
-  firstName: "John",
-  lastName: "Doe",
-  email: "john@example.com",
-})
+  firstName: 'John',
+  lastName: 'Doe',
+  email: 'john@example.com',
+});
 
 // Submit form
-cy.submitForm()
+cy.submitForm();
 
 // Verify success/error
-cy.verifySuccess("User created successfully")
-cy.verifyError("Email already exists")
+cy.verifySuccess('User created successfully');
+cy.verifyError('Email already exists');
 ```
 
 ## Coverage Reporting

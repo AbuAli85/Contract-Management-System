@@ -3,6 +3,7 @@
 ## 🚨 MIGRATING 156 PROMOTERS + 16 COMPANIES TO NEW PROJECT
 
 Your old project has valuable data that needs to be preserved:
+
 - **156 promoters**
 - **16 companies (parties)**
 - **All contracts, users, and audit logs**
@@ -18,6 +19,7 @@ node export-old-project-data.js
 ```
 
 This will create:
+
 - `parties-export.json` (16 companies)
 - `promoters-export.json` (156 promoters)
 - `contracts-export.json` (all contracts)
@@ -33,11 +35,13 @@ This will create:
 ### Step 3: Update Import Script
 
 **Edit `import-to-new-project.js`** and replace:
+
 ```javascript
 const NEW_PROJECT_KEY = 'YOUR_NEW_ANON_KEY_HERE';
 ```
 
 **With your actual new project API key:**
+
 ```javascript
 const NEW_PROJECT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
 ```
@@ -59,6 +63,7 @@ node import-to-new-project.js
 ```
 
 This will import:
+
 - ✅ 16 companies to `parties` table
 - ✅ 156 promoters to `promoters` table
 - ✅ All contracts to `contracts` table
@@ -68,12 +73,14 @@ This will import:
 ### Step 6: Update Environment Variables
 
 **Edit your `.env` file** and change:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://ekdjxzhujettocosgzql.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=old_key_here
 ```
 
 **To:**
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://reootcngcptfogfozlmz.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=new_key_here
@@ -97,6 +104,7 @@ After migration, verify:
 ## 🎯 Expected Result
 
 After completing migration:
+
 - ✅ **156 promoters** in new project
 - ✅ **16 companies** in new project
 - ✅ **All contracts** preserved
@@ -116,7 +124,8 @@ After completing migration:
 ## 📞 If You Need Help
 
 If migration fails:
+
 1. Check that new project API key is correct
 2. Verify database schema is restored
 3. Check that JSON export files exist
-4. Look for error messages in console 
+4. Look for error messages in console

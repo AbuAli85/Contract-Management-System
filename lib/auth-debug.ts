@@ -8,8 +8,8 @@ export const authDebug = {
       loading,
       userEmail: user?.email,
       sessionExpiresAt: session?.expires_at,
-      currentTime: Date.now()
-    })
+      currentTime: Date.now(),
+    });
   },
 
   // Log environment variables (safely)
@@ -18,11 +18,11 @@ export const authDebug = {
       hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      urlPreview: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
-      anonKeyPreview: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...',
-      serviceKeyPreview: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
-      nodeEnv: process.env.NODE_ENV
-    })
+      urlPreview: `${process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30)}...`,
+      anonKeyPreview: `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20)}...`,
+      serviceKeyPreview: `${process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20)}...`,
+      nodeEnv: process.env.NODE_ENV,
+    });
   },
 
   // Log login attempt
@@ -30,8 +30,9 @@ export const authDebug = {
     console.log('🔐 Auth Debug - Login Attempt:', {
       email,
       timestamp: new Date().toISOString(),
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
-    })
+      userAgent:
+        typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+    });
   },
 
   // Log login result
@@ -40,8 +41,8 @@ export const authDebug = {
       success,
       error: error?.message || error,
       errorCode: error?.code,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    });
   },
 
   // Log Supabase client state
@@ -50,33 +51,36 @@ export const authDebug = {
       hasClient: !!client,
       hasAuth: !!client?.auth,
       clientType: typeof client,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    });
   },
 
   // Test Supabase connection
   testConnection: async (client: any) => {
     try {
-      console.log('🔐 Auth Debug - Testing Supabase connection...')
-      
+      console.log('🔐 Auth Debug - Testing Supabase connection...');
+
       if (!client) {
-        console.error('❌ No Supabase client available')
-        return false
+        console.error('❌ No Supabase client available');
+        return false;
       }
 
       // Test basic connection
-      const { data, error } = await client.from('users').select('count').limit(1)
-      
+      const { data, error } = await client
+        .from('users')
+        .select('count')
+        .limit(1);
+
       if (error) {
-        console.error('❌ Supabase connection test failed:', error.message)
-        return false
+        console.error('❌ Supabase connection test failed:', error.message);
+        return false;
       }
 
-      console.log('✅ Supabase connection test successful')
-      return true
+      console.log('✅ Supabase connection test successful');
+      return true;
     } catch (error) {
-      console.error('❌ Supabase connection test error:', error)
-      return false
+      console.error('❌ Supabase connection test error:', error);
+      return false;
     }
-  }
-} 
+  },
+};

@@ -1,24 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextRequest, NextResponse } from 'next/server';
 
 // Force dynamic rendering for this API route
-export const dynamic = "force-dynamic"
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const promoterId = searchParams.get("promoterId") || "1"
+    const { searchParams } = new URL(request.url);
+    const promoterId = searchParams.get('promoterId') || '1';
 
     // Mock data for promoter dashboard
     const mockPromoterData = {
       promoter: {
         id: promoterId,
-        name: "Sarah Johnson",
-        email: "sarah.johnson@example.com",
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@example.com',
         avatar:
-          "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
-        role: "Senior Promoter",
-        joinDate: "2023-03-15",
-        status: "active",
+          'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
+        role: 'Senior Promoter',
+        joinDate: '2023-03-15',
+        status: 'active',
         rating: 4.9,
         totalTasks: 156,
         completedTasks: 142,
@@ -29,39 +29,39 @@ export async function GET(request: NextRequest) {
         achievements: [
           {
             id: 1,
-            name: "Top Performer",
-            icon: "🏆",
-            description: "Achieved highest performance rating",
-            date: "2024-06-01",
+            name: 'Top Performer',
+            icon: '🏆',
+            description: 'Achieved highest performance rating',
+            date: '2024-06-01',
           },
           {
             id: 2,
-            name: "Perfect Attendance",
-            icon: "📅",
-            description: "30 days of perfect attendance",
-            date: "2024-05-15",
+            name: 'Perfect Attendance',
+            icon: '📅',
+            description: '30 days of perfect attendance',
+            date: '2024-05-15',
           },
           {
             id: 3,
-            name: "Client Favorite",
-            icon: "⭐",
-            description: "Highest client satisfaction rating",
-            date: "2024-04-20",
+            name: 'Client Favorite',
+            icon: '⭐',
+            description: 'Highest client satisfaction rating',
+            date: '2024-04-20',
           },
           {
             id: 4,
-            name: "Task Master",
-            icon: "✅",
-            description: "Completed 100+ tasks",
-            date: "2024-03-10",
+            name: 'Task Master',
+            icon: '✅',
+            description: 'Completed 100+ tasks',
+            date: '2024-03-10',
           },
         ],
         skills: [
-          "Product Demonstrations",
-          "Client Relations",
-          "Sales",
-          "Event Management",
-          "Social Media Marketing",
+          'Product Demonstrations',
+          'Client Relations',
+          'Sales',
+          'Event Management',
+          'Social Media Marketing',
         ],
         leaderboardRank: 1,
         performanceScore: 98,
@@ -69,67 +69,67 @@ export async function GET(request: NextRequest) {
       tasks: [
         {
           id: 1,
-          title: "Product Launch Event",
-          description: "Lead product demonstration at tech conference",
-          dueDate: "2024-06-25",
-          priority: "high",
-          status: "in_progress",
+          title: 'Product Launch Event',
+          description: 'Lead product demonstration at tech conference',
+          dueDate: '2024-06-25',
+          priority: 'high',
+          status: 'in_progress',
           progress: 75,
-          category: "Event",
+          category: 'Event',
         },
         {
           id: 2,
-          title: "Client Meeting - ABC Corp",
-          description: "Present quarterly performance report",
-          dueDate: "2024-06-22",
-          priority: "medium",
-          status: "pending",
+          title: 'Client Meeting - ABC Corp',
+          description: 'Present quarterly performance report',
+          dueDate: '2024-06-22',
+          priority: 'medium',
+          status: 'pending',
           progress: 0,
-          category: "Meeting",
+          category: 'Meeting',
         },
         {
           id: 3,
-          title: "Social Media Campaign",
-          description: "Create and manage Instagram campaign",
-          dueDate: "2024-06-28",
-          priority: "low",
-          status: "completed",
+          title: 'Social Media Campaign',
+          description: 'Create and manage Instagram campaign',
+          dueDate: '2024-06-28',
+          priority: 'low',
+          status: 'completed',
           progress: 100,
-          category: "Marketing",
+          category: 'Marketing',
         },
         {
           id: 4,
-          title: "Training Session",
-          description: "Train new team members on product features",
-          dueDate: "2024-06-30",
-          priority: "medium",
-          status: "pending",
+          title: 'Training Session',
+          description: 'Train new team members on product features',
+          dueDate: '2024-06-30',
+          priority: 'medium',
+          status: 'pending',
           progress: 0,
-          category: "Training",
+          category: 'Training',
         },
       ],
       recentActivity: [
         {
           id: 1,
-          type: "task_completed",
-          title: "Task Completed",
-          description: "Social Media Campaign finished successfully",
+          type: 'task_completed',
+          title: 'Task Completed',
+          description: 'Social Media Campaign finished successfully',
           timestamp: new Date().toISOString(),
           points: 50,
         },
         {
           id: 2,
-          type: "achievement_earned",
-          title: "Achievement Earned",
+          type: 'achievement_earned',
+          title: 'Achievement Earned',
           description: "Earned 'Perfect Attendance' badge",
           timestamp: new Date(Date.now() - 3600000).toISOString(),
           points: 100,
         },
         {
           id: 3,
-          type: "client_feedback",
-          title: "Positive Feedback",
-          description: "Received 5-star rating from client",
+          type: 'client_feedback',
+          title: 'Positive Feedback',
+          description: 'Received 5-star rating from client',
           timestamp: new Date(Date.now() - 7200000).toISOString(),
           points: 25,
         },
@@ -153,37 +153,37 @@ export async function GET(request: NextRequest) {
       upcomingEvents: [
         {
           id: 1,
-          title: "Tech Conference Demo",
-          date: "2024-06-25",
-          time: "10:00 AM",
-          location: "Convention Center",
-          type: "Product Demo",
+          title: 'Tech Conference Demo',
+          date: '2024-06-25',
+          time: '10:00 AM',
+          location: 'Convention Center',
+          type: 'Product Demo',
         },
         {
           id: 2,
-          title: "Team Training",
-          date: "2024-06-30",
-          time: "2:00 PM",
-          location: "Office",
-          type: "Training",
+          title: 'Team Training',
+          date: '2024-06-30',
+          time: '2:00 PM',
+          location: 'Office',
+          type: 'Training',
         },
       ],
-    }
+    };
 
     return NextResponse.json({
       success: true,
       data: mockPromoterData,
       timestamp: new Date().toISOString(),
-    })
+    });
   } catch (error) {
-    console.error("Promoter dashboard error:", error)
+    console.error('Promoter dashboard error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to fetch promoter dashboard data",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to fetch promoter dashboard data',
+        message: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

@@ -81,23 +81,25 @@ ANALYZE=true pnpm run build
 
 ```javascript
 // In browser console, generate test contracts:
-const generateTestContracts = (count) => {
+const generateTestContracts = count => {
   return Array.from({ length: count }, (_, i) => ({
     id: `contract-${i}`,
-    contract_number: `CON-${String(i).padStart(6, "0")}`,
+    contract_number: `CON-${String(i).padStart(6, '0')}`,
     first_party_name_en: `Client ${i}`,
     second_party_name_en: `Employer ${i}`,
     promoter_name_en: `Promoter ${i}`,
     job_title: `Job Title ${i}`,
     contract_start_date: new Date().toISOString(),
-    contract_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    contract_end_date: new Date(
+      Date.now() + 365 * 24 * 60 * 60 * 1000
+    ).toISOString(),
     contract_value: Math.floor(Math.random() * 100000) + 10000,
-    status: ["active", "draft", "expired"][Math.floor(Math.random() * 3)],
-  }))
-}
+    status: ['active', 'draft', 'expired'][Math.floor(Math.random() * 3)],
+  }));
+};
 
 // Generate 1000 test contracts
-window.testContracts = generateTestContracts(1000)
+window.testContracts = generateTestContracts(1000);
 ```
 
 ### **Step 2: Test Virtual Scrolling Performance**
@@ -128,15 +130,15 @@ window.testContracts = generateTestContracts(1000)
 
 ```javascript
 // Add to your main component
-import { Profiler } from "react"
+import { Profiler } from 'react';
 
 function onRenderCallback(id, phase, actualDuration) {
-  console.log(`Component ${id} took ${actualDuration}ms to ${phase}`)
+  console.log(`Component ${id} took ${actualDuration}ms to ${phase}`);
 }
 
-;<Profiler id="App" onRender={onRenderCallback}>
+<Profiler id='App' onRender={onRenderCallback}>
   <YourApp />
-</Profiler>
+</Profiler>;
 ```
 
 ### **Bundle Size Monitoring**
@@ -161,20 +163,20 @@ module.exports = withBundleAnalyzer({
 // Add to your app for monitoring
 const measurePerformance = () => {
   // First Contentful Paint
-  const fcp = performance.getEntriesByName("first-contentful-paint")[0]
-  console.log("FCP:", fcp.startTime)
+  const fcp = performance.getEntriesByName('first-contentful-paint')[0];
+  console.log('FCP:', fcp.startTime);
 
   // Largest Contentful Paint
-  const lcp = performance.getEntriesByName("largest-contentful-paint")[0]
-  console.log("LCP:", lcp.startTime)
+  const lcp = performance.getEntriesByName('largest-contentful-paint')[0];
+  console.log('LCP:', lcp.startTime);
 
   // Time to Interactive
-  const tti = performance.getEntriesByName("time-to-interactive")[0]
-  console.log("TTI:", tti.startTime)
-}
+  const tti = performance.getEntriesByName('time-to-interactive')[0];
+  console.log('TTI:', tti.startTime);
+};
 
 // Call after page load
-window.addEventListener("load", measurePerformance)
+window.addEventListener('load', measurePerformance);
 ```
 
 ## 🎯 **5. Success Criteria**

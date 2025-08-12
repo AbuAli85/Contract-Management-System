@@ -1,46 +1,48 @@
-import { render, fireEvent, waitFor, screen } from "@testing-library/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { useDeleteContractMutation } from "@/hooks/use-contracts"
+import { render, fireEvent, waitFor, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useDeleteContractMutation } from '@/hooks/use-contracts';
 
-const toastMock = jest.fn()
+const toastMock = jest.fn();
 
-jest.mock("@/hooks/use-toast", () => ({
+jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: toastMock,
   }),
-}))
+}));
 
-const deleteContractMock = jest.fn()
+const deleteContractMock = jest.fn();
 
-jest.mock("@/app/actions/contracts", () => ({
+jest.mock('@/app/actions/contracts', () => ({
   deleteContract: deleteContractMock,
-}))
+}));
 
-describe("useDeleteContractMutation", () => {
+describe('useDeleteContractMutation', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-  })
+    jest.clearAllMocks();
+  });
 
-  it("shows toast when deletion fails", async () => {
-    deleteContractMock.mockRejectedValue(new Error("Delete failed"))
+  it('shows toast when deletion fails', async () => {
+    deleteContractMock.mockRejectedValue(new Error('Delete failed'));
 
-    const queryClient = new QueryClient()
+    const queryClient = new QueryClient();
 
     const TestComponent = () => {
-      const mutation = useDeleteContractMutation()
-      return <button onClick={() => mutation.mutate("123")}>Delete</button>
-    }
+      const mutation = useDeleteContractMutation();
+      return <button onClick={() => mutation.mutate('123')}>Delete</button>;
+    };
 
     render(
       <QueryClientProvider client={queryClient}>
         <TestComponent />
-      </QueryClientProvider>,
-    )
+      </QueryClientProvider>
+    );
 
-    fireEvent.click(screen.getByRole("button"))
+    fireEvent.click(screen.getByRole('button'));
 
     await waitFor(() => {
-      expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ variant: "destructive" }))
-    })
-  })
-})
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'destructive' })
+      );
+    });
+  });
+});

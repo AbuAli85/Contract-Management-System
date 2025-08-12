@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,36 +16,36 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            isJson: true
+            isJson: true,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data.substring(0, 500) + '...',
-            isJson: false
+            isJson: false,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -63,14 +64,14 @@ async function testDashboardStats() {
 
   try {
     const result = await makeRequest(`${BASE_URL}/api/dashboard/stats`);
-    
+
     console.log(`Status: ${result.status}`);
-    
+
     if (result.status === 200) {
       console.log('✅ Success! Dashboard stats endpoint is working.');
       console.log('\n📊 Data received:');
       console.log(JSON.stringify(result.data, null, 2));
-      
+
       // Check if we have real data
       if (result.data.totalPromoters > 0 || result.data.totalParties > 0) {
         console.log('\n🎉 Real data is being returned!');
@@ -92,4 +93,4 @@ async function testDashboardStats() {
   }
 }
 
-testDashboardStats(); 
+testDashboardStats();

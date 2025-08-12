@@ -253,9 +253,9 @@ PUT /api/workflow/config/{configId}
 ```typescript
 // components/approval/ApprovalDashboard.tsx
 interface ApprovalDashboardProps {
-  userRole: "legal_reviewer" | "hr_reviewer" | "final_approver" | "signatory"
-  pendingReviews: ContractReview[]
-  completedReviews: ContractReview[]
+  userRole: 'legal_reviewer' | 'hr_reviewer' | 'final_approver' | 'signatory';
+  pendingReviews: ContractReview[];
+  completedReviews: ContractReview[];
 }
 
 // Features:
@@ -270,11 +270,11 @@ interface ApprovalDashboardProps {
 ```typescript
 // components/approval/ContractReviewForm.tsx
 interface ContractReviewFormProps {
-  contractId: string
-  reviewStage: string
-  onApprove: (comments: string) => void
-  onReject: (reason: string) => void
-  onRequestChanges: (changes: string) => void
+  contractId: string;
+  reviewStage: string;
+  onApprove: (comments: string) => void;
+  onReject: (reason: string) => void;
+  onRequestChanges: (changes: string) => void;
 }
 
 // Features:
@@ -289,9 +289,9 @@ interface ContractReviewFormProps {
 ```typescript
 // components/approval/WorkflowStatusTracker.tsx
 interface WorkflowStatusTrackerProps {
-  contractId: string
-  currentStatus: string
-  approvalHistory: ApprovalRecord[]
+  contractId: string;
+  currentStatus: string;
+  approvalHistory: ApprovalRecord[];
 }
 
 // Features:
@@ -308,10 +308,19 @@ interface WorkflowStatusTrackerProps {
 ```typescript
 // lib/notifications/approval-notifications.ts
 export class ApprovalNotificationService {
-  static async notifyReviewer(contractId: string, reviewerId: string): Promise<void>
-  static async notifyApprovalComplete(contractId: string): Promise<void>
-  static async notifyEscalation(contractId: string, escalatedTo: string[]): Promise<void>
-  static async notifyOverdue(contractId: string, reviewerId: string): Promise<void>
+  static async notifyReviewer(
+    contractId: string,
+    reviewerId: string
+  ): Promise<void>;
+  static async notifyApprovalComplete(contractId: string): Promise<void>;
+  static async notifyEscalation(
+    contractId: string,
+    escalatedTo: string[]
+  ): Promise<void>;
+  static async notifyOverdue(
+    contractId: string,
+    reviewerId: string
+  ): Promise<void>;
 }
 ```
 
@@ -320,9 +329,18 @@ export class ApprovalNotificationService {
 ```typescript
 // lib/notifications/slack-notifications.ts
 export class SlackApprovalNotifications {
-  static async sendReviewRequest(contract: Contract, reviewer: User): Promise<void>
-  static async sendApprovalUpdate(contract: Contract, approval: ApprovalRecord): Promise<void>
-  static async sendEscalationAlert(contract: Contract, daysOverdue: number): Promise<void>
+  static async sendReviewRequest(
+    contract: Contract,
+    reviewer: User
+  ): Promise<void>;
+  static async sendApprovalUpdate(
+    contract: Contract,
+    approval: ApprovalRecord
+  ): Promise<void>;
+  static async sendEscalationAlert(
+    contract: Contract,
+    daysOverdue: number
+  ): Promise<void>;
 }
 ```
 
@@ -359,12 +377,12 @@ FOR INSERT WITH CHECK (
 ```typescript
 // lib/auth/approval-permissions.ts
 export const APPROVAL_PERMISSIONS = {
-  legal_reviewer: ["view_contracts", "approve_legal_review"],
-  hr_reviewer: ["view_contracts", "approve_hr_review"],
-  final_approver: ["view_contracts", "approve_final", "override_approvals"],
-  signatory: ["view_contracts", "sign_contracts"],
-  admin: ["view_contracts", "manage_workflow", "assign_reviewers"],
-}
+  legal_reviewer: ['view_contracts', 'approve_legal_review'],
+  hr_reviewer: ['view_contracts', 'approve_hr_review'],
+  final_approver: ['view_contracts', 'approve_final', 'override_approvals'],
+  signatory: ['view_contracts', 'sign_contracts'],
+  admin: ['view_contracts', 'manage_workflow', 'assign_reviewers'],
+};
 ```
 
 ### Testing Strategy
@@ -373,25 +391,25 @@ export const APPROVAL_PERMISSIONS = {
 
 ```typescript
 // __tests__/approval-workflow.test.ts
-describe("Approval Workflow", () => {
-  test("should transition from draft to legal review")
-  test("should allow parallel legal and HR reviews")
-  test("should escalate overdue reviews")
-  test("should enforce role-based permissions")
-  test("should maintain audit trail")
-})
+describe('Approval Workflow', () => {
+  test('should transition from draft to legal review');
+  test('should allow parallel legal and HR reviews');
+  test('should escalate overdue reviews');
+  test('should enforce role-based permissions');
+  test('should maintain audit trail');
+});
 ```
 
 #### 2. Integration Tests
 
 ```typescript
 // __tests__/approval-api.test.ts
-describe("Approval API", () => {
-  test("POST /api/contracts/{id}/submit-for-review")
-  test("POST /api/contracts/{id}/approve")
-  test("GET /api/reviews/pending")
-  test("workflow state transitions")
-})
+describe('Approval API', () => {
+  test('POST /api/contracts/{id}/submit-for-review');
+  test('POST /api/contracts/{id}/approve');
+  test('GET /api/reviews/pending');
+  test('workflow state transitions');
+});
 ```
 
 ### Deployment Plan

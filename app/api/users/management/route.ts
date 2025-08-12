@@ -9,8 +9,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
-    persistSession: false
-  }
+    persistSession: false,
+  },
 });
 
 // User management operations
@@ -26,7 +26,8 @@ export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
     // Build query
     let query = supabase
       .from('users')
-      .select(`
+      .select(
+        `
         id,
         email,
         role,
@@ -36,7 +37,8 @@ export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
         updated_at,
         profiles!inner(id, email, role, full_name),
         user_roles!inner(id, user_id, role)
-      `)
+      `
+      )
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -58,7 +60,10 @@ export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
 
     if (error) {
       console.error('Error fetching users:', error);
-      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch users' },
+        { status: 500 }
+      );
     }
 
     // Get total count for pagination
@@ -72,13 +77,15 @@ export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
         page,
         limit,
         total: totalCount || 0,
-        pages: Math.ceil((totalCount || 0) / limit)
-      }
+        pages: Math.ceil((totalCount || 0) / limit),
+      },
     });
-
   } catch (error) {
     console.error('Error in GET /api/users/management:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 });
 
@@ -89,17 +96,23 @@ export const POST = withRBAC(['admin'], async (req: Request) => {
 
     // Validate required fields
     if (!email || !role || !full_name || !password) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: email, role, full_name, password' 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Missing required fields: email, role, full_name, password',
+        },
+        { status: 400 }
+      );
     }
 
     // Validate role
     const validRoles = ['admin', 'manager', 'user', 'provider', 'client'];
     if (!validRoles.includes(role)) {
-      return NextResponse.json({ 
-        error: `Invalid role. Must be one of: ${validRoles.join(', ')}` 
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
+        },
+        { status: 400 }
+      );
     }
 
     // Check if user already exists
@@ -110,9 +123,12 @@ export const POST = withRBAC(['admin'], async (req: Request) => {
       .single();
 
     if (existingUser) {
-      return NextResponse.json({ 
-        error: 'User with this email already exists' 
-      }, { status: 409 });
+      return NextResponse.json(
+        {
+          error: 'User with this email already exists',
+        },
+        { status: 409 }
+      );
     }
 
     // Create user in auth.users (this will be handled by Supabase auth)
@@ -123,60 +139,68 @@ export const POST = withRBAC(['admin'], async (req: Request) => {
         email,
         role,
         full_name,
-        status
+        status,
       })
       .select()
       .single();
 
     if (createError) {
       console.error('Error creating user:', createError);
-      return NextResponse.json({ 
-        error: 'Failed to create user' 
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'Failed to create user',
+        },
+        { status: 500 }
+      );
     }
 
     // Create profile record
     const profileRole = ['provider', 'client'].includes(role) ? 'user' : role;
-    await supabase
-      .from('profiles')
-      .upsert({
+    await supabase.from('profiles').upsert(
+      {
         id: newUser.id,
         email,
         full_name,
-        role: profileRole
-      }, {
-        onConflict: 'id'
-      });
+        role: profileRole,
+      },
+      {
+        onConflict: 'id',
+      }
+    );
 
     // Create user_roles record
     const userRoleRole = ['provider', 'client'].includes(role) ? 'user' : role;
-    await supabase
-      .from('user_roles')
-      .upsert({
+    await supabase.from('user_roles').upsert(
+      {
         user_id: newUser.id,
-        role: userRoleRole
-      }, {
-        onConflict: 'user_id,role'
-      });
+        role: userRoleRole,
+      },
+      {
+        onConflict: 'user_id,role',
+      }
+    );
 
     // Log the action
-    await supabase
-      .from('audit_logs')
-      .insert({
-        user_id: newUser.id,
-        action: 'USER_CREATED',
-        details: { email, role, full_name, status },
-        ip_address: req.headers.get('x-forwarded-for') || 'unknown'
-      });
+    await supabase.from('audit_logs').insert({
+      user_id: newUser.id,
+      action: 'USER_CREATED',
+      details: { email, role, full_name, status },
+      ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+    });
 
-    return NextResponse.json({ 
-      message: 'User created successfully',
-      user: newUser
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        message: 'User created successfully',
+        user: newUser,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error in POST /api/users/management:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 });
 
@@ -186,7 +210,10 @@ export const PUT = withRBAC(['admin', 'manager'], async (req: Request) => {
     const { id, email, role, full_name, status } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
     // Get current user data
@@ -208,7 +235,10 @@ export const PUT = withRBAC(['admin', 'manager'], async (req: Request) => {
     if (status !== undefined) updateData.status = status;
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
     }
 
     // Update user
@@ -221,61 +251,68 @@ export const PUT = withRBAC(['admin', 'manager'], async (req: Request) => {
 
     if (updateError) {
       console.error('Error updating user:', updateError);
-      return NextResponse.json({ 
-        error: 'Failed to update user' 
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'Failed to update user',
+        },
+        { status: 500 }
+      );
     }
 
     // Update related tables if role changed
     if (role !== undefined && role !== currentUser.role) {
       const profileRole = ['provider', 'client'].includes(role) ? 'user' : role;
-      const userRoleRole = ['provider', 'client'].includes(role) ? 'user' : role;
+      const userRoleRole = ['provider', 'client'].includes(role)
+        ? 'user'
+        : role;
 
       // Update profiles
-      await supabase
-        .from('profiles')
-        .upsert({
+      await supabase.from('profiles').upsert(
+        {
           id,
           email: updatedUser.email,
           full_name: updatedUser.full_name,
-          role: profileRole
-        }, {
-          onConflict: 'id'
-        });
+          role: profileRole,
+        },
+        {
+          onConflict: 'id',
+        }
+      );
 
       // Update user_roles
-      await supabase
-        .from('user_roles')
-        .upsert({
+      await supabase.from('user_roles').upsert(
+        {
           user_id: id,
-          role: userRoleRole
-        }, {
-          onConflict: 'user_id,role'
-        });
+          role: userRoleRole,
+        },
+        {
+          onConflict: 'user_id,role',
+        }
+      );
     }
 
     // Log the action
-    await supabase
-      .from('audit_logs')
-      .insert({
-        user_id: id,
-        action: 'USER_UPDATED',
-        details: { 
-          previous: currentUser, 
-          current: updatedUser,
-          changed_fields: Object.keys(updateData)
-        },
-        ip_address: req.headers.get('x-forwarded-for') || 'unknown'
-      });
-
-    return NextResponse.json({ 
-      message: 'User updated successfully',
-      user: updatedUser
+    await supabase.from('audit_logs').insert({
+      user_id: id,
+      action: 'USER_UPDATED',
+      details: {
+        previous: currentUser,
+        current: updatedUser,
+        changed_fields: Object.keys(updateData),
+      },
+      ip_address: req.headers.get('x-forwarded-for') || 'unknown',
     });
 
+    return NextResponse.json({
+      message: 'User updated successfully',
+      user: updatedUser,
+    });
   } catch (error) {
     console.error('Error in PUT /api/users/management:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 });
 
@@ -285,7 +322,10 @@ export const DELETE = withRBAC(['admin'], async (req: Request) => {
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
     }
 
     // Check if user exists
@@ -310,35 +350,36 @@ export const DELETE = withRBAC(['admin'], async (req: Request) => {
       // Soft delete - mark as deleted instead of removing
       const { error: softDeleteError } = await supabase
         .from('users')
-        .update({ 
+        .update({
           status: 'deleted',
-          deleted_at: new Date().toISOString()
+          deleted_at: new Date().toISOString(),
         })
         .eq('id', id);
 
       if (softDeleteError) {
         console.error('Error soft deleting user:', softDeleteError);
-        return NextResponse.json({ 
-          error: 'Failed to delete user' 
-        }, { status: 500 });
+        return NextResponse.json(
+          {
+            error: 'Failed to delete user',
+          },
+          { status: 500 }
+        );
       }
 
       // Log the action
-      await supabase
-        .from('audit_logs')
-        .insert({
-          user_id: id,
-          action: 'USER_SOFT_DELETED',
-          details: { 
-            reason: 'Has dependencies in provider_services',
-            dependencies_count: dependencies.length
-          },
-          ip_address: req.headers.get('x-forwarded-for') || 'unknown'
-        });
+      await supabase.from('audit_logs').insert({
+        user_id: id,
+        action: 'USER_SOFT_DELETED',
+        details: {
+          reason: 'Has dependencies in provider_services',
+          dependencies_count: dependencies.length,
+        },
+        ip_address: req.headers.get('x-forwarded-for') || 'unknown',
+      });
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         message: 'User soft deleted due to dependencies',
-        user_id: id
+        user_id: id,
       });
     }
 
@@ -346,7 +387,7 @@ export const DELETE = withRBAC(['admin'], async (req: Request) => {
     // Delete in reverse order to respect foreign keys
     await supabase.from('user_roles').delete().eq('user_id', id);
     await supabase.from('profiles').delete().eq('id', id);
-    
+
     const { error: deleteError } = await supabase
       .from('users')
       .delete()
@@ -354,31 +395,34 @@ export const DELETE = withRBAC(['admin'], async (req: Request) => {
 
     if (deleteError) {
       console.error('Error deleting user:', deleteError);
-      return NextResponse.json({ 
-        error: 'Failed to delete user' 
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          error: 'Failed to delete user',
+        },
+        { status: 500 }
+      );
     }
 
     // Log the action
-    await supabase
-      .from('audit_logs')
-      .insert({
-        user_id: id,
-        action: 'USER_DELETED',
-        details: { 
-          email: user.email,
-          role: user.role
-        },
-        ip_address: req.headers.get('x-forwarded-for') || 'unknown'
-      });
-
-    return NextResponse.json({ 
-      message: 'User deleted successfully',
-      user_id: id
+    await supabase.from('audit_logs').insert({
+      user_id: id,
+      action: 'USER_DELETED',
+      details: {
+        email: user.email,
+        role: user.role,
+      },
+      ip_address: req.headers.get('x-forwarded-for') || 'unknown',
     });
 
+    return NextResponse.json({
+      message: 'User deleted successfully',
+      user_id: id,
+    });
   } catch (error) {
     console.error('Error in DELETE /api/users/management:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 });

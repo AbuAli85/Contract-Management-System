@@ -12,42 +12,46 @@ const services = {
     name: 'Supabase',
     url: 'https://reootcngcptfogfozlmz.supabase.co',
     expectedHeaders: ['strict-transport-security', 'x-content-type-options'],
-    securityFeatures: ['HTTPS', 'HSTS', 'CORS']
+    securityFeatures: ['HTTPS', 'HSTS', 'CORS'],
   },
   makecom: {
     name: 'Make.com',
     url: 'https://hook.eu2.make.com',
     expectedHeaders: ['strict-transport-security'],
-    securityFeatures: ['HTTPS', 'HSTS', 'EU Region']
+    securityFeatures: ['HTTPS', 'HSTS', 'EU Region'],
   },
   vercel: {
     name: 'Vercel (Your Domain)',
     url: 'https://portal.thesmartpro.io',
-    expectedHeaders: ['strict-transport-security', 'x-frame-options', 'x-content-type-options'],
-    securityFeatures: ['HTTPS', 'HSTS', 'CSP', 'XSS Protection']
-  }
+    expectedHeaders: [
+      'strict-transport-security',
+      'x-frame-options',
+      'x-content-type-options',
+    ],
+    securityFeatures: ['HTTPS', 'HSTS', 'CSP', 'XSS Protection'],
+  },
 };
 
 async function testServiceSecurity(service, config) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     console.log(`🧪 Testing ${service}...`);
-    
+
     const url = new URL(config.url);
     const options = {
       hostname: url.hostname,
       port: 443,
       path: '/',
       method: 'HEAD',
-      timeout: 5000
+      timeout: 5000,
     };
 
-    const req = https.request(options, (res) => {
+    const req = https.request(options, res => {
       const results = {
         name: config.name,
         status: res.statusCode,
         headers: res.headers,
         securityScore: 0,
-        findings: []
+        findings: [],
       };
 
       // Check HTTPS
@@ -71,7 +75,10 @@ async function testServiceSecurity(service, config) {
       // Check HSTS
       if (res.headers['strict-transport-security']) {
         const hsts = res.headers['strict-transport-security'];
-        if (hsts.includes('max-age') && parseInt(hsts.match(/max-age=(\d+)/)?.[1] || '0') > 86400) {
+        if (
+          hsts.includes('max-age') &&
+          parseInt(hsts.match(/max-age=(\d+)/)?.[1] || '0') > 86400
+        ) {
           results.securityScore += 1;
           results.findings.push('✅ Strong HSTS policy');
         } else {
@@ -89,14 +96,14 @@ async function testServiceSecurity(service, config) {
       resolve(results);
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       console.log(`❌ Error testing ${service}: ${error.message}`);
       resolve({
         name: config.name,
         status: 'Error',
         error: error.message,
         securityScore: 0,
-        findings: [`❌ Connection failed: ${error.message}`]
+        findings: [`❌ Connection failed: ${error.message}`],
       });
     });
 
@@ -106,7 +113,7 @@ async function testServiceSecurity(service, config) {
         name: config.name,
         status: 'Timeout',
         securityScore: 0,
-        findings: ['❌ Connection timeout']
+        findings: ['❌ Connection timeout'],
       });
     });
 
@@ -116,17 +123,19 @@ async function testServiceSecurity(service, config) {
 
 async function validateEnvironmentSecurity() {
   console.log('🔑 Environment Variable Security Check:\n');
-  
+
   const securityChecks = [
     {
       name: 'Supabase Service Role Key',
       check: () => {
         // In a real environment, this would check if the key is properly secured
         // For demo, we'll check if it's not in the current process.env
-        return !process.env.SUPABASE_SERVICE_ROLE_KEY || 
-               process.env.SUPABASE_SERVICE_ROLE_KEY.length > 100;
+        return (
+          !process.env.SUPABASE_SERVICE_ROLE_KEY ||
+          process.env.SUPABASE_SERVICE_ROLE_KEY.length > 100
+        );
       },
-      recommendation: 'Store in Vercel environment variables, not in files'
+      recommendation: 'Store in Vercel environment variables, not in files',
     },
     {
       name: 'Data Encryption Key',
@@ -134,16 +143,19 @@ async function validateEnvironmentSecurity() {
         const key = process.env.DATA_ENCRYPTION_KEY;
         return !key || (key.length >= 32 && /^[a-f0-9]+$/i.test(key));
       },
-      recommendation: 'Use 32+ character hex string, stored securely'
+      recommendation: 'Use 32+ character hex string, stored securely',
     },
     {
       name: 'Webhook Secrets',
       check: () => {
         // Check if webhook secrets are properly secured
-        return !process.env.MAKE_WEBHOOK_SECRET || process.env.MAKE_WEBHOOK_SECRET.length >= 20;
+        return (
+          !process.env.MAKE_WEBHOOK_SECRET ||
+          process.env.MAKE_WEBHOOK_SECRET.length >= 20
+        );
       },
-      recommendation: 'Use strong, unique secrets for each webhook'
-    }
+      recommendation: 'Use strong, unique secrets for each webhook',
+    },
   ];
 
   securityChecks.forEach(check => {
@@ -157,7 +169,7 @@ async function validateEnvironmentSecurity() {
 
 function generateSecurityReport(results) {
   console.log('\n📊 Security Assessment Report:\n');
-  
+
   let totalScore = 0;
   let maxScore = 0;
 
@@ -173,8 +185,10 @@ function generateSecurityReport(results) {
     maxScore += maxPossible;
 
     console.log(`🔍 ${result.name}:`);
-    console.log(`   Score: ${score}/${maxPossible} (${((score/maxPossible)*100).toFixed(1)}%)`);
-    
+    console.log(
+      `   Score: ${score}/${maxPossible} (${((score / maxPossible) * 100).toFixed(1)}%)`
+    );
+
     result.findings.forEach(finding => {
       console.log(`   ${finding}`);
     });
@@ -186,11 +200,15 @@ function generateSecurityReport(results) {
 
   // Security recommendations based on score
   if (overallScore >= 90) {
-    console.log('🟢 Excellent security posture! Your services are well-protected.');
+    console.log(
+      '🟢 Excellent security posture! Your services are well-protected.'
+    );
   } else if (overallScore >= 75) {
     console.log('🟡 Good security posture with room for improvement.');
   } else {
-    console.log('🔴 Security improvements needed. Review recommendations above.');
+    console.log(
+      '🔴 Security improvements needed. Review recommendations above.'
+    );
   }
 }
 
@@ -222,7 +240,9 @@ async function performSecurityValidation() {
   console.log('5. 🔒 Implement webhook signature validation');
   console.log('6. 📝 Regular security audits and key rotation');
 
-  console.log('\n✨ Your third-party services have strong security foundations!');
+  console.log(
+    '\n✨ Your third-party services have strong security foundations!'
+  );
   console.log('Focus on proper key management for optimal security.');
 }
 

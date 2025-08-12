@@ -107,15 +107,17 @@ The dashboard displays feature cards based on user permissions:
 ```typescript
 const featureCards = [
   {
-    title: "Generate Contract",
-    permission: "contract:generate",
+    title: 'Generate Contract',
+    permission: 'contract:generate',
     icon: FilePlus,
-    href: "/generate-contract",
+    href: '/generate-contract',
   },
   // ... more features
-]
+];
 
-const filteredFeatures = featureCards.filter((feature) => permissions.can(feature.permission))
+const filteredFeatures = featureCards.filter(feature =>
+  permissions.can(feature.permission)
+);
 ```
 
 ## 🚀 Usage Examples
@@ -201,17 +203,17 @@ import { MobileSidebar } from "@/components/permission-aware-sidebar"
 ```typescript
 const navigationSections = [
   {
-    title: "New Section",
+    title: 'New Section',
     items: [
       {
-        href: "/new-feature",
-        label: "New Feature",
+        href: '/new-feature',
+        label: 'New Feature',
         icon: NewIcon,
-        permission: "new:feature",
+        permission: 'new:feature',
       },
     ],
   },
-]
+];
 ```
 
 2. **Add to Feature Cards**:
@@ -219,12 +221,12 @@ const navigationSections = [
 ```typescript
 const featureCards = [
   {
-    title: "New Feature",
-    permission: "new:feature",
+    title: 'New Feature',
+    permission: 'new:feature',
     icon: NewIcon,
-    href: "/new-feature",
+    href: '/new-feature',
   },
-]
+];
 ```
 
 3. **Add to Quick Actions**:
@@ -232,12 +234,12 @@ const featureCards = [
 ```typescript
 const quickActions = [
   {
-    label: "New Action",
+    label: 'New Action',
     icon: NewIcon,
-    href: "/new-action",
-    permission: "new:action",
+    href: '/new-action',
+    permission: 'new:action',
   },
-]
+];
 ```
 
 ### **Customizing Permissions**

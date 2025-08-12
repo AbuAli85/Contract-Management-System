@@ -1,23 +1,29 @@
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/client';
 
 export interface NotificationData {
-  user_id: string
-  title: string
-  message: string
-  type: 'booking_created' | 'booking_updated' | 'payment_received' | 'review_received' | 'system' | 'reminder'
-  metadata?: Record<string, any>
-  expires_hours?: number
+  user_id: string;
+  title: string;
+  message: string;
+  type:
+    | 'booking_created'
+    | 'booking_updated'
+    | 'payment_received'
+    | 'review_received'
+    | 'system'
+    | 'reminder';
+  metadata?: Record<string, any>;
+  expires_hours?: number;
 }
 
 export class NotificationService {
-  private supabase = createClient()
+  private supabase = createClient();
 
   /**
    * Create a notification for a specific user
    */
   async createNotification(data: NotificationData) {
     try {
-      console.log('📨 Creating notification:', data)
+      console.log('📨 Creating notification:', data);
 
       const { data: notification, error } = await this.supabase
         .from('notifications')
@@ -27,21 +33,22 @@ export class NotificationService {
           message: data.message,
           type: data.type,
           metadata: data.metadata || {},
-          expires_at: data.expires_hours 
-            ? new Date(Date.now() + data.expires_hours * 60 * 60 * 1000).toISOString()
-            : null
+          expires_at: data.expires_hours
+            ? new Date(
+                Date.now() + data.expires_hours * 60 * 60 * 1000
+              ).toISOString()
+            : null,
         })
         .select()
-        .single()
+        .single();
 
-      if (error) throw error
+      if (error) throw error;
 
-      console.log('✅ Notification created:', notification.id)
-      return notification
-
+      console.log('✅ Notification created:', notification.id);
+      return notification;
     } catch (error) {
-      console.error('❌ Error creating notification:', error)
-      throw error
+      console.error('❌ Error creating notification:', error);
+      throw error;
     }
   }
 
@@ -51,31 +58,31 @@ export class NotificationService {
   async createBookingNotification(
     providerId: string,
     booking: {
-      id: string
-      booking_number: string
-      client_name: string
-      service_title: string
-      scheduled_start: string
-      quoted_price: number
-      status: string
+      id: string;
+      booking_number: string;
+      client_name: string;
+      service_title: string;
+      scheduled_start: string;
+      quoted_price: number;
+      status: string;
     },
     type: 'created' | 'updated' | 'cancelled' | 'confirmed' | 'completed'
   ) {
     const titles = {
       created: '🆕 New Booking Request',
-      updated: '📝 Booking Updated', 
+      updated: '📝 Booking Updated',
       cancelled: '❌ Booking Cancelled',
       confirmed: '✅ Booking Confirmed',
-      completed: '🎉 Booking Completed'
-    }
+      completed: '🎉 Booking Completed',
+    };
 
     const messages = {
       created: `New booking for "${booking.service_title}" from ${booking.client_name} on ${new Date(booking.scheduled_start).toLocaleDateString()}`,
       updated: `Booking ${booking.booking_number} has been updated`,
       cancelled: `Booking ${booking.booking_number} has been cancelled`,
       confirmed: `Booking ${booking.booking_number} has been confirmed`,
-      completed: `Booking ${booking.booking_number} has been completed`
-    }
+      completed: `Booking ${booking.booking_number} has been completed`,
+    };
 
     return this.createNotification({
       user_id: providerId,
@@ -89,10 +96,10 @@ export class NotificationService {
         service_title: booking.service_title,
         quoted_price: booking.quoted_price,
         status: booking.status,
-        scheduled_start: booking.scheduled_start
+        scheduled_start: booking.scheduled_start,
       },
-      expires_hours: type === 'created' ? 72 : 48 // New bookings expire in 3 days, updates in 2 days
-    })
+      expires_hours: type === 'created' ? 72 : 48, // New bookings expire in 3 days, updates in 2 days
+    });
   }
 
   /**
@@ -101,18 +108,18 @@ export class NotificationService {
   async createPaymentNotification(
     providerId: string,
     payment: {
-      amount: number
-      booking_number: string
-      status: 'completed' | 'failed'
-      payment_method: string
+      amount: number;
+      booking_number: string;
+      status: 'completed' | 'failed';
+      payment_method: string;
     }
   ) {
-    const isSuccess = payment.status === 'completed'
+    const isSuccess = payment.status === 'completed';
 
     return this.createNotification({
       user_id: providerId,
       title: isSuccess ? '💰 Payment Received' : '⚠️ Payment Failed',
-      message: isSuccess 
+      message: isSuccess
         ? `Payment of $${payment.amount} received for booking ${payment.booking_number}`
         : `Payment failed for booking ${payment.booking_number} - please contact the client`,
       type: 'payment_received',
@@ -120,10 +127,10 @@ export class NotificationService {
         amount: payment.amount,
         booking_number: payment.booking_number,
         status: payment.status,
-        payment_method: payment.payment_method
+        payment_method: payment.payment_method,
       },
-      expires_hours: isSuccess ? null : 24 // Failed payments expire in 24 hours
-    })
+      expires_hours: isSuccess ? null : 24, // Failed payments expire in 24 hours
+    });
   }
 
   /**
@@ -132,11 +139,11 @@ export class NotificationService {
   async createReminderNotification(
     userId: string,
     reminder: {
-      title: string
-      message: string
-      booking_id?: string
-      booking_number?: string
-      scheduled_start?: string
+      title: string;
+      message: string;
+      booking_id?: string;
+      booking_number?: string;
+      scheduled_start?: string;
     }
   ) {
     return this.createNotification({
@@ -147,10 +154,10 @@ export class NotificationService {
       metadata: {
         booking_id: reminder.booking_id,
         booking_number: reminder.booking_number,
-        scheduled_start: reminder.scheduled_start
+        scheduled_start: reminder.scheduled_start,
       },
-      expires_hours: 48
-    })
+      expires_hours: 48,
+    });
   }
 
   /**
@@ -168,8 +175,8 @@ export class NotificationService {
       message,
       type: 'system',
       metadata,
-      expires_hours: 168 // 1 week
-    })
+      expires_hours: 168, // 1 week
+    });
   }
 
   /**
@@ -180,15 +187,14 @@ export class NotificationService {
       const { error } = await this.supabase
         .from('notifications')
         .update({ read: true })
-        .eq('id', notificationId)
+        .eq('id', notificationId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      console.log('✅ Notification marked as read:', notificationId)
-
+      console.log('✅ Notification marked as read:', notificationId);
     } catch (error) {
-      console.error('❌ Error marking notification as read:', error)
-      throw error
+      console.error('❌ Error marking notification as read:', error);
+      throw error;
     }
   }
 
@@ -201,15 +207,14 @@ export class NotificationService {
         .from('notifications')
         .update({ read: true })
         .eq('user_id', userId)
-        .eq('read', false)
+        .eq('read', false);
 
-      if (error) throw error
+      if (error) throw error;
 
-      console.log('✅ All notifications marked as read for user:', userId)
-
+      console.log('✅ All notifications marked as read for user:', userId);
     } catch (error) {
-      console.error('❌ Error marking all notifications as read:', error)
-      throw error
+      console.error('❌ Error marking all notifications as read:', error);
+      throw error;
     }
   }
 
@@ -221,15 +226,14 @@ export class NotificationService {
       const { error } = await this.supabase
         .from('notifications')
         .delete()
-        .eq('id', notificationId)
+        .eq('id', notificationId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      console.log('✅ Notification deleted:', notificationId)
-
+      console.log('✅ Notification deleted:', notificationId);
     } catch (error) {
-      console.error('❌ Error deleting notification:', error)
-      throw error
+      console.error('❌ Error deleting notification:', error);
+      throw error;
     }
   }
 
@@ -243,15 +247,14 @@ export class NotificationService {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(limit)
+        .limit(limit);
 
-      if (error) throw error
+      if (error) throw error;
 
-      return data || []
-
+      return data || [];
     } catch (error) {
-      console.error('❌ Error fetching notifications:', error)
-      throw error
+      console.error('❌ Error fetching notifications:', error);
+      throw error;
     }
   }
 
@@ -264,15 +267,14 @@ export class NotificationService {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
-        .eq('read', false)
+        .eq('read', false);
 
-      if (error) throw error
+      if (error) throw error;
 
-      return count || 0
-
+      return count || 0;
     } catch (error) {
-      console.error('❌ Error fetching unread count:', error)
-      throw error
+      console.error('❌ Error fetching unread count:', error);
+      throw error;
     }
   }
 
@@ -284,30 +286,29 @@ export class NotificationService {
       const { error } = await this.supabase
         .from('notifications')
         .delete()
-        .lt('expires_at', new Date().toISOString())
+        .lt('expires_at', new Date().toISOString());
 
-      if (error) throw error
+      if (error) throw error;
 
-      console.log('✅ Expired notifications cleaned up')
-
+      console.log('✅ Expired notifications cleaned up');
     } catch (error) {
-      console.error('❌ Error cleaning up expired notifications:', error)
-      throw error
+      console.error('❌ Error cleaning up expired notifications:', error);
+      throw error;
     }
   }
 }
 
 // Create a singleton instance
-export const notificationService = new NotificationService()
+export const notificationService = new NotificationService();
 
 // Helper hooks for React components
 export function useNotificationService() {
-  return notificationService
+  return notificationService;
 }
 
 // Test functions for development
 export const createTestNotifications = async (userId: string) => {
-  const service = notificationService
+  const service = notificationService;
 
   try {
     // Test booking notification
@@ -318,45 +319,40 @@ export const createTestNotifications = async (userId: string) => {
         booking_number: 'BK20250107001',
         client_name: 'John Doe',
         service_title: 'Business Consultation',
-        scheduled_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        scheduled_start: new Date(
+          Date.now() + 24 * 60 * 60 * 1000
+        ).toISOString(),
         quoted_price: 150,
-        status: 'pending'
+        status: 'pending',
       },
       'created'
-    )
+    );
 
     // Test payment notification
-    await service.createPaymentNotification(
-      userId,
-      {
-        amount: 250,
-        booking_number: 'BK20250106001',
-        status: 'completed',
-        payment_method: 'credit_card'
-      }
-    )
+    await service.createPaymentNotification(userId, {
+      amount: 250,
+      booking_number: 'BK20250106001',
+      status: 'completed',
+      payment_method: 'credit_card',
+    });
 
     // Test reminder notification
-    await service.createReminderNotification(
-      userId,
-      {
-        title: 'Upcoming Booking Tomorrow',
-        message: 'You have a consultation with Jane Smith tomorrow at 2:00 PM',
-        booking_number: 'BK20250108001',
-        scheduled_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      }
-    )
+    await service.createReminderNotification(userId, {
+      title: 'Upcoming Booking Tomorrow',
+      message: 'You have a consultation with Jane Smith tomorrow at 2:00 PM',
+      booking_number: 'BK20250108001',
+      scheduled_start: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    });
 
     // Test system notification
     await service.createSystemNotification(
       userId,
       'Platform Update Available',
       'New features have been added to your dashboard. Check out the updated booking management tools!'
-    )
+    );
 
-    console.log('✅ Test notifications created successfully!')
-
+    console.log('✅ Test notifications created successfully!');
   } catch (error) {
-    console.error('❌ Error creating test notifications:', error)
+    console.error('❌ Error creating test notifications:', error);
   }
-}
+};

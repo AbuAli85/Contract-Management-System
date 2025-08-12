@@ -3,7 +3,8 @@
 
 const https = require('https');
 
-const BASE_URL = 'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
+const BASE_URL =
+  'https://contract-management-system-ifmh5ucr5-abuali85s-projects.vercel.app';
 
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -15,36 +16,36 @@ function makeRequest(url) {
       method: 'GET',
       headers: {
         'User-Agent': 'Test-Script/1.0',
-        'Accept': 'application/json'
-      }
+        Accept: 'application/json',
+      },
     };
 
-    const req = https.request(requestOptions, (res) => {
+    const req = https.request(requestOptions, res => {
       let data = '';
-      
-      res.on('data', (chunk) => {
+
+      res.on('data', chunk => {
         data += chunk;
       });
-      
+
       res.on('end', () => {
         try {
           const jsonData = JSON.parse(data);
           resolve({
             status: res.statusCode,
             data: jsonData,
-            isJson: true
+            isJson: true,
           });
         } catch (error) {
           resolve({
             status: res.statusCode,
             data: data.substring(0, 200) + '...',
-            isJson: false
+            isJson: false,
           });
         }
       });
     });
 
-    req.on('error', (error) => {
+    req.on('error', error => {
       reject(error);
     });
 
@@ -63,7 +64,7 @@ async function testEndpoints() {
 
   const endpoints = [
     '/api/dashboard/stats',
-    '/api/dashboard/notifications', 
+    '/api/dashboard/notifications',
     '/api/dashboard/activities',
     '/api/dashboard/metrics',
     '/api/dashboard/analytics',
@@ -76,23 +77,27 @@ async function testEndpoints() {
     '/api/users',
     '/api/contracts',
     '/api/promoters',
-    '/api/parties'
+    '/api/parties',
   ];
 
   for (const endpoint of endpoints) {
     try {
       console.log(`🔍 Testing: ${endpoint}`);
       const result = await makeRequest(`${BASE_URL}${endpoint}`);
-      
+
       if (result.status === 200) {
         console.log(`✅ ${endpoint} - Status: ${result.status}`);
         if (result.isJson) {
-          console.log(`   Data: ${JSON.stringify(result.data).substring(0, 100)}...`);
+          console.log(
+            `   Data: ${JSON.stringify(result.data).substring(0, 100)}...`
+          );
         } else {
           console.log(`   Response: ${result.data}`);
         }
       } else if (result.status === 401) {
-        console.log(`🔐 ${endpoint} - Status: ${result.status} (Authentication required)`);
+        console.log(
+          `🔐 ${endpoint} - Status: ${result.status} (Authentication required)`
+        );
       } else if (result.status === 404) {
         console.log(`❌ ${endpoint} - Status: ${result.status} (Not found)`);
       } else {
@@ -107,4 +112,4 @@ async function testEndpoints() {
   console.log('🏁 Testing completed.');
 }
 
-testEndpoints().catch(console.error); 
+testEndpoints().catch(console.error);

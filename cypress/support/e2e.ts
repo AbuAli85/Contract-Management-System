@@ -14,7 +14,7 @@
 // ***********************************************************
 
 // Import commands.js using ES2015 syntax:
-import "./commands"
+import './commands';
 
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
@@ -27,52 +27,52 @@ declare global {
        * Custom command to login with email and password
        * @example cy.login('user@example.com', 'password')
        */
-      login(email: string, password: string): Chainable<void>
+      login(email: string, password: string): Chainable<void>;
 
       /**
        * Custom command to logout
        * @example cy.logout()
        */
-      logout(): Chainable<void>
+      logout(): Chainable<void>;
 
       /**
        * Custom command to create a test promoter
        * @example cy.createTestPromoter()
        */
-      createTestPromoter(): Chainable<any>
+      createTestPromoter(): Chainable<any>;
 
       /**
        * Custom command to create a test contract
        * @example cy.createTestContract()
        */
-      createTestContract(): Chainable<any>
+      createTestContract(): Chainable<any>;
 
       /**
        * Custom command to wait for page load
        * @example cy.waitForPageLoad()
        */
-      waitForPageLoad(): Chainable<void>
+      waitForPageLoad(): Chainable<void>;
 
       /**
        * Custom command to check if element is visible and clickable
        * @example cy.checkElementReady('[data-testid="submit-button"]')
        */
-      checkElementReady(selector: string): Chainable<void>
+      checkElementReady(selector: string): Chainable<void>;
 
       /**
        * Custom command to upload file
        * @example cy.uploadFile('[data-testid="file-input"]', 'test-file.csv')
        */
-      uploadFile(selector: string, fileName: string): Chainable<void>
+      uploadFile(selector: string, fileName: string): Chainable<void>;
 
       /**
        * Custom command to download and verify file
        * @example cy.downloadAndVerifyFile('promoters.csv')
        */
-      downloadAndVerifyFile(fileName: string): Chainable<void>
+      downloadAndVerifyFile(fileName: string): Chainable<void>;
     }
   }
 }
 
 // Prevent TypeScript from reading file as legacy script
-export {}
+export {};

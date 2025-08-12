@@ -8,6 +8,7 @@
 ## 🎯 **What You'll See Now**
 
 ### **Enhanced Entity Overview Cards**
+
 Right below the header, you'll see **4 prominent cards**:
 
 1. **🟣 Promoters Card**
@@ -31,6 +32,7 @@ Right below the header, you'll see **4 prominent cards**:
    - Click "View All Notifications →" for detailed alerts
 
 ### **Interactive Features**
+
 - **Hover effects** - Cards scale and glow when you hover
 - **Click arrows** (→) to navigate to specific management areas
 - **Real-time data** - Refreshes automatically every 2 minutes
@@ -39,6 +41,7 @@ Right below the header, you'll see **4 prominent cards**:
 ## 🔄 **Auto-Refresh System**
 
 The dashboard automatically updates:
+
 - **Every 2 minutes** while the page is active
 - **When you switch back** to the browser tab
 - **When you focus** the window
@@ -53,13 +56,15 @@ The dashboard automatically updates:
 ## 🎨 **Visual Indicators**
 
 ### **Badge Colors**
+
 - **🟢 Green**: Active/Healthy status
-- **🟠 Orange**: Expiring/Warning status  
+- **🟠 Orange**: Expiring/Warning status
 - **🔴 Red**: Urgent/High priority
 - **🔵 Blue**: Informational
 - **🟡 Yellow**: Medium priority
 
 ### **Card Themes**
+
 - **Purple**: Promoter-related information
 - **Green**: Company/Party information
 - **Blue**: Contract information
@@ -68,6 +73,7 @@ The dashboard automatically updates:
 ## ✨ **Quick Actions**
 
 From the dashboard, you can now:
+
 1. **Jump directly** to promoter management
 2. **Access party management** immediately
 3. **View contracts** with one click
@@ -77,17 +83,20 @@ From the dashboard, you can now:
 ## 🔍 **Finding Specific Information**
 
 ### **Promoter Overview**
+
 - Total count prominently displayed
 - Active promoters highlighted
 - Expiring documents clearly marked
 - Direct management access
 
 ### **Company Overview**
+
 - Registered companies count
 - Document expiration alerts
 - Quick navigation to party management
 
 ### **Alerts & Notifications**
+
 - High-priority items in red badges
 - Medium priority in yellow
 - "All Clear" when no urgent items

@@ -1,9 +1,11 @@
 # 📊 Complete Export/Import Workflow Guide
 
 ## 🎯 Overview
+
 This guide explains how to export promoter data from your application and import it back into Supabase, including handling company relationships and data updates.
 
 ## 📋 Prerequisites
+
 - Node.js installed
 - `csv-parser` package installed: `npm install csv-parser`
 - Access to your Supabase project
@@ -29,11 +31,13 @@ This guide explains how to export promoter data from your application and import
 ### Step 2: Import Data Back to Supabase
 
 #### Option A: Basic Import (Simple)
+
 ```bash
 node import-promoters-from-csv.js
 ```
 
 **Features:**
+
 - ✅ Imports all promoter data
 - ✅ Handles basic field mapping
 - ✅ Shows progress and results
@@ -41,11 +45,13 @@ node import-promoters-from-csv.js
 - ❌ Doesn't update existing records
 
 #### Option B: Advanced Import (Recommended)
+
 ```bash
 node import-promoters-with-companies.js
 ```
 
 **Features:**
+
 - ✅ Imports all promoter data
 - ✅ Creates missing companies automatically
 - ✅ Links promoters to companies
@@ -84,11 +90,13 @@ your-project/
 ## 🔧 Script Details
 
 ### Basic Import Script (`import-promoters-from-csv.js`)
+
 - **Purpose**: Simple import of promoter data
 - **Use Case**: When you just need to import data without company relationships
 - **Limitations**: Doesn't handle existing records or company links
 
 ### Advanced Import Script (`import-promoters-with-companies.js`)
+
 - **Purpose**: Full-featured import with company relationships
 - **Use Case**: Production data migration or backup restoration
 - **Features**:
@@ -101,48 +109,52 @@ your-project/
 ## 📊 Data Mapping
 
 ### Export Fields → Import Fields
-| Export Column | Import Field | Notes |
-|---------------|--------------|-------|
-| Name (EN) | name_en | Required |
-| Name (AR) | name_ar | Required |
-| ID Card Number | id_card_number | Required, used for duplicate detection |
-| Passport Number | passport_number | Optional |
-| Mobile | mobile_number | Phone number |
-| Phone | phone | Alternative phone |
-| Email | email | Email address |
-| Nationality | nationality | Country of origin |
-| Date of Birth | date_of_birth | Formatted date |
-| Gender | gender | male/female/other |
-| Address | address | Full address |
-| Emergency Contact | emergency_contact | Contact person |
-| Emergency Phone | emergency_phone | Emergency phone |
-| ID Card Status | id_card_status | Calculated field |
-| ID Card Expiry | id_card_expiry_date | Formatted date |
-| Passport Status | passport_status | Calculated field |
-| Passport Expiry | passport_expiry_date | Formatted date |
-| Company | employer_id | Linked to parties table |
-| Job Title | job_title | Position |
-| Work Location | work_location | Work address |
-| Status | status | active/inactive/etc |
-| Overall Status | overall_status | Calculated field |
-| Active Contracts | active_contracts_count | Number of contracts |
-| Notes | notes | Additional information |
-| Created At | created_at | Timestamp |
+
+| Export Column     | Import Field           | Notes                                  |
+| ----------------- | ---------------------- | -------------------------------------- |
+| Name (EN)         | name_en                | Required                               |
+| Name (AR)         | name_ar                | Required                               |
+| ID Card Number    | id_card_number         | Required, used for duplicate detection |
+| Passport Number   | passport_number        | Optional                               |
+| Mobile            | mobile_number          | Phone number                           |
+| Phone             | phone                  | Alternative phone                      |
+| Email             | email                  | Email address                          |
+| Nationality       | nationality            | Country of origin                      |
+| Date of Birth     | date_of_birth          | Formatted date                         |
+| Gender            | gender                 | male/female/other                      |
+| Address           | address                | Full address                           |
+| Emergency Contact | emergency_contact      | Contact person                         |
+| Emergency Phone   | emergency_phone        | Emergency phone                        |
+| ID Card Status    | id_card_status         | Calculated field                       |
+| ID Card Expiry    | id_card_expiry_date    | Formatted date                         |
+| Passport Status   | passport_status        | Calculated field                       |
+| Passport Expiry   | passport_expiry_date   | Formatted date                         |
+| Company           | employer_id            | Linked to parties table                |
+| Job Title         | job_title              | Position                               |
+| Work Location     | work_location          | Work address                           |
+| Status            | status                 | active/inactive/etc                    |
+| Overall Status    | overall_status         | Calculated field                       |
+| Active Contracts  | active_contracts_count | Number of contracts                    |
+| Notes             | notes                  | Additional information                 |
+| Created At        | created_at             | Timestamp                              |
 
 ## 🚨 Important Notes
 
 ### Data Validation
+
 - **Required Fields**: name_en, name_ar, id_card_number
 - **Duplicate Detection**: Based on ID card number
 - **Company Linking**: Automatic based on company name matching
 
 ### Error Handling
+
 - **Missing Companies**: Automatically created as "Employer" type
 - **Duplicate Promoters**: Updated instead of creating duplicates
 - **Invalid Data**: Skipped with error reporting
 - **Network Issues**: Retry mechanism for failed imports
 
 ### Performance
+
 - **Large Datasets**: Processed one record at a time for error handling
 - **Progress Reporting**: Real-time feedback on import progress
 - **Memory Usage**: Efficient streaming for large CSV files
@@ -150,6 +162,7 @@ your-project/
 ## 🔄 Use Cases
 
 ### 1. Data Backup
+
 ```bash
 # Export current data
 # (Use Export CSV button in UI)
@@ -159,6 +172,7 @@ node import-promoters-with-companies.js
 ```
 
 ### 2. Data Migration
+
 ```bash
 # Export from old system
 # Import to new Supabase project
@@ -166,6 +180,7 @@ node import-promoters-with-companies.js
 ```
 
 ### 3. Data Update
+
 ```bash
 # Export current data
 # Edit in Excel/Google Sheets
@@ -174,6 +189,7 @@ node import-promoters-with-companies.js
 ```
 
 ### 4. Bulk Data Import
+
 ```bash
 # Prepare CSV with new promoters
 # Import with company relationships
@@ -195,6 +211,7 @@ node import-promoters-with-companies.js
    - Restart your terminal after updating `.env`
 
 3. **"csv-parser not installed"**
+
    ```bash
    npm install csv-parser
    ```
@@ -210,7 +227,9 @@ node import-promoters-with-companies.js
    - Check ID card numbers for uniqueness
 
 ### Debug Mode
+
 Add this to see detailed error information:
+
 ```javascript
 // Add to script for debugging
 console.log('Debug data:', promoter);
@@ -228,6 +247,7 @@ console.log('Debug data:', promoter);
 ## 🎉 Success Checklist
 
 After running the import, verify:
+
 - [ ] All promoters appear in the management page
 - [ ] Company relationships are correct
 - [ ] Search and filters work properly
@@ -239,4 +259,4 @@ After running the import, verify:
 
 ---
 
-**Need help?** Check the console output for detailed error messages and progress information. 
+**Need help?** Check the console output for detailed error messages and progress information.
