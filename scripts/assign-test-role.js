@@ -115,3 +115,4 @@ assignTestRole()
     console.error('❌ Unexpected error:', error);
     process.exit(1);
   });
+
