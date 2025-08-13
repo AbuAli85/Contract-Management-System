@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 // GET - Fetch pending users for approval (simplified admin check)
 export async function GET(request: NextRequest) {
   try {
     console.log('🔧 User approval API called');
+    
+    // Add more detailed logging
+    console.log('🔧 Environment check:', {
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+    
     const supabase = await createClient();
+    console.log('🔧 Supabase client created successfully');
 
     // Get current user to check permissions
     const {
@@ -15,33 +25,108 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 Auth check result:', {
       hasUser: !!user,
+      userId: user?.id,
+      userEmail: user?.email,
       authError: authError?.message,
+      authErrorCode: authError?.code,
     });
 
     if (authError || !user) {
-      console.log('❌ Authentication failed');
+      console.log('❌ Authentication failed:', {
+        authError: authError?.message,
+        authErrorCode: authError?.code,
+        hasUser: !!user,
+      });
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('✅ User authenticated:', user.id);
 
-    // Check if user has admin permissions
-    const { data: userProfile, error: profileError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    // Check if user has admin permissions - try profiles table first, then users table
+    let userRole = null;
+    let profileError = null;
+    
+    // First try to get role from profiles table
+    try {
+      const { data: profileData, error: profileErr } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (!profileErr && profileData?.role) {
+        userRole = profileData.role;
+        console.log('✅ Role found in profiles table:', userRole);
+      } else {
+        profileError = profileErr;
+        console.log('⚠️ No role in profiles table, trying users table...');
+      }
+    } catch (err) {
+      console.log('⚠️ Profiles table query failed, trying users table...');
+    }
+    
+    // If no role from profiles, try users table
+    if (!userRole) {
+      try {
+        const { data: userData, error: userErr } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (!userErr && userData?.role) {
+          userRole = userData.role;
+          console.log('✅ Role found in users table:', userRole);
+        } else {
+          console.log('⚠️ No role in users table either');
+        }
+      } catch (err) {
+        console.log('⚠️ Users table query also failed');
+      }
+    }
 
-    console.log('👤 Profile check result:', {
-      profile: userProfile,
-      error: profileError?.message,
+    console.log('👤 Role check result:', {
+      userRole,
+      profileError: profileError?.message,
     });
 
-    if (!userProfile || userProfile.role !== 'admin') {
-      console.log('❌ User is not admin:', userProfile?.role);
+    if (!userRole || userRole !== 'admin') {
+      console.log('❌ User is not admin:', userRole);
       return NextResponse.json(
         { error: 'Only admins can view pending users' },
         { status: 403 }
+      );
+    }
+
+    // Use admin client for admin operations to bypass RLS policies
+    const adminClient = getSupabaseAdmin();
+    console.log('🔑 Using admin client for database operations');
+    
+    // Test admin client connection
+    try {
+      const { data: testData, error: testError } = await adminClient
+        .from('users')
+        .select('count')
+        .limit(1);
+      
+      console.log('🔑 Admin client test:', {
+        success: !testError,
+        error: testError?.message,
+        errorCode: testError?.code,
+      });
+      
+      if (testError) {
+        console.error('❌ Admin client connection failed:', testError);
+        return NextResponse.json(
+          { error: 'Admin database access failed', details: testError.message },
+          { status: 500 }
+        );
+      }
+    } catch (testErr) {
+      console.error('❌ Admin client test exception:', testErr);
+      return NextResponse.json(
+        { error: 'Admin client test failed', details: testErr instanceof Error ? testErr.message : 'Unknown error' },
+        { status: 500 }
       );
     }
 
@@ -49,28 +134,98 @@ export async function GET(request: NextRequest) {
 
     // Fetch pending users
     console.log('📋 Fetching pending users from database...');
-    const { data: pendingUsers, error } = await supabase
-      .from('users')
-      .select(
-        `
-        id,
-        email,
-        full_name,
-        role,
-        status,
-        department,
-        position,
-        phone,
-        created_at
-      `
-      )
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+    
+    let pendingUsers: any[] = [];
+    
+    try {
+      // First, let's check if the users table exists and has any data
+      const { data: tableCheck, error: tableError } = await adminClient
+        .from('users')
+        .select('count')
+        .limit(1);
+      
+      console.log('📋 Table check result:', {
+        hasTable: !tableError,
+        tableError: tableError?.message,
+        tableErrorCode: tableError?.code,
+      });
+      
+      if (tableError) {
+        console.error('❌ Users table access error:', {
+          message: tableError.message,
+          code: tableError.code,
+          details: tableError.details,
+          hint: tableError.hint,
+        });
+        
+        // Try to provide helpful error message
+        if (tableError.code === '42P01') {
+          return NextResponse.json(
+            { error: 'Users table does not exist', details: 'Database schema issue detected' },
+            { status: 500 }
+          );
+        }
+        
+        return NextResponse.json(
+          { error: 'Database access error', details: tableError.message },
+          { status: 500 }
+        );
+      }
+      
+      // Now fetch pending users - only select columns that exist
+      const { data, error } = await adminClient
+        .from('users')
+        .select('*')  // Select all available columns to avoid schema mismatch
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('❌ Error fetching pending users:', error);
+      pendingUsers = data || [];
+
+      console.log('📋 Database query result:', {
+        hasData: !!data,
+        dataLength: data?.length || 0,
+        error: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+      });
+
+      if (error) {
+        console.error('❌ Error fetching pending users:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+        });
+        return NextResponse.json(
+          { error: 'Failed to fetch pending users', details: error.message },
+          { status: 500 }
+        );
+      }
+
+      // If no pending users found, let's check if there are any users at all
+      if (!data || data.length === 0) {
+        console.log('📋 No pending users found, checking if table has any users...');
+        
+        try {
+          const { data: allUsers, error: allUsersError } = await adminClient
+            .from('users')
+            .select('*')
+            .limit(10);
+          
+          console.log('📋 All users check:', {
+            hasUsers: !!allUsers,
+            userCount: allUsers?.length || 0,
+            error: allUsersError?.message,
+            sampleUsers: allUsers?.map(u => ({ id: u.id, email: u.email, role: u.role, status: u.status })) || [],
+          });
+        } catch (allUsersErr) {
+          console.log('📋 All users check failed:', allUsersErr);
+        }
+      }
+    } catch (dbError) {
+      console.error('❌ Database query exception:', dbError);
       return NextResponse.json(
-        { error: 'Failed to fetch pending users' },
+        { error: 'Database query failed', details: dbError instanceof Error ? dbError.message : 'Unknown error' },
         { status: 500 }
       );
     }

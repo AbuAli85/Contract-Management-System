@@ -26,12 +26,19 @@ async function fixLuxsess2001Role() {
     console.log(`Target User ID: ${targetUserId}`);
     console.log(`Target Email: ${targetEmail}`);
 
-    // Step 1: Update users table
-    console.log('📝 Updating users table...');
+    // Step 1: Update users table with full admin permissions
+    console.log('📝 Updating users table with admin role and permissions...');
     const { data: userUpdate, error: userError } = await supabase
       .from('users')
       .update({
         role: 'admin',
+        status: 'active',
+        permissions: [
+          'users.view', 'users.create', 'users.edit', 'users.delete', 'users.bulk',
+          'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.delete', 'contracts.approve',
+          'dashboard.view', 'analytics.view', 'reports.generate',
+          'settings.view', 'settings.edit', 'logs.view', 'backup.create'
+        ],
         updated_at: new Date().toISOString(),
       })
       .eq('id', targetUserId)
@@ -44,7 +51,7 @@ async function fixLuxsess2001Role() {
       console.log('✅ Users table updated:', userUpdate);
     }
 
-    // Step 2: Update profiles table if it exists
+    // Step 2: Update profiles table
     console.log('📝 Updating profiles table...');
     const { data: profileUpdate, error: profileError } = await supabase
       .from('profiles')
@@ -64,11 +71,53 @@ async function fixLuxsess2001Role() {
       console.log('✅ Profiles table updated:', profileUpdate);
     }
 
-    // Step 3: Verify the change
+    // Step 3: Update user_roles table if it exists
+    console.log('📝 Updating user_roles table...');
+    try {
+      const { data: userRoleUpdate, error: userRoleError } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: targetUserId,
+          role: 'admin',
+          assigned_at: new Date().toISOString(),
+          assigned_by: targetUserId,
+        })
+        .select();
+
+      if (userRoleError) {
+        console.error('❌ Error updating user_roles table:', userRoleError);
+      } else {
+        console.log('✅ User_roles table updated:', userRoleUpdate);
+      }
+    } catch (error) {
+      console.log('⚠️ user_roles table might not exist, skipping...');
+    }
+
+    // Step 4: Update auth.users metadata
+    console.log('📝 Updating auth user metadata...');
+    try {
+      const { error: authError } = await supabase.auth.admin.updateUserById(targetUserId, {
+        user_metadata: {
+          role: 'admin',
+          status: 'active',
+          full_name: 'Fahad alamri'
+        }
+      });
+
+      if (authError) {
+        console.error('❌ Error updating auth metadata:', authError);
+      } else {
+        console.log('✅ Auth user metadata updated');
+      }
+    } catch (error) {
+      console.log('⚠️ Could not update auth metadata:', error.message);
+    }
+
+    // Step 5: Verify the change
     console.log('🔍 Verifying the change...');
     const { data: verifyUser, error: verifyError } = await supabase
       .from('users')
-      .select('id, email, role, status')
+      .select('id, email, role, status, permissions')
       .eq('id', targetUserId)
       .single();
 
@@ -78,6 +127,7 @@ async function fixLuxsess2001Role() {
       console.log('✅ Verification result:', verifyUser);
       if (verifyUser.role === 'admin') {
         console.log('🎉 SUCCESS: User role has been updated to admin!');
+        console.log('🔑 Admin permissions granted:', verifyUser.permissions);
       } else {
         console.log(
           '⚠️ WARNING: User role is still not admin:',
@@ -85,6 +135,24 @@ async function fixLuxsess2001Role() {
         );
       }
     }
+
+    // Step 6: Test admin access
+    console.log('🧪 Testing admin access...');
+    try {
+      const { data: adminUsers, error: adminError } = await supabase
+        .from('users')
+        .select('id, email, role')
+        .eq('role', 'admin');
+
+      if (adminError) {
+        console.error('❌ Error testing admin access:', adminError);
+      } else {
+        console.log('✅ Admin access test successful. Found admin users:', adminUsers);
+      }
+    } catch (error) {
+      console.error('❌ Admin access test failed:', error.message);
+    }
+
   } catch (error) {
     console.error('❌ Unexpected error:', error);
   }

@@ -17,14 +17,28 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const url = request.nextUrl.clone();
   
+  console.log('🔐 Middleware: Processing request for path:', pathname);
+  
   // SECURITY FIX: Replace insecure cookie-based role with secure JWT verification
   const userAuth = await verifyUserRoleFromToken(request);
   const role = userAuth.role;
+  
+  console.log('🔐 Middleware: User auth result:', { 
+    role, 
+    isValid: userAuth.isValid, 
+    userId: userAuth.userId 
+  });
 
   // Role-based access control (before API route handling)
   if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
     // Extract locale-free pathname for role checks
     const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '') || '/';
+    
+    // Admin users have access to everything - skip role checks
+    if (role === 'admin') {
+      console.log('🔐 Middleware: Admin user detected - allowing access to all paths');
+      return NextResponse.next();
+    }
     
     // Redirect to login if user is not authenticated for protected routes
     if (!userAuth.isValid && (
@@ -38,25 +52,25 @@ export async function middleware(request: NextRequest) {
     }
     
     // Protect provider console routes
-    if (pathWithoutLocale.startsWith('/provider') && !hasRequiredRole(role, ['provider', 'manager', 'admin'])) {
+    if (pathWithoutLocale.startsWith('/provider') && !hasRequiredRole(role, ['provider', 'manager'])) {
       url.pathname = '/403';
       return NextResponse.redirect(url);
     }
     
     // Protect admin routes
-    if (pathWithoutLocale.startsWith('/admin') && !hasRequiredRole(role, ['admin', 'manager'])) {
+    if (pathWithoutLocale.startsWith('/admin') && !hasRequiredRole(role, ['manager'])) {
       url.pathname = '/403';
       return NextResponse.redirect(url);
     }
     
     // Protect manager routes
-    if (pathWithoutLocale.startsWith('/manager') && !hasRequiredRole(role, ['manager', 'admin'])) {
+    if (pathWithoutLocale.startsWith('/manager') && !hasRequiredRole(role, ['manager'])) {
       url.pathname = '/403';
       return NextResponse.redirect(url);
     }
     
     // Protect invoice management routes
-    if (pathWithoutLocale.startsWith('/invoices') && !hasRequiredRole(role, ['client', 'provider', 'manager', 'admin'])) {
+    if (pathWithoutLocale.startsWith('/invoices') && !hasRequiredRole(role, ['client', 'provider', 'manager'])) {
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }

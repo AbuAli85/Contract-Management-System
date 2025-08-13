@@ -195,7 +195,9 @@ export default function DebugDashboardPage() {
                 <p>
                   <strong>Error:</strong>{' '}
                   <span className='text-red-500'>
-                    {debugInfo.supabase.supabase.error}
+                    {typeof debugInfo.supabase.supabase.error === 'string' 
+                      ? debugInfo.supabase.supabase.error 
+                      : debugInfo.supabase.supabase.error?.message || 'Unknown error'}
                   </span>
                 </p>
               )}
@@ -225,7 +227,9 @@ export default function DebugDashboardPage() {
               <p>
                 <strong>Error:</strong>{' '}
                 <span className='text-red-500'>
-                  {debugInfo.analytics.data.error}
+                  {typeof debugInfo.analytics.data.error === 'string' 
+                    ? debugInfo.analytics.data.error 
+                    : debugInfo.analytics.data.error?.message || 'Unknown error'}
                 </span>
               </p>
             )}
@@ -265,7 +269,11 @@ export default function DebugDashboardPage() {
             <CardTitle className='text-red-600'>❌ Error</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className='text-red-600'>{debugInfo.error}</p>
+            <p className='text-red-600'>
+              {typeof debugInfo.error === 'string' 
+                ? debugInfo.error 
+                : debugInfo.error?.message || 'Unknown error'}
+            </p>
           </CardContent>
         </Card>
       )}

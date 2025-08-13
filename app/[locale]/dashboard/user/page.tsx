@@ -420,7 +420,7 @@ export default function UserDashboard({
   }, [toast]);
 
   return (
-    <DashboardAuthGuard locale={locale} requiredRole='user'>
+    <DashboardAuthGuard locale={locale}>
       <SilentSessionTimeout />
       <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
         <div className='container mx-auto px-4 py-8 max-w-7xl'>

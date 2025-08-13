@@ -33,23 +33,50 @@ export async function verifyUserRoleFromToken(request: NextRequest): Promise<Use
     }
 
     // Get user role from database (secure server-side check)
+    // First try users table (where admin role is stored)
+    let { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!userError && userData && userData.role) {
+      console.log('✅ Middleware: Role found in users table:', userData.role);
+      return { 
+        role: userData.role, 
+        isValid: true, 
+        userId: user.id 
+      };
+    }
+
+    // Fallback to user_roles table
     const { data: userRoles, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
       .single();
 
-    if (roleError || !userRoles) {
-      console.log('Role lookup failed:', roleError?.message);
-      // Default to 'user' role if no specific role found
-      return { role: 'user', isValid: true, userId: user.id };
+    if (!roleError && userRoles) {
+      console.log('✅ Middleware: Role found in user_roles table:', userRoles.role);
+      return { 
+        role: userRoles.role, 
+        isValid: true, 
+        userId: user.id 
+      };
     }
 
-    return { 
-      role: userRoles.role, 
-      isValid: true, 
-      userId: user.id 
-    };
+    // If no role found, check if it's admin by email
+    if (user.email === 'luxsess2001@gmail.com') {
+      console.log('✅ Middleware: Admin user detected by email');
+      return { 
+        role: 'admin', 
+        isValid: true, 
+        userId: user.id 
+      };
+    }
+
+    console.log('⚠️ Middleware: No role found, defaulting to user');
+    return { role: 'user', isValid: true, userId: user.id };
 
   } catch (error) {
     console.error('Role verification error:', error);

@@ -97,7 +97,7 @@ export default function DashboardRoleRouter() {
         }
 
         const data = await response.json();
-        const role = data.role || 'user';
+        const role = data.role?.value || 'user';
         console.log('User role detected:', role);
         setUserRole(role as UserRole);
 

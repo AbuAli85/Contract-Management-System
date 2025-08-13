@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { deletePromoter } from '@/app/actions/promoters';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Trash2 } from 'lucide-react';

@@ -39,7 +39,10 @@ export function PendingApprovalsNotification() {
   const fetchPendingApprovals = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users/approval');
+      const response = await fetch('/api/users/approval', {
+        credentials: 'include',
+        cache: 'no-store'
+      });
       const result = await response.json();
 
       if (result.success) {
