@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { NextRequest as NextRequestType } from 'next/server';
+import { verifyUserRoleFromToken, hasRequiredRole } from '@/lib/auth/middleware-utils';
 
 // Fix for next-intl import issue
 const createMiddleware = require('next-intl/middleware').default;
@@ -12,8 +13,54 @@ const intlMiddleware = createMiddleware({
   localeDetection: true,
 });
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const url = request.nextUrl.clone();
+  
+  // SECURITY FIX: Replace insecure cookie-based role with secure JWT verification
+  const userAuth = await verifyUserRoleFromToken(request);
+  const role = userAuth.role;
+
+  // Role-based access control (before API route handling)
+  if (!pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
+    // Extract locale-free pathname for role checks
+    const pathWithoutLocale = pathname.replace(/^\/(en|ar)/, '') || '/';
+    
+    // Redirect to login if user is not authenticated for protected routes
+    if (!userAuth.isValid && (
+      pathWithoutLocale.startsWith('/provider') ||
+      pathWithoutLocale.startsWith('/admin') ||
+      pathWithoutLocale.startsWith('/manager') ||
+      pathWithoutLocale.startsWith('/invoices')
+    )) {
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+    
+    // Protect provider console routes
+    if (pathWithoutLocale.startsWith('/provider') && !hasRequiredRole(role, ['provider', 'manager', 'admin'])) {
+      url.pathname = '/403';
+      return NextResponse.redirect(url);
+    }
+    
+    // Protect admin routes
+    if (pathWithoutLocale.startsWith('/admin') && !hasRequiredRole(role, ['admin', 'manager'])) {
+      url.pathname = '/403';
+      return NextResponse.redirect(url);
+    }
+    
+    // Protect manager routes
+    if (pathWithoutLocale.startsWith('/manager') && !hasRequiredRole(role, ['manager', 'admin'])) {
+      url.pathname = '/403';
+      return NextResponse.redirect(url);
+    }
+    
+    // Protect invoice management routes
+    if (pathWithoutLocale.startsWith('/invoices') && !hasRequiredRole(role, ['client', 'provider', 'manager', 'admin'])) {
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+  }
 
   // Enhanced API route skipping with emergency patterns
   if (
@@ -36,29 +83,27 @@ export function middleware(request: NextRequest) {
     // Apply security headers for API routes
     const response = NextResponse.next();
 
-    // Security Headers
-    if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
-      response.headers.set('X-Frame-Options', 'DENY');
-      response.headers.set('X-Content-Type-Options', 'nosniff');
-      response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-      response.headers.set(
-        'Permissions-Policy',
-        'camera=(), microphone=(), geolocation=()'
-      );
-    }
-
-    // XSS Protection
-    if (process.env.ENABLE_XSS_PROTECTION === 'true') {
-      response.headers.set('X-XSS-Protection', '1; mode=block');
-    }
+    // SECURITY FIX: Always apply security headers (remove conditional)
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=()'
+    );
 
     // CORS Headers for API routes
     if (pathname.startsWith('/api/')) {
-      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+      // SECURITY FIX: Validate CORS origins properly
+      const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
       const origin = request.headers.get('origin');
 
       if (origin && allowedOrigins.includes(origin)) {
         response.headers.set('Access-Control-Allow-Origin', origin);
+      } else if (process.env.NODE_ENV === 'development') {
+        // Allow localhost in development only
+        response.headers.set('Access-Control-Allow-Origin', 'http://localhost:3000');
       }
 
       response.headers.set(
@@ -96,21 +141,15 @@ export function middleware(request: NextRequest) {
   try {
     const response = intlMiddleware(request);
     if (response) {
-      // Add security headers to page responses
-      if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
-        response.headers.set('X-Frame-Options', 'DENY');
-        response.headers.set('X-Content-Type-Options', 'nosniff');
-        response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
-        response.headers.set(
-          'Permissions-Policy',
-          'camera=(), microphone=(), geolocation=()'
-        );
-      }
-
-      // XSS Protection
-      if (process.env.ENABLE_XSS_PROTECTION === 'true') {
-        response.headers.set('X-XSS-Protection', '1; mode=block');
-      }
+      // SECURITY FIX: Always add security headers to page responses
+      response.headers.set('X-Frame-Options', 'DENY');
+      response.headers.set('X-Content-Type-Options', 'nosniff');
+      response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      response.headers.set('X-XSS-Protection', '1; mode=block');
+      response.headers.set(
+        'Permissions-Policy',
+        'camera=(), microphone=(), geolocation=()'
+      );
 
       // Content Security Policy
       if (process.env.ENABLE_CONTENT_SECURITY_POLICY === 'true') {
@@ -133,19 +172,18 @@ export function middleware(request: NextRequest) {
     // Fallback redirect
     const fallbackResponse = NextResponse.redirect(new URL('/en', request.url));
 
-    // Add security headers to fallback response
-    if (process.env.SECURITY_HEADERS_ENABLED === 'true') {
-      fallbackResponse.headers.set('X-Frame-Options', 'DENY');
-      fallbackResponse.headers.set('X-Content-Type-Options', 'nosniff');
-      fallbackResponse.headers.set(
-        'Referrer-Policy',
-        'origin-when-cross-origin'
-      );
-      fallbackResponse.headers.set(
-        'Permissions-Policy',
-        'camera=(), microphone=(), geolocation=()'
-      );
-    }
+    // SECURITY FIX: Always add security headers to fallback response
+    fallbackResponse.headers.set('X-Frame-Options', 'DENY');
+    fallbackResponse.headers.set('X-Content-Type-Options', 'nosniff');
+    fallbackResponse.headers.set('X-XSS-Protection', '1; mode=block');
+    fallbackResponse.headers.set(
+      'Referrer-Policy',
+      'strict-origin-when-cross-origin'
+    );
+    fallbackResponse.headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=()'
+    );
 
     return fallbackResponse;
   } catch (error) {

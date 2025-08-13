@@ -91,7 +91,12 @@ export async function guardPermission(
 ): Promise<NextResponse | null> {
   try {
     // Get RBAC enforcement mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
+    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'enforce';
+
+    // SECURITY FIX: Prevent dry-run mode in production
+    if (process.env.NODE_ENV === 'production' && enforcementMode !== 'enforce') {
+      throw new Error('RBAC must be enforced in production environment');
+    }
 
     // Check permission
     const result = await checkPermission(requiredPermission, {
@@ -114,43 +119,40 @@ export async function guardPermission(
       });
     }
 
-    // Handle dry-run mode
-    if (enforcementMode === 'dry-run') {
+    // Handle dry-run mode (development only)
+    if (enforcementMode === 'dry-run' && process.env.NODE_ENV === 'development') {
       if (!result.allowed) {
         console.log(
           `🔐 RBAC: WOULD_BLOCK - ${requiredPermission} for ${request.url}`
         );
-        // In dry-run mode, allow the request but log that it would be blocked
-        return null;
+        // SECURITY FIX: Still perform actual check in dry-run for validation
+        // Log but continue with enforcement logic
       }
-      return null;
+      // Continue to enforcement logic even in dry-run for proper validation
     }
 
-    // Handle enforce mode
-    if (enforcementMode === 'enforce') {
-      if (!result.allowed) {
-        console.log(
-          `🔐 RBAC: BLOCKED - ${requiredPermission} for ${request.url}`
-        );
-        return NextResponse.json(
-          {
-            error: 'Insufficient permissions',
-            required_permission: requiredPermission,
-            reason: result.reason,
-          },
-          { status: 403 }
-        );
-      }
-      return null;
+    // Handle enforce mode (and secure dry-run)
+    if (!result.allowed) {
+      console.log(
+        `🔐 RBAC: BLOCKED - ${requiredPermission} for ${request.url}`
+      );
+      return NextResponse.json(
+        {
+          error: 'Insufficient permissions',
+          required_permission: requiredPermission,
+          reason: result.reason,
+        },
+        { status: 403 }
+      );
     }
 
-    // Default: allow if no enforcement mode specified
+    // Permission granted
     return null;
   } catch (error) {
     console.error('🔐 RBAC: Error in guardPermission:', error);
 
     // In case of error, default to deny in enforce mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'dry-run';
+    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'enforce';
     if (enforcementMode === 'enforce') {
       return NextResponse.json(
         {

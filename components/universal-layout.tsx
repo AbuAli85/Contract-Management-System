@@ -20,6 +20,11 @@ const NO_NAVIGATION_PAGES = [
   '/auth/logout',
   '/auth/pending-approval',
   '/auth/profile',
+  '/register/client',
+  '/register/provider',
+  '/register/provider-simple',
+  '/register-new',
+  '/simple-register',
 ];
 
 export function UniversalLayout({ children, locale }: UniversalLayoutProps) {

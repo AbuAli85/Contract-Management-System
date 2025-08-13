@@ -1,5 +1,7 @@
-import { Suspense } from 'react';
-import { DashboardAuthGuard } from '@/components/dashboard-auth-guard';
+'use client';
+
+import React, { Suspense } from 'react';
+import { AdminOnlyGuard } from '@/components/admin-only-guard';
 import {
   Card,
   CardContent,
@@ -29,15 +31,22 @@ function UserApprovalsLoading() {
   );
 }
 
-export default async function UserApprovalsPage({
+export default function UserApprovalsPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
+  // For client components, we need to handle the params differently
+  const [locale, setLocale] = React.useState('en');
+  
+  React.useEffect(() => {
+    params.then(({ locale: resolvedLocale }) => {
+      setLocale(resolvedLocale);
+    });
+  }, [params]);
 
   return (
-    <DashboardAuthGuard locale={locale}>
+    <AdminOnlyGuard locale={locale}>
       <div className='space-y-6'>
         {/* Header */}
         <div className='flex items-center justify-between'>
@@ -167,6 +176,6 @@ export default async function UserApprovalsPage({
           </CardContent>
         </Card>
       </div>
-    </DashboardAuthGuard>
+    </AdminOnlyGuard>
   );
 }
