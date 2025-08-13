@@ -41,6 +41,47 @@ export interface CompanyResponse {
   lower_email?: string;
 }
 
+// CompanyService class for compatibility
+export class CompanyService {
+  static async uploadCompanyLogo(file: File): Promise<{ url: string }> {
+    try {
+      // Only run in browser environment
+      if (typeof window === 'undefined') {
+        throw new Error('File upload only available in browser environment');
+      }
+
+      const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `company-logos/${fileName}`;
+
+      // Upload file to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('company-assets')
+        .upload(filePath, file);
+
+      if (error) {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('company-assets')
+        .getPublicUrl(filePath);
+
+      return { url: urlData.publicUrl };
+    } catch (error) {
+      console.error('Company logo upload error:', error);
+      throw error;
+    }
+  }
+}
+
 /**
  * Upsert company using email-based conflict resolution
  * Uses the lower_email generated column for case-insensitive email matching

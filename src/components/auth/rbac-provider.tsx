@@ -106,80 +106,38 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           '🔐 RBACProvider: User not found in users table, attempting to create...'
         );
 
-        // Special handling for admin user with fixed UUID
-        if (user.email === 'luxsess2001@gmail.com') {
-          console.log(
-            '🔐 RBACProvider: Admin user detected, using fixed UUID...'
-          );
-          try {
-            const { data: newUser, error: createError } = await supabase
-              .from('users')
-              .upsert(
-                {
-                  id: '550e8400-e29b-41d4-a716-446655440000', // Fixed UUID for admin
-                  email: user.email,
-                  full_name: 'Admin User',
-                  role: 'admin',
-                  status: 'active',
-                  created_at: user.created_at,
-                },
-                {
-                  onConflict: 'email', // Use email as conflict key to avoid 409 errors
-                  ignoreDuplicates: false,
-                }
-              )
-              .select('role')
-              .single();
+        // SECURITY FIX: Standard user creation without hardcoded admin checks
+        try {
+          const { data: newUser, error: createError } = await supabase
+            .from('users')
+            .upsert(
+              {
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name || 'User',
+                role: user.user_metadata?.role || 'user',
+                status: 'active',
+                created_at: user.created_at,
+              },
+              {
+                onConflict: 'email', // Use email as conflict key to avoid 409 errors
+                ignoreDuplicates: false,
+              }
+            )
+            .select('role')
+            .single();
 
-            if (!createError && newUser?.role) {
-              console.log(
-                '✅ RBACProvider: Created/updated admin user and got role:',
-                newUser.role
-              );
-              setUserRoles([newUser.role as Role]);
-              setIsLoading(false);
-              return;
-            }
-          } catch (createError) {
+          if (!createError && newUser?.role) {
             console.log(
-              '🔐 RBACProvider: Admin user creation failed:',
-              createError
+              '✅ RBACProvider: Created/updated user and got role:',
+              newUser.role
             );
+            setUserRoles([newUser.role as Role]);
+            setIsLoading(false);
+            return;
           }
-        } else {
-          // Regular user creation
-          try {
-            const { data: newUser, error: createError } = await supabase
-              .from('users')
-              .upsert(
-                {
-                  id: user.id,
-                  email: user.email,
-                  full_name: user.user_metadata?.full_name || 'User',
-                  role: user.user_metadata?.role || 'user',
-                  status: 'active',
-                  created_at: user.created_at,
-                },
-                {
-                  onConflict: 'email', // Use email as conflict key to avoid 409 errors
-                  ignoreDuplicates: false,
-                }
-              )
-              .select('role')
-              .single();
-
-            if (!createError && newUser?.role) {
-              console.log(
-                '✅ RBACProvider: Created/updated user and got role:',
-                newUser.role
-              );
-              setUserRoles([newUser.role as Role]);
-              setIsLoading(false);
-              return;
-            }
-          } catch (createError) {
-            console.log('🔐 RBACProvider: User creation failed:', createError);
-          }
+        } catch (createError) {
+          console.log('🔐 RBACProvider: User creation failed:', createError);
         }
       }
 
@@ -242,16 +200,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Fallback for admin user
-      if (user.email === 'luxsess2001@gmail.com') {
-        console.log(
-          '🔐 RBACProvider: Using default admin role for luxsess2001@gmail.com'
-        );
-        setUserRoles(['admin' as Role]);
-        setIsLoading(false);
-        return;
-      }
-
+      // SECURITY FIX: Remove hardcoded admin email check - use database roles only
       console.log(
         '🔐 RBACProvider: No role found in tables, setting default user role'
       );
@@ -260,15 +209,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('🔐 RBACProvider: Error loading roles:', error);
 
-      // Final fallback for admin user
-      if (user.email === 'luxsess2001@gmail.com') {
-        console.log(
-          '🔐 RBACProvider: Final fallback to admin role for luxsess2001@gmail.com'
-        );
-        setUserRoles(['admin' as Role]);
-      } else {
-        setUserRoles(['user']);
-      }
+      // SECURITY FIX: Remove hardcoded admin fallback - always use default
+      setUserRoles(['user']);
       setIsLoading(false);
     }
   }, [user, supabase]);

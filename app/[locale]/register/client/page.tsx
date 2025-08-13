@@ -25,11 +25,8 @@ export default function ClientRegistrationPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!user) {
-      router.push('/auth/login?redirect=/register/client');
-      return;
-    }
+    // Don't redirect unauthenticated users - they need to register first!
+    // If user is already authenticated, they might want to complete their profile
     setIsLoading(false);
   }, [user, router]);
 
@@ -58,9 +55,8 @@ export default function ClientRegistrationPage() {
     );
   }
 
-  if (!user) {
-    return null; // Will redirect to login
-  }
+  // Don't block registration for unauthenticated users - they need to register first!
+  // The form will handle authentication as part of the registration process
 
   if (registrationComplete) {
     return (

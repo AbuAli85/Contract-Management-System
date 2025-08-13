@@ -43,8 +43,7 @@ async function loginHandler(request: NextRequest) {
 
     if (error) {
       console.error('🔐 Server login error:', error);
-      const apiError = ApiErrorHandler.handleAuthError(error);
-
+      
       // Log failed login attempt
       const auditEntry = createAuditLog(request, 'LOGIN_FAILED', false, {
         email,
@@ -53,17 +52,15 @@ async function loginHandler(request: NextRequest) {
       });
       logAuditEvent(auditEntry);
 
-      return NextResponse.json(ApiErrorHandler.formatErrorResponse(apiError), {
-        status: apiError.status || 400,
-      });
+      // SECURITY FIX: Return generic error message
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
     if (!data.user) {
       console.error('🔐 No user returned from sign in');
-      const error = AuthErrorHandler.createError(
-        'Authentication failed',
-        'AUTH_FAILED'
-      );
 
       // Log authentication failure
       const auditEntry = createAuditLog(request, 'LOGIN_AUTH_FAILED', false, {
@@ -72,7 +69,11 @@ async function loginHandler(request: NextRequest) {
       });
       logAuditEvent(auditEntry);
 
-      return NextResponse.json(error, { status: 400 });
+      // SECURITY FIX: Return generic error message
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      );
     }
 
     console.log('🔐 Server login successful for user:', data.user.id);

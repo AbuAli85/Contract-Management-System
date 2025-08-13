@@ -101,8 +101,6 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
-    // Server components external packages
-    serverComponentsExternalPackages: ['lucide-react'],
     // Enable modern features
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },

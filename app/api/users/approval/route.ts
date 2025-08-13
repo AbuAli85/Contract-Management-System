@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC } from '@/lib/rbac/guard';
 import { createClient } from '@/lib/supabase/server';
 
-// GET - Fetch pending users for approval
-export const GET = withRBAC(
-  'user:approve:all',
-  async (request: NextRequest) => {
-    try {
-      console.log('🔧 User approval API called');
-      const supabase = createClient();
+// GET - Fetch pending users for approval (simplified admin check)
+export async function GET(request: NextRequest) {
+  try {
+    console.log('🔧 User approval API called');
+    const supabase = await createClient();
 
       // Get current user to check permissions
       const {
@@ -102,15 +99,12 @@ export const GET = withRBAC(
         { status: 500 }
       );
     }
-  }
-);
+}
 
-// POST - Approve or reject users
-export const POST = withRBAC(
-  'user:approve:all',
-  async (request: NextRequest) => {
-    try {
-      const supabase = createClient();
+// POST - Approve or reject users (simplified admin check)
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient();
 
       // Get current user to check permissions
       const {
@@ -246,4 +240,4 @@ export const POST = withRBAC(
       );
     }
   }
-);
+}
