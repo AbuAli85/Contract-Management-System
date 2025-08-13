@@ -20,6 +20,12 @@ export async function middleware(request: NextRequest) {
   
   console.log('🔐 Middleware: Processing request for path:', pathname);
   
+  // Handle root path redirect
+  if (pathname === '/') {
+    console.log('🔐 Middleware: Redirecting root path to /en');
+    return NextResponse.redirect(new URL('/en', request.url));
+  }
+  
   // SECURITY FIX: Replace insecure cookie-based role with secure JWT verification
   const userAuth = await verifyUserRoleFromToken(request);
   const role = userAuth.role;
@@ -155,6 +161,7 @@ export function GET(request: NextRequest) {
   
   if (pathname === '/') {
     try {
+      console.log('🔐 Middleware: Redirecting root path to /en');
       return NextResponse.redirect(new URL('/en', request.url));
     } catch (error) {
       console.error('Emergency middleware redirect error:', error);
