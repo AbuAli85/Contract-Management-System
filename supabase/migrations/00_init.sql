@@ -76,13 +76,13 @@ CREATE TABLE IF NOT EXISTS companies (
 -- Create user_roles table (junction table for many-to-many relationship)
 CREATE TABLE IF NOT EXISTS user_roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
     role user_role NOT NULL DEFAULT 'client',
     permissions JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     assigned_at TIMESTAMPTZ DEFAULT NOW(),
-    assigned_by UUID REFERENCES profiles(user_id),
+    assigned_by UUID REFERENCES profiles(id),
     
     -- A user can have only one role per company
     CONSTRAINT user_roles_user_company_unique UNIQUE (user_id, company_id)
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS services (
     max_participants INTEGER DEFAULT 1,
     status service_status DEFAULT 'active',
     metadata JSONB DEFAULT '{}',
-    created_by UUID REFERENCES profiles(user_id),
+    created_by UUID REFERENCES profiles(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS services (
 CREATE TABLE IF NOT EXISTS bookings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     service_id UUID REFERENCES services(id) ON DELETE CASCADE NOT NULL,
-    client_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE NOT NULL,
+    client_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     provider_company_id UUID REFERENCES companies(id) ON DELETE CASCADE NOT NULL,
     status booking_status DEFAULT 'pending',
     scheduled_at TIMESTAMPTZ NOT NULL,
@@ -137,14 +137,14 @@ CREATE TABLE IF NOT EXISTS booking_events (
     old_value JSONB,
     new_value JSONB,
     description TEXT,
-    created_by UUID REFERENCES profiles(user_id),
+    created_by UUID REFERENCES profiles(id),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Create notifications table
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(user_id) ON DELETE CASCADE NOT NULL,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
     type notification_type NOT NULL,
     title TEXT NOT NULL,
     message TEXT NOT NULL,
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 -- Create audit_logs table
 CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(user_id) ON DELETE SET NULL,
+    user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
     action audit_action NOT NULL,
     table_name TEXT,
     record_id UUID,
@@ -396,7 +396,7 @@ SELECT
     p.email,
     p.full_name
 FROM user_roles ur
-JOIN profiles p ON ur.user_id = p.user_id
+JOIN profiles p ON ur.user_id = p.id
 JOIN companies c ON ur.company_id = c.id
 WHERE ur.is_active = true;
 

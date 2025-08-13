@@ -82,7 +82,22 @@
     "storybook:build": "storybook build",
     "docs:dev": "next dev -p 3001",
     "docs:build": "next build",
-    "docs:start": "next start -p 3001"
+    "docs:start": "next start -p 3001",
+    "security:setup": "echo 'Setting up security features...' && npm run security:migrate && npm run security:test",
+    "security:migrate": "supabase db push --include-all",
+    "security:test": "jest --testPathPattern=security",
+    "security:deploy-functions": "supabase functions deploy update-user-claims",
+    "security:check-headers": "curl -I -s https://yourdomain.com | grep -E '(X-Frame-Options|X-Content-Type-Options|X-XSS-Protection)'",
+    "security:test-rate-limit": "node scripts/test-rate-limiting.js",
+    "security:test-mfa": "node scripts/test-mfa-setup.js",
+    "security:test-cors": "node scripts/test-cors-config.js",
+    "security:audit-full": "npm run security:audit && npm run security:test && npm run security:check-headers",
+    "mfa:setup": "echo 'Setting up MFA system...' && npm run security:migrate",
+    "mfa:test": "npm run security:test-mfa",
+    "rate-limit:setup": "echo 'Setting up rate limiting...' && npm run security:migrate",
+    "rate-limit:test": "npm run security:test-rate-limit",
+    "cors:setup": "echo 'Setting up CORS...' && npm run security:migrate",
+    "cors:test": "npm run security:test-cors"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
