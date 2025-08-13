@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { AdminOnlyGuard } from '@/components/admin-only-guard';
 import {
   Card,
@@ -34,16 +34,48 @@ function UserApprovalsLoading() {
 export default function UserApprovalsPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params: { locale: string };
 }) {
-  // For client components, we need to handle the params differently
-  const [locale, setLocale] = React.useState('en');
-  
-  React.useEffect(() => {
-    params.then(({ locale: resolvedLocale }) => {
-      setLocale(resolvedLocale);
-    });
-  }, [params]);
+  // For client components, params are directly available
+  const locale = params.locale;
+  const [stats, setStats] = useState({
+    pending: 0,
+    approvedToday: 0,
+    rejectedToday: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch dashboard statistics
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/users/approval', {
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          const pendingCount = data.pendingUsers?.length || 0;
+          // For now, we'll set these to 0 since we don't have historical data
+          // In a real app, you'd have separate APIs for these stats
+          setStats({
+            pending: pendingCount,
+            approvedToday: 0,
+            rejectedToday: 0
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <AdminOnlyGuard locale={locale}>
@@ -76,7 +108,9 @@ export default function UserApprovalsPage({
               <Clock className='h-4 w-4 text-yellow-500' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold text-yellow-600'>12</div>
+              <div className='text-2xl font-bold text-yellow-600'>
+                {loading ? '...' : stats.pending}
+              </div>
               <p className='text-xs text-muted-foreground'>
                 Users waiting for review
               </p>
@@ -91,7 +125,9 @@ export default function UserApprovalsPage({
               <CheckCircle className='h-4 w-4 text-green-500' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold text-green-600'>8</div>
+              <div className='text-2xl font-bold text-green-600'>
+                {loading ? '...' : stats.approvedToday}
+              </div>
               <p className='text-xs text-muted-foreground'>
                 Users approved today
               </p>
@@ -106,7 +142,9 @@ export default function UserApprovalsPage({
               <XCircle className='h-4 w-4 text-red-500' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold text-red-600'>2</div>
+              <div className='text-2xl font-bold text-red-600'>
+                {loading ? '...' : stats.rejectedToday}
+              </div>
               <p className='text-xs text-muted-foreground'>
                 Users rejected today
               </p>
@@ -132,7 +170,7 @@ export default function UserApprovalsPage({
                 className='bg-yellow-100 text-yellow-800'
               >
                 <Clock className='mr-1 h-3 w-3' />
-                12 Pending
+                {loading ? '...' : stats.pending} Pending
               </Badge>
             </div>
           </CardHeader>

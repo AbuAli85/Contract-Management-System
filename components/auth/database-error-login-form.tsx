@@ -27,7 +27,7 @@ import {
   WifiOff 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
+// import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
 
 export function DatabaseErrorLoginForm() {
@@ -42,7 +42,7 @@ export function DatabaseErrorLoginForm() {
   const [retryCount, setRetryCount] = useState(0);
 
   const router = useRouter();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const supabase = createClient();
 
   useEffect(() => {
@@ -110,10 +110,10 @@ export function DatabaseErrorLoginForm() {
       
       console.log('✅ Auth data cleared');
       
-      toast({
-        title: 'Authentication Reset',
-        description: 'Cleared all authentication data. Please try logging in again.',
-      });
+      // toast({
+      //   title: 'Authentication Reset',
+      //   description: 'Cleared all authentication data. Please try logging in again.',
+      // });
       
     } catch (error) {
       console.error('❌ Error clearing auth data:', error);
@@ -131,10 +131,10 @@ export function DatabaseErrorLoginForm() {
       // and immediately redirect to offline mode
       setSuccess('Switching to offline mode...');
       
-      toast({
-        title: 'Switching to Demo Mode',
-        description: 'Redirecting to offline demo access...',
-      });
+      // toast({
+      //   title: 'Switching to Demo Mode',
+      //   description: 'Redirecting to offline demo access...',
+      // });
 
       // Wait a moment for user to see the message
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -146,11 +146,11 @@ export function DatabaseErrorLoginForm() {
       console.error('🚨 Offline mode switch failed:', error);
       setError('Unable to switch to offline mode. Please try refreshing the page.');
       
-      toast({
-        title: 'Switch Failed',
-        description: 'Please refresh the page and try again.',
-        variant: 'destructive',
-      });
+      // toast({
+      //   title: 'Switch Failed',
+      //   description: 'Please refresh the page and try again.',
+      //   variant: 'destructive',
+      // });
     } finally {
       setLoading(false);
     }
@@ -202,23 +202,27 @@ export function DatabaseErrorLoginForm() {
 
         setSuccess('Login successful! Redirecting...');
         
-        toast({
-          title: 'Login Successful',
-          description: 'Welcome back!',
-        });
+        // toast({
+        //   title: 'Login Successful',
+        //   description: 'Welcome back!',
+        // });
 
+        // Wait longer to ensure session is properly established
         setTimeout(() => {
+          console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
-        }, 1500);
+        }, 3000);
         
       } catch (profileError) {
         console.warn('⚠️ Profile operations failed, but auth succeeded');
         
         setSuccess('Login successful! Redirecting...');
         
+        // Wait longer to ensure session is properly established
         setTimeout(() => {
+          console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
-        }, 1500);
+        }, 3000);
       }
 
     } catch (error: any) {

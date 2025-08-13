@@ -21,7 +21,7 @@ export default function AdminPage() {
         const roleResponse = await fetch('/api/auth/get-user-role');
         const roleData = await roleResponse.json();
 
-        if (!roleData.success || roleData.role !== 'admin') {
+        if (!roleData.success || roleData.role?.value !== 'admin') {
           router.replace('/not-authorized');
           return;
         }

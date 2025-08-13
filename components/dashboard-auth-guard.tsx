@@ -7,7 +7,7 @@ import { useSupabase } from '@/app/providers';
 interface DashboardAuthGuardProps {
   children: React.ReactNode;
   locale?: string;
-  requiredRole?: string;
+  requiredRole?: string | string[];
 }
 
 export function DashboardAuthGuard({
@@ -150,7 +150,19 @@ export function DashboardAuthGuard({
   // Check user role when required
   useEffect(() => {
     const checkUserRole = async () => {
-      if (!session?.user || checkingRole || !requiredRole) return;
+      console.log('🔐 DashboardAuthGuard: Starting role check', { 
+        hasSession: !!session?.user, 
+        checkingRole, 
+        requiredRole 
+      });
+      
+      if (!session?.user || checkingRole) return;
+      
+      // If no role requirement, allow access
+      if (!requiredRole) {
+        console.log('🔐 No role requirement - allowing access');
+        return;
+      }
 
       // Debounce role checks to prevent excessive calls
       const now = Date.now();
@@ -168,11 +180,23 @@ export function DashboardAuthGuard({
           const data = await response.json();
           setUserRole(data.role.value);
 
-          // If user doesn't have the required role, redirect to unauthorized
-          if (data.role.value !== requiredRole) {
+          // Check if user has any of the required roles
+          const hasRequiredRole = Array.isArray(requiredRole) 
+            ? requiredRole.includes(data.role.value)
+            : data.role.value === requiredRole;
+
+          // Admin users should have access to everything
+          if (data.role.value === 'admin') {
+            console.log('🔐 Admin user detected - granting access to all dashboards');
+            setUserRole(data.role.value);
+            return;
+          }
+
+          if (!hasRequiredRole) {
+            const requiredRoleDisplay = Array.isArray(requiredRole) ? requiredRole.join(' or ') : requiredRole;
             const redirectUrl = locale
-              ? `/${locale}/auth/unauthorized?required=${requiredRole}&current=${data.role.value}`
-              : `/auth/unauthorized?required=${requiredRole}&current=${data.role.value}`;
+              ? `/${locale}/auth/unauthorized?required=${requiredRoleDisplay}&current=${data.role.value}`
+              : `/auth/unauthorized?required=${requiredRoleDisplay}&current=${data.role.value}`;
             router.replace(redirectUrl);
             return;
           }

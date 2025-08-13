@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Shield, AlertTriangle, RefreshCw } from 'lucide-react';
-import { useAuth } from '@/lib/auth-service';
+import { useAuth } from '@/app/providers';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ interface AdminGuardProps {
 }
 
 export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
   const router = useRouter();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
@@ -22,11 +22,28 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
 
   useEffect(() => {
     const checkAdminRole = async () => {
+      console.log('🔍 AdminOnlyGuard: Checking admin role...', { user, loading });
+      
       if (loading) return;
       
       if (!user) {
-        router.push(`/${locale || 'en'}/auth/login`);
-        return;
+        console.log('🔍 AdminOnlyGuard: No user, attempting session refresh...');
+        try {
+          await refreshSession();
+          // Wait a bit for the session to refresh
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Check again after refresh
+          if (!user) {
+            console.log('🔍 AdminOnlyGuard: Still no user after refresh, redirecting to login');
+            router.push(`/${locale || 'en'}/auth/login`);
+            return;
+          }
+        } catch (error) {
+          console.log('🔍 AdminOnlyGuard: Session refresh failed, redirecting to login');
+          router.push(`/${locale || 'en'}/auth/login`);
+          return;
+        }
       }
 
       try {
@@ -40,9 +57,9 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
         console.log('🔍 Admin check response:', { status: response.status, data });
 
         if (response.ok && data.success) {
-          setUserRole(data.role);
-          if (data.role !== 'admin') {
-            setError(`Access denied: Role '${data.role}' is not admin`);
+          setUserRole(data.role.value);
+          if (data.role.value !== 'admin') {
+            setError(`Access denied: Role '${data.role.value}' is not admin`);
           }
         } else {
           setError(`Failed to verify admin permissions: ${data.error || 'Unknown error'}`);
