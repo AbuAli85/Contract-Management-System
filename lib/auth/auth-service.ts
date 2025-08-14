@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/client';
 export class AuthService {
   private static instance: AuthService;
   private supabase: ReturnType<typeof createClient>;
-  private refreshPromise: Promise<any> | null = null;
 
   constructor() {
     this.supabase = createClient();
@@ -129,7 +128,7 @@ export class AuthService {
     }
   }
 
-  // Enhanced sign out with cleanup
+  // Sign out with cleanup
   async signOut() {
     try {
       if (!this.supabase?.auth) {
@@ -155,7 +154,7 @@ export class AuthService {
     }
   }
 
-  // Get current user with error handling
+  // Get current user
   async getUser() {
     try {
       if (!this.supabase?.auth) {
@@ -168,79 +167,11 @@ export class AuthService {
         console.error('Get user error:', error);
         throw error;
       }
-
+      
       return data;
     } catch (error) {
       console.error('Failed to get user:', error);
       throw error;
-    }
-  }
-
-  // Refresh session with error handling
-  async refreshSession() {
-    try {
-      if (!this.supabase?.auth) {
-        throw new Error('Supabase client not available');
-      }
-
-      // Prevent multiple refresh attempts
-      if (this.refreshPromise) {
-        return this.refreshPromise;
-      }
-
-      this.refreshPromise = this.supabase.auth.refreshSession();
-      const result = await this.refreshPromise;
-      this.refreshPromise = null;
-
-      return result;
-    } catch (error) {
-      this.refreshPromise = null;
-      console.error('Failed to refresh session:', error);
-      throw error;
-    }
-  }
-
-  // Check if user is authenticated
-  async isAuthenticated(): Promise<boolean> {
-    try {
-      const { data } = await this.getSession();
-      return !!data.session;
-    } catch (error) {
-      console.error('Failed to check authentication:', error);
-      return false;
-    }
-  }
-
-  // Get user role from session or profile
-  async getUserRole(): Promise<string | null> {
-    try {
-      const { data } = await this.getSession();
-      if (!data.session?.user) {
-        return null;
-      }
-
-      // Try to get role from user metadata first
-      const userRole = data.session.user.user_metadata?.role;
-      if (userRole) {
-        return userRole;
-      }
-
-      // Fallback to profile table
-      const { data: profile, error } = await this.supabase
-        .from('profiles')
-        .select('role')
-        .eq('user_id', data.session.user.id)
-        .single();
-
-      if (error) {
-        console.error('Failed to get profile role:', error);
-        return null;
-      }
-
-      return profile?.role || null;
-    } catch (error) {
-      console.error('Failed to get user role:', error);
-      return null;
     }
   }
 
@@ -251,17 +182,9 @@ export class AuthService {
         throw new Error('Supabase client not available');
       }
 
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { data, error } = await this.supabase
-        .from('profiles')
-        .update(updates)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+      const { data, error } = await this.supabase.auth.updateUser({
+        data: updates,
+      });
 
       if (error) {
         console.error('Update profile error:', error);
@@ -275,135 +198,101 @@ export class AuthService {
     }
   }
 
-  // Get user profile
-  async getProfile() {
+  // Refresh session
+  async refreshSession() {
     try {
       if (!this.supabase?.auth) {
         throw new Error('Supabase client not available');
       }
 
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      const { data, error } = await this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
+      const { data, error } = await this.supabase.auth.refreshSession();
+      
       if (error) {
-        console.error('Get profile error:', error);
+        console.error('Refresh session error:', error);
         throw error;
       }
-
+      
       return data;
     } catch (error) {
-      console.error('Failed to get profile:', error);
+      console.error('Failed to refresh session:', error);
       throw error;
     }
   }
 
-  // MFA methods
-  async enableMFA() {
+  // Check if user is authenticated
+  async isAuthenticated(): Promise<boolean> {
     try {
-      if (!this.supabase?.auth) {
-        throw new Error('Supabase client not available');
-      }
-
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // This would integrate with your MFA service
-      // For now, return a placeholder
-      return {
-        success: true,
-        message: 'MFA setup initiated',
-      };
+      const { session } = await this.getSession();
+      return !!session;
     } catch (error) {
-      console.error('Failed to enable MFA:', error);
-      throw error;
+      console.error('Failed to check authentication:', error);
+      return false;
     }
   }
 
-  async verifyMFA(code: string) {
+  // Get user role from database
+  async getUserRole(): Promise<string | null> {
     try {
-      if (!this.supabase?.auth) {
-        throw new Error('Supabase client not available');
-      }
+      const { user } = await this.getUser();
+      if (!user) return null;
 
-      // This would integrate with your MFA service
-      // For now, return a placeholder
-      return {
-        success: true,
-        message: 'MFA verification successful',
-      };
-    } catch (error) {
-      console.error('Failed to verify MFA:', error);
-      throw error;
-    }
-  }
-
-  async disableMFA() {
-    try {
-      if (!this.supabase?.auth) {
-        throw new Error('Supabase client not available');
-      }
-
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // This would integrate with your MFA service
-      // For now, return a placeholder
-      return {
-        success: true,
-        message: 'MFA disabled successfully',
-      };
-    } catch (error) {
-      console.error('Failed to disable MFA:', error);
-      throw error;
-    }
-  }
-
-  // Get MFA status
-  async getMFAStatus() {
-    try {
-      if (!this.supabase?.auth) {
-        throw new Error('Supabase client not available');
-      }
-
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Check MFA status from database
-      const { data, error } = await this.supabase
-        .from('user_mfa')
-        .select('enabled, verified')
-        .eq('user_id', user.id)
+      // Try to get role from profiles table first
+      const { data: profileData, error: profileErr } = await this.supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
         .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Get MFA status error:', error);
-        throw error;
+      
+      if (!profileErr && profileData?.role) {
+        return profileData.role;
       }
 
-      return {
-        enabled: data?.enabled || false,
-        verified: data?.verified || false,
-      };
+      // If no role from profiles, try users table
+      const { data: userData, error: userErr } = await this.supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (!userErr && userData?.role) {
+        return userData.role;
+      }
+
+      return null;
     } catch (error) {
-      console.error('Failed to get MFA status:', error);
-      return {
-        enabled: false,
-        verified: false,
-      };
+      console.error('Failed to get user role:', error);
+      return null;
+    }
+  }
+
+  // Check if user has specific permission
+  async hasPermission(permission: string): Promise<boolean> {
+    try {
+      const role = await this.getUserRole();
+      if (!role) return false;
+
+      // Admin has all permissions
+      if (role === 'admin') return true;
+
+      // Manager has most permissions except admin-only ones
+      if (role === 'manager') {
+        const adminOnlyPermissions = ['users.delete', 'system.settings', 'system.backup'];
+        return !adminOnlyPermissions.includes(permission);
+      }
+
+      // User has basic permissions
+      if (role === 'user') {
+        const userPermissions = [
+          'contracts.view', 'contracts.create', 'contracts.edit',
+          'dashboard.view', 'profile.edit'
+        ];
+        return userPermissions.includes(permission);
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Failed to check permission:', error);
+      return false;
     }
   }
 }

@@ -1,23 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
-export function SimpleWorkingLogin() {
-  const [email, setEmail] = useState('provider@test.com');
-  const [password, setPassword] = useState('TestPass123!');
+export default function SimpleWorkingLogin() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
   const router = useRouter();
+
   const supabase = createClient();
+
+  // Check if Supabase client is available
+  if (!supabase) {
+    return (
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+        <div className='w-full max-w-md bg-white rounded-lg shadow-md p-6'>
+          <div className='text-center'>
+            <h1 className='text-2xl font-bold text-red-600 mb-4'>Configuration Error</h1>
+            <p className='text-gray-600 mb-4'>
+              Supabase client is not properly configured. Please check your environment variables.
+            </p>
+            <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
+              <p className='text-red-800 text-sm'>
+                NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +74,7 @@ export function SimpleWorkingLogin() {
 
       let redirectPath = '/en/dashboard';
 
-      if (!profileError && userProfile) {
+      if (!profileError && userProfile && userProfile.role) {
         console.log('🔐 Simple Login - User role:', userProfile.role);
 
         // Route based on role
@@ -80,9 +96,9 @@ export function SimpleWorkingLogin() {
 
       console.log('🔐 Simple Login - Redirecting to:', redirectPath);
 
-      // Use window.location for immediate redirect
+      // Use Next.js router for proper navigation
       setTimeout(() => {
-        window.location.href = redirectPath;
+        router.push(redirectPath);
       }, 1000);
     } catch (error) {
       console.error('🔐 Simple Login - Exception:', error);
@@ -111,129 +127,127 @@ export function SimpleWorkingLogin() {
 
   return (
     <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
-      <Card className='w-full max-w-md'>
-        <CardHeader className='text-center'>
-          <CardTitle className='text-2xl'>Simple Login Test</CardTitle>
+      <div className='w-full max-w-md bg-white rounded-lg shadow-md p-6'>
+        <div className='text-center mb-6'>
+          <h1 className='text-2xl font-bold text-gray-900'>Simple Login Test</h1>
           <p className='text-sm text-gray-600'>
             Direct Supabase authentication
           </p>
-        </CardHeader>
+        </div>
 
-        <CardContent className='space-y-4'>
-          <form
-            id='simple-login-form'
-            onSubmit={handleLogin}
-            className='space-y-4'
+        <form
+          id='simple-login-form'
+          onSubmit={handleLogin}
+          className='space-y-4'
+        >
+          <div>
+            <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-1'>
+              Email
+            </label>
+            <input
+              id='email'
+              type='email'
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder='Enter email'
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
+              Password
+            </label>
+            <input
+              id='password'
+              type='password'
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder='Enter password'
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+              required
+            />
+          </div>
+
+          {error && (
+            <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
+              <p className='text-red-800 text-sm'>{error}</p>
+            </div>
+          )}
+
+          {message && (
+            <div className='p-3 bg-green-50 border border-green-200 rounded-md'>
+              <p className='text-green-800 text-sm'>
+                {message}
+              </p>
+            </div>
+          )}
+
+          <button
+            type='submit'
+            className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50'
+            disabled={loading}
           >
-            <div>
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                type='email'
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder='Enter email'
-                required
-              />
-            </div>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
 
-            <div>
-              <Label htmlFor='password'>Password</Label>
-              <Input
-                id='password'
-                type='password'
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder='Enter password'
-                required
-              />
-            </div>
-
-            {error && (
-              <Alert variant='destructive'>
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            {message && (
-              <Alert className='border-green-200 bg-green-50'>
-                <AlertDescription className='text-green-800'>
-                  {message}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button type='submit' className='w-full' disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
-            </Button>
-          </form>
-
-          {/* Quick Test Buttons */}
-          <div className='border-t pt-4'>
-            <p className='text-sm text-gray-600 mb-2'>Quick test accounts:</p>
-            <div className='space-y-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                className='w-full'
-                onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test Provider Account
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                className='w-full'
-                onClick={() => quickLogin('user@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test User Account
-              </Button>
-              <Button
-                variant='outline'
-                size='sm'
-                className='w-full'
-                onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test Admin Account
-              </Button>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div className='border-t pt-4 space-y-2'>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='w-full'
-              onClick={() => router.push('/en/test-auth')}
+        {/* Quick Test Buttons */}
+        <div className='border-t pt-4 mt-4'>
+          <p className='text-sm text-gray-600 mb-2'>Quick test accounts:</p>
+          <div className='space-y-2'>
+            <button
+              className='w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm'
+              onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
+              disabled={loading}
             >
-              🧪 Open Diagnostic Page
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='w-full'
-              onClick={() => router.push('/en/auth/register')}
+              Test Provider Account
+            </button>
+            <button
+              className='w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm'
+              onClick={() => quickLogin('user@test.com', 'TestPass123!')}
+              disabled={loading}
             >
-              📝 Create New Account
-            </Button>
+              Test User Account
+            </button>
+            <button
+              className='w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 text-sm'
+              onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
+              disabled={loading}
+            >
+              Test Admin Account
+            </button>
           </div>
+        </div>
 
-          {/* Debug Info */}
-          <div className='text-xs text-gray-500 border-t pt-2'>
-            <p>Server: localhost:3001</p>
-            <p>
-              Supabase:{' '}
-              {process.env.NEXT_PUBLIC_SUPABASE_URL
-                ? 'Connected'
-                : 'Not configured'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        {/* Navigation */}
+        <div className='border-t pt-4 mt-4 space-y-2'>
+          <button
+            className='w-full bg-transparent text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
+            onClick={() => router.push('/en/test-auth')}
+          >
+            🧪 Open Diagnostic Page
+          </button>
+          <button
+            className='w-full bg-transparent text-blue-600 py-2 px-4 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm'
+            onClick={() => router.push('/en/auth/register')}
+          >
+            📝 Create New Account
+          </button>
+        </div>
+
+        {/* Debug Info */}
+        <div className='text-xs text-gray-500 border-t pt-2 mt-4'>
+          <p>Server: localhost:3001</p>
+          <p>
+            Supabase:{' '}
+            {process.env.NEXT_PUBLIC_SUPABASE_URL
+              ? 'Connected'
+              : 'Not configured'}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

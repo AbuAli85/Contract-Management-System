@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     
     // Redirect to home or login
-    window.location.href = '/';
+    window.location.href = '/en';
   };
 
   const updateUser = (updates: Partial<DemoUser>) => {
@@ -86,19 +86,19 @@ export function useRequireAuth(requiredRole?: string) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirect to login if not authenticated
-      window.location.href = '/auth/login';
+      window.location.href = '/en/auth/login';
       return;
     }
     
     if (!isLoading && isAuthenticated && requiredRole && user?.role !== requiredRole) {
       // Redirect to appropriate dashboard if wrong role
       const dashboardMap = {
-        provider: '/dashboard/provider',
-        admin: '/dashboard/admin', 
-        client: '/dashboard/client',
+        provider: '/en/dashboard/provider-comprehensive',
+        admin: '/en/dashboard', 
+        client: '/en/dashboard/client-comprehensive',
       };
       
-      window.location.href = dashboardMap[user?.role as keyof typeof dashboardMap] || '/';
+      window.location.href = dashboardMap[user?.role as keyof typeof dashboardMap] || '/en';
       return;
     }
   }, [user, isAuthenticated, isLoading, requiredRole]);

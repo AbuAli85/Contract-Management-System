@@ -3,14 +3,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useDeleteContractMutation } from '@/hooks/use-contracts';
 
 const toastMock = jest.fn();
+const deleteContractMock = jest.fn();
 
 jest.mock('@/hooks/use-toast', () => ({
   useToast: () => ({
     toast: toastMock,
   }),
 }));
-
-const deleteContractMock = jest.fn();
 
 jest.mock('@/app/actions/contracts', () => ({
   deleteContract: deleteContractMock,

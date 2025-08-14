@@ -1,9 +1,13 @@
-// Jest setup file for RBAC testing
+// Jest setup file for comprehensive testing
 require('@testing-library/jest-dom');
+const React = require('react');
 
 // Mock environment variables
 process.env.RBAC_ENFORCEMENT = 'dry-run';
 process.env.NODE_ENV = 'test';
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
@@ -25,53 +29,123 @@ jest.mock('next/navigation', () => ({
   },
 }));
 
+// Mock next-intl
+jest.mock('next-intl', () => ({
+  useLocale: () => 'en',
+  useTranslations: () => (key) => key,
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+  }),
+}));
+
+// Create a proper Supabase query builder mock
+const createSupabaseQueryBuilder = () => {
+  const mockQueryBuilder = {
+    select: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    neq: jest.fn().mockReturnThis(),
+    gt: jest.fn().mockReturnThis(),
+    lt: jest.fn().mockReturnThis(),
+    gte: jest.fn().mockReturnThis(),
+    lte: jest.fn().mockReturnThis(),
+    like: jest.fn().mockReturnThis(),
+    ilike: jest.fn().mockReturnThis(),
+    in: jest.fn().mockReturnThis(),
+    not: jest.fn().mockReturnThis(),
+    or: jest.fn().mockReturnThis(),
+    and: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    range: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    offset: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
+    count: jest.fn().mockResolvedValue({ data: null, error: null, count: 0 }),
+  };
+
+  // Mock the final execution methods
+  mockQueryBuilder.single.mockResolvedValue({ data: null, error: null });
+  mockQueryBuilder.maybeSingle.mockResolvedValue({ data: null, error: null });
+  mockQueryBuilder.count.mockResolvedValue({ data: null, error: null, count: 0 });
+
+  return mockQueryBuilder;
+};
+
 // Mock Supabase client
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
-      getUser: jest
-        .fn()
-        .mockResolvedValue({ data: { user: null }, error: null }),
+      getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      signInWithPassword: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      signUp: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      signOut: jest.fn().mockResolvedValue({ error: null }),
+      onAuthStateChange: jest.fn(() => ({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      })),
     },
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({ data: null, error: null }),
-        }),
-      }),
-      insert: jest.fn().mockReturnValue({
-        select: jest.fn().mockResolvedValue({ data: null, error: null }),
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({ data: null, error: null }),
-      }),
-    }),
+    from: jest.fn(() => createSupabaseQueryBuilder()),
     rpc: jest.fn().mockResolvedValue({ data: null, error: null }),
   }),
 }));
 
-// Mock Redis client (commented out - package not available)
-// jest.mock('redis', () => ({
-//   createClient: () => ({
-//     get: jest.fn(),
-//     set: jest.fn(),
-//     del: jest.fn(),
-//     flushdb: jest.fn(),
-//     connect: jest.fn(),
-//     disconnect: jest.fn()
-//   })
-// }))
+// Mock Supabase server client
+jest.mock('@/lib/supabase/server', () => ({
+  createClient: () => ({
+    auth: {
+      getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      getSession: jest.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    },
+    from: jest.fn(() => createSupabaseQueryBuilder()),
+  }),
+  createClientWithAuth: () => ({
+    auth: {
+      getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
+    },
+    from: jest.fn(() => createSupabaseQueryBuilder()),
+  }),
+}));
+
+// Mock Supabase admin client
+jest.mock('@/lib/supabase/admin', () => ({
+  getSupabaseAdmin: () => ({
+    from: jest.fn(() => createSupabaseQueryBuilder()),
+  }),
+}));
+
+// Mock auth provider
+jest.mock('@/components/auth-provider', () => ({
+  AuthProvider: ({ children }) => React.createElement('div', null, children),
+  useAuth: () => ({
+    user: null,
+    session: null,
+    signIn: jest.fn(),
+    signUp: jest.fn(),
+    signOut: jest.fn(),
+    loading: false,
+  }),
+}));
+
+// Mock auth error boundary
+jest.mock('@/components/auth-error-boundary', () => ({
+  AuthErrorBoundary: ({ children }) => React.createElement('div', null, children),
+}));
+
+// Mock toast hook
+jest.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: jest.fn(),
+  }),
+}));
 
 // Global test utilities
 global.console = {
   ...console,
-  // Uncomment to see console.log output during tests
-  // log: jest.fn(),
-  // debug: jest.fn(),
-  // info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 };

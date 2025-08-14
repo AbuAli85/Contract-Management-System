@@ -1,275 +1,228 @@
-# 🚀 Contract Management System
+# Contract Management System
 
-A professional, enterprise-grade contract management and generation system built with Next.js 14, TypeScript, and Supabase.
+A professional enterprise-grade contract management and generation system built with Next.js, TypeScript, and Supabase.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-14-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
-![Supabase](https://img.shields.io/badge/Supabase-2.38-green)
+## 🚀 Features
 
-## ✨ Features
+- **User Management**: Complete user lifecycle with role-based access control
+- **Contract Management**: Create, edit, and manage contracts with approval workflows
+- **Promoter Management**: Comprehensive promoter profile and CV management
+- **RBAC System**: Role-based access control with granular permissions
+- **Real-time Updates**: Live data synchronization across the application
+- **Audit Logging**: Complete audit trail for all system activities
+- **Multi-language Support**: Internationalization with next-intl
+- **Responsive Design**: Modern UI that works on all devices
 
-### 🔐 **Advanced Security & RBAC**
+## 🛠️ Tech Stack
 
-- Role-Based Access Control (RBAC) with fine-grained permissions
-- Multi-factor authentication support
-- Session management with automatic refresh
-- Audit logging and compliance features
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui components
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth with custom RBAC
+- **State Management**: React Context + Hooks
+- **Testing**: Jest, React Testing Library
+- **Linting**: ESLint, Prettier
+- **Deployment**: Vercel, Supabase
 
-### 📄 **Contract Management**
+## 📋 Prerequisites
 
-- AI-powered contract generation
-- Template management system
-- Digital signature integration
-- Version control and tracking
-- Real-time collaboration
-
-### 👥 **User Management**
-
-- Comprehensive user administration
-- Role assignment and permission management
-- User activity monitoring
-- Bulk operations and reporting
-
-### 📊 **Analytics & Reporting**
-
-- Real-time dashboard with live data
-- Advanced analytics and insights
-- Custom report generation
-- Export capabilities (PDF, Excel, CSV)
-
-### 🔄 **Workflow & Automation**
-
-- Approval workflows
-- Automated notifications
-- Task management
-- Integration with external systems
-
-## 🏗️ Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Database      │
-│   (Next.js)     │◄──►│   (Supabase)    │◄──►│   (PostgreSQL)  │
-│                 │    │                 │    │                 │
-│ • React 18      │    │ • Auth          │    │ • User Data     │
-│ • TypeScript    │    │ • Database      │    │ • Contracts     │
-│ • Tailwind CSS  │    │ • Storage       │    │ • Analytics     │
-│ • Radix UI      │    │ • Functions     │    │ • Audit Logs    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+- Node.js 18+ 
+- npm or yarn
+- Supabase account and project
+- Git
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 1. Clone the Repository
 
-- **Node.js** 18.0.0 or higher
-- **npm** 8.0.0 or higher
-- **Supabase** account and project
+```bash
+git clone https://github.com/yourusername/contract-management-system.git
+cd contract-management-system
+```
 
-### Installation
+### 2. Install Dependencies
 
-1. **Clone the repository**
+```bash
+npm install
+# or
+yarn install
+```
 
-   ```bash
-   git clone https://github.com/yourusername/contract-management-system.git
-   cd contract-management-system
-   ```
+### 3. Environment Setup
 
-2. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-3. **Set up environment variables**
-
-   ```bash
-   cp env.example .env.local
-   # Edit .env.local with your Supabase credentials
-   ```
-
-4. **Set up Supabase**
-
-   ```bash
-   # Install Supabase CLI
-   npm install -g supabase
-
-   # Start local development
-   supabase start
-
-   # Apply migrations
-   npm run db:migrate
-   ```
-
-5. **Run the development server**
-
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Key environment variables you need to configure:
+Create a `.env.local` file in the root directory:
 
 ```bash
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-# Application Settings
-NODE_ENV=development
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Database Configuration
+DATABASE_URL=your_database_connection_string
 
-# Security
-RBAC_ENFORCEMENT=true
-NEXT_PUBLIC_SESSION_TIMEOUT=3600000
+# Security Configuration
+JWT_SECRET=your_jwt_secret
+ENCRYPTION_KEY=your_encryption_key
+
+# Feature Flags
+ENABLE_MFA=true
+ENABLE_AUDIT_LOGS=true
+ENABLE_REAL_TIME_UPDATES=true
 ```
 
-### Database Setup
+### 4. Database Setup
 
-The system uses Supabase with the following key tables:
+Run the database migrations:
 
-- `users` - User accounts and profiles
-- `user_roles` - Role assignments
-- `permissions` - Permission definitions
-- `contracts` - Contract data
-- `parties` - Contract parties
-- `audit_logs` - System audit trail
+```bash
+npm run db:migrate
+# or
+supabase db push
+```
 
-## 📁 Project Structure
+Seed the database with initial data:
+
+```bash
+npm run db:seed
+```
+
+### 5. Start Development Server
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🗄️ Database Schema
+
+The system uses the following main tables:
+
+- **users**: User accounts and profiles
+- **contracts**: Contract information and metadata
+- **promoters**: Promoter profiles and CV data
+- **user_activity_log**: Audit trail for all activities
+- **permissions**: RBAC permission definitions
+- **roles**: User role assignments
+
+## 🔐 Authentication & Authorization
+
+### User Roles
+
+- **Admin**: Full system access
+- **Manager**: User and contract management
+- **User**: Basic contract operations
+- **Viewer**: Read-only access
+
+### Permission System
+
+The RBAC system uses a hierarchical permission structure:
 
 ```
-contract-management-system/
-├── app/                    # Next.js 14 app directory
-│   ├── [locale]/          # Internationalization
-│   ├── api/               # API routes
-│   ├── auth/              # Authentication pages
-│   ├── dashboard/         # Dashboard pages
-│   ├── contracts/         # Contract management
-│   └── user-management/   # User administration
-├── components/            # Reusable UI components
-│   ├── ui/               # Base UI components
-│   ├── auth/             # Authentication components
-│   ├── dashboard/        # Dashboard components
-│   └── contracts/        # Contract components
-├── lib/                  # Utility libraries
-│   ├── supabase/         # Supabase client
-│   ├── auth/             # Authentication utilities
-│   ├── rbac/             # RBAC implementation
-│   └── utils/            # General utilities
-├── hooks/                # Custom React hooks
-├── types/                # TypeScript type definitions
-├── database/             # Database migrations
-├── supabase/             # Supabase configuration
-└── tests/                # Test files
+resource.action.scope
 ```
+
+Examples:
+- `users.view.all` - View all users
+- `contracts.create.own` - Create own contracts
+- `dashboard.view.public` - View public dashboard
+
+## 📱 API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+
+### Users
+- `GET /api/users` - List users
+- `GET /api/users/[id]` - Get user details
+- `POST /api/users/approval` - Approve/reject users
+- `PUT /api/users/[id]` - Update user
+
+### Contracts
+- `GET /api/contracts` - List contracts
+- `POST /api/contracts` - Create contract
+- `PUT /api/contracts/[id]` - Update contract
+- `DELETE /api/contracts/[id]` - Delete contract
+
+### Promoters
+- `GET /api/promoters` - List promoters
+- `POST /api/promoters` - Create promoter
+- `PUT /api/promoters/[id]` - Update promoter
+- `DELETE /api/promoters/[id]` - Delete promoter
 
 ## 🧪 Testing
 
-### Run Tests
+Run the test suite:
 
 ```bash
-# Unit tests
-npm run test
+# Run all tests
+npm test
 
-# Watch mode
+# Run tests in watch mode
 npm run test:watch
 
-# Coverage report
+# Run tests with coverage
 npm run test:coverage
 
-# E2E tests
-npm run test:e2e
+# Run specific test files
+npm test -- --testPathPattern=auth
 ```
-
-### Test Structure
-
-- **Unit Tests**: Jest + React Testing Library
-- **E2E Tests**: Cypress
-- **API Tests**: Supertest
-- **Database Tests**: Test database with fixtures
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+### Vercel Deployment
 
-1. **Connect your repository to Vercel**
-2. **Set environment variables in Vercel dashboard**
-3. **Deploy automatically on push to main branch**
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy automatically on push
 
-### Manual Deployment
+### Supabase Deployment
 
+1. Push database changes:
 ```bash
-# Build the application
-npm run build
-
-# Start production server
-npm start
+supabase db push
 ```
 
-### Docker Deployment
-
+2. Deploy Edge Functions:
 ```bash
-# Build Docker image
-docker build -t contract-management-system .
-
-# Run container
-docker run -p 3000:3000 contract-management-system
+supabase functions deploy
 ```
+
+## 📊 Monitoring & Logging
+
+The system includes comprehensive logging and monitoring:
+
+- **Application Logs**: Console and file-based logging
+- **Audit Logs**: User activity tracking
+- **Error Tracking**: Error monitoring and alerting
+- **Performance Metrics**: Response time and throughput monitoring
 
 ## 🔒 Security Features
 
+- **JWT Authentication**: Secure token-based authentication
 - **RBAC**: Role-based access control
-- **Input Validation**: Zod schema validation
+- **Input Validation**: Comprehensive input sanitization
 - **SQL Injection Protection**: Parameterized queries
 - **XSS Protection**: Content Security Policy
-- **CSRF Protection**: Token-based validation
-- **Rate Limiting**: API request throttling
-- **Audit Logging**: Comprehensive activity tracking
-
-## 📊 Performance
-
-- **Bundle Optimization**: Webpack optimization with code splitting
-- **Image Optimization**: Next.js Image component with WebP/AVIF
-- **Caching**: Redis caching for RBAC and API responses
-- **Lazy Loading**: Component and route lazy loading
-- **CDN**: Static asset delivery optimization
-
-## 🌍 Internationalization
-
-The system supports multiple languages:
-
-- English (en) - Default
-- Arabic (ar) - RTL support
-- Spanish (es)
-- French (fr)
-- German (de)
+- **Rate Limiting**: API rate limiting and throttling
+- **Audit Logging**: Complete activity tracking
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature-name`
 3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-### Code Standards
-
-- **TypeScript**: Strict mode enabled
-- **ESLint**: Code quality enforcement
-- **Prettier**: Code formatting
-- **Pre-commit hooks**: Automated quality checks
+4. Add tests for new functionality
+5. Run the test suite: `npm test`
+6. Commit your changes: `git commit -am 'Add feature'`
+7. Push to the branch: `git push origin feature-name`
+8. Submit a pull request
 
 ## 📝 License
 
@@ -277,54 +230,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🆘 Support
 
-### Documentation
+For support and questions:
 
-- [User Guide](docs/USER_GUIDE.md)
-- [API Documentation](docs/API.md)
-- [Deployment Guide](docs/DEPLOYMENT.md)
+- Create an issue in the GitHub repository
+- Check the [documentation](docs/)
+- Review the [troubleshooting guide](docs/TROUBLESHOOTING.md)
 
-### Community
+## 🔄 Changelog
 
-- [GitHub Issues](https://github.com/yourusername/contract-management-system/issues)
-- [Discussions](https://github.com/yourusername/contract-management-system/discussions)
-- [Wiki](https://github.com/yourusername/contract-management-system/wiki)
-
-### Professional Support
-
-- **Email**: support@yourdomain.com
-- **Phone**: +1 (555) 123-4567
-- **Hours**: Monday - Friday, 9 AM - 6 PM EST
-
-## 🙏 Acknowledgments
-
-- **Next.js Team** for the amazing framework
-- **Supabase Team** for the backend infrastructure
-- **Radix UI** for accessible components
-- **Tailwind CSS** for utility-first CSS
-- **Vercel** for hosting and deployment
+See [CHANGELOG.md](CHANGELOG.md) for a complete list of changes and updates.
 
 ## 📈 Roadmap
 
-### Q1 2025
-
-- [ ] Mobile app (React Native)
-- [ ] Advanced AI contract analysis
+- [ ] Advanced contract templates
+- [ ] Document versioning
+- [ ] Workflow automation
+- [ ] Mobile application
+- [ ] Advanced analytics dashboard
+- [ ] Integration with external services
 - [ ] Multi-tenant support
-
-### Q2 2025
-
-- [ ] Blockchain integration
-- [ ] Advanced workflow engine
-- [ ] API marketplace
-
-### Q3 2025
-
-- [ ] Machine learning insights
 - [ ] Advanced reporting
-- [ ] Enterprise SSO
 
----
+## 🙏 Acknowledgments
 
-**Built with ❤️ by the Contract Management System Team**
-
-_For enterprise inquiries, contact: enterprise@yourdomain.com_
+- Built with [Next.js](https://nextjs.org/)
+- Database powered by [Supabase](https://supabase.com/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)

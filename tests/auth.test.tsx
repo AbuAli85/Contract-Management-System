@@ -1,18 +1,17 @@
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { useAuth } from '@/components/auth/auth-provider';
-import { AuthErrorBoundary } from '@/components/auth-error-boundary';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { LoginForm } from '@/auth/forms/login-form';
+import { SignupForm } from '@/auth/forms/signup-form';
+import { AuthProvider, useAuth } from '@/components/auth/auth-provider';
 import {
   formatAuthError,
   isNetworkError,
   isRateLimitError,
   isSessionExpiredError,
-} from '@/lib/actions/cookie-actions';
-import {
-  createClientWithRefresh,
-  refreshSession,
   isSessionExpired,
-} from '@/lib/supabase/server';
+  refreshSession,
+} from '@/lib/actions/cookie-actions';
+import { AuthErrorBoundary } from '@/components/auth-error-boundary';
 
 // Mock Supabase client
 const mockSupabaseClient = {
@@ -33,19 +32,8 @@ jest.mock('@/lib/supabase/client', () => ({
   createClient: () => mockSupabaseClient,
 }));
 
-jest.mock('@/lib/supabase/server', () => ({
-  createClientWithRefresh: jest.fn(),
-  refreshSession: jest.fn(),
-  isSessionExpired: jest.fn(),
-  ensureValidSession: jest.fn(),
-  refreshTokenWithRetry: jest.fn(),
-  getValidSession: jest.fn(),
-  isAuthenticated: jest.fn(),
-}));
-
 // Mock AuthProvider component
 const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const auth = useAuth();
   return <div data-testid='auth-provider'>{children}</div>;
 };
 
@@ -179,7 +167,7 @@ describe('Authentication System - Unit Tests', () => {
       const networkError = { message: 'Network Error', code: 'NETWORK_ERROR' };
       const formatted = formatAuthError(networkError);
 
-      expect(formatted.message).toContain('network');
+      expect(formatted.message).toContain('Network error');
       expect(formatted.severity).toBe('error');
       expect(isNetworkError(networkError)).toBe(true);
     });
@@ -191,7 +179,7 @@ describe('Authentication System - Unit Tests', () => {
       };
       const formatted = formatAuthError(rateLimitError);
 
-      expect(formatted.message).toContain('too many');
+      expect(formatted.message).toContain('Too many attempts');
       expect(formatted.severity).toBe('warning');
       expect(isRateLimitError(rateLimitError)).toBe(true);
     });
@@ -203,7 +191,7 @@ describe('Authentication System - Unit Tests', () => {
       };
       const formatted = formatAuthError(sessionError);
 
-      expect(formatted.message).toContain('session');
+      expect(formatted.message).toContain('session has expired');
       expect(formatted.severity).toBe('info');
       expect(isSessionExpiredError(sessionError)).toBe(true);
     });
@@ -212,7 +200,7 @@ describe('Authentication System - Unit Tests', () => {
       const unknownError = { message: 'Unknown error', code: 'UNKNOWN' };
       const formatted = formatAuthError(unknownError);
 
-      expect(formatted.message).toContain('authentication');
+      expect(formatted.message).toBe('Unknown error');
       expect(formatted.severity).toBe('error');
     });
 
@@ -433,8 +421,9 @@ describe('Authentication System - Unit Tests', () => {
       };
       const formatted = formatAuthError(connectionError);
 
-      expect(formatted.message).toContain('connection');
+      expect(formatted.message).toContain('Network error');
       expect(formatted.severity).toBe('error');
+      expect(isNetworkError(connectionError)).toBe(true);
     });
   });
 

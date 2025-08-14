@@ -13,7 +13,6 @@ export type PermissionScope =
   | 'own'
   | 'provider'
   | 'organization'
-  | 'booking'
   | 'public'
   | 'all';
 
@@ -23,11 +22,8 @@ export type PermissionResource =
   | 'auth'
   | 'security'
   | 'service'
-  | 'discovery'
   | 'booking'
-  | 'booking_lifecycle'
   | 'communication'
-  | 'call'
   | 'payment'
   | 'finance'
   | 'role'
@@ -52,7 +48,6 @@ export type PermissionAction =
   | 'login'
   | 'logout'
   | 'refresh'
-  | 'impersonate'
   | 'search'
   | 'browse'
   | 'filter'
@@ -84,8 +79,6 @@ export type PermissionAction =
   | 'message'
   | 'approve'
   | 'transition'
-  | 'ingest'
-  | 'seed'
   | 'import';
 
 // Valid permission scopes
@@ -93,7 +86,6 @@ export const VALID_SCOPES: PermissionScope[] = [
   'own',
   'provider',
   'organization',
-  'booking',
   'public',
   'all',
 ];
@@ -105,11 +97,8 @@ export const VALID_RESOURCES: PermissionResource[] = [
   'auth',
   'security',
   'service',
-  'discovery',
   'booking',
-  'booking_lifecycle',
   'communication',
-  'call',
   'payment',
   'finance',
   'role',
@@ -136,7 +125,6 @@ export const VALID_ACTIONS: PermissionAction[] = [
   'login',
   'logout',
   'refresh',
-  'impersonate',
   'search',
   'browse',
   'filter',
@@ -168,303 +156,195 @@ export const VALID_ACTIONS: PermissionAction[] = [
   'message',
   'approve',
   'transition',
-  'ingest',
-  'seed',
   'import',
 ];
 
-/**
- * Parse a permission string into its components
- * Format: {resource}:{action}:{scope}
- *
- * @param permission - Permission string to parse
- * @returns ParsedPermission object or null if invalid
- */
+// Permission parsing function
 export function parsePermission(permission: string): ParsedPermission | null {
-  if (!permission || typeof permission !== 'string') {
+  try {
+    // Handle simple format: "resource.action"
+    if (permission.includes('.')) {
+      const [resource, action] = permission.split('.');
+      
+      if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
+        return null;
+      }
+      
+      if (!VALID_ACTIONS.includes(action as PermissionAction)) {
+        return null;
+      }
+      
+      return {
+        resource: resource as PermissionResource,
+        action: action as PermissionAction,
+        scope: 'all',
+        original: permission,
+      };
+    }
+    
+    // Handle complex format: "resource.action.scope"
+    if (permission.includes(':')) {
+      const [resourceAction, scope] = permission.split(':');
+      const [resource, action] = resourceAction.split('.');
+      
+      if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
+        return null;
+      }
+      
+      if (!VALID_ACTIONS.includes(action as PermissionAction)) {
+        return null;
+      }
+      
+      if (!VALID_SCOPES.includes(scope as PermissionScope)) {
+        return null;
+      }
+      
+      return {
+        resource: resource as PermissionResource,
+        action: action as PermissionAction,
+        scope: scope as PermissionScope,
+        original: permission,
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error parsing permission:', permission, error);
     return null;
   }
-
-  const parts = permission.split(':');
-  if (parts.length !== 3) {
-    return null;
-  }
-
-  const [resource, action, scope] = parts;
-
-  // Validate each component
-  if (
-    !isValidResource(resource) ||
-    !isValidAction(action) ||
-    !isValidScope(scope)
-  ) {
-    return null;
-  }
-
-  return {
-    resource: resource as PermissionResource,
-    action: action as PermissionAction,
-    scope: scope as PermissionScope,
-    original: permission,
-  };
 }
 
-/**
- * Validate if a resource is valid
- */
-export function isValidResource(
-  resource: string
-): resource is PermissionResource {
-  return VALID_RESOURCES.includes(resource as PermissionResource);
+// Permission validation function
+export function validatePermission(permission: string): boolean {
+  const parsed = parsePermission(permission);
+  return parsed !== null;
 }
 
-/**
- * Validate if an action is valid
- */
-export function isValidAction(action: string): action is PermissionAction {
-  return VALID_ACTIONS.includes(action as PermissionAction);
-}
-
-/**
- * Validate if a scope is valid
- */
-export function isValidScope(scope: string): scope is PermissionScope {
-  return VALID_SCOPES.includes(scope as PermissionScope);
-}
-
-/**
- * Validate a complete permission string
- */
-export function isValidPermission(permission: string): boolean {
-  return parsePermission(permission) !== null;
-}
-
-/**
- * Create a permission string from components
- */
-export function createPermission(
-  resource: PermissionResource,
-  action: PermissionAction,
-  scope: PermissionScope
-): string {
-  return `${resource}:${action}:${scope}`;
-}
-
-/**
- * Check if a permission matches a pattern
- * Pattern can use wildcards (*) for any component
- */
-export function permissionMatches(
-  pattern: string,
-  permission: string
-): boolean {
-  if (!pattern || !permission) return false;
-
-  const patternParts = pattern.split(':');
-  const permissionParts = permission.split(':');
-
-  if (patternParts.length !== 3 || permissionParts.length !== 3) {
+// Permission comparison function
+export function permissionsMatch(permission1: string, permission2: string): boolean {
+  const parsed1 = parsePermission(permission1);
+  const parsed2 = parsePermission(permission2);
+  
+  if (!parsed1 || !parsed2) {
     return false;
   }
-
-  return patternParts.every((part, index) => {
-    if (part === '*') return true;
-    return part === permissionParts[index];
-  });
-}
-
-/**
- * Get all permissions that match a pattern
- */
-export function getMatchingPermissions(
-  pattern: string,
-  permissions: string[]
-): string[] {
-  return permissions.filter(permission =>
-    permissionMatches(pattern, permission)
+  
+  return (
+    parsed1.resource === parsed2.resource &&
+    parsed1.action === parsed2.action &&
+    (parsed1.scope === 'all' || parsed2.scope === 'all' || parsed1.scope === parsed2.scope)
   );
 }
 
-/**
- * Check if a user has any permission that matches a pattern
- */
-export function hasMatchingPermission(
-  userPermissions: string[],
-  pattern: string
-): boolean {
-  return getMatchingPermissions(pattern, userPermissions).length > 0;
+// Check if permission includes another permission
+export function permissionIncludes(permission: string, requiredPermission: string): boolean {
+  const parsed = parsePermission(permission);
+  const required = parsePermission(requiredPermission);
+  
+  if (!parsed || !required) {
+    return false;
+  }
+  
+  // Check if resources match
+  if (parsed.resource !== required.resource) {
+    return false;
+  }
+  
+  // Check if actions match
+  if (parsed.action !== required.action) {
+    return false;
+  }
+  
+  // Check scope hierarchy
+  if (parsed.scope === 'all') {
+    return true;
+  }
+  
+  if (required.scope === 'all') {
+    return false;
+  }
+  
+  return parsed.scope === required.scope;
 }
 
-/**
- * Get the highest scope level from a list of permissions
- * Scope hierarchy: public < own < booking < organization < provider < all
- */
-export function getHighestScope(permissions: string[]): PermissionScope {
-  const scopeHierarchy: Record<PermissionScope, number> = {
-    public: 1,
-    own: 2,
-    booking: 3,
-    organization: 4,
-    provider: 5,
-    all: 6,
+// Get all permissions for a role
+export function getRolePermissions(role: string): string[] {
+  const rolePermissions: Record<string, string[]> = {
+    admin: [
+      'users.view', 'users.create', 'users.edit', 'users.delete',
+      'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.delete', 'contracts.approve',
+      'dashboard.view', 'analytics.view', 'reports.generate',
+      'settings.view', 'settings.edit', 'logs.view', 'backup.create',
+      'system.manage', 'security.manage', 'audit.view'
+    ],
+    manager: [
+      'users.view', 'users.create', 'users.edit',
+      'contracts.view', 'contracts.create', 'contracts.edit', 'contracts.approve',
+      'dashboard.view', 'analytics.view', 'reports.generate',
+      'settings.view', 'logs.view'
+    ],
+    user: [
+      'contracts.view', 'contracts.create', 'contracts.edit',
+      'dashboard.view', 'profile.edit'
+    ],
+    viewer: [
+      'contracts.view', 'dashboard.view'
+    ]
   };
-
-  let highestScope: PermissionScope = 'public';
-  let highestLevel = 1;
-
-  for (const permission of permissions) {
-    const parsed = parsePermission(permission);
-    if (parsed && scopeHierarchy[parsed.scope] > highestLevel) {
-      highestLevel = scopeHierarchy[parsed.scope];
-      highestScope = parsed.scope;
-    }
-  }
-
-  return highestScope;
+  
+  return rolePermissions[role] || [];
 }
 
-/**
- * Check if a scope is sufficient for a required scope
- */
-export function scopeIsSufficient(
-  userScope: PermissionScope,
-  requiredScope: PermissionScope
-): boolean {
-  const scopeHierarchy: Record<PermissionScope, number> = {
-    public: 1,
-    own: 2,
-    booking: 3,
-    organization: 4,
-    provider: 5,
-    all: 6,
-  };
-
-  return scopeHierarchy[userScope] >= scopeHierarchy[requiredScope];
+// Check if user has permission based on role
+export function hasPermission(role: string, permission: string): boolean {
+  const rolePermissions = getRolePermissions(role);
+  return rolePermissions.some(rolePermission => 
+    permissionIncludes(rolePermission, permission)
+  );
 }
 
-/**
- * Normalize a permission string (lowercase, trim) and handle legacy aliases
- * Converts legacy permission keys to canonical format {resource}:{action}:{scope}
- */
-export function normalizePermission(permission: string): string {
-  const normalized = permission.toLowerCase().trim();
-
-  // Legacy permission aliases mapping to canonical format
-  const permissionAliases: Record<string, string> = {
-    // Dashboard aliases
-    'dashboard:analytics:read': 'analytics:read:all',
-
-    // Admin aliases
-    'admin:backup:all': 'system:backup:all',
-    'admin:import:all': 'data:import:all',
-    'admin:seed:all': 'data:seed:all',
-    'admin:roles:update:all': 'role:update:all',
-
-    // Notification aliases
-    'notification:send:own': 'notification:create:own',
-    'notification:send:provider': 'notification:create:provider',
-
-    // Audit aliases
-    'audit-logs:view:all': 'audit:read:all',
-
-    // Upload aliases
-    'upload:*:*': 'file:*:*',
-
-    // Workflow aliases
-    'workflow:move:organization': 'workflow:transition:organization',
-
-    // Webhook aliases
-    'webhook:receive:public': 'webhook:ingest:public',
-  };
-
-  // Check for exact alias matches first
-  if (permissionAliases[normalized]) {
-    return permissionAliases[normalized];
-  }
-
-  // Handle wildcard patterns
-  for (const [pattern, canonical] of Object.entries(permissionAliases)) {
-    if (pattern.includes('*')) {
-      const regexPattern = pattern.replace(/\*/g, '.*');
-      if (new RegExp(`^${regexPattern}$`).test(normalized)) {
-        return canonical.replace(
-          /\*/g,
-          normalized.split(':')[normalized.split(':').indexOf('*')]
-        );
-      }
-    }
-  }
-
-  return normalized;
+// Get effective permissions for a user with multiple roles
+export function getEffectivePermissions(roles: string[]): string[] {
+  const allPermissions = new Set<string>();
+  
+  roles.forEach(role => {
+    const rolePermissions = getRolePermissions(role);
+    rolePermissions.forEach(permission => {
+      allPermissions.add(permission);
+    });
+  });
+  
+  return Array.from(allPermissions);
 }
 
-/**
- * Get all possible scopes for a resource-action combination
- */
-export function getPossibleScopes(
-  resource: PermissionResource,
-  action: PermissionAction
-): PermissionScope[] {
-  // Some combinations only make sense with certain scopes
-  const scopeRestrictions: Record<string, PermissionScope[]> = {
-    'auth:login': ['public'],
-    'auth:logout': ['own'],
-    'auth:refresh': ['own'],
-    'auth:impersonate': ['all'],
-    'user:create': ['all'],
-    'user:delete': ['all'],
-    'role:assign': ['all'],
-    'role:revoke': ['all'],
-    'system:backup': ['all'],
-    'system:maintenance': ['all'],
-    'webhook:ingest': ['public'],
-    'audit:read': ['all'],
-    'file:manage': ['all'],
-    'notification:manage': ['all'],
-    'workflow:approve': ['all'],
-    'role:update': ['all'],
-    'permission:manage': ['all'],
-  };
-
-  const key = `${resource}:${action}`;
-  return scopeRestrictions[key] || VALID_SCOPES;
-}
-
-/**
- * Validate permission components individually
- */
-export function validatePermissionComponents(
-  resource: string,
-  action: string,
-  scope: string
-): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  if (!isValidResource(resource)) {
-    errors.push(`Invalid resource: ${resource}`);
-  }
-
-  if (!isValidAction(action)) {
-    errors.push(`Invalid action: ${action}`);
-  }
-
-  if (!isValidScope(scope)) {
-    errors.push(`Invalid scope: ${scope}`);
-  }
-
-  // Check if the combination makes sense
-  if (isValidResource(resource) && isValidAction(action)) {
-    const possibleScopes = getPossibleScopes(
-      resource as PermissionResource,
-      action as PermissionAction
-    );
-    if (!possibleScopes.includes(scope as PermissionScope)) {
-      errors.push(`Scope '${scope}' is not valid for ${resource}:${action}`);
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
+// Export default permissions for common operations
+export const DEFAULT_PERMISSIONS = {
+  // User management
+  USER_VIEW: 'users.view',
+  USER_CREATE: 'users.create',
+  USER_EDIT: 'users.edit',
+  USER_DELETE: 'users.delete',
+  
+  // Contract management
+  CONTRACT_VIEW: 'contracts.view',
+  CONTRACT_CREATE: 'contracts.create',
+  CONTRACT_EDIT: 'contracts.edit',
+  CONTRACT_DELETE: 'contracts.delete',
+  CONTRACT_APPROVE: 'contracts.approve',
+  
+  // Dashboard and analytics
+  DASHBOARD_VIEW: 'dashboard.view',
+  ANALYTICS_VIEW: 'analytics.view',
+  REPORTS_GENERATE: 'reports.generate',
+  
+  // System administration
+  SETTINGS_VIEW: 'settings.view',
+  SETTINGS_EDIT: 'settings.edit',
+  LOGS_VIEW: 'logs.view',
+  BACKUP_CREATE: 'backup.create',
+  
+  // Security and audit
+  SECURITY_MANAGE: 'security.manage',
+  AUDIT_VIEW: 'audit.view',
+  SYSTEM_MANAGE: 'system.manage'
+};

@@ -158,21 +158,21 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() => (window.location.href = '/dashboard')}
+                onClick={() => (window.location.href = '/en/dashboard')}
               >
                 Dashboard
               </Button>
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() => (window.location.href = '/contracts')}
+                onClick={() => (window.location.href = '/en/contracts')}
               >
                 Contracts
               </Button>
               <Button
                 variant='ghost'
                 size='sm'
-                onClick={() => (window.location.href = '/profile')}
+                onClick={() => (window.location.href = '/en/profile')}
               >
                 Profile
               </Button>
