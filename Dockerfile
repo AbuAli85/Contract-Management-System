@@ -36,6 +36,10 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Install only production dependencies for runtime
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production --ignore-scripts
+
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
