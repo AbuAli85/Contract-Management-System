@@ -36,7 +36,7 @@ fi
 # Function to start development environment
 start_dev() {
     echo "🚀 Starting development environment..."
-    docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+    docker-compose -f docker-compose.dev.yml up --build
 }
 
 # Function to start production environment
