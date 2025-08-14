@@ -12,7 +12,7 @@ This document provides comprehensive instructions for setting up and running the
 
 - **`Dockerfile`** - Multi-stage production build
 - **`docker-compose.yml`** - Production configuration
-- **`docker-compose.override.yml`** - Development configuration (auto-applied)
+- **`docker-compose.dev.yml`** - Development configuration (separate file)
 - **`.dockerignore`** - Excludes unnecessary files from build context
 
 ## 🚀 Quick Start
@@ -40,10 +40,10 @@ UPSTASH_REDIS_REST_TOKEN=your-redis-token-here
 
 ```bash
 # Start development environment
-docker-compose up --build
+docker-compose -f docker-compose.dev.yml up --build
 
-# Or explicitly use override file
-docker-compose -f docker-compose.yml -f docker-compose.override.yml up --build
+# Start production environment
+docker-compose up --build
 ```
 
 **Features:**
@@ -87,8 +87,8 @@ The production Dockerfile uses a multi-stage build approach:
 ### Docker Compose Services
 
 #### Web Service
-- **Production**: Built from Dockerfile
-- **Development**: Uses `node:18-alpine` with volume mounts
+- **Production**: Built from Dockerfile with multi-stage build
+- **Development**: Uses `node:18-alpine` with volume mounts (separate compose file)
 - **Port**: 3000 (mapped to host)
 - **Health Check**: `/api/health` endpoint
 
