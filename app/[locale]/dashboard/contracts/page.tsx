@@ -1,25 +1,26 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import ContractReportsTable from '@/components/dashboard/contract-reports-table';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { FilePlus2Icon } from 'lucide-react';
 
-export default function DashboardContractsPage() {
-  const router = useRouter();
-  const params = useParams();
-  const locale = params?.locale as string;
-
-  useEffect(() => {
-    // Redirect to the main contracts page
-    router.replace(`/${locale}/contracts`);
-  }, [router, locale]);
-
+export default function ContractsPage() {
   return (
-    <div className='flex min-h-screen items-center justify-center'>
-      <div className='text-center'>
-        <Loader2 className='mx-auto mb-4 h-8 w-8 animate-spin' />
-        <p className='text-muted-foreground'>Redirecting to contracts...</p>
+    <div className='space-y-6'>
+      <div className='flex items-center justify-between'>
+        <h1 className='text-2xl font-semibold'>
+          Manage Contracts / إدارة العقود
+        </h1>
+        <Button asChild>
+          <Link href='/generate-contract'>
+            <FilePlus2Icon className='mr-2 h-5 w-5' />
+            Generate New Contract
+          </Link>
+        </Button>
       </div>
+      <ContractReportsTable />
+      {/* Additional contract management features can be added here */}
     </div>
   );
 }

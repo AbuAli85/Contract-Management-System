@@ -2,11 +2,11 @@ import {
   fetchPromotersWithPagination,
   getPromoterCVData,
   fetchPromotersAnalytics,
-  getPromoterPerformanceStats,
+  getPromoterIndividualPerformanceStats,
   exportPromotersToCSV,
   importPromotersFromCSV,
 } from '@/lib/promoter-service';
-import { promoterProfileSchema } from '@/lib/promoter-profile-schema';
+import { promoterProfileSchema } from '@/lib/validations/promoter-schemas';
 
 // Mock Supabase client
 const mockSupabaseClient = {

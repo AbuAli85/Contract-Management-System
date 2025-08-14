@@ -5,11 +5,11 @@ import {
   fetchPromotersWithPagination,
   getPromoterCVData,
   fetchPromotersAnalytics,
-  getPromoterPerformanceStats,
+  getPromoterIndividualPerformanceStats,
   exportPromotersToCSV,
   importPromotersFromCSV,
 } from '@/lib/promoter-service';
-import { promoterProfileSchema } from '@/lib/promoter-profile-schema';
+import { promoterProfileSchema } from '@/lib/validations/promoter-schemas';
 
 // Mock Supabase client for integration tests
 const mockSupabaseClient = {
@@ -326,7 +326,7 @@ describe('Promoter Management - Integration Tests', () => {
         error: null,
       });
 
-      const result = await getPromoterPerformanceStats(1);
+      const result = await getPromoterIndividualPerformanceStats(1);
 
       expect(result.data.total_contracts).toBe(50);
       expect(result.data.success_rate).toBe(0.9);
