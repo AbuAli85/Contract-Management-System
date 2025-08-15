@@ -71,62 +71,52 @@ export function EnhancedRBACProvider({ children }: EnhancedRBACProviderProps) {
 
       const supabase = createClient();
 
-      // Try to fetch user data - handle both schemas
+      // Try to fetch user data from profiles table (which exists)
       let userData = null;
-      const userError = null;
       let companyData = null;
 
-      // Use the same approach as the working RBACProvider
-      // First try users table by email (works for admin user)
-      const { data: usersData, error: usersError } = await supabase
-        .from('users')
-        .select('id, role, company_id, status, email')
+      // First try profiles table by email
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, role, status, first_name, last_name')
         .eq('email', user.email || '')
         .single();
 
-      if (!usersError && usersData?.role) {
+      if (!profilesError && profilesData?.role) {
         console.log(
-          '✅ Enhanced RBAC: Found user by email, role:',
-          usersData.role
+          '✅ Enhanced RBAC: Found user in profiles by email, role:',
+          profilesData.role
         );
-        userData = usersData;
-
-        // Fetch company data if user has company_id
-        if (userData.company_id) {
-          const { data: company } = await supabase
-            .from('companies')
-            .select('id, name, is_active')
-            .eq('id', userData.company_id)
-            .single();
-          companyData = company;
-        }
+        userData = {
+          id: profilesData.id,
+          role: profilesData.role,
+          company_id: null, // profiles table doesn't have company_id
+          status: profilesData.status || 'active',
+          email: profilesData.email,
+        };
       } else {
         // If not found by email, try by auth ID
         console.log(
           '📋 Enhanced RBAC: User not found by email, trying auth ID...'
         );
-        const { data: authIdUser, error: authIdError } = await supabase
-          .from('users')
-          .select('id, role, company_id, status, email')
+        const { data: authIdProfile, error: authIdError } = await supabase
+          .from('profiles')
+          .select('id, email, role, status, first_name, last_name')
           .eq('id', user.id)
           .single();
 
-        if (!authIdError && authIdUser?.role) {
+        if (!authIdError && authIdProfile?.role) {
           console.log(
-            '✅ Enhanced RBAC: Found user by auth ID, role:',
-            authIdUser.role
+            '✅ Enhanced RBAC: Found user in profiles by auth ID, role:',
+            authIdProfile.role
           );
-          userData = authIdUser;
-
-          // Fetch company data if user has company_id
-          if (userData.company_id) {
-            const { data: company } = await supabase
-              .from('companies')
-              .select('id, name, is_active')
-              .eq('id', userData.company_id)
-              .single();
-            companyData = company;
-          }
+          userData = {
+            id: authIdProfile.id,
+            role: authIdProfile.role,
+            company_id: null, // profiles table doesn't have company_id
+            status: authIdProfile.status || 'active',
+            email: authIdProfile.email,
+          };
         } else {
           // Fallback: Use admin detection by email (same as working provider)
           console.log('📋 Enhanced RBAC: Using admin email fallback...');

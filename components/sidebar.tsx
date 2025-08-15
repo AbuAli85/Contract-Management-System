@@ -519,7 +519,7 @@ function SidebarContent({
             </h3>
 
             <Link
-              href='/dashboard/users'
+                              href={`/${locale}/dashboard/users`}
               onClick={onClose}
               className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
             >
@@ -532,7 +532,7 @@ function SidebarContent({
 
             {pendingUsersCount > 0 && (
               <Link
-                href='/dashboard/users/approvals'
+                href={`/${locale}/dashboard/users/approvals`}
                 onClick={onClose}
                 className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
               >

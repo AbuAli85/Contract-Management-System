@@ -120,12 +120,12 @@ export async function GET(request: NextRequest) {
       !userProfile ||
       !userProfile.role ||
       !['admin', 'manager'].includes(userProfile.role) ||
-      userProfile.status !== 'active'
+      !['active', 'approved'].includes(userProfile.status)
     ) {
       return NextResponse.json(
         {
           error: 'Insufficient permissions',
-          details: 'Only active admins or managers can view users',
+          details: 'Only active/approved admins or managers can view users',
         },
         { status: 403 }
       );

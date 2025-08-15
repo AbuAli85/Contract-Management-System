@@ -11,9 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Users, Settings, Database, Mail, FileSpreadsheet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input'; // For file input
+import { useParams } from 'next/navigation';
 import type React from 'react';
 
 export default function AdminTools() {
+  const params = useParams();
+  const locale = params.locale as string;
   const { toast } = useToast();
 
   const handleBulkImport = async (
@@ -67,7 +70,7 @@ export default function AdminTools() {
       icon: Users,
       action: () => {
         // Navigate to user management page
-        window.location.href = '/dashboard/users';
+        window.location.href = `/${locale}/dashboard/users`;
       },
     },
     {
@@ -76,7 +79,7 @@ export default function AdminTools() {
       icon: Settings,
       action: () => {
         // Navigate to settings page
-        window.location.href = '/dashboard/settings';
+        window.location.href = `/${locale}/dashboard/settings`;
       },
     },
     {
@@ -115,7 +118,7 @@ export default function AdminTools() {
       icon: Mail,
       action: () => {
         // Navigate to email templates page
-        window.location.href = '/dashboard/email-templates';
+        window.location.href = `/${locale}/dashboard/email-templates`;
       },
     },
   ];

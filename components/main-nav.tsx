@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from '@/navigation';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
 import { cn } from '@/lib/utils';
@@ -60,6 +61,8 @@ const components: { title: string; href: string; description: string }[] = [
 export function MainNav() {
   const t = useTranslations('MainNav');
   const pathname = usePathname();
+  const params = useParams();
+  const locale = params.locale as string;
 
   return (
     <div className='mr-4 hidden md:flex'>
@@ -137,7 +140,7 @@ export function MainNav() {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href='/dashboard/approvals' legacyBehavior passHref>
+            <Link href={`/${locale}/dashboard/approvals`} legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 Approvals
               </NavigationMenuLink>

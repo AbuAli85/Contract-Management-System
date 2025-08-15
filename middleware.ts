@@ -64,7 +64,7 @@ export function middleware(request: NextRequest) {
           message: 'Too many requests. Please wait 1 minute and try again.',
           retryAfter: 60
         },
-        { 
+        {
           status: 429,
           headers: {
             'Retry-After': '60',
@@ -84,9 +84,9 @@ export function middleware(request: NextRequest) {
     }
 
     // Continue with the request
-    return NextResponse.next();
+      return NextResponse.next();
   }
-
+  
   // For non-rate-limited paths, just continue
   return NextResponse.next();
 }
