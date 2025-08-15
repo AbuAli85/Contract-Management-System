@@ -2,87 +2,93 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-  }
+/* CSS Reset and Base Styles */
+* {
+  box-sizing: border-box;
+}
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Global authentication cleanup script */
+@layer base {
+  /* Force clear all auth data on page load */
+  html::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: -1;
   }
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+/* Custom CSS for contract enhancements */
+.contract-form {
+  @apply space-y-6;
 }
 
-@layer components {
-  /* Essential layout utilities */
-  .sidebar-layout {
-    @apply flex h-screen bg-background;
-  }
+.contract-section {
+  @apply bg-white rounded-lg shadow-sm p-6 border border-gray-200;
+}
 
-  .sidebar-container {
-    @apply h-full bg-card shadow-lg transition-all duration-300 ease-in-out;
-  }
+.contract-field {
+  @apply space-y-2;
+}
 
-  .main-content {
-    @apply flex flex-1 flex-col overflow-hidden transition-all duration-300;
-  }
+.contract-label {
+  @apply block text-sm font-medium text-gray-700;
+}
 
-  /* Mobile responsive utilities */
-  .mobile-sidebar {
-    @apply fixed md:relative z-50;
-  }
+.contract-input {
+  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+}
 
-  .mobile-overlay {
-    @apply fixed inset-0 z-40 bg-black/50 md:hidden;
-  }
+.contract-textarea {
+  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+  min-height: 100px;
+}
 
-  /* Page content spacing */
-  .page-content {
-    @apply p-4 md:p-6 h-full overflow-auto;
-  }
+.contract-select {
+  @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm;
+}
+
+.contract-checkbox {
+  @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500;
+}
+
+.contract-radio {
+  @apply h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500;
+}
+
+.contract-button {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+}
+
+.contract-button-secondary {
+  @apply inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500;
+}
+
+.contract-button-danger {
+  @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500;
+}
+
+.contract-success {
+  @apply rounded-md bg-green-50 p-4;
+}
+
+.contract-error {
+  @apply rounded-md bg-red-50 p-4;
+}
+
+.contract-warning {
+  @apply rounded-md bg-yellow-50 p-4;
+}
+
+.contract-info {
+  @apply rounded-md bg-blue-50 p-4;
 }

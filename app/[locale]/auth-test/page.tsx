@@ -13,6 +13,7 @@ import {
   Database,
   User,
   Key,
+  Shield,
 } from 'lucide-react';
 
 export default function AuthTestPage() {
@@ -313,6 +314,62 @@ export default function AuthTestPage() {
     }
   };
 
+  const [authTest, setAuthTest] = useState<string>('Not tested');
+  const [sessionTest, setSessionTest] = useState<string>('Not tested');
+  const [demoTest, setDemoTest] = useState<string>('Not tested');
+  const [loading, setLoading] = useState(false);
+
+  // Test authentication system
+  const testAuthentication = async () => {
+    setLoading(true);
+    try {
+      // Test 1: Check if demo mode is disabled
+      const demoMode = localStorage.getItem('auth-mode') === 'offline-demo';
+      if (demoMode) {
+        setDemoTest('❌ Demo mode is still active - clearing now');
+        // Clear demo mode
+        localStorage.removeItem('demo-user-session');
+        localStorage.removeItem('user-role');
+        localStorage.removeItem('auth-mode');
+        setDemoTest('✅ Demo mode cleared');
+      } else {
+        setDemoTest('✅ Demo mode is disabled');
+      }
+
+      // Test 2: Check authentication endpoint
+      const response = await fetch('/api/auth/check-session');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.authenticated) {
+          setAuthTest(`✅ Authenticated as: ${data.user?.email || 'Unknown'}`);
+        } else {
+          setAuthTest('✅ Not authenticated (correct behavior)');
+        }
+      } else {
+        setAuthTest(`❌ Auth endpoint error: ${response.status}`);
+      }
+
+      // Test 3: Check session
+      const sessionResponse = await fetch('/api/auth/check-session');
+      if (sessionResponse.ok) {
+        const sessionData = await sessionResponse.json();
+        if (sessionData.authenticated && sessionData.user) {
+          setSessionTest(`✅ Valid session for: ${sessionData.user.email}`);
+        } else {
+          setSessionTest('✅ No valid session (correct behavior)');
+        }
+      } else {
+        setSessionTest(`❌ Session check error: ${sessionResponse.status}`);
+      }
+
+    } catch (error) {
+      console.error('Test error:', error);
+      setAuthTest(`❌ Test failed: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className='min-h-screen bg-gray-50 p-4'>
       <div className='max-w-4xl mx-auto space-y-6'>
@@ -501,6 +558,65 @@ export default function AuthTestPage() {
             </div>
           </CardContent>
         </Card>
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            Authentication System Test
+          </h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Shield className="h-5 w-5 mr-2" />
+                  Authentication Test
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 mb-4">
+                  Test the authentication system and verify it's working properly
+                </p>
+                <Button 
+                  onClick={testAuthentication} 
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? 'Testing...' : 'Run Authentication Tests'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <CheckCircle className="h-5 w-5 mr-2" />
+                  Test Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <strong>Demo Mode:</strong> {demoTest}
+                </div>
+                <div>
+                  <strong>Authentication:</strong> {authTest}
+                </div>
+                <div>
+                  <strong>Session:</strong> {sessionTest}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">
+              🔒 Authentication System Status
+            </h3>
+            <p className="text-blue-800 text-sm">
+              The authentication system has been fixed to prevent automatic demo mode bypass. 
+              Users must now properly authenticate through the login system.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

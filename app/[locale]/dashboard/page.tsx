@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AuthGuard } from '@/components/auth/auth-guard';
 import { 
   User, 
   FileText, 
@@ -24,31 +25,80 @@ interface User {
   last_name?: string;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated
+    // AGGRESSIVE CLEANUP - Clear ALL possible auth data
+    const aggressiveCleanup = () => {
+      try {
+        // Clear demo session data
+        localStorage.removeItem('demo-user-session');
+        localStorage.removeItem('user-role');
+        localStorage.removeItem('auth-mode');
+        
+        // Clear Supabase auth data
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('supabase.auth.expires_at');
+        localStorage.removeItem('supabase.auth.refresh_token');
+        
+        // Clear any other auth-related data
+        localStorage.removeItem('auth-token');
+        localStorage.removeItem('user-session');
+        localStorage.removeItem('admin-session');
+        
+        // Clear sessionStorage as well
+        sessionStorage.clear();
+        
+        console.log('🧹 Aggressive cleanup of all auth data completed');
+      } catch (error) {
+        console.warn('Could not perform aggressive cleanup:', error);
+      }
+    };
+
+    // Perform aggressive cleanup first
+    aggressiveCleanup();
+
+    // Force redirect to login if we detect any admin session
+    const checkForAdminSession = () => {
+      try {
+        const hasAdminSession = 
+          localStorage.getItem('demo-user-session') ||
+          localStorage.getItem('supabase.auth.token') ||
+          sessionStorage.getItem('admin-session');
+        
+        if (hasAdminSession) {
+          console.warn('🚫 Admin session detected - forcing redirect to login');
+          router.push('/en/auth/login');
+          return;
+        }
+      } catch (error) {
+        console.warn('Could not check for admin session:', error);
+      }
+    };
+
+    checkForAdminSession();
+
+    // Get user info from AuthGuard context
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/auth/check-session');
         if (response.ok) {
           const data = await response.json();
-          if (data.authenticated) {
+          if (data.authenticated && data.user) {
+            // If this is admin@contractmanagement.com, force redirect
+            if (data.user.email === 'admin@contractmanagement.com') {
+              console.warn('🚫 Blocked admin@contractmanagement.com access');
+              router.push('/en/auth/login');
+              return;
+            }
             setUser(data.user);
-          } else {
-            // Redirect to login if not authenticated
-            router.push('/en/auth/login');
           }
-        } else {
-          // Redirect to login if not authenticated
-          router.push('/en/auth/login');
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
-        router.push('/en/auth/login');
+        console.error('Error getting user info:', error);
       } finally {
         setLoading(false);
       }
@@ -60,6 +110,7 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
       router.push('/en/auth/login');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -71,7 +122,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -236,5 +287,13 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthGuard requireAuth={true}>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

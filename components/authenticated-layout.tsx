@@ -1,11 +1,10 @@
 'use client';
 
-import { ReactNode } from 'react';
+import React, { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-service';
 // RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from '@/components/theme-provider';
 import { Sidebar } from '@/components/sidebar';
-import { useState, useEffect } from 'react';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +19,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
+import { useRouter } from 'next/navigation';
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
@@ -76,10 +76,34 @@ export function AuthenticatedLayout({
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      // Redirect to login if not authenticated
+      router.push('/en/auth/login');
+      return;
+    }
+
+    if (user && !loading) {
+      // Redirect based on user role
+      const dashboardMap = {
+        admin: '/en/dashboard',
+        provider: '/en/provider-dashboard',
+        client: '/en/client-dashboard',
+        user: '/en/dashboard',
+      };
+      
+      // Access role from user_metadata or default to 'user'
+      const userRole = user?.user_metadata?.role || 'user';
+      router.push(dashboardMap[userRole as keyof typeof dashboardMap] || '/en');
+      return;
+    }
+  }, [loading, user, router]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
@@ -264,12 +288,12 @@ export function AuthenticatedLayout({
           <p className='mb-4 text-muted-foreground'>
             Please log in to access the application.
           </p>
-          <a
-            href='/login'
-            className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90'
-          >
-            Go to Login
-          </a>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600">
+              Not signed in?{' '}
+              <Link href='/en/auth/login'>Sign In</Link>
+            </span>
+          </div>
         </div>
       </div>
     );
