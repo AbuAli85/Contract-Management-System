@@ -16,7 +16,7 @@ import { Toaster } from 'sonner';
 // Types
 interface User {
   id: string;
-  email: string;
+  email?: string; // Make email optional to match Supabase types
   user_metadata?: {
     role?: string;
     full_name?: string;
@@ -30,7 +30,7 @@ interface Session {
   user: User;
   access_token: string;
   refresh_token: string;
-  expires_at: number;
+  expires_at?: number; // Make optional to match Supabase types
 }
 
 interface AuthContextType {
@@ -80,40 +80,152 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [supabase, setSupabase] = useState<any>(null);
 
+  // Helper function to get proper login URL with locale
+  const getLoginUrl = () => {
+    // Try to get locale from URL or default to 'en'
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname;
+      const localeMatch = pathname.match(/^\/([a-z]{2})/);
+      const locale = localeMatch ? localeMatch[1] : 'en';
+      return `/${locale}/auth/login`;
+    }
+    return '/en/auth/login';
+  };
+
   // Initialize Supabase on client side only
   React.useEffect(() => {
     const initSupabase = async () => {
       try {
         setLoading(true);
         const client = createClient();
+        
+        if (!client) {
+          console.error('Failed to create Supabase client');
+          setLoading(false);
+          return;
+        }
+        
         setSupabase(client);
 
-        // Get initial session
+        // FORCE CLEAR ANY EXISTING SESSIONS FIRST
+        console.log('🧹 Checking for existing sessions...');
+        try {
+          // Check for emergency bypass in development
+          if (typeof window !== 'undefined' && localStorage.getItem('emergency-bypass') === 'true') {
+            console.log('🚨 Emergency bypass detected - skipping session clearing');
+            // Don't clear sessions when bypass is active
+          } else {
+            // Only clear if there's an existing session
+            const { data: { session: existingSession } } = await client.auth.getSession();
+            if (existingSession) {
+              console.log('🧹 Found existing session, clearing...');
+              await client.auth.signOut();
+              console.log('✅ Existing sessions cleared');
+            } else {
+              console.log('ℹ️ No existing sessions to clear');
+            }
+          }
+        } catch (error) {
+          console.warn('Could not clear existing sessions:', error);
+        }
+
+        // Clear any localStorage auth data
+        try {
+          localStorage.removeItem('supabase.auth.token');
+          localStorage.removeItem('supabase.auth.expires_at');
+          localStorage.removeItem('supabase.auth.refresh_token');
+          localStorage.removeItem('demo-user-session');
+          localStorage.removeItem('user-role');
+          localStorage.removeItem('auth-mode');
+          console.log('🧹 Local storage auth data cleared');
+        } catch (error) {
+          console.warn('Could not clear localStorage:', error);
+        }
+
+        // Get initial session (should be null now)
         const {
           data: { session },
           error,
         } = await client.auth.getSession();
+        
         if (error) {
           console.error('Error getting session:', error);
-        } else if (session) {
-          setSession(session);
-          setUser(session.user);
+          setSession(null);
+          setUser(null);
+        } else if (session && session.user) {
+          // Only set session if user exists and is properly authenticated
+          if (session.user.id && session.user.email) {
+            // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
+            if (session.user.email === 'admin@contractmanagement.com') {
+              console.warn('🚫 Detected admin@contractmanagement.com - forcing logout');
+              await client.auth.signOut();
+              setSession(null);
+              setUser(null);
+            } else {
+              setSession(session);
+              setUser(session.user);
+              console.log('✅ Authenticated user found:', session.user.email);
+            }
+          } else {
+            console.warn('⚠️ Invalid session data, clearing session');
+            setSession(null);
+            setUser(null);
+          }
+        } else {
+          console.log('ℹ️ No active session found');
+          setSession(null);
+          setUser(null);
         }
 
-        // Listen for auth changes
+        // Listen for auth changes with reduced logging
         const {
           data: { subscription },
         } = client.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth state changed:', event, session?.user?.email);
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
+          // Only log important events to reduce console spam
+          if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+            console.log('Auth state changed:', event, session?.user?.email);
+          }
+          
+          if (event === 'SIGNED_IN' && session?.user) {
+            if (session.user.id && session.user.email) {
+              // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
+              if (session.user.email === 'admin@contractmanagement.com') {
+                console.warn('🚫 Blocked admin@contractmanagement.com login - forcing logout');
+                await client.auth.signOut();
+                setSession(null);
+                setUser(null);
+              } else {
+                setSession(session);
+                setUser(session.user);
+                console.log('✅ User signed in:', session.user.email);
+              }
+            }
+          } else if (event === 'SIGNED_OUT') {
+            setSession(null);
+            setUser(null);
+            console.log('✅ User signed out');
+          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            if (session.user.id && session.user.email) {
+              // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
+              if (session.user.email === 'admin@contractmanagement.com') {
+                console.warn('🚫 Blocked admin@contractmanagement.com token refresh - forcing logout');
+                await client.auth.signOut();
+                setSession(null);
+                setUser(null);
+              } else {
+                setSession(session);
+                setUser(session.user);
+              }
+            }
+          }
         });
 
         setLoading(false);
         return () => subscription.unsubscribe();
       } catch (error) {
         console.error('Error initializing Supabase:', error);
+        setSession(null);
+        setUser(null);
         setLoading(false);
       }
     };
@@ -127,6 +239,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut();
         setUser(null);
         setSession(null);
+        console.log('✅ User signed out successfully');
       }
     } catch (error) {
       console.error('Error signing out:', error);
@@ -142,9 +255,20 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         } = await supabase.auth.refreshSession();
         if (error) {
           console.error('Error refreshing session:', error);
-        } else if (session) {
-          setSession(session);
-          setUser(session.user);
+        } else if (session && session.user) {
+          if (session.user.id && session.user.email) {
+            // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
+            if (session.user.email === 'admin@contractmanagement.com') {
+              console.warn('🚫 Blocked admin@contractmanagement.com token refresh - forcing logout');
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+            } else {
+              setSession(session);
+              setUser(session.user);
+              console.log('✅ Session refreshed for:', session.user.email);
+            }
+          }
         }
       }
     } catch (error) {

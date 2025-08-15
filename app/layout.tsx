@@ -37,6 +37,49 @@ export const metadata: Metadata = {
   })`,
 };
 
+// Global authentication cleanup script
+const AuthCleanupScript = () => {
+  if (typeof window === 'undefined') return null;
+  
+  return (
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            // Force clear all authentication data on every page load
+            try {
+              console.log('🧹 Starting global auth cleanup...');
+              
+              // Clear localStorage
+              localStorage.removeItem('demo-user-session');
+              localStorage.removeItem('user-role');
+              localStorage.removeItem('auth-mode');
+              localStorage.removeItem('supabase.auth.token');
+              localStorage.removeItem('supabase.auth.expires_at');
+              localStorage.removeItem('supabase.auth.refresh_token');
+              localStorage.removeItem('auth-token');
+              localStorage.removeItem('user-session');
+              localStorage.removeItem('admin-session');
+              
+              // Clear sessionStorage
+              sessionStorage.clear();
+              
+              // Clear cookies
+              document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+              });
+              
+              console.log('🧹 Global auth cleanup completed');
+            } catch (error) {
+              console.warn('Global auth cleanup failed:', error);
+            }
+          })();
+        `,
+      }}
+    />
+  );
+};
+
 export default async function RootLayout({
   children,
 }: {
@@ -44,6 +87,9 @@ export default async function RootLayout({
 }) {
   return (
     <html lang='en' suppressHydrationWarning>
+      <head>
+        <AuthCleanupScript />
+      </head>
       <body
         className={`${fontInter.variable} ${fontLexend.variable} min-h-screen bg-background font-sans antialiased`}
         suppressHydrationWarning

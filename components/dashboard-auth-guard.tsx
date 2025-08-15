@@ -37,8 +37,8 @@ export function DashboardAuthGuard({
 
       // Debounce status checks to prevent excessive calls
       const now = Date.now();
-      if (now - lastStatusCheck < 30000) {
-        // 30 second debounce (increased from 10)
+      if (now - lastStatusCheck < 300000) {
+        // 300 second debounce (increased from 120 to match main AuthGuard)
         console.log('🔐 Skipping user status check (debounced)');
         return;
       }

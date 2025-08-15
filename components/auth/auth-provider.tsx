@@ -1,35 +1,34 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { demoSessionManager, type DemoUser } from '@/lib/auth/demo-session';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+// Remove demo session dependency
+// import { demoSessionManager, type DemoUser } from '@/lib/auth/demo-session';
 
 interface AuthContextType {
-  user: DemoUser | null;
+  user: any | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isDemoMode: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  updateUser: (updates: Partial<DemoUser>) => void;
+  updateUser: (updates: any) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<DemoUser | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Initialize auth state
-    const currentUser = demoSessionManager.getCurrentUser();
-    setUser(currentUser);
+    // Initialize auth state - NO DEMO MODE
+    setUser(null);
     setIsLoading(false);
 
-    console.log('🔐 Auth Provider initialized:', {
-      hasUser: !!currentUser,
-      isDemoMode: demoSessionManager.isDemoMode(),
-      role: currentUser?.role,
-    });
+    console.log('🔐 Auth Provider initialized: No demo mode');
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -39,26 +38,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    demoSessionManager.clearSession();
+    // Clear any existing session
     setUser(null);
     
     // Redirect to home or login
-    window.location.href = '/en';
+    router.push('/en/auth/login');
   };
 
-  const updateUser = (updates: Partial<DemoUser>) => {
+  const updateUser = (updates: any) => {
     if (user) {
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
-      demoSessionManager.updateSession(updates);
     }
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: !!user && user.authenticated,
+    isAuthenticated: !!user,
     isLoading,
-    isDemoMode: demoSessionManager.isDemoMode(),
+    isDemoMode: false, // Always false - no demo mode
     login,
     logout,
     updateUser,
@@ -86,7 +84,7 @@ export function useRequireAuth(requiredRole?: string) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirect to login if not authenticated
-      window.location.href = '/en/auth/login';
+      router.push('/en/auth/login');
       return;
     }
     
@@ -98,7 +96,7 @@ export function useRequireAuth(requiredRole?: string) {
         client: '/en/dashboard/client-comprehensive',
       };
       
-      window.location.href = dashboardMap[user?.role as keyof typeof dashboardMap] || '/en';
+      router.push(dashboardMap[user?.role as keyof typeof dashboardMap] || '/en');
       return;
     }
   }, [user, isAuthenticated, isLoading, requiredRole]);

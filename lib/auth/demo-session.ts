@@ -1,4 +1,4 @@
-// Demo session management for offline mode
+// Demo session management for offline mode - COMPLETELY DISABLED FOR PRODUCTION
 
 export interface DemoUser {
   id: string;
@@ -20,134 +20,147 @@ export class DemoSessionManager {
   private sessionKey = 'demo-user-session';
   private roleKey = 'user-role';
   private authModeKey = 'auth-mode';
+  
+  // COMPLETELY DISABLE DEMO MODE
+  private demoModeEnabled = false;
 
   static getInstance(): DemoSessionManager {
     if (!DemoSessionManager.instance) {
       DemoSessionManager.instance = new DemoSessionManager();
+      // Immediately disable demo mode and clear any existing sessions
+      DemoSessionManager.instance.disableDemoMode();
     }
     return DemoSessionManager.instance;
   }
 
-  // Create demo session
-  createSession(user: Omit<DemoUser, 'id' | 'authenticated' | 'authMode' | 'loginTime'>): DemoSession {
-    const demoUser: DemoUser = {
-      ...user,
-      id: `demo-${user.role}-${Date.now()}`,
-      authenticated: true,
-      authMode: 'offline',
-      loginTime: new Date().toISOString(),
-    };
-
-    const session: DemoSession = { user: demoUser };
-
-    // Store in localStorage
-    localStorage.setItem(this.sessionKey, JSON.stringify(session));
-    localStorage.setItem(this.roleKey, user.role);
-    localStorage.setItem(this.authModeKey, 'offline-demo');
-
-    console.log('✅ Demo session created:', user.role);
-    return session;
+  // Create demo session - COMPLETELY DISABLED
+  createSession(user: Omit<DemoUser, 'id' | 'authenticated' | 'authMode' | 'loginTime'>): null {
+    console.warn('🚫 Demo mode is completely disabled. Cannot create demo session.');
+    return null;
   }
 
-  // Get current session
-  getSession(): DemoSession | null {
+  // Get current session - COMPLETELY DISABLED
+  getSession(): null {
+    console.warn('🚫 Demo mode is completely disabled. Cannot get demo session.');
+    return null;
+  }
+
+  // Get current user - COMPLETELY DISABLED
+  getCurrentUser(): null {
+    console.warn('🚫 Demo mode is completely disabled. Cannot get demo user.');
+    return null;
+  }
+
+  // Check if user is authenticated - COMPLETELY DISABLED
+  isAuthenticated(): false {
+    return false;
+  }
+
+  // Get user role - COMPLETELY DISABLED
+  getUserRole(): null {
+    return null;
+  }
+
+  // Check if in demo mode - COMPLETELY DISABLED
+  isDemoMode(): false {
+    return false;
+  }
+
+  // Clear session - ALWAYS CLEAR
+  clearSession(): void {
     try {
-      const sessionData = localStorage.getItem(this.sessionKey);
-      if (!sessionData) return null;
-
-      const session = JSON.parse(sessionData) as DemoSession;
-      
-      // Validate session
-      if (!session.user || !session.user.authenticated) {
-        this.clearSession();
-        return null;
-      }
-
-      return session;
+      localStorage.removeItem(this.sessionKey);
+      localStorage.removeItem(this.roleKey);
+      localStorage.removeItem(this.authModeKey);
+      console.log('🧹 Demo sessions cleared (demo mode disabled)');
     } catch (error) {
-      console.error('Error getting demo session:', error);
-      this.clearSession();
-      return null;
+      console.warn('Could not clear demo sessions:', error);
     }
   }
 
-  // Get current user
-  getCurrentUser(): DemoUser | null {
-    const session = this.getSession();
-    return session?.user || null;
+  // Update session - COMPLETELY DISABLED
+  updateSession(updates: Partial<DemoUser>): false {
+    console.warn('🚫 Demo mode is completely disabled. Cannot update demo session.');
+    return false;
   }
 
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    const session = this.getSession();
-    return session?.user?.authenticated || false;
-  }
-
-  // Get user role
-  getUserRole(): string | null {
-    const user = this.getCurrentUser();
-    return user?.role || localStorage.getItem(this.roleKey);
-  }
-
-  // Check if in demo mode
-  isDemoMode(): boolean {
-    return localStorage.getItem(this.authModeKey) === 'offline-demo';
-  }
-
-  // Clear session
-  clearSession(): void {
-    localStorage.removeItem(this.sessionKey);
-    localStorage.removeItem(this.roleKey);
-    localStorage.removeItem(this.authModeKey);
-    console.log('🧹 Demo session cleared');
-  }
-
-  // Update session
-  updateSession(updates: Partial<DemoUser>): boolean {
-    const session = this.getSession();
-    if (!session) return false;
-
-    const updatedUser = { ...session.user, ...updates };
-    const updatedSession = { user: updatedUser };
-
-    localStorage.setItem(this.sessionKey, JSON.stringify(updatedSession));
-    console.log('✅ Demo session updated');
-    return true;
-  }
-
-  // Check session validity
-  isSessionValid(): boolean {
-    const session = this.getSession();
-    if (!session) return false;
-
-    // Check if session is too old (optional - for demo purposes, sessions don't expire)
-    // const loginTime = new Date(session.user.loginTime);
-    // const now = new Date();
-    // const hoursSinceLogin = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
-    // return hoursSinceLogin < 24; // 24 hour session
-
-    return session.user.authenticated;
+  // Check session validity - COMPLETELY DISABLED
+  isSessionValid(): false {
+    return false;
   }
 
   // Get session info for debugging
   getSessionInfo() {
-    const session = this.getSession();
     return {
-      hasSession: !!session,
-      isAuthenticated: this.isAuthenticated(),
-      role: this.getUserRole(),
-      isDemoMode: this.isDemoMode(),
-      user: session?.user || null,
+      hasSession: false,
+      isAuthenticated: false,
+      role: null,
+      isDemoMode: false,
+      user: null,
+      demoModeEnabled: false,
+      status: 'DEMO_MODE_DISABLED'
     };
+  }
+
+  // Enable demo mode (for development only) - DISABLED
+  enableDemoMode(): void {
+    console.warn('🚫 Demo mode cannot be enabled - completely disabled for security');
+    this.demoModeEnabled = false;
+  }
+
+  // Disable demo mode (default and permanent)
+  disableDemoMode(): void {
+    this.demoModeEnabled = false;
+    this.clearSession();
+    console.log('🔒 Demo mode permanently disabled for security');
+  }
+
+  // Force clear all demo data
+  forceClearAll(): void {
+    try {
+      // Clear all possible demo-related data
+      localStorage.removeItem(this.sessionKey);
+      localStorage.removeItem(this.roleKey);
+      localStorage.removeItem(this.authModeKey);
+      localStorage.removeItem('demo-user-session');
+      localStorage.removeItem('user-role');
+      localStorage.removeItem('auth-mode');
+      localStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('supabase.auth.expires_at');
+      localStorage.removeItem('supabase.auth.refresh_token');
+      console.log('🧹 All demo and auth data cleared');
+    } catch (error) {
+      console.warn('Could not clear all data:', error);
+    }
   }
 }
 
 // Export singleton instance
 export const demoSessionManager = DemoSessionManager.getInstance();
 
-// Helper functions for easy access
-export const getCurrentDemoUser = () => demoSessionManager.getCurrentUser();
-export const isDemoAuthenticated = () => demoSessionManager.isAuthenticated();
-export const getDemoUserRole = () => demoSessionManager.getUserRole();
-export const isDemoMode = () => demoSessionManager.isDemoMode();
+// Helper functions for easy access - ALL COMPLETELY DISABLED
+export const getCurrentDemoUser = () => null;
+export const isDemoAuthenticated = () => false;
+export const getDemoUserRole = () => null;
+export const isDemoMode = () => false;
 export const clearDemoSession = () => demoSessionManager.clearSession();
+
+// Initialize with demo mode completely disabled and clear all data
+demoSessionManager.disableDemoMode();
+demoSessionManager.forceClearAll();
+
+// Additional cleanup on module load
+if (typeof window !== 'undefined') {
+  // Clear any existing demo sessions immediately
+  try {
+    localStorage.removeItem('demo-user-session');
+    localStorage.removeItem('user-role');
+    localStorage.removeItem('auth-mode');
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.expires_at');
+    localStorage.removeItem('supabase.auth.refresh_token');
+    console.log('🧹 Immediate cleanup of demo sessions completed');
+  } catch (error) {
+    console.warn('Could not perform immediate cleanup:', error);
+  }
+}
