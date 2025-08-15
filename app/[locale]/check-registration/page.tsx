@@ -24,6 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/lib/auth-service';
+import { useParams } from 'next/navigation';
 
 interface RegistrationStatus {
   id: string;
@@ -36,6 +37,8 @@ interface RegistrationStatus {
 }
 
 export default function CheckRegistrationPage() {
+  const params = useParams();
+  const locale = params.locale as string;
   const { user } = useAuth();
   const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -292,7 +295,7 @@ export default function CheckRegistrationPage() {
                 
                 {registrationStatus.status === 'active' && (
                   <Button 
-                    onClick={() => window.location.href = '/dashboard'}
+                    onClick={() => window.location.href = `/${locale}/dashboard`}
                     className='flex-1'
                   >
                     Go to Dashboard

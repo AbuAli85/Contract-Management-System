@@ -48,6 +48,7 @@ import { usePendingUsersCount } from '@/hooks/use-pending-users';
 import { getRoleDisplay } from '@/lib/role-hierarchy';
 import { useAuth } from '@/lib/auth-service';
 import { useRolePermissions } from '@/components/user-role-display';
+import { useParams } from 'next/navigation';
 
 // Dynamic imports for better chunk loading reliability
 const PermissionsManager = dynamic(
@@ -187,6 +188,8 @@ function formatDate(date: string): string {
 
 export default function NewUsersPage() {
   // Hooks
+  const params = useParams();
+  const locale = params.locale as string;
   const { count: pendingUsersCount } = usePendingUsersCount();
 
   // Basic state
@@ -761,7 +764,7 @@ export default function NewUsersPage() {
           </p>
         </div>
         <div className='flex items-center gap-2'>
-          <Link href='/dashboard/users/approvals'>
+          <Link href={`/${locale}/dashboard/users/approvals`}>
             <Button variant='outline' size='sm'>
               <Users className='mr-2 h-4 w-4' />
               User Approvals

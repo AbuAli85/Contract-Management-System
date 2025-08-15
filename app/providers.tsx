@@ -107,42 +107,50 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setSupabase(client);
 
-        // FORCE CLEAR ANY EXISTING SESSIONS FIRST
-        console.log('🧹 Checking for existing sessions...');
-        try {
-          // Check for emergency bypass in development
-          if (typeof window !== 'undefined' && localStorage.getItem('emergency-bypass') === 'true') {
-            console.log('🚨 Emergency bypass detected - skipping session clearing');
-            // Don't clear sessions when bypass is active
-          } else {
-            // Only clear if there's an existing session
+        // Check for emergency bypass in development
+        const hasEmergencyBypass = typeof window !== 'undefined' && localStorage.getItem('emergency-bypass') === 'true';
+        
+        if (hasEmergencyBypass) {
+          console.log('🚨 Emergency bypass detected - preserving existing session');
+          // Don't clear sessions when bypass is active
+        } else {
+          // Only clear sessions if there's a specific security issue
+          console.log('🔐 Checking session security...');
+          try {
             const { data: { session: existingSession } } = await client.auth.getSession();
             if (existingSession) {
-              console.log('🧹 Found existing session, clearing...');
-              await client.auth.signOut();
-              console.log('✅ Existing sessions cleared');
+              // Only clear if it's the blocked admin account
+              if (existingSession.user.email === 'admin@contractmanagement.com') {
+                console.log('🚫 Detected blocked admin account - clearing session');
+                await client.auth.signOut();
+              } else {
+                console.log('✅ Valid session found, preserving...');
+                // Preserve the existing session
+                setSession(existingSession);
+                setUser(existingSession.user);
+                setLoading(false);
+                return;
+              }
             } else {
-              console.log('ℹ️ No existing sessions to clear');
+              console.log('ℹ️ No existing sessions to check');
             }
+          } catch (error) {
+            console.warn('Could not check existing sessions:', error);
           }
-        } catch (error) {
-          console.warn('Could not clear existing sessions:', error);
         }
 
-        // Clear any localStorage auth data
+        // Clear only specific localStorage items that might cause issues
         try {
-          localStorage.removeItem('supabase.auth.token');
-          localStorage.removeItem('supabase.auth.expires_at');
-          localStorage.removeItem('supabase.auth.refresh_token');
           localStorage.removeItem('demo-user-session');
           localStorage.removeItem('user-role');
           localStorage.removeItem('auth-mode');
-          console.log('🧹 Local storage auth data cleared');
+          // Don't clear Supabase auth tokens - let Supabase handle them
+          console.log('🧹 Limited local storage cleanup completed');
         } catch (error) {
-          console.warn('Could not clear localStorage:', error);
+          console.warn('Could not clean localStorage:', error);
         }
 
-        // Get initial session (should be null now)
+        // Get initial session
         const {
           data: { session },
           error,
@@ -155,7 +163,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (session && session.user) {
           // Only set session if user exists and is properly authenticated
           if (session.user.id && session.user.email) {
-            // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
+            // Check if this is the blocked admin account
             if (session.user.email === 'admin@contractmanagement.com') {
               console.warn('🚫 Detected admin@contractmanagement.com - forcing logout');
               await client.auth.signOut();
