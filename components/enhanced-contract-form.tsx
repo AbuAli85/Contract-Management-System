@@ -583,10 +583,12 @@ export default function EnhancedContractForm({
 
       const payload = {
         contract_number: undefined,
-        // Prefer UUID-based columns expected by the API and DB
+        // Send both field names to ensure compatibility
+        first_party_id: formValues.first_party_id || null,
+        second_party_id: formValues.second_party_id || null,
+        promoter_id: formValues.promoter_id || null,
         client_id: formValues.first_party_id || formValues.client_id || null,
         employer_id: formValues.second_party_id || formValues.employer_id || null,
-        promoter_id: formValues.promoter_id || null,
         // Use date-only to match DATE columns across environments
         start_date: toDateOnly(
           formValues.contract_start_date || formValues.start_date
@@ -600,10 +602,10 @@ export default function EnhancedContractForm({
           formValues.title ||
           formValues.job_title ||
           'Employment Contract',
-        // Include a type value if present (API will handle variants)
-        type: formValues.contract_type || undefined,
+        // Include contract_type value (API will handle variants)
+        contract_type: formValues.contract_type || 'employment',
         currency: formValues.currency || 'OMR',
-      } as const;
+      };
 
       const res = await fetch('/api/contracts', {
         method: 'POST',

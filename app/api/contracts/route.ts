@@ -253,12 +253,33 @@ export const POST = withAnyRBAC(
       const isUUID = (v: any) => typeof v === 'string' && /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i.test(v);
       const isNumeric = (v: any) => v !== null && v !== undefined && /^\d+$/.test(String(v));
 
-      const uuidClientId = isUUID(clientId) ? clientId : undefined;
-      const uuidEmployerId = isUUID(employerId) ? employerId : undefined;
-      const uuidPromoterId = isUUID(promoterId) ? promoterId : undefined;
+      // Accept any non-empty string or number as valid ID, not just UUIDs
+      const validClientId = clientId && (clientId !== '' && clientId !== 'null') ? clientId : undefined;
+      const validEmployerId = employerId && (employerId !== '' && employerId !== 'null') ? employerId : undefined;
+      const validPromoterId = promoterId && (promoterId !== '' && promoterId !== 'null') ? promoterId : undefined;
 
-      const intFirstPartyId = isNumeric(clientId) ? Number(clientId) : undefined;
-      const intSecondPartyId = isNumeric(employerId) ? Number(employerId) : undefined;
+      // For UUID validation, only check if it's a valid UUID format
+      const uuidClientId = isUUID(validClientId) ? validClientId : undefined;
+      const uuidEmployerId = isUUID(validEmployerId) ? validEmployerId : undefined;
+      const uuidPromoterId = isUUID(validPromoterId) ? validPromoterId : undefined;
+
+      // For numeric IDs, accept any non-empty value
+      const intFirstPartyId = validClientId ? validClientId : undefined;
+      const intSecondPartyId = validEmployerId ? validEmployerId : undefined;
+
+      console.log('🔍 Contract creation debug info:', {
+        originalClientId: clientId,
+        originalEmployerId: employerId,
+        originalPromoterId: promoterId,
+        validClientId,
+        validEmployerId,
+        validPromoterId,
+        uuidClientId,
+        uuidEmployerId,
+        uuidPromoterId,
+        contractType,
+        title
+      });
 
       const variantsRaw: Record<string, any>[] = [
         // Variant A: Complete schema with all fields (preferred)
