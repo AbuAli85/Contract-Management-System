@@ -468,234 +468,54 @@ export default function ExcelImportModal({
     setStep('import');
 
     try {
-      const supabase = createClient();
-
-      if (!supabase) {
-        throw new Error('Database connection not available');
-      }
-
-      // Test authentication
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError || !user) {
-        throw new Error('Authentication required');
-      }
-
       console.log('=== IMPORT DEBUG START ===');
-      console.log(
-        'Starting import process for',
-        previewData.length,
-        'promoters'
-      );
-      console.log('Preview data:', previewData);
+      console.log('Starting import process for', previewData.length, 'promoters');
+      setProgress(10);
 
-      let imported = 0;
-      let duplicates = 0;
-      const errors: string[] = [];
-      let importedWithCompany = 0;
+      const response = await fetch('/api/promoters/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ promoters: previewData }),
+      });
 
-      for (let i = 0; i < previewData.length; i++) {
-        const promoter = previewData[i];
-
-        try {
-          console.log(`\n--- Processing row ${i + 2} ---`);
-          console.log('Promoter data:', promoter);
-
-          // Check for existing promoter with same ID card number
-          const { data: existing, error: checkError } = await supabase
-            .from('promoters')
-            .select('id, employer_id')
-            .eq('id_card_number', promoter.id_card_number)
-            .single();
-
-          if (checkError && checkError.code !== 'PGRST116') {
-            console.error(
-              `Error checking existing promoter for row ${i + 2}:`,
-              checkError
-            );
-            errors.push(
-              `Row ${i + 2}: Error checking existing promoter - ${checkError.message}`
-            );
-            continue;
-          }
-
-          if (existing) {
-            console.log(
-              `Row ${i + 2}: Existing promoter found - ${promoter.id_card_number}`
-            );
-
-            // If promoter exists but has no company assignment, try to assign company
-            if (
-              !existing.employer_id &&
-              promoter.employer_id &&
-              promoter.employer_id.trim()
-            ) {
-              console.log(
-                `Row ${i + 2}: Attempting to assign company to existing promoter`
-              );
-
-              // Validate company ID
-              const { data: companyData, error: companyError } = await supabase
-                .from('parties')
-                .select('id')
-                .eq('id', promoter.employer_id.trim())
-                .eq('type', 'Employer')
-                .single();
-
-              if (!companyError && companyData) {
-                // Update existing promoter with company assignment
-                const { error: updateError } = await supabase
-                  .from('promoters')
-                  .update({ employer_id: promoter.employer_id.trim() })
-                  .eq('id', existing.id);
-
-                if (updateError) {
-                  console.error(
-                    `Row ${i + 2}: Failed to update promoter with company:`,
-                    updateError
-                  );
-                  errors.push(
-                    `Row ${i + 2}: Failed to assign company to existing promoter`
-                  );
-                } else {
-                  console.log(
-                    `Row ${i + 2}: Successfully assigned company to existing promoter`
-                  );
-                  imported++;
-                  importedWithCompany++;
-                }
-              } else {
-                console.log(
-                  `Row ${i + 2}: Invalid company ID for existing promoter - ${promoter.employer_id}`
-                );
-                duplicates++;
-                errors.push(
-                  `Row ${i + 2}: Promoter exists but invalid company ID provided`
-                );
-              }
-            } else {
-              console.log(
-                `Row ${i + 2}: Promoter already exists with company or no company provided`
-              );
-              duplicates++;
-              errors.push(
-                `Row ${i + 2}: Promoter with ID card number ${promoter.id_card_number} already exists`
-              );
-            }
-            continue;
-          }
-
-          // Validate company ID if provided
-          if (promoter.employer_id && promoter.employer_id.trim()) {
-            console.log(
-              `Row ${i + 2}: Validating company ID: ${promoter.employer_id}`
-            );
-
-            const { data: companyData, error: companyError } = await supabase
-              .from('parties')
-              .select('id')
-              .eq('id', promoter.employer_id.trim())
-              .eq('type', 'Employer')
-              .single();
-
-            if (companyError || !companyData) {
-              console.error(
-                `Row ${i + 2}: Invalid company ID - ${promoter.employer_id}`
-              );
-              // Instead of failing, just remove the invalid company ID
-              promoter.employer_id = undefined;
-              console.log(
-                `Row ${i + 2}: Removed invalid company ID, will import without company assignment`
-              );
-            } else {
-              importedWithCompany++;
-            }
-          }
-
-          // Prepare data for insertion (remove undefined values)
-          const insertData = {
-            name_en: promoter.name_en,
-            name_ar: promoter.name_ar,
-            id_card_number: promoter.id_card_number,
-            mobile_number: promoter.mobile_number || null,
-            passport_number: promoter.passport_number || null,
-            nationality: promoter.nationality || null,
-            id_card_expiry_date: promoter.id_card_expiry_date,
-            passport_expiry_date: promoter.passport_expiry_date,
-            notes: promoter.notes || null,
-            status: promoter.status || 'active',
-            ...(promoter.employer_id && { employer_id: promoter.employer_id }),
-          };
-
-          console.log(`Row ${i + 2}: Inserting data:`, insertData);
-
-          const { data: insertResult, error: insertError } = await supabase
-            .from('promoters')
-            .insert(insertData)
-            .select();
-
-          if (insertError) {
-            console.error(`Row ${i + 2}: Insert error:`, insertError);
-            console.error(`Row ${i + 2}: Insert data that failed:`, insertData);
-
-            // Provide more specific error messages
-            let errorMessage = insertError.message;
-            if (insertError.code === '22008') {
-              errorMessage = `Invalid date format. Please use DD/MM/YYYY or DD-MM-YYYY format.`;
-            } else if (insertError.code === '23505') {
-              errorMessage = `Duplicate entry. This promoter already exists.`;
-            } else if (insertError.code === '23503') {
-              errorMessage = `Invalid company ID. Please check the company reference.`;
-            }
-
-            errors.push(`Row ${i + 2}: ${errorMessage}`);
-          } else {
-            console.log(`Row ${i + 2}: Successfully imported:`, insertResult);
-            imported++;
-          }
-
-          // Update progress
-          setProgress(((i + 1) / previewData.length) * 100);
-        } catch (error) {
-          console.error(`Error importing row ${i + 2}:`, error);
-          errors.push(
-            `Row ${i + 2}: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-        }
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error || 'Server import failed');
       }
 
-      console.log(`=== IMPORT COMPLETED ===`);
-      console.log(`Total processed: ${previewData.length}`);
-      console.log(`Successfully imported: ${imported}`);
-      console.log(`Duplicates skipped: ${duplicates}`);
-      console.log(`Errors: ${errors.length}`);
-      console.log(`Promoters with company: ${importedWithCompany}`);
-      console.log(
-        `Promoters without company: ${imported - importedWithCompany}`
-      );
+      const result = await response.json();
+      const { imported = 0, duplicates = 0, errors = [], importedWithCompany = 0 } = result || {};
+
+      setProgress(100);
 
       if (imported > 0) {
         toast({
           title: 'Import completed',
-          description: `Successfully processed ${imported} promoters. ${importedWithCompany} with company assignment, ${imported - importedWithCompany} without company.`,
+          description: `Successfully processed ${imported} promoters. ${importedWithCompany} with company, ${imported - importedWithCompany} without company.`,
         });
         onImportComplete();
       } else if (duplicates > 0) {
         toast({
           title: 'Import completed',
-          description: `All promoters already exist in the database. ${duplicates} promoters were skipped as duplicates.`,
+          description: `All promoters already exist. ${duplicates} duplicates were skipped.`,
         });
         onImportComplete();
       } else {
         toast({
           title: 'Import failed',
-          description:
-            'No promoters were processed. Please check the data and try again.',
+          description: errors?.[0] || 'No promoters were processed. Check the data and try again.',
           variant: 'destructive',
         });
       }
+
+      setImportResult({
+        success: imported > 0,
+        message: imported > 0 ? 'Import successful' : 'Import completed with no new records',
+        imported,
+        duplicates,
+        errors,
+      });
     } catch (error) {
       console.error('Import error:', error);
       setImportResult({
