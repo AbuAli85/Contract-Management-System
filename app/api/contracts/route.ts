@@ -224,9 +224,15 @@ export const POST = withAnyRBAC(
         const d = new Date(value);
         return isNaN(d.getTime()) ? null : d.toISOString();
       };
+      const toDateOnly = (value: any): string | null => {
+        const iso = toISODate(value);
+        return iso ? iso.slice(0, 10) : null; // YYYY-MM-DD
+      };
 
       const isoStart = toISODate(body.contract_start_date || body.start_date);
       const isoEnd = toISODate(body.contract_end_date || body.end_date);
+      const dateStart = toDateOnly(body.contract_start_date || body.start_date);
+      const dateEnd = toDateOnly(body.contract_end_date || body.end_date);
 
       const contractNumber = body.contract_number || `CON-${Date.now()}`;
       const clientId = body.first_party_id || body.client_id || null;
@@ -243,46 +249,45 @@ export const POST = withAnyRBAC(
       // 2) Add legacy/new type field separately
       // 3) Try alternate date column names only if needed
       const variantsRaw: Record<string, any>[] = [
-        // Variant A (preferred, minimal & safe): start/end + client/employer + title
+        // Variant A (preferred, minimal & safe): start/end + first/second party + title
         {
           contract_number: contractNumber,
-          client_id: clientId,
-          employer_id: employerId,
+          first_party_id: clientId,
+          second_party_id: employerId,
           promoter_id: promoterId,
-          start_date: isoStart,
-          end_date: isoEnd,
+          start_date: dateStart,
+          end_date: dateEnd,
           title,
           status: 'draft',
         },
-        // Variant B (legacy type column): add `type` instead of `contract_type`
+        // Variant B (client/employer minimal): start/end + client/employer + title
         {
           contract_number: contractNumber,
           client_id: clientId,
           employer_id: employerId,
           promoter_id: promoterId,
-          start_date: isoStart,
-          end_date: isoEnd,
+          start_date: dateStart,
+          end_date: dateEnd,
+          title,
+          status: 'draft',
+        },
+        // Variant C (legacy type column): add `type`
+        {
+          contract_number: contractNumber,
+          first_party_id: clientId,
+          second_party_id: employerId,
+          promoter_id: promoterId,
+          start_date: dateStart,
+          end_date: dateEnd,
           title,
           type: contractType,
-          status: 'draft',
-        },
-        // Variant C (newer type column): add `contract_type`
-        {
-          contract_number: contractNumber,
-          client_id: clientId,
-          employer_id: employerId,
-          promoter_id: promoterId,
-          start_date: isoStart,
-          end_date: isoEnd,
-          title,
-          contract_type: contractType,
           status: 'draft',
         },
         // Variant D (alt date column names + newer type col)
         {
           contract_number: contractNumber,
-          client_id: clientId,
-          employer_id: employerId,
+          first_party_id: clientId,
+          second_party_id: employerId,
           promoter_id: promoterId,
           contract_start_date: isoStart,
           contract_end_date: isoEnd,
@@ -290,11 +295,11 @@ export const POST = withAnyRBAC(
           contract_type: contractType,
           status: 'draft',
         },
-        // Variant E (alt date + legacy party column names + newer type)
+        // Variant E (alt date + client/employer + newer type)
         {
           contract_number: contractNumber,
-          first_party_id: clientId,
-          second_party_id: employerId,
+          client_id: clientId,
+          employer_id: employerId,
           promoter_id: promoterId,
           contract_start_date: isoStart,
           contract_end_date: isoEnd,
