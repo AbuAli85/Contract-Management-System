@@ -207,7 +207,6 @@ export const POST = withAnyRBAC(
       const supabase = await createClient();
       const body = await request.json();
 
-      // Get user session
       const {
         data: { session },
         error: sessionError,
@@ -215,111 +214,125 @@ export const POST = withAnyRBAC(
 
       if (sessionError || !session) {
         return NextResponse.json(
-          {
-            success: false,
-            error: 'Unauthorized',
-          },
+          { success: false, error: 'Unauthorized' },
           { status: 401 }
         );
       }
 
-      // Prepare contract data
-      const normalizeDate = (value: any): string | null => {
+      const toISODate = (value: any): string | null => {
         if (!value) return null;
-        try {
-          const d = new Date(value);
-          if (isNaN(d.getTime())) return null;
-          return d.toISOString();
-        } catch {
-          return null;
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d.toISOString();
+      };
+
+      const isoStart = toISODate(body.contract_start_date || body.start_date);
+      const isoEnd = toISODate(body.contract_end_date || body.end_date);
+
+      const contractNumber = body.contract_number || `CON-${Date.now()}`;
+      const clientId = body.first_party_id || body.client_id || null;
+      const employerId = body.second_party_id || body.employer_id || null;
+      const promoterId = body.promoter_id || null;
+      const title = body.contract_name || body.title || body.job_title || 'Employment Contract';
+      const value =
+        body.contract_value || body.basic_salary || body.amount || null;
+      const currency = body.currency || 'OMR';
+      const contractType = body.contract_type || 'employment';
+
+      // Prepare multiple schema variants and try them in safest order
+      // Prefer start_date/end_date and client/employer ids first (matches latest schema)
+      const variantsRaw: Record<string, any>[] = [
+        // Variant A (preferred): start/end + client/employer + title/value
+        {
+          contract_number: contractNumber,
+          client_id: clientId,
+          employer_id: employerId,
+          promoter_id: promoterId,
+          start_date: isoStart,
+          end_date: isoEnd,
+          title,
+          contract_type: contractType,
+          value,
+          currency,
+          status: 'draft',
+        },
+        // Variant B: start/end + first/second party + common extras
+        {
+          contract_number: contractNumber,
+          first_party_id: clientId,
+          second_party_id: employerId,
+          promoter_id: promoterId,
+          start_date: isoStart,
+          end_date: isoEnd,
+          email: body.email || null,
+          job_title: body.job_title || null,
+          work_location: body.work_location || null,
+          department: body.department || null,
+          contract_type: contractType,
+          currency,
+          user_id: session.user.id,
+          status: 'draft',
+        },
+        // Variant C: contract_*date + client/employer (alt date column names)
+        {
+          contract_number: contractNumber,
+          client_id: clientId,
+          employer_id: employerId,
+          promoter_id: promoterId,
+          contract_start_date: isoStart,
+          contract_end_date: isoEnd,
+          title,
+          contract_type: contractType,
+          value,
+          currency,
+          status: 'draft',
+        },
+        // Variant D: contract_*date + first/second party + extras
+        {
+          contract_number: contractNumber,
+          first_party_id: clientId,
+          second_party_id: employerId,
+          promoter_id: promoterId,
+          contract_start_date: isoStart,
+          contract_end_date: isoEnd,
+          email: body.email || null,
+          job_title: body.job_title || null,
+          work_location: body.work_location || null,
+          department: body.department || null,
+          contract_type: contractType,
+          currency,
+          user_id: session.user.id,
+          status: 'draft',
+        },
+      ];
+
+      // Remove undefined properties to avoid schema cache column errors
+      const variants: Record<string, any>[] = variantsRaw.map(v =>
+        Object.fromEntries(Object.entries(v).filter(([, val]) => val !== undefined))
+      );
+
+      const attemptErrors: any[] = [];
+      for (const variant of variants) {
+        const { data, error } = await supabase
+          .from('contracts')
+          .insert([variant])
+          .select()
+          .single();
+        if (!error && data) {
+          return NextResponse.json({ success: true, contract: data });
         }
-      };
-
-      // Build two variants to handle schema differences between environments
-      const isoStart = normalizeDate(body.contract_start_date || body.start_date);
-      const isoEnd = normalizeDate(body.contract_end_date || body.end_date);
-
-      const insertVariantA: any = {
-        contract_number: body.contract_number || `CON-${Date.now()}`,
-        first_party_id: body.first_party_id || body.client_id || null,
-        second_party_id: body.second_party_id || body.employer_id || null,
-        promoter_id: body.promoter_id || null,
-        contract_start_date: isoStart,
-        contract_end_date: isoEnd,
-        email: body.email || null,
-        job_title: body.job_title || null,
-        work_location: body.work_location || null,
-        department: body.department || null,
-        contract_type: body.contract_type || null,
-        currency: body.currency || 'OMR',
-        user_id: session.user.id,
-        status: 'draft',
-      };
-
-      const insertVariantB: any = {
-        contract_number: insertVariantA.contract_number,
-        first_party_id: insertVariantA.first_party_id,
-        second_party_id: insertVariantA.second_party_id,
-        promoter_id: insertVariantA.promoter_id,
-        start_date: isoStart,
-        end_date: isoEnd,
-        email: insertVariantA.email,
-        job_title: insertVariantA.job_title,
-        work_location: insertVariantA.work_location,
-        department: insertVariantA.department,
-        contract_type: insertVariantA.contract_type,
-        currency: insertVariantA.currency,
-        user_id: session.user.id,
-        status: 'draft',
-      };
-
-      // Insert the contract
-      let contract: any = null;
-      let error: any = null;
-      // Try variant A (contract_start_date/contract_end_date)
-      {
-        const res = await supabase
-          .from('contracts')
-          .insert([insertVariantA])
-          .select()
-          .single();
-        contract = res.data;
-        error = res.error;
+        attemptErrors.push({ message: error?.message, code: (error as any)?.code });
+        // Continue to try next variant
       }
 
-      // If schema doesn't have contract_*date columns, retry with start_date/end_date
-      if (error &&
-          (String(error.message).includes('contract_start_date') ||
-           String(error.message).includes('contract_end_date') ||
-           String(error.message).includes('schema cache') ||
-           String(error.message).includes('column'))) {
-        const retry = await supabase
-          .from('contracts')
-          .insert([insertVariantB])
-          .select()
-          .single();
-        contract = retry.data;
-        error = retry.error;
-      }
-
-      if (error) {
-        console.error('Error creating contract:', error);
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Failed to create contract',
-            details: error.message,
-          },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        contract,
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to create contract',
+          details: attemptErrors,
+        },
+        { status: 500 }
+      );
     } catch (error) {
-      console.error('Create contract error:', error);
       return NextResponse.json(
         {
           success: false,
