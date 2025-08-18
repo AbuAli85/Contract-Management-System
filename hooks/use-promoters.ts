@@ -17,7 +17,7 @@ const fetchPromoters = async (): Promise<Promoter[]> => {
   const { data, error } = await supabaseClient
     .from('promoters')
     .select('*')
-    .order('name_en', { ascending: true });
+    .order('first_name', { ascending: true });
 
   if (error) {
     devLog('Error fetching promoters:', error);
@@ -25,7 +25,12 @@ const fetchPromoters = async (): Promise<Promoter[]> => {
     devLog(error);
     throw new Error(error.message);
   }
-  return data || [];
+  // Normalize names for UI that expects name_en
+  const normalized = (data || []).map((p: any) => ({
+    ...p,
+    name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+  }));
+  return normalized;
 };
 
 // Helper function to create realtime channel

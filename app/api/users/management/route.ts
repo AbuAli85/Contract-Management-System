@@ -2,20 +2,34 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { withRBAC } from '@/lib/rbac/withRBAC';
 
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false,
-  },
-});
+function getSupabaseServerClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    return null;
+  }
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+}
 
 // User management operations
 export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
   try {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          error: 'Supabase is not configured',
+          details:
+            'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
+        },
+        { status: 500 }
+      );
+    }
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -91,6 +105,17 @@ export const GET = withRBAC(['admin', 'manager'], async (req: Request) => {
 
 export const POST = withRBAC(['admin'], async (req: Request) => {
   try {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          error: 'Supabase is not configured',
+          details:
+            'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
+        },
+        { status: 500 }
+      );
+    }
     const body = await req.json();
     const { email, role, full_name, password, status = 'active' } = body;
 
@@ -206,6 +231,17 @@ export const POST = withRBAC(['admin'], async (req: Request) => {
 
 export const PUT = withRBAC(['admin', 'manager'], async (req: Request) => {
   try {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          error: 'Supabase is not configured',
+          details:
+            'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
+        },
+        { status: 500 }
+      );
+    }
     const body = await req.json();
     const { id, email, role, full_name, status } = body;
 
@@ -318,6 +354,17 @@ export const PUT = withRBAC(['admin', 'manager'], async (req: Request) => {
 
 export const DELETE = withRBAC(['admin'], async (req: Request) => {
   try {
+    const supabase = getSupabaseServerClient();
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          error: 'Supabase is not configured',
+          details:
+            'Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY environment variables.',
+        },
+        { status: 500 }
+      );
+    }
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 

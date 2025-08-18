@@ -44,8 +44,9 @@ export default function AddNewPromoterPage() {
 
         const { data, error } = await supabase
           .from('employers')
-          .select('id, name_en, name_ar')
-          .order('name_en');
+          .select('id, name_en, name_ar, first_name, last_name')
+          .order('name_en', { nullsFirst: true })
+          .order('first_name');
 
         if (error) {
           console.error('Error fetching employers:', error);
@@ -88,9 +89,13 @@ export default function AddNewPromoterPage() {
     );
   }
 
-  const uniqueCompanies = employers.map(emp => ({
+  const uniqueCompanies = employers.map((emp: any) => ({
     id: emp.id,
-    name: emp.name_en || emp.name_ar || emp.id,
+    name:
+      emp.name_en ||
+      emp.name_ar ||
+      [emp.first_name, emp.last_name].filter(Boolean).join(' ') ||
+      emp.id,
   }));
 
   return (

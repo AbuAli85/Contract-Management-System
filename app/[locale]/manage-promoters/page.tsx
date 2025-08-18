@@ -189,7 +189,7 @@ export default function PromoterManagement({
       const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
         .select('*')
-        .order('name_en');
+        .order('first_name');
 
       if (promotersError) {
         console.error('Error fetching promoters:', promotersError);
@@ -218,8 +218,13 @@ export default function PromoterManagement({
               )
             : null;
 
+          const computedNameEn =
+            promoter.name_en ||
+            [promoter.first_name, promoter.last_name].filter(Boolean).join(' ');
+
           return {
             ...promoter,
+            name_en: computedNameEn,
             id_card_status: getDocumentStatusType(
               idExpiryDays,
               promoter.id_card_expiry_date
