@@ -574,24 +574,35 @@ export default function EnhancedContractForm({
   const createMutation = useMutation({
     // Use API route to avoid server-action auth/cookie issues across environments
     mutationFn: async (formValues: any) => {
-      const payload = {
-        contract_number: undefined, // let API/DB set or generate
-        first_party_id: formValues.first_party_id || '',
-        second_party_id: formValues.second_party_id || '',
-        promoter_id: formValues.promoter_id || '',
-        contract_start_date: formValues.contract_start_date
-          ? new Date(formValues.contract_start_date).toISOString()
-          : null,
-        contract_end_date: formValues.contract_end_date
-          ? new Date(formValues.contract_end_date).toISOString()
-          : null,
-        email: formValues.email || null,
-        job_title: formValues.job_title || null,
-        work_location: formValues.work_location || null,
-        department: formValues.department || null,
-        contract_type: formValues.contract_type || null,
-        currency: formValues.currency || 'OMR',
+      const toDateOnly = (value: any): string | null => {
+        if (!value) return null;
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
       };
+
+      const payload = {
+        contract_number: undefined,
+        // Prefer UUID-based columns expected by the API and DB
+        client_id: formValues.first_party_id || formValues.client_id || null,
+        employer_id: formValues.second_party_id || formValues.employer_id || null,
+        promoter_id: formValues.promoter_id || null,
+        // Use date-only to match DATE columns across environments
+        start_date: toDateOnly(
+          formValues.contract_start_date || formValues.start_date
+        ),
+        end_date: toDateOnly(
+          formValues.contract_end_date || formValues.end_date
+        ),
+        // Title mapping
+        title:
+          formValues.contract_name ||
+          formValues.title ||
+          formValues.job_title ||
+          'Employment Contract',
+        // Include a type value if present (API will handle variants)
+        type: formValues.contract_type || undefined,
+        currency: formValues.currency || 'OMR',
+      } as const;
 
       const res = await fetch('/api/contracts', {
         method: 'POST',

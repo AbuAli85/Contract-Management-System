@@ -1,6 +1,6 @@
 // app/api/contracts/makecom/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 import { createClient } from '@supabase/supabase-js';
 import {
   generateContractWithMakecom,
@@ -120,8 +120,8 @@ export async function GET(request: NextRequest) {
 }
 
 // POST: Generate contract using Make.com templates
-export const POST = withRBAC(
-  'contract:message:own',
+export const POST = withAnyRBAC(
+  ['contract:message:own', 'contract:generate:own', 'contract:create:own'],
   async (request: NextRequest) => {
     try {
       const body = await request.json();
