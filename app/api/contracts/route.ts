@@ -261,21 +261,7 @@ export const POST = withAnyRBAC(
       const intSecondPartyId = isNumeric(employerId) ? Number(employerId) : undefined;
 
       const variantsRaw: Record<string, any>[] = [
-        // Variant A (minimal): only required/common fields
-        {
-          contract_number: contractNumber,
-          title,
-          status: 'draft',
-        },
-        // Variant B: add start/end (date-only)
-        {
-          contract_number: contractNumber,
-          start_date: dateStart,
-          end_date: dateEnd,
-          title,
-          status: 'draft',
-        },
-        // Variant C: UUID-based client/employer IDs
+        // Variant A: UUID-based client/employer IDs first (preferred)
         {
           contract_number: contractNumber,
           client_id: uuidClientId,
@@ -283,6 +269,20 @@ export const POST = withAnyRBAC(
           promoter_id: uuidPromoterId,
           start_date: dateStart,
           end_date: dateEnd,
+          title,
+          status: 'draft',
+        },
+        // Variant B: add dates without party IDs
+        {
+          contract_number: contractNumber,
+          start_date: dateStart,
+          end_date: dateEnd,
+          title,
+          status: 'draft',
+        },
+        // Variant C: minimal only
+        {
+          contract_number: contractNumber,
           title,
           status: 'draft',
         },
