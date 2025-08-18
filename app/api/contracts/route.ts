@@ -239,9 +239,34 @@ export const POST = withAnyRBAC(
       const contractType = body.contract_type || 'employment';
 
       // Prepare multiple schema variants and try them in safest order
-      // Prefer start_date/end_date and client/employer ids first (matches latest schema)
+      // 1) Minimal columns common to both schemas (avoid unknown columns entirely)
+      // 2) Add legacy/new type field separately
+      // 3) Try alternate date column names only if needed
       const variantsRaw: Record<string, any>[] = [
-        // Variant A (preferred): start/end + client/employer + title/value
+        // Variant A (preferred, minimal & safe): start/end + client/employer + title
+        {
+          contract_number: contractNumber,
+          client_id: clientId,
+          employer_id: employerId,
+          promoter_id: promoterId,
+          start_date: isoStart,
+          end_date: isoEnd,
+          title,
+          status: 'draft',
+        },
+        // Variant B (legacy type column): add `type` instead of `contract_type`
+        {
+          contract_number: contractNumber,
+          client_id: clientId,
+          employer_id: employerId,
+          promoter_id: promoterId,
+          start_date: isoStart,
+          end_date: isoEnd,
+          title,
+          type: contractType,
+          status: 'draft',
+        },
+        // Variant C (newer type column): add `contract_type`
         {
           contract_number: contractNumber,
           client_id: clientId,
@@ -251,28 +276,9 @@ export const POST = withAnyRBAC(
           end_date: isoEnd,
           title,
           contract_type: contractType,
-          value,
-          currency,
           status: 'draft',
         },
-        // Variant B: start/end + first/second party + common extras
-        {
-          contract_number: contractNumber,
-          first_party_id: clientId,
-          second_party_id: employerId,
-          promoter_id: promoterId,
-          start_date: isoStart,
-          end_date: isoEnd,
-          email: body.email || null,
-          job_title: body.job_title || null,
-          work_location: body.work_location || null,
-          department: body.department || null,
-          contract_type: contractType,
-          currency,
-          user_id: session.user.id,
-          status: 'draft',
-        },
-        // Variant C: contract_*date + client/employer (alt date column names)
+        // Variant D (alt date column names + newer type col)
         {
           contract_number: contractNumber,
           client_id: clientId,
@@ -282,11 +288,9 @@ export const POST = withAnyRBAC(
           contract_end_date: isoEnd,
           title,
           contract_type: contractType,
-          value,
-          currency,
           status: 'draft',
         },
-        // Variant D: contract_*date + first/second party + extras
+        // Variant E (alt date + legacy party column names + newer type)
         {
           contract_number: contractNumber,
           first_party_id: clientId,
@@ -294,13 +298,8 @@ export const POST = withAnyRBAC(
           promoter_id: promoterId,
           contract_start_date: isoStart,
           contract_end_date: isoEnd,
-          email: body.email || null,
-          job_title: body.job_title || null,
-          work_location: body.work_location || null,
-          department: body.department || null,
+          title,
           contract_type: contractType,
-          currency,
-          user_id: session.user.id,
           status: 'draft',
         },
       ];
