@@ -677,7 +677,7 @@ export default function EnhancedContractForm({
         ? `${formValues.notice_period_days}_days`
         : undefined;
       const workingHours = formValues.working_hours_per_week
-        ? `${formValues.working_hours_per_week}_hours`
+        ? parseInt(formValues.working_hours_per_week, 10)
         : undefined;
 
       const payload = {
