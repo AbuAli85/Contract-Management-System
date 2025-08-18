@@ -207,10 +207,10 @@ export default function PromoterDetailPage() {
       if (!supabase) return;
 
       const { data, error } = await supabase
-        .from('employers')
-        .select('id, name_en, name_ar, first_name, last_name')
-        .order('name_en', { nullsFirst: true })
-        .order('first_name');
+        .from('parties')
+        .select('id, name_en, name_ar')
+        .eq('type', 'Employer')
+        .order('name_en', { nullsFirst: true });
 
       if (error) {
         console.error('Error fetching employers:', error);
@@ -219,7 +219,7 @@ export default function PromoterDetailPage() {
 
       const normalized = (data || []).map((p: any) => ({
         ...p,
-        name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+        name_en: p.name_en || p.name_ar || p.id,
       }));
       setEmployers(normalized);
     } catch (error) {
