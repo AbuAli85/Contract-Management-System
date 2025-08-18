@@ -167,20 +167,17 @@ export const POST = withAnyRBAC(
         .insert({
           contract_number:
             contractData.contract_number || generateContractNumber(),
-          first_party_id: contractData.first_party_id,
-          second_party_id: contractData.second_party_id,
+          client_id: contractData.first_party_id,
+          employer_id: contractData.second_party_id,
           promoter_id: contractData.promoter_id,
-          contract_start_date: contractData.contract_start_date,
-          contract_end_date: contractData.contract_end_date,
-          job_title: contractData.job_title,
-          work_location: contractData.work_location,
-          basic_salary: contractData.basic_salary,
-          allowances: contractData.allowances,
-          currency: contractData.currency || 'OMR',
+          start_date: contractData.contract_start_date,
+          end_date: contractData.contract_end_date,
+          title: contractData.job_title || 'Employment Contract',
+          description: contractData.special_terms || '',
           contract_type: contractType,
           status: 'pending_generation',
-          email: contractData.email,
-          special_terms: contractData.special_terms,
+          value: contractData.basic_salary,
+          currency: contractData.currency || 'OMR',
           is_current: true,
         })
         .select()
