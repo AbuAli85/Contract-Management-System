@@ -670,13 +670,13 @@ export default function EnhancedContractForm({
     mutationFn: async (formValues: any) => {
       // Map local form fields to the IDs expected by the Make.com contract type config
       const probationPeriod = formValues.probation_period_months
-        ? `${parseInt(formValues.probation_period_months, 10)}_months`
+        ? `${formValues.probation_period_months}_months`
         : undefined;
       const noticePeriod = formValues.notice_period_days
-        ? `${parseInt(formValues.notice_period_days, 10)}_days`
+        ? `${formValues.notice_period_days}_days`
         : undefined;
       const workingHours = formValues.working_hours_per_week
-        ? `${parseInt(formValues.working_hours_per_week, 10)}_hours`
+        ? `${formValues.working_hours_per_week}_hours`
         : undefined;
 
       const payload = {
@@ -707,6 +707,11 @@ export default function EnhancedContractForm({
         },
         triggerMakecom: true,
       };
+
+      // Debug logging
+      console.log('🔍 Form values:', formValues);
+      console.log('🔍 Mapped values:', { probationPeriod, noticePeriod, workingHours });
+      console.log('🔍 Final payload:', payload);
 
       const res = await fetch('/api/contracts/makecom/generate', {
         method: 'POST',
@@ -1234,6 +1239,87 @@ export default function EnhancedContractForm({
                       </FormItem>
                     )}
                   />
+
+                  {/* Contract Terms */}
+                  <div className='grid gap-4 md:grid-cols-3'>
+                    <FormField
+                      control={form.control}
+                      name='probation_period_months'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Probation Period</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select probation period' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='3'>3 Months</SelectItem>
+                              <SelectItem value='6'>6 Months</SelectItem>
+                              <SelectItem value='12'>12 Months</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='notice_period_days'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notice Period</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select notice period' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='30'>30 Days</SelectItem>
+                              <SelectItem value='60'>60 Days</SelectItem>
+                              <SelectItem value='90'>90 Days</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='working_hours_per_week'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Working Hours</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select working hours' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='40'>40 Hours/Week</SelectItem>
+                              <SelectItem value='45'>45 Hours/Week</SelectItem>
+                              <SelectItem value='48'>48 Hours/Week</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 
