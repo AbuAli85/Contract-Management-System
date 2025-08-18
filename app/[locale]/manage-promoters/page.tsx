@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -107,6 +108,14 @@ export default function PromoterManagement({
   const router = useRouter();
   const { toast } = useToast();
   const { supabase, loading: authLoading } = useSupabase();
+  const ExcelImportModal = useMemo(
+    () =>
+      dynamic(() => import('@/components/excel-import-modal'), {
+        ssr: false,
+      }),
+    []
+  );
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Helper functions
   const formatDate = (dateString: string | null | undefined) => {
@@ -526,7 +535,7 @@ export default function PromoterManagement({
                 <ArrowLeftIcon className='mr-2 h-4 w-4' /> Back to Home
               </Link>
             </Button>
-            <Button variant='outline' size='sm'>
+            <Button variant='outline' size='sm' onClick={() => setIsImportOpen(true)}>
               <FileSpreadsheet className='mr-2 h-4 w-4' />
               Import Excel
             </Button>
@@ -871,6 +880,15 @@ export default function PromoterManagement({
           </Card>
         )}
       </div>
+      {/* Import Modal */}
+      <ExcelImportModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onImportComplete={async () => {
+          setIsImportOpen(false);
+          await fetchPromoters();
+        }}
+      />
     </div>
   );
 }
