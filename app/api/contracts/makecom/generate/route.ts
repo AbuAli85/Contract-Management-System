@@ -175,7 +175,7 @@ export const POST = withAnyRBAC(
           title: contractData.job_title || 'Employment Contract',
           description: contractData.special_terms || '',
           contract_type: contractType,
-          status: 'pending_generation',
+          status: 'pending',
           value: contractData.basic_salary,
           currency: contractData.currency || 'OMR',
           is_current: true,
