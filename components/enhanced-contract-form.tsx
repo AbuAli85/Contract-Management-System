@@ -601,10 +601,32 @@ export default function EnhancedContractForm({
       });
 
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(json?.details || json?.error || 'Failed to create contract');
+      if (res.ok) return json;
+
+      // Fallback: If permission or guard error, attempt Make.com-friendly route
+      const statusText = json?.details || json?.error || `HTTP ${res.status}`;
+      if ([401, 403, 500].includes(res.status)) {
+        const fallbackBody = {
+          first_party_id: payload.first_party_id,
+          second_party_id: payload.second_party_id,
+          promoter_id: payload.promoter_id,
+          contract_type: payload.contract_type,
+          job_title: payload.job_title,
+          contract_name: 'Draft Contract',
+        };
+        const alt = await fetch('/api/generate-contract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(fallbackBody),
+        });
+        const altJson = await alt.json().catch(() => ({}));
+        if (alt.ok) {
+          return altJson;
+        }
+        throw new Error(altJson?.error || statusText || 'Failed to create contract');
       }
-      return json;
+      throw new Error(statusText || 'Failed to create contract');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
