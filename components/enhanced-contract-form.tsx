@@ -633,15 +633,55 @@ export default function EnhancedContractForm({
   });
 
   const generateMutation = useMutation({
-    mutationFn: generateContractWithMakecom,
-    onSuccess: data => {
+    // Call API route instead of server action to avoid 500 POST to page URL
+    mutationFn: async (formValues: any) => {
+      const payload = {
+        contractType: formValues.contract_type || 'unlimited-contract',
+        contractData: {
+          first_party_id: formValues.first_party_id || '',
+          second_party_id: formValues.second_party_id || '',
+          promoter_id: formValues.promoter_id || '',
+          contract_start_date: formValues.contract_start_date
+            ? new Date(formValues.contract_start_date)
+            : null,
+          contract_end_date: formValues.contract_end_date
+            ? new Date(formValues.contract_end_date)
+            : null,
+          email: formValues.email || '',
+          job_title: formValues.job_title || '',
+          work_location: formValues.work_location || '',
+          department: formValues.department || '',
+          contract_type: formValues.contract_type || '',
+          currency: formValues.currency || 'OMR',
+          basic_salary: formValues.basic_salary,
+          allowances: formValues.allowances,
+          special_terms: formValues.special_terms || '',
+        },
+        triggerMakecom: true,
+      };
+
+      const res = await fetch('/api/contracts/makecom/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.details || json?.error || 'Failed to generate contract');
+      }
+      return json;
+    },
+    onSuccess: (data: any) => {
       toast.success('Contract generated successfully!');
-      if (data?.pdfUrl) {
-        window.open(data.pdfUrl, '_blank');
+      const url = data?.data?.pdf_url || data?.pdf_url;
+      if (url) {
+        window.open(url, '_blank');
       }
     },
-    onError: error => {
-      toast.error('Failed to generate contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to generate contract';
+      toast.error(message);
       onError?.(error);
     },
   });
