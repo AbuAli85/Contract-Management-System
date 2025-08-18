@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -110,7 +110,7 @@ export default function PromoterManagement({
   const { supabase, loading: authLoading } = useSupabase();
   const ExcelImportModal = useMemo(
     () =>
-      dynamic(() => import('@/components/excel-import-modal'), {
+      nextDynamic(() => import('@/components/excel-import-modal'), {
         ssr: false,
       }),
     []
