@@ -261,7 +261,7 @@ export const POST = withAnyRBAC(
       const intSecondPartyId = isNumeric(employerId) ? Number(employerId) : undefined;
 
       const variantsRaw: Record<string, any>[] = [
-        // Variant A: UUID-based client/employer IDs with contract_type (preferred)
+        // Variant A: Complete schema with all fields (preferred)
         {
           contract_number: contractNumber,
           client_id: uuidClientId,
@@ -272,8 +272,25 @@ export const POST = withAnyRBAC(
           title,
           status: 'draft',
           contract_type: contractType,
+          is_current: true,
+          priority: 'medium',
+          currency,
+          value,
         },
-        // Variant B: add dates without party IDs but with contract_type
+        // Variant B: UUID-based with contract_type and is_current
+        {
+          contract_number: contractNumber,
+          client_id: uuidClientId,
+          employer_id: uuidEmployerId,
+          promoter_id: uuidPromoterId,
+          start_date: dateStart,
+          end_date: dateEnd,
+          title,
+          status: 'draft',
+          contract_type: contractType,
+          is_current: true,
+        },
+        // Variant C: Basic with contract_type and is_current
         {
           contract_number: contractNumber,
           start_date: dateStart,
@@ -281,15 +298,17 @@ export const POST = withAnyRBAC(
           title,
           status: 'draft',
           contract_type: contractType,
+          is_current: true,
         },
-        // Variant C: minimal with contract_type
+        // Variant D: Minimal with contract_type and is_current
         {
           contract_number: contractNumber,
           title,
           status: 'draft',
           contract_type: contractType,
+          is_current: true,
         },
-        // Variant D: legacy schema with 'type' instead of 'contract_type'
+        // Variant E: Legacy schema with 'type' and is_current
         {
           contract_number: contractNumber,
           client_id: uuidClientId,
@@ -300,13 +319,15 @@ export const POST = withAnyRBAC(
           title,
           status: 'draft',
           type: contractType,
+          is_current: true,
         },
-        // Variant E: legacy minimal with 'type'
+        // Variant F: Legacy minimal with 'type' and is_current
         {
           contract_number: contractNumber,
           title,
           status: 'draft',
           type: contractType,
+          is_current: true,
         },
       ];
 
