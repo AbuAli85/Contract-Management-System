@@ -22,9 +22,26 @@ export async function createContract(newContract: ContractInsert) {
   // Ensure the user has a profile before proceeding
   await ensureUserProfile(user);
 
+  // Normalize optional fields and dates to avoid 500s from invalid payloads
+  const safePayload: ContractInsert = {
+    ...newContract,
+    contract_start_date: newContract.contract_start_date
+      ? (new Date(newContract.contract_start_date as unknown as string).toISOString() as any)
+      : (null as any),
+    contract_end_date: newContract.contract_end_date
+      ? (new Date(newContract.contract_end_date as unknown as string).toISOString() as any)
+      : (null as any),
+    email: (newContract as any).email ?? null,
+    job_title: (newContract as any).job_title ?? null,
+    work_location: (newContract as any).work_location ?? null,
+    department: (newContract as any).department ?? null,
+    currency: (newContract as any).currency ?? 'OMR',
+    contract_value: (newContract as any).contract_value ?? (newContract as any).basic_salary ?? null,
+  };
+
   const { data, error } = await supabase
     .from('contracts')
-    .insert(newContract)
+    .insert(safePayload)
     .select(
       `id,
        created_at,
