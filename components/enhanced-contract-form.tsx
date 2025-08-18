@@ -126,12 +126,7 @@ import {
   DEPARTMENTS,
   CONTRACT_TYPES,
 } from '@/constants/contract-options';
-import {
-  createContract,
-  updateContract,
-  ContractInsert,
-  generateContractWithMakecom,
-} from '@/app/actions/contracts';
+import { updateContract, ContractInsert, generateContractWithMakecom } from '@/app/actions/contracts';
 import {
   analyzeContractDuration,
   validateContractData,
@@ -577,7 +572,40 @@ export default function EnhancedContractForm({
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: createContract,
+    // Use API route to avoid server-action auth/cookie issues across environments
+    mutationFn: async (formValues: any) => {
+      const payload = {
+        contract_number: undefined, // let API/DB set or generate
+        first_party_id: formValues.first_party_id || '',
+        second_party_id: formValues.second_party_id || '',
+        promoter_id: formValues.promoter_id || '',
+        contract_start_date: formValues.contract_start_date
+          ? new Date(formValues.contract_start_date).toISOString()
+          : null,
+        contract_end_date: formValues.contract_end_date
+          ? new Date(formValues.contract_end_date).toISOString()
+          : null,
+        email: formValues.email || null,
+        job_title: formValues.job_title || null,
+        work_location: formValues.work_location || null,
+        department: formValues.department || null,
+        contract_type: formValues.contract_type || null,
+        currency: formValues.currency || 'OMR',
+      };
+
+      const res = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.details || json?.error || 'Failed to create contract');
+      }
+      return json;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast.success('Contract created successfully!');
