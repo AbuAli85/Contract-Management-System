@@ -235,13 +235,17 @@ export const POST = withAnyRBAC(
         }
       };
 
-      const contractData = {
+      // Build two variants to handle schema differences between environments
+      const isoStart = normalizeDate(body.contract_start_date || body.start_date);
+      const isoEnd = normalizeDate(body.contract_end_date || body.end_date);
+
+      const insertVariantA: any = {
         contract_number: body.contract_number || `CON-${Date.now()}`,
         first_party_id: body.first_party_id || body.client_id || null,
         second_party_id: body.second_party_id || body.employer_id || null,
         promoter_id: body.promoter_id || null,
-        contract_start_date: normalizeDate(body.contract_start_date || body.start_date),
-        contract_end_date: normalizeDate(body.contract_end_date || body.end_date),
+        contract_start_date: isoStart,
+        contract_end_date: isoEnd,
         email: body.email || null,
         job_title: body.job_title || null,
         work_location: body.work_location || null,
@@ -250,14 +254,53 @@ export const POST = withAnyRBAC(
         currency: body.currency || 'OMR',
         user_id: session.user.id,
         status: 'draft',
-      } as any;
+      };
+
+      const insertVariantB: any = {
+        contract_number: insertVariantA.contract_number,
+        first_party_id: insertVariantA.first_party_id,
+        second_party_id: insertVariantA.second_party_id,
+        promoter_id: insertVariantA.promoter_id,
+        start_date: isoStart,
+        end_date: isoEnd,
+        email: insertVariantA.email,
+        job_title: insertVariantA.job_title,
+        work_location: insertVariantA.work_location,
+        department: insertVariantA.department,
+        contract_type: insertVariantA.contract_type,
+        currency: insertVariantA.currency,
+        user_id: session.user.id,
+        status: 'draft',
+      };
 
       // Insert the contract
-      const { data: contract, error } = await supabase
-        .from('contracts')
-        .insert([contractData])
-        .select()
-        .single();
+      let contract: any = null;
+      let error: any = null;
+      // Try variant A (contract_start_date/contract_end_date)
+      {
+        const res = await supabase
+          .from('contracts')
+          .insert([insertVariantA])
+          .select()
+          .single();
+        contract = res.data;
+        error = res.error;
+      }
+
+      // If schema doesn't have contract_*date columns, retry with start_date/end_date
+      if (error &&
+          (String(error.message).includes('contract_start_date') ||
+           String(error.message).includes('contract_end_date') ||
+           String(error.message).includes('schema cache') ||
+           String(error.message).includes('column'))) {
+        const retry = await supabase
+          .from('contracts')
+          .insert([insertVariantB])
+          .select()
+          .single();
+        contract = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.error('Error creating contract:', error);
