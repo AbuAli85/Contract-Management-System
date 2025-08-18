@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering for this API route
@@ -291,9 +293,25 @@ export const POST = withAnyRBAC(
         Object.fromEntries(Object.entries(v).filter(([, val]) => val !== undefined))
       );
 
+      // Create admin client to bypass RLS for inserts
+      const adminSupabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return [];
+            },
+            setAll() {
+              // no-op
+            },
+          },
+        }
+      );
+
       const attemptErrors: any[] = [];
       for (const variant of variants) {
-        const { data, error } = await supabase
+        const { data, error } = await adminSupabase
           .from('contracts')
           .insert([variant])
           .select()
