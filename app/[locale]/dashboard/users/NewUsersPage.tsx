@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import { Link } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -764,7 +764,7 @@ export default function NewUsersPage() {
           </p>
         </div>
         <div className='flex items-center gap-2'>
-          <Link href={`/${locale}/dashboard/users/approvals`}>
+          <Link href={'/dashboard/users/approvals'}>
             <Button variant='outline' size='sm'>
               <Users className='mr-2 h-4 w-4' />
               User Approvals
