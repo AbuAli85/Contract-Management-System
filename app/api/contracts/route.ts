@@ -248,63 +248,65 @@ export const POST = withAnyRBAC(
       // 1) Minimal columns common to both schemas (avoid unknown columns entirely)
       // 2) Add legacy/new type field separately
       // 3) Try alternate date column names only if needed
+      const isUUID = (v: any) => typeof v === 'string' && /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i.test(v);
+      const isNumeric = (v: any) => v !== null && v !== undefined && /^\d+$/.test(String(v));
+
+      const uuidClientId = isUUID(clientId) ? clientId : undefined;
+      const uuidEmployerId = isUUID(employerId) ? employerId : undefined;
+      const uuidPromoterId = isUUID(promoterId) ? promoterId : undefined;
+
+      const intFirstPartyId = isNumeric(clientId) ? Number(clientId) : undefined;
+      const intSecondPartyId = isNumeric(employerId) ? Number(employerId) : undefined;
+
       const variantsRaw: Record<string, any>[] = [
-        // Variant A (preferred, minimal & safe): start/end + first/second party + title
+        // Variant A (minimal & safest): no party IDs
         {
           contract_number: contractNumber,
-          first_party_id: clientId,
-          second_party_id: employerId,
-          promoter_id: promoterId,
           start_date: dateStart,
           end_date: dateEnd,
           title,
           status: 'draft',
         },
-        // Variant B (client/employer minimal): start/end + client/employer + title
+        // Variant B: UUID-based party IDs
         {
           contract_number: contractNumber,
-          client_id: clientId,
-          employer_id: employerId,
-          promoter_id: promoterId,
+          client_id: uuidClientId,
+          employer_id: uuidEmployerId,
+          promoter_id: uuidPromoterId,
           start_date: dateStart,
           end_date: dateEnd,
           title,
           status: 'draft',
         },
-        // Variant C (legacy type column): add `type`
+        // Variant C: Integer-based party IDs
         {
           contract_number: contractNumber,
-          first_party_id: clientId,
-          second_party_id: employerId,
-          promoter_id: promoterId,
+          first_party_id: intFirstPartyId,
+          second_party_id: intSecondPartyId,
           start_date: dateStart,
           end_date: dateEnd,
           title,
-          type: contractType,
           status: 'draft',
         },
-        // Variant D (alt date column names + newer type col)
+        // Variant D: Alt date columns with UUID IDs
         {
           contract_number: contractNumber,
-          first_party_id: clientId,
-          second_party_id: employerId,
-          promoter_id: promoterId,
+          client_id: uuidClientId,
+          employer_id: uuidEmployerId,
+          promoter_id: uuidPromoterId,
           contract_start_date: isoStart,
           contract_end_date: isoEnd,
           title,
-          contract_type: contractType,
           status: 'draft',
         },
-        // Variant E (alt date + client/employer + newer type)
+        // Variant E: Alt date columns with integer IDs
         {
           contract_number: contractNumber,
-          client_id: clientId,
-          employer_id: employerId,
-          promoter_id: promoterId,
+          first_party_id: intFirstPartyId,
+          second_party_id: intSecondPartyId,
           contract_start_date: isoStart,
           contract_end_date: isoEnd,
           title,
-          contract_type: contractType,
           status: 'draft',
         },
       ];
