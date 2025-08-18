@@ -583,8 +583,9 @@ export default function EnhancedContractForm({
       toast.success('Contract created successfully!');
       onSuccess?.();
     },
-    onError: error => {
-      toast.error('Failed to create contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to create contract';
+      toast.error(message);
       onError?.(error);
     },
   });
@@ -596,8 +597,9 @@ export default function EnhancedContractForm({
       toast.success('Contract updated successfully!');
       onSuccess?.();
     },
-    onError: error => {
-      toast.error('Failed to update contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to update contract';
+      toast.error(message);
       onError?.(error);
     },
   });
