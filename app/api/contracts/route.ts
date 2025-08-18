@@ -224,22 +224,33 @@ export const POST = withRBAC(
       }
 
       // Prepare contract data
+      const normalizeDate = (value: any): string | null => {
+        if (!value) return null;
+        try {
+          const d = new Date(value);
+          if (isNaN(d.getTime())) return null;
+          return d.toISOString();
+        } catch {
+          return null;
+        }
+      };
+
       const contractData = {
         contract_number: body.contract_number || `CON-${Date.now()}`,
-        employer_id: body.employer_id,
-        client_id: body.client_id,
-        promoter_id: body.promoter_id,
-        start_date: body.start_date,
-        end_date: body.end_date,
-        email: body.email,
-        job_title: body.job_title,
-        work_location: body.work_location,
-        department: body.department,
-        contract_type: body.contract_type,
-        currency: body.currency,
+        first_party_id: body.first_party_id || body.client_id || null,
+        second_party_id: body.second_party_id || body.employer_id || null,
+        promoter_id: body.promoter_id || null,
+        contract_start_date: normalizeDate(body.contract_start_date || body.start_date),
+        contract_end_date: normalizeDate(body.contract_end_date || body.end_date),
+        email: body.email || null,
+        job_title: body.job_title || null,
+        work_location: body.work_location || null,
+        department: body.department || null,
+        contract_type: body.contract_type || null,
+        currency: body.currency || 'OMR',
         user_id: session.user.id,
         status: 'draft',
-      };
+      } as any;
 
       // Insert the contract
       const { data: contract, error } = await supabase
