@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -200,8 +200,8 @@ export const GET = withRBAC(
   }
 );
 
-export const POST = withRBAC(
-  'contract:create:own',
+export const POST = withAnyRBAC(
+  ['contract:create:own', 'contract:generate:own', 'contract:message:own'],
   async (request: NextRequest) => {
     try {
       const supabase = await createClient();
