@@ -709,12 +709,17 @@ export default function EnhancedContractForm({
           working_hours_numeric: formValues.working_hours_per_week,
           probation_period_numeric: formValues.probation_period_months,
           notice_period_numeric: formValues.notice_period_days,
+          // Additional fields for part-time contracts
+          weekly_hours: formValues.working_hours_per_week,
+          hourly_rate: formValues.basic_salary,
+          work_schedule: 'fixed_schedule', // Default to fixed schedule
         },
         triggerMakecom: true,
       };
 
       // Debug logging
       console.log('🔍 Form values:', formValues);
+      console.log('🔍 Contract type being sent:', formValues.contract_type || 'full-time-permanent');
       console.log('🔍 Mapped values:', { probationPeriod, noticePeriod, workingHours });
       console.log('🔍 Final payload:', payload);
 
