@@ -259,7 +259,13 @@ export const POST = withAnyRBAC(
       const intSecondPartyId = isNumeric(employerId) ? Number(employerId) : undefined;
 
       const variantsRaw: Record<string, any>[] = [
-        // Variant A (minimal & safest): no party IDs
+        // Variant A (minimal): only required/common fields
+        {
+          contract_number: contractNumber,
+          title,
+          status: 'draft',
+        },
+        // Variant B: add start/end (date-only)
         {
           contract_number: contractNumber,
           start_date: dateStart,
@@ -267,7 +273,7 @@ export const POST = withAnyRBAC(
           title,
           status: 'draft',
         },
-        // Variant B: UUID-based party IDs
+        // Variant C: UUID-based client/employer IDs
         {
           contract_number: contractNumber,
           client_id: uuidClientId,
@@ -275,37 +281,6 @@ export const POST = withAnyRBAC(
           promoter_id: uuidPromoterId,
           start_date: dateStart,
           end_date: dateEnd,
-          title,
-          status: 'draft',
-        },
-        // Variant C: Integer-based party IDs
-        {
-          contract_number: contractNumber,
-          first_party_id: intFirstPartyId,
-          second_party_id: intSecondPartyId,
-          start_date: dateStart,
-          end_date: dateEnd,
-          title,
-          status: 'draft',
-        },
-        // Variant D: Alt date columns with UUID IDs
-        {
-          contract_number: contractNumber,
-          client_id: uuidClientId,
-          employer_id: uuidEmployerId,
-          promoter_id: uuidPromoterId,
-          contract_start_date: isoStart,
-          contract_end_date: isoEnd,
-          title,
-          status: 'draft',
-        },
-        // Variant E: Alt date columns with integer IDs
-        {
-          contract_number: contractNumber,
-          first_party_id: intFirstPartyId,
-          second_party_id: intSecondPartyId,
-          contract_start_date: isoStart,
-          contract_end_date: isoEnd,
           title,
           status: 'draft',
         },
