@@ -182,15 +182,19 @@ export default function PromoterDetailPage() {
       const { data, error } = await supabase
         .from('promoters')
         .select('*')
-        .order('name_en');
+        .order('first_name');
 
       if (error) {
         console.error('Error fetching all promoters:', error);
         return;
       }
 
-      setAllPromoters(data || []);
-      setFilteredPromoters(data || []);
+      const normalized = (data || []).map((p: any) => ({
+        ...p,
+        name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+      }));
+      setAllPromoters(normalized);
+      setFilteredPromoters(normalized);
     } catch (error) {
       console.error('Error fetching all promoters:', error);
     }
@@ -366,7 +370,11 @@ export default function PromoterDetailPage() {
       setPromoterDetails({
         ...promoterData,
         contracts: (contractsData as any) || [],
-        name_en: promoterData.name_en || '',
+        name_en:
+          promoterData.name_en ||
+          [promoterData.first_name, promoterData.last_name]
+            .filter(Boolean)
+            .join(' '),
         name_ar: promoterData.name_ar || '',
         id_card_number: promoterData.id_card_number || '',
         tags,
