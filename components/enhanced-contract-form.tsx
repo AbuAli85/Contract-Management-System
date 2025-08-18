@@ -126,7 +126,8 @@ import {
   DEPARTMENTS,
   CONTRACT_TYPES,
 } from '@/constants/contract-options';
-import { updateContract, ContractInsert, generateContractWithMakecom } from '@/app/actions/contracts';
+import { updateContract, generateContractWithMakecom } from '@/app/actions/contracts';
+import type { ContractInsert } from '@/app/actions/contracts';
 import {
   analyzeContractDuration,
   validateContractData,
@@ -205,9 +206,9 @@ export default function EnhancedContractForm({
     resolver: zodResolver(contractGeneratorSchema),
     mode: 'onTouched',
     defaultValues: {
-      first_party_id: contract?.first_party_id || '',
-      second_party_id: contract?.second_party_id || '',
-      promoter_id: contract?.promoter_id || '',
+      ...(contract?.first_party_id ? { first_party_id: contract.first_party_id } : {}),
+      ...(contract?.second_party_id ? { second_party_id: contract.second_party_id } : {}),
+      ...(contract?.promoter_id ? { promoter_id: contract.promoter_id } : {}),
       contract_start_date: contract?.contract_start_date
         ? parseISO(contract.contract_start_date)
         : undefined,
@@ -676,7 +677,7 @@ export default function EnhancedContractForm({
         ? `${formValues.notice_period_days}_days`
         : undefined;
       const workingHours = formValues.working_hours_per_week
-        ? parseInt(formValues.working_hours_per_week, 10)
+        ? `${formValues.working_hours_per_week}_hours`
         : undefined;
 
       const payload = {
@@ -704,6 +705,10 @@ export default function EnhancedContractForm({
           probation_period: probationPeriod,
           notice_period: noticePeriod,
           working_hours: workingHours,
+          // Also send numeric values for Make.com template validation
+          working_hours_numeric: formValues.working_hours_per_week,
+          probation_period_numeric: formValues.probation_period_months,
+          notice_period_numeric: formValues.notice_period_days,
         },
         triggerMakecom: true,
       };
@@ -891,11 +896,11 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' disabled>
+                                <SelectItem value='loading' aria-disabled='true'>
                                   Loading clients...
                                 </SelectItem>
                               ) : clientParties.length === 0 ? (
-                                <SelectItem value='no-clients' disabled>
+                                <SelectItem value='no-clients' aria-disabled='true'>
                                   No clients found. Please add a client in Party
                                   Management.
                                 </SelectItem>
@@ -934,11 +939,11 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' disabled>
+                                <SelectItem value='loading' aria-disabled='true'>
                                   Loading employers...
                                 </SelectItem>
                               ) : employerParties.length === 0 ? (
-                                <SelectItem value='no-employers' disabled>
+                                <SelectItem value='no-employers' aria-disabled='true'>
                                   No employers found. Please add an employer in
                                   Party Management.
                                 </SelectItem>
