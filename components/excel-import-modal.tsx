@@ -211,13 +211,14 @@ export default function ExcelImportModal({
         console.log('Data rows count:', dataRows.length);
         console.log('Data rows:', dataRows);
 
-        // Build header index map with tolerant matching
+        // Build header index map with tolerant matching (underscores, punctuation → spaces)
         const normalize = (s: string) =>
           String(s || '')
             .trim()
             .toLowerCase()
+            .replace(/[^a-z0-9]+/g, ' ')
             .replace(/\s+/g, ' ')
-            .replace(/[()]/g, '');
+            .trim();
 
         const idx = {
           name_en:
@@ -226,15 +227,26 @@ export default function ExcelImportModal({
                 'name en',
                 'english name',
                 'name',
-                'full name (english)',
+                'full name english',
+                'name english',
+                'name_en',
               ].includes(normalize(h))
             ),
           name_ar: headers.findIndex(h =>
             [
               'name ar',
               'arabic name',
-              'full name (arabic)',
+              'full name arabic',
+              'name_ar',
             ].includes(normalize(h))
+          ),
+          first_name: headers.findIndex(h =>
+            ['first name', 'firstname', 'first_name'].includes(normalize(h))
+          ),
+          last_name: headers.findIndex(h =>
+            ['last name', 'lastname', 'last_name', 'surname'].includes(
+              normalize(h)
+            )
           ),
           id_card_number: headers.findIndex(h =>
             [
@@ -242,13 +254,18 @@ export default function ExcelImportModal({
               'id number',
               'id',
               'national id',
+              'id_card_number',
             ].includes(normalize(h))
           ),
           mobile_number: headers.findIndex(h =>
-            ['mobile number', 'mobile', 'phone'].includes(normalize(h))
+            ['mobile number', 'mobile', 'phone', 'mobile_number'].includes(
+              normalize(h)
+            )
           ),
           passport_number: headers.findIndex(h =>
-            ['passport number', 'passport'].includes(normalize(h))
+            ['passport number', 'passport', 'passport_no', 'passport_number'].includes(
+              normalize(h)
+            )
           ),
           nationality: headers.findIndex(h => ['nationality'].includes(normalize(h))),
           id_card_expiry_date: headers.findIndex(h =>
@@ -262,7 +279,15 @@ export default function ExcelImportModal({
           notes: headers.findIndex(h => ['notes', 'note'].includes(normalize(h))),
           status: headers.findIndex(h => ['status'].includes(normalize(h))),
           employer_id: headers.findIndex(h =>
-            ['company id', 'employer id', 'company', 'employer'].includes(
+            [
+              'company id',
+              'employer id',
+              'company',
+              'employer',
+              'company_id',
+              'employer_id',
+              'employer uuid',
+            ].includes(
               normalize(h)
             )
           ),
@@ -365,6 +390,16 @@ export default function ExcelImportModal({
             employer_id:
               String(cell(row, idx.employer_id) || '').trim() || undefined,
           };
+
+          // If name_en is missing but first/last present, compose it
+          if (!mappedRow.name_en) {
+            const first = String(cell(row, idx.first_name) || '').trim();
+            const last = String(cell(row, idx.last_name) || '').trim();
+            const combined = [first, last].filter(Boolean).join(' ').trim();
+            if (combined) {
+              (mappedRow as any).name_en = combined;
+            }
+          }
 
           console.log(`Mapped row ${index + 1}:`, mappedRow);
           return mappedRow;
@@ -794,6 +829,7 @@ export default function ExcelImportModal({
                     accept='.xlsx,.xls,.csv'
                     onChange={handleFileChange}
                     className='hidden'
+                    data-testid='import-file-input'
                   />
 
                   {file && (
