@@ -129,17 +129,23 @@ export default function ExcelImportModal({
       const selectedFile = event.target.files?.[0];
       if (!selectedFile) return;
 
-      // Validate file type
+      // Validate by extension fallback as some browsers provide empty/incorrect MIME types
+      const fileName = selectedFile.name.toLowerCase();
+      const ext = fileName.split('.').pop() || '';
+      const allowedExt = ['xlsx', 'xls', 'csv'];
+      const validByExt = allowedExt.includes(ext);
       const validTypes = [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
         'application/vnd.ms-excel', // .xls
         'text/csv', // .csv
       ];
+      const validByMime = validTypes.includes(selectedFile.type);
 
-      if (!validTypes.includes(selectedFile.type)) {
+      if (!validByExt && !validByMime) {
         toast({
           title: 'Invalid file type',
-          description: 'Please select an Excel file (.xlsx, .xls) or CSV file',
+          description:
+            'Please upload an Excel (.xlsx, .xls) or CSV (.csv) file saved on your local disk.',
           variant: 'destructive',
         });
         return;
@@ -166,7 +172,12 @@ export default function ExcelImportModal({
         );
 
         const arrayBuffer = await selectedFile.arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const workbook = XLSX.read(arrayBuffer, {
+          type: 'array',
+          cellDates: true,
+          raw: false,
+          dateNF: 'yyyy-mm-dd',
+        });
 
         console.log('Workbook sheets:', workbook.SheetNames);
 
@@ -176,8 +187,12 @@ export default function ExcelImportModal({
 
         console.log('Processing sheet:', sheetName);
 
-        // Convert to JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        // Convert to JSON (row arrays) keeping empty cells as ''
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          header: 1,
+          raw: false,
+          defval: '',
+        });
 
         console.log('Raw JSON data length:', jsonData.length);
         console.log('Raw JSON data:', jsonData);
@@ -196,14 +211,85 @@ export default function ExcelImportModal({
         console.log('Data rows count:', dataRows.length);
         console.log('Data rows:', dataRows);
 
+        // Build header index map with tolerant matching
+        const normalize = (s: string) =>
+          String(s || '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ')
+            .replace(/[()]/g, '');
+
+        const idx = {
+          name_en:
+            headers.findIndex(h =>
+              [
+                'name en',
+                'english name',
+                'name',
+                'full name (english)',
+              ].includes(normalize(h))
+            ),
+          name_ar: headers.findIndex(h =>
+            [
+              'name ar',
+              'arabic name',
+              'full name (arabic)',
+            ].includes(normalize(h))
+          ),
+          id_card_number: headers.findIndex(h =>
+            [
+              'id card number',
+              'id number',
+              'id',
+              'national id',
+            ].includes(normalize(h))
+          ),
+          mobile_number: headers.findIndex(h =>
+            ['mobile number', 'mobile', 'phone'].includes(normalize(h))
+          ),
+          passport_number: headers.findIndex(h =>
+            ['passport number', 'passport'].includes(normalize(h))
+          ),
+          nationality: headers.findIndex(h => ['nationality'].includes(normalize(h))),
+          id_card_expiry_date: headers.findIndex(h =>
+            ['id expiry date', 'id card expiry date', 'id expiry'].includes(
+              normalize(h)
+            )
+          ),
+          passport_expiry_date: headers.findIndex(h =>
+            ['passport expiry date', 'passport expiry'].includes(normalize(h))
+          ),
+          notes: headers.findIndex(h => ['notes', 'note'].includes(normalize(h))),
+          status: headers.findIndex(h => ['status'].includes(normalize(h))),
+          employer_id: headers.findIndex(h =>
+            ['company id', 'employer id', 'company', 'employer'].includes(
+              normalize(h)
+            )
+          ),
+        };
+
+        // Helper to safely read a cell by index
+        const cell = (r: any[], i: number) => (i >= 0 ? r[i] : '');
+
         // Map data to PromoterData interface
         const mappedData: PromoterData[] = dataRows.map((row, index) => {
           console.log(`Mapping row ${index + 1}:`, row);
 
-          const formatDate = (dateString: string | null | undefined) => {
-            if (!dateString) return null;
+          const toISODate = (value: any): string | null => {
+            if (value == null || value === '') return null;
 
-            const dateStr = String(dateString).trim();
+            // Date object
+            if (value instanceof Date && !isNaN(value.getTime())) {
+              return value.toISOString().slice(0, 10);
+            }
+
+            // Excel serial number
+            if (typeof value === 'number') {
+              const jsDate = new Date(Math.round((value - 25569) * 86400 * 1000));
+              if (!isNaN(jsDate.getTime())) return jsDate.toISOString().slice(0, 10);
+            }
+
+            const dateStr = String(value).trim();
             if (!dateStr) return null;
 
             console.log(`Formatting date: "${dateStr}"`);
@@ -256,22 +342,28 @@ export default function ExcelImportModal({
               }
             }
 
+            // Already yyyy-mm-dd
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+              return dateStr;
+            }
+
             console.log(`Could not format date: "${dateStr}"`);
             return null;
           };
 
           const mappedRow = {
-            name_en: String(row[0] || '').trim(),
-            name_ar: String(row[1] || '').trim(),
-            id_card_number: String(row[2] || '').trim(),
-            mobile_number: String(row[3] || '').trim(),
-            passport_number: String(row[4] || '').trim(),
-            nationality: String(row[5] || '').trim(),
-            id_card_expiry_date: formatDate(row[6]),
-            passport_expiry_date: formatDate(row[7]),
-            notes: String(row[8] || '').trim(),
-            status: String(row[9] || 'active').trim(),
-            employer_id: String(row[10] || '').trim() || undefined,
+            name_en: String(cell(row, idx.name_en) || '').trim(),
+            name_ar: String(cell(row, idx.name_ar) || '').trim(),
+            id_card_number: String(cell(row, idx.id_card_number) || '').trim(),
+            mobile_number: String(cell(row, idx.mobile_number) || '').trim(),
+            passport_number: String(cell(row, idx.passport_number) || '').trim(),
+            nationality: String(cell(row, idx.nationality) || '').trim(),
+            id_card_expiry_date: toISODate(cell(row, idx.id_card_expiry_date)),
+            passport_expiry_date: toISODate(cell(row, idx.passport_expiry_date)),
+            notes: String(cell(row, idx.notes) || '').trim(),
+            status: String(cell(row, idx.status) || 'active').trim(),
+            employer_id:
+              String(cell(row, idx.employer_id) || '').trim() || undefined,
           };
 
           console.log(`Mapped row ${index + 1}:`, mappedRow);
@@ -282,18 +374,14 @@ export default function ExcelImportModal({
 
         // Filter out empty rows
         const validData = mappedData.filter(row => {
-          const isValid = row.name_en && row.name_ar && row.id_card_number;
+          const isValid = row.name_en && row.id_card_number;
           console.log(
-            `Row validation: ${row.name_en} - ${row.name_ar} - ${row.id_card_number} = ${isValid}`
+            `Row validation: ${row.name_en} - ${row.id_card_number} = ${isValid}`
           );
 
           // Additional validation for required fields
           if (!row.name_en) {
             console.log(`Row skipped: Missing English name`);
-            return false;
-          }
-          if (!row.name_ar) {
-            console.log(`Row skipped: Missing Arabic name`);
             return false;
           }
           if (!row.id_card_number) {
