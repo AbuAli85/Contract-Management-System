@@ -668,8 +668,19 @@ export default function EnhancedContractForm({
   const generateMutation = useMutation({
     // Call API route instead of server action to avoid 500 POST to page URL
     mutationFn: async (formValues: any) => {
+      // Map local form fields to the IDs expected by the Make.com contract type config
+      const probationPeriod = formValues.probation_period_months
+        ? `${parseInt(formValues.probation_period_months, 10)}_months`
+        : undefined;
+      const noticePeriod = formValues.notice_period_days
+        ? `${parseInt(formValues.notice_period_days, 10)}_days`
+        : undefined;
+      const workingHours = formValues.working_hours_per_week
+        ? `${parseInt(formValues.working_hours_per_week, 10)}_hours`
+        : undefined;
+
       const payload = {
-        contractType: formValues.contract_type || 'unlimited-contract',
+        contractType: formValues.contract_type || 'full-time-permanent',
         contractData: {
           first_party_id: formValues.first_party_id || '',
           second_party_id: formValues.second_party_id || '',
@@ -689,6 +700,10 @@ export default function EnhancedContractForm({
           basic_salary: formValues.basic_salary,
           allowances: formValues.allowances,
           special_terms: formValues.special_terms || '',
+          // Required by 'full-time-permanent' type
+          probation_period: probationPeriod,
+          notice_period: noticePeriod,
+          working_hours: workingHours,
         },
         triggerMakecom: true,
       };
