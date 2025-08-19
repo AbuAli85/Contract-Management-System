@@ -167,8 +167,11 @@ export const POST = withAnyRBAC(
         .insert({
           contract_number:
             contractData.contract_number || generateContractNumber(),
+          // Persist both legacy and new party columns for compatibility
           client_id: contractData.first_party_id,
           employer_id: contractData.second_party_id,
+          first_party_id: contractData.first_party_id,
+          second_party_id: contractData.second_party_id,
           promoter_id: contractData.promoter_id,
           start_date: contractData.contract_start_date,
           end_date: contractData.contract_end_date,
