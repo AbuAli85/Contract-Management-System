@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
           contractConfig,
           templateConfig,
           googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-          templatePlaceholders: templateConfig.templatePlaceholders,
           makecomModuleConfig: templateConfig.makecomModuleConfig,
         },
       });
@@ -205,10 +204,37 @@ export const POST = withAnyRBAC(
       if (triggerMakecom && webhookPayload) {
         try {
           // Add the created contract ID to the webhook payload
+          const appUrl =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            process.env.APP_URL ||
+            process.env.VERCEL_URL?.startsWith('http')
+              ? process.env.VERCEL_URL
+              : process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : 'http://localhost:3000';
+
+          // Pull Google Drive settings from Make.com template config (if available)
+          const makeTemplate = templateConfig?.makecomTemplateId
+            ? getMakecomTemplateConfig(templateConfig.makecomTemplateId)
+            : null;
+
           const enhancedPayload = {
             ...webhookPayload,
             contract_id: contract.id,
             contract_number: contract.contract_number,
+            // Callback URL for Make.com to update status/pdf_url
+            update_url: `${appUrl}/api/generate-contract`,
+            // Provide Drive folder context to Make.com scenario if configured
+            ...(makeTemplate?.makecomModuleConfig.googleDriveSettings
+              ? {
+                  google_drive_folder_id:
+                    makeTemplate.makecomModuleConfig.googleDriveSettings
+                      .folderId,
+                  file_naming_pattern:
+                    makeTemplate.makecomModuleConfig.googleDriveSettings
+                      .naming,
+                }
+              : {}),
           };
 
           // Trigger Make.com webhook (replace with your actual Make.com webhook URL)
@@ -274,6 +300,21 @@ export const POST = withAnyRBAC(
             webhookPayload: triggerMakecom ? webhookPayload : null,
             response: makecomResponse,
           },
+          // Helpful link to the target Drive folder if configured
+          google_drive_url: ((): string | null => {
+            try {
+              const makeTemplate = templateConfig?.makecomTemplateId
+                ? getMakecomTemplateConfig(templateConfig.makecomTemplateId)
+                : null;
+              const folderId =
+                makeTemplate?.makecomModuleConfig.googleDriveSettings?.folderId;
+              return folderId
+                ? `https://drive.google.com/drive/folders/${folderId}`
+                : null;
+            } catch {
+              return null;
+            }
+          })(),
         },
       });
     } catch (error) {
