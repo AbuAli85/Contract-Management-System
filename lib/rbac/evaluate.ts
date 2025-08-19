@@ -464,48 +464,115 @@ export class PermissionEvaluator {
     userId: string
   ): Promise<{ permissions: string[]; roles: string[] }> {
     try {
-      const { data: roleAssignments, error: roleError } = await permissionCache[
-        'supabase'
-      ]
-        .from('user_role_assignments')
-        .select(
-          `
-          role_id,
-          roles!inner(
-            name,
-            category
-          )
-        `
-        )
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .is('valid_until', null);
+      // Create a new Supabase client for direct database access
+      const { createClient } = await import('@/lib/supabase/server');
+      const supabase = await createClient();
 
-      if (roleError || !roleAssignments) {
+      // Try new RBAC tables first
+      let roleAssignments: any[] | null = null;
+      let rolesFetchError: any = null;
+      
+      try {
+        const r = await supabase
+          .from('rbac_user_role_assignments')
+          .select(
+            `
+            role_id,
+            rbac_roles!inner(
+              name,
+              category
+            )
+          `
+          )
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .is('valid_until', null);
+        roleAssignments = r.data as any[] | null;
+        rolesFetchError = r.error;
+      } catch (e) {
+        rolesFetchError = e;
+      }
+
+      // Legacy fallback
+      if ((!roleAssignments || roleAssignments.length === 0) && rolesFetchError) {
+        const { data, error } = await supabase
+          .from('user_role_assignments')
+          .select(
+            `
+            role_id,
+            roles!inner(
+              name,
+              category
+            )
+          `
+          )
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .is('valid_until', null);
+        roleAssignments = data as any[] | null;
+        rolesFetchError = error;
+      }
+
+      if (rolesFetchError) {
+        console.error('🔐 RBAC: Failed to fetch user roles:', rolesFetchError);
+        return { permissions: [], roles: [] };
+      }
+
+      if (!roleAssignments || roleAssignments.length === 0) {
         return { permissions: [], roles: [] };
       }
 
       const roleIds = roleAssignments.map(ra => ra.role_id);
-      const roles = roleAssignments.map(ra => ra.roles.name);
+      const roles = roleAssignments.map(ra =>
+        // Handle both rbac_roles and legacy roles linkage
+        (ra.rbac_roles?.name as string) || (ra.roles?.name as string)
+      );
 
-      const { data: permissions, error: permError } = await permissionCache[
-        'supabase'
-      ]
-        .from('role_permissions')
-        .select(
+      // Get permissions for these roles (new RBAC first)
+      let permissionsRows: any[] | null = null;
+      let permError: any = null;
+      
+      try {
+        const pr = await supabase
+          .from('rbac_role_permissions')
+          .select(
+            `
+            rbac_permissions!inner(
+              name
+            )
           `
-          permissions!inner(
-            name
           )
-        `
-        )
-        .in('role_id', roleIds);
-
-      if (permError) {
-        return { permissions: [], roles };
+          .in('role_id', roleIds);
+        permissionsRows = pr.data as any[] | null;
+        permError = pr.error;
+      } catch (e) {
+        permError = e;
       }
 
-      const permissionNames = permissions?.map(p => p.permissions.name) || [];
+      // Legacy fallback
+      if ((!permissionsRows || permissionsRows.length === 0) && permError) {
+        const { data, error } = await supabase
+          .from('role_permissions')
+          .select(
+            `
+            permissions!inner(
+              name
+            )
+          `
+          )
+          .in('role_id', roleIds);
+        permissionsRows = data as any[] | null;
+        permError = error;
+      }
+
+      if (permError) {
+        console.error('🔐 RBAC: Failed to fetch permissions:', permError);
+        return { permissions: [], roles: [] };
+      }
+
+      const permissionNames = (permissionsRows || []).map(row =>
+        row.rbac_permissions?.name || row.permissions?.name
+      ).filter(Boolean) as string[];
 
       return {
         permissions: permissionNames,
