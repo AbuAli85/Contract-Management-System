@@ -1193,6 +1193,31 @@ export function generateContractWithMakecom(
   // Validate data against contract type requirements
   const validation = validateContractTypeData(contractTypeId, contractData);
 
+  // Derive a normalized contract_value if absent, for business rules
+  const normalizedData: Record<string, unknown> = { ...contractData };
+  if (normalizedData.contract_value == null) {
+    // Heuristics per type
+    if (contractTypeId === 'full-time-permanent') {
+      // Use basic_salary as base value when available
+      if (typeof normalizedData.basic_salary === 'number') {
+        normalizedData.contract_value = normalizedData.basic_salary;
+      }
+    } else if (
+      contractTypeId === 'part-time-contract' ||
+      contractTypeId === 'consulting-agreement'
+    ) {
+      // Use hourly_rate when present
+      if (typeof normalizedData.hourly_rate === 'number') {
+        normalizedData.contract_value = normalizedData.hourly_rate;
+      }
+    } else if (contractTypeId === 'vendor-service-agreement') {
+      if (typeof normalizedData.contract_value !== 'number' &&
+          typeof normalizedData['contract_value'] === 'number') {
+        // keep as is
+      }
+    }
+  }
+
   // Generate webhook payload if validation passes
   const webhookPayload = validation.isValid
     ? {
@@ -1200,7 +1225,7 @@ export function generateContractWithMakecom(
         template_id: contractConfig.googleDocsTemplateId,
         makecom_template_id: contractConfig.makecomTemplateId,
         business_rules: contractConfig.businessRules,
-        ...contractData,
+        ...normalizedData,
       }
     : null;
 
