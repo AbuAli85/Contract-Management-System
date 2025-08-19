@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { apiFetch } from '@/lib/http/api';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -192,7 +193,7 @@ function ContractsContent() {
       setError(null);
 
       console.log('🔍 Contracts Page: Fetching contracts...');
-      const response = await fetch('/api/contracts');
+      const response = await apiFetch('/api/contracts');
 
       if (!response.ok) {
         console.error(
