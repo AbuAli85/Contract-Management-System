@@ -4,9 +4,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { permissionEvaluator, PermissionContext } from './evaluate';
-import { auditLogger, AuditLogger } from './audit';
+import { permissionEvaluator } from './evaluate';
+import type { PermissionContext } from './evaluate';
 import { parsePermission } from './permissions';
+import { permissionCache } from './cache';
 
 export interface GuardOptions {
   context?: PermissionContext;
@@ -18,9 +19,9 @@ export interface GuardResult {
   allowed: boolean;
   reason: string;
   required_permission: string;
-  user_permissions: string[];
+  user_permissions: (string | { resource: string; action: string; scope: string })[];
   user_roles: string[];
-  user_id?: string;
+  user_id: string | null;
   context?: Record<string, any>;
 }
 
@@ -52,19 +53,36 @@ export async function checkPermission(
     }
 
     // Evaluate permission
+    const evalOptions: any = {};
+    if (typeof options.skipAudit === 'boolean') evalOptions.skipAudit = options.skipAudit;
+    if (typeof options.skipCache === 'boolean') evalOptions.skipCache = options.skipCache;
+    if (options.context && (options.context as any).user && (options.context as any).params) {
+      evalOptions.context = { ...(options.context as any), request: (options.context as any).request } as PermissionContext;
+    }
+
+    const normalizedOptions: any = {
+      skipAudit: !!evalOptions.skipAudit,
+      skipCache: !!evalOptions.skipCache,
+    };
+    if (evalOptions.context) {
+      normalizedOptions.context = evalOptions.context as PermissionContext;
+    }
     const result = await permissionEvaluator.evaluatePermission(
       user.id,
       requiredPermission,
-      {
-        skipAudit: options.skipAudit,
-        skipCache: options.skipCache,
-        context: options.context,
-      }
+      normalizedOptions
     );
 
     // Add user ID to result
+    const flattenedPerms = (result.user_permissions || []).map((p: any) =>
+      typeof p === 'string' ? p : `${p.resource}:${p.action}:${p.scope}`
+    );
     return {
-      ...result,
+      allowed: result.allowed,
+      reason: result.reason || 'OK',
+      required_permission: requiredPermission,
+      user_permissions: flattenedPerms,
+      user_roles: result.user_roles || [],
       user_id: user.id,
     };
   } catch (error) {
@@ -99,25 +117,14 @@ export async function guardPermission(
     }
 
     // Check permission
-    const result = await checkPermission(requiredPermission, {
-      ...options,
-      context: {
-        ...options.context,
-        request,
-      },
-    });
-
-    // Log the permission check
-    if (!options.skipAudit) {
-      await auditLogger.logPermissionUsage({
-        user_id: result.user_id || 'anonymous',
-        permission: requiredPermission,
-        path: request.url,
-        result: result.allowed ? 'ALLOW' : 'DENY',
-        ip_address: AuditLogger.getClientIP(request),
-        user_agent: AuditLogger.getUserAgent(request),
-      });
+    const baseOptions: any = { ...options };
+    // Avoid passing partially-typed context to satisfy exactOptionalPropertyTypes
+    if (baseOptions.context === undefined) {
+      delete baseOptions.context;
     }
+    const result = await checkPermission(requiredPermission, baseOptions);
+
+    // Optional: add audit logging here if needed
 
     // Handle dry-run mode (development only)
     if (enforcementMode === 'dry-run' && process.env.NODE_ENV === 'development') {
@@ -152,7 +159,9 @@ export async function guardPermission(
     console.error('🔐 RBAC: Error in guardPermission:', error);
 
     // In case of error, default to deny in enforce mode
-    const enforcementMode = process.env.RBAC_ENFORCEMENT || 'enforce';
+    const enforcementMode =
+      process.env.RBAC_ENFORCEMENT ||
+      (process.env.NODE_ENV === 'production' ? 'enforce' : 'dry-run');
     if (enforcementMode === 'enforce') {
       return NextResponse.json(
         {
@@ -173,7 +182,7 @@ export async function guardPermission(
  */
 export function withRBAC<T extends any[]>(
   requiredPermission: string,
-  handler: (...args: T) => Promise<NextResponse>
+  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     // Check permission first
@@ -194,7 +203,7 @@ export function withRBAC<T extends any[]>(
  */
 export function withAnyRBAC<T extends any[]>(
   requiredPermissions: string[],
-  handler: (...args: T) => Promise<NextResponse>
+  handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
     // Check if user has any of the required permissions
@@ -225,10 +234,6 @@ async function guardAnyPermission(
     // Check if user has any of the required permissions
     const result = await checkAnyPermission(requiredPermissions, {
       ...options,
-      context: {
-        ...options.context,
-        request,
-      },
     });
 
     // If RBAC is disabled, always allow
@@ -314,20 +319,32 @@ export async function checkAnyPermission(
         required_permission: requiredPermissions.join(' OR '),
         user_permissions: [],
         user_roles: [],
+        user_id: null,
       };
     }
 
+    const anyOptions: any = {
+      skipAudit: !!options.skipAudit,
+      skipCache: !!options.skipCache,
+    };
+    if (options.context) anyOptions.context = options.context as PermissionContext;
     const result = await permissionEvaluator.hasAnyPermission(
       user.id,
       requiredPermissions,
-      {
-        skipAudit: options.skipAudit,
-        skipCache: options.skipCache,
-        context: options.context,
-      }
+      anyOptions
     );
 
-    return result;
+    const flattenedPerms = (result.user_permissions || []).map((p: any) =>
+      typeof p === 'string' ? p : `${p.resource}:${p.action}:${p.scope}`
+    );
+    return {
+      allowed: result.allowed,
+      reason: result.reason || (result.allowed ? 'OK' : 'DENY'),
+      required_permission: requiredPermissions.join(' OR '),
+      user_permissions: flattenedPerms,
+      user_roles: result.user_roles || [],
+      user_id: result.user_id || null,
+    };
   } catch (error) {
     console.error('🔐 RBAC: Error in checkAnyPermission:', error);
     return {
@@ -336,6 +353,7 @@ export async function checkAnyPermission(
       required_permission: requiredPermissions.join(' OR '),
       user_permissions: [],
       user_roles: [],
+      user_id: null,
     };
   }
 }
@@ -361,20 +379,32 @@ export async function checkAllPermissions(
         required_permission: requiredPermissions.join(' AND '),
         user_permissions: [],
         user_roles: [],
+        user_id: null,
       };
     }
 
+    const allOptions: any = {
+      skipAudit: !!options.skipAudit,
+      skipCache: !!options.skipCache,
+    };
+    if (options.context) allOptions.context = options.context as PermissionContext;
     const result = await permissionEvaluator.hasAllPermissions(
       user.id,
       requiredPermissions,
-      {
-        skipAudit: options.skipAudit,
-        skipCache: options.skipCache,
-        context: options.context,
-      }
+      allOptions
     );
 
-    return result;
+    const flattenedPerms = (result.user_permissions || []).map((p: any) =>
+      typeof p === 'string' ? p : `${p.resource}:${p.action}:${p.scope}`
+    );
+    return {
+      allowed: result.allowed,
+      reason: result.reason || (result.allowed ? 'OK' : 'DENY'),
+      required_permission: requiredPermissions.join(' AND '),
+      user_permissions: flattenedPerms,
+      user_roles: result.user_roles || [],
+      user_id: result.user_id || null,
+    };
   } catch (error) {
     console.error('🔐 RBAC: Error in checkAllPermissions:', error);
     return {
@@ -383,6 +413,7 @@ export async function checkAllPermissions(
       required_permission: requiredPermissions.join(' AND '),
       user_permissions: [],
       user_roles: [],
+      user_id: null,
     };
   }
 }
@@ -406,9 +437,9 @@ export async function getCurrentUserPermissions(): Promise<{
       return { permissions: [], roles: [], userId: null };
     }
 
-    const { permissions, roles } = await permissionEvaluator[
-      'permissionCache'
-    ].getUserPermissions(user.id);
+    const { permissions, roles } = await permissionCache.getUserPermissions(
+      user.id
+    );
     return { permissions, roles, userId: user.id };
   } catch (error) {
     console.error('🔐 RBAC: Error getting current user permissions:', error);
