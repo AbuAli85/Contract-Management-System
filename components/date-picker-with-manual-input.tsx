@@ -35,20 +35,35 @@ const safeFormat = (date: Date, formatString: string): string => {
   }
 };
 
-// Safe date parsing function
-const safeParse = (value: string, formatString: string): Date | null => {
+// Safe date parsing function that accepts multiple common formats
+const safeParse = (value: string, preferredFormat: string): Date | null => {
   try {
     if (!value || !value.trim()) return null;
 
-    const parsed = parse(value, formatString, new Date());
+    const trimmed = value.trim();
+    const candidates = [
+      preferredFormat,
+      'dd/MM/yyyy',
+      'yyyy-MM-dd',
+      'MM/dd/yyyy',
+      'd-M-yyyy',
+      'd/M/yyyy',
+      'dd.MM.yyyy',
+    ];
 
-    // Additional validation to ensure we have a valid Date object
-    if (!(parsed instanceof Date) || isNaN(parsed.getTime())) {
-      console.warn('Invalid date parsed:', parsed);
-      return null;
+    for (const fmt of candidates) {
+      try {
+        const parsed = parse(trimmed, fmt, new Date());
+        if (parsed instanceof Date && !isNaN(parsed.getTime()) && isValid(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // try next format
+      }
     }
 
-    return isValid(parsed) ? parsed : null;
+    console.warn('Invalid date input, no formats matched:', value);
+    return null;
   } catch (error) {
     console.warn('Safe parse failed:', error);
     return null;
@@ -151,18 +166,10 @@ export function DatePickerWithManualInput({
         return;
       }
 
-      // Try to parse the date
+      // Try to parse the date; if valid, update the bound date value
       const parsedDate = safeParse(value, dateFormat);
-      if (
-        parsedDate &&
-        parsedDate instanceof Date &&
-        !isNaN(parsedDate.getTime())
-      ) {
-        // Only update if the formatted result matches the input
-        const formattedValue = safeFormat(parsedDate, dateFormat);
-        if (formattedValue === value) {
-          safeSetDate(parsedDate);
-        }
+      if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
+        safeSetDate(parsedDate);
       }
     } catch (error) {
       console.error('Error in handleInputChange:', error);
