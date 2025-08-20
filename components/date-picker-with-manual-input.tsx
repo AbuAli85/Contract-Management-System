@@ -25,7 +25,7 @@ interface DatePickerWithManualInputProps {
 }
 
 // Safe date formatting function
-const safeFormat = (date: Date, formatString: string): string => {
+const safeFormat = (date: Date | undefined, formatString: string): string => {
   try {
     if (!date || !isValid(date)) return '';
     return format(date, formatString);
@@ -169,6 +169,9 @@ export function DatePickerWithManualInput({
       // Try to parse the date; if valid, update the bound date value
       const parsedDate = safeParse(value, dateFormat);
       if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
+        // Normalize the input immediately to avoid malformed text
+        const normalized = safeFormat(parsedDate, dateFormat);
+        safeSetInputValue(normalized);
         safeSetDate(parsedDate);
       }
     } catch (error) {
@@ -258,6 +261,9 @@ export function DatePickerWithManualInput({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           className='w-full'
+          inputMode='numeric'
+          pattern='[0-9/\\.\-]*'
+          maxLength={10}
           disabled={typeof disabled === 'boolean' ? disabled : false}
         />
         <PopoverTrigger asChild>
