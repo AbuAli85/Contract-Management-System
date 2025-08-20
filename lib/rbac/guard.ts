@@ -280,6 +280,13 @@ async function guardAnyPermission(
         reason: result.reason,
       });
 
+      // Add detailed debugging for empty permissions
+      if (result.user_permissions.length === 0) {
+        console.error('🔐 RBAC DEBUG: User permissions array is empty!');
+        console.error('🔐 RBAC DEBUG: User roles array:', result.user_roles);
+        console.error('🔐 RBAC DEBUG: Result object:', JSON.stringify(result, null, 2));
+      }
+
       return NextResponse.json(
         {
           error: 'Access denied',
@@ -347,12 +354,19 @@ export async function checkAnyPermission(
     };
     if (options.context) anyOptions.context = options.context as PermissionContext;
     
-    // First try with normal cache
+    console.log('🔐 RBAC DEBUG: Calling hasAnyPermission with options:', anyOptions);
     let result = await permissionEvaluator.hasAnyPermission(
       user.id,
       requiredPermissions,
       anyOptions
     );
+    
+    console.log('🔐 RBAC DEBUG: hasAnyPermission result:', {
+      allowed: result.allowed,
+      user_permissions_count: result.user_permissions?.length || 0,
+      user_roles_count: result.user_roles?.length || 0,
+      reason: result.reason
+    });
 
     // If no permissions found, force direct database lookup as fallback
     if (!result.allowed && (!result.user_permissions || result.user_permissions.length === 0)) {
@@ -364,6 +378,13 @@ export async function checkAnyPermission(
         anyOptions
       );
       
+      console.log('🔐 RBAC DEBUG: hasAnyPermission result after direct lookup:', {
+        allowed: result.allowed,
+        user_permissions_count: result.user_permissions?.length || 0,
+        user_roles_count: result.user_roles?.length || 0,
+        reason: result.reason
+      });
+
       if (result.user_permissions && result.user_permissions.length > 0) {
         console.log('🔐 RBAC: Direct lookup found permissions:', result.user_permissions.length);
       }
