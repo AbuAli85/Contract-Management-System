@@ -166,10 +166,26 @@ export function DatePickerWithManualInput({
         return;
       }
 
-      // Try to parse the date; if valid, update the bound date value
+      // Only attempt to parse/normalize when a full date is typed
+      const isComplete = (() => {
+        const v = value.trim();
+        const patterns = [
+          /^\d{2}-\d{2}-\d{4}$/, // dd-MM-yyyy
+          /^\d{2}\/\d{2}\/\d{4}$/, // dd/MM/yyyy
+          /^\d{4}-\d{2}-\d{2}$/, // yyyy-MM-dd
+          /^\d{2}\.\d{2}\.\d{4}$/, // dd.MM.yyyy
+          /^\d{2}\/\d{2}\/\d{4}$/ // MM/dd/yyyy (same shape as dd/MM/yyyy)
+        ];
+        return patterns.some(p => p.test(v));
+      })();
+
+      if (!isComplete) {
+        // Defer parsing until full date is present to avoid years like 0002
+        return;
+      }
+
       const parsedDate = safeParse(value, dateFormat);
       if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
-        // Normalize the input immediately to avoid malformed text
         const normalized = safeFormat(parsedDate, dateFormat);
         safeSetInputValue(normalized);
         safeSetDate(parsedDate);
