@@ -184,6 +184,11 @@ export function DatePickerWithManualInput({
         return;
       }
 
+      // Additional validation: reject years that are clearly invalid
+      if (value.includes('000')) {
+        return; // Don't parse dates with "000" years
+      }
+
       const parsedDate = safeParse(value, dateFormat);
       if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
         const normalized = safeFormat(parsedDate, dateFormat);
@@ -278,7 +283,6 @@ export function DatePickerWithManualInput({
           onBlur={handleInputBlur}
           className='w-full'
           inputMode='numeric'
-          pattern='[0-9/\\.\-]*'
           maxLength={10}
           disabled={typeof disabled === 'boolean' ? disabled : false}
         />
