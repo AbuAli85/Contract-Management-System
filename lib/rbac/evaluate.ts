@@ -464,9 +464,9 @@ export class PermissionEvaluator {
     userId: string
   ): Promise<{ permissions: string[]; roles: string[] }> {
     try {
-      // Create a new Supabase client for direct database access
-      const { createClient } = await import('@/lib/supabase/server');
-      const supabase = await createClient();
+      // Use service-role Supabase client to bypass RLS for RBAC lookups
+      const { getSupabaseAdmin } = await import('@/lib/supabase/admin');
+      const supabase = getSupabaseAdmin();
 
       // Try new RBAC tables first
       let roleAssignments: any[] | null = null;
