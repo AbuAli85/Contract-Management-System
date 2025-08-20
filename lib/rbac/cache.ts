@@ -2,7 +2,7 @@
 // 🛡️ RBAC PERMISSION CACHING
 // ========================================
 
-import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export interface CachedPermissions {
   permissions: string[];
@@ -284,7 +284,7 @@ class PermissionCache {
     userId: string
   ): Promise<{ permissions: string[]; roles: string[] } | null> {
     try {
-      const supabase = await createClient();
+      const supabase = getSupabaseAdmin();
 
       // Prefer new RBAC tables; fall back to legacy if needed
       let roleAssignments: any[] | null = null;
