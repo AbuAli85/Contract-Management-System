@@ -284,7 +284,7 @@ export default function EnhancedContractForm({
   }, [watchedSecondParty, promoters, form]);
 
   // Form sections
-  const sections: FormSection[] = [
+  const sections: FormSection[] = React.useMemo(() => [
     {
       id: 'parties',
       title: 'Contracting Parties',
@@ -339,7 +339,7 @@ export default function EnhancedContractForm({
       completed: false,
       fields: ['special_terms'],
     },
-  ];
+  ], []);
 
   // Removed analyzeFormData function to prevent circular dependencies
 
