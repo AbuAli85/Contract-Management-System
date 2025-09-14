@@ -8,9 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import CaptchaHandler from './captcha-handler';
-import CaptchaErrorHandler from './captcha-error-handler';
+import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import ProductionCaptcha from './production-captcha';
 
 interface LoginFormData {
   email: string;
@@ -25,7 +24,13 @@ interface UserProfile {
   status: string;
 }
 
-export default function UnifiedLoginForm() {
+interface CaptchaConfig {
+  provider: 'hcaptcha' | 'turnstile' | null;
+  siteKey: string | null;
+  enabled: boolean;
+}
+
+export default function ProductionLoginForm() {
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -36,12 +41,33 @@ export default function UnifiedLoginForm() {
   const [success, setSuccess] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaConfig, setCaptchaConfig] = useState<CaptchaConfig | null>(null);
+  const [captchaRequired, setCaptchaRequired] = useState(false);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [captchaError, setCaptchaError] = useState('');
   const captchaRef = useRef<any>(null);
   const router = useRouter();
 
   const supabase = createClient();
+
+  // Load CAPTCHA configuration on mount
+  useEffect(() => {
+    loadCaptchaConfig();
+  }, []);
+
+  const loadCaptchaConfig = async () => {
+    try {
+      const response = await fetch('/api/auth/production-login');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setCaptchaConfig(data.captchaConfig);
+        setCaptchaRequired(data.captchaRequired);
+      }
+    } catch (error) {
+      console.error('Failed to load CAPTCHA config:', error);
+    }
+  };
 
   // Check if Supabase client is available
   if (!supabase) {
@@ -105,67 +131,60 @@ export default function UnifiedLoginForm() {
     setCaptchaError('');
 
     try {
-      console.log('🔐 Unified Login - Starting login process...');
-      console.log('🔐 Unified Login - Email:', formData.email);
+      console.log('🔐 Production Login - Starting login process...');
+      console.log('🔐 Production Login - Email:', formData.email);
+      console.log('🔐 Production Login - CAPTCHA Required:', captchaRequired);
 
-      // Step 1: Try authentication with CAPTCHA if needed
-      let authOptions: any = {
+      // Prepare request body
+      const requestBody: any = {
         email: formData.email.trim(),
         password: formData.password,
       };
 
       // Add CAPTCHA token if available
       if (captchaToken) {
-        authOptions.options = {
-          captchaToken: captchaToken,
-        };
+        requestBody.captchaToken = captchaToken;
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword(authOptions);
+      // Make API request
+      const response = await fetch('/api/auth/production-login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-      if (authError) {
-        console.error('🔐 Unified Login - Auth error:', authError);
-        
-        // Check if it's a CAPTCHA error
-        if (authError.message.includes('captcha') || authError.message.includes('verification')) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Check if CAPTCHA is required
+        if (data.captchaRequired) {
           setShowCaptcha(true);
+          setCaptchaConfig(data.captchaConfig);
           setError('Please complete the CAPTCHA verification');
           return;
         }
         
-        setError(`Login failed: ${authError.message}`);
+        setError(data.error || 'Login failed');
         return;
       }
 
-      if (!authData.user) {
-        setError('Login failed: No user data returned');
-        return;
-      }
+      console.log('🔐 Production Login - Login successful:', data.user.id);
+      setSuccess('Login successful! Redirecting...');
 
-      console.log('🔐 Unified Login - Auth successful:', authData.user.id);
-
-      // Step 2: Get user profile
+      // Get user profile to determine redirect
       const { data: profile, error: profileError } = await supabase
         .from('users')
         .select('id, email, full_name, role, status')
-        .eq('id', authData.user.id)
+        .eq('id', data.user.id)
         .single();
 
-      if (profileError) {
-        console.warn('🔐 Unified Login - Profile error:', profileError);
-        // Continue with auth user data if profile doesn't exist
-        setUserProfile({
-          id: authData.user.id,
-          email: authData.user.email || '',
-          full_name: authData.user.user_metadata?.full_name || '',
-          role: authData.user.user_metadata?.role || 'user',
-          status: 'active',
-        });
-      } else {
+      if (!profileError && profile) {
         setUserProfile(profile);
       }
 
-      // Step 3: Check user status
+      // Check user status
       const userStatus = profile?.status || 'active';
       if (userStatus === 'pending') {
         setError('Your account is pending approval. Please contact an administrator.');
@@ -179,10 +198,8 @@ export default function UnifiedLoginForm() {
         return;
       }
 
-      setSuccess('Login successful! Redirecting...');
-
-      // Step 4: Determine redirect path based on role
-      const userRole = profile?.role || authData.user.user_metadata?.role || 'user';
+      // Determine redirect path based on role
+      const userRole = profile?.role || data.user.user_metadata?.role || 'user';
       let redirectPath = '/en/dashboard';
 
       switch (userRole) {
@@ -204,7 +221,7 @@ export default function UnifiedLoginForm() {
           redirectPath = '/en/dashboard';
       }
 
-      console.log('🔐 Unified Login - Redirecting to:', redirectPath);
+      console.log('🔐 Production Login - Redirecting to:', redirectPath);
 
       // Redirect after a short delay
       setTimeout(() => {
@@ -212,7 +229,7 @@ export default function UnifiedLoginForm() {
       }, 1500);
 
     } catch (error) {
-      console.error('🔐 Unified Login - Exception:', error);
+      console.error('🔐 Production Login - Exception:', error);
       setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
@@ -230,6 +247,11 @@ export default function UnifiedLoginForm() {
     setCaptchaToken(null);
   };
 
+  const handleCaptchaExpired = () => {
+    setCaptchaToken(null);
+    setCaptchaError('CAPTCHA expired. Please complete it again.');
+  };
+
   const resetCaptcha = () => {
     if (captchaRef.current) {
       captchaRef.current.reset();
@@ -242,43 +264,27 @@ export default function UnifiedLoginForm() {
     setFormData({ email, password });
   };
 
-  const handleRetry = () => {
-    setError('');
-    setShowCaptcha(false);
-    setCaptchaToken(null);
-  };
-
-  const handleBypass = () => {
-    setError('');
-    setShowCaptcha(false);
-    setCaptchaToken(null);
-    // In a real implementation, you might want to set a bypass flag
-    console.log('CAPTCHA bypassed for development');
-  };
-
-  // Show CAPTCHA error handler if it's a CAPTCHA-related error
-  if (error && (error.toLowerCase().includes('captcha') || error.toLowerCase().includes('verification') || error.toLowerCase().includes('unexpected_failure'))) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <CaptchaErrorHandler
-          error={error}
-          onRetry={handleRetry}
-          onBypass={handleBypass}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Welcome Back
-          </CardTitle>
+          <div className="flex items-center justify-center mb-2">
+            <Shield className="h-6 w-6 text-blue-600 mr-2" />
+            <CardTitle className="text-2xl font-bold text-gray-900">
+              Production Login
+            </CardTitle>
+          </div>
           <p className="text-sm text-gray-600">
-            Sign in to your account to continue
+            Secure authentication with CAPTCHA protection
           </p>
+          {captchaConfig?.enabled && (
+            <div className="mt-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <Shield className="h-3 w-3 mr-1" />
+                CAPTCHA Protected
+              </span>
+            </div>
+          )}
         </CardHeader>
 
         <CardContent>
@@ -324,41 +330,45 @@ export default function UnifiedLoginForm() {
                     <Eye className="h-4 w-4" />
                   )}
                 </Button>
-            </div>
-          </div>
-
-          {/* CAPTCHA Section */}
-          {showCaptcha && (
-            <div className="space-y-2">
-              <Label>Security Verification</Label>
-              <div className="flex items-center gap-2">
-                <CaptchaHandler
-                  ref={captchaRef}
-                  onCaptchaReady={handleCaptchaReady}
-                  onCaptchaError={handleCaptchaError}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={resetCaptcha}
-                  disabled={loading}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
               </div>
-              {captchaError && (
-                <p className="text-sm text-red-600">{captchaError}</p>
-              )}
             </div>
-          )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {/* CAPTCHA Section */}
+            {showCaptcha && captchaConfig?.enabled && (
+              <div className="space-y-2">
+                <Label>Security Verification</Label>
+                <div className="flex items-center gap-2">
+                  <ProductionCaptcha
+                    ref={captchaRef}
+                    provider={captchaConfig.provider || 'hcaptcha'}
+                    siteKey={captchaConfig.siteKey || ''}
+                    onCaptchaReady={handleCaptchaReady}
+                    onCaptchaError={handleCaptchaError}
+                    onCaptchaExpired={handleCaptchaExpired}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetCaptcha}
+                    disabled={loading}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                {captchaError && (
+                  <p className="text-sm text-red-600">{captchaError}</p>
+                )}
+              </div>
+            )}
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             {success && (
               <Alert className="border-green-200 bg-green-50">
@@ -370,7 +380,7 @@ export default function UnifiedLoginForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading}
+              disabled={loading || (captchaRequired && !captchaToken)}
             >
               {loading ? (
                 <>
@@ -383,36 +393,38 @@ export default function UnifiedLoginForm() {
             </Button>
           </form>
 
-          {/* Quick Test Buttons */}
-          <div className="mt-6 pt-4 border-t">
-            <p className="text-sm text-gray-600 mb-3">Quick test accounts:</p>
-            <div className="grid grid-cols-1 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test Provider Account
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('client@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test Client Account
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
-                disabled={loading}
-              >
-                Test Admin Account
-              </Button>
+          {/* Quick Test Buttons (only in development) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6 pt-4 border-t">
+              <p className="text-sm text-gray-600 mb-3">Quick test accounts:</p>
+              <div className="grid grid-cols-1 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
+                  disabled={loading}
+                >
+                  Test Provider Account
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => quickLogin('client@test.com', 'TestPass123!')}
+                  disabled={loading}
+                >
+                  Test Client Account
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
+                  disabled={loading}
+                >
+                  Test Admin Account
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation */}
           <div className="mt-6 pt-4 border-t space-y-2">
@@ -443,6 +455,13 @@ export default function UnifiedLoginForm() {
               </p>
             </div>
           )}
+
+          {/* Environment Info */}
+          <div className="text-xs text-gray-500 border-t pt-2 mt-4">
+            <p>Environment: {process.env.NODE_ENV}</p>
+            <p>CAPTCHA: {captchaConfig?.enabled ? 'Enabled' : 'Disabled'}</p>
+            <p>Provider: {captchaConfig?.provider || 'None'}</p>
+          </div>
         </CardContent>
       </Card>
     </div>

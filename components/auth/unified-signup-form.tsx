@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, User, Building, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, User, Building, Shield, RefreshCw } from 'lucide-react';
+import CaptchaHandler from './captcha-handler';
 
 interface SignupFormData {
   email: string;
@@ -43,6 +44,10 @@ export default function UnifiedSignupForm() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [step, setStep] = useState(1);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaError, setCaptchaError] = useState('');
+  const captchaRef = useRef<any>(null);
   const router = useRouter();
 
   const supabase = createClient();
@@ -143,14 +148,15 @@ export default function UnifiedSignupForm() {
     setLoading(true);
     setError('');
     setSuccess('');
+    setCaptchaError('');
 
     try {
       console.log('🔐 Unified Signup - Starting signup process...');
       console.log('🔐 Unified Signup - Email:', formData.email);
       console.log('🔐 Unified Signup - Role:', formData.role);
 
-      // Step 1: Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Step 1: Create auth user with CAPTCHA if needed
+      let signupOptions: any = {
         email: formData.email.trim(),
         password: formData.password,
         options: {
@@ -161,10 +167,25 @@ export default function UnifiedSignupForm() {
             company: formData.company?.trim() || null,
           },
         },
-      });
+      };
+
+      // Add CAPTCHA token if available
+      if (captchaToken) {
+        signupOptions.options.captchaToken = captchaToken;
+      }
+
+      const { data: authData, error: authError } = await supabase.auth.signUp(signupOptions);
 
       if (authError) {
         console.error('🔐 Unified Signup - Auth error:', authError);
+        
+        // Check if it's a CAPTCHA error
+        if (authError.message.includes('captcha') || authError.message.includes('verification')) {
+          setShowCaptcha(true);
+          setError('Please complete the CAPTCHA verification');
+          return;
+        }
+        
         setError(`Signup failed: ${authError.message}`);
         return;
       }
@@ -226,6 +247,25 @@ export default function UnifiedSignupForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCaptchaReady = (token: string) => {
+    setCaptchaToken(token);
+    setCaptchaError('');
+    setError('');
+  };
+
+  const handleCaptchaError = (error: string) => {
+    setCaptchaError(error);
+    setCaptchaToken(null);
+  };
+
+  const resetCaptcha = () => {
+    if (captchaRef.current) {
+      captchaRef.current.reset();
+    }
+    setCaptchaToken(null);
+    setCaptchaError('');
   };
 
   const renderStep1 = () => (
@@ -401,6 +441,32 @@ export default function UnifiedSignupForm() {
         <CardContent>
           <form onSubmit={step === 1 ? (e) => { e.preventDefault(); handleNext(); } : handleSignup} className="space-y-4">
             {step === 1 ? renderStep1() : renderStep2()}
+
+            {/* CAPTCHA Section */}
+            {showCaptcha && (
+              <div className="space-y-2">
+                <Label>Security Verification</Label>
+                <div className="flex items-center gap-2">
+                  <CaptchaHandler
+                    ref={captchaRef}
+                    onCaptchaReady={handleCaptchaReady}
+                    onCaptchaError={handleCaptchaError}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={resetCaptcha}
+                    disabled={loading}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+                {captchaError && (
+                  <p className="text-sm text-red-600">{captchaError}</p>
+                )}
+              </div>
+            )}
 
             {error && (
               <Alert variant="destructive">
