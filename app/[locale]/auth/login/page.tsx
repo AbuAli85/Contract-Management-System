@@ -1,13 +1,13 @@
 'use client';
 
 import EnvironmentCheck from '@/components/auth/environment-check';
-import UnifiedLoginForm from '@/components/auth/unified-login-form';
+import SimpleWorkingLoginFixed from '@/components/auth/simple-working-login-fixed';
 
 export default function LoginPage() {
   return (
     <>
       <EnvironmentCheck />
-      <UnifiedLoginForm />
+      <SimpleWorkingLoginFixed />
     </>
   );
 }
