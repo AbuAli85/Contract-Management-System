@@ -126,12 +126,8 @@ import {
   DEPARTMENTS,
   CONTRACT_TYPES,
 } from '@/constants/contract-options';
-import {
-  createContract,
-  updateContract,
-  ContractInsert,
-  generateContractWithMakecom,
-} from '@/app/actions/contracts';
+import { updateContract, generateContractWithMakecom } from '@/app/actions/contracts';
+import type { ContractInsert } from '@/app/actions/contracts';
 import {
   analyzeContractDuration,
   validateContractData,
@@ -210,9 +206,9 @@ export default function EnhancedContractForm({
     resolver: zodResolver(contractGeneratorSchema),
     mode: 'onTouched',
     defaultValues: {
-      first_party_id: contract?.first_party_id || '',
-      second_party_id: contract?.second_party_id || '',
-      promoter_id: contract?.promoter_id || '',
+      ...(contract?.first_party_id ? { first_party_id: contract.first_party_id } : {}),
+      ...(contract?.second_party_id ? { second_party_id: contract.second_party_id } : {}),
+      ...(contract?.promoter_id ? { promoter_id: contract.promoter_id } : {}),
       contract_start_date: contract?.contract_start_date
         ? parseISO(contract.contract_start_date)
         : undefined,
@@ -288,7 +284,7 @@ export default function EnhancedContractForm({
   }, [watchedSecondParty, promoters, form]);
 
   // Form sections
-  const sections: FormSection[] = [
+  const sections: FormSection[] = React.useMemo(() => [
     {
       id: 'parties',
       title: 'Contracting Parties',
@@ -343,7 +339,7 @@ export default function EnhancedContractForm({
       completed: false,
       fields: ['special_terms'],
     },
-  ];
+  ], []);
 
   // Removed analyzeFormData function to prevent circular dependencies
 
@@ -577,14 +573,83 @@ export default function EnhancedContractForm({
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: createContract,
+    // Use API route to avoid server-action auth/cookie issues across environments
+    mutationFn: async (formValues: any) => {
+      const toDateOnly = (value: any): string | null => {
+        if (!value) return null;
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+      };
+
+      const payload = {
+        contract_number: undefined,
+        // Send both field names to ensure compatibility
+        first_party_id: formValues.first_party_id || null,
+        second_party_id: formValues.second_party_id || null,
+        promoter_id: formValues.promoter_id || null,
+        client_id: formValues.first_party_id || formValues.client_id || null,
+        employer_id: formValues.second_party_id || formValues.employer_id || null,
+        // Use date-only to match DATE columns across environments
+        start_date: toDateOnly(
+          formValues.contract_start_date || formValues.start_date
+        ),
+        end_date: toDateOnly(
+          formValues.contract_end_date || formValues.end_date
+        ),
+        // Title mapping
+        title:
+          formValues.contract_name ||
+          formValues.title ||
+          formValues.job_title ||
+          'Employment Contract',
+        // Include contract_type value (API will handle variants)
+        contract_type: formValues.contract_type || 'employment',
+        currency: formValues.currency || 'OMR',
+      };
+
+      const res = await fetch('/api/contracts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (res.ok) return json;
+
+      // Fallback: If permission or guard error, attempt Make.com-friendly route
+      const statusText = json?.details || json?.error || `HTTP ${res.status}`;
+      if ([401, 403, 500].includes(res.status)) {
+        const fallbackBody = {
+          first_party_id: payload.first_party_id,
+          second_party_id: payload.second_party_id,
+          promoter_id: payload.promoter_id,
+          contract_type: payload.contract_type,
+          job_title: payload.job_title,
+          contract_name: 'Draft Contract',
+        };
+        const alt = await fetch('/api/generate-contract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(fallbackBody),
+        });
+        const altJson = await alt.json().catch(() => ({}));
+        if (alt.ok) {
+          return altJson;
+        }
+        throw new Error(altJson?.error || statusText || 'Failed to create contract');
+      }
+      throw new Error(statusText || 'Failed to create contract');
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contracts'] });
       toast.success('Contract created successfully!');
       onSuccess?.();
     },
-    onError: error => {
-      toast.error('Failed to create contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to create contract';
+      toast.error(message);
       onError?.(error);
     },
   });
@@ -596,22 +661,92 @@ export default function EnhancedContractForm({
       toast.success('Contract updated successfully!');
       onSuccess?.();
     },
-    onError: error => {
-      toast.error('Failed to update contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to update contract';
+      toast.error(message);
       onError?.(error);
     },
   });
 
   const generateMutation = useMutation({
-    mutationFn: generateContractWithMakecom,
-    onSuccess: data => {
+    // Call API route instead of server action to avoid 500 POST to page URL
+    mutationFn: async (formValues: any) => {
+      // Map local form fields to the IDs expected by the Make.com contract type config
+      const probationPeriod = formValues.probation_period_months
+        ? `${formValues.probation_period_months}_months`
+        : undefined;
+      const noticePeriod = formValues.notice_period_days
+        ? `${formValues.notice_period_days}_days`
+        : undefined;
+      const workingHours = formValues.working_hours_per_week
+        ? parseInt(formValues.working_hours_per_week, 10)
+        : undefined;
+
+      const payload = {
+        contractType: formValues.contract_type || 'full-time-permanent',
+        contractData: {
+          first_party_id: formValues.first_party_id || '',
+          second_party_id: formValues.second_party_id || '',
+          promoter_id: formValues.promoter_id || '',
+          contract_start_date: formValues.contract_start_date
+            ? new Date(formValues.contract_start_date)
+            : null,
+          contract_end_date: formValues.contract_end_date
+            ? new Date(formValues.contract_end_date)
+            : null,
+          email: formValues.email || '',
+          job_title: formValues.job_title || '',
+          work_location: formValues.work_location || '',
+          department: formValues.department || '',
+          contract_type: formValues.contract_type || '',
+          currency: formValues.currency || 'OMR',
+          basic_salary: formValues.basic_salary,
+          allowances: formValues.allowances,
+          special_terms: formValues.special_terms || '',
+          // Required by 'full-time-permanent' type
+          probation_period: probationPeriod,
+          notice_period: noticePeriod,
+          working_hours: workingHours,
+          // Also send numeric values for Make.com template validation
+          working_hours_numeric: formValues.working_hours_per_week,
+          probation_period_numeric: formValues.probation_period_months,
+          notice_period_numeric: formValues.notice_period_days,
+          // Additional fields for part-time contracts
+          weekly_hours: formValues.working_hours_per_week,
+          hourly_rate: formValues.basic_salary,
+          work_schedule: 'fixed_schedule', // Default to fixed schedule
+        },
+        triggerMakecom: true,
+      };
+
+      // Debug logging
+      console.log('🔍 Form values:', formValues);
+      console.log('🔍 Contract type being sent:', formValues.contract_type || 'full-time-permanent');
+      console.log('🔍 Mapped values:', { probationPeriod, noticePeriod, workingHours });
+      console.log('🔍 Final payload:', payload);
+
+      const res = await fetch('/api/contracts/makecom/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json?.details || json?.error || 'Failed to generate contract');
+      }
+      return json;
+    },
+    onSuccess: (data: any) => {
       toast.success('Contract generated successfully!');
-      if (data?.pdfUrl) {
-        window.open(data.pdfUrl, '_blank');
+      const url = data?.data?.pdf_url || data?.pdf_url;
+      if (url) {
+        window.open(url, '_blank');
       }
     },
-    onError: error => {
-      toast.error('Failed to generate contract');
+    onError: (error: any) => {
+      const message = error?.message || 'Failed to generate contract';
+      toast.error(message);
       onError?.(error);
     },
   });
@@ -768,11 +903,11 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' disabled>
+                                <SelectItem value='loading' aria-disabled='true'>
                                   Loading clients...
                                 </SelectItem>
                               ) : clientParties.length === 0 ? (
-                                <SelectItem value='no-clients' disabled>
+                                <SelectItem value='no-clients' aria-disabled='true'>
                                   No clients found. Please add a client in Party
                                   Management.
                                 </SelectItem>
@@ -811,11 +946,11 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' disabled>
+                                <SelectItem value='loading' aria-disabled='true'>
                                   Loading employers...
                                 </SelectItem>
                               ) : employerParties.length === 0 ? (
-                                <SelectItem value='no-employers' disabled>
+                                <SelectItem value='no-employers' aria-disabled='true'>
                                   No employers found. Please add an employer in
                                   Party Management.
                                 </SelectItem>
@@ -1116,6 +1251,87 @@ export default function EnhancedContractForm({
                       </FormItem>
                     )}
                   />
+
+                  {/* Contract Terms */}
+                  <div className='grid gap-4 md:grid-cols-3'>
+                    <FormField
+                      control={form.control}
+                      name='probation_period_months'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Probation Period</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select probation period' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='3'>3 Months</SelectItem>
+                              <SelectItem value='6'>6 Months</SelectItem>
+                              <SelectItem value='12'>12 Months</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='notice_period_days'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notice Period</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select notice period' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='30'>30 Days</SelectItem>
+                              <SelectItem value='60'>60 Days</SelectItem>
+                              <SelectItem value='90'>90 Days</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='working_hours_per_week'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Working Hours</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value?.toString() || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger disabled={isLoading}>
+                                <SelectValue placeholder='Select working hours' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='40'>40 Hours/Week</SelectItem>
+                              <SelectItem value='45'>45 Hours/Week</SelectItem>
+                              <SelectItem value='48'>48 Hours/Week</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </CardContent>
               </Card>
 

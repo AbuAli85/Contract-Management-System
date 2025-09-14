@@ -167,7 +167,7 @@ function SidebarContent({
               Please log in to access the sidebar features.
             </p>
             <Button asChild variant='default' className='w-full'>
-              <Link href={`/${locale}/auth/login`}>Login</Link>
+              <Link href={'/auth/login'}>Login</Link>
             </Button>
           </div>
         </div>
@@ -287,14 +287,14 @@ function SidebarContent({
           0, // Insert before Settings
           {
             title: 'Role Management',
-            href: `/${locale}/dashboard/roles`,
+            href: '/dashboard/roles',
             icon: Crown,
             description: 'Manage user roles',
             badge: 'Admin',
           },
           {
             title: 'Advanced Dashboard',
-            href: `/${locale}/dashboard/advanced`,
+            href: '/dashboard/advanced',
             icon: Power,
             description: 'Advanced features',
             badge: 'Pro',
@@ -519,7 +519,7 @@ function SidebarContent({
             </h3>
 
             <Link
-                              href={`/${locale}/dashboard/users`}
+                              href={'/dashboard/users'}
               onClick={onClose}
               className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
             >
@@ -532,7 +532,7 @@ function SidebarContent({
 
             {pendingUsersCount > 0 && (
               <Link
-                href={`/${locale}/dashboard/users/approvals`}
+                href={'/dashboard/users/approvals'}
                 onClick={onClose}
                 className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
               >

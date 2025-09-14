@@ -25,7 +25,7 @@ interface DatePickerWithManualInputProps {
 }
 
 // Safe date formatting function
-const safeFormat = (date: Date, formatString: string): string => {
+const safeFormat = (date: Date | undefined, formatString: string): string => {
   try {
     if (!date || !isValid(date)) return '';
     return format(date, formatString);
@@ -35,20 +35,35 @@ const safeFormat = (date: Date, formatString: string): string => {
   }
 };
 
-// Safe date parsing function
-const safeParse = (value: string, formatString: string): Date | null => {
+// Safe date parsing function that accepts multiple common formats
+const safeParse = (value: string, preferredFormat: string): Date | null => {
   try {
     if (!value || !value.trim()) return null;
 
-    const parsed = parse(value, formatString, new Date());
+    const trimmed = value.trim();
+    const candidates = [
+      preferredFormat,
+      'dd/MM/yyyy',
+      'yyyy-MM-dd',
+      'MM/dd/yyyy',
+      'd-M-yyyy',
+      'd/M/yyyy',
+      'dd.MM.yyyy',
+    ];
 
-    // Additional validation to ensure we have a valid Date object
-    if (!(parsed instanceof Date) || isNaN(parsed.getTime())) {
-      console.warn('Invalid date parsed:', parsed);
-      return null;
+    for (const fmt of candidates) {
+      try {
+        const parsed = parse(trimmed, fmt, new Date());
+        if (parsed instanceof Date && !isNaN(parsed.getTime()) && isValid(parsed)) {
+          return parsed;
+        }
+      } catch {
+        // try next format
+      }
     }
 
-    return isValid(parsed) ? parsed : null;
+    console.warn('Invalid date input, no formats matched:', value);
+    return null;
   } catch (error) {
     console.warn('Safe parse failed:', error);
     return null;
@@ -151,18 +166,34 @@ export function DatePickerWithManualInput({
         return;
       }
 
-      // Try to parse the date
+      // Only attempt to parse/normalize when a full date is typed
+      const isComplete = (() => {
+        const v = value.trim();
+        const patterns = [
+          /^\d{2}-\d{2}-\d{4}$/, // dd-MM-yyyy
+          /^\d{2}\/\d{2}\/\d{4}$/, // dd/MM/yyyy
+          /^\d{4}-\d{2}-\d{2}$/, // yyyy-MM-dd
+          /^\d{2}\.\d{2}\.\d{4}$/, // dd.MM.yyyy
+          /^\d{2}\/\d{2}\/\d{4}$/ // MM/dd/yyyy (same shape as dd/MM/yyyy)
+        ];
+        return patterns.some(p => p.test(v));
+      })();
+
+      if (!isComplete) {
+        // Defer parsing until full date is present to avoid years like 0002
+        return;
+      }
+
+      // Additional validation: reject years that are clearly invalid
+      if (value.includes('000')) {
+        return; // Don't parse dates with "000" years
+      }
+
       const parsedDate = safeParse(value, dateFormat);
-      if (
-        parsedDate &&
-        parsedDate instanceof Date &&
-        !isNaN(parsedDate.getTime())
-      ) {
-        // Only update if the formatted result matches the input
-        const formattedValue = safeFormat(parsedDate, dateFormat);
-        if (formattedValue === value) {
-          safeSetDate(parsedDate);
-        }
+      if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
+        const normalized = safeFormat(parsedDate, dateFormat);
+        safeSetInputValue(normalized);
+        safeSetDate(parsedDate);
       }
     } catch (error) {
       console.error('Error in handleInputChange:', error);
@@ -251,6 +282,8 @@ export function DatePickerWithManualInput({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           className='w-full'
+          inputMode='numeric'
+          maxLength={10}
           disabled={typeof disabled === 'boolean' ? disabled : false}
         />
         <PopoverTrigger asChild>

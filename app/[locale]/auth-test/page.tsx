@@ -317,7 +317,7 @@ export default function AuthTestPage() {
   const [authTest, setAuthTest] = useState<string>('Not tested');
   const [sessionTest, setSessionTest] = useState<string>('Not tested');
   const [demoTest, setDemoTest] = useState<string>('Not tested');
-  const [loading, setLoading] = useState(false);
+  
 
   // Test authentication system
   const testAuthentication = async () => {
