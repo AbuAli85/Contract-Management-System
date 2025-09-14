@@ -102,7 +102,7 @@
     "hr:migrate": "supabase db push --include-all",
     "hr:seed": "node scripts/setup-hr-module.js",
     "hr:test": "jest --testPathPattern=hr",
-    "auth:fix-captcha": "node scripts/disable-captcha.js",
+    "auth:fix-captcha": "node scripts/fix-captcha-issue.js",
     "prod:check": "node scripts/check-production-config.js",
     "prod:deploy": "npm run prod:check && vercel --prod"
   },
