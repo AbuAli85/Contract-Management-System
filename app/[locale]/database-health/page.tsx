@@ -187,7 +187,7 @@ export default function DatabaseHealthCheck() {
     try {
       // Fix 1: Clear authentication cache
       addLog('🧹 Clearing authentication cache...');
-      localStorage.removeItem('supabase.auth.token');
+      // Don't clear Supabase session data - let Supabase handle it
       Object.keys(localStorage).forEach(key => {
         if (key.includes('supabase') || key.includes('sb-')) {
           localStorage.removeItem(key);

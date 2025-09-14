@@ -150,37 +150,55 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn('Could not clean localStorage:', error);
         }
 
-        // Get initial session
-        const {
-          data: { session },
-          error,
-        } = await client.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          setSession(null);
-          setUser(null);
-        } else if (session && session.user) {
-          // Only set session if user exists and is properly authenticated
-          if (session.user.id && session.user.email) {
-            // Check if this is the blocked admin account
-            if (session.user.email === 'admin@contractmanagement.com') {
-              console.warn('🚫 Detected admin@contractmanagement.com - forcing logout');
+        // Get initial session with error handling
+        try {
+          const {
+            data: { session },
+            error,
+          } = await client.auth.getSession();
+          
+          if (error) {
+            console.error('Error getting session:', error);
+            // If there's a session error, try to clear corrupted data
+            try {
               await client.auth.signOut();
+            } catch (signOutError) {
+              console.warn('Could not sign out after session error:', signOutError);
+            }
+            setSession(null);
+            setUser(null);
+          } else if (session && session.user) {
+            // Only set session if user exists and is properly authenticated
+            if (session.user.id && session.user.email) {
+              // Check if this is the blocked admin account
+              if (session.user.email === 'admin@contractmanagement.com') {
+                console.warn('🚫 Detected admin@contractmanagement.com - forcing logout');
+                await client.auth.signOut();
+                setSession(null);
+                setUser(null);
+              } else {
+                setSession(session);
+                setUser(session.user);
+                console.log('✅ Authenticated user found:', session.user.email);
+              }
+            } else {
+              console.warn('⚠️ Invalid session data, clearing session');
               setSession(null);
               setUser(null);
-            } else {
-              setSession(session);
-              setUser(session.user);
-              console.log('✅ Authenticated user found:', session.user.email);
             }
           } else {
-            console.warn('⚠️ Invalid session data, clearing session');
+            console.log('ℹ️ No active session found');
             setSession(null);
             setUser(null);
           }
-        } else {
-          console.log('ℹ️ No active session found');
+        } catch (sessionError) {
+          console.error('Critical session error, clearing all auth data:', sessionError);
+          // Clear all auth data and force fresh start
+          try {
+            await client.auth.signOut();
+          } catch (signOutError) {
+            console.warn('Could not sign out after critical error:', signOutError);
+          }
           setSession(null);
           setUser(null);
         }

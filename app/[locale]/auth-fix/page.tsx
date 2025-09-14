@@ -30,7 +30,7 @@ export default function AuthFixPage() {
     setLoading(true);
     try {
       // Clear localStorage tokens
-      localStorage.removeItem('supabase.auth.token');
+      // Don't clear Supabase session data - let Supabase handle it
       localStorage.removeItem('sb-reootcngcptfogfozlmz-auth-token');
       
       // Clear all supabase related items

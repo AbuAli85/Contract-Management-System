@@ -28,7 +28,7 @@ export default function LogoutPage() {
         // Clear any remaining client-side state
         if (typeof window !== 'undefined') {
           // Clear localStorage if any auth data is stored there
-          localStorage.removeItem('supabase.auth.token');
+          // Don't clear Supabase session data - let Supabase handle it
           sessionStorage.clear();
         }
 

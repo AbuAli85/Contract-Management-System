@@ -31,42 +31,35 @@ function DashboardContent() {
   const router = useRouter();
 
   useEffect(() => {
-    // AGGRESSIVE CLEANUP - Clear ALL possible auth data
-    const aggressiveCleanup = () => {
+    // LIMITED CLEANUP - Only clear demo/development data, preserve Supabase sessions
+    const limitedCleanup = () => {
       try {
-        // Clear demo session data
+        // Clear only demo session data
         localStorage.removeItem('demo-user-session');
         localStorage.removeItem('user-role');
         localStorage.removeItem('auth-mode');
         
-        // Clear Supabase auth data
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('supabase.auth.expires_at');
-        localStorage.removeItem('supabase.auth.refresh_token');
-        
-        // Clear any other auth-related data
+        // Clear other auth-related data but NOT Supabase session data
         localStorage.removeItem('auth-token');
         localStorage.removeItem('user-session');
         localStorage.removeItem('admin-session');
         
-        // Clear sessionStorage as well
-        sessionStorage.clear();
+        // Don't clear sessionStorage as it may contain Supabase session data
         
-        console.log('🧹 Aggressive cleanup of all auth data completed');
+        console.log('🧹 Limited cleanup of demo auth data completed');
       } catch (error) {
-        console.warn('Could not perform aggressive cleanup:', error);
+        console.warn('Could not perform limited cleanup:', error);
       }
     };
 
-    // Perform aggressive cleanup first
-    aggressiveCleanup();
+    // Perform limited cleanup first
+    limitedCleanup();
 
-    // Force redirect to login if we detect any admin session
+    // Check for admin session without clearing Supabase data
     const checkForAdminSession = () => {
       try {
         const hasAdminSession = 
           localStorage.getItem('demo-user-session') ||
-          localStorage.getItem('supabase.auth.token') ||
           sessionStorage.getItem('admin-session');
         
         if (hasAdminSession) {
