@@ -101,7 +101,10 @@
     "hr:setup": "node scripts/setup-hr-module.js",
     "hr:migrate": "supabase db push --include-all",
     "hr:seed": "node scripts/setup-hr-module.js",
-    "hr:test": "jest --testPathPattern=hr"
+    "hr:test": "jest --testPathPattern=hr",
+    "auth:fix-captcha": "node scripts/disable-captcha.js",
+    "prod:check": "node scripts/check-production-config.js",
+    "prod:deploy": "npm run prod:check && vercel --prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
