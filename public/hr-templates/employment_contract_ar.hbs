@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عقد العمل</title>
+    <style>
+        body {
+            font-family: 'Arial', 'Tahoma', sans-serif;
+            line-height: 1.8;
+            margin: 40px;
+            color: #333;
+            direction: rtl;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .contract-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 30px 0 20px 0;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+        .employee-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-right: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        .signature-line {
+            border-bottom: 1px solid #333;
+            margin: 40px 0 10px 0;
+        }
+        .date {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">{{company.name}}</div>
+        <div>{{company.address}}</div>
+        <div>الهاتف: {{company.phone}} | البريد الإلكتروني: {{company.email}}</div>
+    </div>
+
+    <div class="date">
+        <strong>التاريخ:</strong> {{employee.current_date}}
+    </div>
+
+    <div class="contract-title">عقد العمل</div>
+
+    <div class="employee-info">
+        <strong>بيانات الموظف:</strong><br>
+        الاسم: {{employee.full_name}}<br>
+        رقم الموظف: {{employee.employee_code}}<br>
+        المنصب: {{employee.job_title}}<br>
+        القسم: {{employee.department_name}}<br>
+        البريد الإلكتروني: {{employee.email}}<br>
+        الهاتف: {{employee.phone}}
+    </div>
+
+    <div class="section">
+        <div class="section-title">1. المنصب والواجبات</div>
+        <p>يوافق الموظف على العمل كـ {{employee.job_title}} في قسم {{employee.department_name}}. يلتزم الموظف بأداء جميع الواجبات والمسؤوليات المكلف بها من قبل الشركة ويخصص كامل وقته واهتمامه وجهوده لأعمال الشركة.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">2. الراتب</div>
+        <p>يتقاضى الموظف راتباً شهرياً قدره {{employee.formatted_salary}}، يتم دفعه وفقاً لممارسات الشركة المعيارية لدفع الرواتب. قد يتم مراجعة الراتب سنوياً حسب تقدير الشركة.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">3. ساعات العمل</div>
+        <p>ساعات العمل العادية للموظف من الساعة 9:00 صباحاً إلى الساعة 5:00 مساءً، من الاثنين إلى الجمعة، مع استراحة غداء لمدة ساعة واحدة. قد يُطلب من الموظف العمل ساعات إضافية حسب الضرورة لأداء واجباته الوظيفية.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">4. تاريخ البدء</div>
+        <p>يبدأ هذا التوظيف في {{employee.formatted_hire_date}} ويستمر حتى يتم إنهاؤه من قبل أي من الطرفين وفقاً لشروط هذا العقد.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">5. الإنهاء</div>
+        <p>يجوز لأي من الطرفين إنهاء علاقة العمل هذه في أي وقت مع أو بدون سبب، مع إشعار كتابي كما هو مطلوب بموجب القانون المعمول به. عند الإنهاء، يجب على الموظف إرجاع جميع ممتلكات الشركة والمعلومات السرية.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">6. السرية</div>
+        <p>يوافق الموظف على الحفاظ على سرية جميع معلومات الشركة، بما في ذلك على سبيل المثال لا الحصر الأسرار التجارية وقوائم العملاء والمعلومات المالية والعمليات الخاصة. يبقى هذا الالتزام سارياً بعد إنهاء التوظيف.</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">7. القانون الحاكم</div>
+        <p>يخضع هذا العقد للقوانين المعمول بها في الولاية القضائية التي تعمل فيها الشركة.</p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>توقيع الموظف</strong></div>
+            <div>{{employee.full_name}}</div>
+            <div>التاريخ: _______________</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div><strong>ممثل الشركة</strong></div>
+            <div>مدير الموارد البشرية</div>
+            <div>التاريخ: _______________</div>
+        </div>
+    </div>
+</body>
+</html>
