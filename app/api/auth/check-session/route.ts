@@ -33,7 +33,22 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const supabase = await createClient();
+    // Create Supabase client with explicit error handling to avoid opaque 500s
+    let supabase;
+    try {
+      supabase = await createClient();
+    } catch (initError) {
+      console.error('🔐 Auth Check: Supabase client init failed:', initError);
+      return NextResponse.json(
+        {
+          authenticated: false,
+          error: 'Authentication service unavailable',
+          hint:
+            'Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment and restart the dev server.',
+        },
+        { status: 503 }
+      );
+    }
 
     if (!supabase) {
       console.error('🔐 Auth Check: Failed to create Supabase client');
@@ -53,13 +68,15 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.error('🔐 Auth Check: Error getting user:', error);
+      console.warn('🔐 Auth Check: getUser error treated as unauthenticated:', error?.message || error);
+      // Treat recoverable auth errors as unauthenticated rather than 500
       return NextResponse.json(
         {
           authenticated: false,
-          error: error.message,
+          user: null,
+          error: 'No valid session',
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
 
@@ -195,24 +212,25 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (profileError) {
-      console.error('🔐 Auth Check: Error checking user profile:', profileError);
+      console.warn('🔐 Auth Check: Profile validation error treated as unauthenticated');
       return NextResponse.json(
         {
           authenticated: false,
           user: null,
-          error: 'Error validating user profile',
+          error: 'Profile validation failed',
         },
-        { status: 500 }
+        { status: 200 }
       );
     }
   } catch (error) {
-    console.error('🔐 Auth Check: Unexpected error:', error);
+    console.warn('🔐 Auth Check: Unexpected error treated as unauthenticated');
     return NextResponse.json(
       {
         authenticated: false,
-        error: 'Internal server error',
+        user: null,
+        error: 'Unexpected authentication error',
       },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

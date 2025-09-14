@@ -181,7 +181,7 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
             return { user: data.user, error: null };
           }
         } else {
-          console.warn('⚠️ AuthGuard: Invalid authentication data');
+          // Treat unauthenticated responses quietly to reduce console noise
           return { user: null, error: 'Authentication required' };
         }
       } else {

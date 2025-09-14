@@ -1,6 +1,7 @@
 'use server';
 
 import { createServerComponentClient } from '@/lib/supabaseServer';
+import { nanoid } from 'nanoid';
 import type { Database } from '@/types/supabase';
 import { getContractGenerationService } from '@/lib/contract-generation-service';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
@@ -22,9 +23,43 @@ export async function createContract(newContract: ContractInsert) {
   // Ensure the user has a profile before proceeding
   await ensureUserProfile(user);
 
+  // Normalize optional fields and dates to avoid 500s from invalid payloads
+  // Generate a robust contract number if missing (PAC-DDMMYYYY-XXXX)
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const year = now.getFullYear();
+  const random = nanoid(4).toUpperCase();
+  const generatedNumber = `PAC-${day}${month}${year}-${random}`;
+
+  const asAny: any = newContract as any;
+
+  const safePayload: ContractInsert = {
+    ...newContract,
+    contract_number: (asAny.contract_number as string) || generatedNumber,
+    contract_start_date: newContract.contract_start_date
+      ? (new Date(newContract.contract_start_date as unknown as string).toISOString() as any)
+      : (null as any),
+    contract_end_date: newContract.contract_end_date
+      ? (new Date(newContract.contract_end_date as unknown as string).toISOString() as any)
+      : (null as any),
+    email: asAny.email ?? null,
+    job_title: asAny.job_title ?? null,
+    work_location: asAny.work_location ?? null,
+    department: asAny.department ?? null,
+    currency: asAny.currency ?? 'OMR',
+    contract_value: asAny.contract_value ?? asAny.basic_salary ?? null,
+    first_party_id: asAny.first_party_id ?? newContract.first_party_id ?? null,
+    second_party_id: asAny.second_party_id ?? newContract.second_party_id ?? null,
+    promoter_id: asAny.promoter_id ?? newContract.promoter_id ?? null,
+    status: (asAny.status as string) ?? 'draft',
+    created_at: (asAny.created_at as string) ?? new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('contracts')
-    .insert(newContract)
+    .insert(safePayload)
     .select(
       `id,
        created_at,

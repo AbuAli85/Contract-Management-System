@@ -58,16 +58,23 @@ export default function EditPromoterPage() {
         if (!supabase) return;
 
         const { data, error } = await supabase
-          .from('employers')
+          .from('parties')
           .select('id, name_en, name_ar')
-          .order('name_en');
+          .eq('type', 'Employer')
+          .order('name_en', { nullsFirst: true });
 
         if (error) {
           console.error('Error fetching employers:', error);
           return;
         }
 
-        setEmployers(data || []);
+        setEmployers(
+          (data || []).map((emp: any) => ({
+            id: emp.id,
+            name_en: emp.name_en,
+            name_ar: emp.name_ar,
+          }))
+        );
       } catch (error) {
         console.error('Error fetching employers:', error);
       } finally {

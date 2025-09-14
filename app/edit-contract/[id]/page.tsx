@@ -120,11 +120,16 @@ export default function EditContractPage({
       const supabase = createClient();
       const { data, error } = await supabase
         .from('promoters')
-        .select('id, name_en')
-        .order('name_en');
+        .select('id, name_en, first_name, last_name')
+        .order('name_en', { nullsFirst: true })
+        .order('first_name');
 
       if (error) throw error;
-      setPromoters(data || []);
+      const normalized = (data || []).map((p: any) => ({
+        ...p,
+        name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+      }));
+      setPromoters(normalized);
     } catch (error) {
       console.error('Error fetching promoters:', error);
     }

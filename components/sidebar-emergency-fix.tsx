@@ -92,7 +92,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
             Please log in to access the sidebar features.
           </p>
           <Button asChild variant='default' className='w-full'>
-            <Link href={`/${locale}/login`}>Login</Link>
+            <Link href={'/login'}>Login</Link>
           </Button>
         </div>
       </div>
@@ -277,7 +277,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
             </h3>
 
             <Link
-              href={`/${locale}/dashboard/users`}
+              href={'/dashboard/users'}
               onClick={onClose}
               className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
             >
@@ -290,7 +290,7 @@ function SidebarContent({ isOpen, onClose }: SidebarProps) {
 
             {pendingUsersCount > 0 && (
               <Link
-                href={`/${locale}/dashboard/users/approvals`}
+                href={'/dashboard/users/approvals'}
                 onClick={onClose}
                 className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
               >

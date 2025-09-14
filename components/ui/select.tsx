@@ -185,42 +185,36 @@ const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
     } = React.useContext(SelectContext);
     const isSelected = selectedValue === value;
 
-    // Register this item's label with the context
-    React.useEffect(() => {
-      if (setValueToLabel && children) {
-        const extractText = (element: React.ReactNode): string => {
-          if (typeof element === 'string') return element;
-          if (typeof element === 'number') return element.toString();
-          if (Array.isArray(element)) {
-            return element.map(extractText).join(' ');
-          }
-          if (React.isValidElement(element)) {
-            if (element.props.children) {
-              return extractText(element.props.children);
-            }
-          }
-          return '';
-        };
-
-        const text = extractText(children).trim();
-        if (text) {
-          setValueToLabel(prev => {
-            const newMap = new Map(prev);
-            newMap.set(value, text);
-            // Debug logging for text extraction
-            console.log(
-              `🔧 SelectItem: Mapped value "${value}" to text "${text}"`
-            );
-            return newMap;
-          });
-        } else {
-          console.warn(
-            `🔧 SelectItem: Failed to extract text for value "${value}", children:`,
-            children
-          );
+    // Extract item label once per children change
+    const extractedText = React.useMemo(() => {
+      const extractText = (element: React.ReactNode): string => {
+        if (typeof element === 'string') return element;
+        if (typeof element === 'number') return element.toString();
+        if (Array.isArray(element)) {
+          return element.map(extractText).join(' ');
         }
-      }
-    }, [value, children, setValueToLabel]);
+        if (React.isValidElement(element) && element.props?.children) {
+          return extractText(element.props.children);
+        }
+        return '';
+      };
+      return extractText(children).trim();
+    }, [children]);
+
+    // Register this item's label with the context, but only when it actually changes
+    React.useEffect(() => {
+      if (!setValueToLabel || !extractedText) return;
+      setValueToLabel(prev => {
+        const existing = prev.get(value);
+        if (existing === extractedText) {
+          // No change → preserve identity to avoid unnecessary renders
+          return prev;
+        }
+        const next = new Map(prev);
+        next.set(value, extractedText);
+        return next;
+      });
+    }, [value, extractedText, setValueToLabel]);
 
     const handleClick = (e: React.MouseEvent) => {
       e.preventDefault();

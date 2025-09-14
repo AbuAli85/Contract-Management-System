@@ -1,6 +1,6 @@
 // app/api/contracts/makecom/generate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 import { createClient } from '@supabase/supabase-js';
 import {
   generateContractWithMakecom,
@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
           contractConfig,
           templateConfig,
           googleDocsTemplateId: templateConfig.googleDocsTemplateId,
-          templatePlaceholders: templateConfig.templatePlaceholders,
           makecomModuleConfig: templateConfig.makecomModuleConfig,
         },
       });
@@ -120,8 +119,8 @@ export async function GET(request: NextRequest) {
 }
 
 // POST: Generate contract using Make.com templates
-export const POST = withRBAC(
-  'contract:message:own',
+export const POST = withAnyRBAC(
+  ['contract:message:own', 'contract:generate:own', 'contract:create:own'],
   async (request: NextRequest) => {
     try {
       const body = await request.json();
@@ -167,20 +166,20 @@ export const POST = withRBAC(
         .insert({
           contract_number:
             contractData.contract_number || generateContractNumber(),
+          // Persist both legacy and new party columns for compatibility
+          client_id: contractData.first_party_id,
+          employer_id: contractData.second_party_id,
           first_party_id: contractData.first_party_id,
           second_party_id: contractData.second_party_id,
           promoter_id: contractData.promoter_id,
-          contract_start_date: contractData.contract_start_date,
-          contract_end_date: contractData.contract_end_date,
-          job_title: contractData.job_title,
-          work_location: contractData.work_location,
-          basic_salary: contractData.basic_salary,
-          allowances: contractData.allowances,
-          currency: contractData.currency || 'OMR',
+          start_date: contractData.contract_start_date,
+          end_date: contractData.contract_end_date,
+          title: contractData.job_title || 'Employment Contract',
+          description: contractData.special_terms || '',
           contract_type: contractType,
-          status: 'pending_generation',
-          email: contractData.email,
-          special_terms: contractData.special_terms,
+          status: 'pending',
+          value: contractData.basic_salary,
+          currency: contractData.currency || 'OMR',
           is_current: true,
         })
         .select()
@@ -205,10 +204,37 @@ export const POST = withRBAC(
       if (triggerMakecom && webhookPayload) {
         try {
           // Add the created contract ID to the webhook payload
+          const appUrl =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            process.env.APP_URL ||
+            process.env.VERCEL_URL?.startsWith('http')
+              ? process.env.VERCEL_URL
+              : process.env.VERCEL_URL
+              ? `https://${process.env.VERCEL_URL}`
+              : 'http://localhost:3000';
+
+          // Pull Google Drive settings from Make.com template config (if available)
+          const makeTemplate = templateConfig?.makecomTemplateId
+            ? getMakecomTemplateConfig(templateConfig.makecomTemplateId)
+            : null;
+
           const enhancedPayload = {
             ...webhookPayload,
             contract_id: contract.id,
             contract_number: contract.contract_number,
+            // Callback URL for Make.com to update status/pdf_url
+            update_url: `${appUrl}/api/generate-contract`,
+            // Provide Drive folder context to Make.com scenario if configured
+            ...(makeTemplate?.makecomModuleConfig.googleDriveSettings
+              ? {
+                  google_drive_folder_id:
+                    makeTemplate.makecomModuleConfig.googleDriveSettings
+                      .folderId,
+                  file_naming_pattern:
+                    makeTemplate.makecomModuleConfig.googleDriveSettings
+                      .naming,
+                }
+              : {}),
           };
 
           // Trigger Make.com webhook (replace with your actual Make.com webhook URL)
@@ -274,6 +300,21 @@ export const POST = withRBAC(
             webhookPayload: triggerMakecom ? webhookPayload : null,
             response: makecomResponse,
           },
+          // Helpful link to the target Drive folder if configured
+          google_drive_url: ((): string | null => {
+            try {
+              const makeTemplate = templateConfig?.makecomTemplateId
+                ? getMakecomTemplateConfig(templateConfig.makecomTemplateId)
+                : null;
+              const folderId =
+                makeTemplate?.makecomModuleConfig.googleDriveSettings?.folderId;
+              return folderId
+                ? `https://drive.google.com/drive/folders/${folderId}`
+                : null;
+            } catch {
+              return null;
+            }
+          })(),
         },
       });
     } catch (error) {

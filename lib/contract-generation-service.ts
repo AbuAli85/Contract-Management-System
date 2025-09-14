@@ -666,25 +666,57 @@ class ContractGenerationService {
    * Update contract with PDF URL (called by Make.com webhook)
    */
   async updateContractWithPDF(
-    contractId: string,
+    contractIdOrNumber: string,
     pdfUrl: string,
     googleDriveUrl?: string
   ): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('contracts')
-        .update({
-          pdf_url: pdfUrl,
-          status: 'generated',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', contractId);
+      const updatePayload = {
+        pdf_url: pdfUrl,
+        status: 'generated',
+        updated_at: new Date().toISOString(),
+      } as Record<string, unknown>;
 
-      if (error) {
-        throw new Error(`Database error: ${error.message}`);
+      // Attempt to update by UUID id first
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        contractIdOrNumber
+      );
+
+      if (isUuid) {
+        const { data: byIdData, error: byIdError } = await this.supabase
+          .from('contracts')
+          .update(updatePayload)
+          .eq('id', contractIdOrNumber)
+          .select('id')
+          .maybeSingle();
+
+        if (byIdError) {
+          throw new Error(`Database error: ${byIdError.message}`);
+        }
+
+        if (byIdData) {
+          console.log('✅ Contract updated with PDF URL (by id):', pdfUrl);
+          return true;
+        }
       }
 
-      console.log('✅ Contract updated with PDF URL:', pdfUrl);
+      // Fallback: update by contract_number
+      const { data: byNumberData, error: byNumberError } = await this.supabase
+        .from('contracts')
+        .update(updatePayload)
+        .eq('contract_number', contractIdOrNumber)
+        .select('id')
+        .maybeSingle();
+
+      if (byNumberError) {
+        throw new Error(`Database error: ${byNumberError.message}`);
+      }
+
+      if (!byNumberData) {
+        throw new Error('Contract not found by id or contract_number');
+      }
+
+      console.log('✅ Contract updated with PDF URL (by number):', pdfUrl);
       return true;
     } catch (error) {
       console.error('❌ Error updating contract with PDF:', error);
