@@ -97,7 +97,11 @@
     "rate-limit:setup": "echo 'Setting up rate limiting...' && npm run security:migrate",
     "rate-limit:test": "npm run security:test-rate-limit",
     "cors:setup": "echo 'Setting up CORS...' && npm run security:migrate",
-    "cors:test": "npm run security:test-cors"
+    "cors:test": "npm run security:test-cors",
+    "hr:setup": "node scripts/setup-hr-module.js",
+    "hr:migrate": "supabase db push --include-all",
+    "hr:seed": "node scripts/setup-hr-module.js",
+    "hr:test": "jest --testPathPattern=hr"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
