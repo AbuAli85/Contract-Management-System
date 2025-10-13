@@ -12,9 +12,6 @@ import { Sidebar } from './sidebar';
 import { MobileMenuButton } from './mobile-menu-button';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { DebugRoleInfo } from '@/components/debug-role-info';
-import { AdminRoleFixer } from '@/components/admin-role-fixer';
-import { DebugAuthState } from '@/components/debug-auth-state';
 import {
   Bell,
   Settings,
@@ -41,7 +38,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     highPriorityCount,
     userProfile,
     fetchUserProfile,
-    isAdmin,
     isUser,
     roleInfo;
 
@@ -58,7 +54,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
     fetchUserProfile = profileResult?.fetchUserProfile;
 
     const roleResult = useRolePermissions();
-    isAdmin = roleResult?.isAdmin || false;
     isUser = roleResult?.isUser || false;
     roleInfo = roleResult?.roleInfo;
   } catch (error) {
@@ -266,16 +261,6 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
                   </div>
 
                   <div className='flex items-center gap-2'>
-                    {/* Debug role info - only show in development */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <DebugRoleInfo />
-                    )}
-
-                    {/* Admin role fixer - only show for admins in development */}
-                    {process.env.NODE_ENV === 'development' && isAdmin && (
-                      <AdminRoleFixer />
-                    )}
-
                     {/* Notifications */}
                     <Button variant='ghost' size='icon' className='relative'>
                       <Bell className='h-4 w-4' />
