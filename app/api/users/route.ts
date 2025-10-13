@@ -50,36 +50,16 @@ export async function GET(request: NextRequest) {
       console.log('⚠️ API Users: Auth check failed:', authError);
     }
 
-    // If no authenticated user, try to find admin user in database
+    // ✅ SECURITY FIX: Removed dangerous admin fallback
+    // No authentication = NO ACCESS
     if (!user) {
-      try {
-        const { data: adminUser, error: adminError } = await adminSupabase
-          .from('profiles')
-          .select('id, email, role')
-          .eq('email', 'luxsess2001@gmail.com')
-          .single();
-
-        if (adminUser && adminUser.role === 'admin') {
-          console.log('✅ API Users: Found admin user in database');
-          user = { id: adminUser.id, email: adminUser.email } as any;
-        } else {
-          return NextResponse.json(
-            {
-              error: 'Authentication required',
-              message: 'Please log in to access this resource',
-            },
-            { status: 401 }
-          );
-        }
-      } catch (dbError) {
-        return NextResponse.json(
-          {
-            error: 'Authentication required',
-            message: 'Please log in to access this resource',
-          },
-          { status: 401 }
-        );
-      }
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Authentication required to access user data',
+        },
+        { status: 401 }
+      );
     }
 
     // Check user permissions
