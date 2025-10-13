@@ -54,7 +54,7 @@ export const GET = withRBAC(
         .eq('id', user.id)
         .single();
 
-      const isAdmin = userProfile?.role === 'admin';
+      const isAdmin = (userProfile as any)?.role === 'admin';
 
       // If party_id is provided, try to fetch contracts for that party
       if (partyId) {

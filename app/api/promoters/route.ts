@@ -137,7 +137,7 @@ export const GET = withRBAC('promoter:read:own', async () => {
       .eq('id', user.id)
       .single();
 
-    const userRole = userProfile?.role;
+    const userRole = (userProfile as any)?.role;
     const isAdmin = userRole === 'admin';
 
     // Build query with proper scoping

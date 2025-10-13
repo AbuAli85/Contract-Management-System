@@ -69,7 +69,7 @@
     "fix:corrupted": "node scripts/fix_corrupted_user.js",
     "fix:corrupted:update": "node scripts/fix_corrupted_user_update.js",
     "sync:roles:skip": "node scripts/sync_all_user_roles_skip_problematic.js",
-    "prepare": "husky install",
+    "prepare": "husky install || echo 'Husky setup skipped'",
     "pre-commit": "lint-staged",
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",

@@ -5,6 +5,11 @@ const nextConfig = {
   // Next-intl configuration
   // Note: _next_intl_trailing_slash removed as it's not needed in newer versions
 
+  // Custom generateBuildId to fix Next.js build error
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
+
   // Trailing slash configuration for next-intl
   trailingSlash: false,
 
@@ -80,7 +85,7 @@ const nextConfig = {
       fs: false,
       net: false,
       tls: false,
-      crypto: false,
+      // crypto needed for Next.js build process
     };
 
     // Add webpack configuration to resolve module issues
