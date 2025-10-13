@@ -38,15 +38,39 @@ export const GET = withRBAC(
 
       console.log('🔍 Contracts API: Fetching contracts from database...');
 
+      // ✅ SECURITY FIX: Get user info for query scoping
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return NextResponse.json(
+          { error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+
+      // Get user role for scoping
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      const isAdmin = userProfile?.role === 'admin';
+
       // If party_id is provided, try to fetch contracts for that party
       if (partyId) {
         try {
-          const { data: contracts, error: contractsError } = await supabase
+          let query = supabase
             .from('contracts')
             .select('*')
             .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
-            .eq('status', status)
-            .limit(10);
+            .eq('status', status);
+
+          // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in
+          if (!isAdmin) {
+            query = query.or(`created_by.eq.${user.id},first_party_id.eq.${user.id},second_party_id.eq.${user.id}`);
+          }
+
+          const { data: contracts, error: contractsError } = await query.limit(10);
 
           if (contractsError) {
             console.warn(
@@ -77,11 +101,19 @@ export const GET = withRBAC(
       }
 
       // Start with a simple query first to test basic connectivity
-      let contracts = [];
+      let contracts: any[] = [];
       try {
-        const { data: contractsData, error: contractsError } = await supabase
+        // ✅ SECURITY FIX: Scope query based on user role
+        let query = supabase
           .from('contracts')
-          .select('*')
+          .select('*');
+
+        // Non-admin users only see contracts they're involved in
+        if (!isAdmin) {
+          query = query.or(`created_by.eq.${user.id},first_party_id.eq.${user.id},second_party_id.eq.${user.id}`);
+        }
+
+        const { data: contractsData, error: contractsError} = await query
           .order('created_at', { ascending: false })
           .limit(20);
 
@@ -357,27 +389,19 @@ export const POST = withAnyRBAC(
         Object.fromEntries(Object.entries(v).filter(([, val]) => val !== undefined))
       );
 
-      // Create admin client to bypass RLS for inserts
-      const adminSupabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-          cookies: {
-            getAll() {
-              return [];
-            },
-            setAll() {
-              // no-op
-            },
-          },
-        }
-      );
+      // ✅ SECURITY FIX: Use authenticated client with RLS instead of service-role key
+      // Add created_by to ensure proper ownership tracking
+      const variantsWithOwnership = variants.map(v => ({
+        ...v,
+        created_by: session.user.id,
+        updated_at: new Date().toISOString(),
+      }));
 
       const attemptErrors: any[] = [];
-      for (const variant of variants) {
-        const { data, error } = await adminSupabase
+      for (const variant of variantsWithOwnership) {
+        const { data, error } = await supabase
           .from('contracts')
-          .insert([variant])
+          .insert(variant as any)
           .select()
           .single();
         if (!error && data) {

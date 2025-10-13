@@ -43,7 +43,7 @@ export const POST = withRBAC(
 
       const body = verification.payload;
 
-      const supabase = createClient();
+      const supabase = await createClient();
 
       // Validate webhook type
       const typeResult = WebhookTypeSchema.safeParse(params.type);

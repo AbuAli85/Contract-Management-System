@@ -137,7 +137,7 @@ export const GET = withRBAC(
       }
 
       // Fetch contracts data separately (simplified to avoid relationship issues)
-      let contracts = [];
+      let contracts: any[] = [];
       try {
         const { data: contractsData, error: contractsError } = await supabase
           .from('contracts')
@@ -159,7 +159,7 @@ export const GET = withRBAC(
       }
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if ((error as any).code === 'PGRST116') {
           return NextResponse.json(
             { error: 'Promoter not found' },
             { status: 404 }
@@ -190,10 +190,10 @@ export const GET = withRBAC(
   }
 );
 
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ✅ SECURITY FIX: Added RBAC guard for promoter updates
+export const PUT = withRBAC(
+  'promoter:update',
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params;
     const cookieStore = await cookies();
@@ -335,12 +335,12 @@ export async function PUT(
       { status: 500 }
     );
   }
-}
+});
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+// ✅ SECURITY FIX: Added RBAC guard for promoter deletion
+export const DELETE = withRBAC(
+  'promoter:delete',
+  async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params;
     const cookieStore = await cookies();
@@ -473,4 +473,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
+});

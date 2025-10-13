@@ -24,7 +24,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 
-type UserRole = 'provider' | 'client' | 'admin' | 'user';
+type UserRole = 'provider' | 'client' | 'user';
 
 interface FormData {
   email: string;
@@ -126,12 +126,17 @@ export default function RegisterNewUserPage() {
       console.log('✅ Auth signup successful:', authData.user.id);
 
       // Step 2: Create public user record
+      // Note: User status is set to 'pending' by default for security
+      // Only 'provider', 'client', and 'user' roles are allowed for self-registration
+      const allowedRoles = ['provider', 'client', 'user'];
+      const safeRole = allowedRoles.includes(formData.role) ? formData.role : 'user';
+      
       const { error: publicUserError } = await supabase.from('users').insert({
         id: authData.user.id,
         email: formData.email,
         full_name: formData.fullName,
-        role: formData.role,
-        status: 'active',
+        role: safeRole,
+        status: 'pending', // Changed from 'active' - requires admin approval
         phone: formData.phone,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -147,25 +152,13 @@ export default function RegisterNewUserPage() {
         console.log('✅ Public user record created successfully');
       }
 
-      // Step 3: Auto-confirm email for demo purposes
-      try {
-        // Update the auth user to confirm email
-        const { error: updateError } = await supabase.auth.admin.updateUserById(
-          authData.user.id,
-          { email_confirmed_at: new Date().toISOString() }
-        );
-
-        if (updateError) {
-          console.log('⚠️ Could not auto-confirm email:', updateError.message);
-        } else {
-          console.log('✅ Email auto-confirmed for demo');
-        }
-      } catch (adminError) {
-        console.log('⚠️ Admin operation not available in client');
-      }
+      // Step 3: Email confirmation
+      // Note: Email confirmation should be handled server-side for security
+      // Users will receive a confirmation email from Supabase
+      console.log('📧 Confirmation email sent to:', formData.email);
 
       setMessage(
-        `✅ Registration successful! Account created for ${formData.email}`
+        `✅ Registration successful! Please check ${formData.email} for confirmation and wait for admin approval.`
       );
       setStep('success');
     } catch (error) {
@@ -222,7 +215,7 @@ export default function RegisterNewUserPage() {
                     <strong>Name:</strong> {formData.fullName}
                   </p>
                   <p>
-                    <strong>Status:</strong> Ready to use
+                    <strong>Status:</strong> Pending approval
                   </p>
                 </div>
               </AlertDescription>
@@ -254,7 +247,7 @@ export default function RegisterNewUserPage() {
             </div>
 
             <div className='text-xs text-gray-500 text-center border-t pt-2'>
-              <p>Use the login page with your new credentials</p>
+              <p>Please check your email and wait for admin approval</p>
             </div>
           </CardContent>
         </Card>
@@ -314,12 +307,6 @@ export default function RegisterNewUserPage() {
                       Client - Book services
                     </div>
                   </SelectItem>
-                  <SelectItem value='admin'>
-                    <div className='flex items-center gap-2'>
-                      <User className='h-4 w-4' />
-                      Admin - Full access
-                    </div>
-                  </SelectItem>
                   <SelectItem value='user'>
                     <div className='flex items-center gap-2'>
                       <User className='h-4 w-4' />
@@ -333,7 +320,6 @@ export default function RegisterNewUserPage() {
                   {formData.role === 'provider' &&
                     'Can offer digital marketing services'}
                   {formData.role === 'client' && 'Can book and manage projects'}
-                  {formData.role === 'admin' && 'Full system administration'}
                   {formData.role === 'user' && 'Basic platform access'}
                 </Badge>
               </div>
@@ -439,7 +425,7 @@ export default function RegisterNewUserPage() {
           </div>
 
           <div className='text-xs text-gray-500 text-center border-t pt-2'>
-            <p>This will create both auth and public user records</p>
+            <p>Account will require admin approval before access is granted</p>
           </div>
         </CardContent>
       </Card>

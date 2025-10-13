@@ -14,12 +14,15 @@ export interface AuthOptions {
 }
 
 export class ProductionAuthService {
-  private supabase;
   private captchaConfig: CaptchaConfig | null = null;
 
   constructor() {
-    this.supabase = createClient();
     this.initializeCaptchaConfig();
+  }
+
+  // Lazy client creation to avoid storing unresolved Promise
+  private async getSupabaseClient() {
+    return await createClient();
   }
 
   private initializeCaptchaConfig() {
@@ -111,8 +114,10 @@ export class ProductionAuthService {
       }
     }
 
+    const supabase = await this.getSupabaseClient();
+
     // Create user with Supabase
-    const { data, error } = await this.supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -148,8 +153,10 @@ export class ProductionAuthService {
       }
     }
 
+    const supabase = await this.getSupabaseClient();
+
     // Sign in with Supabase
-    const { data, error } = await this.supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -176,8 +183,10 @@ export class ProductionAuthService {
       }
     }
 
+    const supabase = await this.getSupabaseClient();
+
     // Reset password with Supabase
-    const { data, error } = await this.supabase.auth.resetPasswordForEmail(email, {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password`,
     });
 

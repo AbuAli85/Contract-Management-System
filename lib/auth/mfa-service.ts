@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createClientComponent } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import { authenticator } from 'otplib';
 
 export interface MFASetupResult {
   success: boolean;
@@ -384,21 +385,33 @@ export class MFAService {
   // Private helper methods
 
   private generateTOTPSecret(): string {
-    // Generate a 32-character base32 secret
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-    let secret = '';
-    for (let i = 0; i < 32; i++) {
-      secret += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return secret;
+    // Generate a secure random secret using otplib
+    return authenticator.generateSecret();
   }
 
   private generateBackupCodes(): string[] {
     const codes: string[] = [];
+    // Use crypto.randomBytes for secure random generation
+    const crypto = typeof window === 'undefined' 
+      ? require('crypto') 
+      : window.crypto;
+    
     for (let i = 0; i < 10; i++) {
-      // Generate 8-character alphanumeric codes
-      const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-      codes.push(code);
+      if (typeof window === 'undefined') {
+        // Node.js environment (server-side)
+        const randomBytes = crypto.randomBytes(6);
+        const code = randomBytes.toString('hex').toUpperCase();
+        codes.push(code);
+      } else {
+        // Browser environment (client-side)
+        const array = new Uint8Array(6);
+        crypto.getRandomValues(array);
+        const code = Array.from(array)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('')
+          .toUpperCase();
+        codes.push(code);
+      }
     }
     return codes;
   }
@@ -415,15 +428,18 @@ export class MFAService {
   }
 
   private verifyTOTPToken(token: string, secret: string): boolean {
-    // In a real implementation, you would use a TOTP library
-    // For now, implement basic validation
+    // Validate token format
     if (!token || token.length !== 6 || !/^\d{6}$/.test(token)) {
       return false;
     }
 
-    // TODO: Implement actual TOTP verification using a library like 'otplib'
-    // This is a placeholder implementation
-    return true;
+    try {
+      // Use otplib to verify the TOTP token against the secret
+      return authenticator.verify({ token, secret });
+    } catch (error) {
+      console.error('TOTP verification error:', error);
+      return false;
+    }
   }
 
   private async logSecurityEvent(eventType: string, metadata: any): Promise<void> {

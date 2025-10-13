@@ -129,11 +129,34 @@ export const GET = withRBAC('promoter:read:own', async () => {
 
     console.log('User authenticated for promoters:', user.email);
 
-    // Fetch promoters from the database without joins to avoid relationship issues
-    const { data: promoters, error } = await supabase
+    // ✅ SECURITY FIX: Scope query based on user role
+    // Get user's role from session or database
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const userRole = userProfile?.role;
+    const isAdmin = userRole === 'admin';
+
+    // Build query with proper scoping
+    let query = supabase
       .from('promoters')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
+
+    // Non-admin users only see promoters they created
+    if (!isAdmin) {
+      query = query.eq('created_by', user.id);
+      console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
+    } else {
+      console.log(`Fetching all promoters (admin access)`);
+    }
+
+    query = query.order('created_at', { ascending: false });
+
+    // Fetch promoters from the database
+    const { data: promoters, error } = await query;
 
     if (error) {
       console.error('Error fetching promoters:', error);
@@ -157,7 +180,8 @@ export const GET = withRBAC('promoter:read:own', async () => {
   }
 });
 
-export async function POST(request: Request) {
+// ✅ SECURITY FIX: Added RBAC guard for promoter creation
+export const POST = withRBAC('promoter:create', async (request: Request) => {
   try {
     const cookieStore = await cookies();
 
@@ -296,4 +320,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

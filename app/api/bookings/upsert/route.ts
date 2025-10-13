@@ -4,7 +4,7 @@ import {
   createBookingPayload,
   type BookingPayload,
 } from '@/lib/booking-service';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,11 +71,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Use authenticated client with anon key and RLS policies
+    const supabase = await createClient();
 
+    // Verify user is authenticated
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !session) {
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Authentication required to access booking data',
+        },
+        { status: 401 }
+      );
+    }
+
+    // Query with RLS enabled - user can only see bookings they have access to
     const { data: booking, error } = await supabase
       .from('bookings')
       .select(
