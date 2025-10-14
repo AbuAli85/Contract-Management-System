@@ -7,6 +7,10 @@ export const metadata: Metadata = {
 
 import { PromotersView } from '@/components/promoters-view';
 
-export default function PromotersPage() {
-  return <PromotersView />;
+export default function PromotersPage({
+  params,
+}: {
+  params: { locale: string };
+}) {
+  return <PromotersView locale={params.locale} />;
 }
