@@ -587,16 +587,21 @@ export function PromotersView({ locale }: PromotersViewProps) {
               </div>
             </div>
             <div className='flex flex-wrap items-center gap-3'>
-              <Button onClick={handleAddPromoter} className='bg-white text-slate-900 hover:bg-white/90'>
-                <Plus className='mr-2 h-4 w-4' />
-                Add promoter
+              <Button 
+                onClick={handleAddPromoter} 
+                className='bg-white text-slate-900 hover:bg-white/90'
+                size='lg'
+              >
+                <Plus className='mr-2 h-5 w-5' />
+                Add Promoter
               </Button>
               <Button
                 variant='secondary'
                 className='bg-white/10 text-white hover:bg-white/20'
                 onClick={handleExport}
+                size='lg'
               >
-                <Download className='mr-2 h-4 w-4' />
+                <Download className='mr-2 h-5 w-5' />
                 Export report
               </Button>
               <Button
@@ -761,19 +766,32 @@ export function PromotersView({ locale }: PromotersViewProps) {
           <CardContent className='p-0'>
             {sortedPromoters.length === 0 ? (
               <div className='flex flex-col items-center justify-center space-y-4 py-16 text-center'>
-                <Users className='h-10 w-10 text-muted-foreground' />
-                <div className='space-y-1'>
-                  <h3 className='text-lg font-semibold tracking-tight'>
-                    No promoters match your filters
+                <div className='rounded-full bg-muted p-6'>
+                  <Users className='h-12 w-12 text-muted-foreground' />
+                </div>
+                <div className='space-y-2'>
+                  <h3 className='text-xl font-semibold tracking-tight'>
+                    {hasFiltersApplied ? 'No promoters match your filters' : 'No promoters yet'}
                   </h3>
-                  <p className='text-sm text-muted-foreground'>
-                    Adjust the filters or add a new promoter to see them listed here.
+                  <p className='max-w-sm text-sm text-muted-foreground'>
+                    {hasFiltersApplied 
+                      ? 'Try adjusting your filters or search terms to find what you\'re looking for.'
+                      : 'Get started by adding your first promoter to the system.'
+                    }
                   </p>
                 </div>
-                <Button onClick={handleAddPromoter}>
-                  <Plus className='mr-2 h-4 w-4' />
-                  Add promoter
-                </Button>
+                <div className='flex gap-3'>
+                  {hasFiltersApplied && (
+                    <Button onClick={handleResetFilters} variant='outline'>
+                      <RefreshCw className='mr-2 h-4 w-4' />
+                      Clear Filters
+                    </Button>
+                  )}
+                  <Button onClick={handleAddPromoter} size='lg'>
+                    <Plus className='mr-2 h-5 w-5' />
+                    Add Your First Promoter
+                  </Button>
+                </div>
               </div>
             ) : (
               <ScrollArea className='h-[520px]'>

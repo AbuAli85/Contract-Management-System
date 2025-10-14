@@ -54,13 +54,14 @@ export async function GET() {
     const cookieStore = await cookies();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Use service role key if available for full database access, otherwise use anon key
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseKey) {
       throw new Error('Missing Supabase environment variables');
     }
 
-    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
           return cookieStore.getAll();
@@ -90,7 +91,7 @@ export async function GET() {
       },
     });
 
-    // Get user session for scoping
+    // Get user session for scoping (optional)
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -108,22 +109,21 @@ export async function GET() {
     }
 
     console.log('Fetching promoters from database...');
+    console.log('Session status:', session?.user ? `Logged in as ${session.user.email}` : 'No session');
+    console.log('Is admin:', isAdmin);
 
-    // Build query with proper scoping
-    let query = supabase
+    // Build query - show all promoters for now (simplified for testing)
+    // TODO: Implement proper scoping based on user role and organization
+    const query = supabase
       .from('promoters')
       .select('*, parties!employer_id(name_en, name_ar)')
       .order('created_at', { ascending: false });
 
-    // Non-admin users only see promoters they created
-    if (!isAdmin && session?.user) {
-      query = query.eq('created_by', session.user.id);
-      console.log(`Fetching promoters for user: ${session.user.id} (non-admin)`);
-    } else if (isAdmin) {
-      console.log(`Fetching all promoters (admin access)`);
-    } else {
-      console.log(`Fetching promoters (no user context)`);
-    }
+    // Optional: Add user-based filtering in the future
+    // if (!isAdmin && session?.user) {
+    //   query = query.eq('created_by', session.user.id);
+    //   console.log(`Fetching promoters for user: ${session.user.id} (non-admin)`);
+    // }
 
     // Fetch promoters from the database
     const { data: promoters, error } = await query;

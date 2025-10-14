@@ -504,36 +504,40 @@ export default function PromoterManagement({
     <div className='min-h-screen bg-background px-4 py-8'>
       <div className='mx-auto max-w-screen-xl'>
         {/* Header */}
-        <div className='mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row'>
-          <div>
-            <h1 className='text-3xl font-bold text-card-foreground'>
-              Promoter Management
-            </h1>
-            <p className='text-muted-foreground'>
-              Manage and monitor your promoters
-            </p>
+        <div className='mb-8 flex flex-col gap-4'>
+          <div className='flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center'>
+            <div>
+              <h1 className='text-3xl font-bold text-card-foreground'>
+                Promoter Management
+              </h1>
+              <p className='text-muted-foreground mt-1'>
+                Manage and monitor your promoters with full control
+              </p>
+            </div>
+
+            <div className='flex flex-wrap gap-2'>
+              <Button
+                variant='outline'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw
+                  className={cn('mr-2 h-4 w-4', isRefreshing && 'animate-spin')}
+                />
+                Refresh
+              </Button>
+              <Button onClick={handleAddNew} size='lg' className='bg-primary'>
+                <PlusCircleIcon className='mr-2 h-5 w-5' />
+                Add Promoter
+              </Button>
+            </div>
           </div>
 
-          <div className='flex gap-2'>
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw
-                className={cn('mr-2 h-4 w-4', isRefreshing && 'animate-spin')}
-              />
-              Refresh
-            </Button>
-            <Button asChild variant='outline'>
-              <Link href='/'>
-                <ArrowLeftIcon className='mr-2 h-4 w-4' /> Back to Home
-              </Link>
-            </Button>
+          {/* Action Bar */}
+          <div className='flex flex-wrap items-center gap-2 border-t pt-4'>
             <Button variant='outline' size='sm' onClick={() => setIsImportOpen(true)}>
               <FileSpreadsheet className='mr-2 h-4 w-4' />
-              Import Excel
+              Import
             </Button>
             <Button
               onClick={handleExportCSV}
@@ -546,12 +550,13 @@ export default function PromoterManagement({
               ) : (
                 <Download className='mr-2 h-4 w-4' />
               )}
-              Export CSV
+              Export
             </Button>
-            <Button onClick={handleAddNew}>
-              <PlusCircleIcon className='mr-2 h-4 w-4' />
-              Add New Promoter
-            </Button>
+            {selectedPromoters.length > 0 && (
+              <Badge variant='secondary' className='ml-2'>
+                {selectedPromoters.length} selected
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -658,31 +663,30 @@ export default function PromoterManagement({
 
         {/* Search and Filters */}
         <Card className='mb-6'>
-          <CardContent className='pt-4'>
+          <CardContent className='pt-6'>
             <div className='space-y-4'>
               {/* Search Bar */}
-              <div className='flex flex-col gap-4 sm:flex-row sm:items-center'>
-                <div className='flex-1'>
-                  <Input
-                    placeholder='Search by name, ID, passport, or company...'
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className='w-full'
-                  />
-                </div>
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
+                <Input
+                  placeholder='Search by name, ID card, passport, or company...'
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className='pl-10 h-11'
+                />
               </div>
 
               {/* Filter Options */}
-              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3'>
                 {/* Status Filter */}
-                <div>
-                  <label className='text-sm font-medium mb-2 block'>
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
                     Status
                   </label>
                   <select
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value)}
-                    className='w-full px-3 py-2 border border-input rounded-md bg-background'
+                    className='w-full h-10 px-3 py-2 border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring'
                     aria-label='Filter by status'
                   >
                     <option value='all'>All Status</option>
@@ -692,6 +696,23 @@ export default function PromoterManagement({
                     <option value='inactive'>Inactive</option>
                   </select>
                 </div>
+
+                {/* Quick Actions */}
+                <div className='flex items-end gap-2'>
+                  {(searchTerm || filterStatus !== 'all') && (
+                    <Button
+                      variant='outline'
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilterStatus('all');
+                      }}
+                      className='h-10'
+                    >
+                      <RefreshCw className='mr-2 h-4 w-4' />
+                      Clear Filters
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -700,24 +721,38 @@ export default function PromoterManagement({
         {/* Promoters Table */}
         {filteredPromoters.length === 0 ? (
           <Card>
-            <CardContent className='flex flex-col items-center justify-center py-12'>
-              <UserIcon className='h-12 w-12 text-muted-foreground mb-4' />
-              <h3 className='text-lg font-semibold mb-2'>
+            <CardContent className='flex flex-col items-center justify-center py-16'>
+              <div className='rounded-full bg-muted p-6 mb-4'>
+                <UserIcon className='h-12 w-12 text-muted-foreground' />
+              </div>
+              <h3 className='text-xl font-semibold mb-2'>
                 {searchTerm || filterStatus !== 'all'
-                  ? 'No promoters found'
+                  ? 'No promoters match your search'
                   : 'No promoters yet'}
               </h3>
-              <p className='text-muted-foreground text-center mb-4'>
+              <p className='text-muted-foreground text-center mb-6 max-w-md'>
                 {searchTerm || filterStatus !== 'all'
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Get started by adding your first promoter'}
+                  ? 'Try adjusting your search or filter criteria to find what you\'re looking for.'
+                  : 'Get started by adding your first promoter to the system.'}
               </p>
-              {!searchTerm && filterStatus === 'all' && (
-                <Button onClick={handleAddNew}>
-                  <PlusCircleIcon className='mr-2 h-4 w-4' />
-                  Add First Promoter
+              <div className='flex gap-3'>
+                {(searchTerm || filterStatus !== 'all') && (
+                  <Button 
+                    onClick={() => {
+                      setSearchTerm('');
+                      setFilterStatus('all');
+                    }}
+                    variant='outline'
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    Clear Filters
+                  </Button>
+                )}
+                <Button onClick={handleAddNew} size='lg'>
+                  <PlusCircleIcon className='mr-2 h-5 w-5' />
+                  Add Promoter
                 </Button>
-              )}
+              </div>
             </CardContent>
           </Card>
         ) : (
