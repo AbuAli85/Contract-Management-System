@@ -93,6 +93,11 @@ export default function PromoterManagement({
 
   // Core state
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([]);
+  
+  // TEMPORARY: Simple test return
+  if (typeof window !== 'undefined') {
+    console.log('🌐 Running in browser, promoters count:', promoters.length);
+  }
   const [filteredPromoters, setFilteredPromoters] = useState<
     EnhancedPromoter[]
   >([]);
