@@ -90,70 +90,13 @@ export async function GET() {
       },
     });
 
-    // Try to get session first
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+    console.log('Fetching promoters from database...');
 
-    if (sessionError) {
-      console.error('Session error:', sessionError);
-    }
-
-    // If no session, try to get user directly
-    let user = session?.user;
-    if (!user) {
-      const {
-        data: { user: userData },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        console.error('Auth error:', userError);
-        return NextResponse.json(
-          { error: 'Authentication error' },
-          { status: 401 }
-        );
-      }
-
-      user = userData || undefined;
-    }
-
-    if (!user) {
-      console.log('No user found in session or auth');
-      return NextResponse.json(
-        { error: 'Unauthorized - No user session' },
-        { status: 401 }
-      );
-    }
-
-    console.log('User authenticated for promoters:', user.email);
-
-    // ✅ SECURITY FIX: Scope query based on user role
-    // Get user's role from session or database
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const userRole = (userProfile as any)?.role;
-    const isAdmin = userRole === 'admin';
-
-    // Build query with proper scoping
-    let query = supabase
+    // Build query - fetch all promoters with employer information
+    const query = supabase
       .from('promoters')
-      .select('*');
-
-    // Non-admin users only see promoters they created
-    if (!isAdmin) {
-      query = query.eq('created_by', user.id);
-      console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
-    } else {
-      console.log(`Fetching all promoters (admin access)`);
-    }
-
-    query = query.order('created_at', { ascending: false });
+      .select('*, parties!employer_id(name_en, name_ar)')
+      .order('created_at', { ascending: false });
 
     // Fetch promoters from the database
     const { data: promoters, error } = await query;

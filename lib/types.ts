@@ -101,6 +101,7 @@ export interface Promoter {
   zip_code?: string;
   bio?: string;
   tags?: string[];
+  parties?: { name_en: string; name_ar: string } | null;
 }
 
 export interface Contract {

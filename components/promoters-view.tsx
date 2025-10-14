@@ -325,10 +325,10 @@ export function PromotersView({ locale }: PromotersViewProps) {
       const assignmentStatus = promoter.employer_id ? 'assigned' : 'unassigned';
 
       const organisationLabel =
+        (promoter.parties as any)?.name_en ||
+        (promoter.parties as any)?.name_ar ||
         promoter.work_location ||
         promoter.job_title ||
-        promoter.employer_id ||
-        promoter.outsourced_to_id ||
         'Unassigned';
 
       const overallStatus = computeOverallStatus(
