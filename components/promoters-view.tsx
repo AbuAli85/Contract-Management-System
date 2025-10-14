@@ -64,7 +64,7 @@ import {
   Calendar,
   MoreHorizontal,
   ShieldCheck,
-  IdCard,
+  Contact,
   Globe,
   Clock,
   AlertTriangle,
@@ -187,7 +187,7 @@ function computeDocumentHealth(
       status: 'expired',
       daysRemaining: Math.abs(days),
       expiresOn: value ?? null,
-      label: Expired d ago,
+      label: `Expired ${Math.abs(days)} days ago`,
     };
   }
 
@@ -196,7 +196,7 @@ function computeDocumentHealth(
       status: 'expiring',
       daysRemaining: days,
       expiresOn: value ?? null,
-      label: Expires in d,
+      label: `Expires in ${days} days`,
     };
   }
 
@@ -204,7 +204,7 @@ function computeDocumentHealth(
     status: 'valid',
     daysRemaining: days,
     expiresOn: value ?? null,
-    label: Valid until ,
+    label: `Valid until ${formatDisplayDate(value)}`,
   };
 }
 
@@ -313,7 +313,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
 
       const fallbackName =
         (promoter as any)?.first_name || (promoter as any)?.last_name
-          ? ${(promoter as any)?.first_name || ''} .trim()
+          ? `${(promoter as any)?.first_name || ''} ${(promoter as any)?.last_name || ''}`.trim()
           : promoter.email || 'Unnamed promoter';
 
       const displayName =
@@ -485,7 +485,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
   }, []);
 
   const handleAddPromoter = useCallback(() => {
-    router.push(//manage-promoters);
+    router.push(`/${derivedLocale}/manage-promoters/new`);
   }, [router, derivedLocale]);
 
   const handleRefresh = useCallback(() => {
@@ -513,7 +513,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
     ];
 
     const rows = sortedPromoters.map(promoter => [
-      "",
+      promoter.displayName,
       promoter.overallStatus,
       promoter.contactEmail ?? '',
       promoter.contactPhone ?? '',
@@ -541,18 +541,14 @@ export function PromotersView({ locale }: PromotersViewProps) {
 
   const handleViewPromoter = useCallback(
     (promoter: DashboardPromoter) => {
-      router.push(
-        //promoter-details?promoterId=
-      );
+      router.push(`/${derivedLocale}/promoters/${promoter.id}`);
     },
     [router, derivedLocale]
   );
 
   const handleEditPromoter = useCallback(
     (promoter: DashboardPromoter) => {
-      router.push(
-        //manage-promoters?promoterId=
-      );
+      router.push(`/${derivedLocale}/manage-promoters/${promoter.id}`);
     },
     [router, derivedLocale]
   );
@@ -561,7 +557,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
     (promoter: DashboardPromoter) => {
       toast({
         title: 'Archive workflow',
-        description: Archiving for  is coming soon.,
+        description: `Archiving for ${promoter.displayName} is coming soon.`,
       });
     },
     [toast]
@@ -622,28 +618,28 @@ export function PromotersView({ locale }: PromotersViewProps) {
         <StatCard
           title='Total promoters'
           value={metrics.total}
-          helper={${metrics.active} active right now}
+          helper={`${metrics.active} active right now`}
           icon={Users}
           variant='primary'
         />
         <StatCard
           title='Active workforce'
           value={metrics.active}
-          helper={${metrics.unassigned} awaiting assignment}
+          helper={`${metrics.unassigned} awaiting assignment`}
           icon={UserCheck}
           variant='neutral'
         />
         <StatCard
           title='Document alerts'
           value={metrics.critical}
-          helper={${metrics.expiring} expiring soon}
+          helper={`${metrics.expiring} expiring soon`}
           icon={ShieldAlert}
           variant={metrics.critical > 0 ? 'danger' : 'warning'}
         />
         <StatCard
           title='Partner coverage'
           value={metrics.companies}
-          helper={${metrics.total - metrics.unassigned} assigned staff}
+          helper={`${metrics.total - metrics.unassigned} assigned staff`}
           icon={Building2}
           variant='neutral'
         />
@@ -805,7 +801,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
                         <TableCell>
                           <div className='flex items-center gap-3'>
                             <SafeImage
-                              src={promoter.profile_picture_url ?? undefined}
+                              src={promoter.profile_picture_url ?? null}
                               alt={promoter.displayName}
                               width={40}
                               height={40}
@@ -943,7 +939,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
                             DOCUMENT_STATUS_BADGES[promoter.idDocument.status]
                           )}
                         >
-                          <IdCard className='mr-1 h-3 w-3' />
+                          <Contact className='mr-1 h-3 w-3' />
                           ID: {promoter.idDocument.label}
                         </Badge>
                       )}
