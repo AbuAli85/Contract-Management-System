@@ -17,12 +17,7 @@ export default function DebugLoginPage() {
           </p>
         </div>
         
-        <LoginDebugger 
-          onLoginSuccess={(data) => {
-            console.log('✅ Login successful:', data);
-            // You can add redirect logic here if needed
-          }}
-        />
+        <LoginDebugger />
       </div>
     </div>
   );

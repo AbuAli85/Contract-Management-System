@@ -9,21 +9,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
-interface LoginDebuggerProps {
-  onLoginSuccess?: (data: any) => void;
-}
-
-export function LoginDebugger({ onLoginSuccess }: LoginDebuggerProps) {
+export function LoginDebugger() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleLogin = async () => {
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
     setDebugInfo(null);
 
     try {
@@ -75,9 +73,8 @@ export function LoginDebugger({ onLoginSuccess }: LoginDebuggerProps) {
 
       if (response.ok) {
         console.log('🔍 Debug Login - Login successful!');
-        if (onLoginSuccess) {
-          onLoginSuccess(responseData);
-        }
+        console.log('✅ Login successful:', responseData);
+        setSuccess(`Login successful! Welcome ${responseData.user?.user_metadata?.full_name || responseData.user?.email}`);
       } else {
         console.error('🔍 Debug Login - Login failed:', responseData);
         setError(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -94,6 +91,7 @@ export function LoginDebugger({ onLoginSuccess }: LoginDebuggerProps) {
   const handleTestEndpoint = async () => {
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
     setDebugInfo(null);
 
     try {
@@ -208,6 +206,13 @@ export function LoginDebugger({ onLoginSuccess }: LoginDebuggerProps) {
             <Alert variant='destructive'>
               <AlertCircle className='h-4 w-4' />
               <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {success && (
+            <Alert>
+              <CheckCircle className='h-4 w-4' />
+              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 
