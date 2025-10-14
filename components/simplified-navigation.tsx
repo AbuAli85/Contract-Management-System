@@ -132,7 +132,7 @@ export function SimplifiedNavigation({
           icon: Settings,
         },
         {
-          href: '/help',
+          href: `/${locale}/dashboard/settings`,
           label: 'Help',
           labelAr: 'المساعدة',
           icon: HelpCircle,
