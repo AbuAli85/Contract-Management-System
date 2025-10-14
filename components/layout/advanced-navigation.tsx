@@ -168,7 +168,7 @@ const navigationItems: NavigationItem[] = [
 ];
 
 const quickActions = [
-  { name: 'New Contract', href: '/contracts/new', icon: FileText },
+  { name: 'New Contract', href: '/en/generate-contract', icon: FileText },
   { name: 'Book Resource', href: '/booking/new', icon: Calendar },
   { name: 'Create Project', href: '/tracking/projects/new', icon: Briefcase },
   { name: 'Search', href: '/search', icon: Search },

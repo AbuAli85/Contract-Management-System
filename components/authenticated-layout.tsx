@@ -200,7 +200,7 @@ export function AuthenticatedLayout({
                   {/* Quick Actions */}
                   <div className='hidden md:flex items-center space-x-2'>
                     <Button size='sm' variant='outline' asChild>
-                      <Link href='/contracts/new'>
+                      <Link href='/en/generate-contract'>
                         <FilePlus className='mr-2 h-4 w-4' />
                         New Contract
                       </Link>

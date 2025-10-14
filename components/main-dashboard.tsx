@@ -132,7 +132,7 @@ export function MainDashboard() {
     {
       name: 'New Contract',
       description: 'Create a new contract',
-      href: '/contracts/new',
+      href: '/en/generate-contract',
       icon: FileText,
       color: 'bg-blue-500',
       isNew: false,
