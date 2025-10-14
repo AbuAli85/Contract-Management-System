@@ -23,43 +23,27 @@ import { useRouter } from 'next/navigation';
 
 // Pages that don't need authentication or sidebar
 const PUBLIC_PAGES = [
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/auth/callback',
-  '/setup-admin',
-  '/test-auth',
-  '/debug-auth',
-  '/test-db',
-  '/test-supabase',
-  '/test-env',
-  '/test-simple',
-  '/test-webhook',
-  '/test-webhooks',
-  '/trigger-webhook',
-  '/register/client',
-  '/register/provider',
-  '/register/provider-simple',
-  '/register-new',
-  '/simple-register',
-  '/check-registration',
-  '/test-makecom',
-  '/test-promoters',
-  '/promoters/profile-test',
-  '/logout',
-  '/demo',
-  '/onboarding',
-  '/preview',
-  '/instant',
-  '/bypass',
-  '/dashboard-direct',
+  // Authentication pages
   '/auth/login',
   '/auth/signup',
+  '/auth/callback',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/unauthorized',
+  '/auth/logout',
+  
+  // Registration pages
+  '/register/client',
+  '/register/provider',
+  '/register-new',
+  
+  // Promoters pages (for testing without auth)
+  '/promoters',
+  '/manage-promoters',
+  
+  // Essential system pages
   '/unauthorized',
-  '/test-fix',
-  '/test-basic',
-  '/test-booking-fixed',
+  '/logout',
 ];
 
 interface AuthenticatedLayoutProps {
