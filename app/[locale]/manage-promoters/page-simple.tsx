@@ -1,28 +1,24 @@
 'use client';
 
-import { AuthenticatedLayout } from '@/components/authenticated-layout';
+import React from 'react';
 
-export default function SimpleManagePromotersPage({
+interface PromoterManagementProps {
+  params: {
+    locale: string;
+  };
+}
+
+export default function PromoterManagement({
   params,
-}: {
-  params: { locale: string };
-}) {
+}: PromoterManagementProps) {
+  console.log('🚀 SIMPLE TEST - Component mounted!');
+  
   return (
-    <AuthenticatedLayout locale={params.locale}>
-      <div className='p-8'>
-        <h1 className='text-2xl font-bold mb-4'>Manage Promoters (Simple)</h1>
-        <p className='text-muted-foreground'>
-          This is a simple version of the manage promoters page without data
-          fetching.
-        </p>
-        <div className='mt-4 p-4 bg-muted rounded'>
-          <h2 className='font-semibold mb-2'>Test Content</h2>
-          <p>
-            If you can see this content with a sidebar and header, then the
-            layout is working correctly.
-          </p>
-        </div>
-      </div>
-    </AuthenticatedLayout>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold">SIMPLE TEST PAGE</h1>
+      <p>If you see this, the component is working!</p>
+      <p>Check console for the log message.</p>
+      <p>Locale: {params.locale}</p>
+    </div>
   );
 }
