@@ -175,80 +175,78 @@ export default function PromoterManagement({
     return 'active';
   };
 
+  // Helper function to enhance promoter data
+  const enhancePromoterData = (promoter: any): EnhancedPromoter => {
+    const idExpiryDays = promoter.id_card_expiry_date
+      ? differenceInDays(
+          parseISO(promoter.id_card_expiry_date),
+          new Date()
+        )
+      : null;
+
+    const passportExpiryDays = promoter.passport_expiry_date
+      ? differenceInDays(
+          parseISO(promoter.passport_expiry_date),
+          new Date()
+        )
+      : null;
+
+    const computedNameEn =
+      promoter.name_en ||
+      [promoter.first_name, promoter.last_name].filter(Boolean).join(' ');
+
+    return {
+      ...promoter,
+      name_en: computedNameEn,
+      id_card_status: getDocumentStatusType(
+        idExpiryDays,
+        promoter.id_card_expiry_date
+      ),
+      passport_status: getDocumentStatusType(
+        passportExpiryDays,
+        promoter.passport_expiry_date
+      ),
+      overall_status: getOverallStatus(promoter),
+      days_until_id_expiry: idExpiryDays || undefined,
+      days_until_passport_expiry: passportExpiryDays || undefined,
+      active_contracts_count: 0,
+      employer: promoter.parties ? {
+        id: promoter.employer_id || '',
+        name_en: promoter.parties.name_en || '',
+        name_ar: promoter.parties.name_ar || ''
+      } : null,
+    };
+  };
+
   // Data fetching
   const fetchPromoters = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      if (!supabase) {
-        throw new Error('Database connection not available');
+      // Use the API endpoint instead of direct Supabase access
+      const response = await fetch('/api/promoters', { cache: 'no-store' });
+
+      if (!response.ok) {
+        throw new Error('Unable to load promoters from the server.');
       }
 
-      // Test authentication
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError || !user) {
-        throw new Error('Authentication required');
+      const payload = await response.json();
+
+      if (!payload.success) {
+        throw new Error(payload.error || 'Failed to load promoters.');
       }
 
-      // Fetch promoters
-      const { data: promotersData, error: promotersError } = await supabase
-        .from('promoters')
-        .select('*')
-        .order('first_name');
+      const promotersData = payload.promoters || [];
 
-      if (promotersError) {
-        console.error('Error fetching promoters:', promotersError);
-        throw new Error(promotersError.message);
-      }
-
-      if (!promotersData) {
+      if (!promotersData || promotersData.length === 0) {
         setPromoters([]);
         return;
       }
 
       // Enhance promoter data
       const enhancedPromoters: EnhancedPromoter[] = promotersData.map(
-        (promoter: any) => {
-          const idExpiryDays = promoter.id_card_expiry_date
-            ? differenceInDays(
-                parseISO(promoter.id_card_expiry_date),
-                new Date()
-              )
-            : null;
-
-          const passportExpiryDays = promoter.passport_expiry_date
-            ? differenceInDays(
-                parseISO(promoter.passport_expiry_date),
-                new Date()
-              )
-            : null;
-
-          const computedNameEn =
-            promoter.name_en ||
-            [promoter.first_name, promoter.last_name].filter(Boolean).join(' ');
-
-          return {
-            ...promoter,
-            name_en: computedNameEn,
-            id_card_status: getDocumentStatusType(
-              idExpiryDays,
-              promoter.id_card_expiry_date
-            ),
-            passport_status: getDocumentStatusType(
-              passportExpiryDays,
-              promoter.passport_expiry_date
-            ),
-            overall_status: getOverallStatus(promoter),
-            days_until_id_expiry: idExpiryDays || undefined,
-            days_until_passport_expiry: passportExpiryDays || undefined,
-            active_contracts_count: 0,
-            employer: null,
-          };
-        }
+        (promoter: any) => enhancePromoterData(promoter)
       );
 
       setPromoters(enhancedPromoters);
@@ -260,14 +258,12 @@ export default function PromoterManagement({
     } finally {
       setIsLoading(false);
     }
-  }, [supabase]);
+  }, []);
 
   // Load data on mount
   useEffect(() => {
-    if (supabase && !authLoading) {
-      fetchPromoters();
-    }
-  }, [fetchPromoters, supabase, authLoading]);
+    fetchPromoters();
+  }, [fetchPromoters]);
 
   // Filter promoters
   useEffect(() => {
@@ -764,7 +760,7 @@ export default function PromoterManagement({
                       <TableCell>
                         <div className='flex items-center space-x-3'>
                           <SafeImage
-                            src={promoter.profile_picture_url}
+                            src={promoter.profile_picture_url ?? null}
                             alt={promoter.name_en}
                             className='h-10 w-10 rounded-full'
                             fallback={

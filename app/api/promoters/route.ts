@@ -90,13 +90,40 @@ export async function GET() {
       },
     });
 
+    // Get user session for scoping
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    // Check if user is admin (for scoping data)
+    let isAdmin = false;
+    if (session?.user) {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      isAdmin = (userProfile as any)?.role === 'admin';
+    }
+
     console.log('Fetching promoters from database...');
 
-    // Build query - fetch all promoters with employer information
-    const query = supabase
+    // Build query with proper scoping
+    let query = supabase
       .from('promoters')
       .select('*, parties!employer_id(name_en, name_ar)')
       .order('created_at', { ascending: false });
+
+    // Non-admin users only see promoters they created
+    if (!isAdmin && session?.user) {
+      query = query.eq('created_by', session.user.id);
+      console.log(`Fetching promoters for user: ${session.user.id} (non-admin)`);
+    } else if (isAdmin) {
+      console.log(`Fetching all promoters (admin access)`);
+    } else {
+      console.log(`Fetching promoters (no user context)`);
+    }
 
     // Fetch promoters from the database
     const { data: promoters, error } = await query;
@@ -172,10 +199,17 @@ export async function POST(request: Request) {
       error: sessionError,
     } = await supabase.auth.getSession();
 
-    // TEMPORARILY DISABLED FOR TESTING - REMOVE IN PRODUCTION
-    // if (sessionError || !session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
+    // Check if user is admin (for scoping data)
+    let isAdmin = false;
+    if (session?.user) {
+      const { data: userProfile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      isAdmin = (userProfile as any)?.role === 'admin';
+    }
 
     // Parse and validate request body
     const body = await request.json();
