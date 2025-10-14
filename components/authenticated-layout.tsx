@@ -4,7 +4,7 @@ import React, { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '@/lib/auth-service';
 // RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from '@/components/theme-provider';
-import { Sidebar } from '@/components/sidebar';
+import { Sidebar } from '@/components/sidebar-simplified';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
