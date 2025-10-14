@@ -221,6 +221,7 @@ export default function PromoterManagement({
   // Data fetching
   const fetchPromoters = useCallback(async () => {
     try {
+      console.log('🔄 Starting fetchPromoters...');
       setIsLoading(true);
       setError(null);
 
@@ -232,14 +233,17 @@ export default function PromoterManagement({
       }
 
       const payload = await response.json();
+      console.log('📡 API Response:', { success: payload.success, count: payload.promoters?.length || 0 });
 
       if (!payload.success) {
         throw new Error(payload.error || 'Failed to load promoters.');
       }
 
       const promotersData = payload.promoters || [];
+      console.log('📊 Promoters data:', promotersData.length, 'items');
 
       if (!promotersData || promotersData.length === 0) {
+        console.log('⚠️ No promoters data, setting empty array');
         setPromoters([]);
         return;
       }
@@ -249,9 +253,10 @@ export default function PromoterManagement({
         (promoter: any) => enhancePromoterData(promoter)
       );
 
+      console.log('✅ Enhanced promoters:', enhancedPromoters.length, 'items');
       setPromoters(enhancedPromoters);
     } catch (error) {
-      console.error('Error in fetchPromoters:', error);
+      console.error('❌ Error in fetchPromoters:', error);
       setError(
         error instanceof Error ? error.message : 'Failed to load promoters'
       );
@@ -294,6 +299,7 @@ export default function PromoterManagement({
 
   // Calculate statistics
   const stats = useMemo((): PromoterStats => {
+    console.log('📊 Calculating stats for', promoters.length, 'promoters');
     const total = promoters.length;
     const active = promoters.filter(p => p.overall_status === 'active').length;
     const expiring_documents = promoters.filter(
@@ -308,7 +314,7 @@ export default function PromoterManagement({
     );
     const companies_count = 0; // Simplified for now
 
-    return {
+    const statsResult = {
       total,
       active,
       expiring_documents,
@@ -316,6 +322,9 @@ export default function PromoterManagement({
       total_contracts,
       companies_count,
     };
+    
+    console.log('📊 Stats result:', statsResult);
+    return statsResult;
   }, [promoters]);
 
   // Action handlers
