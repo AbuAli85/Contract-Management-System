@@ -2,9 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Reset and Base Styles */
+/* Performance optimizations and CSS Reset */
 * {
   box-sizing: border-box;
+  transition-duration: 0.15s !important;
+  transition-timing-function: ease-out !important;
+}
+
+/* Prevent layout shifts */
+img, svg, video, canvas, audio, iframe, embed, object {
+  display: block;
+  max-width: 100%;
 }
 
 html, body {
