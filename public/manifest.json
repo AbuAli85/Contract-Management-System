@@ -1,7 +1,6 @@
 {
   "name": "Contract Management System",
   "short_name": "CMS",
-  "description": "Professional contract management and generation system",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,18 +8,18 @@
   "icons": [
     {
       "src": "/favicon.ico",
-      "sizes": "any",
+      "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
       "src": "/placeholder-logo.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "sizes": "192x192"
     },
     {
-      "src": "/placeholder-logo.svg",
-      "sizes": "512x512",
-      "type": "image/svg+xml"
+      "src": "/placeholder-logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ]
 }

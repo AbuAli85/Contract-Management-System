@@ -9,10 +9,17 @@
   transition-timing-function: ease-out !important;
 }
 
+/* Optimize for better performance */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 /* Prevent layout shifts */
 img, svg, video, canvas, audio, iframe, embed, object {
   display: block;
   max-width: 100%;
+  height: auto;
 }
 
 html, body {
