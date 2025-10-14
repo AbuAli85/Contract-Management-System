@@ -65,13 +65,13 @@ export const GET = withRBAC('party:read:own', async () => {
       }
     );
 
-    // Get user session
+    // Get authenticated user
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -174,13 +174,13 @@ export async function POST(request: Request) {
       }
     );
 
-    // Get user session
+    // Get authenticated user
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -191,7 +191,7 @@ export async function POST(request: Request) {
     // Add owner_id field
     const partyData = {
       ...validatedData,
-      owner_id: session.user.id,
+      owner_id: user.id,
     };
 
     // Insert party into database

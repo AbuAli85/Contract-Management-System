@@ -242,11 +242,11 @@ export const POST = withAnyRBAC(
       const body = await request.json();
 
       const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session) {
+      if (authError || !user) {
         return NextResponse.json(
           { success: false, error: 'Unauthorized' },
           { status: 401 }
@@ -393,7 +393,7 @@ export const POST = withAnyRBAC(
       // Add created_by to ensure proper ownership tracking
       const variantsWithOwnership = variants.map(v => ({
         ...v,
-        created_by: session.user.id,
+        created_by: user.id,
         updated_at: new Date().toISOString(),
       }));
 

@@ -80,7 +80,7 @@ async function bookingsGET(request: NextRequest) {
       query = query.lte('end_time', dateTo);
     }
 
-    let bookings = [];
+    let bookings: any[] = [];
     try {
       const { data: bookingsData, error: bookingsError } =
         await query.limit(50);
@@ -186,13 +186,13 @@ async function bookingsPOST(request: NextRequest) {
       );
     }
 
-    // Get user session
+    // Get authenticated user
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session) {
+    if (authError || !user) {
       return NextResponse.json(
         {
           success: false,
@@ -202,22 +202,23 @@ async function bookingsPOST(request: NextRequest) {
       );
     }
 
-    Sentry.setUser({ id: session.user.id });
+    Sentry.setUser({ id: user.id });
 
     // Prepare booking data
     const bookingData = {
       ...validated.data,
-      user_id: session.user.id,
+      user_id: user.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     // Insert the booking
-    const { data: booking, error } = await supabase
+    const { data: booking, error } = (await supabase
       .from('bookings')
+      // @ts-ignore - Supabase type inference issue
       .insert([bookingData])
       .select()
-      .single();
+      .single()) as { data: any; error: any };
 
     if (error) {
       console.error('Error creating booking:', error);
@@ -231,16 +232,27 @@ async function bookingsPOST(request: NextRequest) {
       );
     }
 
+    if (!booking) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to create booking - no data returned',
+        },
+        { status: 500 }
+      );
+    }
+
     console.log('✅ Booking created successfully:', booking.id);
 
     // Insert tracking event
-    await supabase.from('tracking_events').insert({
-      actor_user_id: session.user.id,
+    // @ts-ignore - Supabase type inference issue
+    (await supabase.from('tracking_events').insert({
+      actor_user_id: user.id,
       subject_type: 'booking',
       subject_id: booking.id,
       event_type: 'created',
       metadata: { booking_number: booking.booking_number },
-    });
+    })) as { data: any; error: any };
 
     // Trigger Make.com webhook for automation
     try {

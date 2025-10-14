@@ -39,11 +39,11 @@ export async function GET(request: NextRequest) {
 
       if (!user) {
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.log('✅ API Users: Found user from session:', session.user.id);
-          user = session.user;
+          data: { user: authUser },
+        } = await supabase.auth.getUser();
+        if (authUser) {
+          console.log('✅ API Users: Found authenticated user:', authUser.id);
+          user = authUser;
         }
       }
     } catch (authError) {

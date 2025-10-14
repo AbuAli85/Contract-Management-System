@@ -23,13 +23,13 @@ export const GET = withAnyRBAC(
 
       const supabase = await createClient();
 
-      // Get user session
+      // Get authenticated user
       const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (authError || !user) {
         return NextResponse.json(
           {
             success: false,
@@ -43,7 +43,7 @@ export const GET = withAnyRBAC(
       let query = supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       // Apply filters
@@ -101,13 +101,13 @@ export const POST = withRBAC(
 
       const supabase = await createClient();
 
-      // Get user session
+      // Get authenticated user
       const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-      if (sessionError || !session?.user) {
+      if (authError || !user) {
         return NextResponse.json(
           {
             success: false,
@@ -118,8 +118,9 @@ export const POST = withRBAC(
       }
 
       // Create notification
-      const { data: notification, error } = await supabase
+      const { data: notification, error } = (await supabase
         .from('notifications')
+        // @ts-ignore - Supabase type inference issue
         .insert([
           {
             ...validatedData,
@@ -127,7 +128,7 @@ export const POST = withRBAC(
           },
         ])
         .select()
-        .single();
+        .single()) as { data: any; error: any };
 
       if (error) {
         console.error('Error creating notification:', error);
@@ -189,13 +190,13 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get user session
+    // Get authenticated user
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-    if (sessionError || !session?.user) {
+    if (authError || !user) {
       return NextResponse.json(
         {
           success: false,
@@ -206,13 +207,14 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update notification
-    const { data: notification, error } = await supabase
+    const { data: notification, error } = (await supabase
       .from('notifications')
+      // @ts-ignore - Supabase type inference issue
       .update({ is_read: read })
       .eq('id', parseInt(notification_id))
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .select()
-      .single();
+      .single()) as { data: any; error: any };
 
     if (error) {
       console.error('Error updating notification:', error);

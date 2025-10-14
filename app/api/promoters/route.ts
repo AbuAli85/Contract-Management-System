@@ -91,25 +91,26 @@ export async function GET() {
       },
     });
 
-    // Get user session for scoping (optional)
+    // Get authenticated user (secure method)
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     // Check if user is admin (for scoping data)
     let isAdmin = false;
-    if (session?.user) {
+    if (user) {
       const { data: userProfile } = await supabase
         .from('users')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
 
       isAdmin = (userProfile as any)?.role === 'admin';
     }
 
     console.log('Fetching promoters from database...');
-    console.log('Session status:', session?.user ? `Logged in as ${session.user.email}` : 'No session');
+    console.log('User status:', user ? `Logged in as ${user.email}` : 'No user');
     console.log('Is admin:', isAdmin);
 
     // Build query - show all promoters for now (simplified for testing)
@@ -120,9 +121,9 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     // Optional: Add user-based filtering in the future
-    // if (!isAdmin && session?.user) {
-    //   query = query.eq('created_by', session.user.id);
-    //   console.log(`Fetching promoters for user: ${session.user.id} (non-admin)`);
+    // if (!isAdmin && user) {
+    //   query = query.eq('created_by', user.id);
+    //   console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
     // }
 
     // Fetch promoters from the database
