@@ -304,6 +304,10 @@ ON CONFLICT (name) DO UPDATE SET
 
 -- Contracts (extras)
 INSERT INTO permissions (resource, action, scope, name, description) VALUES
+    ('contract', 'read', 'own', 'contract:read:own', 'Read own contracts'),
+    ('contract', 'create', 'own', 'contract:create:own', 'Create own contracts'),
+    ('contract', 'update', 'own', 'contract:update:own', 'Update own contracts'),
+    ('contract', 'delete', 'own', 'contract:delete:own', 'Delete own contracts'),
     ('contract', 'submit', 'own', 'contract:submit:own', 'Submit own contracts for approval'),
     ('contract', 'message', 'own', 'contract:message:own', 'Send messages related to own contracts'),
     ('contract', 'read', 'paginated', 'contract:read:paginated:own', 'Read paginated own contracts')
@@ -369,7 +373,8 @@ BEGIN
         'communication:send:own', 'communication:receive:own', 'communication:view:own',
         'call:initiate:own', 'call:join:own', 'call:view:own',
         'payment:view:own', 'finance:view:own', 'finance:export:own',
-        'company:read:own', 'party:read:own', 'contract:generate:own', 'contract:download:own',
+        'company:read:own', 'party:read:own', 'contract:read:own', 'contract:create:own', 
+        'contract:update:own', 'contract:generate:own', 'contract:download:own',
         'file:upload:own', 'file:read:own', 'file:delete:own',
         'notification:create:own', 'notification:read:own', 'notification:update:own', 'notification:delete:own',
         'workflow:start:own', 'contract:submit:own', 'contract:message:own'
@@ -388,7 +393,8 @@ BEGIN
         'communication:send:own', 'communication:receive:own', 'communication:view:own',
         'call:initiate:own', 'call:join:own', 'call:view:own',
         'payment:view:own', 'finance:view:own', 'finance:export:own',
-        'security:mfa:own', 'company:read:own', 'party:read:own', 'contract:generate:own', 'contract:download:own',
+        'security:mfa:own', 'company:read:own', 'party:read:own', 'contract:read:own', 
+        'contract:create:own', 'contract:update:own', 'contract:generate:own', 'contract:download:own',
         'file:upload:own', 'file:read:own', 'file:delete:own',
         'notification:create:own', 'notification:read:own', 'notification:update:own', 'notification:delete:own',
         'workflow:start:own', 'contract:submit:own', 'contract:message:own'
@@ -408,7 +414,8 @@ BEGIN
         'call:initiate:own', 'call:join:own', 'call:view:own',
         'payment:view:own', 'finance:view:own', 'finance:export:own',
         'security:mfa:own', 'user:view:all', 'profile:view:all', 'profile:read:all',
-        'company:read:own', 'company:read:organization', 'party:read:own', 'contract:generate:own', 'contract:download:own',
+        'company:read:own', 'company:read:organization', 'party:read:own', 'contract:read:own',
+        'contract:create:own', 'contract:update:own', 'contract:generate:own', 'contract:download:own',
         'file:upload:own', 'file:read:own', 'file:delete:own',
         'notification:create:own', 'notification:read:own', 'notification:update:own', 'notification:delete:own',
         'workflow:start:own', 'contract:submit:own', 'contract:message:own'
@@ -450,6 +457,7 @@ BEGIN
         'communication:view:provider', 'call:initiate:own', 'call:join:own',
         'call:view:own', 'call:view:provider', 'call:record:provider',
         'payment:view:provider', 'finance:view:own', 'finance:export:own',
+        'contract:read:own', 'contract:create:own', 'contract:update:own', 
         'contract:generate:own', 'contract:download:own', 'promoter:read:own', 'promoter:manage:own',
         'file:upload:own', 'file:read:own', 'file:delete:own',
         'notification:create:own', 'notification:read:own', 'notification:update:own', 'notification:delete:own',
@@ -472,6 +480,7 @@ BEGIN
         'communication:view:provider', 'call:initiate:own', 'call:join:own',
         'call:view:own', 'call:view:provider', 'call:record:provider',
         'payment:view:provider', 'finance:view:own',
+        'contract:read:own', 'contract:create:own', 'contract:update:own',
         'contract:generate:own', 'contract:download:own', 'promoter:read:own',
         'file:upload:own', 'file:read:own', 'file:delete:own',
         'notification:create:own', 'notification:read:own', 'notification:update:own', 'notification:delete:own',
@@ -496,6 +505,7 @@ BEGIN
         'call:view:own', 'call:view:provider', 'call:record:provider',
         'payment:view:provider', 'payment:process:provider', 'payment:refund:provider',
         'finance:view:own', 'finance:view:provider', 'finance:export:provider',
+        'contract:read:own', 'contract:create:own', 'contract:update:own',
         'contract:approve:all', 'contract:generate:own', 'contract:download:own',
         'promoter:read:own', 'promoter:manage:own', 'notification:create:provider'
     )
@@ -519,6 +529,7 @@ BEGIN
         'payment:view:provider', 'payment:process:provider', 'payment:refund:provider',
         'finance:view:own', 'finance:view:provider', 'finance:export:provider',
         'user:view:provider', 'user:create:all', 'user:edit:provider',
+        'contract:read:own', 'contract:create:own', 'contract:update:own',
         'contract:approve:all', 'contract:generate:own', 'contract:download:own',
         'promoter:read:own', 'promoter:manage:own', 'notification:create:provider'
     )

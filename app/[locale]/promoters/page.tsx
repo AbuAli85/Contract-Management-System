@@ -2,15 +2,15 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Promoters | Contract Management System',
-  description: 'Manage promoters and staff members',
+  description: 'Manage promoters and staff members with advanced analytics and notifications',
 };
 
-import { PromotersView } from '@/components/promoters-view';
+import { EnhancedPromotersView } from '@/components/enhanced-promoters-view';
 
 export default function PromotersPage({
   params,
 }: {
   params: { locale: string };
 }) {
-  return <PromotersView locale={params.locale} />;
+  return <EnhancedPromotersView locale={params.locale} />;
 }
