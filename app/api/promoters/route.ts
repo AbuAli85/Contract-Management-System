@@ -49,7 +49,7 @@ const promoterSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 });
 
-export const GET = withRBAC('promoter:read:own', async () => {
+export async function GET() {
   try {
     const cookieStore = await cookies();
 
@@ -178,7 +178,7 @@ export const GET = withRBAC('promoter:read:own', async () => {
       { status: 500 }
     );
   }
-});
+}
 
 // ✅ SECURITY FIX: Added RBAC guard for promoter creation
 export const POST = withRBAC('promoter:create', async (request: Request) => {
