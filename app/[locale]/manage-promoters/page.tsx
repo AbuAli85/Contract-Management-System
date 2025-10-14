@@ -89,6 +89,8 @@ export default function PromoterManagement({
 }: PromoterManagementProps) {
   const { locale } = params;
 
+  console.log('🚀 PromoterManagement component mounted');
+
   // Core state
   const [promoters, setPromoters] = useState<EnhancedPromoter[]>([]);
   const [filteredPromoters, setFilteredPromoters] = useState<
@@ -267,6 +269,7 @@ export default function PromoterManagement({
 
   // Load data on mount
   useEffect(() => {
+    console.log('🔄 useEffect triggered, calling fetchPromoters');
     fetchPromoters();
   }, [fetchPromoters]);
 
