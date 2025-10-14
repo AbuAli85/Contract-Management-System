@@ -70,13 +70,13 @@ export function SidebarSimplified({
   };
 
   const userInitials = user?.email
-    ? user.email
+    ? (user.email
         .split('@')[0]
-        .split('.')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
+        ?.split('.')
+        ?.map((n) => n?.[0] || '')
+        ?.join('')
+        ?.toUpperCase()
+        ?.slice(0, 2) || 'U')
     : 'U';
 
   return (
@@ -129,7 +129,7 @@ export function SidebarSimplified({
         {/* Navigation */}
         <div className='flex-1 overflow-y-auto'>
           <SimplifiedNavigation
-            isCollapsed={isSidebarCollapsed}
+            isCollapsed={!!isSidebarCollapsed}
             locale={locale}
           />
         </div>

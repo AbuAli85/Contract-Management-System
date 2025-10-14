@@ -239,23 +239,31 @@ function computeOverallStatus(
 }
 
 async function fetchPromoters(): Promise<Promoter[]> {
+  console.log('🔄 Fetching promoters from API...');
   const response = await fetch('/api/promoters', { cache: 'no-store' });
 
+  console.log('📡 API Response status:', response.status);
+
   if (!response.ok) {
+    console.error('❌ API request failed:', response.status, response.statusText);
     throw new Error('Unable to load promoters from the server.');
   }
 
   const payload = await response.json();
+  console.log('📦 API Payload:', payload);
+  console.log('📊 Number of promoters:', payload.promoters?.length || 0);
 
   if (!payload.success) {
+    console.error('❌ API returned error:', payload.error);
     throw new Error(payload.error || 'Failed to load promoters.');
   }
 
-
+  console.log('✅ Successfully fetched promoters:', payload.promoters?.length || 0);
   return (payload.promoters || []) as Promoter[];
 }
 
 export function PromotersView({ locale }: PromotersViewProps) {
+  console.log('🚀 PromotersView component mounted');
   const router = useRouter();
   const { toast } = useToast();
 
@@ -301,7 +309,10 @@ export function PromotersView({ locale }: PromotersViewProps) {
   }, [isError, error, toast]);
 
   const promoters = data ?? [];
+  console.log('📊 Raw promoters data:', promoters.length, 'items');
+  
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
+    console.log('🔄 Processing promoters for dashboard...');
     return promoters.map(promoter => {
       const idDocument = computeDocumentHealth(
         promoter.id_card_expiry_date ?? null,
@@ -352,6 +363,8 @@ export function PromotersView({ locale }: PromotersViewProps) {
       } as DashboardPromoter;
     });
   }, [promoters]);
+  
+  console.log('📈 Dashboard promoters processed:', dashboardPromoters.length, 'items');
 
   const metrics = useMemo<DashboardMetrics>(() => {
     const total = dashboardPromoters.length;
@@ -431,6 +444,7 @@ export function PromotersView({ locale }: PromotersViewProps) {
   ]);
 
   const sortedPromoters = useMemo(() => {
+    console.log('🔀 Sorting promoters...');
     const severityRank = (status: OverallStatus) => {
       switch (status) {
         case 'critical':
@@ -461,6 +475,8 @@ export function PromotersView({ locale }: PromotersViewProps) {
       return a.displayName.localeCompare(b.displayName);
     });
   }, [filteredPromoters]);
+  
+  console.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
 
   const atRiskPromoters = useMemo(() => {
     return sortedPromoters
