@@ -310,7 +310,7 @@ INSERT INTO permissions (resource, action, scope, name, description) VALUES
     ('contract', 'delete', 'own', 'contract:delete:own', 'Delete own contracts'),
     ('contract', 'submit', 'own', 'contract:submit:own', 'Submit own contracts for approval'),
     ('contract', 'message', 'own', 'contract:message:own', 'Send messages related to own contracts'),
-    ('contract', 'read', 'paginated', 'contract:read:paginated:own', 'Read paginated own contracts')
+    ('contract', 'read', 'own', 'contract:read:paginated:own', 'Read paginated own contracts')
 ON CONFLICT (name) DO UPDATE SET
     resource = EXCLUDED.resource,
     action = EXCLUDED.action,
