@@ -24,12 +24,12 @@ export const POST = withAnyRBAC(
         .from('contracts')
         .insert({
           contract_number: contractNumber,
-          first_party_id: body.first_party_id,
-          second_party_id: body.second_party_id,
           promoter_id: body.promoter_id,
-          contract_name: body.contract_name,
-          contract_type: body.contract_type,
-          job_title: body.job_title,
+          employer_id: body.employer_id,
+          client_id: body.client_id,
+          title: body.contract_name || body.title || 'Employment Contract',
+          description: body.description,
+          contract_type: body.contract_type || 'employment',
           status: 'generating',
         })
         .select()
