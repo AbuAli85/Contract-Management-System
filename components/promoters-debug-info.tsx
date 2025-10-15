@@ -41,10 +41,14 @@ export function PromotersDebugInfo() {
       console.log('🔍 Debug: Testing promoters API...');
       
       const startTime = Date.now();
-      const response = await fetch('/api/promoters', {
+      // Add timestamp to force fresh request
+      const timestamp = new Date().getTime();
+      const response = await fetch(`/api/promoters?t=${timestamp}`, {
         cache: 'no-store',
         headers: {
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       });
       const endTime = Date.now();
@@ -75,6 +79,9 @@ export function PromotersDebugInfo() {
       
       console.log('🔍 Debug: API response:', data);
       console.log('🔍 Debug: Promoters count:', data.promoters?.length || 0);
+      console.log('🔍 Debug: Response URL:', response.url);
+      console.log('🔍 Debug: Response status:', response.status);
+      console.log('🔍 Debug: Response headers:', Object.fromEntries(response.headers.entries()));
       
     } catch (error) {
       console.error('🔍 Debug: Fetch error:', error);
@@ -99,19 +106,36 @@ export function PromotersDebugInfo() {
             <Database className="h-5 w-5" />
             Promoters API Debug Information
           </CardTitle>
-          <Button 
-            onClick={fetchDebugInfo} 
-            disabled={debugInfo.apiStatus === 'loading'}
-            variant="outline"
-            size="sm"
-          >
-            {debugInfo.apiStatus === 'loading' ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4" />
-            )}
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={fetchDebugInfo} 
+              disabled={debugInfo.apiStatus === 'loading'}
+              variant="outline"
+              size="sm"
+            >
+              {debugInfo.apiStatus === 'loading' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Refresh
+            </Button>
+            <Button 
+              onClick={() => {
+                // Clear cache and reload
+                if ('caches' in window) {
+                  caches.keys().then(names => {
+                    names.forEach(name => caches.delete(name));
+                  });
+                }
+                window.location.reload();
+              }}
+              variant="destructive"
+              size="sm"
+            >
+              Clear Cache & Reload
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -150,6 +174,18 @@ export function PromotersDebugInfo() {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <strong>Error:</strong> {debugInfo.error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Cache Warning */}
+        {debugInfo.promotersCount === 0 && debugInfo.apiStatus === 'success' && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Cache Issue Detected:</strong> API returned success but 0 promoters. 
+              This is likely a browser cache issue. Try the "Clear Cache & Reload" button above, 
+              or press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Shift+R</kbd> for a hard refresh.
             </AlertDescription>
           </Alert>
         )}
