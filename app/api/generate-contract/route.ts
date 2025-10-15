@@ -69,6 +69,7 @@ export const POST = withAnyRBAC(
       const endDate = toDateOnly(body.contract_end_date || body.end_date);
 
       // Insert contract into database
+      // @ts-expect-error - Supabase types not fully generated for contracts table
       const { data: contract, error } = await supabase
         .from('contracts')
         .insert({
@@ -82,7 +83,7 @@ export const POST = withAnyRBAC(
           start_date: startDate,
           end_date: endDate,
           status: 'generating',
-        })
+        } as any)
         .select()
         .single();
 
@@ -103,7 +104,7 @@ export const POST = withAnyRBAC(
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              contractId: contract.id,
+              contractId: (contract as any)?.id,
               contractNumber,
               update_url: `${
                 process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -134,16 +135,16 @@ export const PUT = withAnyRBAC(
     try {
       const body = await request.json();
       const { contractId, status, pdfUrl } = body;
-      const supabase = await createClient(); // No arguments needed
+      const supabase = await createClient();
 
-      // Update contract status
+      // @ts-expect-error - Supabase types not fully generated for contracts table
       const { error } = await supabase
         .from('contracts')
         .update({
           status,
           pdf_url: pdfUrl,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', contractId);
 
       if (error) {
