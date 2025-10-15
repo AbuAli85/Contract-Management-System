@@ -400,10 +400,9 @@ export const POST = withAnyRBAC(
       );
 
       // ✅ SECURITY FIX: Use authenticated client with RLS instead of service-role key
-      // Add created_by to ensure proper ownership tracking
+      // Add ownership tracking via database RLS policies instead of created_by column
       const variantsWithOwnership = variants.map(v => ({
         ...v,
-        created_by: user.id,
         updated_at: new Date().toISOString(),
       }));
 
