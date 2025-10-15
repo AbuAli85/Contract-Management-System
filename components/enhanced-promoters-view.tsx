@@ -337,32 +337,107 @@ interface PromotersResponse {
 
 async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> {
   console.log(`🔄 Fetching promoters from API (page ${page}, limit ${limit})...`);
-  const response = await fetch(`/api/promoters?page=${page}&limit=${limit}`, { 
-    cache: 'no-store',
-    headers: {
-      'Cache-Control': 'no-cache',
+  
+  // Set up abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+  
+  try {
+    const response = await fetch(`/api/promoters?page=${page}&limit=${limit}`, { 
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: {
+        'Cache-Control': 'no-cache',
+      }
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('📡 API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      contentType: response.headers.get('content-type'),
+    });
+
+    if (!response.ok) {
+      console.error('❌ API request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: response.url,
+      });
+      
+      // Try to get error details from response
+      let errorMessage = `API returned ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        console.error('❌ Error details:', errorData);
+        errorMessage = errorData.error || errorData.details || errorMessage;
+      } catch (e) {
+        console.error('❌ Could not parse error response:', e);
+      }
+      
+      throw new Error(errorMessage);
     }
-  });
 
-  console.log('📡 API Response status:', response.status);
+    // Validate content type
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      console.error('❌ Invalid content type:', contentType);
+      throw new Error('Server returned non-JSON response');
+    }
 
-  if (!response.ok) {
-    console.error('❌ API request failed:', response.status, response.statusText);
-    throw new Error('Unable to load promoters from the server.');
+    let payload;
+    try {
+      payload = await response.json();
+    } catch (e) {
+      console.error('❌ Failed to parse JSON:', e);
+      throw new Error('Invalid JSON response from server');
+    }
+
+    // Validate response structure
+    if (!payload || typeof payload !== 'object') {
+      console.error('❌ Invalid payload type:', typeof payload);
+      throw new Error('Invalid API response format');
+    }
+
+    console.log('📦 API Payload received:', {
+      success: payload.success,
+      hasPromoters: !!payload.promoters,
+      isArray: Array.isArray(payload.promoters),
+      promotersCount: payload.promoters?.length || 0,
+      total: payload.total || 0,
+      hasPagination: !!payload.pagination,
+    });
+
+    if (payload.success === false) {
+      console.error('❌ API returned error:', payload.error);
+      throw new Error(payload.error || 'Failed to load promoters.');
+    }
+
+    // Ensure promoters is an array
+    if (!Array.isArray(payload.promoters)) {
+      console.error('❌ Promoters is not an array:', payload.promoters);
+      throw new Error('Invalid promoters data format');
+    }
+
+    console.log('✅ Successfully fetched promoters:', payload.promoters.length);
+    return payload;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.error('❌ Request timeout');
+        throw new Error('Request timeout: Server took too long to respond (30s)');
+      }
+      console.error('❌ Fetch error:', error.message);
+    } else {
+      console.error('❌ Unknown error:', error);
+    }
+    
+    throw error;
   }
-
-  const payload = await response.json();
-  console.log('📦 API Payload:', payload);
-  console.log('📊 Number of promoters:', payload.promoters?.length || 0);
-  console.log('📄 Pagination:', payload.pagination);
-
-  if (!payload.success) {
-    console.error('❌ API returned error:', payload.error);
-    throw new Error(payload.error || 'Failed to load promoters.');
-  }
-
-  console.log('✅ Successfully fetched promoters:', payload.promoters?.length || 0);
-  return payload;
 }
 
 export function EnhancedPromotersView({ locale }: PromotersViewProps) {
@@ -411,8 +486,10 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     queryKey: ['promoters', page, limit],
     queryFn: () => fetchPromoters(page, limit),
     staleTime: 30_000, // 30 seconds
-    refetchInterval: 60_000, // Auto-refresh every minute
-    refetchIntervalInBackground: true,
+    retry: 1, // Only retry once on failure
+    retryDelay: 1000, // Wait 1 second before retry
+    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchInterval: false, // Disable auto-refresh to prevent issues
   });
 
   useEffect(() => {
@@ -427,7 +504,17 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 
   const promoters = response?.promoters ?? [];
   const pagination = response?.pagination;
-  console.log('📊 Raw promoters data:', promoters.length, 'items');
+  
+  // Debug logging
+  console.log('📊 Component state:', {
+    isLoading,
+    isError,
+    isFetching,
+    hasResponse: !!response,
+    hasPromoters: !!promoters,
+    promotersCount: promoters.length,
+    errorMessage: error?.message,
+  });
   
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
@@ -766,8 +853,100 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     [router, derivedLocale]
   );
 
+  // Loading state
   if (isLoading) {
     return <EnhancedPromotersSkeleton />;
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+        <Card>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-red-600'>
+              <XCircle className='h-5 w-5' />
+              Unable to Load Promoters
+            </CardTitle>
+            <CardDescription>
+              {error?.message || 'An error occurred while loading promoters data.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <Alert variant='destructive'>
+              <AlertTriangle className='h-4 w-4' />
+              <AlertDescription>
+                <strong>Error Details:</strong>
+                <div className='mt-2 space-y-1 text-sm'>
+                  <div>• Check your internet connection</div>
+                  <div>• Ensure you're logged in with valid credentials</div>
+                  <div>• Verify you have permission to view promoters</div>
+                  <div>• Contact support if the problem persists</div>
+                </div>
+              </AlertDescription>
+            </Alert>
+            <div className='flex gap-2'>
+              <Button onClick={() => refetch()} variant='default'>
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Try Again
+              </Button>
+              <Button onClick={() => router.push(`/${derivedLocale}/dashboard`)} variant='outline'>
+                Go to Dashboard
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Empty state (no data)
+  if (!promoters || promoters.length === 0) {
+    return (
+      <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+        <Card>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2'>
+              <Users className='h-5 w-5' />
+              No Promoters Found
+            </CardTitle>
+            <CardDescription>
+              There are currently no promoters in the system.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <Alert>
+              <HelpCircle className='h-4 w-4' />
+              <AlertDescription>
+                <strong>Possible reasons:</strong>
+                <div className='mt-2 space-y-1 text-sm'>
+                  <div>• No promoters have been added yet</div>
+                  <div>• Your account may not have access to view promoters</div>
+                  <div>• Data filters may be too restrictive</div>
+                  <div>• Database connection issue</div>
+                </div>
+              </AlertDescription>
+            </Alert>
+            <div className='flex gap-2'>
+              <Button onClick={handleAddPromoter} variant='default'>
+                <Plus className='mr-2 h-4 w-4' />
+                Add First Promoter
+              </Button>
+              <Button onClick={() => refetch()} variant='outline'>
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Refresh
+              </Button>
+            </div>
+            <div className='rounded-lg bg-blue-50 p-4 text-sm'>
+              <strong className='text-blue-900'>Development Mode:</strong>
+              <div className='mt-1 text-blue-700'>
+                Check browser console (F12) and server logs for detailed debugging information.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
