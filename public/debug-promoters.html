@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promoters Debug - Live Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .test-section {
+            background: #252526;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #3e3e42;
+        }
+        .test-title {
+            color: #4ec9b0;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .result {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #dcdcaa; }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px 10px 0;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .loading {
+            color: #dcdcaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Promoters API Live Debug</h1>
+    <p>This page tests the promoters API in real-time</p>
+
+    <button onclick="runAllTests()">🔄 Run All Tests</button>
+    <button onclick="clearResults()">🗑️ Clear Results</button>
+
+    <div id="results"></div>
+
+    <script>
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function runAllTests() {
+            clearResults();
+            const results = document.getElementById('results');
+
+            // Test 1: Health Check
+            await runTest('Health Check', '/api/promoters/health', results);
+
+            // Test 2: Database Check
+            await runTest('Database Check', '/api/promoters/db-check', results);
+
+            // Test 3: Main API
+            await runTest('Main Promoters API', '/api/promoters?page=1&limit=5', results);
+
+            // Test 4: Test API (RBAC Bypass)
+            await runTest('RBAC Bypass Test', '/api/promoters/test?page=1&limit=5', results);
+
+            // Test 5: User Permissions
+            await runTest('User Permissions', '/api/debug/user-permissions', results);
+        }
+
+        async function runTest(title, endpoint, container) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `
+                <div class="test-title">📡 ${title}</div>
+                <div><strong>Endpoint:</strong> ${endpoint}</div>
+                <div class="result loading">⏳ Loading...</div>
+            `;
+            container.appendChild(section);
+            const resultDiv = section.querySelector('.result');
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(endpoint, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+
+                let summary = `Status: ${response.status} ${response.statusText}\n`;
+                summary += `Duration: ${duration}ms\n\n`;
+
+                // Extract key information
+                if (data.success !== undefined) {
+                    summary += `Success: ${data.success}\n`;
+                }
+                if (data.total !== undefined) {
+                    summary += `Total Records: ${data.total}\n`;
+                }
+                if (data.count !== undefined) {
+                    summary += `Returned Count: ${data.count}\n`;
+                }
+                if (data.promoters !== undefined) {
+                    summary += `Promoters Array Length: ${data.promoters.length}\n`;
+                    if (data.promoters.length > 0) {
+                        summary += `First Promoter: ${data.promoters[0].name_en || 'N/A'}\n`;
+                    }
+                }
+                if (data.database) {
+                    summary += `\nDatabase Info:\n`;
+                    summary += `  Total Records: ${data.database.totalRecords}\n`;
+                    summary += `  Fetched Records: ${data.database.fetchedRecords}\n`;
+                }
+                if (data.user) {
+                    summary += `\nUser: ${data.user.email}\n`;
+                }
+                if (data.roles) {
+                    summary += `Roles: ${JSON.stringify(data.roles.assigned)}\n`;
+                }
+                if (data.rolePermissions) {
+                    summary += `Permissions via Roles: ${data.rolePermissions.viaRoles?.length || 0}\n`;
+                }
+                if (data.error) {
+                    summary += `\n❌ Error: ${data.error}\n`;
+                    if (data.details) {
+                        summary += `Details: ${data.details}\n`;
+                    }
+                }
+
+                summary += `\n${'='.repeat(60)}\nFull Response:\n${'='.repeat(60)}\n`;
+                summary += JSON.stringify(data, null, 2);
+
+                resultDiv.className = `result ${response.ok ? 'success' : 'error'}`;
+                resultDiv.textContent = summary;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Error: ${error.message}\n\nStack:\n${error.stack}`;
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>
+
