@@ -309,27 +309,23 @@ class ContractGenerationService {
         };
       }
 
-      // Step 2: Check contract type configuration
-      const contractTypeConfig = getEnhancedContractTypeConfig(
-        data.contract_type
-      );
-      if (!contractTypeConfig) {
+      // Step 2: Check if contract type is valid (database enforces only 4 types)
+      // Valid types: employment, service, consultancy, partnership
+      const validDatabaseTypes = ['employment', 'service', 'consultancy', 'partnership'];
+      const normalizedType = String(data.contract_type).toLowerCase();
+      
+      if (!validDatabaseTypes.includes(normalizedType)) {
         return {
           success: false,
           contract_id: '',
           contract_number: '',
           status: 'failed',
-          message: `Contract type '${data.contract_type}' not found`,
-          errors: [`Invalid contract type: ${data.contract_type}`],
+          message: `Contract type '${data.contract_type}' is not valid`,
+          errors: [`Invalid contract type. Valid types are: ${validDatabaseTypes.join(', ')}`],
         };
       }
 
-      console.log('📋 Contract type configuration:', {
-        id: contractTypeConfig.id,
-        name: contractTypeConfig.name,
-        hasMakecomTemplate: !!contractTypeConfig.makecomTemplateId,
-        hasGoogleDocsTemplate: !!contractTypeConfig.googleDocsTemplateId,
-      });
+      console.log('📋 Contract type validated:', normalizedType);
 
       // Step 3: Generate contract number
       const contractNumber = this.generateContractNumber();
@@ -342,10 +338,10 @@ class ContractGenerationService {
       );
       console.log('💾 Contract saved to database:', contract.id);
 
-      // Step 5: Check if we should use Make.com integration or direct PDF generation
-      if (contractTypeConfig.makecomTemplateId && this.makecomWebhookUrl) {
-        // Use Make.com integration for Google Docs templates
-        console.log('🔗 Using Make.com integration for Google Docs template');
+      // Step 5: Try to trigger Make.com webhook if configured
+      if (this.makecomWebhookUrl) {
+        // Try Make.com integration for webhook-based processing
+        console.log('🔗 Attempting Make.com webhook integration');
         const webhookTriggered = await this.triggerMakecomWebhook(contract);
 
         if (webhookTriggered) {
@@ -355,7 +351,7 @@ class ContractGenerationService {
             contract_number: contractNumber,
             status: 'processing',
             message:
-              'Contract created and sent to Make.com for Google Docs template processing',
+              'Contract created and sent to Make.com for processing',
             google_drive_url: this.googleDriveFolderId
               ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
               : undefined,
