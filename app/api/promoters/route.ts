@@ -52,6 +52,18 @@ const promoterSchema = z.object({
 export async function GET() {
   try {
     console.log('🔍 API /api/promoters called');
+    
+    // Force load environment variables
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const { config } = await import('dotenv');
+        config({ path: '.env.local' });
+        console.log('📁 Loaded .env.local file');
+      } catch (error) {
+        console.log('⚠️ Could not load .env.local:', error);
+      }
+    }
+    
     const cookieStore = await cookies();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
