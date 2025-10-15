@@ -106,11 +106,26 @@ export async function GET(request: Request) {
 
       // Execute query - SERVICE_ROLE key bypasses RLS
       console.log('📊 Executing Supabase query...');
+      console.log('📊 Query details:', { 
+        table: 'promoters', 
+        offset, 
+        range: [offset, offset + limit - 1],
+        usingServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY 
+      });
+      
       const { data: promoters, error, count } = await supabase
         .from('promoters')
         .select('*', { count: 'exact' })
         .range(offset, offset + limit - 1)
         .order('created_at', { ascending: false });
+
+      console.log('📊 Query result:', { 
+        dataLength: promoters?.length, 
+        count, 
+        error: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details 
+      });
 
       if (error) {
         console.error('❌ Database error:', error);
