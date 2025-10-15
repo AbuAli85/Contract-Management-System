@@ -43,14 +43,45 @@ export function PromotersDebugInfo() {
       const startTime = Date.now();
       // Add timestamp to force fresh request
       const timestamp = new Date().getTime();
-      const response = await fetch(`/api/promoters?t=${timestamp}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-        },
-      });
+      
+      // Try multiple approaches to bypass caching
+      const urls = [
+        `/api/promoters?t=${timestamp}&_cb=${Math.random()}`,
+        `/api/promoters?nocache=${timestamp}`,
+        `/api/promoters?refresh=${Date.now()}`
+      ];
+      
+      let response;
+      let lastError;
+      
+      // Try each URL until one works
+      for (const url of urls) {
+        try {
+          console.log(`🔍 Debug: Trying URL: ${url}`);
+          response = await fetch(url, {
+            cache: 'no-store',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          });
+          
+          if (response.ok) {
+            console.log(`✅ Debug: Success with URL: ${url}`);
+            break;
+          }
+        } catch (error) {
+          console.log(`❌ Debug: Failed with URL ${url}:`, error);
+          lastError = error;
+        }
+      }
+      
+      if (!response) {
+        throw lastError || new Error('All fetch attempts failed');
+      }
+      
       const endTime = Date.now();
       
       const responseTime = endTime - startTime;
@@ -121,6 +152,30 @@ export function PromotersDebugInfo() {
               Refresh
             </Button>
             <Button 
+              onClick={async () => {
+                // Test direct API call
+                try {
+                  const response = await fetch(`https://portal.thesmartpro.io/api/promoters?direct=${Date.now()}`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                      'Accept': 'application/json',
+                    }
+                  });
+                  const data = await response.json();
+                  console.log('🔍 Direct API test result:', data);
+                  alert(`Direct API Test:\nStatus: ${response.status}\nPromoters: ${data.promoters?.length || 0}\nCount: ${data.count || 0}`);
+                } catch (error) {
+                  console.error('❌ Direct API test failed:', error);
+                  alert(`Direct API Test Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                }
+              }}
+              variant="secondary"
+              size="sm"
+            >
+              Test Direct API
+            </Button>
+            <Button 
               onClick={() => {
                 // Clear cache and reload
                 if ('caches' in window) {
@@ -183,9 +238,23 @@ export function PromotersDebugInfo() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Cache Issue Detected:</strong> API returned success but 0 promoters. 
-              This is likely a browser cache issue. Try the "Clear Cache & Reload" button above, 
-              or press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Shift+R</kbd> for a hard refresh.
+              <strong>Data Issue Detected:</strong> API returned success but 0 promoters. 
+              <br />
+              <strong>Possible causes:</strong>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Browser cache serving old response</li>
+                <li>CDN/Service Worker caching</li>
+                <li>Production deployment missing latest code</li>
+                <li>Environment variables not loaded in production</li>
+              </ul>
+              <br />
+              <strong>Try these solutions:</strong>
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Click "Test Direct API" to bypass all caching</li>
+                <li>Click "Clear Cache & Reload" for hard refresh</li>
+                <li>Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+Shift+R</kbd> for hard refresh</li>
+                <li>Check browser console for detailed logs</li>
+              </ul>
             </AlertDescription>
           </Alert>
         )}
