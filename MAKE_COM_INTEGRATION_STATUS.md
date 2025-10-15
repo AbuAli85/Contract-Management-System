@@ -62,7 +62,7 @@
 **File:** `app/[locale]/dashboard/generate-contract/page.tsx`
 
 User fills in:
-- Contract Type (employment, service, consultancy, partnership)
+- Contract Type (employment, service, consultancy, partnership) ✅ - enforced by database CHECK constraint
 - First Party (Company A)
 - Second Party (Company B)
 - Promoter (Employee)
