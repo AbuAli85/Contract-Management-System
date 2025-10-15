@@ -343,11 +343,14 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
   
   try {
-    const response = await fetch(`/api/promoters?page=${page}&limit=${limit}`, { 
+    // Add cache-busting timestamp
+    const timestamp = Date.now();
+    const response = await fetch(`/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`, { 
       cache: 'no-store',
       signal: controller.signal,
       headers: {
         'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
       }
     });
 
