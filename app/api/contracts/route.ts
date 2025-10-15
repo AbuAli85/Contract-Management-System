@@ -107,7 +107,12 @@ export async function GET(request: NextRequest) {
         // ✅ SECURITY FIX: Scope query based on user role
         let query = supabase
           .from('contracts')
-          .select('*');
+          .select(`
+            *,
+            first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type),
+            second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type),
+            promoters(id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)
+          `);
 
         // Non-admin users only see contracts they're involved in
         if (!isAdmin) {
