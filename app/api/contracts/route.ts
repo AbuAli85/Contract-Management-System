@@ -273,11 +273,6 @@ export const POST = withAnyRBAC(
         return iso ? iso.slice(0, 10) : null; // YYYY-MM-DD
       };
 
-      const isoStart = toISODate(body.contract_start_date || body.start_date);
-      const isoEnd = toISODate(body.contract_end_date || body.end_date);
-      const dateStart = toDateOnly(body.contract_start_date || body.start_date);
-      const dateEnd = toDateOnly(body.contract_end_date || body.end_date);
-
       const contractNumber = body.contract_number || `CON-${Date.now()}`;
       const clientId = body.first_party_id || body.client_id || null;
       const employerId = body.second_party_id || body.employer_id || null;
@@ -286,7 +281,49 @@ export const POST = withAnyRBAC(
       const value =
         body.contract_value || body.basic_salary || body.amount || null;
       const currency = body.currency || 'OMR';
-      const contractType = body.contract_type || 'employment';
+      
+      // Map and validate contract type to allowed database values
+      const mapContractType = (type: string): string => {
+        if (!type) return 'employment';
+        const typeLower = String(type).toLowerCase();
+        // Map frontend types to database types
+        const typeMap: Record<string, string> = {
+          'employment': 'employment',
+          'full-time-permanent': 'employment',
+          'full-time-fixed': 'employment',
+          'part-time-permanent': 'employment',
+          'part-time-fixed': 'employment',
+          'probationary': 'employment',
+          'training-contract': 'employment',
+          'internship': 'employment',
+          'graduate-trainee': 'employment',
+          'service': 'service',
+          'freelance': 'service',
+          'contractor': 'service',
+          'consultant': 'consultancy',
+          'consulting': 'consultancy',
+          'consulting-agreement': 'consultancy',
+          'project-based': 'consultancy',
+          'partnership': 'partnership',
+          'temporary': 'service',
+          'seasonal': 'service',
+          'executive': 'employment',
+          'management': 'employment',
+          'director': 'employment',
+          'remote-work': 'employment',
+          'hybrid-work': 'employment',
+          'secondment': 'service',
+          'apprenticeship': 'employment',
+          'service-agreement': 'service',
+          'retainer': 'service',
+        };
+        return typeMap[typeLower] || 'employment';
+      };
+      
+      const contractType = mapContractType(body.contract_type);
+      
+      // Ensure start_date is provided (required by database)
+      const startDate = toDateOnly(body.contract_start_date || body.start_date) || new Date().toISOString().slice(0, 10);
 
       // Prepare multiple schema variants and try them in safest order
       // 1) Minimal columns common to both schemas (avoid unknown columns entirely)
@@ -330,8 +367,8 @@ export const POST = withAnyRBAC(
           client_id: uuidClientId,
           employer_id: uuidEmployerId,
           promoter_id: uuidPromoterId,
-          start_date: dateStart,
-          end_date: dateEnd,
+          start_date: startDate,
+          end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
           status: 'draft',
           contract_type: contractType,
@@ -346,8 +383,8 @@ export const POST = withAnyRBAC(
           client_id: uuidClientId,
           employer_id: uuidEmployerId,
           promoter_id: uuidPromoterId,
-          start_date: dateStart,
-          end_date: dateEnd,
+          start_date: startDate,
+          end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
           status: 'draft',
           contract_type: contractType,
@@ -356,8 +393,8 @@ export const POST = withAnyRBAC(
         // Variant C: Basic with contract_type and is_current
         {
           contract_number: contractNumber,
-          start_date: dateStart,
-          end_date: dateEnd,
+          start_date: startDate,
+          end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
           status: 'draft',
           contract_type: contractType,
@@ -377,8 +414,8 @@ export const POST = withAnyRBAC(
           client_id: uuidClientId,
           employer_id: uuidEmployerId,
           promoter_id: uuidPromoterId,
-          start_date: dateStart,
-          end_date: dateEnd,
+          start_date: startDate,
+          end_date: toDateOnly(body.contract_end_date || body.end_date),
           title,
           status: 'draft',
           type: contractType,

@@ -19,6 +19,55 @@ export const POST = withAnyRBAC(
       const random = nanoid(4).toUpperCase();
       const contractNumber = `PAC-${day}${month}${year}-${random}`;
 
+      // Map and validate contract type to allowed database values
+      const mapContractType = (type: string): string => {
+        if (!type) return 'employment';
+        const typeLower = String(type).toLowerCase();
+        const typeMap: Record<string, string> = {
+          'employment': 'employment',
+          'full-time-permanent': 'employment',
+          'full-time-fixed': 'employment',
+          'part-time-permanent': 'employment',
+          'part-time-fixed': 'employment',
+          'probationary': 'employment',
+          'training-contract': 'employment',
+          'internship': 'employment',
+          'graduate-trainee': 'employment',
+          'service': 'service',
+          'freelance': 'service',
+          'contractor': 'service',
+          'consultant': 'consultancy',
+          'consulting': 'consultancy',
+          'consulting-agreement': 'consultancy',
+          'project-based': 'consultancy',
+          'partnership': 'partnership',
+          'temporary': 'service',
+          'seasonal': 'service',
+          'executive': 'employment',
+          'management': 'employment',
+          'director': 'employment',
+          'remote-work': 'employment',
+          'hybrid-work': 'employment',
+          'secondment': 'service',
+          'apprenticeship': 'employment',
+          'service-agreement': 'service',
+          'retainer': 'service',
+        };
+        return typeMap[typeLower] || 'employment';
+      };
+
+      const contractType = mapContractType(body.contract_type);
+      
+      // Ensure start_date is provided (required by database)
+      const toDateOnly = (value: any): string | null => {
+        if (!value) return null;
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().slice(0, 10);
+      };
+      const startDate = toDateOnly(body.contract_start_date || body.start_date) || new Date().toISOString().slice(0, 10);
+      const endDate = toDateOnly(body.contract_end_date || body.end_date);
+
       // Insert contract into database
       const { data: contract, error } = await supabase
         .from('contracts')
@@ -29,7 +78,9 @@ export const POST = withAnyRBAC(
           client_id: body.client_id,
           title: body.contract_name || body.title || 'Employment Contract',
           description: body.description,
-          contract_type: body.contract_type || 'employment',
+          contract_type: contractType,
+          start_date: startDate,
+          end_date: endDate,
           status: 'generating',
         })
         .select()
