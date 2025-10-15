@@ -10,20 +10,17 @@ INSERT INTO users (
   full_name,
   role,
   status,
-  created_at,
-  updated_at
+  created_at
 ) VALUES (
   gen_random_uuid(),
   'test@thesmartpro.io',
   'Test User',
   'admin',
   'active',
-  NOW(),
   NOW()
 ) ON CONFLICT (email) DO UPDATE SET
   status = 'active',
-  role = 'admin',
-  updated_at = NOW();
+  role = 'admin';
 
 -- Verify the user was created
 SELECT 
