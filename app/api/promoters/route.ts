@@ -54,49 +54,23 @@ export const GET = withRBAC(
   'promoter:read:own',
   async (request: Request) => {
     try {
-      console.log('🔍 API /api/promoters called with RBAC protection');
-      
-      // Extract RBAC context from request
-      const rbacContext = (request as any).rbacContext;
-      const user = rbacContext?.user;
-      const permissions = rbacContext?.permissions || [];
-      
-      console.log('👤 User:', user?.email);
-      console.log('🔑 Permissions:', permissions);
-      
-      // Force load environment variables in development
-      if (process.env.NODE_ENV !== 'production') {
-        try {
-          const { config } = await import('dotenv');
-          config({ path: '.env.local' });
-          console.log('📁 Loaded .env.local file');
-        } catch (error) {
-          console.log('⚠️ Could not load .env.local:', error);
-        }
-      }
+      console.log('🔍 API /api/promoters GET called');
       
       const cookieStore = await cookies();
-
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      // Use service role key to bypass RLS since we handle auth via RBAC
       const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      console.log('🔑 Environment check:', {
+      console.log('🔑 Supabase config:', {
         hasUrl: !!supabaseUrl,
-        urlPrefix: supabaseUrl?.substring(0, 20),
         hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
         hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
         usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
       });
 
       if (!supabaseUrl || !supabaseKey) {
-        console.error('❌ Missing Supabase credentials!');
+        console.error('❌ Missing Supabase credentials');
         return NextResponse.json(
-          { 
-            success: false,
-            error: 'Server configuration error: Missing Supabase environment variables',
-            details: 'Please check .env.local file' 
-          },
+          { success: false, error: 'Server configuration error' },
           { status: 500 }
         );
       }
@@ -111,24 +85,24 @@ export const GET = withRBAC(
               cookiesToSet.forEach(({ name, value, options }: any) =>
                 cookieStore.set(name, value, options as CookieOptions)
               );
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
+            } catch {}
           },
         } as any,
       });
 
-      // Parse query parameters for pagination
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('👤 Authenticated user:', user?.email);
+
+      // Parse pagination from query params
       const url = new URL(request.url);
       const page = parseInt(url.searchParams.get('page') || '1');
       const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
       const offset = (page - 1) * limit;
 
-      console.log('📊 Pagination:', { page, limit, offset });
+      console.log('📊 Query params:', { page, limit, offset });
 
-      // Build query
+      // Execute query - SERVICE_ROLE key bypasses RLS
       console.log('📊 Executing Supabase query...');
       const { data: promoters, error, count } = await supabase
         .from('promoters')
@@ -137,8 +111,7 @@ export const GET = withRBAC(
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ Error fetching promoters:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
+        console.error('❌ Database error:', error);
         return NextResponse.json(
           { 
             success: false,
@@ -150,16 +123,10 @@ export const GET = withRBAC(
         );
       }
 
-      console.log(`✅ Successfully fetched ${promoters?.length || 0} promoters (total: ${count})`);
+      console.log(`✅ Fetched ${promoters?.length || 0} promoters (total: ${count})`);
       
       if (promoters && promoters.length > 0) {
-        console.log('📋 Sample promoter:', {
-          id: promoters[0].id,
-          name_en: promoters[0].name_en,
-          employer_id: promoters[0].employer_id,
-        });
-      } else {
-        console.warn('⚠️ No promoters found in database');
+        console.log('📋 First promoter:', promoters[0].name_en);
       }
       
       return NextResponse.json({
@@ -178,9 +145,9 @@ export const GET = withRBAC(
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('API error:', error);
+      console.error('❌ API error:', error);
       return NextResponse.json(
-        { error: 'Internal server error' },
+        { success: false, error: 'Internal server error' },
         { status: 500 }
       );
     }
