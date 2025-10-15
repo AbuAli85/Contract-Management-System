@@ -153,13 +153,13 @@ export function PromotersDebugInfo() {
             </Button>
             <Button 
               onClick={async () => {
-                // Test direct API call
+                // Test direct API call with relative URL
                 try {
-                  const response = await fetch(`https://portal.thesmartpro.io/api/promoters?direct=${Date.now()}`, {
+                  const response = await fetch(`/api/promoters?direct=${Date.now()}`, {
                     method: 'GET',
-                    mode: 'cors',
                     headers: {
                       'Accept': 'application/json',
+                      'Cache-Control': 'no-cache',
                     }
                   });
                   const data = await response.json();

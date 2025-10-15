@@ -319,9 +319,25 @@ function computeOverallStatus(
   return 'active';
 }
 
-async function fetchPromoters(): Promise<Promoter[]> {
-  console.log('🔄 Fetching promoters from API...');
-  const response = await fetch('/api/promoters', { 
+interface PromotersResponse {
+  success: boolean;
+  promoters: Promoter[];
+  count: number;
+  total: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  timestamp: string;
+}
+
+async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> {
+  console.log(`🔄 Fetching promoters from API (page ${page}, limit ${limit})...`);
+  const response = await fetch(`/api/promoters?page=${page}&limit=${limit}`, { 
     cache: 'no-store',
     headers: {
       'Cache-Control': 'no-cache',
@@ -338,6 +354,7 @@ async function fetchPromoters(): Promise<Promoter[]> {
   const payload = await response.json();
   console.log('📦 API Payload:', payload);
   console.log('📊 Number of promoters:', payload.promoters?.length || 0);
+  console.log('📄 Pagination:', payload.pagination);
 
   if (!payload.success) {
     console.error('❌ API returned error:', payload.error);
@@ -345,7 +362,7 @@ async function fetchPromoters(): Promise<Promoter[]> {
   }
 
   console.log('✅ Successfully fetched promoters:', payload.promoters?.length || 0);
-  return (payload.promoters || []) as Promoter[];
+  return payload;
 }
 
 export function EnhancedPromotersView({ locale }: PromotersViewProps) {
@@ -354,6 +371,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   const { toast } = useToast();
 
   // State management
+  const [page, setPage] = useState(1);
+  const [limit] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>('all');
   const [documentFilter, setDocumentFilter] = useState<
@@ -382,15 +401,15 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   }, [locale]);
 
   const {
-    data,
+    data: response,
     isLoading,
     isFetching,
     isError,
     error,
     refetch,
-  } = useQuery<Promoter[], Error>({
-    queryKey: ['promoters'],
-    queryFn: fetchPromoters,
+  } = useQuery<PromotersResponse, Error>({
+    queryKey: ['promoters', page, limit],
+    queryFn: () => fetchPromoters(page, limit),
     staleTime: 30_000, // 30 seconds
     refetchInterval: 60_000, // Auto-refresh every minute
     refetchIntervalInBackground: true,
@@ -406,7 +425,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     }
   }, [isError, error, toast]);
 
-  const promoters = data ?? [];
+  const promoters = response?.promoters ?? [];
+  const pagination = response?.pagination;
   console.log('📊 Raw promoters data:', promoters.length, 'items');
   
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
@@ -1102,6 +1122,61 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               </ScrollArea>
             )}
           </CardContent>
+          
+          {/* Pagination Controls */}
+          {pagination && pagination.totalPages > 1 && (
+            <CardContent className='border-t pt-4'>
+              <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
+                <div className='text-sm text-muted-foreground'>
+                  Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, pagination.total)} of {pagination.total} promoters
+                </div>
+                
+                <div className='flex items-center gap-2'>
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage(1)}
+                    disabled={!pagination.hasPrev || isFetching}
+                  >
+                    First
+                  </Button>
+                  
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage(p => p - 1)}
+                    disabled={!pagination.hasPrev || isFetching}
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className='flex items-center gap-2 px-2'>
+                    <span className='text-sm'>
+                      Page {pagination.page} of {pagination.totalPages}
+                    </span>
+                  </div>
+                  
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage(p => p + 1)}
+                    disabled={!pagination.hasNext || isFetching}
+                  >
+                    Next
+                  </Button>
+                  
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={() => setPage(pagination.totalPages)}
+                    disabled={!pagination.hasNext || isFetching}
+                  >
+                    Last
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         {/* Enhanced Alerts Panel */}

@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
+import { withRBAC } from '@/lib/rbac/guard';
 
 /**
  * DEBUG ENDPOINT
  * Check environment configuration and database connectivity
  * Access: GET /api/promoters/debug
  * 
- * ⚠️ REMOVE THIS IN PRODUCTION! ⚠️
+ * ⚠️ PROTECTED: Admin-only access, disabled in production ⚠️
  */
-export async function GET() {
+export const GET = withRBAC('admin:debug', async (request: Request) => {
+  // Completely disable in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json(
+      { error: 'Not found' },
+      { status: 404 }
+    );
+  }
+  
+  console.log('🔍 Debug endpoint accessed (development only)');
+  
   const diagnostics = {
     timestamp: new Date().toISOString(),
     environment: {
@@ -96,5 +107,5 @@ export async function GET() {
     
     return NextResponse.json(diagnostics, { status: 500 });
   }
-}
+});
 

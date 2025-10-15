@@ -13,9 +13,12 @@ export default function PromotersPage({
 }: {
   params: { locale: string };
 }) {
+  // ✅ SECURITY FIX: Only show debug component in development
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
   return (
     <div className="space-y-6">
-      <PromotersDebugInfo />
+      {isDevelopment && <PromotersDebugInfo />}
       <EnhancedPromotersView locale={params.locale} />
     </div>
   );
