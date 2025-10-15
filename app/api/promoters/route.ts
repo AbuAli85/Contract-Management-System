@@ -51,14 +51,35 @@ const promoterSchema = z.object({
 
 export async function GET() {
   try {
+    console.log('🔍 API /api/promoters called');
     const cookieStore = await cookies();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     // Use service role key if available for full database access, otherwise use anon key
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+    console.log('🔑 Environment check:', {
+      hasUrl: !!supabaseUrl,
+      urlPrefix: supabaseUrl?.substring(0, 20),
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
+    });
+
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error('Missing Supabase environment variables');
+      console.error('❌ Missing Supabase credentials!');
+      console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'SET' : 'MISSING');
+      console.error('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING');
+      console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+      
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Server configuration error: Missing Supabase environment variables',
+          details: 'Please check .env.local file' 
+        },
+        { status: 500 }
+      );
     }
 
     const supabase = createServerClient(supabaseUrl, supabaseKey, {
@@ -115,9 +136,12 @@ export async function GET() {
 
     // Build query - show all promoters for now (simplified for testing)
     // TODO: Implement proper scoping based on user role and organization
-    const query = supabase
+    
+    // SIMPLIFIED QUERY - Remove join to avoid FK issues during testing
+    console.log('📊 Executing Supabase query...');
+    const { data: promoters, error } = await supabase
       .from('promoters')
-      .select('*, parties!employer_id(name_en, name_ar)')
+      .select('*')
       .order('created_at', { ascending: false });
 
     // Optional: Add user-based filtering in the future
@@ -126,21 +150,37 @@ export async function GET() {
     //   console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
     // }
 
-    // Fetch promoters from the database
-    const { data: promoters, error } = await query;
-
     if (error) {
-      console.error('Error fetching promoters:', error);
+      console.error('❌ Error fetching promoters:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: 'Failed to fetch promoters' },
+        { 
+          success: false,
+          error: 'Failed to fetch promoters',
+          details: error.message,
+          code: error.code 
+        },
         { status: 500 }
       );
     }
 
-    console.log(`Fetched ${promoters?.length || 0} promoters`);
+    console.log(`✅ Successfully fetched ${promoters?.length || 0} promoters`);
+    
+    if (promoters && promoters.length > 0) {
+      console.log('📋 Sample promoter:', {
+        id: promoters[0].id,
+        name_en: promoters[0].name_en,
+        employer_id: promoters[0].employer_id,
+      });
+    } else {
+      console.warn('⚠️ No promoters found in database');
+    }
+    
     return NextResponse.json({
       success: true,
       promoters: promoters || [],
+      count: promoters?.length || 0,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('API error:', error);
