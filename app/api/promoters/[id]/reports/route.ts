@@ -1,88 +1,66 @@
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { z } from 'zod';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 /**
- * ⚠️ WARNING: PLACEHOLDER IMPLEMENTATION
- * 
- * This endpoint currently returns EMPTY ARRAYS and PLACEHOLDER DATA because
- * the `promoter_reports` table does not exist in the database schema.
- * 
- * TODO before production:
- * 1. Create `promoter_reports` table in Supabase
- * 2. Create report templates system in database
- * 3. Add RLS policies for report access control
- * 4. Replace placeholder responses with real Supabase operations
- * 5. Add RBAC guards using withRBAC() for all endpoints
- * 6. Implement report generation logic (PDF, Excel, etc.)
- * 7. Add audit logging for report generation
- * 
- * Reporting features WILL NOT WORK until this is implemented.
+ * Promoter reports API is intentionally disabled.
+ * The underlying storage (promoter_reports table, templates, audit trail) is
+ * not provisioned yet, so we surface an explicit 501 response instead of
+ * returning placeholder data.
+ *
+ * TODO before enabling this endpoint:
+ * 1. Add the required Supabase tables/migrations for promoter reports
+ * 2. Configure RLS policies and RBAC mappings for report access
+ * 3. Replace the notImplemented helper usage with real Supabase operations
+ * 4. Add auditing/streaming support as needed by the product requirements
  */
-
-const reportSchema = z.object({
-  template_id: z.string().optional(),
-  report_name: z.string(),
-  parameters: z.record(z.string(), z.any()).optional(),
-});
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  // Placeholder response since promoter_reports table doesn't exist yet
-  return new Response(JSON.stringify([]), { status: 200 });
-}
-
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const body = await req.json();
-  const parsed = reportSchema.safeParse(body);
-  if (!parsed.success)
-    return new Response(JSON.stringify({ error: parsed.error }), {
-      status: 400,
-    });
-  // Placeholder response
-  return new Response(
-    JSON.stringify({
-      id: 'placeholder',
-      ...parsed.data,
-      created_at: new Date().toISOString(),
-    }),
-    { status: 201 }
-  );
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const body = await req.json();
-  const { id, ...updateData } = body;
-  if (!id)
-    return new Response(JSON.stringify({ error: 'Report ID required' }), {
-      status: 400,
-    });
-  // Placeholder response
-  return new Response(
-    JSON.stringify({ id, ...updateData, updated_at: new Date().toISOString() }),
+const notImplemented = (action: string) =>
+  NextResponse.json(
     {
-      status: 200,
-    }
+      success: false,
+      error: 'NOT_IMPLEMENTED',
+      details:
+        'Promoter reports ' +
+        action +
+        ' is not available yet. Provision the data layer and update this handler before enabling.',
+    },
+    { status: 501 }
   );
-}
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await req.json();
-  if (!id)
-    return new Response(JSON.stringify({ error: 'Report ID required' }), {
-      status: 400,
-    });
-  // Placeholder response
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
-}
+type RouteContext = { params: Promise<{ id: string }> };
+
+export const GET = withAnyRBAC(
+  ['promoter:read:own', 'promoter:manage:own'],
+  async (_req: NextRequest, _context: RouteContext) => notImplemented('retrieval')
+);
+
+export const POST = withRBAC(
+  'promoter:manage:own',
+  async (_req: NextRequest, _context: RouteContext) => notImplemented('creation')
+);
+
+export const PUT = withRBAC(
+  'promoter:manage:own',
+  async (_req: NextRequest, _context: RouteContext) => notImplemented('update')
+);
+
+export const DELETE = withRBAC(
+  'promoter:manage:own',
+  async (req: NextRequest, _context: RouteContext) => {
+    const body = await req.json().catch(() => ({ id: undefined as string | undefined }));
+    const { id } = body ?? {};
+
+    if (!id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'INVALID_REQUEST',
+          details: 'Report ID required for delete operation',
+        },
+        { status: 400 }
+      );
+    }
+
+    return notImplemented('deletion');
+  }
+);
+

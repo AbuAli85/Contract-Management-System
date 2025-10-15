@@ -46,8 +46,7 @@ const promoterUpdateSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
 });
 
-export const GET = withRBAC(
-  'promoter:manage:own',
+export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'],
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params;
@@ -61,9 +60,9 @@ export const GET = withRBAC(
             getAll() {
               return cookieStore.getAll();
             },
-            setAll(cookiesToSet) {
+            setAll(cookiesToSet: any) {
               try {
-                cookiesToSet.forEach(({ name, value, ...options }) => {
+                cookiesToSet.forEach(({ name, value, ...options }: any) => {
                   cookieStore.set(
                     name,
                     value,
@@ -83,7 +82,7 @@ export const GET = withRBAC(
                 // user sessions.
               }
             },
-          },
+          } as any,
         }
       );
 
@@ -206,9 +205,9 @@ export const PUT = withRBAC(
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet) {
+          setAll(cookiesToSet: any) {
             try {
-              cookiesToSet.forEach(({ name, value, ...options }) => {
+              cookiesToSet.forEach(({ name, value, ...options }: any) => {
                 cookieStore.set(
                   name,
                   value,
@@ -228,7 +227,7 @@ export const PUT = withRBAC(
               // user sessions.
             }
           },
-        },
+        } as any,
       }
     );
 
@@ -353,9 +352,9 @@ export const DELETE = withRBAC(
           getAll() {
             return cookieStore.getAll();
           },
-          setAll(cookiesToSet) {
+          setAll(cookiesToSet: any) {
             try {
-              cookiesToSet.forEach(({ name, value, ...options }) => {
+              cookiesToSet.forEach(({ name, value, ...options }: any) => {
                 cookieStore.set(
                   name,
                   value,
@@ -375,7 +374,7 @@ export const DELETE = withRBAC(
               // user sessions.
             }
           },
-        },
+        } as any,
       }
     );
 
@@ -474,4 +473,5 @@ export const DELETE = withRBAC(
     );
   }
 });
+
 
