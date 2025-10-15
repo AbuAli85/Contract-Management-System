@@ -36,7 +36,10 @@ export type PermissionResource =
   | 'workflow'
   | 'webhook'
   | 'contract'
-  | 'permission';
+  | 'permission'
+  | 'promoter'
+  | 'party'
+  | 'company';
 
 export type PermissionAction =
   | 'view'
@@ -112,6 +115,9 @@ export const VALID_RESOURCES: PermissionResource[] = [
   'webhook',
   'contract',
   'permission',
+  'promoter',
+  'party',
+  'company',
 ];
 
 // Valid permission actions
@@ -163,7 +169,7 @@ export const VALID_ACTIONS: PermissionAction[] = [
 export function parsePermission(permission: string): ParsedPermission | null {
   try {
     // Handle simple format: "resource.action"
-    if (permission.includes('.')) {
+    if (permission.includes('.') && !permission.includes(':')) {
       const [resource, action] = permission.split('.');
       
       if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
@@ -182,29 +188,62 @@ export function parsePermission(permission: string): ParsedPermission | null {
       };
     }
     
-    // Handle complex format: "resource.action.scope"
+    // Handle database format: "resource:action:scope" (stored in DB)
     if (permission.includes(':')) {
-      const [resourceAction, scope] = permission.split(':');
-      const [resource, action] = resourceAction.split('.');
+      const parts = permission.split(':');
       
-      if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
-        return null;
+      // Format: resource:action:scope
+      if (parts.length === 3) {
+        const [resource, action, scope] = parts;
+        
+        if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
+          console.warn(`Invalid resource in permission: ${resource} (from ${permission})`);
+          return null;
+        }
+        
+        if (!VALID_ACTIONS.includes(action as PermissionAction)) {
+          console.warn(`Invalid action in permission: ${action} (from ${permission})`);
+          return null;
+        }
+        
+        if (!VALID_SCOPES.includes(scope as PermissionScope)) {
+          console.warn(`Invalid scope in permission: ${scope} (from ${permission})`);
+          return null;
+        }
+        
+        return {
+          resource: resource as PermissionResource,
+          action: action as PermissionAction,
+          scope: scope as PermissionScope,
+          original: permission,
+        };
       }
       
-      if (!VALID_ACTIONS.includes(action as PermissionAction)) {
-        return null;
+      // Format: resource.action:scope (alternative format)
+      if (parts.length === 2) {
+        const [resourceAction, scope] = parts;
+        if (!resourceAction) return null;
+        const [resource, action] = resourceAction.split('.');
+        
+        if (!VALID_RESOURCES.includes(resource as PermissionResource)) {
+          return null;
+        }
+        
+        if (!VALID_ACTIONS.includes(action as PermissionAction)) {
+          return null;
+        }
+        
+        if (!VALID_SCOPES.includes(scope as PermissionScope)) {
+          return null;
+        }
+        
+        return {
+          resource: resource as PermissionResource,
+          action: action as PermissionAction,
+          scope: scope as PermissionScope,
+          original: permission,
+        };
       }
-      
-      if (!VALID_SCOPES.includes(scope as PermissionScope)) {
-        return null;
-      }
-      
-      return {
-        resource: resource as PermissionResource,
-        action: action as PermissionAction,
-        scope: scope as PermissionScope,
-        original: permission,
-      };
     }
     
     return null;

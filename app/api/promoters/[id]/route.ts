@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Validation schema for promoter updates
 const promoterUpdateSchema = z.object({
@@ -474,3 +474,4 @@ export const DELETE = withRBAC(
     );
   }
 });
+

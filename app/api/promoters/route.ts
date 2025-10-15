@@ -2,7 +2,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { withRBAC } from '@/lib/rbac/guard';
+import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -50,7 +50,7 @@ const promoterSchema = z.object({
 });
 
 // ✅ SECURITY: Protected with RBAC guard for viewing promoters
-export const GET = withRBAC('promoter:read:own', async () => {
+export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'], async () => {
   try {
     console.log('🔍 API /api/promoters called');
     
@@ -342,3 +342,4 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
     );
   }
 });
+
