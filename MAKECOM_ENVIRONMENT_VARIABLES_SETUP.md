@@ -124,34 +124,34 @@ After adding variables, update these modules in your scenario:
 ### Module 2: Fetch Contract Data
 Replace hardcoded values with:
 ```
-url: {{env("SUPABASE_URL")}}/rest/v1/contracts
-apikey: {{env("SUPABASE_ANON_KEY")}}
-Authorization: Bearer {{env("SUPABASE_SERVICE_KEY")}}
+url: {{SUPABASE_URL}}/rest/v1/contracts
+apikey: {{SUPABASE_ANON_KEY}}
+Authorization: Bearer {{SUPABASE_SERVICE_KEY}}
 ```
 
 ### Module 6: Create Google Docs
 Replace hardcoded values with:
 ```
-folderId: {{env("GOOGLE_DRIVE_FOLDER_ID")}}
+folderId: {{GOOGLE_DRIVE_FOLDER_ID}}
 ```
 
 ### Module 20: Upload PDF to Storage
 Replace hardcoded values with:
 ```
-bucketID: {{env("CONTRACTS_STORAGE_BUCKET")}}
+bucketID: {{CONTRACTS_STORAGE_BUCKET}}
 ```
 
 ### Module 21: Send Webhook Callback
 Replace hardcoded values with:
 ```
-url: {{env("CONTRACTS_API_URL")}}/api/webhook/contract-pdf-ready
-X-Webhook-Secret: {{env("PDF_WEBHOOK_SECRET")}}
+url: {{CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready
+X-Webhook-Secret: {{PDF_WEBHOOK_SECRET}}
 ```
 
 ### Module 22: Respond
 Replace hardcoded values with:
 ```
-pdf_url: {{env("SUPABASE_URL")}}/storage/v1/object/public/{{env("CONTRACTS_STORAGE_BUCKET")}}/{{20.file_name}}
+pdf_url: {{SUPABASE_URL}}/storage/v1/object/public/{{CONTRACTS_STORAGE_BUCKET}}/{{20.file_name}}
 ```
 
 ---

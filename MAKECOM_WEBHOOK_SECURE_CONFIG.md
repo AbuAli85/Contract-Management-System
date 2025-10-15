@@ -69,7 +69,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
         "value": "contract_number,start_date,end_date,title,employer_id,client_id,promoter_id,first_party:parties!contracts_employer_id_fkey(name_en,name_ar,crn),second_party:parties!contracts_client_id_fkey(name_en,name_ar,crn),promoters(name_en,name_ar,id_card_number,id_card_url,passport_url)"
       }
     ],
-    "url": "{{env(\"SUPABASE_URL\")}}/rest/v1/contracts",
+    "url": "{{SUPABASE_URL}}/rest/v1/contracts",
     "gzip": true,
     "method": "get",
     "headers": [
@@ -79,11 +79,11 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
       },
       {
         "name": "apikey",
-        "value": "{{env(\"SUPABASE_ANON_KEY\")}}"
+        "value": "{{SUPABASE_ANON_KEY}}"
       },
       {
         "name": "Authorization",
-        "value": "Bearer {{env(\"SUPABASE_SERVICE_KEY\")}}"
+        "value": "Bearer {{SUPABASE_SERVICE_KEY}}"
       }
     ],
     "timeout": "30",
@@ -120,8 +120,8 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
       "kix.hofhbp84rfny-t.0": "{{14.value.promoters.passport_url}}"
     },
     "select": "dropdown",
-    "document": "/{{env(\"GOOGLE_DRIVE_FOLDER_ID\")}}/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
-    "folderId": "/{{env(\"GOOGLE_DRIVE_FOLDER_ID\")}}/14SuwU3yrJZeba2XVYa55fafb4EtpcDTk/1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP",
+    "document": "/{{GOOGLE_DRIVE_FOLDER_ID}}/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0",
+    "folderId": "/{{GOOGLE_DRIVE_FOLDER_ID}}/14SuwU3yrJZeba2XVYa55fafb4EtpcDTk/1tBNSMae1HsHxdq8WjMaoeuhn6WAPTpvP",
     "requests": {
       "ref_number": "{{14.value.contract_number}}",
       "id_card_number": "{{14.value.promoters.id_card_number}}",
@@ -155,8 +155,8 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
   "mapper": {
     "ca": "",
     "qs": [],
-    "url": "{{env(\"CONTRACTS_API_URL\")}}/api/webhook/contract-pdf-ready",
-    "data": "{\n  \"contract_id\": \"{{1.contract_id}}\",\n  \"contract_number\": \"{{14.value.contract_number}}\",\n  \"pdf_url\": \"{{env(\"SUPABASE_URL\")}}/storage/v1/object/public/contracts/{{20.file_name}}\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{6.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": {{if(4.id; true; false)}},\n    \"passport\": {{if(5.id; true; false)}}\n  }\n}",
+    "url": "{{CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready",
+    "data": "{\n  \"contract_id\": \"{{1.contract_id}}\",\n  \"contract_number\": \"{{14.value.contract_number}}\",\n  \"pdf_url\": \"{{SUPABASE_URL}}/storage/v1/object/public/contracts/{{20.file_name}}\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{6.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": {{if(4.id; true; false)}},\n    \"passport\": {{if(5.id; true; false)}}\n  }\n}",
     "gzip": true,
     "method": "post",
     "headers": [
@@ -166,7 +166,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
       },
       {
         "name": "X-Webhook-Secret",
-        "value": "{{env(\"PDF_WEBHOOK_SECRET\")}}"
+        "value": "{{PDF_WEBHOOK_SECRET}}"
       },
       {
         "name": "X-Make-Request-ID",
@@ -199,7 +199,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
   "version": 1,
   "parameters": {},
   "mapper": {
-    "body": "{\"success\": true, \"pdf_url\": \"{{env(\"SUPABASE_URL\")}}/storage/v1/object/public/contracts/{{20.file_name}}\", \"contract_id\": \"{{14.value.contract_number}}\", \"images_processed\": {\"id_card\": {{if(4.id; true; false)}}, \"passport\": {{if(5.id; true; false)}}}}",
+    "body": "{\"success\": true, \"pdf_url\": \"{{SUPABASE_URL}}/storage/v1/object/public/contracts/{{20.file_name}}\", \"contract_id\": \"{{14.value.contract_number}}\", \"images_processed\": {\"id_card\": {{if(4.id; true; false)}}, \"passport\": {{if(5.id; true; false)}}}}",
     "status": "200",
     "headers": [
       {
