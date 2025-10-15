@@ -165,7 +165,7 @@ const enhanceContract = (contract: ContractWithRelations): EnhancedContract => {
     days_until_expiry,
     contract_duration_days,
     age_days,
-  };
+  } as EnhancedContract;
 };
 
 export default function ContractsDashboardPage() {
