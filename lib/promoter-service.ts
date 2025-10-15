@@ -209,7 +209,7 @@ export async function fetchPromotersWithPagination(
 }
 
 // Fetch promoter by ID
-export async function fetchPromoterById(id: number): Promise<Promoter | null> {
+export async function fetchPromoterById(id: string): Promise<Promoter | null> {
   try {
     const supabase = createSupabaseClient();
     
@@ -253,7 +253,7 @@ export async function createPromoter(promoterData: Partial<Promoter>): Promise<P
 }
 
 // Update promoter
-export async function updatePromoter(id: number, updates: Partial<Promoter>): Promise<Promoter | null> {
+export async function updatePromoter(id: string, updates: Partial<Promoter>): Promise<Promoter | null> {
   try {
     const supabase = createSupabaseClient();
     
@@ -276,7 +276,7 @@ export async function updatePromoter(id: number, updates: Partial<Promoter>): Pr
 }
 
 // Delete promoter
-export async function deletePromoter(id: number): Promise<boolean> {
+export async function deletePromoter(id: string): Promise<boolean> {
   try {
     const supabase = createSupabaseClient();
     
@@ -499,7 +499,7 @@ export async function importPromotersFromCSV(csvData: string): Promise<ImportRes
 }
 
 // Get promoter CV data
-export async function getPromoterCVData(promoterId: number) {
+export async function getPromoterCVData(promoterId: string) {
   try {
     const supabase = createSupabaseClient();
     
@@ -642,7 +642,7 @@ export async function fetchPromotersAnalytics(
 
 // Get promoter individual performance stats
 export async function getPromoterIndividualPerformanceStats(
-  promoterId: number
+  promoterId: string
 ): Promise<{ data: any; error: ServiceError | null }> {
   try {
     const supabase = createSupabaseClient();

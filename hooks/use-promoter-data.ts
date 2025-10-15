@@ -69,10 +69,11 @@ const api = {
     return response.json();
   },
 
-  createPromoter: async (data: FormData): Promise<Promoter> => {
+  createPromoter: async (data: any): Promise<Promoter> => {
     const response = await fetch('/api/promoters', {
       method: 'POST',
-      body: data,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to create promoter');
     return response.json();
@@ -146,10 +147,11 @@ const api = {
   },
 
   // Onboarding
-  submitOnboarding: async (data: FormData): Promise<any> => {
+  submitOnboarding: async (data: any): Promise<any> => {
     const response = await fetch('/api/promoters/onboarding', {
       method: 'POST',
-      body: data,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to submit onboarding');
     return response.json();

@@ -1,8 +1,25 @@
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { z } from 'zod';
-import { PromoterScore } from '@/lib/types';
+import type { PromoterScore } from '@/lib/types';
 import { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+
+/**
+ * ⚠️ WARNING: PLACEHOLDER IMPLEMENTATION
+ * 
+ * This endpoint currently returns EMPTY ARRAYS and PLACEHOLDER DATA because
+ * the `promoter_scores` table does not exist in the database schema.
+ * 
+ * TODO before production:
+ * 1. Create `promoter_scores` table in Supabase with proper schema
+ * 2. Add RLS policies for score data access
+ * 3. Replace placeholder responses with real Supabase operations
+ * 4. Add RBAC guards using withRBAC() for all endpoints
+ * 5. Implement score calculation logic based on business rules
+ * 6. Add audit logging for score updates
+ * 
+ * Performance tracking and scoring features WILL NOT WORK until this is implemented.
+ */
 
 const scoreSchema = z.object({
   score_type: z.string(),

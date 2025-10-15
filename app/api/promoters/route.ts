@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -49,7 +49,8 @@ const promoterSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 });
 
-export async function GET() {
+// ✅ SECURITY: Protected with RBAC guard for viewing promoters
+export const GET = withRBAC('promoter:view', async () => {
   try {
     console.log('🔍 API /api/promoters called');
     
@@ -67,21 +68,19 @@ export async function GET() {
     const cookieStore = await cookies();
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    // Use service role key if available for full database access, otherwise use anon key
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // ✅ SECURITY FIX: Use anon key to respect RLS policies
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     console.log('🔑 Environment check:', {
       hasUrl: !!supabaseUrl,
       urlPrefix: supabaseUrl?.substring(0, 20),
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
       hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
+      usingKey: 'ANON', // Always use anon key to respect RLS
     });
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ Missing Supabase credentials!');
       console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'SET' : 'MISSING');
-      console.error('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING');
       console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
       
       return NextResponse.json(
@@ -99,68 +98,65 @@ export async function GET() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: any) {
           try {
-            cookiesToSet.forEach(({ name, value, ...options }) => {
-              cookieStore.set(
-                name,
-                value,
-                options as {
-                  path?: string;
-                  domain?: string;
-                  maxAge?: number;
-                  secure?: boolean;
-                  httpOnly?: boolean;
-                  sameSite?: 'strict' | 'lax' | 'none';
-                }
-              );
-            });
+            cookiesToSet.forEach(({ name, value, options }: any) =>
+              cookieStore.set(name, value, options as CookieOptions)
+            );
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
           }
         },
-      },
+      } as any,
     });
 
-    // Get authenticated user (secure method)
+    // Get authenticated user
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    // Check if user is admin (for scoping data)
-    let isAdmin = false;
-    if (user) {
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      isAdmin = (userProfile as any)?.role === 'admin';
+    if (authError || !user) {
+      console.error('❌ Authentication error:', authError);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Authentication required',
+          details: 'Please log in to view promoters' 
+        },
+        { status: 401 }
+      );
     }
 
+    // Check if user is admin (for scoping data)
+    let isAdmin = false;
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    isAdmin = (userProfile as any)?.role === 'admin';
+
     console.log('Fetching promoters from database...');
-    console.log('User status:', user ? `Logged in as ${user.email}` : 'No user');
+    console.log('User status:', `Logged in as ${user.email}`);
     console.log('Is admin:', isAdmin);
 
-    // Build query - show all promoters for now (simplified for testing)
-    // TODO: Implement proper scoping based on user role and organization
-    
-    // SIMPLIFIED QUERY - Remove join to avoid FK issues during testing
-    console.log('📊 Executing Supabase query...');
-    const { data: promoters, error } = await supabase
+    // Build query with proper RLS - anon key respects RLS policies
+    console.log('📊 Executing Supabase query with RLS...');
+    let query = supabase
       .from('promoters')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
 
-    // Optional: Add user-based filtering in the future
-    // if (!isAdmin && user) {
-    //   query = query.eq('created_by', user.id);
-    //   console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
-    // }
+    // If not admin, only show promoters created by this user
+    if (!isAdmin) {
+      query = query.eq('created_by', user.id);
+      console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
+    }
+
+    const { data: promoters, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('❌ Error fetching promoters:', error);
@@ -201,11 +197,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
-// ✅ SECURITY FIX: Added RBAC guard for promoter creation
-// TEMPORARILY DISABLED FOR TESTING - REMOVE IN PRODUCTION
-export async function POST(request: Request) {
+// ✅ SECURITY: Protected with RBAC guard for creating promoters
+export const POST = withRBAC('promoter:create', async (request: Request) => {
   try {
     const cookieStore = await cookies();
 
@@ -221,48 +216,42 @@ export async function POST(request: Request) {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: any) {
           try {
-            cookiesToSet.forEach(({ name, value, ...options }) => {
-              cookieStore.set(
-                name,
-                value,
-                options as {
-                  path?: string;
-                  domain?: string;
-                  maxAge?: number;
-                  secure?: boolean;
-                  httpOnly?: boolean;
-                  sameSite?: 'strict' | 'lax' | 'none';
-                }
-              );
-            });
+            cookiesToSet.forEach(({ name, value, options }: any) =>
+              cookieStore.set(name, value, options as CookieOptions)
+            );
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
             // user sessions.
           }
         },
-      },
+      } as any,
     });
 
-    // Get user session (optional for testing)
+    // Get authenticated user (required)
     const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
 
     // Check if user is admin (for scoping data)
     let isAdmin = false;
-    if (session?.user) {
-      const { data: userProfile } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+    const { data: userProfile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-      isAdmin = (userProfile as any)?.role === 'admin';
-    }
+    isAdmin = (userProfile as any)?.role === 'admin';
 
     // Parse and validate request body
     const body = await request.json();
@@ -292,10 +281,10 @@ export async function POST(request: Request) {
       }
     }
 
-    // Add created_by field (use a default UUID if no session)
+    // Add created_by field from authenticated user
     const promoterData = {
       ...validatedData,
-      created_by: session?.user?.id || '00000000-0000-0000-0000-000000000000',
+      created_by: user.id,
     };
 
     // Insert promoter into database
@@ -319,7 +308,7 @@ export async function POST(request: Request) {
     // Create audit log
     try {
       await supabase.from('audit_logs').insert({
-        user_id: session?.user?.id || '00000000-0000-0000-0000-000000000000',
+        user_id: user.id,
         action: 'create',
         table_name: 'promoters',
         record_id: promoter.id,
@@ -352,4 +341,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

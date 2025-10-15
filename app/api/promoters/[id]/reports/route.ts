@@ -2,6 +2,24 @@ import { getSupabaseAdmin } from '@/lib/supabase/admin';
 import { z } from 'zod';
 import { NextRequest } from 'next/server';
 
+/**
+ * ⚠️ WARNING: PLACEHOLDER IMPLEMENTATION
+ * 
+ * This endpoint currently returns EMPTY ARRAYS and PLACEHOLDER DATA because
+ * the `promoter_reports` table does not exist in the database schema.
+ * 
+ * TODO before production:
+ * 1. Create `promoter_reports` table in Supabase
+ * 2. Create report templates system in database
+ * 3. Add RLS policies for report access control
+ * 4. Replace placeholder responses with real Supabase operations
+ * 5. Add RBAC guards using withRBAC() for all endpoints
+ * 6. Implement report generation logic (PDF, Excel, etc.)
+ * 7. Add audit logging for report generation
+ * 
+ * Reporting features WILL NOT WORK until this is implemented.
+ */
+
 const reportSchema = z.object({
   template_id: z.string().optional(),
   report_name: z.string(),
