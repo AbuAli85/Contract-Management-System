@@ -49,153 +49,143 @@ const promoterSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 });
 
-// ✅ SECURITY: Protected with RBAC guard for viewing promoters
-export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'], async () => {
-  try {
-    console.log('🔍 API /api/promoters called');
-    
-    // Force load environment variables
-    if (process.env.NODE_ENV !== 'production') {
-      try {
-        const { config } = await import('dotenv');
-        config({ path: '.env.local' });
-        console.log('📁 Loaded .env.local file');
-      } catch (error) {
-        console.log('⚠️ Could not load .env.local:', error);
-      }
-    }
-    
-    const cookieStore = await cookies();
-
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    // ✅ SECURITY FIX: Use anon key to respect RLS policies
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-    console.log('🔑 Environment check:', {
-      hasUrl: !!supabaseUrl,
-      urlPrefix: supabaseUrl?.substring(0, 20),
-      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      usingKey: 'ANON', // Always use anon key to respect RLS
-    });
-
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ Missing Supabase credentials!');
-      console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl ? 'SET' : 'MISSING');
-      console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+// ✅ SECURITY FIX: Added RBAC guard for promoter listing
+export const GET = withRBAC(
+  'promoter:read:own',
+  async (request: Request) => {
+    try {
+      console.log('🔍 API /api/promoters called with RBAC protection');
       
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Server configuration error: Missing Supabase environment variables',
-          details: 'Please check .env.local file' 
-        },
-        { status: 500 }
-      );
-    }
+      // Extract RBAC context from request
+      const rbacContext = (request as any).rbacContext;
+      const user = rbacContext?.user;
+      const permissions = rbacContext?.permissions || [];
+      
+      console.log('👤 User:', user?.email);
+      console.log('🔑 Permissions:', permissions);
+      
+      // Force load environment variables in development
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          const { config } = await import('dotenv');
+          config({ path: '.env.local' });
+          console.log('📁 Loaded .env.local file');
+        } catch (error) {
+          console.log('⚠️ Could not load .env.local:', error);
+        }
+      }
+      
+      const cookieStore = await cookies();
 
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: any) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }: any) =>
-              cookieStore.set(name, value, options as CookieOptions)
-            );
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      } as any,
-    });
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      // Use service role key to bypass RLS since we handle auth via RBAC
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      console.error('❌ Authentication error:', authError);
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Authentication required',
-          details: 'Please log in to view promoters' 
-        },
-        { status: 401 }
-      );
-    }
-
-    // Check if user is admin (for scoping data)
-    let isAdmin = false;
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    isAdmin = (userProfile as any)?.role === 'admin';
-
-    console.log('Fetching promoters from database...');
-    console.log('User status:', `Logged in as ${user.email}`);
-    console.log('Is admin:', isAdmin);
-
-    // Build query with proper RLS - anon key respects RLS policies
-    console.log('📊 Executing Supabase query with RLS...');
-    let query = supabase
-      .from('promoters')
-      .select('*');
-
-    // NOTE: Data scoping handled by RLS policies in Supabase
-    // TODO: Add created_by column to promoters table for granular user-level scoping
-    console.log(`Fetching promoters (RLS policies will apply data scoping)`);
-
-    const { data: promoters, error } = await query.order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('❌ Error fetching promoters:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Failed to fetch promoters',
-          details: error.message,
-          code: error.code 
-        },
-        { status: 500 }
-      );
-    }
-
-    console.log(`✅ Successfully fetched ${promoters?.length || 0} promoters`);
-    
-    if (promoters && promoters.length > 0) {
-      console.log('📋 Sample promoter:', {
-        id: promoters[0].id,
-        name_en: promoters[0].name_en,
-        employer_id: promoters[0].employer_id,
+      console.log('🔑 Environment check:', {
+        hasUrl: !!supabaseUrl,
+        urlPrefix: supabaseUrl?.substring(0, 20),
+        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
       });
-    } else {
-      console.warn('⚠️ No promoters found in database');
+
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ Missing Supabase credentials!');
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Server configuration error: Missing Supabase environment variables',
+            details: 'Please check .env.local file' 
+          },
+          { status: 500 }
+        );
+      }
+
+      const supabase = createServerClient(supabaseUrl, supabaseKey, {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet: any) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }: any) =>
+                cookieStore.set(name, value, options as CookieOptions)
+              );
+            } catch {
+              // The `setAll` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+        } as any,
+      });
+
+      // Parse query parameters for pagination
+      const url = new URL(request.url);
+      const page = parseInt(url.searchParams.get('page') || '1');
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+      const offset = (page - 1) * limit;
+
+      console.log('📊 Pagination:', { page, limit, offset });
+
+      // Build query
+      console.log('📊 Executing Supabase query...');
+      const { data: promoters, error, count } = await supabase
+        .from('promoters')
+        .select('*', { count: 'exact' })
+        .range(offset, offset + limit - 1)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching promoters:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        return NextResponse.json(
+          { 
+            success: false,
+            error: 'Failed to fetch promoters',
+            details: error.message,
+            code: error.code 
+          },
+          { status: 500 }
+        );
+      }
+
+      console.log(`✅ Successfully fetched ${promoters?.length || 0} promoters (total: ${count})`);
+      
+      if (promoters && promoters.length > 0) {
+        console.log('📋 Sample promoter:', {
+          id: promoters[0].id,
+          name_en: promoters[0].name_en,
+          employer_id: promoters[0].employer_id,
+        });
+      } else {
+        console.warn('⚠️ No promoters found in database');
+      }
+      
+      return NextResponse.json({
+        success: true,
+        promoters: promoters || [],
+        count: promoters?.length || 0,
+        total: count || 0,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages: Math.ceil((count || 0) / limit),
+          hasNext: offset + limit < (count || 0),
+          hasPrev: page > 1,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('API error:', error);
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      );
     }
-    
-    return NextResponse.json({
-      success: true,
-      promoters: promoters || [],
-      count: promoters?.length || 0,
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
-    console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-});
+);
 
 // ✅ SECURITY: Protected with RBAC guard for creating promoters
 export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
