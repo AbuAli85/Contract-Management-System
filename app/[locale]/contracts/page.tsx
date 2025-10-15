@@ -281,24 +281,6 @@ function ContractsContent() {
     );
   }
 
-  // Auto-refresh setup
-  useEffect(() => {
-    const interval = setInterval(
-      () => {
-        if (isMountedRef.current) {
-          handleRefresh();
-        }
-      },
-      5 * 60 * 1000
-    ); // 5 minutes
-
-    refreshIntervalRef.current = interval;
-    return () => {
-      clearInterval(interval);
-      isMountedRef.current = false;
-    };
-  }, []);
-
   // Calculate statistics
   const contractStats = useMemo((): ContractStats => {
     if (!contracts)
