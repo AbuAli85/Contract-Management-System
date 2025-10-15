@@ -53,8 +53,8 @@ const promoterSchema = z.object({
 export async function GET(request: Request) {
   // TODO: Re-enable RBAC after fixing permission issues
   // export const GET = withRBAC('promoter:read:own', async (request: Request) => {
-    try {
-      console.log('🔍 API /api/promoters GET called (RBAC BYPASSED FOR DEBUG)');
+  try {
+    console.log('🔍 API /api/promoters GET called (RBAC BYPASSED, RLS DISABLED)');
       
       const cookieStore = await cookies();
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
