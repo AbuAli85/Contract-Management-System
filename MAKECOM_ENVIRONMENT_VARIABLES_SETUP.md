@@ -48,6 +48,141 @@ Add the following 7 variables to your Make.com organization:
 - **Value**: `your-secret-key-here-replace-with-strong-value`
 - **Purpose**: Secret key for verifying webhook signatures from Make.com
 
+---
+
+## 🔐 How to Generate PDF_WEBHOOK_SECRET
+
+You have several options to generate a strong secret key:
+
+### Option 1: Use OpenSSL (Recommended for Linux/Mac)
+```bash
+openssl rand -base64 32
+```
+**Output example**: `aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=`
+
+### Option 2: Use Python
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+**Output example**: `AbCdEfGhIjKlMnOpQrStUvWxYz1234567890_-`
+
+### Option 3: Use Node.js
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+**Output example**: `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6`
+
+### Option 4: Use Online Generator (Quick)
+- Visit: https://www.uuidgenerator.net/
+- Copy the generated UUID
+- **Or** visit: https://www.random.org/strings/ and generate a random string
+
+### Option 5: Use PowerShell (Windows)
+```powershell
+[Convert]::ToBase64String((1..32 | ForEach-Object {Get-Random -Maximum 256}))
+```
+
+---
+
+## 📋 Example Secret Keys
+
+Here are examples of valid format (DO NOT use these in production):
+
+```
+aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=
+AbCdEfGhIjKlMnOpQrStUvWxYz1234567890_-AbCdEfGh
+a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+```
+
+**Length**: 32+ characters recommended
+
+---
+
+## ✅ Steps to Add PDF_WEBHOOK_SECRET
+
+1. **Generate** a secret key using one of the methods above
+2. **Copy** the generated value
+3. **Go to** Make.com → Organization Settings → Variables
+4. **Click** "Add organization variable"
+5. **Enter**:
+   - Name: `PDF_WEBHOOK_SECRET`
+   - Data type: `text`
+   - Value: `[paste your generated secret]`
+6. **Click** "Save"
+
+---
+
+## 🔒 Security Best Practices
+
+⚠️ **Important**:
+- ✅ Use a **unique, strong secret** (at least 32 characters)
+- ✅ **Store it securely** (only in Make.com, not in code)
+- ✅ **Rotate it periodically** (e.g., every 3 months)
+- ✅ **Never share** or commit to Git
+- ❌ Don't use simple patterns like "123456" or "password"
+- ❌ Don't reuse secrets across different services
+
+---
+
+## 🧪 Test Your Secret
+
+After adding the secret to Make.com:
+
+1. **Open** your webhook scenario in Make.com
+2. **Go to** Module 21 (Send Webhook Callback)
+3. **Verify** the header contains: `"X-Webhook-Secret": "{{PDF_WEBHOOK_SECRET}}"`
+4. **Run** a test execution
+5. **Check** backend logs for webhook received with secret validation
+
+---
+
+## 🔧 Backend Validation (Optional)
+
+If you want to validate the webhook signature in your backend, add this to `/api/webhook/contract-pdf-ready`:
+
+```typescript
+import crypto from 'crypto';
+
+// Verify webhook signature
+function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): boolean {
+  const hash = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  return hash === signature;
+}
+
+// In your webhook handler:
+const secret = process.env.PDF_WEBHOOK_SECRET;
+const signature = request.headers.get('X-Webhook-Signature');
+const payload = await request.text();
+
+if (!verifyWebhookSignature(payload, signature, secret)) {
+  return NextResponse.json(
+    { success: false, error: 'Invalid signature' },
+    { status: 401 }
+  );
+}
+```
+
+---
+
+## 📝 Summary
+
+| Step | Action | Example |
+|------|--------|---------|
+| 1 | Generate secret | `openssl rand -base64 32` |
+| 2 | Copy result | `aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=` |
+| 3 | Add to Make.com | Variables → Add → Save |
+| 4 | Use in scenario | `{{PDF_WEBHOOK_SECRET}}` |
+| 5 | Validate in backend | HMAC-SHA256 verification (optional) |
+
+**Done! Your webhook is now secured with a secret key.** 🔐
+
 ### 7. CONTRACTS_STORAGE_BUCKET
 - **Name**: `CONTRACTS_STORAGE_BUCKET`
 - **Data type**: `text`
