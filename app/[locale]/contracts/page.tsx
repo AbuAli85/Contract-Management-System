@@ -258,13 +258,6 @@ function ContractsContent() {
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
-  // Role-based access control with error handling
-  const canCreateContract = permissions.canCreateContract();
-  const canEditContract = permissions.canEditContract();
-  const canDeleteContract = permissions.canDeleteContract();
-  const canExportContracts = permissions.canExportContracts();
-  const canGenerateContract = permissions.canGenerateContract();
-
   // All hooks must be called before any conditional returns
   const isMountedRef = useRef(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -280,6 +273,13 @@ function ContractsContent() {
       </div>
     );
   }
+
+  // Role-based access control - NOW CALLED AFTER LOADING CHECK
+  const canCreateContract = permissions.canCreateContract();
+  const canEditContract = permissions.canEditContract();
+  const canDeleteContract = permissions.canDeleteContract();
+  const canExportContracts = permissions.canExportContracts();
+  const canGenerateContract = permissions.canGenerateContract();
 
   // Calculate statistics
   const contractStats = useMemo((): ContractStats => {
