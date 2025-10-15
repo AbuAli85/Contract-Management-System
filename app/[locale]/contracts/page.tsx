@@ -262,26 +262,7 @@ function ContractsContent() {
   const isMountedRef = useRef(true);
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Show loading state if permissions are still loading - moved to after all hooks
-  if (permissions.isLoading) {
-    return (
-      <div className='flex h-64 items-center justify-center'>
-        <div className='text-center'>
-          <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
-          <p className='text-muted-foreground'>Loading permissions...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Role-based access control - NOW CALLED AFTER LOADING CHECK
-  const canCreateContract = permissions.canCreateContract();
-  const canEditContract = permissions.canEditContract();
-  const canDeleteContract = permissions.canDeleteContract();
-  const canExportContracts = permissions.canExportContracts();
-  const canGenerateContract = permissions.canGenerateContract();
-
-  // Calculate statistics
+  // Calculate statistics BEFORE permission check
   const contractStats = useMemo((): ContractStats => {
     if (!contracts)
       return {
@@ -320,7 +301,7 @@ function ContractsContent() {
     };
   }, [contracts]);
 
-  // Enhanced filtering and sorting
+  // Enhanced filtering and sorting BEFORE permission check
   const filteredAndSortedContracts = useMemo(() => {
     if (!contracts) return [];
 
@@ -398,7 +379,7 @@ function ContractsContent() {
     });
   }, [contracts, searchTerm, statusFilter, sortColumn, sortDirection, locale]);
 
-  // Handler functions
+  // Handler functions - moved BEFORE permission check
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
@@ -709,6 +690,25 @@ function ContractsContent() {
       </Card>
     </div>
   );
+
+  // NOW we can check permissions and return early if needed
+  if (permissions.isLoading) {
+    return (
+      <div className='flex h-64 items-center justify-center'>
+        <div className='text-center'>
+          <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
+          <p className='text-muted-foreground'>Loading permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Role-based access control - NOW CALLED AFTER ALL HOOKS
+  const canCreateContract = permissions.canCreateContract();
+  const canEditContract = permissions.canEditContract();
+  const canDeleteContract = permissions.canDeleteContract();
+  const canExportContracts = permissions.canExportContracts();
+  const canGenerateContract = permissions.canGenerateContract();
 
   if (isLoading) {
     return (
