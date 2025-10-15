@@ -50,7 +50,7 @@ const promoterSchema = z.object({
 });
 
 // ✅ SECURITY: Protected with RBAC guard for viewing promoters
-export const GET = withRBAC('promoter:view', async () => {
+export const GET = withRBAC('promoter:read:own', async () => {
   try {
     console.log('🔍 API /api/promoters called');
     
@@ -200,7 +200,7 @@ export const GET = withRBAC('promoter:view', async () => {
 });
 
 // ✅ SECURITY: Protected with RBAC guard for creating promoters
-export const POST = withRBAC('promoter:create', async (request: Request) => {
+export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
   try {
     const cookieStore = await cookies();
 
