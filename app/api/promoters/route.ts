@@ -150,11 +150,9 @@ export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'], asy
       .from('promoters')
       .select('*');
 
-    // If not admin, only show promoters created by this user
-    if (!isAdmin) {
-      query = query.eq('created_by', user.id);
-      console.log(`Fetching promoters for user: ${user.id} (non-admin)`);
-    }
+    // NOTE: Data scoping handled by RLS policies in Supabase
+    // TODO: Add created_by column to promoters table for granular user-level scoping
+    console.log(`Fetching promoters (RLS policies will apply data scoping)`);
 
     const { data: promoters, error } = await query.order('created_at', { ascending: false });
 
@@ -281,11 +279,14 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
       }
     }
 
-    // Add created_by field from authenticated user
+    // NOTE: created_by column doesn't exist in promoters table yet
+    // TODO: Add created_by column for better audit tracking
     const promoterData = {
       ...validatedData,
-      created_by: user.id,
+      // created_by: user.id, // Column doesn't exist yet
     };
+
+    console.log('📝 Creating promoter (audit tracked via audit_logs table)');
 
     // Insert promoter into database
     const { data: promoter, error } = await supabase

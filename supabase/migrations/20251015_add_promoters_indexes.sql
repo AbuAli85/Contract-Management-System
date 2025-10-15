@@ -29,10 +29,10 @@ CREATE INDEX IF NOT EXISTS idx_promoters_id_card_number
 ON promoters(id_card_number) 
 WHERE id_card_number IS NOT NULL;
 
--- Index on created_by for user-scoped queries
-CREATE INDEX IF NOT EXISTS idx_promoters_created_by 
-ON promoters(created_by) 
-WHERE created_by IS NOT NULL;
+-- Index on employer_id for user-scoped queries (via employer relationship)
+CREATE INDEX IF NOT EXISTS idx_promoters_employer_scoped 
+ON promoters(employer_id) 
+WHERE employer_id IS NOT NULL;
 
 -- Composite index for common query pattern (status + created_at)
 CREATE INDEX IF NOT EXISTS idx_promoters_status_created 
@@ -72,7 +72,7 @@ COMMENT ON INDEX idx_promoters_employer_id IS 'Speeds up foreign key lookups';
 COMMENT ON INDEX idx_promoters_created_at IS 'Optimizes time-based sorting';
 COMMENT ON INDEX idx_promoters_email IS 'Enables fast email lookups';
 COMMENT ON INDEX idx_promoters_id_card_number IS 'Supports unique ID card checks';
-COMMENT ON INDEX idx_promoters_created_by IS 'Improves user-scoped queries for RBAC';
+COMMENT ON INDEX idx_promoters_employer_scoped IS 'Improves user-scoped queries via employer relationship';
 COMMENT ON INDEX idx_promoters_status_created IS 'Composite index for common status + time queries';
 COMMENT ON INDEX idx_promoters_pagination IS 'Optimizes pagination performance';
 COMMENT ON INDEX idx_promoters_name_search IS 'Enables fast fuzzy name search';
