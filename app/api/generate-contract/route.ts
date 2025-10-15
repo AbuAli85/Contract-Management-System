@@ -136,14 +136,14 @@ export const PUT = withAnyRBAC(
       const { contractId, status, pdfUrl } = body;
       const supabase = await createClient();
 
-      const { error } = await supabase
+      const { error } = await (supabase
         .from('contracts')
         .update({
           status,
           pdf_url: pdfUrl,
           updated_at: new Date().toISOString(),
         } as any)
-        .eq('id', contractId);
+        .eq('id', contractId) as any);
 
       if (error) {
         console.error('Database error:', error);
