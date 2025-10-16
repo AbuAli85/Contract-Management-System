@@ -102,13 +102,22 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
 const DropdownMenuTrigger = React.forwardRef<
   HTMLButtonElement,
   DropdownMenuTriggerProps
->(({ children, className, onClick, ...props }, ref) => {
+>(({ children, className, asChild, onClick, ...props }, ref) => {
   const { isOpen, setIsOpen } = React.useContext(DropdownMenuContext);
 
   const handleClick = () => {
     setIsOpen(!isOpen);
     onClick?.();
   };
+
+  // If asChild is true, clone the child element with our props
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ref,
+      onClick: handleClick,
+      ...props,
+    });
+  }
 
   return (
     <button
