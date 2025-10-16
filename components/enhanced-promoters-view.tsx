@@ -1736,6 +1736,7 @@ interface EnhancedActionsMenuProps {
 
 function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuProps) {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // Determine context-aware actions based on promoter status
@@ -1746,29 +1747,111 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
   const isCritical = promoter.overallStatus === 'critical';
   const isUnassigned = promoter.assignmentStatus === 'unassigned';
 
-  const handleArchive = async () => {
+  // Handle View Profile with validation
+  const handleViewProfile = useCallback(() => {
     try {
-      // TODO: Implement actual archive logic
+      onView();
+    } catch (error) {
+      console.error('Error viewing profile:', error);
       toast({
-        title: 'Record Archived',
-        description: `${promoter.displayName} has been archived.`,
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not open profile. Please try again.',
+      });
+    }
+  }, [onView, toast]);
+
+  // Handle Edit with validation
+  const handleEditDetails = useCallback(() => {
+    try {
+      onEdit();
+    } catch (error) {
+      console.error('Error editing details:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not open edit form. Please try again.',
+      });
+    }
+  }, [onEdit, toast]);
+
+  // Handle Archive with API call
+  const handleArchive = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Make API call to archive the promoter
+      const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ archived: true }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to archive record');
+      }
+
+      toast({
+        title: '✓ Record Archived',
+        description: `${promoter.displayName} has been successfully archived.`,
+        variant: 'default',
       });
       setShowArchiveDialog(false);
     } catch (error) {
+      console.error('Archive error:', error);
       toast({
         variant: 'destructive',
-        title: 'Archive Failed',
-        description: 'Could not archive the record.',
+        title: '✗ Archive Failed',
+        description: error instanceof Error ? error.message : 'Could not archive the record.',
       });
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [promoter.id, promoter.displayName, toast]);
 
-  const handleNotification = () => {
-    toast({
-      title: 'Notification Sent',
-      description: `Notification sent to ${promoter.displayName}.`,
-    });
-  };
+  // Handle Send Notification with API call
+  const handleNotification = useCallback(async (type: 'standard' | 'urgent' | 'reminder' = 'standard') => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          type,
+          promoterName: promoter.displayName,
+          email: promoter.contactEmail,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send notification');
+      }
+
+      const notificationText = type === 'urgent' 
+        ? 'Urgent notification sent' 
+        : type === 'reminder'
+        ? 'Renewal reminder sent'
+        : 'Notification sent';
+
+      toast({
+        title: '✓ ' + notificationText,
+        description: `${notificationText} to ${promoter.displayName}.`,
+        variant: 'default',
+      });
+    } catch (error) {
+      console.error('Notification error:', error);
+      toast({
+        variant: 'destructive',
+        title: '✗ Notification Failed',
+        description: error instanceof Error ? error.message : 'Could not send notification.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [promoter.id, promoter.displayName, promoter.contactEmail, toast]);
 
   return (
     <>
@@ -1781,8 +1864,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   variant='ghost'
                   size='icon'
                   className='h-8 w-8 text-muted-foreground hover:text-foreground transition-colors'
+                  disabled={isLoading}
                 >
-                  <MoreHorizontal className='h-4 w-4' />
+                  <MoreHorizontal className={cn('h-4 w-4', isLoading && 'animate-spin')} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -1799,7 +1883,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             </p>
           </div>
           
-          <DropdownMenuItem onClick={onView} className='cursor-pointer gap-2'>
+          <DropdownMenuItem onClick={handleViewProfile} disabled={isLoading} className='cursor-pointer gap-2'>
             <Eye className='h-4 w-4 text-blue-500' />
             <div className='flex-1'>
               <div className='font-medium'>View profile</div>
@@ -1810,7 +1894,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             </kbd>
           </DropdownMenuItem>
 
-          <DropdownMenuItem onClick={onEdit} className='cursor-pointer gap-2'>
+          <DropdownMenuItem onClick={handleEditDetails} disabled={isLoading} className='cursor-pointer gap-2'>
             <Edit className='h-4 w-4 text-amber-500' />
             <div className='flex-1'>
               <div className='font-medium'>Edit details</div>
@@ -1831,7 +1915,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   ⚠️ At Risk
                 </p>
               </div>
-              <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+              <DropdownMenuItem onClick={() => handleNotification('reminder')} disabled={isLoading} className='cursor-pointer gap-2'>
                 <AlertTriangle className='h-4 w-4 text-amber-500' />
                 <div className='flex-1'>
                   <div className='font-medium'>Remind to renew docs</div>
@@ -1849,7 +1933,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   🚨 Critical
                 </p>
               </div>
-              <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+              <DropdownMenuItem onClick={() => handleNotification('urgent')} disabled={isLoading} className='cursor-pointer gap-2'>
                 <Send className='h-4 w-4 text-red-500' />
                 <div className='flex-1'>
                   <div className='font-medium'>Urgent notification</div>
@@ -1867,7 +1951,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   Unassigned
                 </p>
               </div>
-              <DropdownMenuItem onClick={onEdit} className='cursor-pointer gap-2'>
+              <DropdownMenuItem onClick={handleEditDetails} disabled={isLoading} className='cursor-pointer gap-2'>
                 <Building2 className='h-4 w-4 text-slate-500' />
                 <div className='flex-1'>
                   <div className='font-medium'>Assign to company</div>
@@ -1885,7 +1969,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             </p>
           </div>
           
-          <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+          <DropdownMenuItem onClick={() => handleNotification('standard')} disabled={isLoading} className='cursor-pointer gap-2'>
             <Send className='h-4 w-4 text-green-500' />
             <div className='flex-1'>
               <div className='font-medium'>Send notification</div>
@@ -1897,6 +1981,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             onClick={() => setShowArchiveDialog(true)} 
+            disabled={isLoading}
             className='cursor-pointer gap-2 text-destructive hover:bg-destructive/10'
           >
             <Archive className='h-4 w-4' />
@@ -1914,13 +1999,17 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Record?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This action can be undone.
+              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This action can be undone from the archive section.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleArchive} className='bg-destructive hover:bg-destructive/90'>
-              Archive
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleArchive} 
+              disabled={isLoading}
+              className='bg-destructive hover:bg-destructive/90'
+            >
+              {isLoading ? 'Archiving...' : 'Archive'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
