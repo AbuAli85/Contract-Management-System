@@ -1874,10 +1874,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           </div>
           
           <DropdownMenuItem 
-            onClick={() => {
-              console.log('[CLICK] View profile for:', promoter.displayName);
-              onClickView();
-            }}
+            onClick={onClickView}
             disabled={isLoading}
             className='cursor-pointer'
           >
@@ -1892,10 +1889,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           </DropdownMenuItem>
 
           <DropdownMenuItem 
-            onClick={() => {
-              console.log('[CLICK] Edit details for:', promoter.displayName);
-              onClickEdit();
-            }}
+            onClick={onClickEdit}
             disabled={isLoading}
             className='cursor-pointer'
           >
@@ -1920,10 +1914,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={() => {
-                  console.log('[CLICK] Remind to renew docs for:', promoter.displayName);
-                  onClickNotify('reminder');
-                }}
+                onClick={() => onClickNotify('reminder')}
                 disabled={isLoading}
                 className='cursor-pointer'
               >
@@ -1945,10 +1936,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={() => {
-                  console.log('[CLICK] Urgent notification for:', promoter.displayName);
-                  onClickNotify('urgent');
-                }}
+                onClick={() => onClickNotify('urgent')}
                 disabled={isLoading}
                 className='cursor-pointer'
               >
@@ -1970,10 +1958,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={() => {
-                  console.log('[CLICK] Assign to company for:', promoter.displayName);
-                  onClickEdit();
-                }}
+                onClick={onClickEdit}
                 disabled={isLoading}
                 className='cursor-pointer'
               >
@@ -1995,10 +1980,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           </div>
           
           <DropdownMenuItem 
-            onClick={() => {
-              console.log('[CLICK] Send notification for:', promoter.displayName);
-              onClickNotify('standard');
-            }}
+            onClick={() => onClickNotify('standard')}
             disabled={isLoading}
             className='cursor-pointer'
           >
@@ -2012,10 +1994,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           {/* Destructive Actions */}
           <DropdownMenuSeparator />
           <DropdownMenuItem 
-            onClick={() => {
-              console.log('[CLICK] Archive record for:', promoter.displayName);
-              setShowArchiveDialog(true);
-            }}
+            onClick={() => setShowArchiveDialog(true)}
             disabled={isLoading}
             className='cursor-pointer text-destructive hover:bg-destructive/10'
           >
