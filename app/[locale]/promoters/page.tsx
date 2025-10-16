@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 
 import { EnhancedPromotersView } from '@/components/enhanced-promoters-view';
 import { PromotersDebugInfo } from '@/components/promoters-debug-info';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function PromotersPage({
   params,
@@ -17,9 +18,20 @@ export default function PromotersPage({
   const isDevelopment = process.env.NODE_ENV === 'development';
   
   return (
-    <div className="space-y-6">
-      {isDevelopment && <PromotersDebugInfo />}
-      <EnhancedPromotersView locale={params.locale} />
-    </div>
+    <ErrorBoundary 
+      componentName="Promoters Page"
+      onError={(error, errorInfo) => {
+        // Log to error tracking service in production
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Promoters page error:', error, errorInfo);
+          // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
+        }
+      }}
+    >
+      <div className="space-y-6">
+        {isDevelopment && <PromotersDebugInfo />}
+        <EnhancedPromotersView locale={params.locale} />
+      </div>
+    </ErrorBoundary>
   );
 }

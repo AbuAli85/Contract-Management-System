@@ -73,6 +73,7 @@ const DropdownMenuContext = React.createContext<{
 
 const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   const closeDropdown = React.useCallback(() => {
     setIsOpen(false);
@@ -80,15 +81,30 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen) {
+      // Only close if click is outside the dropdown container
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    // Handle escape key to close dropdown
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () =>
+      document.addEventListener('keydown', handleEscape);
+      return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
+      };
     }
     
     return undefined;
@@ -96,7 +112,9 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
 
   return (
     <DropdownMenuContext.Provider value={{ isOpen, setIsOpen, closeDropdown }}>
-      <div className='relative inline-block text-left'>{children}</div>
+      <div ref={dropdownRef} className='relative inline-block text-left'>
+        {children}
+      </div>
     </DropdownMenuContext.Provider>
   );
 };
