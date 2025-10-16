@@ -1749,8 +1749,12 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
   // Handle View Profile - Simple and direct
   const onClickView = () => {
-    console.log('View profile clicked for:', promoter.displayName);
+    console.log('[CLICK] View profile clicked for:', promoter.displayName);
     try {
+      toast({
+        title: '👁️ Opening profile...',
+        description: `Loading ${promoter.displayName}'s details.`,
+      });
       onView();
     } catch (error) {
       console.error('Error viewing profile:', error);
@@ -1764,8 +1768,12 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
   // Handle Edit Details - Simple and direct
   const onClickEdit = () => {
-    console.log('Edit details clicked for:', promoter.displayName);
+    console.log('[CLICK] Edit details clicked for:', promoter.displayName);
     try {
+      toast({
+        title: '✏️ Opening editor...',
+        description: `Ready to edit ${promoter.displayName}'s information.`,
+      });
       onEdit();
     } catch (error) {
       console.error('Error editing details:', error);
@@ -1779,7 +1787,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
   // Handle Send Notification
   const onClickNotify = async (type: 'standard' | 'urgent' | 'reminder') => {
-    console.log('Send notification clicked:', type, promoter.displayName);
+    console.log('[CLICK] Send notification:', type, 'to', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
@@ -1816,7 +1824,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
   // Handle Archive
   const onClickArchive = async () => {
-    console.log('Archive clicked for:', promoter.displayName);
+    console.log('[CLICK] Archive record for:', promoter.displayName);
     setIsLoading(true);
     try {
       const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
