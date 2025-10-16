@@ -170,26 +170,62 @@ export const POST = withAnyRBAC(
         }
       }
       
-      // Add default placeholder URLs for ALL template images to prevent empty URL errors
-      // This ensures all 12 image slots (body, header, footer) have valid URLs
+      // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
+      // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
       const placeholderImage = 'https://via.placeholder.com/200x200.png?text=Image';
       
       enrichedContractData = {
         ...enrichedContractData,
-        // Ensure we have fallback URLs for all possible image placeholders (body, header, footer)
-        // These will be used if the specific image URL is not provided
+        // Header/Footer images (various naming conventions)
         header_logo: enrichedContractData.header_logo || placeholderImage,
         footer_logo: enrichedContractData.footer_logo || placeholderImage,
+        header_image: enrichedContractData.header_image || placeholderImage,
+        footer_image: enrichedContractData.footer_image || placeholderImage,
+        
+        // Company/Party logos
         company_logo: enrichedContractData.company_logo || placeholderImage,
+        company_logo_url: enrichedContractData.company_logo_url || placeholderImage,
         first_party_logo: enrichedContractData.first_party_logo || placeholderImage,
         second_party_logo: enrichedContractData.second_party_logo || placeholderImage,
+        party_1_logo: enrichedContractData.party_1_logo || placeholderImage,
+        party_2_logo: enrichedContractData.party_2_logo || placeholderImage,
+        
+        // Signature images
         first_party_signature: enrichedContractData.first_party_signature || placeholderImage,
         second_party_signature: enrichedContractData.second_party_signature || placeholderImage,
+        party_1_signature: enrichedContractData.party_1_signature || placeholderImage,
+        party_2_signature: enrichedContractData.party_2_signature || placeholderImage,
         witness_signature: enrichedContractData.witness_signature || placeholderImage,
+        signature_1: enrichedContractData.signature_1 || placeholderImage,
+        signature_2: enrichedContractData.signature_2 || placeholderImage,
+        
+        // Official stamps/seals
         stamp_image: enrichedContractData.stamp_image || placeholderImage,
+        stamp: enrichedContractData.stamp || placeholderImage,
+        official_stamp: enrichedContractData.official_stamp || placeholderImage,
+        seal: enrichedContractData.seal || placeholderImage,
+        
+        // QR codes/Barcodes
         qr_code: enrichedContractData.qr_code || placeholderImage,
+        barcode: enrichedContractData.barcode || placeholderImage,
+        
+        // Watermarks/Background
         watermark: enrichedContractData.watermark || placeholderImage,
-        header_image: enrichedContractData.header_image || placeholderImage,
+        background_image: enrichedContractData.background_image || placeholderImage,
+        
+        // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
+        image_1: enrichedContractData.image_1 || placeholderImage,
+        image_2: enrichedContractData.image_2 || placeholderImage,
+        image_3: enrichedContractData.image_3 || placeholderImage,
+        image_4: enrichedContractData.image_4 || placeholderImage,
+        image_5: enrichedContractData.image_5 || placeholderImage,
+        image_6: enrichedContractData.image_6 || placeholderImage,
+        image_7: enrichedContractData.image_7 || placeholderImage,
+        image_8: enrichedContractData.image_8 || placeholderImage,
+        image_9: enrichedContractData.image_9 || placeholderImage,
+        image_10: enrichedContractData.image_10 || placeholderImage,
+        image_11: enrichedContractData.image_11 || placeholderImage,
+        image_12: enrichedContractData.image_12 || placeholderImage,
       };
 
       // Generate contract with Make.com integration
