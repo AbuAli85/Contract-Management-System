@@ -1076,7 +1076,25 @@ export const enhancedContractTypes: ContractTypeConfig[] = [
 export function getEnhancedContractTypeConfig(
   contractTypeId: string
 ): ContractTypeConfig | null {
-  return enhancedContractTypes.find(type => type.id === contractTypeId) || null;
+  // Try direct match first
+  let config = enhancedContractTypes.find(type => type.id === contractTypeId);
+  
+  // If not found, try legacy type mapping for backward compatibility
+  if (!config) {
+    const legacyTypeMapping: Record<string, string> = {
+      'employment': 'full-time-permanent',
+      'service': 'service-contract',
+      'consultancy': 'consulting-agreement',
+      'partnership': 'partnership-agreement',
+    };
+    
+    const mappedId = legacyTypeMapping[contractTypeId];
+    if (mappedId) {
+      config = enhancedContractTypes.find(type => type.id === mappedId);
+    }
+  }
+  
+  return config || null;
 }
 
 export function getAllEnhancedContractTypes(): ContractTypeConfig[] {
