@@ -177,9 +177,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       { 
         success: false, 
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' 
-          ? (error as Error).message 
-          : undefined
+        details: (error as Error).message // Temporarily expose for debugging
       },
       { status: 500 }
     );
