@@ -169,6 +169,50 @@ export const POST = withAnyRBAC(
           console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
       }
+
+      // Fetch first party (employer) data if first_party_id is provided
+      if (contractData.first_party_id) {
+        const supabase = createSupabaseClient();
+        const { data: firstParty, error: firstPartyError } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, crn')
+          .eq('id', contractData.first_party_id)
+          .single();
+
+        if (!firstPartyError && firstParty) {
+          console.log('✅ Fetched first party data:', firstParty.name_en);
+          enrichedContractData = {
+            ...enrichedContractData,
+            first_party_name_en: firstParty.name_en,
+            first_party_name_ar: firstParty.name_ar,
+            first_party_crn: firstParty.crn,
+          };
+        } else {
+          console.warn('⚠️ Could not fetch first party data:', firstPartyError);
+        }
+      }
+
+      // Fetch second party data if second_party_id is provided
+      if (contractData.second_party_id) {
+        const supabase = createSupabaseClient();
+        const { data: secondParty, error: secondPartyError } = await supabase
+          .from('parties')
+          .select('id, name_en, name_ar, crn')
+          .eq('id', contractData.second_party_id)
+          .single();
+
+        if (!secondPartyError && secondParty) {
+          console.log('✅ Fetched second party data:', secondParty.name_en);
+          enrichedContractData = {
+            ...enrichedContractData,
+            second_party_name_en: secondParty.name_en,
+            second_party_name_ar: secondParty.name_ar,
+            second_party_crn: secondParty.crn,
+          };
+        } else {
+          console.warn('⚠️ Could not fetch second party data:', secondPartyError);
+        }
+      }
       
       // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
       // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
