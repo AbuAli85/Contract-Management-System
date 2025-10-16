@@ -2,7 +2,7 @@
 -- CONVERT PARTIAL URLs TO FULL SUPABASE STORAGE URLs
 -- ============================================================================
 -- 🚀 READY TO RUN - No modifications needed!
--- Project ID: ekdjxzhujettocosgzql
+-- Project ID: reootcngcptfogfozlmz
 -- Storage Bucket: promoter-documents
 -- ============================================================================
 
@@ -22,9 +22,9 @@ SELECT
   '=== PREVIEW: What URLs Will Become ===' as section,
   name_en,
   id_card_url as current_id_card,
-  'https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/' || id_card_url as new_id_card,
+  'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/' || id_card_url as new_id_card,
   passport_url as current_passport,
-  'https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/' || passport_url as new_passport
+  'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/' || passport_url as new_passport
 FROM promoters
 WHERE (id_card_url IS NOT NULL AND id_card_url NOT LIKE 'https://%')
    OR (passport_url IS NOT NULL AND passport_url NOT LIKE 'https://%')
@@ -36,14 +36,14 @@ LIMIT 5;
 
 -- 3. Update ID card URLs to full URLs
 UPDATE promoters
-SET id_card_url = 'https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/' || id_card_url
+SET id_card_url = 'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/' || id_card_url
 WHERE id_card_url IS NOT NULL 
   AND id_card_url NOT LIKE 'https://%'
   AND id_card_url != '';
 
 -- 4. Update passport URLs to full URLs
 UPDATE promoters
-SET passport_url = 'https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/' || passport_url
+SET passport_url = 'https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/' || passport_url
 WHERE passport_url IS NOT NULL 
   AND passport_url NOT LIKE 'https://%'
   AND passport_url != '';
@@ -105,8 +105,8 @@ LIMIT 1;
 -- - 24 passports: "filename.jpeg" (partial)
 --
 -- AFTER:
--- - 49 ID cards: "https://ekdjxzhujettocosgzql.supabase.co/.../filename.jpeg" (full)
--- - 24 passports: "https://ekdjxzhujettocosgzql.supabase.co/.../filename.jpeg" (full)
+-- - 49 ID cards: "https://reootcngcptfogfozlmz.supabase.co/.../filename.jpeg" (full)
+-- - 24 passports: "https://reootcngcptfogfozlmz.supabase.co/.../filename.jpeg" (full)
 -- - All URLs work in browser and Make.com
 -- ============================================================================
 
@@ -114,7 +114,7 @@ LIMIT 1;
 -- 🧪 TESTING:
 -- ============================================================================
 -- After running, test one URL in your browser:
--- https://ekdjxzhujettocosgzql.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg
+-- https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg
 --
 -- If it displays the image ✅ - URLs are correct and Make.com will work!
 -- If it shows 404 ❌ - Check bucket permissions or file names
