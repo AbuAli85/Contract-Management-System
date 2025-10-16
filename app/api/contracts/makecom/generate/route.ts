@@ -164,11 +164,39 @@ export const POST = withAnyRBAC(
             promoter_passport_number: promoter.passport_number,
             promoter_email: promoter.email,
             promoter_mobile_number: promoter.mobile_number,
+            // Add placeholder URLs for all common template image placeholders
+            // This prevents "URL should not be empty" errors for unused placeholders
+            company_logo: 'https://via.placeholder.com/200x80.png?text=Company+Logo',
+            first_party_logo: 'https://via.placeholder.com/150x80.png?text=Party+1',
+            second_party_logo: 'https://via.placeholder.com/150x80.png?text=Party+2',
+            first_party_signature: 'https://via.placeholder.com/200x60.png?text=Signature+1',
+            second_party_signature: 'https://via.placeholder.com/200x60.png?text=Signature+2',
+            witness_signature: 'https://via.placeholder.com/200x60.png?text=Witness',
+            stamp_image: 'https://via.placeholder.com/100x100.png?text=Stamp',
+            qr_code: 'https://via.placeholder.com/100x100.png?text=QR',
+            header_image: 'https://via.placeholder.com/800x100.png?text=Header',
+            watermark: 'https://via.placeholder.com/1x1.png',
           };
         } else {
           console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
       }
+      
+      // Add default placeholder URLs for common template images (always include these)
+      enrichedContractData = {
+        ...enrichedContractData,
+        // Ensure we have fallback URLs for all common template placeholders
+        company_logo: enrichedContractData.company_logo || 'https://via.placeholder.com/200x80.png?text=Company+Logo',
+        first_party_logo: enrichedContractData.first_party_logo || 'https://via.placeholder.com/150x80.png?text=Party+1',
+        second_party_logo: enrichedContractData.second_party_logo || 'https://via.placeholder.com/150x80.png?text=Party+2',
+        first_party_signature: enrichedContractData.first_party_signature || 'https://via.placeholder.com/200x60.png?text=Signature+1',
+        second_party_signature: enrichedContractData.second_party_signature || 'https://via.placeholder.com/200x60.png?text=Signature+2',
+        witness_signature: enrichedContractData.witness_signature || 'https://via.placeholder.com/200x60.png?text=Witness',
+        stamp_image: enrichedContractData.stamp_image || 'https://via.placeholder.com/100x100.png?text=Stamp',
+        qr_code: enrichedContractData.qr_code || 'https://via.placeholder.com/100x100.png?text=QR',
+        header_image: enrichedContractData.header_image || 'https://via.placeholder.com/800x100.png?text=Header',
+        watermark: enrichedContractData.watermark || 'https://via.placeholder.com/1x1.png',
+      };
 
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
