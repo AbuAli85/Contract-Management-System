@@ -269,7 +269,7 @@ export const POST = withAnyRBAC(
           currency: contractData.currency || 'OMR',
           is_current: true,
         })
-        .select('id, contract_number, contract_type, status, first_party_id, second_party_id, promoter_id, start_date, end_date, title, value, currency')
+        .select('id, contract_number, contract_type, status, promoter_id, start_date, end_date, title, value, currency, created_at, updated_at')
         .single();
 
       if (contractError) {
@@ -284,6 +284,10 @@ export const POST = withAnyRBAC(
         );
       }
 
+      // Add the party IDs back to the contract object (they weren't selected to avoid foreign key expansion)
+      (contract as any).first_party_id = contractData.first_party_id;
+      (contract as any).second_party_id = contractData.second_party_id;
+      
       console.log('✅ Contract created:', contract.id);
 
       // If triggerMakecom is true, send webhook to Make.com
