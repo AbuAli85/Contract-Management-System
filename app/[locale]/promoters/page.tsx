@@ -18,16 +18,7 @@ export default function PromotersPage({
   const isDevelopment = process.env.NODE_ENV === 'development';
   
   return (
-    <ErrorBoundary 
-      componentName="Promoters Page"
-      onError={(error, errorInfo) => {
-        // Log to error tracking service in production
-        if (process.env.NODE_ENV === 'production') {
-          console.error('Promoters page error:', error, errorInfo);
-          // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
-        }
-      }}
-    >
+    <ErrorBoundary componentName="Promoters Page">
       <div className="space-y-6">
         {isDevelopment && <PromotersDebugInfo />}
         <EnhancedPromotersView locale={params.locale} />

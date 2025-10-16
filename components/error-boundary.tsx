@@ -66,12 +66,19 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Log to error reporting service in production
     if (process.env.NODE_ENV === 'production') {
+      console.error('Production error:', error, errorInfo);
       // TODO: Send to error tracking service (e.g., Sentry, LogRocket)
       // logErrorToService(error, errorInfo);
     }
 
-    // Call custom error handler if provided
-    this.props.onError?.(error, errorInfo);
+    // Call custom error handler if provided (only works from client components)
+    if (typeof this.props.onError === 'function') {
+      try {
+        this.props.onError(error, errorInfo);
+      } catch (e) {
+        console.error('Error in onError handler:', e);
+      }
+    }
 
     // Update state with error info
     this.setState({
