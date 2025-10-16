@@ -2,14 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AuthErrorHandler } from '@/lib/auth-error-handler';
 import { ApiErrorHandler } from '@/lib/api-error-handler';
-import { withRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
+import { ratelimitAuth, getClientIdentifier, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rate-limit';
 import { createAuditLog, logAuditEvent } from '@/lib/security';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-async function loginHandler(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
+    // ✅ SECURITY: Apply strict rate limiting for auth (5 requests per minute)
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await ratelimitAuth.limit(identifier);
+    
+    if (!rateLimitResult.success) {
+      const headers = getRateLimitHeaders(rateLimitResult);
+      const body = createRateLimitResponse(rateLimitResult);
+      
+      // Log rate limit hit
+      const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
+        identifier,
+        attemptsRemaining: rateLimitResult.remaining,
+      });
+      logAuditEvent(auditEntry);
+      
+      return NextResponse.json(body, {
+        status: 429,
+        headers,
+      });
+    }
+
     console.log('🔐 Server login API called');
 
     const { email, password } = await request.json();
@@ -98,6 +119,9 @@ async function loginHandler(request: NextRequest) {
       });
     }
 
+    // Add rate limit headers to response
+    const responseHeaders = getRateLimitHeaders(rateLimitResult);
+    
     // Create response with success
     const response = NextResponse.json(
       AuthErrorHandler.createSuccess(
@@ -108,7 +132,10 @@ async function loginHandler(request: NextRequest) {
           },
         },
         'Login successful'
-      )
+      ),
+      {
+        headers: responseHeaders,
+      }
     );
 
     // Let Supabase handle cookie management automatically
@@ -130,6 +157,3 @@ async function loginHandler(request: NextRequest) {
     return NextResponse.json(apiError, { status: 500 });
   }
 }
-
-// Export the rate-limited handler
-export const POST = withRateLimit(loginHandler, RATE_LIMITS.auth);
