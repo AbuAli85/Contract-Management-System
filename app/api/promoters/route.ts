@@ -130,8 +130,9 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       .select(`
         id, name_en, name_ar, email, mobile_number, phone,
         profile_picture_url, status, job_title,
-        id_card_expiry_date, passport_expiry_date, id_card_number,
-        passport_number, nationality, date_of_birth, gender,
+        id_card_number, id_card_expiry_date, id_card_url,
+        passport_number, passport_expiry_date, passport_url,
+        nationality, date_of_birth, gender,
         employer_id, created_at, updated_at
       `, { count: 'exact' })
       .range(offset, offset + limit - 1)
