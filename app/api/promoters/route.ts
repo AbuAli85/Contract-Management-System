@@ -129,7 +129,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       .from('promoters')
       .select(`
         id, name_en, name_ar, email, mobile_number, phone,
-        profile_picture_url, status, job_title, work_location,
+        profile_picture_url, status, job_title,
         id_card_expiry_date, passport_expiry_date, id_card_number,
         passport_number, nationality, date_of_birth, gender,
         employer_id, created_at, updated_at
@@ -143,7 +143,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         { 
           success: false,
           error: 'Failed to fetch promoters',
-          details: error.message // Temporarily expose for debugging
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
         },
         { status: 500 }
       );
@@ -177,7 +177,9 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       { 
         success: false, 
         error: 'Internal server error',
-        details: (error as Error).message // Temporarily expose for debugging
+        details: process.env.NODE_ENV === 'development' 
+          ? (error as Error).message 
+          : undefined
       },
       { status: 500 }
     );
