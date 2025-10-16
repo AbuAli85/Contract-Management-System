@@ -794,16 +794,19 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     
     try {
       switch (actionId) {
-        case 'export':
-          // Export selected promoters
+        case 'export': {
+          // Export selected promoters (client-side, no API call)
           const selectedData = sortedPromoters.filter(p => selectedPromoters.has(p.id));
-          const headers = ['Name', 'Email', 'Phone', 'Status', 'Company'];
+          const headers = ['Name', 'Email', 'Phone', 'Status', 'Company', 'Job Title', 'ID Expiry', 'Passport Expiry'];
           const rows = selectedData.map(p => [
             p.displayName,
             p.contactEmail,
             p.contactPhone,
             p.overallStatus,
-            p.organisationLabel
+            p.organisationLabel,
+            p.job_title || '—',
+            formatDisplayDate(p.id_card_expiry_date),
+            formatDisplayDate(p.passport_expiry_date),
           ]);
           const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
           
@@ -811,7 +814,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           const url = URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `selected-promoters-${new Date().toISOString().split('T')[0]}.csv`;
+          link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
           link.click();
           URL.revokeObjectURL(url);
           
@@ -820,33 +823,74 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
             description: `${selectedPromoters.size} promoters exported successfully.`,
           });
           break;
+        }
           
-        case 'notify':
-          toast({
-            title: 'Notifications Sent',
-            description: `Notifications sent to ${selectedPromoters.size} promoters.`,
+        case 'archive':
+        case 'delete':
+        case 'notify': {
+          // API call for these actions
+          const response = await fetch('/api/promoters/bulk', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              action: actionId === 'delete' ? 'update_status' : actionId,
+              promoterIds: Array.from(selectedPromoters),
+              status: actionId === 'delete' ? 'terminated' : undefined,
+              notificationType: actionId === 'notify' ? 'standard' : undefined,
+            }),
           });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || 'Bulk action failed');
+          }
+
+          const result = await response.json();
+          
+          toast({
+            title: 'Success',
+            description: result.message || `${actionId} completed successfully`,
+          });
+          
+          // Refetch data to update the UI
+          await refetch();
           break;
+        }
+        
+        case 'assign': {
+          // TODO: Show dialog to select company
+          // For now, show a message
+          toast({
+            title: 'Feature Coming Soon',
+            description: 'Company assignment dialog will be available soon.',
+          });
+          return; // Don't clear selection or close bulk actions
+        }
           
         default:
           toast({
-            title: 'Action Completed',
-            description: `Bulk action "${actionId}" completed for ${selectedPromoters.size} promoters.`,
+            variant: 'destructive',
+            title: 'Unknown Action',
+            description: `Action "${actionId}" is not recognized.`,
           });
+          return;
       }
       
       setSelectedPromoters(new Set());
       setShowBulkActions(false);
     } catch (error) {
+      console.error('Bulk action error:', error);
       toast({
         variant: 'destructive',
         title: 'Action Failed',
-        description: 'There was an error performing the bulk action.',
+        description: error instanceof Error ? error.message : 'There was an error performing the bulk action.',
       });
     } finally {
       setIsPerformingBulkAction(false);
     }
-  }, [selectedPromoters, sortedPromoters, toast]);
+  }, [selectedPromoters, sortedPromoters, toast, refetch]);
 
   const handleResetFilters = useCallback(() => {
     setSearchTerm('');

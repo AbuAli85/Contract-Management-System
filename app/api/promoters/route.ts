@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
+import { ratelimitStrict, getClientIdentifier, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rate-limit';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -49,131 +50,162 @@ const promoterSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).default(210),
 });
 
-// 🔧 TEMPORARY FIX: Bypass RBAC for debugging
-export async function GET(request: Request) {
-  // TODO: Re-enable RBAC after fixing permission issues
-  // export const GET = withRBAC('promoter:read:own', async (request: Request) => {
+// ✅ SECURITY: RBAC enabled with rate limiting
+export const GET = withRBAC('promoter:read:own', async (request: Request) => {
   try {
-    console.log('🔍 API /api/promoters GET called (RBAC BYPASSED, RLS DISABLED)');
+    // ✅ SECURITY: Apply rate limiting
+    const identifier = getClientIdentifier(request);
+    const rateLimitResult = await ratelimitStrict.limit(identifier);
+    
+    if (!rateLimitResult.success) {
+      const headers = getRateLimitHeaders(rateLimitResult);
+      const body = createRateLimitResponse(rateLimitResult);
       
-      const cookieStore = await cookies();
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-      console.log('🔑 Supabase config:', {
-        hasUrl: !!supabaseUrl,
-        hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        usingKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE' : 'ANON',
-        rbacEnforcement: process.env.RBAC_ENFORCEMENT || 'not set',
-        nodeEnv: process.env.NODE_ENV,
-      });
-
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('❌ Missing Supabase credentials');
-        return NextResponse.json(
-          { success: false, error: 'Server configuration error' },
-          { status: 500 }
-        );
-      }
-
-      const supabase = createServerClient(supabaseUrl, supabaseKey, {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet: any) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }: any) =>
-                cookieStore.set(name, value, options as CookieOptions)
-              );
-            } catch {}
-          },
-        } as any,
-      });
-
-      // Get authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('👤 Authenticated user:', user?.email);
-
-      // Parse pagination from query params
-      const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get('page') || '1');
-      const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-      const offset = (page - 1) * limit;
-
-      console.log('📊 Query params:', { page, limit, offset });
-
-      // Execute query - SERVICE_ROLE key bypasses RLS
-      console.log('📊 Executing Supabase query...');
-      console.log('📊 Query details:', { 
-        table: 'promoters', 
-        offset, 
-        range: [offset, offset + limit - 1],
-        usingServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY 
-      });
-      
-      const { data: promoters, error, count } = await supabase
-        .from('promoters')
-        .select('*', { count: 'exact' })
-        .range(offset, offset + limit - 1)
-        .order('created_at', { ascending: false });
-
-      console.log('📊 Query result:', { 
-        dataLength: promoters?.length, 
-        count, 
-        error: error?.message,
-        errorCode: error?.code,
-        errorDetails: error?.details 
-      });
-
-      if (error) {
-        console.error('❌ Database error:', error);
-        return NextResponse.json(
-          { 
-            success: false,
-            error: 'Failed to fetch promoters',
-            details: error.message,
-            code: error.code 
-          },
-          { status: 500 }
-        );
-      }
-
-      console.log(`✅ Fetched ${promoters?.length || 0} promoters (total: ${count})`);
-      
-      if (promoters && promoters.length > 0) {
-        console.log('📋 First promoter:', promoters[0].name_en);
-      }
-      
-      return NextResponse.json({
-        success: true,
-        promoters: promoters || [],
-        count: promoters?.length || 0,
-        total: count || 0,
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
-          hasNext: offset + limit < (count || 0),
-          hasPrev: page > 1,
+      return NextResponse.json(body, {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers,
         },
-        timestamp: new Date().toISOString(),
       });
-    } catch (error) {
-      console.error('❌ API error:', error);
+    }
+
+    console.log('🔍 API /api/promoters GET called (RBAC ENABLED, Rate Limited)');
+      
+    const cookieStore = await cookies();
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('❌ Missing Supabase credentials');
       return NextResponse.json(
-        { success: false, error: 'Internal server error' },
+        { success: false, error: 'Server configuration error' },
         { status: 500 }
       );
     }
+
+    // ✅ SECURITY: Using ANON key with RLS policies
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet: any) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }: any) =>
+              cookieStore.set(name, value, options as CookieOptions)
+            );
+          } catch {}
+        },
+      } as any,
+    });
+
+    // ✅ SECURITY: Verify authenticated user
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Authentication required',
+          details: 'Please log in to access promoters data'
+        },
+        { status: 401 }
+      );
+    }
+
+    console.log('👤 Authenticated user:', user.email);
+
+    // Parse pagination from query params
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
+    const offset = (page - 1) * limit;
+
+    console.log('📊 Query params:', { page, limit, offset });
+
+    // ✅ SECURITY: Query with RLS policies - only returns authorized data
+    const { data: promoters, error, count } = await supabase
+      .from('promoters')
+      .select(`
+        id, name_en, name_ar, email, mobile_number, phone,
+        profile_picture_url, status, job_title, work_location,
+        id_card_expiry_date, passport_expiry_date, id_card_number,
+        passport_number, nationality, date_of_birth, gender,
+        employer_id, created_at, updated_at
+      `, { count: 'exact' })
+      .range(offset, offset + limit - 1)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('❌ Database error:', error);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Failed to fetch promoters',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ Fetched ${promoters?.length || 0} promoters (total: ${count})`);
+    
+    // Add rate limit headers to response
+    const responseHeaders = getRateLimitHeaders(rateLimitResult);
+    
+    return NextResponse.json({
+      success: true,
+      promoters: promoters || [],
+      count: promoters?.length || 0,
+      total: count || 0,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+        hasNext: offset + limit < (count || 0),
+        hasPrev: page > 1,
+      },
+      timestamp: new Date().toISOString(),
+    }, {
+      headers: responseHeaders,
+    });
+  } catch (error) {
+    console.error('❌ API error:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' 
+          ? (error as Error).message 
+          : undefined
+      },
+      { status: 500 }
+    );
+  }
+});
+
+// ✅ SECURITY: RBAC enabled with rate limiting
+export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
+  // ✅ SECURITY: Apply rate limiting
+  const identifier = getClientIdentifier(request);
+  const rateLimitResult = await ratelimitStrict.limit(identifier);
+  
+  if (!rateLimitResult.success) {
+    const headers = getRateLimitHeaders(rateLimitResult);
+    const body = createRateLimitResponse(rateLimitResult);
+    
+    return NextResponse.json(body, {
+      status: 429,
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+    });
   }
 
-// 🔧 TEMPORARY FIX: Bypass RBAC for debugging
-export async function POST(request: Request) {
-  // TODO: Re-enable RBAC after fixing permission issues
-  // export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
+  console.log('🔍 API /api/promoters POST called (RBAC ENABLED, Rate Limited)');
   try {
     const cookieStore = await cookies();
 
@@ -203,7 +235,7 @@ export async function POST(request: Request) {
       } as any,
     });
 
-    // Get authenticated user (required)
+    // ✅ SECURITY: Verify authenticated user (required)
     const {
       data: { user },
       error: authError,
@@ -211,10 +243,16 @@ export async function POST(request: Request) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { 
+          success: false,
+          error: 'Authentication required',
+          details: 'Please log in to create promoters'
+        },
         { status: 401 }
       );
     }
+
+    console.log('👤 Authenticated user:', user.email);
 
     // Check if user is admin (for scoping data)
     let isAdmin = false;
@@ -304,6 +342,7 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
+          success: false,
           error: 'Validation error',
           details: error.issues,
         },
@@ -313,9 +352,15 @@ export async function POST(request: Request) {
 
     console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' 
+          ? (error as Error).message 
+          : undefined
+      },
       { status: 500 }
     );
   }
-}
+});
 
