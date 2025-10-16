@@ -269,7 +269,7 @@ export const POST = withAnyRBAC(
           currency: contractData.currency || 'OMR',
           is_current: true,
         })
-        .select()
+        .select('id, contract_number, contract_type, status, first_party_id, second_party_id, promoter_id, start_date, end_date, title, value, currency')
         .single();
 
       if (contractError) {
