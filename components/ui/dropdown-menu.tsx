@@ -90,6 +90,8 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
       return () =>
         document.removeEventListener('mousedown', handleClickOutside);
     }
+    
+    return undefined;
   }, [isOpen]);
 
   return (
@@ -105,7 +107,9 @@ const DropdownMenuTrigger = React.forwardRef<
 >(({ children, className, asChild, onClick, ...props }, ref) => {
   const { isOpen, setIsOpen } = React.useContext(DropdownMenuContext);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsOpen(!isOpen);
     onClick?.();
   };
@@ -122,9 +126,14 @@ const DropdownMenuTrigger = React.forwardRef<
   return (
     <button
       ref={ref}
-      type='button'
+      type="button"
+      aria-haspopup="menu"
+      aria-expanded={isOpen}
       className={cn(
-        'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center rounded-lg text-sm font-medium ring-offset-background transition-all duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2',
+        'disabled:pointer-events-none disabled:opacity-50',
+        'hover:bg-slate-100 active:bg-slate-200',
         className
       )}
       onClick={handleClick}
@@ -159,9 +168,8 @@ const DropdownMenuContent = React.forwardRef<
       <div
         ref={ref}
         className={cn(
-          'absolute z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md',
-          'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          'absolute z-[100] min-w-[8rem] overflow-hidden rounded-lg border border-slate-200 bg-white text-slate-950 shadow-xl',
+          'animate-in fade-in-0 zoom-in-95 slide-in-from-top-2',
           topClass,
           align === 'start' && 'left-0',
           align === 'center' && 'left-1/2 transform -translate-x-1/2',
@@ -183,7 +191,9 @@ const DropdownMenuItem = React.forwardRef<
 >(({ children, className, inset, onClick, disabled, ...props }, ref) => {
   const { closeDropdown } = React.useContext(DropdownMenuContext);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!disabled) {
       onClick?.();
       closeDropdown();
@@ -194,13 +204,23 @@ const DropdownMenuItem = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        'relative flex cursor-default select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors',
-        'hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground',
-        disabled && 'pointer-events-none opacity-50',
+        'relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-3 py-2.5 text-sm outline-none transition-all duration-150',
+        'hover:bg-slate-100 hover:text-slate-950 focus:bg-slate-100 focus:text-slate-950',
+        'active:bg-slate-200',
+        disabled && 'pointer-events-none opacity-50 cursor-not-allowed',
         inset && 'pl-8',
         className
       )}
       onClick={handleClick}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          onClick?.();
+          closeDropdown();
+        }
+      }}
       {...props}
     >
       {children}

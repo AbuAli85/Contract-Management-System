@@ -482,6 +482,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards'>('table');
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
+  const [loadTimeout, setLoadTimeout] = useState(false);
 
   // Refs for virtualization
   const parentRef = useRef<HTMLDivElement>(null);
@@ -505,12 +506,24 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   } = useQuery<PromotersResponse, Error>({
     queryKey: ['promoters', page, limit],
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: 30_000, // 30 seconds
-    retry: 1, // Only retry once on failure
-    retryDelay: 1000, // Wait 1 second before retry
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
-    refetchInterval: false, // Disable auto-refresh to prevent issues
+    staleTime: 30_000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading && !response) {
+        console.warn('⚠️ Load timeout: Data took too long to load');
+        setLoadTimeout(true);
+      }
+    }, 15000); // 15 second timeout
+
+    return () => clearTimeout(timer);
+  }, [isLoading, response]);
 
   useEffect(() => {
     if (isError && error) {
@@ -874,8 +887,51 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   );
 
   // Loading state
-  if (isLoading) {
+  // Show loading skeleton only for first 15 seconds
+  if (isLoading && !response && !loadTimeout) {
     return <EnhancedPromotersSkeleton />;
+  }
+
+  // If loading timed out, show error
+  if (loadTimeout && !response) {
+    return (
+      <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+        <Card>
+          <CardHeader>
+            <CardTitle className='flex items-center gap-2 text-red-600'>
+              <XCircle className='h-5 w-5' />
+              Page Load Timeout
+            </CardTitle>
+            <CardDescription>
+              The page took too long to load. This might be a network issue.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <Alert variant='destructive'>
+              <AlertTriangle className='h-4 w-4' />
+              <AlertDescription>
+                <strong>What to do:</strong>
+                <div className='mt-2 space-y-1 text-sm'>
+                  <div>• Refresh the page</div>
+                  <div>• Check your internet connection</div>
+                  <div>• Try again in a few moments</div>
+                </div>
+              </AlertDescription>
+            </Alert>
+            <div className='flex gap-2'>
+              <Button onClick={() => window.location.reload()} variant='default'>
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Reload Page
+              </Button>
+              <Button onClick={() => refetch()} variant='outline'>
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Try Loading Data
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Error state
