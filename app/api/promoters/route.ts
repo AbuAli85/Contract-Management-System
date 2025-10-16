@@ -143,7 +143,7 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
         { 
           success: false,
           error: 'Failed to fetch promoters',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          details: error.message // Temporarily expose for debugging
         },
         { status: 500 }
       );
