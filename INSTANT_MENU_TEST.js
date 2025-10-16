@@ -1,41 +1,85 @@
-// INSTANT MENU TEST - Paste this entire script into your browser console (F12)
-// This will add click logging to all menu items
-
-console.log('🧪 MENU TEST STARTED');
+// CLICK TEST - Find and click the "More options" button
+console.log('🎯 CLICK TEST STARTED');
 console.log('============================================');
 
-// Test 1: Find all menu items
-const menuItems = document.querySelectorAll('[role="menuitem"]');
-console.log(`✅ Found ${menuItems.length} menu items`);
+// Find all buttons in table cells
+const rows = document.querySelectorAll('table tbody tr');
+console.log(`Found ${rows.length} table rows`);
 
-// Test 2: Add click listeners to all menu items
-menuItems.forEach((item, index) => {
-  const originalOnClick = item.onclick;
-  item.onclick = function(e) {
-    console.log(`🖱️ MENU CLICK #${index + 1}:`, item.textContent.trim());
-    console.log('   Element:', item);
-    console.log('   Event:', e);
-    if (originalOnClick) {
-      return originalOnClick.call(this, e);
+if (rows.length > 0) {
+  const firstRow = rows[0];
+  const cells = firstRow.querySelectorAll('td');
+  const lastCell = cells[cells.length - 1];
+  const buttons = lastCell.querySelectorAll('button');
+  
+  console.log(`First row last cell has ${buttons.length} buttons`);
+  
+  // Find the "More options" button
+  let moreButton = null;
+  buttons.forEach((btn, idx) => {
+    if (btn.title === 'More options') {
+      console.log(`✅ Found "More options" button at index ${idx}`);
+      moreButton = btn;
     }
-  };
-});
+  });
+  
+  if (moreButton) {
+    console.log('🖱️ Clicking "More options" button...');
+    moreButton.click();
+    
+    // Wait a bit and check what appeared
+    setTimeout(() => {
+      console.log('\n📊 AFTER CLICK - Checking DOM:');
+      
+      // Check for menu items
+      const menuItems = document.querySelectorAll('[role="menuitem"]');
+      console.log(`1. Menu items [role="menuitem"]: ${menuItems.length}`);
+      
+      // Check for any visible divs that might be the menu
+      const allDivs = document.querySelectorAll('div');
+      let visibleMenuDivs = 0;
+      allDivs.forEach(div => {
+        const style = window.getComputedStyle(div);
+        if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+          if (div.textContent.includes('View profile') || div.textContent.includes('Edit details')) {
+            visibleMenuDivs++;
+            console.log(`   Found menu content div: "${div.textContent.substring(0, 50)}..."`);
+          }
+        }
+      });
+      console.log(`2. Visible menu content divs: ${visibleMenuDivs}`);
+      
+      // Check for dialog/popover
+      const dialogs = document.querySelectorAll('[role="dialog"]');
+      console.log(`3. Dialog elements: ${dialogs.length}`);
+      
+      // Check for Radix UI popover data attribute
+      const popoverElements = document.querySelectorAll('[data-radix-popover-content]');
+      console.log(`4. Radix popover elements: ${popoverElements.length}`);
+      if (popoverElements.length > 0) {
+        console.log(`   Content: "${popoverElements[0].textContent.substring(0, 100)}..."`);
+      }
+      
+      // Try to find elements with "View profile" text
+      const allElements = document.querySelectorAll('*');
+      let profileLinks = 0;
+      allElements.forEach(el => {
+        if (el.textContent === 'View profile' || el.textContent.includes('View profile')) {
+          profileLinks++;
+        }
+      });
+      console.log(`5. Elements with "View profile" text: ${profileLinks}`);
+      
+      // Check button disabled state
+      console.log(`\n🔍 Button state AFTER click:`);
+      console.log(`   disabled: ${moreButton.disabled}`);
+      console.log(`   aria-expanded: ${moreButton.getAttribute('aria-expanded')}`);
+      
+    }, 500);
+  } else {
+    console.log('❌ Could not find "More options" button');
+  }
+}
 
-console.log('============================================');
-console.log('✅ TEST READY - Now try clicking menu items');
-console.log('Watch the console for CLICK messages below');
-console.log('============================================');
-
-// Test 3: Show what to do
-console.log(`
-📋 NEXT STEPS:
-1. Click the three-dots (...) button on any promoter row
-2. A menu will appear
-3. Click any menu item (View profile, Edit, Send notification, Archive)
-4. Watch this console for the CLICK message
-
-If you see "🖱️ MENU CLICK" - the onClick IS firing ✅
-If you DON'T see it - the onClick is NOT firing ❌
-
-IMPORTANT: Take a screenshot of this console after clicking!
-`);
+console.log('\n============================================');
+console.log('✅ CLICK TEST COMPLETE - Check console above');
