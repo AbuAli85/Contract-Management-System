@@ -224,11 +224,38 @@ class ContractGenerationService {
         return false;
       }
 
+      // Fetch promoter data including image URLs
+      let promoterData = null;
+      if (contract.promoter_id) {
+        const { data: promoter, error: promoterError } = await this.supabase
+          .from('promoters')
+          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number')
+          .eq('id', contract.promoter_id)
+          .single();
+
+        if (!promoterError && promoter) {
+          promoterData = promoter;
+          console.log('✅ Fetched promoter data for webhook:', promoter.name_en);
+        } else {
+          console.warn('⚠️ Could not fetch promoter data:', promoterError);
+        }
+      }
+
       // Prepare webhook payload
       const webhookPayload = {
         contract_id: contract.id,
         contract_number: contract.contract_number,
         contract_type: contract.contract_type,
+        // Include promoter data if available
+        promoter_id: promoterData?.id,
+        promoter_name_en: promoterData?.name_en,
+        promoter_name_ar: promoterData?.name_ar,
+        promoter_id_card_number: promoterData?.id_card_number,
+        promoter_passport_number: promoterData?.passport_number,
+        promoter_id_card_url: promoterData?.id_card_url,
+        promoter_passport_url: promoterData?.passport_url,
+        promoter_email: promoterData?.email,
+        promoter_mobile_number: promoterData?.mobile_number,
       };
 
       console.log('📤 Sending webhook payload:', webhookPayload);
