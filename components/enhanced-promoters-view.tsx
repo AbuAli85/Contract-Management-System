@@ -1625,7 +1625,6 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end' className='w-48'>
-        <DropdownMenuLabel>Quick actions</DropdownMenuLabel>
         <DropdownMenuItem onClick={onView}>
           <Eye className='mr-2 h-4 w-4' />
           View profile
