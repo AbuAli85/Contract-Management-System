@@ -310,7 +310,7 @@ class ContractGenerationService {
       }
 
       // Step 2: Check if contract type is valid
-      // Supports both enhanced types and legacy database types
+      // Supports enhanced types, legacy database types, and Make.com automated types
       const validEnhancedTypes = [
         'full-time-permanent',
         'part-time-fixed',
@@ -323,7 +323,12 @@ class ContractGenerationService {
         'lease-equipment',
       ];
       const validDatabaseTypes = ['employment', 'service', 'consultancy', 'partnership'];
-      const allValidTypes = [...validEnhancedTypes, ...validDatabaseTypes];
+      const validMakecomTypes = [
+        'oman-unlimited-makecom',
+        'oman-fixed-term-makecom',
+        'oman-part-time-makecom',
+      ];
+      const allValidTypes = [...validEnhancedTypes, ...validDatabaseTypes, ...validMakecomTypes];
       const normalizedType = String(data.contract_type).toLowerCase();
       
       if (!allValidTypes.includes(normalizedType)) {

@@ -24,6 +24,16 @@ These are the **9 enhanced contract types** configured in the system:
 | `vendor-supply` | Vendor Supply Agreement | Vendor | ✅ Active |
 | `lease-equipment` | Equipment Lease Agreement | Lease | ✅ Active |
 
+### **Make.com Automated Contract Types**
+
+These are **Oman Labor Law compliant** contract types with automated PDF generation:
+
+| ID | Name | Status |
+|----|------|--------|
+| `oman-unlimited-makecom` | 🤖 Oman Unlimited Contract (Auto PDF) | ✅ Active |
+| `oman-fixed-term-makecom` | 🤖 Oman Fixed-Term Contract (Auto PDF) | ✅ Active |
+| `oman-part-time-makecom` | 🤖 Oman Part-Time Contract (Auto PDF) | ✅ Active |
+
 ### **Database Values (for existing contracts)**
 
 These are **legacy values** stored in the database:
@@ -46,8 +56,9 @@ The error message should indicate what contract type was attempted. Common issue
 ❌ **Wrong:** `'unlimited-contract'` (from old CONTRACT_TYPES constant)  
 ✅ **Correct:** `'full-time-permanent'` (from enhanced config)
 
-❌ **Wrong:** `'oman-unlimited-makecom'` (old Make.com type)  
-✅ **Correct:** Use one of the 9 enhanced types above
+✅ **Also Valid:** `'oman-unlimited-makecom'` (Make.com automated type)  
+✅ **Also Valid:** `'oman-fixed-term-makecom'` (Make.com automated type)  
+✅ **Also Valid:** `'oman-part-time-makecom'` (Make.com automated type)
 
 ### **Step 2: Check Your Form Data**
 
@@ -221,7 +232,7 @@ console.log('Validation result:', result);
 
 ## 📝 Summary
 
-**Valid Contract Type IDs:**
+**Valid Enhanced Contract Type IDs (9):**
 1. `full-time-permanent`
 2. `part-time-fixed`
 3. `consulting-agreement`
@@ -232,15 +243,22 @@ console.log('Validation result:', result);
 8. `vendor-supply`
 9. `lease-equipment`
 
-**Legacy Database Values (still supported):**
+**Valid Make.com Automated Types (3):**
+1. `oman-unlimited-makecom` 🤖
+2. `oman-fixed-term-makecom` 🤖
+3. `oman-part-time-makecom` 🤖
+
+**Legacy Database Values (4, still supported):**
 - `employment`
 - `service`
 - `consultancy`
 - `partnership`
 
+**Total: 16 valid contract types**
+
 **Action Required:**
 - Check what `contract_type` value is being sent
-- Ensure it matches one of the 9 enhanced IDs above
+- Ensure it matches one of the 16 valid types listed above
 - Update any old references to use new IDs
 - Run diagnostic query to check existing contracts
 
