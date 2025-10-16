@@ -102,6 +102,23 @@ import {
   SortDesc,
 } from 'lucide-react';
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 type DocumentStatus = 'valid' | 'expiring' | 'expired' | 'missing';
 type OverallStatus = 'active' | 'warning' | 'critical' | 'inactive';
 type SortField = 'name' | 'status' | 'created' | 'documents';
@@ -955,46 +972,72 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   return (
     <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       {/* Enhanced Header */}
-      <Card className='relative overflow-hidden border-none bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white'>
-        <CardHeader className='pb-6'>
+      <Card className='relative overflow-hidden border-none bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white shadow-2xl'>
+        <div className='absolute inset-0 opacity-10'>
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,white_1px,transparent_1px)] bg-[length:40px_40px]' />
+        </div>
+        <CardHeader className='relative pb-6'>
           <div className='flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between'>
-            <div className='space-y-2'>
-              <CardTitle className='text-3xl font-semibold tracking-tight lg:text-4xl'>
-                Promoter Intelligence Hub
-              </CardTitle>
-              <CardDescription className='max-w-2xl text-base text-white/80'>
-                Monitor workforce readiness, document compliance, and partner coverage in real-time to keep every engagement on track.
+            <div className='space-y-3'>
+              <div className='flex items-center gap-3'>
+                <div className='rounded-lg bg-white/10 p-3 backdrop-blur-sm'>
+                  <Users className='h-6 w-6' />
+                </div>
+                <CardTitle className='text-4xl font-bold tracking-tight lg:text-5xl'>
+                  Promoter Intelligence Hub
+                </CardTitle>
+              </div>
+              <CardDescription className='max-w-3xl text-base text-white/80'>
+                Monitor workforce readiness, document compliance, and partner coverage in real-time to keep every engagement on track. {metrics.total} promoters in system.
               </CardDescription>
-              <div className='flex flex-wrap items-center gap-3 text-sm text-white/70'>
-                <Badge className='bg-white/10 text-white'>Live data</Badge>
-                <Badge className='bg-white/10 text-white'>
+              <div className='flex flex-wrap items-center gap-3 text-sm text-white/70 pt-2'>
+                <Badge className='bg-white/10 text-white border-white/20'>
+                  <Activity className='mr-1.5 h-3 w-3' />
+                  Live data
+                </Badge>
+                <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30'>
+                  <CheckCircle className='mr-1.5 h-3 w-3' />
                   {metrics.complianceRate}% compliant
                 </Badge>
-                <span>
-                  {metrics.active} active • {metrics.critical} critical alerts • {metrics.companies} partner organisations
-                </span>
+                <Badge className='bg-amber-500/20 text-amber-100 border-amber-400/30'>
+                  <AlertTriangle className='mr-1.5 h-3 w-3' />
+                  {metrics.critical} critical
+                </Badge>
+                <Badge className='bg-blue-500/20 text-blue-100 border-blue-400/30'>
+                  <Building2 className='mr-1.5 h-3 w-3' />
+                  {metrics.companies} companies
+                </Badge>
               </div>
             </div>
             <div className='flex flex-wrap items-center gap-3'>
               <Button 
                 onClick={handleAddPromoter} 
-                className='bg-white text-slate-900 hover:bg-white/90'
+                className='bg-white text-slate-900 hover:bg-white/90 font-semibold shadow-lg transition-all hover:shadow-xl'
                 size='lg'
               >
                 <Plus className='mr-2 h-5 w-5' />
                 Add Promoter
               </Button>
-              <Button
-                variant='secondary'
-                className='bg-white/10 text-white hover:bg-white/20'
-                onClick={handleRefresh}
-                disabled={isFetching}
-              >
-                <RefreshCw
-                  className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin text-white/70')}
-                />
-                Refresh
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant='secondary'
+                      className='bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border-white/10'
+                      onClick={handleRefresh}
+                      disabled={isFetching}
+                    >
+                      <RefreshCw
+                        className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin')}
+                      />
+                      {isFetching ? 'Refreshing...' : 'Refresh'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className='text-xs'>Refresh promoter data (Cmd+R)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </CardHeader>
@@ -1174,26 +1217,41 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
       {/* Main Content */}
       <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'>
         {/* Enhanced Table */}
-        <Card className='overflow-hidden'>
-          <CardHeader className='flex flex-col gap-2 border-b bg-muted/10 py-4 sm:flex-row sm:items-center sm:justify-between'>
+        <Card className='overflow-hidden shadow-lg'>
+          <CardHeader className='flex flex-col gap-3 border-b bg-gradient-to-r from-slate-50 to-slate-100 py-4 dark:from-slate-950 dark:to-slate-900 sm:flex-row sm:items-center sm:justify-between'>
             <div>
-              <CardTitle className='text-lg'>Promoter roster</CardTitle>
-              <CardDescription>
-                {sortedPromoters.length} of {dashboardPromoters.length} records visible
+              <CardTitle className='text-2xl font-bold'>Promoter roster</CardTitle>
+              <CardDescription className='mt-1'>
+                <span className='font-semibold text-foreground'>{sortedPromoters.length}</span> of <span className='font-semibold text-foreground'>{dashboardPromoters.length}</span> records visible
               </CardDescription>
             </div>
-            <div className='flex items-center gap-2'>
+            <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
               {isFetching && (
-                <Badge variant='outline' className='gap-2'>
-                  <RefreshCw className='h-3 w-3 animate-spin' />
-                  Refreshing
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant='outline' className='gap-2 bg-amber-50 text-amber-700 border-amber-200'>
+                        <RefreshCw className='h-3 w-3 animate-spin' />
+                        Refreshing data
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className='text-xs'>Syncing latest promoter information...</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
-              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'grid' | 'cards')}>
-                <TabsList className='grid w-full grid-cols-3'>
-                  <TabsTrigger value='table'>Table</TabsTrigger>
-                  <TabsTrigger value='grid'>Grid</TabsTrigger>
-                  <TabsTrigger value='cards'>Cards</TabsTrigger>
+              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'grid' | 'cards')} className='ml-auto'>
+                <TabsList className='grid w-full grid-cols-3 bg-white/80 dark:bg-slate-800/80'>
+                  <TabsTrigger value='table' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                    Table
+                  </TabsTrigger>
+                  <TabsTrigger value='grid' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                    Grid
+                  </TabsTrigger>
+                  <TabsTrigger value='cards' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                    Cards
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -1232,60 +1290,101 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               <ScrollArea className='h-[520px]' ref={parentRef}>
                 <Table>
                   <TableHeader className='sticky top-0 z-10 bg-background/95 backdrop-blur'>
-                    <TableRow>
-                      <TableHead className='w-[50px]'>
-                        <Checkbox
-                          checked={selectedPromoters.size === sortedPromoters.length}
-                          onCheckedChange={handleSelectAll}
-                        />
+                    <TableRow className='border-b-2 hover:bg-transparent'>
+                      <TableHead className='w-[50px] text-center'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Checkbox
+                                checked={selectedPromoters.size === sortedPromoters.length}
+                                onCheckedChange={handleSelectAll}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className='text-xs'>Select all visible promoters</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableHead>
                       <TableHead 
-                        className='w-[220px] cursor-pointer hover:bg-muted/50'
+                        className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('name')}
                       >
-                        <div className='flex items-center gap-2'>
-                          Promoter
-                          {sortField === 'name' && (
-                            sortOrder === 'asc' ? <SortAsc className='h-4 w-4' /> : <SortDesc className='h-4 w-4' />
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Promoter</span>
+                          {sortField === 'name' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
                           )}
                         </div>
                       </TableHead>
                       <TableHead 
-                        className='w-[200px] cursor-pointer hover:bg-muted/50'
+                        className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('documents')}
                       >
-                        <div className='flex items-center gap-2'>
-                          Documents
-                          {sortField === 'documents' && (
-                            sortOrder === 'asc' ? <SortAsc className='h-4 w-4' /> : <SortDesc className='h-4 w-4' />
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Documents</span>
+                          {sortField === 'documents' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
                           )}
                         </div>
                       </TableHead>
-                      <TableHead>Assignment</TableHead>
-                      <TableHead>Contacts</TableHead>
+                      <TableHead className='font-semibold'>Assignment</TableHead>
+                      <TableHead className='font-semibold'>Contacts</TableHead>
                       <TableHead 
-                        className='cursor-pointer hover:bg-muted/50'
+                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('created')}
                       >
-                        <div className='flex items-center gap-2'>
-                          Created
-                          {sortField === 'created' && (
-                            sortOrder === 'asc' ? <SortAsc className='h-4 w-4' /> : <SortDesc className='h-4 w-4' />
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Created</span>
+                          {sortField === 'created' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
                           )}
                         </div>
                       </TableHead>
                       <TableHead 
-                        className='cursor-pointer hover:bg-muted/50'
+                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('status')}
                       >
-                        <div className='flex items-center gap-2'>
-                          Status
-                          {sortField === 'status' && (
-                            sortOrder === 'asc' ? <SortAsc className='h-4 w-4' /> : <SortDesc className='h-4 w-4' />
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Status</span>
+                          {sortField === 'status' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='text-right'>Actions</TableHead>
+                      <TableHead className='text-right font-semibold'>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1467,29 +1566,34 @@ function EnhancedStatCard({
   const styles = STAT_CARD_STYLES[variant];
 
   return (
-    <Card className={cn('shadow-sm', styles.container)}>
-      <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-        <CardTitle className='text-sm font-medium text-muted-foreground'>
-          {title}
-        </CardTitle>
+    <Card className={cn(
+      'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
+      styles.container
+    )}>
+      <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
+        <div className='space-y-1'>
+          <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
+            {title}
+          </CardTitle>
+          <div className='text-3xl font-bold tracking-tight'>{value}</div>
+        </div>
         <div
           className={cn(
-            'rounded-full p-2 text-slate-700 transition group-hover:scale-105',
+            'rounded-lg p-3 text-white transition-transform group-hover:scale-110',
             styles.icon
           )}
         >
-          <Icon className='h-4 w-4' />
+          <Icon className='h-6 w-6' />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className='text-2xl font-semibold tracking-tight'>{value}</div>
+      <CardContent className='space-y-2'>
         {helper && (
-          <p className='mt-1 text-sm text-muted-foreground'>{helper}</p>
+          <p className='text-sm text-muted-foreground'>{helper}</p>
         )}
         {trend && (
-          <div className='mt-2 flex items-center gap-1 text-xs text-muted-foreground'>
-            <TrendingUp className='h-3 w-3 text-green-500' />
-            <span>+{trend.value} {trend.label}</span>
+          <div className='flex items-center gap-2 rounded-lg bg-green-50/50 p-2 text-xs text-green-700'>
+            <TrendingUp className='h-4 w-4' />
+            <span className='font-semibold'>+{trend.value} {trend.label}</span>
           </div>
         )}
       </CardContent>
@@ -1515,38 +1619,51 @@ function EnhancedPromoterRow({
   return (
     <TableRow
       className={cn(
-        'group transition-colors hover:bg-muted/40',
-        promoter.overallStatus === 'critical' && 'border-l-2 border-l-red-500',
-        promoter.overallStatus === 'warning' && 'border-l-2 border-l-amber-400',
-        isSelected && 'bg-primary/5'
+        'group transition-all duration-200 hover:bg-muted/50',
+        promoter.overallStatus === 'critical' && 'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
+        promoter.overallStatus === 'warning' && 'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
+        isSelected && 'bg-primary/10 border-l-4 border-l-primary'
       )}
     >
-      <TableCell>
+      <TableCell className='w-[50px]'>
         <Checkbox checked={isSelected} onCheckedChange={onSelect} />
       </TableCell>
       <TableCell>
-        <div className='flex items-center gap-3'>
-          <SafeImage
-            src={promoter.profile_picture_url ?? null}
-            alt={promoter.displayName}
-            width={40}
-            height={40}
-            className='h-10 w-10 rounded-full border border-white/50 object-cover shadow-sm'
-            fallback={
-              <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
-                <Users className='h-5 w-5' />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className='flex cursor-help items-center gap-3'>
+                <SafeImage
+                  src={promoter.profile_picture_url ?? null}
+                  alt={promoter.displayName}
+                  width={40}
+                  height={40}
+                  className='h-10 w-10 rounded-full border-2 border-white/50 object-cover shadow-sm transition-transform group-hover:scale-105'
+                  fallback={
+                    <div className='flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500'>
+                      <Users className='h-5 w-5' />
+                    </div>
+                  }
+                />
+                <div className='space-y-0.5'>
+                  <div className='font-semibold leading-none text-foreground'>
+                    {promoter.displayName}
+                  </div>
+                  <div className='text-xs text-muted-foreground'>
+                    {promoter.job_title || promoter.work_location || '—'}
+                  </div>
+                </div>
               </div>
-            }
-          />
-          <div className='space-y-0.5'>
-            <div className='font-medium leading-none text-foreground'>
-              {promoter.displayName}
-            </div>
-            <div className='text-xs text-muted-foreground'>
-              {promoter.job_title || promoter.work_location || '—'}
-            </div>
-          </div>
-        </div>
+            </TooltipTrigger>
+            <TooltipContent side='right' className='max-w-xs'>
+              <div className='space-y-1'>
+                <div className='font-semibold'>{promoter.displayName}</div>
+                <div className='text-sm'>{promoter.contactEmail}</div>
+                <div className='text-sm'>{promoter.contactPhone}</div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TableCell>
       <TableCell>
         <div className='space-y-1'>
@@ -1562,13 +1679,13 @@ function EnhancedPromoterRow({
           <Badge
             variant='outline'
             className={cn(
-              'w-fit rounded-full border px-2 py-0.5 text-xs font-medium',
+              'w-fit rounded-full border px-2 py-0.5 text-xs font-medium transition-colors',
               promoter.assignmentStatus === 'assigned'
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                : 'bg-slate-100 text-slate-600 border-slate-200'
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             )}
           >
-            {promoter.assignmentStatus === 'assigned' ? 'Assigned' : 'Unassigned'}
+            {promoter.assignmentStatus === 'assigned' ? '✓ Assigned' : '○ Unassigned'}
           </Badge>
         </div>
       </TableCell>
@@ -1588,10 +1705,15 @@ function EnhancedPromoterRow({
         <Badge
           variant='outline'
           className={cn(
-            'rounded-full px-3 py-1 text-xs font-medium',
+            'rounded-full px-3 py-1 text-xs font-semibold transition-all',
             OVERALL_STATUS_BADGES[promoter.overallStatus]
           )}
         >
+          {promoter.overallStatus === 'critical' && '🔴'}
+          {promoter.overallStatus === 'warning' && '🟡'}
+          {promoter.overallStatus === 'active' && '🟢'}
+          {promoter.overallStatus === 'inactive' && '⚪'}
+          {' '}
           {OVERALL_STATUS_LABELS[promoter.overallStatus]}
         </Badge>
       </TableCell>
@@ -1613,37 +1735,197 @@ interface EnhancedActionsMenuProps {
 }
 
 function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuProps) {
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+  const { toast } = useToast();
+
+  // Determine context-aware actions based on promoter status
+  const isAtRisk = 
+    promoter.idDocument.status !== 'valid' || 
+    promoter.passportDocument.status !== 'valid';
+  
+  const isCritical = promoter.overallStatus === 'critical';
+  const isUnassigned = promoter.assignmentStatus === 'unassigned';
+
+  const handleArchive = async () => {
+    try {
+      // TODO: Implement actual archive logic
+      toast({
+        title: 'Record Archived',
+        description: `${promoter.displayName} has been archived.`,
+      });
+      setShowArchiveDialog(false);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Archive Failed',
+        description: 'Could not archive the record.',
+      });
+    }
+  };
+
+  const handleNotification = () => {
+    toast({
+      title: 'Notification Sent',
+      description: `Notification sent to ${promoter.displayName}.`,
+    });
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant='ghost'
-          size='icon'
-          className='h-8 w-8 text-muted-foreground hover:text-foreground'
-        >
-          <MoreHorizontal className='h-4 w-4' />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align='end' className='w-48'>
-        <DropdownMenuItem onClick={onView}>
-          <Eye className='mr-2 h-4 w-4' />
-          View profile
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={onEdit}>
-          <Edit className='mr-2 h-4 w-4' />
-          Edit details
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Send className='mr-2 h-4 w-4' />
-          Send notification
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Archive className='mr-2 h-4 w-4' />
-          Archive record
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='h-8 w-8 text-muted-foreground hover:text-foreground transition-colors'
+                >
+                  <MoreHorizontal className='h-4 w-4' />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className='text-xs'>More options (Alt+M)</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end' className='w-56'>
+          {/* Primary Actions Section */}
+          <div className='px-2 py-1.5'>
+            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+              View & Edit
+            </p>
+          </div>
+          
+          <DropdownMenuItem onClick={onView} className='cursor-pointer gap-2'>
+            <Eye className='h-4 w-4 text-blue-500' />
+            <div className='flex-1'>
+              <div className='font-medium'>View profile</div>
+              <div className='text-xs text-muted-foreground'>Full details</div>
+            </div>
+            <kbd className='pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex'>
+              <span className='text-xs'>⌘</span>V
+            </kbd>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={onEdit} className='cursor-pointer gap-2'>
+            <Edit className='h-4 w-4 text-amber-500' />
+            <div className='flex-1'>
+              <div className='font-medium'>Edit details</div>
+              <div className='text-xs text-muted-foreground'>Update information</div>
+            </div>
+            <kbd className='pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex'>
+              <span className='text-xs'>⌘</span>E
+            </kbd>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Context-Aware Actions Section */}
+          {isAtRisk && (
+            <>
+              <div className='px-2 py-1.5'>
+                <p className='text-xs font-semibold text-amber-600 uppercase tracking-wider'>
+                  ⚠️ At Risk
+                </p>
+              </div>
+              <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+                <AlertTriangle className='h-4 w-4 text-amber-500' />
+                <div className='flex-1'>
+                  <div className='font-medium'>Remind to renew docs</div>
+                  <div className='text-xs text-muted-foreground'>Send alert</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
+          {isCritical && (
+            <>
+              <div className='px-2 py-1.5'>
+                <p className='text-xs font-semibold text-red-600 uppercase tracking-wider'>
+                  🚨 Critical
+                </p>
+              </div>
+              <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+                <Send className='h-4 w-4 text-red-500' />
+                <div className='flex-1'>
+                  <div className='font-medium'>Urgent notification</div>
+                  <div className='text-xs text-muted-foreground'>High priority alert</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
+          {isUnassigned && (
+            <>
+              <div className='px-2 py-1.5'>
+                <p className='text-xs font-semibold text-slate-600 uppercase tracking-wider'>
+                  Unassigned
+                </p>
+              </div>
+              <DropdownMenuItem onClick={onEdit} className='cursor-pointer gap-2'>
+                <Building2 className='h-4 w-4 text-slate-500' />
+                <div className='flex-1'>
+                  <div className='font-medium'>Assign to company</div>
+                  <div className='text-xs text-muted-foreground'>Set employer</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
+          {/* Communication Actions */}
+          <div className='px-2 py-1.5'>
+            <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+              Actions
+            </p>
+          </div>
+          
+          <DropdownMenuItem onClick={handleNotification} className='cursor-pointer gap-2'>
+            <Send className='h-4 w-4 text-green-500' />
+            <div className='flex-1'>
+              <div className='font-medium'>Send notification</div>
+              <div className='text-xs text-muted-foreground'>Email or SMS</div>
+            </div>
+          </DropdownMenuItem>
+
+          {/* Destructive Actions */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem 
+            onClick={() => setShowArchiveDialog(true)} 
+            className='cursor-pointer gap-2 text-destructive hover:bg-destructive/10'
+          >
+            <Archive className='h-4 w-4' />
+            <div className='flex-1'>
+              <div className='font-medium'>Archive record</div>
+              <div className='text-xs text-muted-foreground'>Hide from active list</div>
+            </div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Archive Confirmation Dialog */}
+      <AlertDialog open={showArchiveDialog} onOpenChange={setShowArchiveDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This action can be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchive} className='bg-destructive hover:bg-destructive/90'>
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
