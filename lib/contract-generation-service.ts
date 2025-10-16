@@ -309,19 +309,31 @@ class ContractGenerationService {
         };
       }
 
-      // Step 2: Check if contract type is valid (database enforces only 4 types)
-      // Valid types: employment, service, consultancy, partnership
+      // Step 2: Check if contract type is valid
+      // Supports both enhanced types and legacy database types
+      const validEnhancedTypes = [
+        'full-time-permanent',
+        'part-time-fixed',
+        'consulting-agreement',
+        'service-contract',
+        'freelance-project',
+        'partnership-agreement',
+        'nda-standard',
+        'vendor-supply',
+        'lease-equipment',
+      ];
       const validDatabaseTypes = ['employment', 'service', 'consultancy', 'partnership'];
+      const allValidTypes = [...validEnhancedTypes, ...validDatabaseTypes];
       const normalizedType = String(data.contract_type).toLowerCase();
       
-      if (!validDatabaseTypes.includes(normalizedType)) {
+      if (!allValidTypes.includes(normalizedType)) {
         return {
           success: false,
           contract_id: '',
           contract_number: '',
           status: 'failed',
           message: `Contract type '${data.contract_type}' is not valid`,
-          errors: [`Invalid contract type. Valid types are: ${validDatabaseTypes.join(', ')}`],
+          errors: [`Invalid contract type. Valid types are: ${allValidTypes.join(', ')}`],
         };
       }
 
