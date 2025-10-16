@@ -141,9 +141,38 @@ export const POST = withAnyRBAC(
         );
       }
 
+      // Fetch promoter data including image URLs if promoter_id is provided
+      let enrichedContractData = { ...contractData };
+      if (contractData.promoter_id) {
+        const supabase = createSupabaseClient();
+        const { data: promoter, error: promoterError } = await supabase
+          .from('promoters')
+          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number')
+          .eq('id', contractData.promoter_id)
+          .single();
+
+        if (!promoterError && promoter) {
+          console.log('✅ Fetched promoter data for contract generation:', promoter.name_en);
+          // Add promoter image URLs to contract data for webhook
+          enrichedContractData = {
+            ...enrichedContractData,
+            promoter_id_card_url: promoter.id_card_url,
+            promoter_passport_url: promoter.passport_url,
+            promoter_name_en: promoter.name_en,
+            promoter_name_ar: promoter.name_ar,
+            promoter_id_card_number: promoter.id_card_number,
+            promoter_passport_number: promoter.passport_number,
+            promoter_email: promoter.email,
+            promoter_mobile_number: promoter.mobile_number,
+          };
+        } else {
+          console.warn('⚠️ Could not fetch promoter data:', promoterError);
+        }
+      }
+
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
-        generateContractWithMakecom(contractType, contractData);
+        generateContractWithMakecom(contractType, enrichedContractData);
 
       if (!validation.isValid) {
         return NextResponse.json(
