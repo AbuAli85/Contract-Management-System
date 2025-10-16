@@ -41,10 +41,10 @@ export interface ContractGenerationResponse {
     | 'approved'
     | 'rejected'
     | 'failed';
-  pdf_url?: string;
-  google_drive_url?: string;
+  pdf_url?: string | undefined;
+  google_drive_url?: string | undefined;
   message: string;
-  errors?: string[];
+  errors?: string[] | undefined;
 }
 
 export interface ContractStatus {
@@ -60,10 +60,10 @@ export interface ContractStatus {
     | 'approved'
     | 'rejected'
     | 'failed';
-  pdf_url?: string;
-  google_drive_url?: string;
-  generated_at?: string;
-  error_message?: string;
+  pdf_url?: string | undefined;
+  google_drive_url?: string | undefined;
+  generated_at?: string | undefined;
+  error_message?: string | undefined;
 }
 
 class ContractGenerationService {
