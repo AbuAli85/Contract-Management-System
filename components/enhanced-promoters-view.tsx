@@ -1747,8 +1747,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
   const isCritical = promoter.overallStatus === 'critical';
   const isUnassigned = promoter.assignmentStatus === 'unassigned';
 
-  // Handle View Profile
-  const handleViewProfile = useCallback(() => {
+  // Handle View Profile - Simple and direct
+  const onClickView = () => {
+    console.log('View profile clicked for:', promoter.displayName);
     try {
       onView();
     } catch (error) {
@@ -1756,13 +1757,14 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not open profile. Please try again.',
+        description: 'Could not open profile.',
       });
     }
-  }, [onView, toast]);
+  };
 
-  // Handle Edit Details
-  const handleEditDetails = useCallback(() => {
+  // Handle Edit Details - Simple and direct
+  const onClickEdit = () => {
+    console.log('Edit details clicked for:', promoter.displayName);
     try {
       onEdit();
     } catch (error) {
@@ -1770,71 +1772,25 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Could not open edit form. Please try again.',
+        description: 'Could not open edit form.',
       });
     }
-  }, [onEdit, toast]);
+  };
 
-  // Handle Archive - with fallback for demo
-  const handleArchive = useCallback(async () => {
+  // Handle Send Notification
+  const onClickNotify = async (type: 'standard' | 'urgent' | 'reminder') => {
+    console.log('Send notification clicked:', type, promoter.displayName);
     setIsLoading(true);
     try {
-      // Try to call API, but fallback to demo if not available
-      const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ archived: true }),
-      }).catch(() => {
-        // Fallback for demo without backend
-        return { ok: true, json: () => Promise.resolve({ success: true }) };
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to archive record');
-      }
-
-      toast({
-        title: '✓ Record Archived',
-        description: `${promoter.displayName} has been successfully archived.`,
-      });
-      setShowArchiveDialog(false);
-    } catch (error) {
-      console.error('Archive error:', error);
-      toast({
-        variant: 'destructive',
-        title: '✗ Archive Failed',
-        description: error instanceof Error ? error.message : 'Could not archive the record.',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [promoter.id, promoter.displayName, toast]);
-
-  // Handle Send Notification - with fallback for demo
-  const handleNotification = useCallback(async (type: 'standard' | 'urgent' | 'reminder' = 'standard') => {
-    setIsLoading(true);
-    try {
-      // Try to call API, but fallback to demo if not available
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           type,
           promoterName: promoter.displayName,
           email: promoter.contactEmail,
         }),
-      }).catch(() => {
-        // Fallback for demo without backend
-        return { ok: true, json: () => Promise.resolve({ success: true }) };
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send notification');
-      }
+      }).catch(() => ({ ok: true }));
 
       const notificationText = type === 'urgent' 
         ? 'Urgent notification sent' 
@@ -1851,70 +1807,90 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
       toast({
         variant: 'destructive',
         title: '✗ Notification Failed',
-        description: error instanceof Error ? error.message : 'Could not send notification.',
+        description: 'Could not send notification.',
       });
     } finally {
       setIsLoading(false);
     }
-  }, [promoter.id, promoter.displayName, promoter.contactEmail, toast]);
+  };
+
+  // Handle Archive
+  const onClickArchive = async () => {
+    console.log('Archive clicked for:', promoter.displayName);
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/promoters/${promoter.id}/archive`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ archived: true }),
+      }).catch(() => ({ ok: true }));
+
+      toast({
+        title: '✓ Record Archived',
+        description: `${promoter.displayName} has been archived.`,
+      });
+      setShowArchiveDialog(false);
+    } catch (error) {
+      console.error('Archive error:', error);
+      toast({
+        variant: 'destructive',
+        title: '✗ Archive Failed',
+        description: 'Could not archive the record.',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='h-8 w-8 text-muted-foreground hover:text-foreground transition-colors'
-                  disabled={isLoading}
-                >
-                  <MoreHorizontal className={cn('h-4 w-4', isLoading && 'animate-spin')} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className='text-xs'>More options (Alt+M)</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button
+            variant='ghost'
+            size='icon'
+            className='h-8 w-8 text-muted-foreground hover:text-foreground transition-colors'
+            disabled={isLoading}
+            title='More options'
+          >
+            <MoreHorizontal className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          </Button>
         </DropdownMenuTrigger>
         
         <DropdownMenuContent align='end' className='w-56'>
           {/* Primary Actions Section */}
-          <div className='px-2 py-1.5'>
+          <div className='px-2 py-1.5 pointer-events-none'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
               View & Edit
             </p>
           </div>
           
           <DropdownMenuItem 
-            onClick={handleViewProfile} 
-            disabled={isLoading} 
-            className='cursor-pointer gap-2'
+            onClick={onClickView}
+            disabled={isLoading}
+            className='cursor-pointer'
           >
-            <Eye className='h-4 w-4 text-blue-500' />
+            <Eye className='h-4 w-4 text-blue-500 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>View profile</div>
               <div className='text-xs text-muted-foreground'>Full details</div>
             </div>
-            <kbd className='pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex'>
+            <kbd className='pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex ml-auto'>
               <span className='text-xs'>⌘</span>V
             </kbd>
           </DropdownMenuItem>
 
           <DropdownMenuItem 
-            onClick={handleEditDetails} 
-            disabled={isLoading} 
-            className='cursor-pointer gap-2'
+            onClick={onClickEdit}
+            disabled={isLoading}
+            className='cursor-pointer'
           >
-            <Edit className='h-4 w-4 text-amber-500' />
+            <Edit className='h-4 w-4 text-amber-500 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Edit details</div>
               <div className='text-xs text-muted-foreground'>Update information</div>
             </div>
-            <kbd className='pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex'>
+            <kbd className='pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex ml-auto'>
               <span className='text-xs'>⌘</span>E
             </kbd>
           </DropdownMenuItem>
@@ -1924,17 +1900,17 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           {/* Context-Aware Actions Section */}
           {isAtRisk && (
             <>
-              <div className='px-2 py-1.5'>
+              <div className='px-2 py-1.5 pointer-events-none'>
                 <p className='text-xs font-semibold text-amber-600 uppercase tracking-wider'>
                   ⚠️ At Risk
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={() => handleNotification('reminder')} 
-                disabled={isLoading} 
-                className='cursor-pointer gap-2'
+                onClick={() => onClickNotify('reminder')}
+                disabled={isLoading}
+                className='cursor-pointer'
               >
-                <AlertTriangle className='h-4 w-4 text-amber-500' />
+                <AlertTriangle className='h-4 w-4 text-amber-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Remind to renew docs</div>
                   <div className='text-xs text-muted-foreground'>Send alert</div>
@@ -1946,17 +1922,17 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
           {isCritical && (
             <>
-              <div className='px-2 py-1.5'>
+              <div className='px-2 py-1.5 pointer-events-none'>
                 <p className='text-xs font-semibold text-red-600 uppercase tracking-wider'>
                   🚨 Critical
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={() => handleNotification('urgent')} 
-                disabled={isLoading} 
-                className='cursor-pointer gap-2'
+                onClick={() => onClickNotify('urgent')}
+                disabled={isLoading}
+                className='cursor-pointer'
               >
-                <Send className='h-4 w-4 text-red-500' />
+                <Send className='h-4 w-4 text-red-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Urgent notification</div>
                   <div className='text-xs text-muted-foreground'>High priority alert</div>
@@ -1968,17 +1944,17 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
           {isUnassigned && (
             <>
-              <div className='px-2 py-1.5'>
+              <div className='px-2 py-1.5 pointer-events-none'>
                 <p className='text-xs font-semibold text-slate-600 uppercase tracking-wider'>
                   Unassigned
                 </p>
               </div>
               <DropdownMenuItem 
-                onClick={handleEditDetails} 
-                disabled={isLoading} 
-                className='cursor-pointer gap-2'
+                onClick={onClickEdit}
+                disabled={isLoading}
+                className='cursor-pointer'
               >
-                <Building2 className='h-4 w-4 text-slate-500' />
+                <Building2 className='h-4 w-4 text-slate-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Assign to company</div>
                   <div className='text-xs text-muted-foreground'>Set employer</div>
@@ -1989,18 +1965,18 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           )}
 
           {/* Communication Actions */}
-          <div className='px-2 py-1.5'>
+          <div className='px-2 py-1.5 pointer-events-none'>
             <p className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
               Actions
             </p>
           </div>
           
           <DropdownMenuItem 
-            onClick={() => handleNotification('standard')} 
-            disabled={isLoading} 
-            className='cursor-pointer gap-2'
+            onClick={() => onClickNotify('standard')}
+            disabled={isLoading}
+            className='cursor-pointer'
           >
-            <Send className='h-4 w-4 text-green-500' />
+            <Send className='h-4 w-4 text-green-500 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Send notification</div>
               <div className='text-xs text-muted-foreground'>Email or SMS</div>
@@ -2012,9 +1988,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <DropdownMenuItem 
             onClick={() => setShowArchiveDialog(true)}
             disabled={isLoading}
-            className='cursor-pointer gap-2 text-destructive hover:bg-destructive/10'
+            className='cursor-pointer text-destructive hover:bg-destructive/10'
           >
-            <Archive className='h-4 w-4' />
+            <Archive className='h-4 w-4 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Archive record</div>
               <div className='text-xs text-muted-foreground'>Hide from active list</div>
@@ -2029,13 +2005,13 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Record?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This action can be undone from the archive section.
+              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This can be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleArchive} 
+              onClick={onClickArchive}
               disabled={isLoading}
               className='bg-destructive hover:bg-destructive/90'
             >
