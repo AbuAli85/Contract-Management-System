@@ -1082,10 +1082,15 @@ export function getEnhancedContractTypeConfig(
   // If not found, try legacy type mapping for backward compatibility
   if (!config) {
     const legacyTypeMapping: Record<string, string> = {
+      // Legacy database types
       'employment': 'full-time-permanent',
       'service': 'service-contract',
       'consultancy': 'consulting-agreement',
       'partnership': 'partnership-agreement',
+      // Make.com automated types (map to equivalent enhanced types)
+      'oman-unlimited-makecom': 'full-time-permanent',
+      'oman-fixed-term-makecom': 'part-time-fixed',
+      'oman-part-time-makecom': 'part-time-fixed',
     };
     
     const mappedId = legacyTypeMapping[contractTypeId];
