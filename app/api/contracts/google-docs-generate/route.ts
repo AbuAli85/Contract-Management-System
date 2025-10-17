@@ -146,6 +146,31 @@ export async function POST(request: NextRequest) {
       currency: 'OMR',
     };
 
+    // Check environment variables
+    if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+      console.error('❌ GOOGLE_SERVICE_ACCOUNT_KEY not set');
+      return NextResponse.json(
+        { 
+          error: 'Google Docs configuration missing',
+          details: 'GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set',
+          debug: 'Check /api/debug/google-docs-config for configuration status'
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.GOOGLE_DOCS_TEMPLATE_ID) {
+      console.error('❌ GOOGLE_DOCS_TEMPLATE_ID not set');
+      return NextResponse.json(
+        { 
+          error: 'Google Docs configuration missing',
+          details: 'GOOGLE_DOCS_TEMPLATE_ID environment variable not set',
+          debug: 'Check /api/debug/google-docs-config for configuration status'
+        },
+        { status: 500 }
+      );
+    }
+
     // Initialize Google Docs service
     const googleDocsConfig: any = {
       templateId: process.env.GOOGLE_DOCS_TEMPLATE_ID!,
@@ -156,17 +181,48 @@ export async function POST(request: NextRequest) {
       googleDocsConfig.outputFolderId = process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID;
     }
 
-    if (!googleDocsConfig.templateId || !googleDocsConfig.serviceAccountKey) {
+    let googleDocsService;
+    try {
+      googleDocsService = new GoogleDocsService(googleDocsConfig);
+    } catch (error) {
+      console.error('❌ Failed to initialize Google Docs service:', error);
       return NextResponse.json(
-        { error: 'Google Docs configuration missing' },
+        { 
+          error: 'Google Docs service initialization failed',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          debug: 'Check /api/debug/google-docs-config for configuration status'
+        },
         { status: 500 }
       );
     }
 
-    const googleDocsService = new GoogleDocsService(googleDocsConfig);
-
     // Generate contract using Google Docs
-    const result = await googleDocsService.generateContract(googleDocsData);
+    let result;
+    try {
+      result = await googleDocsService.generateContract(googleDocsData);
+    } catch (error) {
+      console.error('❌ Google Docs contract generation failed:', error);
+      
+      // Update contract status to failed
+      await (supabase as any)
+        .from('contracts')
+        .update({
+          status: 'failed',
+          error_message: error instanceof Error ? error.message : 'Unknown error',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', (contract as any)?.id);
+
+      return NextResponse.json(
+        { 
+          error: 'Contract generation failed',
+          details: error instanceof Error ? error.message : 'Unknown error',
+          contract_id: (contract as any)?.id,
+          debug: 'Check /api/debug/google-docs-config for configuration status'
+        },
+        { status: 500 }
+      );
+    }
 
     // Update contract with generated document info
     await (supabase as any)
@@ -201,7 +257,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Contract generation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        debug: 'Check /api/debug/google-docs-config for configuration status'
       },
       { status: 500 }
     );
@@ -213,6 +270,7 @@ export async function GET() {
     message: 'Google Docs Contract Generation API',
     endpoints: {
       POST: 'Generate contract using Google Docs template'
-    }
+    },
+    debug: '/api/debug/google-docs-config'
   });
 }
