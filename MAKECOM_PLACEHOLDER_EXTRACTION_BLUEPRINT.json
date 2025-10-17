@@ -1,0 +1,185 @@
+{
+  "name": "Google Docs Template Placeholder Extractor",
+  "description": "Extract all placeholders from Google Docs templates for contract generation",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": 1,
+      "type": "webhook",
+      "name": "Template Analysis Webhook",
+      "config": {
+        "method": "POST",
+        "response": "JSON",
+        "description": "Receives template ID for placeholder extraction"
+      },
+      "outputs": [
+        "template_id",
+        "template_name",
+        "analysis_type"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "google-docs",
+      "name": "Get Document Content",
+      "config": {
+        "action": "get_document",
+        "document_id": "{{1.template_id}}",
+        "description": "Retrieve the full document content from Google Docs"
+      }
+    },
+    {
+      "id": 3,
+      "type": "tools",
+      "name": "Extract Text Content",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "document_text",
+        "variable_value": "{{2.body.content}}",
+        "description": "Extract plain text content from document"
+      }
+    },
+    {
+      "id": 4,
+      "type": "tools",
+      "name": "Parse Placeholders",
+      "config": {
+        "action": "text_parser",
+        "input_text": "{{3.document_text}}",
+        "pattern": "\\{\\{([^}]+)\\}\\}",
+        "description": "Extract all {{placeholder}} patterns using regex"
+      }
+    },
+    {
+      "id": 5,
+      "type": "tools",
+      "name": "Clean and Deduplicate",
+      "config": {
+        "action": "array_operations",
+        "operation": "unique",
+        "array": "{{4.matches}}",
+        "description": "Remove duplicate placeholders"
+      }
+    },
+    {
+      "id": 6,
+      "type": "tools",
+      "name": "Categorize Placeholders",
+      "config": {
+        "action": "set_multiple_variables",
+        "description": "Categorize placeholders by type"
+      },
+      "variables": {
+        "contract_placeholders": "{{5.unique_array | filter('contains', 'contract')}}",
+        "promoter_placeholders": "{{5.unique_array | filter('contains', 'promoter')}}",
+        "party_placeholders": "{{5.unique_array | filter('contains', 'party')}}",
+        "date_placeholders": "{{5.unique_array | filter('contains', 'date')}}",
+        "salary_placeholders": "{{5.unique_array | filter('contains', 'salary')}}",
+        "other_placeholders": "{{5.unique_array | filter('not_contains', ['contract', 'promoter', 'party', 'date', 'salary'])}}"
+      }
+    },
+    {
+      "id": 7,
+      "type": "tools",
+      "name": "Generate Placeholder Mapping",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "placeholder_mapping",
+        "description": "Create mapping for contract generation"
+      },
+      "mapping": {
+        "{{contract_number}}": "contract.contract_number",
+        "{{contract_date}}": "contract.contract_date",
+        "{{contract_type}}": "contract.contract_type",
+        "{{promoter_name_en}}": "promoter.name_en",
+        "{{promoter_name_ar}}": "promoter.name_ar",
+        "{{promoter_id_card_number}}": "promoter.id_card_number",
+        "{{first_party_name_en}}": "first_party.name_en",
+        "{{first_party_name_ar}}": "first_party.name_ar",
+        "{{second_party_name_en}}": "second_party.name_en",
+        "{{second_party_name_ar}}": "second_party.name_ar",
+        "{{job_title}}": "contract.job_title",
+        "{{department}}": "contract.department",
+        "{{work_location}}": "contract.work_location",
+        "{{basic_salary}}": "contract.basic_salary",
+        "{{currency}}": "contract.currency",
+        "{{contract_start_date}}": "contract.contract_start_date",
+        "{{contract_end_date}}": "contract.contract_end_date",
+        "{{special_terms}}": "contract.special_terms"
+      }
+    },
+    {
+      "id": 8,
+      "type": "tools",
+      "name": "Validate Required Placeholders",
+      "config": {
+        "action": "set_multiple_variables",
+        "description": "Check if all required placeholders are present"
+      },
+      "variables": {
+        "has_contract_number": "{{5.unique_array | contains('contract_number')}}",
+        "has_promoter_name": "{{5.unique_array | contains('promoter_name')}}",
+        "has_party_info": "{{5.unique_array | contains('party_name')}}",
+        "has_salary_info": "{{5.unique_array | contains('salary')}}",
+        "missing_placeholders": "{{required_placeholders | difference(5.unique_array)}}"
+      }
+    },
+    {
+      "id": 9,
+      "type": "tools",
+      "name": "Generate Analysis Report",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "analysis_report",
+        "description": "Create comprehensive analysis report"
+      },
+      "report": {
+        "template_id": "{{1.template_id}}",
+        "template_name": "{{1.template_name}}",
+        "total_placeholders": "{{5.unique_array | length}}",
+        "placeholder_list": "{{5.unique_array}}",
+        "categorized_placeholders": {
+          "contract": "{{6.contract_placeholders}}",
+          "promoter": "{{6.promoter_placeholders}}",
+          "party": "{{6.party_placeholders}}",
+          "date": "{{6.date_placeholders}}",
+          "salary": "{{6.salary_placeholders}}",
+          "other": "{{6.other_placeholders}}"
+        },
+        "validation": {
+          "has_required_fields": "{{8.has_contract_number}} && {{8.has_promoter_name}} && {{8.has_party_info}}",
+          "missing_placeholders": "{{8.missing_placeholders}}"
+        },
+        "placeholder_mapping": "{{7.placeholder_mapping}}",
+        "analysis_timestamp": "{{now}}"
+      }
+    },
+    {
+      "id": 10,
+      "type": "http",
+      "name": "Save Analysis Results",
+      "config": {
+        "method": "POST",
+        "url": "https://portal.thesmartpro.io/api/templates/analysis",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer YOUR_API_TOKEN"
+        },
+        "description": "Save analysis results to your system"
+      },
+      "body": "{{9.analysis_report}}"
+    }
+  ],
+  "error_handling": {
+    "retry_attempts": 3,
+    "retry_delay": 2000,
+    "error_notification": {
+      "email": "admin@yourdomain.com"
+    }
+  },
+  "settings": {
+    "execution_frequency": "on_demand",
+    "allow_manual_execution": true,
+    "timeout": 60000
+  }
+}

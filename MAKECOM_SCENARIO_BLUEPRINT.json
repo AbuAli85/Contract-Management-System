@@ -1,0 +1,182 @@
+{
+  "name": "Contract Generation Workflow",
+  "description": "Automated contract generation using Google Docs templates and Supabase storage",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": 1,
+      "type": "webhook",
+      "name": "Contract Generation Webhook",
+      "config": {
+        "method": "POST",
+        "response": "JSON",
+        "description": "Receives contract generation requests from the application"
+      },
+      "outputs": [
+        "contract_id",
+        "contract_number", 
+        "contract_type",
+        "promoter_id",
+        "first_party_id",
+        "second_party_id",
+        "job_title",
+        "department",
+        "work_location",
+        "basic_salary",
+        "currency",
+        "contract_start_date",
+        "contract_end_date",
+        "special_terms",
+        "promoter_name_en",
+        "promoter_name_ar",
+        "promoter_id_card_number",
+        "first_party_name_en",
+        "first_party_name_ar",
+        "first_party_crn",
+        "second_party_name_en",
+        "second_party_name_ar",
+        "second_party_crn"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "tools",
+      "name": "Set Contract Variables",
+      "config": {
+        "description": "Organize and prepare contract data for processing"
+      },
+      "variables": {
+        "contract_id": "{{1.contract_id}}",
+        "contract_number": "{{1.contract_number}}",
+        "contract_type": "{{1.contract_type}}",
+        "contract_date": "{{now}}",
+        "promoter_name_en": "{{1.promoter_name_en}}",
+        "promoter_name_ar": "{{1.promoter_name_ar}}",
+        "promoter_id_card_number": "{{1.promoter_id_card_number}}",
+        "first_party_name_en": "{{1.first_party_name_en}}",
+        "first_party_name_ar": "{{1.first_party_name_ar}}",
+        "first_party_crn": "{{1.first_party_crn}}",
+        "second_party_name_en": "{{1.second_party_name_en}}",
+        "second_party_name_ar": "{{1.second_party_name_ar}}",
+        "second_party_crn": "{{1.second_party_crn}}",
+        "job_title": "{{1.job_title}}",
+        "department": "{{1.department}}",
+        "work_location": "{{1.work_location}}",
+        "basic_salary": "{{1.basic_salary}}",
+        "currency": "{{1.currency}}",
+        "contract_start_date": "{{1.contract_start_date}}",
+        "contract_end_date": "{{1.contract_end_date}}",
+        "special_terms": "{{1.special_terms}}"
+      }
+    },
+    {
+      "id": 3,
+      "type": "google-docs",
+      "name": "Create Contract Document",
+      "config": {
+        "action": "create_from_template",
+        "template_id": "YOUR_GOOGLE_DOCS_TEMPLATE_ID",
+        "document_name": "{{2.contract_number}} - {{2.contract_type}}",
+        "description": "Create contract document from Google Docs template"
+      },
+      "variables": {
+        "contract_number": "{{2.contract_number}}",
+        "contract_date": "{{2.contract_date}}",
+        "first_party_name_en": "{{2.first_party_name_en}}",
+        "first_party_name_ar": "{{2.first_party_name_ar}}",
+        "first_party_crn": "{{2.first_party_crn}}",
+        "second_party_name_en": "{{2.second_party_name_en}}",
+        "second_party_name_ar": "{{2.second_party_name_ar}}",
+        "second_party_crn": "{{2.second_party_crn}}",
+        "promoter_name_en": "{{2.promoter_name_en}}",
+        "promoter_name_ar": "{{2.promoter_name_ar}}",
+        "promoter_id_card_number": "{{2.promoter_id_card_number}}",
+        "job_title": "{{2.job_title}}",
+        "department": "{{2.department}}",
+        "work_location": "{{2.work_location}}",
+        "contract_start_date": "{{2.contract_start_date}}",
+        "contract_end_date": "{{2.contract_end_date}}",
+        "basic_salary": "{{2.basic_salary}}",
+        "currency": "{{2.currency}}",
+        "special_terms": "{{2.special_terms}}"
+      }
+    },
+    {
+      "id": 4,
+      "type": "google-docs",
+      "name": "Export as PDF",
+      "config": {
+        "action": "export",
+        "document_id": "{{3.document_id}}",
+        "format": "PDF",
+        "description": "Export the contract document as PDF"
+      }
+    },
+    {
+      "id": 5,
+      "type": "supabase",
+      "name": "Upload PDF to Storage",
+      "config": {
+        "action": "upload_file",
+        "bucket": "contracts",
+        "file_name": "{{2.contract_number}}.pdf",
+        "file_data": "{{4.data}}",
+        "description": "Upload the generated PDF to Supabase storage"
+      }
+    },
+    {
+      "id": 6,
+      "type": "http",
+      "name": "Update Contract Status",
+      "config": {
+        "method": "PATCH",
+        "url": "https://portal.thesmartpro.io/api/contracts/update-status",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer YOUR_API_TOKEN"
+        },
+        "description": "Update contract status in the database"
+      },
+      "body": {
+        "contract_id": "{{2.contract_id}}",
+        "status": "completed",
+        "document_url": "{{3.document_url}}",
+        "pdf_url": "{{5.url}}",
+        "generated_at": "{{now}}",
+        "generation_method": "makecom"
+      }
+    },
+    {
+      "id": 7,
+      "type": "webhook",
+      "name": "PDF Ready Notification",
+      "config": {
+        "method": "POST",
+        "url": "YOUR_PDF_READY_WEBHOOK_URL",
+        "description": "Send notification that PDF is ready"
+      },
+      "body": {
+        "contract_id": "{{2.contract_id}}",
+        "contract_number": "{{2.contract_number}}",
+        "document_url": "{{3.document_url}}",
+        "pdf_url": "{{5.url}}",
+        "status": "completed",
+        "generated_at": "{{now}}"
+      }
+    }
+  ],
+  "error_handling": {
+    "retry_attempts": 3,
+    "retry_delay": 5000,
+    "error_notification": {
+      "email": "admin@yourdomain.com",
+      "webhook": "YOUR_ERROR_WEBHOOK_URL"
+    }
+  },
+  "settings": {
+    "execution_frequency": "immediately",
+    "allow_manual_execution": true,
+    "timeout": 300000,
+    "max_execution_time": 600000
+  }
+}

@@ -1,0 +1,267 @@
+#!/usr/bin/env node
+
+/**
+ * Make.com Integration Setup Script
+ * 
+ * This script helps you configure and test your Make.com integration
+ * with the contract management system.
+ */
+
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+
+// Colors for console output
+const colors = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  cyan: '\x1b[36m'
+};
+
+function log(message, color = 'reset') {
+  console.log(`${colors[color]}${message}${colors.reset}`);
+}
+
+function logStep(step, message) {
+  log(`\n${colors.cyan}Step ${step}:${colors.reset} ${message}`);
+}
+
+function logSuccess(message) {
+  log(`✅ ${message}`, 'green');
+}
+
+function logError(message) {
+  log(`❌ ${message}`, 'red');
+}
+
+function logWarning(message) {
+  log(`⚠️  ${message}`, 'yellow');
+}
+
+function logInfo(message) {
+  log(`ℹ️  ${message}`, 'blue');
+}
+
+// Check if .env.local exists
+function checkEnvFile() {
+  const envPath = path.join(process.cwd(), '.env.local');
+  if (!fs.existsSync(envPath)) {
+    logError('.env.local file not found!');
+    logInfo('Please create .env.local file first.');
+    return false;
+  }
+  return true;
+}
+
+// Read environment variables
+function readEnvFile() {
+  const envPath = path.join(process.cwd(), '.env.local');
+  const envContent = fs.readFileSync(envPath, 'utf8');
+  const envVars = {};
+  
+  envContent.split('\n').forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    if (key && valueParts.length > 0) {
+      envVars[key.trim()] = valueParts.join('=').trim();
+    }
+  });
+  
+  return envVars;
+}
+
+// Test webhook connectivity
+async function testWebhook(webhookUrl, testData) {
+  return new Promise((resolve) => {
+    const url = new URL(webhookUrl);
+    const postData = JSON.stringify(testData);
+    
+    const options = {
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: url.pathname + url.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+    
+    const req = https.request(options, (res) => {
+      let data = '';
+      
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      
+      res.on('end', () => {
+        resolve({
+          success: res.statusCode >= 200 && res.statusCode < 300,
+          statusCode: res.statusCode,
+          data: data,
+          headers: res.headers
+        });
+      });
+    });
+    
+    req.on('error', (error) => {
+      resolve({
+        success: false,
+        error: error.message
+      });
+    });
+    
+    req.write(postData);
+    req.end();
+  });
+}
+
+// Main setup function
+async function setupMakecomIntegration() {
+  log(`${colors.bright}${colors.magenta}🔧 Make.com Integration Setup${colors.reset}`);
+  log(`${colors.cyan}================================${colors.reset}`);
+  
+  // Step 1: Check environment file
+  logStep(1, 'Checking environment configuration');
+  if (!checkEnvFile()) {
+    process.exit(1);
+  }
+  logSuccess('Environment file found');
+  
+  // Step 2: Read environment variables
+  logStep(2, 'Reading environment variables');
+  const envVars = readEnvFile();
+  
+  const requiredVars = [
+    'MAKE_WEBHOOK_URL',
+    'NEXT_PUBLIC_MAKE_WEBHOOK_URL',
+    'PDF_READY_WEBHOOK_URL',
+    'NEXT_PUBLIC_PDF_READY_WEBHOOK_URL'
+  ];
+  
+  const missingVars = requiredVars.filter(varName => !envVars[varName]);
+  
+  if (missingVars.length > 0) {
+    logError(`Missing required environment variables: ${missingVars.join(', ')}`);
+    logInfo('Please add these variables to your .env.local file');
+    logInfo('Refer to MAKECOM_ALIGNMENT_SETUP.md for details');
+    process.exit(1);
+  }
+  
+  logSuccess('All required environment variables found');
+  
+  // Step 3: Validate webhook URLs
+  logStep(3, 'Validating webhook URLs');
+  
+  const webhookUrls = {
+    'Main Contract Generation': envVars.MAKE_WEBHOOK_URL,
+    'PDF Ready Notification': envVars.PDF_READY_WEBHOOK_URL
+  };
+  
+  for (const [name, url] of Object.entries(webhookUrls)) {
+    if (!url || url.includes('YOUR_') || url.includes('your-')) {
+      logWarning(`${name} webhook URL appears to be a placeholder`);
+      logInfo(`Please update ${name} webhook URL in .env.local`);
+    } else {
+      logSuccess(`${name} webhook URL configured`);
+    }
+  }
+  
+  // Step 4: Test webhook connectivity
+  logStep(4, 'Testing webhook connectivity');
+  
+  const testData = {
+    contract_id: 'test-' + Date.now(),
+    contract_number: 'TEST-' + Date.now(),
+    contract_type: 'full-time-permanent',
+    promoter_id: 'test-promoter',
+    first_party_id: 'test-client',
+    second_party_id: 'test-employer',
+    job_title: 'Software Developer',
+    department: 'IT',
+    work_location: 'Remote',
+    basic_salary: 1000,
+    currency: 'OMR',
+    contract_start_date: '2024-01-01',
+    contract_end_date: '2024-12-31',
+    special_terms: 'Test contract generated by setup script'
+  };
+  
+  if (envVars.MAKE_WEBHOOK_URL && !envVars.MAKE_WEBHOOK_URL.includes('YOUR_')) {
+    logInfo('Testing main contract generation webhook...');
+    const result = await testWebhook(envVars.MAKE_WEBHOOK_URL, testData);
+    
+    if (result.success) {
+      logSuccess('Main webhook test successful');
+      logInfo(`Response: ${result.statusCode} - ${result.data.substring(0, 100)}...`);
+    } else {
+      logError('Main webhook test failed');
+      if (result.error) {
+        logError(`Error: ${result.error}`);
+      } else {
+        logError(`Status: ${result.statusCode}`);
+        logError(`Response: ${result.data}`);
+      }
+    }
+  } else {
+    logWarning('Skipping main webhook test (URL not configured)');
+  }
+  
+  // Step 5: Check contract type configuration
+  logStep(5, 'Checking contract type configuration');
+  
+  const configPath = path.join(process.cwd(), 'lib', 'contract-type-config.ts');
+  if (fs.existsSync(configPath)) {
+    const configContent = fs.readFileSync(configPath, 'utf8');
+    
+    if (configContent.includes('YOUR_MAKECOM_TEMPLATE_ID') || 
+        configContent.includes('YOUR_GOOGLE_DOCS_TEMPLATE_ID')) {
+      logWarning('Contract type configuration contains placeholder template IDs');
+      logInfo('Please update template IDs in lib/contract-type-config.ts');
+    } else {
+      logSuccess('Contract type configuration appears to be updated');
+    }
+  } else {
+    logWarning('Contract type configuration file not found');
+  }
+  
+  // Step 6: Generate test commands
+  logStep(6, 'Generating test commands');
+  
+  logInfo('You can test your integration with these commands:');
+  log('');
+  
+  if (envVars.MAKE_WEBHOOK_URL && !envVars.MAKE_WEBHOOK_URL.includes('YOUR_')) {
+    log(`${colors.yellow}curl -X POST ${envVars.MAKE_WEBHOOK_URL} \\${colors.reset}`);
+    log(`${colors.yellow}  -H "Content-Type: application/json" \\${colors.reset}`);
+    log(`${colors.yellow}  -d '${JSON.stringify(testData, null, 2)}'${colors.reset}`);
+    log('');
+  }
+  
+  // Step 7: Next steps
+  logStep(7, 'Next steps');
+  
+  logInfo('1. Create Make.com scenarios as described in MAKECOM_ALIGNMENT_SETUP.md');
+  logInfo('2. Update webhook URLs in .env.local with your actual Make.com webhook URLs');
+  logInfo('3. Create Google Docs templates and update template IDs');
+  logInfo('4. Test contract generation through the web interface');
+  logInfo('5. Monitor Make.com scenario executions');
+  
+  log('');
+  logSuccess('Make.com integration setup check completed!');
+  logInfo('Refer to MAKECOM_ALIGNMENT_SETUP.md for detailed setup instructions');
+}
+
+// Run the setup
+if (require.main === module) {
+  setupMakecomIntegration().catch(error => {
+    logError(`Setup failed: ${error.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = { setupMakecomIntegration };

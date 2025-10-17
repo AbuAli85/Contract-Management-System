@@ -1,0 +1,51 @@
+{
+  "name": "Simple Text Replacement from Template",
+  "description": "Extract text from Google Docs template and replace it in target document",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": 1,
+      "type": "webhook",
+      "name": "Replacement Request",
+      "config": {
+        "method": "POST",
+        "response": "JSON"
+      },
+      "outputs": [
+        "source_template_id",
+        "target_document_id",
+        "new_text"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "google-docs",
+      "name": "Get Template Text",
+      "config": {
+        "action": "get_document",
+        "document_id": "{{1.source_template_id}}"
+      }
+    },
+    {
+      "id": 3,
+      "type": "tools",
+      "name": "Extract Text",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "old_text",
+        "variable_value": "{{2.body.content}}"
+      }
+    },
+    {
+      "id": 4,
+      "type": "google-docs",
+      "name": "Replace Text",
+      "config": {
+        "action": "replace_text",
+        "document_id": "{{1.target_document_id}}",
+        "old_text": "{{3.old_text}}",
+        "new_text": "{{1.new_text}}"
+      }
+    }
+  ]
+}

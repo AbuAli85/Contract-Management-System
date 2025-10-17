@@ -1,0 +1,120 @@
+{
+  "name": "Dynamic Text Replacement in Google Docs",
+  "description": "Extract text from template and use it for replacement in target document",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": 1,
+      "type": "webhook",
+      "name": "Text Replacement Request",
+      "config": {
+        "method": "POST",
+        "response": "JSON",
+        "description": "Receives request for text replacement"
+      },
+      "outputs": [
+        "source_template_id",
+        "target_document_id",
+        "replacement_type",
+        "custom_text"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "google-docs",
+      "name": "Get Source Template",
+      "config": {
+        "action": "get_document",
+        "document_id": "{{1.source_template_id}}",
+        "description": "Extract text content from source template"
+      }
+    },
+    {
+      "id": 3,
+      "type": "tools",
+      "name": "Extract Text Content",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "source_text",
+        "variable_value": "{{2.body.content}}",
+        "description": "Get plain text from source document"
+      }
+    },
+    {
+      "id": 4,
+      "type": "tools",
+      "name": "Process Text Based on Type",
+      "config": {
+        "action": "set_multiple_variables",
+        "description": "Process text based on replacement type"
+      },
+      "variables": {
+        "extracted_text": "{{3.source_text}}",
+        "processed_text": "{{3.source_text | trim | replace('\\n', ' ') | replace('\\r', '')}}",
+        "text_length": "{{3.source_text | length}}",
+        "word_count": "{{3.source_text | split(' ') | length}}"
+      }
+    },
+    {
+      "id": 5,
+      "type": "tools",
+      "name": "Determine Replacement Text",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "replacement_text",
+        "description": "Choose the appropriate text for replacement"
+      },
+      "logic": {
+        "if": "{{1.replacement_type}} == 'full_content'",
+        "then": "{{4.extracted_text}}",
+        "else_if": "{{1.replacement_type}} == 'processed_content'",
+        "then": "{{4.processed_text}}",
+        "else_if": "{{1.replacement_type}} == 'custom'",
+        "then": "{{1.custom_text}}",
+        "else": "{{4.processed_text}}"
+      }
+    },
+    {
+      "id": 6,
+      "type": "google-docs",
+      "name": "Replace Text in Target Document",
+      "config": {
+        "action": "replace_text",
+        "document_id": "{{1.target_document_id}}",
+        "old_text": "{{5.replacement_text}}",
+        "new_text": "{{1.custom_text}}",
+        "description": "Replace the extracted text with new text"
+      }
+    },
+    {
+      "id": 7,
+      "type": "tools",
+      "name": "Log Replacement Results",
+      "config": {
+        "action": "set_multiple_variables",
+        "description": "Log the replacement operation"
+      },
+      "variables": {
+        "source_template_id": "{{1.source_template_id}}",
+        "target_document_id": "{{1.target_document_id}}",
+        "replacement_type": "{{1.replacement_type}}",
+        "text_length": "{{4.text_length}}",
+        "word_count": "{{4.word_count}}",
+        "replacement_successful": "{{6.success}}",
+        "replacement_timestamp": "{{now}}"
+      }
+    }
+  ],
+  "error_handling": {
+    "retry_attempts": 2,
+    "retry_delay": 3000,
+    "error_notification": {
+      "email": "admin@yourdomain.com"
+    }
+  },
+  "settings": {
+    "execution_frequency": "on_demand",
+    "allow_manual_execution": true,
+    "timeout": 120000
+  }
+}

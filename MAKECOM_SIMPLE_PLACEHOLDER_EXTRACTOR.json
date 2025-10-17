@@ -1,0 +1,50 @@
+{
+  "name": "Simple Template Placeholder Extractor",
+  "description": "Quick and easy placeholder extraction from Google Docs templates",
+  "version": "1.0.0",
+  "modules": [
+    {
+      "id": 1,
+      "type": "webhook",
+      "name": "Template ID Input",
+      "config": {
+        "method": "POST",
+        "response": "JSON"
+      },
+      "outputs": ["template_id"]
+    },
+    {
+      "id": 2,
+      "type": "google-docs",
+      "name": "Get Document",
+      "config": {
+        "action": "get_document",
+        "document_id": "{{1.template_id}}"
+      }
+    },
+    {
+      "id": 3,
+      "type": "tools",
+      "name": "Extract Placeholders",
+      "config": {
+        "action": "set_variable",
+        "variable_name": "placeholders",
+        "variable_value": "{{2.body.content | regex('\\{\\{([^}]+)\\}\\}', 'g')}}"
+      }
+    },
+    {
+      "id": 4,
+      "type": "tools",
+      "name": "Format Results",
+      "config": {
+        "action": "set_multiple_variables",
+        "variables": {
+          "template_id": "{{1.template_id}}",
+          "found_placeholders": "{{3.placeholders}}",
+          "placeholder_count": "{{3.placeholders | length}}",
+          "extraction_date": "{{now}}"
+        }
+      }
+    }
+  ]
+}
