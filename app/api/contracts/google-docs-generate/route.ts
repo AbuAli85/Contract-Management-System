@@ -183,7 +183,9 @@ export async function POST(request: NextRequest) {
 
     let googleDocsService;
     try {
+      console.log('🔧 Initializing Google Docs service...');
       googleDocsService = new GoogleDocsService(googleDocsConfig);
+      console.log('✅ Google Docs service initialized');
     } catch (error) {
       console.error('❌ Failed to initialize Google Docs service:', error);
       return NextResponse.json(

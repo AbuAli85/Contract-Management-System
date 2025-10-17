@@ -56,10 +56,15 @@ export class GoogleDocsService {
 
   constructor(config: GoogleDocsConfig) {
     this.config = config;
-    this.initializeAuth();
   }
 
-  private initializeAuth() {
+  private async ensureInitialized() {
+    if (!this.docs || !this.drive) {
+      await this.initializeAuth();
+    }
+  }
+
+  private async initializeAuth() {
     try {
       const serviceAccountKey = JSON.parse(this.config.serviceAccountKey);
       
@@ -72,11 +77,16 @@ export class GoogleDocsService {
         ]
       });
 
-      this.docs = google.docs({ version: 'v1', auth: this.auth });
-      this.drive = google.drive({ version: 'v3', auth: this.auth });
+      // Get authenticated client
+      const authClient = await this.auth.getClient();
+      
+      this.docs = google.docs({ version: 'v1', auth: authClient });
+      this.drive = google.drive({ version: 'v3', auth: authClient });
+      
+      console.log('✅ Google APIs initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize Google Auth:', error);
-      throw new Error('Invalid Google Service Account configuration');
+      console.error('❌ Failed to initialize Google Auth:', error);
+      throw new Error(`Invalid Google Service Account configuration: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -90,6 +100,9 @@ export class GoogleDocsService {
   }> {
     try {
       console.log('🔄 Starting Google Docs contract generation...');
+
+      // Ensure Google APIs are initialized
+      await this.ensureInitialized();
 
       // Step 1: Copy template to create new document
       const documentId = await this.copyTemplate();
@@ -124,18 +137,30 @@ export class GoogleDocsService {
    * Copy template to create new document
    */
   private async copyTemplate(): Promise<string> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `Contract-${timestamp}`;
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = `Contract-${timestamp}`;
 
-    const response = await this.drive.files.copy({
-      fileId: this.config.templateId,
-      requestBody: {
-        name: fileName,
-        parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+      console.log(`📋 Copying template ${this.config.templateId} to ${fileName}`);
+
+      const response = await this.drive.files.copy({
+        fileId: this.config.templateId,
+        requestBody: {
+          name: fileName,
+          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+        }
+      });
+
+      if (!response.data.id) {
+        throw new Error('Failed to copy template - no document ID returned');
       }
-    });
 
-    return response.data.id;
+      console.log('✅ Template copied successfully:', response.data.id);
+      return response.data.id;
+    } catch (error) {
+      console.error('❌ Failed to copy template:', error);
+      throw new Error(`Template copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   /**
