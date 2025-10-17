@@ -143,13 +143,27 @@ export class GoogleDocsService {
 
       console.log(`📋 Copying template ${this.config.templateId} to ${fileName}`);
 
-      const response = await this.drive.files.copy({
-        fileId: this.config.templateId,
-        requestBody: {
-          name: fileName,
-          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
-        }
-      });
+      // Try to copy to specified folder first, then to root if that fails
+      let response;
+      try {
+        response = await this.drive.files.copy({
+          fileId: this.config.templateId,
+          requestBody: {
+            name: fileName,
+            parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+          }
+        });
+      } catch (folderError) {
+        console.log('⚠️ Failed to copy to specified folder, trying root directory...');
+        // If copying to specific folder fails, try copying to root
+        response = await this.drive.files.copy({
+          fileId: this.config.templateId,
+          requestBody: {
+            name: fileName
+            // No parents = root directory
+          }
+        });
+      }
 
       if (!response.data.id) {
         throw new Error('Failed to copy template - no document ID returned');
@@ -163,11 +177,11 @@ export class GoogleDocsService {
       // Handle specific error cases
       if (error instanceof Error) {
         if (error.message.includes('quota')) {
-          throw new Error(`Google Drive storage quota exceeded. Please free up space in your Google Drive or upgrade your storage plan. Original error: ${error.message}`);
+          throw new Error(`Google Drive storage quota exceeded. The service account has limited storage. Please use your personal Google Drive by sharing the template with the service account but keeping it in your personal drive. Original error: ${error.message}`);
         } else if (error.message.includes('permission')) {
-          throw new Error(`Permission denied. Please ensure the template is shared with the service account. Original error: ${error.message}`);
+          throw new Error(`Permission denied. Please ensure the template is shared with the service account (contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com) with Editor permission. Original error: ${error.message}`);
         } else if (error.message.includes('not found')) {
-          throw new Error(`Template not found. Please check the template ID and ensure it exists. Original error: ${error.message}`);
+          throw new Error(`Template not found. Please check the template ID and ensure it exists and is shared with the service account. Original error: ${error.message}`);
         }
       }
       
