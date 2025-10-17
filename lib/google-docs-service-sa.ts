@@ -80,6 +80,23 @@ export class GoogleDocsServiceSA {
     try {
       console.log('📄 Starting contract generation with Service Account...');
 
+      // Step 0: Check storage quota first
+      try {
+        const about = await this.drive.about.get({
+          fields: 'storageQuota,user',
+        });
+        const quota = about.data.storageQuota;
+        if (quota.limit) {
+          const used = parseInt(quota.usage || '0');
+          const limit = parseInt(quota.limit);
+          const available = limit - used;
+          const usedPercent = ((used / limit) * 100).toFixed(1);
+          console.log(`💾 Storage: ${usedPercent}% used (${Math.round(available / 1024 / 1024)} MB available)`);
+        }
+      } catch (quotaError) {
+        console.log('⚠️ Could not check storage quota:', quotaError);
+      }
+
       // Step 1: Copy template
       const copyResult = await this.copyTemplate(contractData.contract_number);
       if (!copyResult.success || !copyResult.documentId) {
@@ -130,6 +147,29 @@ export class GoogleDocsServiceSA {
     errorDetails?: any;
   }> {
     try {
+      console.log('🔍 Attempting to copy template...');
+      console.log('   Template ID:', TEMPLATE_ID);
+      console.log('   New name:', `Contract - ${contractNumber}`);
+      
+      // First, let's try to get template info to verify access
+      try {
+        const templateInfo = await this.drive.files.get({
+          fileId: TEMPLATE_ID,
+          fields: 'id, name, permissions, owners',
+        });
+        console.log('✅ Template access verified:', templateInfo.data.name);
+      } catch (accessError: any) {
+        console.error('❌ Cannot access template:', accessError.message);
+        return {
+          success: false,
+          error: `Cannot access template: ${accessError.message}`,
+          errorDetails: {
+            templateAccessError: accessError.message,
+            templateId: TEMPLATE_ID,
+          },
+        };
+      }
+      
       const response = await this.drive.files.copy({
         fileId: TEMPLATE_ID,
         requestBody: {
@@ -137,6 +177,7 @@ export class GoogleDocsServiceSA {
         },
       });
 
+      console.log('✅ Template copied successfully:', response.data.id);
       return {
         success: true,
         documentId: response.data.id,
@@ -156,9 +197,11 @@ export class GoogleDocsServiceSA {
           code: error.response.data?.error?.code,
           message: error.response.data?.error?.message,
           errors: error.response.data?.error?.errors,
+          fullError: error.response.data,
         };
       } else if (error.message) {
         errorMessage = error.message;
+        errorDetails = { message: error.message };
       }
       
       return {
