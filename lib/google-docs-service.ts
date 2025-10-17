@@ -159,6 +159,18 @@ export class GoogleDocsService {
       return response.data.id;
     } catch (error) {
       console.error('❌ Failed to copy template:', error);
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('quota')) {
+          throw new Error(`Google Drive storage quota exceeded. Please free up space in your Google Drive or upgrade your storage plan. Original error: ${error.message}`);
+        } else if (error.message.includes('permission')) {
+          throw new Error(`Permission denied. Please ensure the template is shared with the service account. Original error: ${error.message}`);
+        } else if (error.message.includes('not found')) {
+          throw new Error(`Template not found. Please check the template ID and ensure it exists. Original error: ${error.message}`);
+        }
+      }
+      
       throw new Error(`Template copy failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
