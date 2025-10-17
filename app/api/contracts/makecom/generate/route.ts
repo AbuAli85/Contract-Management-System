@@ -164,6 +164,9 @@ export const POST = withAnyRBAC(
             promoter_passport_number: promoter.passport_number,
             promoter_email: promoter.email,
             promoter_mobile_number: promoter.mobile_number,
+            // Add aliases for template compatibility
+            id_card_number: promoter.id_card_number, // Alias for promoter_id_card_number
+            passport_number: promoter.passport_number, // Alias for promoter_passport_number
           };
         } else {
           console.warn('⚠️ Could not fetch promoter data:', promoterError);
@@ -357,6 +360,7 @@ export const POST = withAnyRBAC(
             ...webhookPayload,
             contract_id: contract.id,
             contract_number: contract.contract_number,
+            ref_number: contract.contract_number, // Alias for template compatibility
             // Callback URL for Make.com to update status/pdf_url
             update_url: `${appUrl}/api/generate-contract`,
             // Provide Drive folder context to Make.com scenario if configured
