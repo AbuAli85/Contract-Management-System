@@ -71,6 +71,12 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       permission: 'dashboard.view' as const,
     },
     {
+      label: 'Simple Contract Generator',
+      href: '/simple-contract',
+      icon: '📝',
+      permission: 'dashboard.view' as const,
+    },
+    {
       label: 'Enhanced CRM',
       href: '/crm/enhanced',
       icon: '🚀',
@@ -178,6 +184,12 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
   ];
 
   const adminNavItems = [
+    {
+      label: 'Simple Contract Generator',
+      href: '/simple-contract',
+      icon: '📝',
+      permission: 'dashboard.view' as const,
+    },
     {
       label: 'Enhanced CRM',
       href: '/crm/enhanced',
