@@ -101,25 +101,41 @@ export default function SimpleContractGenerator() {
     try {
       const supabase = createClient();
       
+      if (!supabase) {
+        throw new Error('Supabase client not available');
+      }
+      
       // Load promoters
-      const { data: promotersData } = await supabase
-        ?.from('promoters')
+      const { data: promotersData, error: promotersError } = await supabase
+        .from('promoters')
         .select('id, name_en, name_ar, email, mobile_number, id_card_number')
-        .order('name_en') || { data: null };
+        .order('name_en');
+
+      if (promotersError) {
+        console.error('Error loading promoters:', promotersError);
+        throw new Error(`Failed to load promoters: ${promotersError.message}`);
+      }
 
       // Load parties
-      const { data: partiesData } = await supabase
-        ?.from('parties')
+      const { data: partiesData, error: partiesError } = await supabase
+        .from('parties')
         .select('id, name_en, name_ar, crn')
-        .order('name_en') || { data: null };
+        .order('name_en');
+
+      if (partiesError) {
+        console.error('Error loading parties:', partiesError);
+        throw new Error(`Failed to load parties: ${partiesError.message}`);
+      }
 
       setPromoters(promotersData || []);
       setParties(partiesData || []);
+      
+      console.log(`✅ Loaded ${promotersData?.length || 0} promoters and ${partiesData?.length || 0} parties`);
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
         title: 'Error',
-        description: 'Failed to load promoters and parties',
+        description: error instanceof Error ? error.message : 'Failed to load promoters and parties',
         variant: 'destructive',
       });
     } finally {
@@ -227,7 +243,43 @@ export default function SimpleContractGenerator() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading data...</p>
+          <p>Loading promoters and parties...</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Please wait while we fetch your data
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case where no data is loaded
+  if (promoters.length === 0 || parties.length === 0) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold">Generate Contract</h1>
+          <p className="text-muted-foreground">
+            Create professional contracts with automated processing
+          </p>
+        </div>
+        
+        <div className="text-center py-12">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+            <h2 className="text-xl font-semibold mb-2">No Data Available</h2>
+            <p className="text-muted-foreground mb-4">
+              {promoters.length === 0 && parties.length === 0 
+                ? "No promoters or parties found. Please add some data first."
+                : promoters.length === 0 
+                ? "No promoters found. Please add some promoters first."
+                : "No parties found. Please add some parties first."
+              }
+            </p>
+            <Button onClick={loadData} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Retry Loading Data
+            </Button>
+          </div>
         </div>
       </div>
     );

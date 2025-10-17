@@ -1,40 +1,40 @@
 'use client';
 
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import EnhancedContractForm from '@/components/enhanced-contract-form';
+import { useAuth } from '@/app/providers';
+import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
+import SimpleContractGenerator from '@/components/SimpleContractGenerator';
+import LoadingPage from '@/components/LoadingPage';
 
 export default function GenerateContractPage() {
-  return (
-    <div className='min-h-screen bg-gray-50/30'>
-      <div className='container mx-auto py-6'>
-        <div className='mb-8 text-center'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-2'>
-            Generate New Contract
-          </h1>
-          <p className='text-gray-600'>
-            Create comprehensive employment contracts with intelligent templates
-            and professional automation
+  const { loading } = useAuth();
+  const { userRole, hasPermission, isLoading } = useEnhancedRBAC();
+  const isAuthorized = userRole === 'admin' || hasPermission('dashboard.view');
+
+  if (loading || isLoading) {
+    return (
+      <LoadingPage 
+        message="Loading your dashboard..."
+        subMessage="Please wait while we prepare your workspace"
+      />
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground">
+            You don't have permission to access contract generation.
           </p>
         </div>
-
-        <EnhancedContractForm
-          onSuccess={() => {
-            // Contract successfully created/updated - handled by the form itself with toast notifications
-          }}
-          onError={error => {
-            // Error handling is managed by the form component with proper user feedback
-            console.error('Contract generation error:', error);
-          }}
-        />
       </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto py-6">
+      <SimpleContractGenerator />
     </div>
   );
 }
