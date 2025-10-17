@@ -215,14 +215,56 @@ export default function SimpleContractGenerator() {
 
     setGenerating(true);
     try {
-      // Call the Google Docs contract generation API
-      const response = await fetch('/api/contracts/google-docs-generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Try multiple generation methods
+      let response;
+      let generationMethod = 'html'; // Default to HTML generation
+      
+      // First try Google Docs (if available)
+      try {
+        response = await fetch('/api/contracts/google-docs-generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+        
+        if (response.ok) {
+          generationMethod = 'google-docs';
+        } else {
+          throw new Error('Google Docs not available');
+        }
+      } catch (googleDocsError) {
+        console.log('Google Docs not available, trying alternative methods...');
+        
+        // Try HTML generation
+        try {
+          response = await fetch('/api/contracts/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...formData,
+              generation_method: 'html'
+            }),
+          });
+          generationMethod = 'html';
+        } catch (htmlError) {
+          // Try Make.com as fallback
+          response = await fetch('/api/contracts/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              ...formData,
+              generation_method: 'makecom'
+            }),
+          });
+          generationMethod = 'makecom';
+        }
+      }
 
       const result = await response.json();
 
@@ -233,7 +275,7 @@ export default function SimpleContractGenerator() {
       if (result.success) {
         toast({
           title: 'Success!',
-          description: 'Contract generated successfully with Google Docs',
+          description: `Contract generated successfully using ${generationMethod} method`,
         });
 
         // Show success message with links
@@ -241,7 +283,7 @@ export default function SimpleContractGenerator() {
           setTimeout(() => {
             toast({
               title: 'Contract Ready!',
-              description: `Document: ${result.data.document_url}`,
+              description: `Document: ${result.data.document_url || 'Processing...'}`,
               variant: 'default',
             });
           }, 1000);

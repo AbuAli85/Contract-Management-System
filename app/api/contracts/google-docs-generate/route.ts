@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { GoogleDocsService, type ContractData } from '@/lib/google-docs-service';
+import { GoogleDocsService } from '@/lib/google-docs-service';
+import type { ContractData } from '@/lib/google-docs-service';
 
 export async function POST(request: NextRequest) {
   try {
