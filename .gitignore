@@ -17,6 +17,7 @@ Thumbs.db
 
 # Env
 .env*
+PRODUCTION_ENV_VALUES.txt
 
 # Google Service Account Keys (NEVER COMMIT THESE!)
 *service-account*.json

@@ -221,3 +221,6 @@ One of these is failing:
 **Last Updated:** October 16, 2025  
 **Related:** `SUPABASE_RLS_PUBLIC_READ_FIX.md`, `MAKECOM_IMAGE_URL_FIX.md`
 
+
+
+

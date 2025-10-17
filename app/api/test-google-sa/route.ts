@@ -45,13 +45,17 @@ export async function GET() {
         {
           success: false,
           error: result.error,
+          errorDetails: result.errorDetails,
           troubleshooting: {
             common_issues: [
-              'Check that GOOGLE_SERVICE_ACCOUNT_KEY is set in .env.local',
-              'Verify template is shared with service account',
-              'Make sure template ID is correct',
-              'Check that Google Docs and Drive APIs are enabled',
+              'Check that GOOGLE_SERVICE_ACCOUNT_KEY_BASE64 is set in production environment',
+              'Verify template is shared with service account: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com',
+              'Make sure template ID is correct: 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0',
+              'Check that Google Docs and Drive APIs are enabled in your Google Cloud Project',
             ],
+            service_account_email: 'contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com',
+            template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0',
+            template_url: 'https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit',
           },
         },
         { status: 500 }

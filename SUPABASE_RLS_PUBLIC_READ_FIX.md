@@ -195,3 +195,6 @@ DROP POLICY IF EXISTS "Public read access for promoter-documents"
 **Impact:** Makes images publicly readable via URL  
 **Risk:** Low (read-only access, necessary for external integrations)
 
+
+
+

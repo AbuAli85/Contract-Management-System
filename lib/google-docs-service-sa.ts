@@ -75,6 +75,7 @@ export class GoogleDocsServiceSA {
     documentUrl?: string;
     pdfUrl?: string;
     error?: string;
+    errorDetails?: any;
   }> {
     try {
       console.log('📄 Starting contract generation with Service Account...');
@@ -82,7 +83,11 @@ export class GoogleDocsServiceSA {
       // Step 1: Copy template
       const copyResult = await this.copyTemplate(contractData.contract_number);
       if (!copyResult.success || !copyResult.documentId) {
-        return { success: false, error: 'Failed to copy template' };
+        return { 
+          success: false, 
+          error: copyResult.error || 'Failed to copy template',
+          errorDetails: copyResult.errorDetails,
+        };
       }
 
       const documentId = copyResult.documentId;
@@ -122,6 +127,7 @@ export class GoogleDocsServiceSA {
     success: boolean;
     documentId?: string;
     error?: string;
+    errorDetails?: any;
   }> {
     try {
       const response = await this.drive.files.copy({
@@ -135,11 +141,30 @@ export class GoogleDocsServiceSA {
         success: true,
         documentId: response.data.id,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Copy template error:', error);
+      
+      // Provide detailed error information
+      let errorMessage = 'Unknown error';
+      let errorDetails: any = {};
+      
+      if (error.response) {
+        errorMessage = error.response.data?.error?.message || error.message;
+        errorDetails = {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          code: error.response.data?.error?.code,
+          message: error.response.data?.error?.message,
+          errors: error.response.data?.error?.errors,
+        };
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
+        errorDetails,
       };
     }
   }
