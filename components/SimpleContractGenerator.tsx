@@ -73,6 +73,7 @@ export default function SimpleContractGenerator() {
   const [employers, setEmployers] = useState<Party[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
   const [formData, setFormData] = useState<ContractFormData>({
     promoter_id: '',
     first_party_id: '',
@@ -141,6 +142,7 @@ export default function SimpleContractGenerator() {
       }
 
       setPromoters(promotersData || []);
+      setAllPromoters(promotersData || []);
       
       console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`);
     } catch (error) {
@@ -165,13 +167,13 @@ export default function SimpleContractGenerator() {
     if (field === 'second_party_id') {
       const selectedEmployerId = value as string;
       if (selectedEmployerId) {
-        const filteredPromoters = promoters.filter((promoter: any) => 
+        const filteredPromoters = allPromoters.filter((promoter: any) => 
           promoter.employer_id === selectedEmployerId
         );
         setPromoters(filteredPromoters);
       } else {
         // If no employer selected, show all promoters
-        loadData();
+        setPromoters(allPromoters);
       }
     }
   };
@@ -179,11 +181,11 @@ export default function SimpleContractGenerator() {
   // Get filtered promoters based on selected employer
   const getFilteredPromoters = () => {
     if (formData.second_party_id) {
-      return promoters.filter((promoter: any) => 
+      return allPromoters.filter((promoter: any) => 
         promoter.employer_id === formData.second_party_id
       );
     }
-    return promoters;
+    return allPromoters;
   };
 
   const validateForm = (): string[] => {
@@ -364,7 +366,10 @@ export default function SimpleContractGenerator() {
                 : "No parties found. Please add some parties first."
               }
             </p>
-            <Button onClick={loadData} variant="outline">
+            <Button onClick={() => {
+              setLoading(true);
+              loadData();
+            }} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry Loading Data
             </Button>
