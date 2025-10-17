@@ -60,6 +60,7 @@
     "prod:deploy": "npm run prod:check && vercel --prod"
   },
   "dependencies": {
+    "@google-cloud/local-auth": "^3.0.1",
     "@hookform/resolvers": "^3.3.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -98,6 +99,7 @@
     "dotenv": "^17.2.1",
     "framer-motion": "^10.16.5",
     "glob": "^10.4.5",
+    "googleapis": "^164.0.0",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.294.0",
     "next": "^14.2.31",
