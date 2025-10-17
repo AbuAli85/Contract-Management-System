@@ -143,26 +143,42 @@ export class GoogleDocsService {
 
       console.log(`📋 Copying template ${this.config.templateId} to ${fileName}`);
 
-      // Try to copy to specified folder first, then to root if that fails
+      // For personal drive setup, we need to copy the template to the user's drive
+      // The service account should have access to the template via sharing
       let response;
+      
       try {
-        response = await this.drive.files.copy({
-          fileId: this.config.templateId,
-          requestBody: {
-            name: fileName,
-            parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
-          }
-        });
-      } catch (folderError) {
-        console.log('⚠️ Failed to copy to specified folder, trying root directory...');
-        // If copying to specific folder fails, try copying to root
+        // First, try to copy without specifying parents (this should go to the user's drive)
         response = await this.drive.files.copy({
           fileId: this.config.templateId,
           requestBody: {
             name: fileName
-            // No parents = root directory
+            // No parents = should go to the same drive as the template (user's personal drive)
           }
         });
+        
+        console.log('✅ Template copied to user\'s personal drive');
+      } catch (copyError) {
+        console.error('❌ Failed to copy template:', copyError);
+        
+        // If copying fails due to quota, provide a more helpful error message
+        if (copyError instanceof Error && copyError.message.includes('quota')) {
+          throw new Error(`Google Drive storage quota exceeded. The service account has limited storage. 
+
+SOLUTION: Please ensure your template is in your personal Google Drive and shared with the service account:
+1. Go to your template: https://docs.google.com/document/d/${this.config.templateId}/edit
+2. Click "Share" button
+3. Add: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
+4. Set permission to "Editor"
+5. Uncheck "Notify people"
+6. Click "Share"
+
+This will allow the service account to access your template and create new documents in your personal drive (200GB available).
+
+Original error: ${copyError.message}`);
+        }
+        
+        throw copyError;
       }
 
       if (!response.data.id) {
@@ -177,7 +193,19 @@ export class GoogleDocsService {
       // Handle specific error cases
       if (error instanceof Error) {
         if (error.message.includes('quota')) {
-          throw new Error(`Google Drive storage quota exceeded. The service account has limited storage. Please use your personal Google Drive by sharing the template with the service account but keeping it in your personal drive. Original error: ${error.message}`);
+          throw new Error(`Google Drive storage quota exceeded. The service account has limited storage. 
+
+SOLUTION: Please ensure your template is in your personal Google Drive and shared with the service account:
+1. Go to your template: https://docs.google.com/document/d/${this.config.templateId}/edit
+2. Click "Share" button
+3. Add: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
+4. Set permission to "Editor"
+5. Uncheck "Notify people"
+6. Click "Share"
+
+This will allow the service account to access your template and create new documents in your personal drive (200GB available).
+
+Original error: ${error.message}`);
         } else if (error.message.includes('permission')) {
           throw new Error(`Permission denied. Please ensure the template is shared with the service account (contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com) with Editor permission. Original error: ${error.message}`);
         } else if (error.message.includes('not found')) {
@@ -198,6 +226,7 @@ export class GoogleDocsService {
     // Define all placeholder mappings
     const placeholders = {
       '{{contract_number}}': data.contract_number,
+      '{{ref_number}}': data.contract_number, // Alternative placeholder for reference number
       '{{contract_date}}': data.contract_date,
       '{{contract_type}}': data.contract_type,
       
@@ -207,6 +236,7 @@ export class GoogleDocsService {
       '{{promoter_email}}': data.promoter_email,
       '{{promoter_mobile_number}}': data.promoter_mobile_number,
       '{{promoter_id_card_number}}': data.promoter_id_card_number,
+      '{{id_card_number}}': data.promoter_id_card_number, // Alternative placeholder
       '{{promoter_passport_number}}': data.promoter_passport_number || '',
       
       // First party (Client) data
@@ -383,11 +413,11 @@ export class GoogleDocsService {
       const response = await fetch(imageUrl);
       const imageBuffer = await response.arrayBuffer();
 
-      // Upload to Drive
+      // Upload to Drive (no parents = goes to user's personal drive)
       const uploadResponse = await this.drive.files.create({
         requestBody: {
-          name: fileName,
-          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+          name: fileName
+          // No parents = goes to the same drive as the template (user's personal drive)
         },
         media: {
           mimeType: 'image/jpeg',
@@ -414,14 +444,14 @@ export class GoogleDocsService {
         responseType: 'arraybuffer'
       });
 
-      // Upload PDF to Drive
+      // Upload PDF to Drive (no parents = goes to user's personal drive)
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const pdfFileName = `Contract-${timestamp}.pdf`;
 
       const pdfUploadResponse = await this.drive.files.create({
         requestBody: {
-          name: pdfFileName,
-          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+          name: pdfFileName
+          // No parents = goes to the same drive as the template (user's personal drive)
         },
         media: {
           mimeType: 'application/pdf',
