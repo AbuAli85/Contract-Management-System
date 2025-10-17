@@ -1,219 +1,409 @@
-/**
- * Google Docs Service
- * Handles contract generation using Google Docs API
- * Bypasses Make.com restrictions with Gmail accounts
- */
-
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 
-const TEMPLATE_ID = '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0';
+export interface GoogleDocsConfig {
+  templateId: string;
+  serviceAccountKey: string;
+  outputFolderId?: string | undefined;
+}
 
-interface ContractData {
-  ref_number: string;
+export interface ContractData {
+  // Contract info
+  contract_id: string;
   contract_number: string;
-  first_party_name_ar: string;
-  first_party_name_en: string;
-  first_party_crn: string;
-  second_party_name_ar: string;
-  second_party_name_en: string;
-  second_party_crn: string;
-  promoter_name_ar: string;
+  contract_type: string;
+  contract_date: string;
+  
+  // Promoter data
   promoter_name_en: string;
-  id_card_number: string;
+  promoter_name_ar: string;
+  promoter_email: string;
+  promoter_mobile_number: string;
+  promoter_id_card_number: string;
+  promoter_passport_number?: string;
+  promoter_id_card_url?: string;
+  promoter_passport_url?: string;
+  
+  // First party (Client) data
+  first_party_name_en: string;
+  first_party_name_ar: string;
+  first_party_crn: string;
+  first_party_email: string;
+  first_party_phone: string;
+  
+  // Second party (Employer) data
+  second_party_name_en: string;
+  second_party_name_ar: string;
+  second_party_crn: string;
+  second_party_email: string;
+  second_party_phone: string;
+  
+  // Contract details
+  job_title: string;
+  department: string;
+  work_location: string;
+  basic_salary: number;
   contract_start_date: string;
   contract_end_date: string;
+  special_terms: string;
+  currency: string;
 }
 
 export class GoogleDocsService {
-  private auth: OAuth2Client;
+  private auth: any;
   private docs: any;
   private drive: any;
+  private config: GoogleDocsConfig;
 
-  constructor() {
-    // Initialize OAuth2 client
-    this.auth = new google.auth.OAuth2(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      process.env.GOOGLE_REDIRECT_URI
-    );
-
-    // Set credentials
-    this.auth.setCredentials({
-      access_token: process.env.GOOGLE_ACCESS_TOKEN,
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-    });
-
-    // Initialize Google APIs
-    this.docs = google.docs({ version: 'v1', auth: this.auth });
-    this.drive = google.drive({ version: 'v3', auth: this.auth });
+  constructor(config: GoogleDocsConfig) {
+    this.config = config;
+    this.initializeAuth();
   }
 
-  /**
-   * Generate contract from template
-   */
-  async generateContract(contractData: ContractData): Promise<{
-    success: boolean;
-    documentId?: string;
-    documentUrl?: string;
-    pdfUrl?: string;
-    error?: string;
-  }> {
+  private initializeAuth() {
     try {
-      console.log('📄 Starting contract generation...');
-
-      // Step 1: Copy template
-      const copyResult = await this.copyTemplate(contractData.contract_number);
-      if (!copyResult.success || !copyResult.documentId) {
-        return { success: false, error: 'Failed to copy template' };
-      }
-
-      const documentId = copyResult.documentId;
-      console.log(`✅ Template copied: ${documentId}`);
-
-      // Step 2: Replace all text placeholders
-      const replaceResult = await this.replaceTextInDocument(documentId, contractData);
-      if (!replaceResult.success) {
-        return { success: false, error: 'Failed to replace text' };
-      }
-
-      console.log('✅ Text replacements completed');
-
-      // Step 3: Get document URLs
-      const documentUrl = `https://docs.google.com/document/d/${documentId}/edit`;
-      const pdfUrl = `https://docs.google.com/document/d/${documentId}/export?format=pdf`;
-
-      return {
-        success: true,
-        documentId,
-        documentUrl,
-        pdfUrl,
-      };
-    } catch (error) {
-      console.error('❌ Contract generation error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
-
-  /**
-   * Copy template document
-   */
-  private async copyTemplate(contractNumber: string): Promise<{
-    success: boolean;
-    documentId?: string;
-    error?: string;
-  }> {
-    try {
-      const response = await this.drive.files.copy({
-        fileId: TEMPLATE_ID,
-        requestBody: {
-          name: `Contract - ${contractNumber}`,
-        },
+      const serviceAccountKey = JSON.parse(this.config.serviceAccountKey);
+      
+      this.auth = new google.auth.GoogleAuth({
+        credentials: serviceAccountKey,
+        scopes: [
+          'https://www.googleapis.com/auth/documents',
+          'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/drive.file'
+        ]
       });
 
-      return {
-        success: true,
-        documentId: response.data.id,
-      };
+      this.docs = google.docs({ version: 'v1', auth: this.auth });
+      this.drive = google.drive({ version: 'v3', auth: this.auth });
     } catch (error) {
-      console.error('❌ Copy template error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      console.error('Failed to initialize Google Auth:', error);
+      throw new Error('Invalid Google Service Account configuration');
     }
   }
 
   /**
-   * Replace all text placeholders in document
+   * Generate contract from template with data replacement
    */
-  private async replaceTextInDocument(
-    documentId: string,
-    data: ContractData
-  ): Promise<{ success: boolean; error?: string }> {
+  async generateContract(contractData: ContractData): Promise<{
+    documentId: string;
+    documentUrl: string;
+    pdfUrl: string;
+  }> {
     try {
-      // Define all text replacements
-      const replacements = [
-        { find: '{{ref_number}}', replace: data.ref_number || data.contract_number },
-        { find: '{{first_party_name_ar}}', replace: data.first_party_name_ar || '' },
-        { find: '{{first_party_name_en}}', replace: data.first_party_name_en || '' },
-        { find: '{{first_party_crn}}', replace: data.first_party_crn || '' },
-        { find: '{{second_party_name_ar}}', replace: data.second_party_name_ar || '' },
-        { find: '{{second_party_name_en}}', replace: data.second_party_name_en || '' },
-        { find: '{{second_party_crn}}', replace: data.second_party_crn || '' },
-        { find: '{{promoter_name_ar}}', replace: data.promoter_name_ar || '' },
-        { find: '{{promoter_name_en}}', replace: data.promoter_name_en || '' },
-        { find: '{{id_card_number}}', replace: data.id_card_number || '' },
-        { find: '{{contract_start_date}}', replace: data.contract_start_date || '' },
-        { find: '{{contract_end_date}}', replace: data.contract_end_date || '' },
-      ];
+      console.log('🔄 Starting Google Docs contract generation...');
 
-      // Build requests array for batchUpdate
-      const requests = replacements.map((item) => ({
+      // Step 1: Copy template to create new document
+      const documentId = await this.copyTemplate();
+      console.log('✅ Template copied, document ID:', documentId);
+
+      // Step 2: Replace text placeholders
+      await this.replaceTextPlaceholders(documentId, contractData);
+      console.log('✅ Text placeholders replaced');
+
+      // Step 3: Replace image placeholders
+      await this.replaceImagePlaceholders(documentId, contractData);
+      console.log('✅ Image placeholders replaced');
+
+      // Step 4: Generate PDF
+      const pdfUrl = await this.generatePDF(documentId);
+      console.log('✅ PDF generated');
+
+      const documentUrl = `https://docs.google.com/document/d/${documentId}/edit`;
+
+      return {
+        documentId,
+        documentUrl,
+        pdfUrl
+      };
+    } catch (error) {
+      console.error('❌ Google Docs generation failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Copy template to create new document
+   */
+  private async copyTemplate(): Promise<string> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const fileName = `Contract-${timestamp}`;
+
+    const response = await this.drive.files.copy({
+      fileId: this.config.templateId,
+      requestBody: {
+        name: fileName,
+        parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+      }
+    });
+
+    return response.data.id;
+  }
+
+  /**
+   * Replace text placeholders in the document
+   */
+  private async replaceTextPlaceholders(documentId: string, data: ContractData) {
+    const requests = [];
+
+    // Define all placeholder mappings
+    const placeholders = {
+      '{{contract_number}}': data.contract_number,
+      '{{contract_date}}': data.contract_date,
+      '{{contract_type}}': data.contract_type,
+      
+      // Promoter data
+      '{{promoter_name_en}}': data.promoter_name_en,
+      '{{promoter_name_ar}}': data.promoter_name_ar,
+      '{{promoter_email}}': data.promoter_email,
+      '{{promoter_mobile_number}}': data.promoter_mobile_number,
+      '{{promoter_id_card_number}}': data.promoter_id_card_number,
+      '{{promoter_passport_number}}': data.promoter_passport_number || '',
+      
+      // First party (Client) data
+      '{{first_party_name_en}}': data.first_party_name_en,
+      '{{first_party_name_ar}}': data.first_party_name_ar,
+      '{{first_party_crn}}': data.first_party_crn,
+      '{{first_party_email}}': data.first_party_email,
+      '{{first_party_phone}}': data.first_party_phone,
+      
+      // Second party (Employer) data
+      '{{second_party_name_en}}': data.second_party_name_en,
+      '{{second_party_name_ar}}': data.second_party_name_ar,
+      '{{second_party_crn}}': data.second_party_crn,
+      '{{second_party_email}}': data.second_party_email,
+      '{{second_party_phone}}': data.second_party_phone,
+      
+      // Contract details
+      '{{job_title}}': data.job_title,
+      '{{department}}': data.department,
+      '{{work_location}}': data.work_location,
+      '{{basic_salary}}': data.basic_salary.toString(),
+      '{{contract_start_date}}': data.contract_start_date,
+      '{{contract_end_date}}': data.contract_end_date,
+      '{{special_terms}}': data.special_terms,
+      '{{currency}}': data.currency,
+    };
+
+    // Create replace text requests for each placeholder
+    for (const [placeholder, value] of Object.entries(placeholders)) {
+      requests.push({
         replaceAllText: {
           containsText: {
-            text: item.find,
-            matchCase: true,
+            text: placeholder,
+            matchCase: false
           },
-          replaceText: item.replace,
-        },
-      }));
+          replaceText: value
+        }
+      });
+    }
 
-      // Execute batch update
+    // Execute all replacement requests
+    if (requests.length > 0) {
       await this.docs.documents.batchUpdate({
         documentId,
         requestBody: {
-          requests,
-        },
+          requests
+        }
       });
-
-      return { success: true };
-    } catch (error) {
-      console.error('❌ Replace text error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
     }
   }
 
   /**
-   * Export document as PDF
+   * Replace image placeholders with actual images
    */
-  async exportToPDF(documentId: string): Promise<{
-    success: boolean;
-    pdfUrl?: string;
-    error?: string;
-  }> {
+  private async replaceImagePlaceholders(documentId: string, data: ContractData) {
+    const requests = [];
+
+    // Handle ID card image replacement
+    if (data.promoter_id_card_url) {
+      try {
+        const imageRequest = await this.createImageReplacementRequest(
+          documentId,
+          '{{promoter_id_card_image}}',
+          data.promoter_id_card_url,
+          'ID Card'
+        );
+        if (imageRequest) {
+          requests.push(imageRequest);
+        }
+      } catch (error) {
+        console.warn('Failed to replace ID card image:', error);
+      }
+    }
+
+    // Handle passport image replacement
+    if (data.promoter_passport_url) {
+      try {
+        const imageRequest = await this.createImageReplacementRequest(
+          documentId,
+          '{{promoter_passport_image}}',
+          data.promoter_passport_url,
+          'Passport'
+        );
+        if (imageRequest) {
+          requests.push(imageRequest);
+        }
+      } catch (error) {
+        console.warn('Failed to replace passport image:', error);
+      }
+    }
+
+    // Execute image replacement requests
+    if (requests.length > 0) {
+      await this.docs.documents.batchUpdate({
+        documentId,
+        requestBody: {
+          requests
+        }
+      });
+    }
+  }
+
+  /**
+   * Create image replacement request
+   */
+  private async createImageReplacementRequest(
+    documentId: string,
+    placeholder: string,
+    imageUrl: string,
+    altText: string
+  ) {
     try {
-      const response = await this.drive.files.export(
-        {
-          fileId: documentId,
-          mimeType: 'application/pdf',
-        },
-        { responseType: 'arraybuffer' }
-      );
+      // First, get the document to find the placeholder
+      const doc = await this.docs.documents.get({ documentId });
+      
+      // Find the placeholder text
+      let placeholderIndex = -1;
+      let placeholderStart = -1;
+      let placeholderEnd = -1;
 
-      // You can save this to Supabase storage or return the URL
-      const pdfUrl = `https://docs.google.com/document/d/${documentId}/export?format=pdf`;
+      for (const element of doc.data.body?.content || []) {
+        if (element.paragraph) {
+          for (const textElement of element.paragraph.elements || []) {
+            if (textElement.textRun?.content?.includes(placeholder)) {
+              placeholderIndex = element.startIndex || 0;
+              placeholderStart = textElement.startIndex || 0;
+              placeholderEnd = (textElement.endIndex || 0) - 1;
+              break;
+            }
+          }
+        }
+        if (placeholderIndex !== -1) break;
+      }
 
+      if (placeholderIndex === -1) {
+        console.warn(`Placeholder ${placeholder} not found in document`);
+        return null;
+      }
+
+      // Download and upload image to Drive
+      const imageId = await this.uploadImageToDrive(imageUrl, altText);
+
+      // Create image replacement request
       return {
-        success: true,
-        pdfUrl,
+        insertInlineImage: {
+          location: {
+            index: placeholderStart
+          },
+          uri: `https://drive.google.com/uc?id=${imageId}`,
+          objectSize: {
+            height: {
+              magnitude: 200,
+              unit: 'PT'
+            },
+            width: {
+              magnitude: 300,
+              unit: 'PT'
+            }
+          }
+        }
       };
     } catch (error) {
-      console.error('❌ Export PDF error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      console.error(`Failed to create image replacement for ${placeholder}:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Upload image to Google Drive
+   */
+  private async uploadImageToDrive(imageUrl: string, fileName: string): Promise<string> {
+    try {
+      // Download image
+      const response = await fetch(imageUrl);
+      const imageBuffer = await response.arrayBuffer();
+
+      // Upload to Drive
+      const uploadResponse = await this.drive.files.create({
+        requestBody: {
+          name: fileName,
+          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+        },
+        media: {
+          mimeType: 'image/jpeg',
+          body: Buffer.from(imageBuffer)
+        }
+      });
+
+      return uploadResponse.data.id;
+    } catch (error) {
+      console.error('Failed to upload image to Drive:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate PDF from document
+   */
+  private async generatePDF(documentId: string): Promise<string> {
+    try {
+      const response = await this.drive.files.export({
+        fileId: documentId,
+        mimeType: 'application/pdf'
+      }, {
+        responseType: 'arraybuffer'
+      });
+
+      // Upload PDF to Drive
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const pdfFileName = `Contract-${timestamp}.pdf`;
+
+      const pdfUploadResponse = await this.drive.files.create({
+        requestBody: {
+          name: pdfFileName,
+          parents: this.config.outputFolderId ? [this.config.outputFolderId] : undefined
+        },
+        media: {
+          mimeType: 'application/pdf',
+          body: Buffer.from(response.data as ArrayBuffer)
+        }
+      });
+
+      // Make PDF publicly accessible
+      await this.drive.permissions.create({
+        fileId: pdfUploadResponse.data.id,
+        requestBody: {
+          role: 'reader',
+          type: 'anyone'
+        }
+      });
+
+      return `https://drive.google.com/file/d/${pdfUploadResponse.data.id}/view`;
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get document content for debugging
+   */
+  async getDocumentContent(documentId: string) {
+    try {
+      const response = await this.docs.documents.get({ documentId });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get document content:', error);
+      throw error;
     }
   }
 }
-
-// Export singleton instance
-export const googleDocsService = new GoogleDocsService();
-

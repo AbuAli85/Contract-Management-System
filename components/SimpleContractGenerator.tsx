@@ -42,6 +42,7 @@ interface Promoter {
   email: string;
   mobile_number: string;
   id_card_number: string;
+  employer_id?: string | null;
 }
 
 interface Party {
@@ -67,7 +68,9 @@ interface ContractFormData {
 
 export default function SimpleContractGenerator() {
   const [promoters, setPromoters] = useState<Promoter[]>([]);
-  const [parties, setParties] = useState<Party[]>([]);
+  const [allParties, setAllParties] = useState<Party[]>([]);
+  const [clients, setClients] = useState<Party[]>([]);
+  const [employers, setEmployers] = useState<Party[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState<ContractFormData>({
@@ -106,21 +109,10 @@ export default function SimpleContractGenerator() {
         throw new Error('Supabase client not available');
       }
       
-      // Load promoters
-      const { data: promotersData, error: promotersError } = await supabase
-        .from('promoters')
-        .select('id, name_en, name_ar, email, mobile_number, id_card_number')
-        .order('name_en');
-
-      if (promotersError) {
-        console.error('Error loading promoters:', promotersError);
-        throw new Error(`Failed to load promoters: ${promotersError.message}`);
-      }
-
-      // Load parties
+      // Load all parties first
       const { data: partiesData, error: partiesError } = await supabase
         .from('parties')
-        .select('id, name_en, name_ar, crn')
+        .select('id, name_en, name_ar, crn, type')
         .order('name_en');
 
       if (partiesError) {
@@ -128,10 +120,29 @@ export default function SimpleContractGenerator() {
         throw new Error(`Failed to load parties: ${partiesError.message}`);
       }
 
+      // Filter parties by type
+      const allPartiesList = partiesData || [];
+      const clientsList = allPartiesList.filter((party: any) => party.type === 'Client');
+      const employersList = allPartiesList.filter((party: any) => party.type === 'Employer');
+
+      setAllParties(allPartiesList);
+      setClients(clientsList);
+      setEmployers(employersList);
+
+      // Load promoters (will be filtered by selected employer later)
+      const { data: promotersData, error: promotersError } = await supabase
+        .from('promoters')
+        .select('id, name_en, name_ar, email, mobile_number, id_card_number, employer_id')
+        .order('name_en');
+
+      if (promotersError) {
+        console.error('Error loading promoters:', promotersError);
+        throw new Error(`Failed to load promoters: ${promotersError.message}`);
+      }
+
       setPromoters(promotersData || []);
-      setParties(partiesData || []);
       
-      console.log(`✅ Loaded ${promotersData?.length || 0} promoters and ${partiesData?.length || 0} parties`);
+      console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`);
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
@@ -149,6 +160,30 @@ export default function SimpleContractGenerator() {
       ...prev,
       [field]: value,
     }));
+
+    // If employer is selected, filter promoters by that employer
+    if (field === 'second_party_id') {
+      const selectedEmployerId = value as string;
+      if (selectedEmployerId) {
+        const filteredPromoters = promoters.filter((promoter: any) => 
+          promoter.employer_id === selectedEmployerId
+        );
+        setPromoters(filteredPromoters);
+      } else {
+        // If no employer selected, show all promoters
+        loadData();
+      }
+    }
+  };
+
+  // Get filtered promoters based on selected employer
+  const getFilteredPromoters = () => {
+    if (formData.second_party_id) {
+      return promoters.filter((promoter: any) => 
+        promoter.employer_id === formData.second_party_id
+      );
+    }
+    return promoters;
   };
 
   const validateForm = (): string[] => {
@@ -180,8 +215,8 @@ export default function SimpleContractGenerator() {
 
     setGenerating(true);
     try {
-      // Call the simple contract generation API
-      const response = await fetch('/api/contracts/simple-generate', {
+      // Call the Google Docs contract generation API
+      const response = await fetch('/api/contracts/google-docs-generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -198,8 +233,19 @@ export default function SimpleContractGenerator() {
       if (result.success) {
         toast({
           title: 'Success!',
-          description: 'Contract generated and sent to Make.com for processing',
+          description: 'Contract generated successfully with Google Docs',
         });
+
+        // Show success message with links
+        if (result.data) {
+          setTimeout(() => {
+            toast({
+              title: 'Contract Ready!',
+              description: `Document: ${result.data.document_url}`,
+              variant: 'default',
+            });
+          }, 1000);
+        }
         
         // Reset form
         setFormData({
@@ -254,7 +300,7 @@ export default function SimpleContractGenerator() {
   }
 
   // Handle case where no data is loaded
-  if (promoters.length === 0 || parties.length === 0) {
+  if (promoters.length === 0 || allParties.length === 0) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="text-center space-y-2">
@@ -269,7 +315,7 @@ export default function SimpleContractGenerator() {
             <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
             <h2 className="text-xl font-semibold mb-2">No Data Available</h2>
             <p className="text-muted-foreground mb-4">
-              {promoters.length === 0 && parties.length === 0 
+              {promoters.length === 0 && allParties.length === 0 
                 ? "No promoters or parties found. Please add some data first."
                 : promoters.length === 0 
                 ? "No promoters found. Please add some promoters first."
@@ -316,8 +362,10 @@ export default function SimpleContractGenerator() {
             </h3>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                <strong>Note:</strong> Both dropdowns show the same list of parties. 
-                Select the <strong>Client</strong> as First Party and <strong>Employer</strong> as Second Party.
+                <strong>Note:</strong> 
+                <br />• <strong>First Party</strong> shows only <strong>Client</strong> type parties
+                <br />• <strong>Second Party</strong> shows only <strong>Employer</strong> type parties  
+                <br />• <strong>Promoters</strong> are filtered by the selected employer
               </p>
             </div>
             
@@ -333,7 +381,7 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select promoter" />
                   </SelectTrigger>
                   <SelectContent>
-                    {promoters.map((promoter) => (
+                    {getFilteredPromoters().map((promoter) => (
                       <SelectItem key={promoter.id} value={promoter.id}>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4" />
@@ -346,6 +394,14 @@ export default function SimpleContractGenerator() {
                         </div>
                       </SelectItem>
                     ))}
+                    {getFilteredPromoters().length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        {formData.second_party_id 
+                          ? 'No promoters found for selected employer' 
+                          : 'Please select an employer first'
+                        }
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -361,7 +417,7 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {parties.map((party) => (
+                    {clients.map((party) => (
                       <SelectItem key={party.id} value={party.id}>
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4" />
@@ -374,6 +430,11 @@ export default function SimpleContractGenerator() {
                         </div>
                       </SelectItem>
                     ))}
+                    {clients.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No clients found
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -389,7 +450,7 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select employer" />
                   </SelectTrigger>
                   <SelectContent>
-                    {parties.map((party) => (
+                    {employers.map((party) => (
                       <SelectItem key={party.id} value={party.id}>
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4" />
@@ -402,6 +463,11 @@ export default function SimpleContractGenerator() {
                         </div>
                       </SelectItem>
                     ))}
+                    {employers.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No employers found
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
