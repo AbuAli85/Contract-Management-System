@@ -36,20 +36,16 @@ Contract Number: {{contract_number}}
 Date: {{contract_date}}
 
 BETWEEN:
-{{first_party_name_en}} ({{first_party_name_ar}})
+{{first_party_name_en}} ({{first_party_name_ar}}) - CLIENT
 Commercial Registration: {{first_party_crn}}
-Address: {{first_party_address_en}}
-Contact Person: {{first_party_contact_person}}
-Email: {{first_party_contact_email}}
-Phone: {{first_party_contact_phone}}
+Email: {{first_party_email}}
+Phone: {{first_party_phone}}
 
 AND:
-{{second_party_name_en}} ({{second_party_name_ar}})
+{{second_party_name_en}} ({{second_party_name_ar}}) - EMPLOYER
 Commercial Registration: {{second_party_crn}}
-Address: {{second_party_address_en}}
-Contact Person: {{second_party_contact_person}}
-Email: {{second_party_contact_email}}
-Phone: {{second_party_contact_phone}}
+Email: {{second_party_email}}
+Phone: {{second_party_phone}}
 
 EMPLOYEE:
 {{promoter_name_en}} ({{promoter_name_ar}})

@@ -120,7 +120,7 @@ export const POST = withAnyRBAC(
         promoter_id_card_url: promoter?.id_card_url,
         promoter_passport_url: promoter?.passport_url,
         
-        // First party data
+        // First party data (Client)
         first_party_id: body.first_party_id,
         first_party_name_en: firstParty?.name_en,
         first_party_name_ar: firstParty?.name_ar,
@@ -128,7 +128,7 @@ export const POST = withAnyRBAC(
         first_party_email: firstParty?.email,
         first_party_phone: firstParty?.phone,
         
-        // Second party data
+        // Second party data (Employer)
         second_party_id: body.second_party_id,
         second_party_name_en: secondParty?.name_en,
         second_party_name_ar: secondParty?.name_ar,

@@ -314,6 +314,12 @@ export default function SimpleContractGenerator() {
               <Users className="h-5 w-5" />
               Select Parties
             </h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> Both dropdowns show the same list of parties. 
+                Select the <strong>Client</strong> as First Party and <strong>Employer</strong> as Second Party.
+              </p>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Promoter Selection */}
@@ -344,15 +350,15 @@ export default function SimpleContractGenerator() {
                 </Select>
               </div>
 
-              {/* First Party Selection */}
+              {/* First Party Selection (Client) */}
               <div className="space-y-2">
-                <Label htmlFor="first_party">First Party (Employer) *</Label>
+                <Label htmlFor="first_party">First Party (Client) *</Label>
                 <Select
                   value={formData.first_party_id}
                   onValueChange={(value) => handleInputChange('first_party_id', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select first party" />
+                    <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
                     {parties.map((party) => (
@@ -372,15 +378,15 @@ export default function SimpleContractGenerator() {
                 </Select>
               </div>
 
-              {/* Second Party Selection */}
+              {/* Second Party Selection (Employer) */}
               <div className="space-y-2">
-                <Label htmlFor="second_party">Second Party (Client) *</Label>
+                <Label htmlFor="second_party">Second Party (Employer) *</Label>
                 <Select
                   value={formData.second_party_id}
                   onValueChange={(value) => handleInputChange('second_party_id', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select second party" />
+                    <SelectValue placeholder="Select employer" />
                   </SelectTrigger>
                   <SelectContent>
                     {parties.map((party) => (
