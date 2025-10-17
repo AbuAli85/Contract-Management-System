@@ -22,6 +22,7 @@ import {
   Clock,
   MapPin,
   CreditCard,
+  Plus,
 } from 'lucide-react';
 
 interface EnhancedSidebarProps {
@@ -57,7 +58,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Payment & Escrow',
       href: '/marketplace/payments',
       icon: '💳',
-      permission: 'payments.view' as const,
+      permission: 'dashboard.view' as const,
     },
   ];
 
@@ -70,16 +71,22 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       permission: 'dashboard.view' as const,
     },
     {
+      label: 'Enhanced CRM',
+      href: '/crm/enhanced',
+      icon: '🚀',
+      permission: 'dashboard.view' as const,
+    },
+    {
       label: 'Project Workflow',
       href: '/workflow',
       icon: '🔄',
-      permission: 'projects.view_own' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'My Projects',
       href: '/client/projects',
       icon: '📋',
-      permission: 'projects.view_own' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'My Bookings',
@@ -97,7 +104,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Messages',
       href: '/client/messages',
       icon: '💬',
-      permission: 'messages.view' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'Reviews & Ratings',
@@ -118,7 +125,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Project Workflow',
       href: '/workflow',
       icon: '🔄',
-      permission: 'projects.view_own' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'My Profile',
@@ -136,25 +143,25 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Orders & Projects',
       href: '/provider/orders',
       icon: '📦',
-      permission: 'orders.view_provider' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'Earnings',
       href: '/provider/earnings',
       icon: '💰',
-      permission: 'earnings.view_own' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'Client Messages',
       href: '/provider/messages',
       icon: '💬',
-      permission: 'messages.view' as const,
+      permission: 'dashboard.view' as const,
     },
     {
       label: 'Portfolio',
       href: '/provider/portfolio',
       icon: '🎨',
-      permission: 'portfolio.edit_own' as const,
+      permission: 'profile.edit_own' as const,
     },
     {
       label: 'Analytics',
@@ -166,11 +173,17 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Reviews & Ratings',
       href: '/provider/reviews',
       icon: '⭐',
-      permission: 'reviews.view_own' as const,
+      permission: 'reviews.create' as const,
     },
   ];
 
   const adminNavItems = [
+    {
+      label: 'Enhanced CRM',
+      href: '/crm/enhanced',
+      icon: '🚀',
+      permission: 'dashboard.view' as const,
+    },
     {
       label: 'Users',
       href: '/admin/users',
@@ -193,7 +206,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
       label: 'Reports',
       href: '/admin/reports',
       icon: '📈',
-      permission: 'reports.view_all' as const,
+      permission: 'dashboard.view' as const,
     },
   ];
 
@@ -251,7 +264,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
           href={`/dashboard/${userRole === 'super_admin' || userRole === 'admin' ? 'admin' : userRole}`}
           className={cn(
             'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-            pathname.includes('/dashboard') && !pathname.includes('/dashboard/')
+            pathname?.includes('/dashboard') && !pathname?.includes('/dashboard/')
               ? 'bg-blue-100 text-blue-700'
               : 'text-gray-700 hover:bg-gray-100'
           )}
@@ -436,7 +449,7 @@ export function QuickActions({ userRole }: QuickActionsProps) {
             label: 'Manage Bookings',
             href: '/provider/bookings',
             icon: Calendar,
-            permission: 'bookings.view_provider' as const,
+            permission: 'dashboard.view' as const,
             color: 'bg-blue-600 hover:bg-blue-700',
           },
         ];
