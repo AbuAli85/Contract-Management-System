@@ -31,7 +31,25 @@ export class GoogleDocsServiceSA {
 
   constructor() {
     // Parse service account credentials from environment
-    const credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY || '{}');
+    // Support both direct JSON and Base64 encoded JSON
+    let credentials: any;
+    
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64) {
+      // Decode from Base64 (recommended for production)
+      const decoded = Buffer.from(
+        process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64,
+        'base64'
+      ).toString('utf8');
+      credentials = JSON.parse(decoded);
+    } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+      // Direct JSON (for development)
+      credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    } else {
+      throw new Error(
+        'Missing Google Service Account credentials. ' +
+        'Set either GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_SERVICE_ACCOUNT_KEY_BASE64'
+      );
+    }
 
     // Create JWT client
     this.auth = new google.auth.JWT({
