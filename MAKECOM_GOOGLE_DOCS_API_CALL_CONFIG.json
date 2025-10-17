@@ -1,0 +1,103 @@
+{
+  "module": "Google Docs - Make an API Call",
+  "note": "Only use this if 'Create from Template' module is not available",
+  "step_1_copy_template": {
+    "url": "/v1/documents/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V:copy",
+    "method": "POST",
+    "body": {
+      "name": "{{1.contract_number}} - Employment Contract"
+    },
+    "output": "This returns a new document ID. Store as {{6.documentId}}"
+  },
+  "step_2_batch_update": {
+    "url": "/v1/documents/{{6.documentId}}:batchUpdate",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "requests": [
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{contract_number}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.contract_number}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{promoter_name_en}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.promoter_name_en}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{first_party_name_en}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.first_party_name_en}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{second_party_name_en}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.second_party_name_en}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{job_title}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.job_title}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{basic_salary}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.basic_salary}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{contract_start_date}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.contract_start_date}}"
+          }
+        },
+        {
+          "replaceAllText": {
+            "containsText": {
+              "text": "{{contract_end_date}}",
+              "matchCase": true
+            },
+            "replaceText": "{{1.contract_end_date}}"
+          }
+        }
+      ]
+    },
+    "note": "This handles text replacements only. Images need separate handling."
+  },
+  "important_notes": [
+    "The 'requests' parameter expects an ARRAY of request objects",
+    "Each text replacement needs its own object in the array",
+    "Image replacements require the image object IDs from the template",
+    "This is more complex than the simple 'Create from Template' module"
+  ]
+}
+
