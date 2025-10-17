@@ -30,6 +30,7 @@ import {
   Loader2,
   CheckCircle,
   AlertTriangle,
+  RefreshCw,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
