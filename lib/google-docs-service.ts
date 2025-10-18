@@ -148,15 +148,26 @@ export class GoogleDocsService {
       let response;
       
       try {
-        // First, try to copy without specifying parents (let it inherit from template)
-        response = await this.drive.files.copy({
-          fileId: this.config.templateId,
-          requestBody: {
-            name: fileName
-          }
-        });
-        
-        console.log('✅ Template copied successfully');
+        // Try to copy the template to the output folder if specified
+        if (this.config.outputFolderId) {
+          response = await this.drive.files.copy({
+            fileId: this.config.templateId,
+            requestBody: {
+              name: fileName,
+              parents: [this.config.outputFolderId]
+            }
+          });
+          console.log('✅ Template copied to output folder');
+        } else {
+          // Copy without specifying parents (let it inherit from template)
+          response = await this.drive.files.copy({
+            fileId: this.config.templateId,
+            requestBody: {
+              name: fileName
+            }
+          });
+          console.log('✅ Template copied successfully');
+        }
       } catch (copyError) {
         console.error('❌ Failed to copy template:', copyError);
         
