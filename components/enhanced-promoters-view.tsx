@@ -488,7 +488,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   const derivedLocale = useMemo(() => {
-    if (locale) return locale;
+    if (locale && typeof locale === 'string') return locale;
     if (typeof window !== 'undefined') {
       const segments = window.location.pathname.split('/').filter(Boolean);
       return segments[0] || 'en';

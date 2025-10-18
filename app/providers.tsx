@@ -311,7 +311,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       signOut,
       refreshSession,
     }),
-    [user, session, loading, supabase, signOut, refreshSession]
+    [user, session, loading] // Removed supabase, signOut, refreshSession from deps
   );
 
   return (
@@ -414,7 +414,7 @@ function RBACProvider({ children }: { children: React.ReactNode }) {
       hasAnyPermission,
       hasAllPermissions,
     }),
-    [userRole, permissions, hasPermission, hasAnyPermission, hasAllPermissions]
+    [userRole, permissions] // Removed functions from deps
   );
 
   return (
