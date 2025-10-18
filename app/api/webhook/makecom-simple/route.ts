@@ -163,14 +163,34 @@ export async function POST(request: NextRequest) {
     
     // Map date fields from webhook data
     if (body.contract_start_date) {
-      // Convert DD-MM-YYYY to YYYY-MM-DD format for database
-      const startDate = body.contract_start_date.split('-').reverse().join('-');
-      contractData.start_date = startDate;
+      // Handle both YYYY-MM-DD and DD-MM-YYYY formats
+      let startDate = body.contract_start_date;
+      if (startDate.includes('-')) {
+        const parts = startDate.split('-');
+        if (parts[0].length === 4) {
+          // Already in YYYY-MM-DD format
+          contractData.start_date = startDate;
+        } else {
+          // Convert DD-MM-YYYY to YYYY-MM-DD format
+          startDate = parts.reverse().join('-');
+          contractData.start_date = startDate;
+        }
+      }
     }
     if (body.contract_end_date) {
-      // Convert DD-MM-YYYY to YYYY-MM-DD format for database
-      const endDate = body.contract_end_date.split('-').reverse().join('-');
-      contractData.end_date = endDate;
+      // Handle both YYYY-MM-DD and DD-MM-YYYY formats
+      let endDate = body.contract_end_date;
+      if (endDate.includes('-')) {
+        const parts = endDate.split('-');
+        if (parts[0].length === 4) {
+          // Already in YYYY-MM-DD format
+          contractData.end_date = endDate;
+        } else {
+          // Convert DD-MM-YYYY to YYYY-MM-DD format
+          endDate = parts.reverse().join('-');
+          contractData.end_date = endDate;
+        }
+      }
     }
     
     // Map other fields
