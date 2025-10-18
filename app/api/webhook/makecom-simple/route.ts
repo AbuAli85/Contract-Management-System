@@ -29,14 +29,25 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const { contract_id, contract_number, contract_type, promoter_id, first_party_id, second_party_id } = body;
 
-    if (!contract_id && !contract_number) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'contract_id or contract_number is required',
-        },
-        { status: 400 }
-      );
+    // Generate contract_id and contract_number if they're empty
+    let finalContractId = contract_id;
+    let finalContractNumber = contract_number;
+
+    if (!finalContractId || finalContractId.trim() === '') {
+      // Generate a UUID for contract_id
+      finalContractId = crypto.randomUUID();
+      console.log('🆔 Generated contract_id:', finalContractId);
+    }
+
+    if (!finalContractNumber || finalContractNumber.trim() === '') {
+      // Generate contract number with format: PAC-DDMMYYYY-XXXX
+      const now = new Date();
+      const day = now.getDate().toString().padStart(2, '0');
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const year = now.getFullYear();
+      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+      finalContractNumber = `PAC-${day}${month}${year}-${random}`;
+      console.log('🔢 Generated contract_number:', finalContractNumber);
     }
 
     if (!contract_type) {
@@ -54,11 +65,11 @@ export async function POST(request: NextRequest) {
 
     // Check if contract already exists
     let contract;
-    if (contract_id) {
+    if (finalContractId) {
       const { data: existingContract, error: contractError } = await supabase
         .from('contracts')
         .select('*')
-        .eq('id', contract_id)
+        .eq('id', finalContractId)
         .single();
 
       if (contractError && contractError.code !== 'PGRST116') {
@@ -72,11 +83,11 @@ export async function POST(request: NextRequest) {
       contract = existingContract;
     }
 
-    if (contract_number) {
+    if (finalContractNumber) {
       const { data: existingContract, error: contractError } = await supabase
         .from('contracts')
         .select('*')
-        .eq('contract_number', contract_number)
+        .eq('contract_number', finalContractNumber)
         .single();
 
       if (contractError && contractError.code !== 'PGRST116') {
@@ -133,7 +144,7 @@ export async function POST(request: NextRequest) {
     
     const contractData: any = {
       contract_type,
-      contract_number: contract_number || `CONTRACT-${Date.now()}`,
+      contract_number: finalContractNumber,
       status: 'draft',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -163,7 +174,8 @@ export async function POST(request: NextRequest) {
       message: 'Contract created successfully',
       contract_id: newContract.id,
       contract_number: newContract.contract_number,
-      status: 'created'
+      status: 'created',
+      template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0'
     });
 
   } catch (error) {
