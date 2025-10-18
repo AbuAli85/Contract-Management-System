@@ -118,12 +118,13 @@ export async function POST(request: NextRequest) {
       if (first_party_id) updateData.client_id = first_party_id;  // first_party is client
       if (second_party_id) updateData.employer_id = second_party_id;  // second_party is employer
 
-      const { data: updatedContract, error: updateError } = await supabase
+      const supabaseClient = supabase as any;
+      const { data: updatedContract, error: updateError } = await supabaseClient
         .from('contracts')
         .update(updateData)
         .eq('id', (contract as any).id)
         .select()
-        .single() as { data: any; error: any };
+        .single();
 
       if (updateError) {
         console.error('❌ Error updating contract:', updateError);
@@ -177,11 +178,11 @@ export async function POST(request: NextRequest) {
     if (body.basic_salary) contractData.value = parseFloat(body.basic_salary);
     if (body.special_terms) contractData.terms = body.special_terms;
 
-    const { data: newContract, error: createError } = await supabase
+    const { data: newContract, error: createError } = await (supabase as any)
       .from('contracts')
       .insert(contractData)
       .select()
-      .single() as { data: any; error: any };
+      .single();
 
     if (createError) {
       console.error('❌ Error creating contract:', createError);
