@@ -128,6 +128,12 @@ export async function POST(request: NextRequest) {
     console.log('✅ Contract created:', (contract as any)?.id);
 
     // Fetch promoter and party data
+    console.log('🔍 Fetching data for:', {
+      promoter_id: body.promoter_id,
+      first_party_id: body.first_party_id,
+      second_party_id: body.second_party_id
+    });
+
     const [promoterResult, firstPartyResult, secondPartyResult] = await Promise.all([
       (await supabase)
         .from('promoters')
@@ -146,15 +152,55 @@ export async function POST(request: NextRequest) {
         .single(),
     ]);
 
-    const promoter = promoterResult.data as any;
-    const firstParty = firstPartyResult.data as any;
-    const secondParty = secondPartyResult.data as any;
+    console.log('📊 Fetch results:', {
+      promoter: { data: promoterResult.data, error: promoterResult.error },
+      firstParty: { data: firstPartyResult.data, error: firstPartyResult.error },
+      secondParty: { data: secondPartyResult.data, error: secondPartyResult.error }
+    });
 
-    if (!promoter || !firstParty || !secondParty) {
-      return NextResponse.json(
-        { error: 'Failed to fetch required data' },
-        { status: 500 }
-      );
+    let promoter = promoterResult.data as any;
+    let firstParty = firstPartyResult.data as any;
+    let secondParty = secondPartyResult.data as any;
+
+    // Check for missing data and provide detailed error
+    const missingData = [];
+    if (!promoter) missingData.push(`promoter (ID: ${body.promoter_id})`);
+    if (!firstParty) missingData.push(`first_party (ID: ${body.first_party_id})`);
+    if (!secondParty) missingData.push(`second_party (ID: ${body.second_party_id})`);
+
+    if (missingData.length > 0) {
+      console.warn('⚠️ Missing data, using fallback data:', missingData);
+      
+      // Use fallback data for missing records
+      promoter = promoter || {
+        id: body.promoter_id,
+        name_en: 'Unknown Promoter',
+        name_ar: 'مروج غير معروف',
+        email: 'promoter@example.com',
+        mobile_number: '+96800000000',
+        id_card_number: 'N/A',
+        passport_number: 'N/A'
+      };
+      
+      firstParty = firstParty || {
+        id: body.first_party_id,
+        name_en: 'Unknown Client',
+        name_ar: 'عميل غير معروف',
+        crn: 'N/A',
+        email: 'client@example.com',
+        phone: '+96800000000'
+      };
+      
+      secondParty = secondParty || {
+        id: body.second_party_id,
+        name_en: 'Unknown Employer',
+        name_ar: 'صاحب عمل غير معروف',
+        crn: 'N/A',
+        email: 'employer@example.com',
+        phone: '+96800000000'
+      };
+      
+      console.log('✅ Using fallback data for missing records');
     }
 
     // Prepare contract data for Google Docs
@@ -315,7 +361,12 @@ export async function POST(request: NextRequest) {
         document_url: result.documentUrl,
         pdf_url: result.pdfUrl,
         generated_at: new Date().toISOString(),
-      }
+      },
+      warnings: missingData.length > 0 ? {
+        fallback_data_used: true,
+        missing_records: missingData,
+        message: 'Some records were not found in database, fallback data was used'
+      } : undefined
     });
 
   } catch (error) {
