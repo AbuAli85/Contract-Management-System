@@ -67,47 +67,47 @@ export async function POST(request: NextRequest) {
     // Create Supabase client
     const supabase = await createClient();
 
-    // Check if contract already exists
-    let contract;
-    if (finalContractId) {
-      const { data: existingContract, error: contractError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('id', finalContractId)
-        .single();
+           // Check if contract already exists
+           let contract: any = null;
+           if (finalContractId) {
+             const { data: existingContract, error: contractError } = await supabase
+               .from('contracts')
+               .select('*')
+               .eq('id', finalContractId)
+               .single();
 
-      if (contractError && contractError.code !== 'PGRST116') {
-        console.error('❌ Error fetching contract:', contractError);
-        return NextResponse.json(
-          { success: false, error: 'Failed to fetch contract' },
-          { status: 500 }
-        );
-      }
+             if (contractError && contractError.code !== 'PGRST116') {
+               console.error('❌ Error fetching contract:', contractError);
+               return NextResponse.json(
+                 { success: false, error: 'Failed to fetch contract' },
+                 { status: 500 }
+               );
+             }
 
-      contract = existingContract;
-    }
+             contract = existingContract;
+           }
 
-    if (finalContractNumber) {
-      const { data: existingContract, error: contractError } = await supabase
-        .from('contracts')
-        .select('*')
-        .eq('contract_number', finalContractNumber)
-        .single();
+           if (finalContractNumber && !contract) {
+             const { data: existingContract, error: contractError } = await supabase
+               .from('contracts')
+               .select('*')
+               .eq('contract_number', finalContractNumber)
+               .single();
 
-      if (contractError && contractError.code !== 'PGRST116') {
-        console.error('❌ Error fetching contract by number:', contractError);
-        return NextResponse.json(
-          { success: false, error: 'Failed to fetch contract by number' },
-          { status: 500 }
-        );
-      }
+             if (contractError && contractError.code !== 'PGRST116') {
+               console.error('❌ Error fetching contract by number:', contractError);
+               return NextResponse.json(
+                 { success: false, error: 'Failed to fetch contract by number' },
+                 { status: 500 }
+               );
+             }
 
-      contract = existingContract;
-    }
+             contract = existingContract;
+           }
 
     // If contract exists, update it
     if (contract) {
-      console.log('📝 Updating existing contract:', contract.id);
+      console.log('📝 Updating existing contract:', (contract as any).id);
       
       const updateData: any = {
         contract_type,
@@ -115,15 +115,15 @@ export async function POST(request: NextRequest) {
       };
 
       if (promoter_id) updateData.promoter_id = promoter_id;
-      if (first_party_id) updateData.first_party_id = first_party_id;
-      if (second_party_id) updateData.second_party_id = second_party_id;
+      if (first_party_id) updateData.client_id = first_party_id;  // first_party is client
+      if (second_party_id) updateData.employer_id = second_party_id;  // second_party is employer
 
       const { data: updatedContract, error: updateError } = await supabase
         .from('contracts')
         .update(updateData)
-        .eq('id', contract.id)
+        .eq('id', (contract as any).id)
         .select()
-        .single();
+        .single() as { data: any; error: any };
 
       if (updateError) {
         console.error('❌ Error updating contract:', updateError);
@@ -137,9 +137,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Contract updated successfully',
-        contract_id: updatedContract.id,
-        contract_number: updatedContract.contract_number,
-        status: 'updated'
+        contract_id: (updatedContract as any).id,
+        contract_number: (updatedContract as any).contract_number,
+        status: 'updated',
+        template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0'
       });
     }
 
@@ -149,25 +150,50 @@ export async function POST(request: NextRequest) {
     const contractData: any = {
       contract_type,
       contract_number: finalContractNumber,
+      title: `${contract_type} Contract - ${finalContractNumber}`,
       status: 'draft',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
 
     if (promoter_id) contractData.promoter_id = promoter_id;
-    if (first_party_id) contractData.first_party_id = first_party_id;
-    if (second_party_id) contractData.second_party_id = second_party_id;
+    if (first_party_id) contractData.client_id = first_party_id;  // first_party is client
+    if (second_party_id) contractData.employer_id = second_party_id;  // second_party is employer
+    
+    // Map date fields from webhook data
+    if (body.contract_start_date) {
+      // Convert DD-MM-YYYY to YYYY-MM-DD format
+      const startDate = body.contract_start_date.split('-').reverse().join('-');
+      contractData.start_date = startDate;
+    }
+    if (body.contract_end_date) {
+      // Convert DD-MM-YYYY to YYYY-MM-DD format
+      const endDate = body.contract_end_date.split('-').reverse().join('-');
+      contractData.end_date = endDate;
+    }
+    
+    // Map other fields
+    if (body.job_title) contractData.title = `${body.job_title} - ${contract_type} Contract - ${finalContractNumber}`;
+    if (body.basic_salary) contractData.value = parseFloat(body.basic_salary);
+    if (body.special_terms) contractData.terms = body.special_terms;
 
     const { data: newContract, error: createError } = await supabase
       .from('contracts')
       .insert(contractData)
       .select()
-      .single();
+      .single() as { data: any; error: any };
 
     if (createError) {
       console.error('❌ Error creating contract:', createError);
+      console.error('❌ Contract data that failed:', contractData);
       return NextResponse.json(
-        { success: false, error: 'Failed to create contract' },
+        { 
+          success: false, 
+          error: 'Failed to create contract',
+          details: createError.message,
+          contract_data: contractData,
+          domain: "protal.thesmartpro.io"
+        },
         { status: 500 }
       );
     }
@@ -176,8 +202,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Contract created successfully',
-      contract_id: newContract.id,
-      contract_number: newContract.contract_number,
+      contract_id: (newContract as any).id,
+      contract_number: (newContract as any).contract_number,
       status: 'created',
       template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0'
     });
