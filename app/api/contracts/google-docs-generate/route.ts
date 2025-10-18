@@ -231,8 +231,12 @@ export async function POST(request: NextRequest) {
       serviceAccountKey: process.env.GOOGLE_SERVICE_ACCOUNT_KEY!,
     };
     
+    // Make output folder optional - use root if not specified
     if (process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID) {
       googleDocsConfig.outputFolderId = process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID;
+    } else {
+      console.log('⚠️ GOOGLE_DRIVE_OUTPUT_FOLDER_ID not set, using root folder');
+      // Don't set outputFolderId - let the service use default
     }
 
     let googleDocsService;
@@ -245,7 +249,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Google Docs service initialization failed',
+          domain: "protal.thesmartpro.io",
           details: error instanceof Error ? error.message : 'Unknown error',
+          config: {
+            hasTemplateId: !!process.env.GOOGLE_DOCS_TEMPLATE_ID,
+            hasServiceAccount: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+            hasOutputFolder: !!process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID
+          },
           debug: 'Check /api/debug/google-docs-config for configuration status'
         },
         { status: 500 }
