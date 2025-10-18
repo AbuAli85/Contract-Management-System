@@ -148,38 +148,35 @@ export class GoogleDocsService {
       let response;
       
       try {
-        // Get the template file to find its parent folder (user's personal drive)
-        const templateFile = await this.drive.files.get({
-          fileId: this.config.templateId,
-          fields: 'parents'
-        });
-        
-        // Copy to the same parent folder as the template (user's personal drive)
+        // First, try to copy without specifying parents (let it inherit from template)
         response = await this.drive.files.copy({
           fileId: this.config.templateId,
           requestBody: {
-            name: fileName,
-            parents: templateFile.data.parents || []
+            name: fileName
           }
         });
         
-        console.log('✅ Template copied to user\'s personal drive');
+        console.log('✅ Template copied successfully');
       } catch (copyError) {
         console.error('❌ Failed to copy template:', copyError);
         
         // If copying fails due to quota, provide a more helpful error message
         if (copyError instanceof Error && copyError.message.includes('quota')) {
-          throw new Error(`Google Drive storage quota exceeded. The service account has limited storage. 
+          throw new Error(`Google Drive storage quota exceeded. The service account cannot create documents in its own storage.
 
-SOLUTION: Please ensure your template is in your personal Google Drive and shared with the service account:
-1. Go to your template: https://docs.google.com/document/d/${this.config.templateId}/edit
-2. Click "Share" button
+SOLUTION: The template sharing is correct, but the service account needs to create documents in your personal drive. Please try one of these solutions:
+
+Option 1 - Add Service Account to Google Workspace:
+1. Go to Google Admin Console: https://admin.google.com
+2. Navigate to: Security → API Controls → Domain-wide Delegation
 3. Add: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
-4. Set permission to "Editor"
-5. Uncheck "Notify people"
-6. Click "Share"
+4. Grant scopes: https://www.googleapis.com/auth/documents, https://www.googleapis.com/auth/drive
 
-This will allow the service account to access your template and create new documents in your personal drive (200GB available).
+Option 2 - Create New Template:
+1. Create a new Google Doc in your personal drive
+2. Share it with: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
+3. Set permission to "Editor"
+4. Update the template ID in your environment variables
 
 Original error: ${copyError.message}`);
         }
