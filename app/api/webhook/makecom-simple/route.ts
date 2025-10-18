@@ -163,12 +163,12 @@ export async function POST(request: NextRequest) {
     
     // Map date fields from webhook data
     if (body.contract_start_date) {
-      // Convert DD-MM-YYYY to YYYY-MM-DD format
+      // Convert DD-MM-YYYY to YYYY-MM-DD format for database
       const startDate = body.contract_start_date.split('-').reverse().join('-');
       contractData.start_date = startDate;
     }
     if (body.contract_end_date) {
-      // Convert DD-MM-YYYY to YYYY-MM-DD format
+      // Convert DD-MM-YYYY to YYYY-MM-DD format for database
       const endDate = body.contract_end_date.split('-').reverse().join('-');
       contractData.end_date = endDate;
     }
