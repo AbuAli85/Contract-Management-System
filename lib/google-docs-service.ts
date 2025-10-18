@@ -148,12 +148,18 @@ export class GoogleDocsService {
       let response;
       
       try {
-        // First, try to copy without specifying parents (this should go to the user's drive)
+        // Get the template file to find its parent folder (user's personal drive)
+        const templateFile = await this.drive.files.get({
+          fileId: this.config.templateId,
+          fields: 'parents'
+        });
+        
+        // Copy to the same parent folder as the template (user's personal drive)
         response = await this.drive.files.copy({
           fileId: this.config.templateId,
           requestBody: {
-            name: fileName
-            // No parents = should go to the same drive as the template (user's personal drive)
+            name: fileName,
+            parents: templateFile.data.parents || []
           }
         });
         
@@ -178,7 +184,16 @@ This will allow the service account to access your template and create new docum
 Original error: ${copyError.message}`);
         }
         
-        throw copyError;
+        // If the above fails, try without specifying parents (fallback)
+        console.log('⚠️ Trying fallback method without specifying parents...');
+        response = await this.drive.files.copy({
+          fileId: this.config.templateId,
+          requestBody: {
+            name: fileName
+          }
+        });
+        
+        console.log('✅ Template copied using fallback method');
       }
 
       if (!response.data.id) {
