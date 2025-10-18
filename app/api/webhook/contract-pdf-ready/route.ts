@@ -162,6 +162,14 @@ export async function PATCH(request: NextRequest) {
     const { contract_id, contract_number, pdf_url, google_drive_url, status } =
       body;
 
+    console.log('📋 Validation data:', {
+      contract_id,
+      contract_number,
+      pdf_url,
+      google_drive_url,
+      status
+    });
+
     if (!contract_id && !contract_number) {
       return NextResponse.json(
         {
@@ -177,6 +185,23 @@ export async function PATCH(request: NextRequest) {
         {
           success: false,
           error: 'pdf_url is required',
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check if URLs are complete (not just base URLs)
+    if (pdf_url.endsWith('/') || pdf_url.includes('/d//')) {
+      console.warn('⚠️ Incomplete PDF URL detected:', pdf_url);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'PDF URL appears to be incomplete - contract generation may have failed',
+          details: {
+            pdf_url,
+            google_drive_url,
+            suggestion: 'Check Make.com scenario for contract generation errors'
+          }
         },
         { status: 400 }
       );
