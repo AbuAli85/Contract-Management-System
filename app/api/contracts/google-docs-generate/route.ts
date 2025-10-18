@@ -5,7 +5,9 @@ import type { ContractData } from '@/lib/google-docs-service';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔄 Google Docs contract generation started');
     const body = await request.json();
+    console.log('📤 Request body:', body);
     
     // Validate required fields
     const requiredFields = [
@@ -21,13 +23,17 @@ export async function POST(request: NextRequest) {
       'contract_end_date'
     ];
 
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { error: `Missing required field: ${field}` },
-          { status: 400 }
-        );
-      }
+    const missingFields = requiredFields.filter(field => !body[field]);
+    if (missingFields.length > 0) {
+      console.error('❌ Missing required fields:', missingFields);
+      return NextResponse.json(
+        { 
+          error: 'Missing required fields',
+          missing_fields: missingFields,
+          received_fields: Object.keys(body)
+        },
+        { status: 400 }
+      );
     }
 
     const supabase = await createClient();
@@ -246,13 +252,22 @@ export async function POST(request: NextRequest) {
       currency: 'OMR',
     };
 
-    // Check environment variables
+    // Check environment variables with detailed logging
+    console.log('🔍 Checking environment variables...');
+    const envStatus = {
+      GOOGLE_SERVICE_ACCOUNT_KEY: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+      GOOGLE_DOCS_TEMPLATE_ID: !!process.env.GOOGLE_DOCS_TEMPLATE_ID,
+      GOOGLE_DRIVE_OUTPUT_FOLDER_ID: !!process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID
+    };
+    console.log('📋 Environment status:', envStatus);
+
     if (!process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
       console.error('❌ GOOGLE_SERVICE_ACCOUNT_KEY not set');
       return NextResponse.json(
         { 
           error: 'Google Docs configuration missing',
           details: 'GOOGLE_SERVICE_ACCOUNT_KEY environment variable not set',
+          environment_status: envStatus,
           debug: 'Check /api/debug/google-docs-config for configuration status'
         },
         { status: 500 }
@@ -265,6 +280,7 @@ export async function POST(request: NextRequest) {
         { 
           error: 'Google Docs configuration missing',
           details: 'GOOGLE_DOCS_TEMPLATE_ID environment variable not set',
+          environment_status: envStatus,
           debug: 'Check /api/debug/google-docs-config for configuration status'
         },
         { status: 500 }
@@ -288,10 +304,21 @@ export async function POST(request: NextRequest) {
     let googleDocsService;
     try {
       console.log('🔧 Initializing Google Docs service...');
+      console.log('📋 Service config:', {
+        templateId: googleDocsConfig.templateId,
+        hasServiceAccount: !!googleDocsConfig.serviceAccountKey,
+        hasOutputFolder: !!googleDocsConfig.outputFolderId
+      });
+      
       googleDocsService = new GoogleDocsService(googleDocsConfig);
-      console.log('✅ Google Docs service initialized');
+      console.log('✅ Google Docs service initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Google Docs service:', error);
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
       return NextResponse.json(
         { 
           error: 'Google Docs service initialization failed',
@@ -300,9 +327,16 @@ export async function POST(request: NextRequest) {
           config: {
             hasTemplateId: !!process.env.GOOGLE_DOCS_TEMPLATE_ID,
             hasServiceAccount: !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
-            hasOutputFolder: !!process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID
+            hasOutputFolder: !!process.env.GOOGLE_DRIVE_OUTPUT_FOLDER_ID,
+            templateId: process.env.GOOGLE_DOCS_TEMPLATE_ID
           },
-          debug: 'Check /api/debug/google-docs-config for configuration status'
+          debug: 'Check /api/debug/google-docs-config for configuration status',
+          troubleshooting: [
+            '1. Verify Google Service Account key is valid JSON',
+            '2. Check that Google Docs API and Google Drive API are enabled',
+            '3. Ensure template is shared with service account email',
+            '4. Verify service account has proper permissions'
+          ]
         },
         { status: 500 }
       );
@@ -311,26 +345,57 @@ export async function POST(request: NextRequest) {
     // Generate contract using Google Docs
     let result;
     try {
+      console.log('🔄 Starting contract generation with Google Docs...');
+      console.log('📋 Contract data being sent:', {
+        contract_id: googleDocsData.contract_id,
+        contract_number: googleDocsData.contract_number,
+        contract_type: googleDocsData.contract_type,
+        promoter_name: googleDocsData.promoter_name_en,
+        first_party_name: googleDocsData.first_party_name_en,
+        second_party_name: googleDocsData.second_party_name_en
+      });
+      
       result = await googleDocsService.generateContract(googleDocsData);
+      console.log('✅ Contract generation completed:', {
+        documentId: result.documentId,
+        documentUrl: result.documentUrl,
+        pdfUrl: result.pdfUrl
+      });
     } catch (error) {
       console.error('❌ Google Docs contract generation failed:', error);
+      console.error('❌ Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       
       // Update contract status to failed
-      await (supabase as any)
-        .from('contracts')
-        .update({
-          status: 'failed',
-          error_message: error instanceof Error ? error.message : 'Unknown error',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', (contract as any)?.id);
+      try {
+        await (supabase as any)
+          .from('contracts')
+          .update({
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : 'Unknown error',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', (contract as any)?.id);
+        console.log('✅ Contract status updated to failed');
+      } catch (updateError) {
+        console.error('❌ Failed to update contract status:', updateError);
+      }
 
       return NextResponse.json(
         { 
           error: 'Contract generation failed',
           details: error instanceof Error ? error.message : 'Unknown error',
           contract_id: (contract as any)?.id,
-          debug: 'Check /api/debug/google-docs-config for configuration status'
+          contract_number: googleDocsData.contract_number,
+          debug: 'Check /api/debug/google-docs-config for configuration status',
+          troubleshooting: [
+            '1. Check Google Docs template exists and is accessible',
+            '2. Verify service account has permission to create documents',
+            '3. Check Google Drive storage quota',
+            '4. Verify template sharing permissions'
+          ]
         },
         { status: 500 }
       );
@@ -370,14 +435,26 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ Contract generation failed:', error);
+    console.error('❌ Contract generation failed (catch-all):', error);
+    console.error('❌ Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace',
+      name: error instanceof Error ? error.name : 'Unknown'
+    });
     
     return NextResponse.json(
       { 
         error: 'Contract generation failed',
         domain: "protal.thesmartpro.io",
         details: error instanceof Error ? error.message : 'Unknown error',
-        debug: 'Check /api/debug/google-docs-config for configuration status'
+        error_type: error instanceof Error ? error.name : 'Unknown',
+        debug: 'Check /api/debug/google-docs-config for configuration status',
+        troubleshooting: [
+          '1. Check server logs for detailed error information',
+          '2. Verify all environment variables are set correctly',
+          '3. Test Google Docs configuration with debug endpoint',
+          '4. Check database connectivity and permissions'
+        ]
       },
       { status: 500 }
     );

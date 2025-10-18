@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { contractGenerationService } from '@/lib/contract-generation-service';
 import { verifyWebhook } from '@/lib/webhooks/verify';
+
+// Webhook endpoint for contract PDF ready notifications
 
 export async function POST(request: NextRequest) {
   try {
@@ -83,21 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Contract updated with PDF URL:', pdf_url);
-
-    // Record processed event for idempotency tracking/audit
-    try {
-      const supabase = await createClient();
-      await supabase.from('tracking_events').insert({
-        actor_user_id: null,
-        subject_type: 'webhook',
-        subject_id: contract_id || contract_number || null,
-        event_type: 'webhook_processed',
-        metadata: { webhook_type: 'pdf_ready' },
-        idempotency_key: request.headers.get('x-idempotency-key') || '',
-      });
-    } catch (e) {
-      console.warn('⚠️ Failed to record tracking event for PDF Ready webhook');
-    }
+    console.log('📝 Webhook processed successfully');
 
     // Send success response
     return NextResponse.json({
@@ -225,21 +212,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     console.log('✅ Contract updated with PDF URL (PATCH):', pdf_url);
-
-    // Record processed event for idempotency tracking/audit
-    try {
-      const supabase = await createClient();
-      await supabase.from('tracking_events').insert({
-        actor_user_id: null,
-        subject_type: 'webhook',
-        subject_id: contract_id || contract_number || null,
-        event_type: 'webhook_processed',
-        metadata: { webhook_type: 'pdf_ready_patch' },
-        idempotency_key: request.headers.get('x-idempotency-key') || '',
-      });
-    } catch (e) {
-      console.warn('⚠️ Failed to record tracking event for PDF Ready webhook (PATCH)');
-    }
+    console.log('📝 Webhook processed successfully (PATCH)');
 
     // Send success response
     return NextResponse.json({
