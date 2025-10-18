@@ -41,20 +41,67 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Starting Google Docs contract generation...');
 
-    // Create contract record in database
+    // Generate unique contract number
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+    const contractNumber = `PAC-${day}${month}${year}-${random}`;
+
+    // Map contract type
+    const mapContractType = (type: string): string => {
+      if (!type) return 'employment';
+      const typeLower = String(type).toLowerCase();
+      const typeMap: Record<string, string> = {
+        'employment': 'employment',
+        'full-time-permanent': 'employment',
+        'full-time-fixed': 'employment',
+        'part-time-permanent': 'employment',
+        'part-time-fixed': 'employment',
+        'probationary': 'employment',
+        'training-contract': 'employment',
+        'internship': 'employment',
+        'graduate-trainee': 'employment',
+        'service': 'service',
+        'freelance': 'service',
+        'contractor': 'service',
+        'consultant': 'consultancy',
+        'consulting': 'consultancy',
+        'consulting-agreement': 'consultancy',
+        'project-based': 'consultancy',
+        'partnership': 'partnership',
+        'temporary': 'service',
+        'seasonal': 'service',
+        'executive': 'employment',
+        'management': 'employment',
+        'director': 'employment',
+        'remote-work': 'employment',
+        'hybrid-work': 'employment',
+        'secondment': 'service',
+        'apprenticeship': 'employment',
+        'service-agreement': 'service',
+        'retainer': 'service',
+      };
+      return typeMap[typeLower] || 'employment';
+    };
+
+    const contractType = mapContractType(body.contract_type);
+
+    // Create contract record in database with correct field mapping
     const contractData = {
+      contract_number: contractNumber,
       promoter_id: body.promoter_id,
-      first_party_id: body.first_party_id,
-      second_party_id: body.second_party_id,
-      contract_type: body.contract_type,
-      job_title: body.job_title,
-      department: body.department,
-      work_location: body.work_location,
-      basic_salary: body.basic_salary,
-      contract_start_date: body.contract_start_date,
-      contract_end_date: body.contract_end_date,
-      special_terms: body.special_terms || '',
-      status: 'generating',
+      employer_id: body.second_party_id, // Fixed: second_party = employer
+      client_id: body.first_party_id,    // Fixed: first_party = client
+      title: body.job_title || 'Employment Contract',
+      description: body.special_terms || '',
+      contract_type: contractType,
+      start_date: body.contract_start_date,
+      end_date: body.contract_end_date,
+      value: body.basic_salary,
+      currency: 'USD',
+      status: 'draft', // Fixed: use 'draft' instead of 'generating'
       created_at: new Date().toISOString(),
     };
 
@@ -67,7 +114,13 @@ export async function POST(request: NextRequest) {
     if (contractError) {
       console.error('❌ Failed to create contract:', contractError);
       return NextResponse.json(
-        { error: 'Failed to create contract record' },
+        { 
+          error: 'Failed to create contract record',
+          domain: "protal.thesmartpro.io",
+          details: contractError.message,
+          code: contractError.code,
+          hint: contractError.hint
+        },
         { status: 500 }
       );
     }
@@ -244,6 +297,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Contract generated successfully',
+      domain: "protal.thesmartpro.io",
       data: {
         contract_id: (contract as any)?.id,
         contract_number: googleDocsData.contract_number,
@@ -260,6 +314,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Contract generation failed',
+        domain: "protal.thesmartpro.io",
         details: error instanceof Error ? error.message : 'Unknown error',
         debug: 'Check /api/debug/google-docs-config for configuration status'
       },
