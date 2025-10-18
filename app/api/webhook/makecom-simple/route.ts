@@ -34,8 +34,12 @@ export async function POST(request: NextRequest) {
     let finalContractNumber = contract_number;
 
     if (!finalContractId || finalContractId.trim() === '') {
-      // Generate a UUID for contract_id
-      finalContractId = crypto.randomUUID();
+      // Generate a UUID for contract_id using a more compatible method
+      finalContractId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
       console.log('🆔 Generated contract_id:', finalContractId);
     }
 
@@ -180,11 +184,13 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Webhook processing failed:', error);
+    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        domain: "protal.thesmartpro.io"
       },
       { status: 500 }
     );
