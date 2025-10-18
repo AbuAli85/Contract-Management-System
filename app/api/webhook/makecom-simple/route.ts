@@ -141,7 +141,20 @@ export async function POST(request: NextRequest) {
         contract_id: (updatedContract as any).id,
         contract_number: (updatedContract as any).contract_number,
         status: 'updated',
-        template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0'
+        template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0',
+        // Image placeholders for Make.com Module 56
+        image_placeholders: {
+          promoter_id_card_image: {
+            placeholder: '{{promoter_id_card_image}}',
+            url: body.promoter_id_card_url || '', // Will be empty if not provided
+            alt_text: 'ID Card'
+          },
+          promoter_passport_image: {
+            placeholder: '{{promoter_passport_image}}',
+            url: body.promoter_passport_url || '', // Will be empty if not provided
+            alt_text: 'Passport'
+          }
+        }
       });
     }
 
@@ -226,7 +239,20 @@ export async function POST(request: NextRequest) {
       contract_id: (newContract as any).id,
       contract_number: (newContract as any).contract_number,
       status: 'created',
-      template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0'
+      template_id: '1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0',
+      // Image placeholders for Make.com Module 56
+      image_placeholders: {
+        promoter_id_card_image: {
+          placeholder: '{{promoter_id_card_image}}',
+          url: body.promoter_id_card_url || '', // Will be empty if not provided
+          alt_text: 'ID Card'
+        },
+        promoter_passport_image: {
+          placeholder: '{{promoter_passport_image}}',
+          url: body.promoter_passport_url || '', // Will be empty if not provided
+          alt_text: 'Passport'
+        }
+      }
     });
 
   } catch (error) {
