@@ -80,6 +80,8 @@ import {
   Clock,
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileText,
   Building2,
   User,
@@ -234,6 +236,17 @@ function ContractsContent() {
     fetchContracts();
   }, [fetchContracts]);
 
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isRefreshing && !isLoading) {
+        fetchContracts();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchContracts, isRefreshing, isLoading]);
+
   // All hooks must be called at the top level, before any conditional returns
   const deleteContractMutation = useDeleteContractMutation();
   const { toast } = useToast();
@@ -257,6 +270,9 @@ function ContractsContent() {
   const [showStats, setShowStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [totalPages, setTotalPages] = useState(1);
 
   // All hooks must be called before any conditional returns
   const isMountedRef = useRef(true);
@@ -301,7 +317,7 @@ function ContractsContent() {
     };
   }, [contracts]);
 
-  // Enhanced filtering and sorting BEFORE permission check
+  // Enhanced filtering and sorting with pagination
   const filteredAndSortedContracts = useMemo(() => {
     if (!contracts) return [];
 
@@ -352,7 +368,7 @@ function ContractsContent() {
       return matchesStatus && matchesSearch;
     });
 
-    return filtered.sort((a, b) => {
+    const sorted = filtered.sort((a, b) => {
       let valA, valB;
       if (sortColumn === 'status') {
         valA = getContractStatus(a);
@@ -377,7 +393,17 @@ function ContractsContent() {
       if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [contracts, searchTerm, statusFilter, sortColumn, sortDirection, locale]);
+
+    // Calculate pagination
+    const totalItems = sorted.length;
+    const totalPages = Math.ceil(totalItems / pageSize);
+    setTotalPages(totalPages);
+
+    // Apply pagination
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return sorted.slice(startIndex, endIndex);
+  }, [contracts, searchTerm, statusFilter, sortColumn, sortDirection, locale, currentPage, pageSize]);
 
   // Handler functions - moved BEFORE permission check
   const handleRefresh = useCallback(async () => {
@@ -385,14 +411,20 @@ function ContractsContent() {
     try {
       await fetchContracts();
       toast({
-        title: 'Refreshed',
-        description: 'Contract data has been updated',
+        title: '✅ Data Refreshed',
+        description: `Updated ${contracts.length} contracts successfully`,
         variant: 'default',
+      });
+    } catch (error) {
+      toast({
+        title: '❌ Refresh Failed',
+        description: 'Failed to update contract data',
+        variant: 'destructive',
       });
     } finally {
       setIsRefreshing(false);
     }
-  }, [fetchContracts, toast]);
+  }, [fetchContracts, toast, contracts.length]);
 
   const handleSort = (column: keyof ContractWithRelations | 'status') => {
     if (sortColumn === column) {
@@ -401,7 +433,13 @@ function ContractsContent() {
       setSortColumn(column);
       setSortDirection('desc');
     }
+    setCurrentPage(1); // Reset to first page when sorting changes
   };
+
+  // Reset pagination when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -584,107 +622,129 @@ function ContractsContent() {
     );
   };
 
-  // Statistics cards component
+  // Enhanced Statistics cards component
   const StatisticsCards = () => (
     <div className='grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8'>
-      <Card className='bg-gradient-to-r from-blue-500 to-blue-600 text-white'>
+      <Card className='bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-blue-100'>Total</p>
+              <p className='text-sm text-blue-100 font-medium'>Total Contracts</p>
               <p className='text-2xl font-bold'>{contractStats.total}</p>
+              <p className='text-xs text-blue-200 mt-1'>All contracts</p>
             </div>
-            <FileText className='h-8 w-8 text-blue-200' />
+            <div className='p-2 bg-blue-400/20 rounded-lg'>
+              <FileText className='h-6 w-6 text-blue-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-green-500 to-green-600 text-white'>
+      <Card className='bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-green-100'>Active</p>
+              <p className='text-sm text-green-100 font-medium'>Active</p>
               <p className='text-2xl font-bold'>{contractStats.active}</p>
+              <p className='text-xs text-green-200 mt-1'>Currently active</p>
             </div>
-            <CheckCircle className='h-8 w-8 text-green-200' />
+            <div className='p-2 bg-green-400/20 rounded-lg'>
+              <CheckCircle className='h-6 w-6 text-green-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-amber-500 to-amber-600 text-white'>
+      <Card className='bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-amber-100'>Expiring</p>
-              <p className='text-2xl font-bold'>
-                {contractStats.expiring_soon}
-              </p>
+              <p className='text-sm text-amber-100 font-medium'>Expiring Soon</p>
+              <p className='text-2xl font-bold'>{contractStats.expiring_soon}</p>
+              <p className='text-xs text-amber-200 mt-1'>Within 30 days</p>
             </div>
-            <AlertTriangle className='h-8 w-8 text-amber-200' />
+            <div className='p-2 bg-amber-400/20 rounded-lg'>
+              <AlertTriangle className='h-6 w-6 text-amber-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-red-500 to-red-600 text-white'>
+      <Card className='bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-red-100'>Expired</p>
+              <p className='text-sm text-red-100 font-medium'>Expired</p>
               <p className='text-2xl font-bold'>{contractStats.expired}</p>
+              <p className='text-xs text-red-200 mt-1'>Past end date</p>
             </div>
-            <XCircle className='h-8 w-8 text-red-200' />
+            <div className='p-2 bg-red-400/20 rounded-lg'>
+              <XCircle className='h-6 w-6 text-red-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-purple-500 to-purple-600 text-white'>
+      <Card className='bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-purple-100'>Upcoming</p>
+              <p className='text-sm text-purple-100 font-medium'>Pending</p>
               <p className='text-2xl font-bold'>{contractStats.upcoming}</p>
+              <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
             </div>
-            <Clock className='h-8 w-8 text-purple-200' />
+            <div className='p-2 bg-purple-400/20 rounded-lg'>
+              <Clock className='h-6 w-6 text-purple-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-indigo-500 to-indigo-600 text-white'>
+      <Card className='bg-gradient-to-br from-indigo-500 via-indigo-600 to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-indigo-100'>Total Value</p>
+              <p className='text-sm text-indigo-100 font-medium'>Total Value</p>
               <p className='text-lg font-bold'>
                 ${contractStats.total_value.toLocaleString()}
               </p>
+              <p className='text-xs text-indigo-200 mt-1'>OMR</p>
             </div>
-            <TrendingUp className='h-8 w-8 text-indigo-200' />
+            <div className='p-2 bg-indigo-400/20 rounded-lg'>
+              <TrendingUp className='h-6 w-6 text-indigo-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-pink-500 to-pink-600 text-white'>
+      <Card className='bg-gradient-to-br from-pink-500 via-pink-600 to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-pink-100'>Avg Duration</p>
+              <p className='text-sm text-pink-100 font-medium'>Avg Duration</p>
               <p className='text-lg font-bold'>
                 {Math.round(contractStats.avg_duration)}d
               </p>
+              <p className='text-xs text-pink-200 mt-1'>Days</p>
             </div>
-            <Calendar className='h-8 w-8 text-pink-200' />
+            <div className='p-2 bg-pink-400/20 rounded-lg'>
+              <Calendar className='h-6 w-6 text-pink-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className='bg-gradient-to-r from-gray-500 to-gray-600 text-white'>
+      <Card className='bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-100'>Unknown</p>
+              <p className='text-sm text-gray-100 font-medium'>Generated</p>
               <p className='text-2xl font-bold'>{contractStats.unknown}</p>
+              <p className='text-xs text-gray-200 mt-1'>Recently created</p>
             </div>
-            <Activity className='h-8 w-8 text-gray-200' />
+            <div className='p-2 bg-gray-400/20 rounded-lg'>
+              <Activity className='h-6 w-6 text-gray-200' />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -712,9 +772,73 @@ function ContractsContent() {
 
   if (isLoading) {
     return (
-      <div className='flex h-[calc(100vh-150px)] items-center justify-center'>
-        <Loader2 className='h-12 w-12 animate-spin text-primary' />
-        <p className='ml-4 text-lg'>Loading contracts...</p>
+      <div className='space-y-6 p-4 md:p-6'>
+        {/* Loading Statistics Cards */}
+        <div className='mb-6'>
+          <div className='mb-4 flex items-center justify-between'>
+            <h2 className='text-lg font-semibold'>Contract Statistics</h2>
+          </div>
+          <div className='grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8'>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Card key={i} className='animate-pulse'>
+                <CardContent className='p-4'>
+                  <div className='flex items-center justify-between'>
+                    <div className='space-y-2'>
+                      <div className='h-3 w-16 bg-gray-200 rounded'></div>
+                      <div className='h-6 w-8 bg-gray-200 rounded'></div>
+                    </div>
+                    <div className='h-8 w-8 bg-gray-200 rounded'></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Loading Table */}
+        <Card>
+          <CardHeader>
+            <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+              <div className='space-y-2'>
+                <div className='h-6 w-48 bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-4 w-64 bg-gray-200 rounded animate-pulse'></div>
+              </div>
+              <div className='flex items-center gap-2'>
+                <div className='h-9 w-9 bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-9 w-9 bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-9 w-32 bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-9 w-40 bg-gray-200 rounded animate-pulse'></div>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              {/* Loading Search and Filters */}
+              <div className='flex flex-col items-center gap-4 md:flex-row'>
+                <div className='h-10 w-full bg-gray-200 rounded animate-pulse'></div>
+                <div className='h-10 w-48 bg-gray-200 rounded animate-pulse'></div>
+              </div>
+              
+              {/* Loading Table Rows */}
+              <div className='space-y-3'>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className='flex items-center space-x-4 p-4 border rounded-lg'>
+                    <div className='h-4 w-4 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-24 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-6 w-16 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-4 w-4 bg-gray-200 rounded animate-pulse'></div>
+                    <div className='h-8 w-8 bg-gray-200 rounded animate-pulse'></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -845,16 +969,20 @@ function ContractsContent() {
                         size='icon'
                         onClick={handleRefresh}
                         disabled={isRefreshing}
+                        className='hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 transition-colors duration-200'
                       >
                         <RefreshCw
                           className={cn(
                             'h-4 w-4',
-                            isRefreshing && 'animate-spin'
+                            isRefreshing && 'animate-spin text-blue-600'
                           )}
                         />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Refresh data</TooltipContent>
+                    <TooltipContent>
+                      <p>Refresh data</p>
+                      <p className='text-xs text-gray-400'>Auto-refreshes every 30s</p>
+                    </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
@@ -966,20 +1094,23 @@ function ContractsContent() {
 
             {/* Content */}
             {filteredAndSortedContracts.length === 0 ? (
-              <div className='py-12 text-center'>
-                <FileTextIcon className='mx-auto h-12 w-12 text-gray-400' />
-                <h3 className='mt-2 text-sm font-medium text-gray-900 dark:text-gray-100'>
+              <div className='py-16 text-center'>
+                <div className='mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-6'>
+                  <FileTextIcon className='h-12 w-12 text-blue-600' />
+                </div>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
                   No contracts found
                 </h3>
-                <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+                <p className='text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
                   {searchTerm || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filters.'
-                    : 'Get started by creating a new contract.'}
+                    ? 'Try adjusting your search or filters to find what you\'re looking for.'
+                    : 'Get started by creating your first contract to manage your business relationships.'}
                 </p>
                 {!(searchTerm || statusFilter !== 'all') &&
                   canCreateContract && (
-                    <Button asChild className='mt-6'>
+                    <Button asChild className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'>
                       <Link href={`/${locale}/dashboard/generate-contract`}>
+                        <Plus className='mr-2 h-4 w-4' />
                         Create New Contract
                       </Link>
                     </Button>
@@ -1044,8 +1175,8 @@ function ContractsContent() {
                             contract.promoters.name_ar
                         : '';
                       return (
-                        <TableRow key={contract.id} className='group'>
-                          <TableCell>
+                        <TableRow key={contract.id} className='group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200'>
+                          <TableCell className='py-4'>
                             {canDeleteContract && (
                               <Checkbox
                                 checked={selectedContracts.includes(
@@ -1057,20 +1188,25 @@ function ContractsContent() {
                                     checked as boolean
                                   )
                                 }
+                                className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
                               />
                             )}
                           </TableCell>
-                          <TableCell className='font-mono text-xs'>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  {contract.id.substring(0, 8)}...
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Full ID: {contract.id}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                          <TableCell className='py-4'>
+                            <div className='flex items-center gap-2'>
+                              <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger className='font-mono text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors'>
+                                    {contract.id.substring(0, 8)}...
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className='font-mono text-xs'>Full ID: {contract.id}</p>
+                                    <p className='text-xs text-gray-400 mt-1'>Click to copy</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className='flex items-center gap-2'>
@@ -1150,26 +1286,41 @@ function ContractsContent() {
                           <TableCell>
                             {getStatusBadge(contractStatus)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className='py-4'>
                             {contract.pdf_url ? (
-                              <a
-                                href={contract.pdf_url}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='text-primary hover:underline'
-                                title='Download contract PDF'
-                              >
-                                <Download className='inline h-5 w-5' />
-                              </a>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <a
+                                      href={contract.pdf_url}
+                                      target='_blank'
+                                      rel='noopener noreferrer'
+                                      className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200'
+                                      title='Download contract PDF'
+                                    >
+                                      <Download className='h-4 w-4' />
+                                    </a>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Download PDF</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             ) : (
-                              'N/A'
+                              <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400'>
+                                <FileText className='h-4 w-4' />
+                              </div>
                             )}
                           </TableCell>
-                          <TableCell className='text-right'>
+                          <TableCell className='text-right py-4'>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant='ghost' size='icon'>
-                                  <MoreHorizontal className='h-5 w-5' />
+                                <Button 
+                                  variant='ghost' 
+                                  size='icon'
+                                  className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                >
+                                  <MoreHorizontal className='h-4 w-4' />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align='end'>
@@ -1220,6 +1371,89 @@ function ContractsContent() {
                   </TableBody>
                 </Table>
               </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className='flex items-center justify-between px-2 py-4 border-t'>
+                  <div className='flex items-center gap-2 text-sm text-gray-500'>
+                    <span>Showing</span>
+                    <Select value={pageSize.toString()} onValueChange={(value) => {
+                      setPageSize(parseInt(value));
+                      setCurrentPage(1);
+                    }}>
+                      <SelectTrigger className='w-20 h-8'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='10'>10</SelectItem>
+                        <SelectItem value='20'>20</SelectItem>
+                        <SelectItem value='50'>50</SelectItem>
+                        <SelectItem value='100'>100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span>per page</span>
+                  </div>
+                  
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      First
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className='h-4 w-4' />
+                    </Button>
+                    
+                    <div className='flex items-center gap-1'>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                        if (pageNum > totalPages) return null;
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            size='sm'
+                            onClick={() => setCurrentPage(pageNum)}
+                            className='w-8 h-8 p-0'
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Last
+                    </Button>
+                  </div>
+                  
+                  <div className='text-sm text-gray-500'>
+                    Page {currentPage} of {totalPages}
+                  </div>
+                </div>
+              )}
             ) : (
               // Grid View
               <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -1374,6 +1608,89 @@ function ContractsContent() {
                   );
                 })}
               </div>
+              
+              {/* Pagination Controls for Grid View */}
+              {totalPages > 1 && (
+                <div className='flex items-center justify-between px-2 py-4 border-t'>
+                  <div className='flex items-center gap-2 text-sm text-gray-500'>
+                    <span>Showing</span>
+                    <Select value={pageSize.toString()} onValueChange={(value) => {
+                      setPageSize(parseInt(value));
+                      setCurrentPage(1);
+                    }}>
+                      <SelectTrigger className='w-20 h-8'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='10'>10</SelectItem>
+                        <SelectItem value='20'>20</SelectItem>
+                        <SelectItem value='50'>50</SelectItem>
+                        <SelectItem value='100'>100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span>per page</span>
+                  </div>
+                  
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage === 1}
+                    >
+                      First
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className='h-4 w-4' />
+                    </Button>
+                    
+                    <div className='flex items-center gap-1'>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                        if (pageNum > totalPages) return null;
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            size='sm'
+                            onClick={() => setCurrentPage(pageNum)}
+                            className='w-8 h-8 p-0'
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className='h-4 w-4' />
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Last
+                    </Button>
+                  </div>
+                  
+                  <div className='text-sm text-gray-500'>
+                    Page {currentPage} of {totalPages}
+                  </div>
+                </div>
+              )}
             )}
           </CardContent>
         </Card>

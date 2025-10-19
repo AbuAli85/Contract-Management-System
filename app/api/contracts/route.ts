@@ -106,17 +106,17 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Start with a simple query first to test basic connectivity
+      // Enhanced query to fetch all contracts with proper relationships
       let contracts: any[] = [];
       try {
-        // ✅ SECURITY FIX: Scope query based on user role
+        // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
         let query = supabase
           .from('contracts')
           .select(`
             *,
-            first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type),
-            second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type),
-            promoters(id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)
+            first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type, email, phone),
+            second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type, email, phone),
+            promoters(id, name_en, name_ar, id_card_number, id_card_url, passport_url, status, mobile_number)
           `);
 
         // Non-admin users only see contracts they're involved in
@@ -126,14 +126,26 @@ export async function GET(request: NextRequest) {
 
         const { data: contractsData, error: contractsError} = await query
           .order('created_at', { ascending: false })
-          .limit(20);
+          .limit(100); // Increased limit to show more contracts
 
         if (contractsError) {
           console.warn(
             '⚠️ Contracts API: Error fetching contracts:',
             contractsError.message
           );
-          contracts = [];
+          // Try a simpler query as fallback
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('contracts')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+          
+          if (fallbackError) {
+            console.error('❌ Contracts API: Fallback query also failed:', fallbackError.message);
+            contracts = [];
+          } else {
+            contracts = fallbackData || [];
+          }
         } else {
           contracts = contractsData || [];
         }
@@ -186,19 +198,29 @@ export async function GET(request: NextRequest) {
         console.warn('⚠️ Contracts API: Could not fetch status data');
       }
 
-      // Calculate statistics
+      // Calculate comprehensive statistics from actual contracts data
       const stats = {
-        total: totalContracts || 0,
+        total: contracts.length,
         active: 0,
         expired: 0,
         upcoming: 0,
         unknown: 0,
+        expiring_soon: 0,
         total_value: 0,
         avg_duration: 0,
+        generated: 0,
+        pending: 0,
       };
 
-      if (statusData) {
-        statusData.forEach((contract: { status: string }) => {
+      // Calculate stats from actual contracts data
+      if (contracts && contracts.length > 0) {
+        const now = new Date();
+        let totalValue = 0;
+        let totalDuration = 0;
+        let validDurations = 0;
+
+        contracts.forEach((contract: any) => {
+          // Count by status
           switch (contract.status) {
             case 'active':
               stats.active++;
@@ -211,16 +233,49 @@ export async function GET(request: NextRequest) {
             case 'hr_review':
             case 'final_approval':
             case 'signature':
-              stats.upcoming++;
+              stats.pending++;
               break;
             case 'draft':
             case 'generated':
-              stats.unknown++;
+              stats.generated++;
               break;
             default:
               stats.unknown++;
           }
+
+          // Calculate contract value
+          if (contract.contract_value || contract.value || contract.basic_salary) {
+            const value = contract.contract_value || contract.value || contract.basic_salary;
+            if (typeof value === 'number' && !isNaN(value)) {
+              totalValue += value;
+            }
+          }
+
+          // Calculate duration and expiry
+          if (contract.contract_start_date && contract.contract_end_date) {
+            try {
+              const startDate = new Date(contract.contract_start_date);
+              const endDate = new Date(contract.contract_end_date);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                const duration = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+                totalDuration += duration;
+                validDurations++;
+
+                // Check if expiring soon (within 30 days)
+                const daysUntilExpiry = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
+                  stats.expiring_soon++;
+                }
+              }
+            } catch (error) {
+              console.warn('Error calculating contract duration:', error);
+            }
+          }
         });
+
+        stats.total_value = totalValue;
+        stats.avg_duration = validDurations > 0 ? Math.round(totalDuration / validDurations) : 0;
       }
 
       console.log('✅ Contracts API: Request completed successfully');
@@ -229,7 +284,15 @@ export async function GET(request: NextRequest) {
         success: true,
         contracts: contracts || [],
         stats,
-        total: totalContracts || 0,
+        total: contracts.length,
+        totalContracts: totalContracts || 0,
+        activeContracts: stats.active,
+        pendingContracts: stats.pending,
+        generatedContracts: stats.generated,
+        expiringSoon: stats.expiring_soon,
+        totalValue: stats.total_value,
+        averageDuration: stats.avg_duration,
+        lastUpdated: new Date().toISOString(),
       });
     } catch (error) {
       console.error('❌ Contracts API: Unexpected error:', error);
