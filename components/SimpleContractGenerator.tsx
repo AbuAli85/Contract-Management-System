@@ -41,6 +41,7 @@ interface Promoter {
   name_ar: string;
   mobile_number: string | null;
   id_card_number: string;
+  employer_id?: string | null;
 }
 
 interface Party {
@@ -166,17 +167,33 @@ export default function SimpleContractGenerator() {
   };
 
   const handleInputChange = (field: keyof ContractFormData, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value,
+      };
 
-    // Note: Promoter filtering by employer removed since employer_id column doesn't exist
+      // If employer (second_party_id) changes, clear the promoter selection
+      if (field === 'second_party_id') {
+        newData.promoter_id = '';
+      }
+
+      return newData;
+    });
   };
 
-  // Get all promoters (no filtering since employer_id column doesn't exist)
+  // Get promoters filtered by selected employer
   const getFilteredPromoters = () => {
-    return allPromoters;
+    if (!formData.second_party_id) {
+      // If no employer is selected, show all promoters
+      return allPromoters;
+    }
+    
+    // Filter promoters by the selected employer
+    // Note: This will work once employer_id column is added to the database
+    return allPromoters.filter((promoter: any) => 
+      promoter.employer_id === formData.second_party_id
+    );
   };
 
   const validateForm = (): string[] => {
@@ -412,7 +429,7 @@ export default function SimpleContractGenerator() {
                 <strong>Note:</strong> 
                 <br />• <strong>First Party</strong> shows only <strong>Client</strong> type parties
                 <br />• <strong>Second Party</strong> shows only <strong>Employer</strong> type parties  
-                <br />• <strong>Promoters</strong> are available for all contracts
+                <br />• <strong>Promoters</strong> are filtered by selected employer
               </p>
             </div>
             
@@ -443,7 +460,10 @@ export default function SimpleContractGenerator() {
                     ))}
                     {getFilteredPromoters().length === 0 && (
                       <div className="p-2 text-sm text-muted-foreground">
-                        No promoters found
+                        {formData.second_party_id 
+                          ? "No promoters found for this employer" 
+                          : "Please select an employer first"
+                        }
                       </div>
                     )}
                   </SelectContent>
