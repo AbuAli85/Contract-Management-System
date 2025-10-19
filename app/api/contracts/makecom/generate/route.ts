@@ -260,6 +260,12 @@ export const POST = withAnyRBAC(
         watermark: enrichedContractData.watermark || placeholderImage,
         background_image: enrichedContractData.background_image || placeholderImage,
         
+        // Promoter images (ensure these have placeholder URLs)
+        promoter_id_card_url: enrichedContractData.promoter_id_card_url || placeholderImage,
+        promoter_passport_url: enrichedContractData.promoter_passport_url || placeholderImage,
+        id_card_url: enrichedContractData.id_card_url || placeholderImage,
+        passport_url: enrichedContractData.passport_url || placeholderImage,
+        
         // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
         image_1: enrichedContractData.image_1 || placeholderImage,
         image_2: enrichedContractData.image_2 || placeholderImage,
