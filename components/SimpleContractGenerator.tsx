@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -745,6 +746,42 @@ export default function SimpleContractGenerator() {
               />
             </div>
           </div>
+
+          {/* Contract Summary */}
+          {(formData.contract_start_date || formData.contract_end_date) && (
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
+                <Calendar className="h-4 w-4 mr-2" />
+                Contract Summary
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {formData.contract_start_date && (
+                  <div>
+                    <span className="font-medium text-blue-800 dark:text-blue-200">Start Date:</span>
+                    <span className="ml-2 text-blue-700 dark:text-blue-300">
+                      {format(parseISO(formData.contract_start_date), 'dd-MM-yyyy')}
+                    </span>
+                  </div>
+                )}
+                {formData.contract_end_date && (
+                  <div>
+                    <span className="font-medium text-blue-800 dark:text-blue-200">End Date:</span>
+                    <span className="ml-2 text-blue-700 dark:text-blue-300">
+                      {format(parseISO(formData.contract_end_date), 'dd-MM-yyyy')}
+                    </span>
+                  </div>
+                )}
+                {formData.contract_start_date && formData.contract_end_date && (
+                  <div className="md:col-span-2">
+                    <span className="font-medium text-blue-800 dark:text-blue-200">Duration:</span>
+                    <span className="ml-2 text-blue-700 dark:text-blue-300">
+                      {format(parseISO(formData.contract_start_date), 'dd-MM-yyyy')} to {format(parseISO(formData.contract_end_date), 'dd-MM-yyyy')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Generate Button */}
           <div className="flex justify-center pt-4">
