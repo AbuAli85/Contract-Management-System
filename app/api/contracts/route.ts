@@ -110,14 +110,10 @@ export async function GET(request: NextRequest) {
       let contracts: any[] = [];
       try {
         // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
+        // Use simple select first, then fetch related data separately
         let query = supabase
           .from('contracts')
-          .select(`
-            *,
-            first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type, email, phone),
-            second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type, email, phone),
-            promoters(id, name_en, name_ar, id_card_number, id_card_url, passport_url, status, mobile_number)
-          `);
+          .select('*');
 
         // Non-admin users only see contracts they're involved in
         if (!isAdmin) {
@@ -145,10 +141,85 @@ export async function GET(request: NextRequest) {
             contracts = [];
           } else {
             contracts = fallbackData || [];
+            // Transform fallback data as well (simplified since we don't have relationships)
+            contracts = contracts.map((contract: any) => ({
+              ...contract,
+              first_party: null,
+              second_party: null,
+              promoters: null,
+              contract_start_date: contract.start_date || contract.contract_start_date,
+              contract_end_date: contract.end_date || contract.contract_end_date,
+              job_title: contract.title || contract.job_title,
+              contract_value: contract.value || contract.contract_value || contract.basic_salary || contract.amount,
+            }));
           }
         } else {
           contracts = contractsData || [];
         }
+
+        // Fetch related data separately and transform contracts
+        const partyIds = new Set();
+        const promoterIds = new Set();
+        
+        contracts.forEach((contract: any) => {
+          if (contract.first_party_id) partyIds.add(contract.first_party_id);
+          if (contract.second_party_id) partyIds.add(contract.second_party_id);
+          if (contract.client_id) partyIds.add(contract.client_id);
+          if (contract.employer_id) partyIds.add(contract.employer_id);
+          if (contract.promoter_id) promoterIds.add(contract.promoter_id);
+        });
+
+        // Fetch parties data
+        let partiesData: any[] = [];
+        if (partyIds.size > 0) {
+          const { data: parties, error: partiesError } = await supabase
+            .from('parties')
+            .select('id, name_en, name_ar, crn, type')
+            .in('id', Array.from(partyIds));
+          
+          if (!partiesError && parties) {
+            partiesData = parties;
+          }
+        }
+
+        // Fetch promoters data
+        let promotersData: any[] = [];
+        if (promoterIds.size > 0) {
+          const { data: promoters, error: promotersError } = await supabase
+            .from('promoters')
+            .select('id, name_en, name_ar, id_card_number, id_card_url, passport_url, status, mobile_number')
+            .in('id', Array.from(promoterIds));
+          
+          if (!promotersError && promoters) {
+            promotersData = promoters;
+          }
+        }
+
+        // Create lookup maps
+        const partiesMap = new Map(partiesData.map(p => [p.id, p]));
+        const promotersMap = new Map(promotersData.map(p => [p.id, p]));
+
+        // Transform contracts to normalize party relationships
+        contracts = contracts.map((contract: any) => {
+          // Get party data from lookup maps
+          const firstParty = contract.first_party_id ? partiesMap.get(contract.first_party_id) : 
+                           contract.client_id ? partiesMap.get(contract.client_id) : null;
+          const secondParty = contract.second_party_id ? partiesMap.get(contract.second_party_id) : 
+                            contract.employer_id ? partiesMap.get(contract.employer_id) : null;
+          const promoter = contract.promoter_id ? promotersMap.get(contract.promoter_id) : null;
+          
+          return {
+            ...contract,
+            first_party: firstParty,
+            second_party: secondParty,
+            promoters: promoter ? [promoter] : null,
+            // Ensure we have the right field names for the frontend
+            contract_start_date: contract.start_date || contract.contract_start_date,
+            contract_end_date: contract.end_date || contract.contract_end_date,
+            job_title: contract.title || contract.job_title,
+            contract_value: contract.value || contract.contract_value || contract.basic_salary || contract.amount,
+          };
+        });
       } catch (error) {
         console.warn(
           '⚠️ Contracts API: Contract fetch failed, continuing with empty array'
