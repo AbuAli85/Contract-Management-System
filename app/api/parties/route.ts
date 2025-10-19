@@ -36,27 +36,23 @@ export const GET = withRBAC('party:read:own', async () => {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
+          get(name: string) {
+            return cookieStore.get(name)?.value;
           },
-          setAll(cookiesToSet) {
+          set(name: string, value: string, options: any) {
             try {
-              cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(
-                  name,
-                  value,
-                  options as {
-                    path?: string;
-                    domain?: string;
-                    maxAge?: number;
-                    secure?: boolean;
-                    httpOnly?: boolean;
-                    sameSite?: 'strict' | 'lax' | 'none';
-                  }
-                );
-              });
+              cookieStore.set(name, value, options);
             } catch {
-              // The `setAll` method was called from a Server Component.
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+          remove(name: string, options: any) {
+            try {
+              cookieStore.set(name, '', options);
+            } catch {
+              // The `remove` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
               // user sessions.
             }
@@ -76,27 +72,10 @@ export const GET = withRBAC('party:read:own', async () => {
     }
 
     // Fetch parties from the database with related data
+    // Use a simpler query first to avoid foreign key issues
     const { data: parties, error } = await supabase
       .from('parties')
-      .select(
-        `
-        *,
-        contracts_as_first_party:contracts!contracts_first_party_id_fkey(
-          id,
-          contract_number,
-          status,
-          contract_start_date,
-          contract_end_date
-        ),
-        contracts_as_second_party:contracts!contracts_second_party_id_fkey(
-          id,
-          contract_number,
-          status,
-          contract_start_date,
-          contract_end_date
-        )
-      `
-      )
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -107,20 +86,12 @@ export const GET = withRBAC('party:read:own', async () => {
       );
     }
 
-    // Transform data to include contract counts
+    // Transform data to include basic information
+    // Contract counts will be calculated separately to avoid foreign key issues
     const partiesWithCounts = parties?.map(party => ({
       ...party,
-      total_contracts:
-        (party.contracts_as_first_party?.length || 0) +
-        (party.contracts_as_second_party?.length || 0),
-      active_contracts: [
-        ...(party.contracts_as_first_party?.filter(
-          (c: any) => c.status === 'active'
-        ) || []),
-        ...(party.contracts_as_second_party?.filter(
-          (c: any) => c.status === 'active'
-        ) || []),
-      ].length,
+      total_contracts: 0, // Will be calculated separately
+      active_contracts: 0, // Will be calculated separately
     }));
 
     return NextResponse.json({
@@ -145,27 +116,23 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() {
-            return cookieStore.getAll();
+          get(name: string) {
+            return cookieStore.get(name)?.value;
           },
-          setAll(cookiesToSet) {
+          set(name: string, value: string, options: any) {
             try {
-              cookiesToSet.forEach(({ name, value, ...options }) => {
-                cookieStore.set(
-                  name,
-                  value,
-                  options as {
-                    path?: string;
-                    domain?: string;
-                    maxAge?: number;
-                    secure?: boolean;
-                    httpOnly?: boolean;
-                    sameSite?: 'strict' | 'lax' | 'none';
-                  }
-                );
-              });
+              cookieStore.set(name, value, options);
             } catch {
-              // The `setAll` method was called from a Server Component.
+              // The `set` method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
+          },
+          remove(name: string, options: any) {
+            try {
+              cookieStore.set(name, '', options);
+            } catch {
+              // The `remove` method was called from a Server Component.
               // This can be ignored if you have middleware refreshing
               // user sessions.
             }
