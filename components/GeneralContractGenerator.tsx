@@ -130,6 +130,12 @@ export default function GeneralContractGenerator() {
   });
   const { toast } = useToast();
 
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+    loadSavedDraft();
+  }, []);
+
   const contractTypes = [
     { value: 'general-service', label: 'General Service Contract' },
     { value: 'consulting-agreement', label: 'Consulting Agreement' },
@@ -160,11 +166,6 @@ export default function GeneralContractGenerator() {
       console.error('Error loading saved draft:', error);
     }
   };
-
-  useEffect(() => {
-    loadData();
-    loadSavedDraft();
-  }, []);
 
   const loadData = async () => {
     setLoading(true);
