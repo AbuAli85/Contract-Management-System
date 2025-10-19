@@ -301,6 +301,7 @@ export const POST = withAnyRBAC(
         promoter_passport_url: enrichedContractData.promoter_passport_url,
         id_card_url: enrichedContractData.id_card_url,
         passport_url: enrichedContractData.passport_url,
+        promoter_passport_number: enrichedContractData.promoter_passport_number,
       });
 
       // Generate contract with Make.com integration
