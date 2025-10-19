@@ -129,52 +129,6 @@ function SidebarContent({
     );
   }
 
-  // Emergency fallback if auth is not ready
-  if (!authMounted || loading) {
-    return (
-      <div
-        className={`sidebar-container ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className='flex flex-col items-center justify-center h-full'>
-          <div className='animate-pulse text-center'>
-            <div className='w-8 h-8 bg-muted rounded-full mx-auto mb-2'></div>
-            <div className='w-24 h-4 bg-muted rounded mx-auto'></div>
-            <p className='text-sm text-muted-foreground mt-2'>Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show a user-friendly message if no user is available after auth completes
-  // But still allow access to basic navigation if we're on dashboard pages
-  if (!user && authMounted && !loading && !pathname?.includes('/dashboard')) {
-    return (
-      <div
-        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className='flex flex-col items-center justify-center h-full'>
-          <div className='text-center p-4'>
-            <User className='mx-auto mb-4 h-10 w-10 text-muted-foreground' />
-            <p className='mb-2 text-lg font-semibold text-card-foreground'>
-              Not signed in
-            </p>
-            <p className='mb-4 text-sm text-muted-foreground'>
-              Please log in to access the sidebar features.
-            </p>
-            <Button asChild variant='default' className='w-full'>
-              <Link href={'/auth/login'}>Login</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Emergency fallback - if on dashboard pages but no user detected, still show navigation
   const showEmergencyNavigation =
     pathname?.includes('/dashboard') && !user && authMounted && !loading;
@@ -335,8 +289,56 @@ function SidebarContent({
     }
   };
 
-  // Emergency navigation fallback for dashboard pages without proper auth
-  if (showEmergencyNavigation) {
+  // Determine what to render based on auth state
+  const shouldShowEmergencyNavigation = showEmergencyNavigation;
+  const shouldShowLoginPrompt = !user && authMounted && !loading && !pathname?.includes('/dashboard');
+  const shouldShowLoading = !authMounted || loading;
+
+  // Handle different rendering states
+  if (shouldShowLoading) {
+    return (
+      <div
+        className={`sidebar-container ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className='flex flex-col items-center justify-center h-full'>
+          <div className='animate-pulse text-center'>
+            <div className='w-8 h-8 bg-muted rounded-full mx-auto mb-2'></div>
+            <div className='w-24 h-4 bg-muted rounded mx-auto'></div>
+            <p className='text-sm text-muted-foreground mt-2'>Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (shouldShowLoginPrompt) {
+    return (
+      <div
+        className={`fixed left-0 top-0 z-50 h-full w-64 transform bg-card shadow-lg transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className='flex flex-col items-center justify-center h-full'>
+          <div className='text-center p-4'>
+            <User className='mx-auto mb-4 h-10 w-10 text-muted-foreground' />
+            <p className='mb-2 text-lg font-semibold text-card-foreground'>
+              Not signed in
+            </p>
+            <p className='mb-4 text-sm text-muted-foreground'>
+              Please log in to access the sidebar features.
+            </p>
+            <Button asChild variant='default' className='w-full'>
+              <Link href={'/auth/login'}>Login</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (shouldShowEmergencyNavigation) {
     return (
       <div
         className={`sidebar-container ${
