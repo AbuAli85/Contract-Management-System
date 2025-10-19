@@ -29,6 +29,27 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const { contract_id, contract_number, contract_type, promoter_id, first_party_id, second_party_id } = body;
 
+    // Validate required fields
+    if (!contract_type) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'contract_type is required',
+        },
+        { status: 400 }
+      );
+    }
+
+    if (!promoter_id) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'promoter_id is required',
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate contract_id and contract_number if they're empty
     let finalContractId = contract_id;
     let finalContractNumber = contract_number;
@@ -52,16 +73,6 @@ export async function POST(request: NextRequest) {
       const random = Math.random().toString(36).substring(2, 6).toUpperCase();
       finalContractNumber = `PAC-${day}${month}${year}-${random}`;
       console.log('🔢 Generated contract_number:', finalContractNumber);
-    }
-
-    if (!contract_type) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'contract_type is required',
-        },
-        { status: 400 }
-      );
     }
 
     // Create Supabase client
@@ -206,10 +217,23 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Map other fields
-    if (body.job_title) contractData.title = `${body.job_title} - ${contract_type} Contract - ${finalContractNumber}`;
+    // Map other fields - ensure title is always set
+    if (body.job_title && body.job_title.trim() !== '') {
+      contractData.title = `${body.job_title} - ${contract_type} Contract - ${finalContractNumber}`;
+    } else {
+      contractData.title = `${contract_type} Contract - ${finalContractNumber}`;
+    }
+    
     if (body.basic_salary) contractData.value = parseFloat(body.basic_salary);
     if (body.special_terms) contractData.terms = body.special_terms;
+    
+    // Add additional fields if provided
+    if (body.department && body.department.trim() !== '') {
+      contractData.description = `Department: ${body.department}`;
+    }
+    if (body.work_location && body.work_location.trim() !== '') {
+      contractData.description = (contractData.description || '') + `\nWork Location: ${body.work_location}`;
+    }
 
     const { data: newContract, error: createError } = await (supabase as any)
       .from('contracts')
@@ -220,13 +244,18 @@ export async function POST(request: NextRequest) {
     if (createError) {
       console.error('❌ Error creating contract:', createError);
       console.error('❌ Contract data that failed:', contractData);
+      console.error('❌ Error code:', createError.code);
+      console.error('❌ Error details:', createError.details);
+      console.error('❌ Error hint:', createError.hint);
       return NextResponse.json(
         { 
           success: false, 
           error: 'Failed to create contract',
           details: createError.message,
+          error_code: createError.code,
+          error_hint: createError.hint,
           contract_data: contractData,
-          domain: "protal.thesmartpro.io"
+          domain: "portal.thesmartpro.io"
         },
         { status: 500 }
       );
@@ -263,7 +292,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
-        domain: "protal.thesmartpro.io"
+        domain: "portal.thesmartpro.io"
       },
       { status: 500 }
     );

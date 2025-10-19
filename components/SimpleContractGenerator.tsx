@@ -43,6 +43,8 @@ interface Promoter {
   mobile_number: string | null;
   id_card_number: string;
   employer_id?: string | null;
+  status?: string;
+  profile_picture_url?: string | null;
 }
 
 interface Party {
@@ -50,6 +52,8 @@ interface Party {
   name_en: string;
   name_ar: string;
   crn: string;
+  logo_url?: string | null;
+  status?: string;
 }
 
 interface ContractFormData {
@@ -79,6 +83,8 @@ export default function SimpleContractGenerator() {
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
+  const [promoterSearchTerm, setPromoterSearchTerm] = useState('');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [formData, setFormData] = useState<ContractFormData>({
     promoter_id: '',
     first_party_id: '',
@@ -107,8 +113,27 @@ export default function SimpleContractGenerator() {
     { value: 'service-contract', label: 'Service Contract' },
   ];
 
+  // Load saved draft from localStorage
+  const loadSavedDraft = () => {
+    try {
+      const savedDraft = localStorage.getItem('contract-form-draft');
+      if (savedDraft) {
+        const parsedDraft = JSON.parse(savedDraft);
+        setFormData(parsedDraft);
+        setLastSaved(new Date());
+        toast({
+          title: 'Draft Restored',
+          description: 'Your previous form data has been restored.',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading saved draft:', error);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadSavedDraft();
   }, []);
 
   const loadData = async () => {
@@ -143,7 +168,7 @@ export default function SimpleContractGenerator() {
       // Load promoters
       const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, mobile_number, id_card_number, employer_id')
+        .select('id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url')
         .order('name_en');
 
       if (promotersError) {
@@ -179,14 +204,19 @@ export default function SimpleContractGenerator() {
         newData.promoter_id = '';
       }
 
+      // Auto-save to localStorage
+      localStorage.setItem('contract-form-draft', JSON.stringify(newData));
+      setLastSaved(new Date());
+
       return newData;
     });
   };
 
-  // Get promoters filtered by selected employer
+  // Get promoters filtered by selected employer and search term
   const getFilteredPromoters = () => {
     console.log('🔍 Filtering promoters:', {
       selectedEmployer: formData.second_party_id,
+      searchTerm: promoterSearchTerm,
       totalPromoters: allPromoters.length,
       firstPromoter: allPromoters[0] ? {
         id: allPromoters[0].id,
@@ -195,25 +225,34 @@ export default function SimpleContractGenerator() {
       } : null
     });
 
-    if (!formData.second_party_id) {
-      // If no employer is selected, show all promoters
-      console.log('📋 No employer selected, showing all promoters');
-      return allPromoters;
+    let filteredPromoters = allPromoters;
+
+    // Filter by employer if selected
+    if (formData.second_party_id) {
+      filteredPromoters = allPromoters.filter((promoter: any) => {
+        // If employer_id doesn't exist on promoter object, show all promoters
+        if (promoter.employer_id === undefined) {
+          console.log('⚠️ employer_id not found on promoter, showing all promoters');
+          return true; // Show all promoters if employer_id column doesn't exist
+        }
+        // If employer_id exists, filter by it
+        const matches = promoter.employer_id === formData.second_party_id;
+        return matches;
+      });
     }
     
-    // Filter promoters by the selected employer
-    // Check if employer_id exists on promoters (for backward compatibility)
-    const filteredPromoters = allPromoters.filter((promoter: any) => {
-      // If employer_id doesn't exist on promoter object, show all promoters
-      if (promoter.employer_id === undefined) {
-        console.log('⚠️ employer_id not found on promoter, showing all promoters');
-        return true; // Show all promoters if employer_id column doesn't exist
-      }
-      // If employer_id exists, filter by it
-      const matches = promoter.employer_id === formData.second_party_id;
-      console.log(`🔍 Promoter ${promoter.name_en}: employer_id=${promoter.employer_id}, matches=${matches}`);
-      return matches;
-    });
+    // Filter by search term if provided
+    if (promoterSearchTerm.trim()) {
+      const searchLower = promoterSearchTerm.toLowerCase();
+      filteredPromoters = filteredPromoters.filter((promoter: any) => {
+        return (
+          promoter.name_en.toLowerCase().includes(searchLower) ||
+          promoter.name_ar.toLowerCase().includes(searchLower) ||
+          promoter.mobile_number?.toLowerCase().includes(searchLower) ||
+          promoter.id_card_number.toLowerCase().includes(searchLower)
+        );
+      });
+    }
     
     console.log(`✅ Filtered promoters: ${filteredPromoters.length} out of ${allPromoters.length}`);
     return filteredPromoters;
@@ -325,6 +364,10 @@ export default function SimpleContractGenerator() {
             });
           }, 1000);
         }
+        
+        // Clear saved draft
+        localStorage.removeItem('contract-form-draft');
+        setLastSaved(null);
         
         // Reset form
         setFormData({
@@ -453,44 +496,84 @@ export default function SimpleContractGenerator() {
                 <br />• <strong>First Party</strong> shows only <strong>Client</strong> type parties
                 <br />• <strong>Second Party</strong> shows only <strong>Employer</strong> type parties  
                 <br />• <strong>Promoters</strong> are filtered by selected employer
+                <br />• <strong>Auto-save</strong> is enabled - your progress is saved automatically
               </p>
             </div>
+            
+            {/* Auto-save status indicator */}
+            {lastSaved && (
+              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-2">
+                <CheckCircle className="h-4 w-4" />
+                <span>Last saved: {lastSaved.toLocaleTimeString()}</span>
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Promoter Selection */}
               <div className="space-y-2">
                 <Label htmlFor="promoter">Promoter *</Label>
-                <Select
-                  value={formData.promoter_id}
-                  onValueChange={(value) => handleInputChange('promoter_id', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select promoter" />
-                  </SelectTrigger>
-                  <SelectContent>
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Search promoters..."
+                    value={promoterSearchTerm}
+                    onChange={(e) => setPromoterSearchTerm(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Select
+                    value={formData.promoter_id}
+                    onValueChange={(value) => handleInputChange('promoter_id', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select promoter" />
+                    </SelectTrigger>
+                    <SelectContent>
                     {getFilteredPromoters().map((promoter) => (
                       <SelectItem key={promoter.id} value={promoter.id}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4" />
-                          <div>
-                            <div className="font-medium">{promoter.name_en}</div>
-                            <div className="text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="flex-shrink-0">
+                            {promoter.profile_picture_url ? (
+                              <img 
+                                src={promoter.profile_picture_url} 
+                                alt={promoter.name_en}
+                                className="w-8 h-8 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <User className="h-4 w-4 text-blue-600" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{promoter.name_en}</div>
+                            <div className="text-xs text-muted-foreground truncate">
                               {promoter.mobile_number || 'No phone'}
                             </div>
+                            {promoter.status && (
+                              <div className="text-xs">
+                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                  promoter.status === 'active' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {promoter.status}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </SelectItem>
                     ))}
-                    {getFilteredPromoters().length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
-                        {formData.second_party_id 
-                          ? "No promoters found for this employer. All promoters are shown until employer relationships are set up." 
-                          : "Please select an employer first"
-                        }
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
+                      {getFilteredPromoters().length === 0 && (
+                        <div className="p-2 text-sm text-muted-foreground">
+                          {formData.second_party_id 
+                            ? "No promoters found for this employer. All promoters are shown until employer relationships are set up." 
+                            : "Please select an employer first"
+                          }
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* First Party Selection (Client) */}
