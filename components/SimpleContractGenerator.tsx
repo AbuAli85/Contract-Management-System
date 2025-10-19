@@ -209,7 +209,11 @@ export default function SimpleContractGenerator() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            contractType: formData.contract_type,
+            contractData: formData,
+            triggerMakecom: true
+          }),
         });
         
         if (response.ok) {
