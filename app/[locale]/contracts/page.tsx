@@ -614,8 +614,8 @@ function ContractsContent() {
           'name_en' in contract.second_party
             ? contract.second_party.name_en || 'N/A'
             : 'N/A',
-        Promoter: contract.promoters
-          ? contract.promoters.name_en || 'N/A'
+        Promoter: contract.promoters && Array.isArray(contract.promoters) && contract.promoters.length > 0
+          ? contract.promoters[0].name_en || 'N/A'
           : 'N/A',
         'Job Title': contract.job_title || 'N/A',
         'Start Date': contract.contract_start_date ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy') : 'N/A',
@@ -630,16 +630,28 @@ function ContractsContent() {
         'Contract Duration (Days)': contract.contract_duration_days || 'N/A',
       }));
 
+      // Create CSV with proper escaping and BOM for Excel compatibility
+      const escapeCSVValue = (val: any): string => {
+        if (val === null || val === undefined) return '';
+        const str = String(val);
+        // Escape quotes and wrap in quotes if contains comma, quote, or newline
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+          return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+      };
+
       const csv = [
-        Object.keys(csvData[0] || {}).join(','),
+        Object.keys(csvData[0] || {}).map(escapeCSVValue).join(','),
         ...csvData.map(row =>
-          Object.values(row)
-            .map(val => `"${val}"`)
-            .join(',')
+          Object.values(row).map(escapeCSVValue).join(',')
         ),
       ].join('\n');
 
-      const blob = new Blob([csv], { type: 'text/csv' });
+      // Add BOM for proper UTF-8 encoding in Excel
+      const csvWithBOM = '\uFEFF' + csv;
+
+      const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
