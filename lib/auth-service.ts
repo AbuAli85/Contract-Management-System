@@ -32,11 +32,11 @@ export function useAuth() {
     loading: authData.loading,
     mounted: isClient,
     signIn: async (email: string, password: string) => {
-      if (!authData.authData.supabase)
+      if (!authData.supabase)
         return { success: false, error: 'Authentication service unavailable' };
 
       try {
-        const { data, error } = await authData.authData.supabase.auth.signInWithPassword({
+        const { data, error } = await authData.supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -157,7 +157,7 @@ export const authService = {
       return { user: null, session: null };
     }
 
-    const { createClient } = await import('@authData.supabase/authData.supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -165,13 +165,13 @@ export const authService = {
       throw new Error('Supabase credentials not configured');
     }
 
-    const authData.supabase = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
     try {
-      const { data, error } = await authData.supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -212,7 +212,7 @@ export const authService = {
   signOut: async () => {
     if (typeof window === 'undefined') return;
 
-    const { createClient } = await import('@authData.supabase/authData.supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -220,12 +220,12 @@ export const authService = {
       return;
     }
 
-    const authData.supabase = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    const { error } = await authData.supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
 
@@ -234,7 +234,7 @@ export const authService = {
       return { user: null, session: null };
     }
 
-    const { createClient } = await import('@authData.supabase/authData.supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -242,12 +242,12 @@ export const authService = {
       throw new Error('Supabase credentials not configured');
     }
 
-    const authData.supabase = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    const { data, error } = await authData.supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -261,7 +261,7 @@ export const authService = {
   getCurrentUser: async () => {
     if (typeof window === 'undefined') return null;
 
-    const { createClient } = await import('@authData.supabase/authData.supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -269,7 +269,7 @@ export const authService = {
       return null;
     }
 
-    const authData.supabase = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
@@ -277,7 +277,7 @@ export const authService = {
     const {
       data: { user },
       error,
-    } = await authData.supabase.auth.getUser();
+    } = await supabase.auth.getUser();
     if (error) throw error;
     return user;
   },
@@ -285,7 +285,7 @@ export const authService = {
   getSession: async () => {
     if (typeof window === 'undefined') return null;
 
-    const { createClient } = await import('@authData.supabase/authData.supabase-js');
+    const { createClient } = await import('@supabase/supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -293,7 +293,7 @@ export const authService = {
       return null;
     }
 
-    const authData.supabase = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
@@ -301,7 +301,7 @@ export const authService = {
     const {
       data: { session },
       error,
-    } = await authData.supabase.auth.getSession();
+    } = await supabase.auth.getSession();
     if (error) throw error;
     return session;
   },
