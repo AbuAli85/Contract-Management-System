@@ -94,6 +94,7 @@ import {
   Mail,
   Share,
   FileDown,
+  Plus,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -1212,6 +1213,7 @@ function ContractsContent() {
                   )}
               </div>
             ) : currentView === 'table' ? (
+              <>
               <div className='overflow-x-auto'>
                 <Table>
                   <TableHeader>
@@ -1562,8 +1564,10 @@ function ContractsContent() {
                   </div>
                 </div>
               )}
+              </>
             ) : (
-              // Grid View
+              <>
+              {/* Grid View */}
               <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
                 {filteredAndSortedContracts.map(contract => {
                   const contractStatus = getContractStatus(contract);
@@ -1841,6 +1845,7 @@ function ContractsContent() {
                   </div>
                 </div>
               )}
+              </>
             )}
           </CardContent>
         </Card>
