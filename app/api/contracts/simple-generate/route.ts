@@ -84,7 +84,7 @@ export const POST = withAnyRBAC(
       const [promoterResult, firstPartyResult, secondPartyResult] = await Promise.all([
         supabase
           .from('promoters')
-          .select('id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url')
+          .select('id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url, employer_id')
           .eq('id', body.promoter_id)
           .single(),
         supabase

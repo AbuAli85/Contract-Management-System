@@ -143,7 +143,7 @@ export default function SimpleContractGenerator() {
       // Load promoters
       const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, mobile_number, id_card_number')
+        .select('id, name_en, name_ar, mobile_number, id_card_number, employer_id')
         .order('name_en');
 
       if (promotersError) {

@@ -161,7 +161,7 @@ export default function DocumentWorkflowWizard() {
       // Load promoters
       const { data: promotersData } = await supabase
         ?.from('promoters')
-        .select('id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url')
+        .select('id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url, employer_id')
         .order('name_en') || { data: null };
 
       // Load parties

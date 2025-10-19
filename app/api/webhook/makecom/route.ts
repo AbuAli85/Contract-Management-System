@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         ),
         promoter:promoters(
           id, name_en, name_ar, id_card_number, mobile_number, 
-          id_card_url, passport_url, status
+          id_card_url, passport_url, status, employer_id
         )
       `
       )
@@ -151,6 +151,7 @@ export async function POST(request: NextRequest) {
       promoter_email: '', // Email field not available in promoters table
       promoter_id_card_url: contract.promoter?.id_card_url || '',
       promoter_passport_url: contract.promoter?.passport_url || '',
+      promoter_employer_id: contract.promoter?.employer_id || '',
 
       // Contract details
       job_title: contract.job_title || '',

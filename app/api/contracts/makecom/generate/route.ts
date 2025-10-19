@@ -147,7 +147,7 @@ export const POST = withAnyRBAC(
         const supabase = createSupabaseClient();
         const { data: promoter, error: promoterError } = await supabase
           .from('promoters')
-          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number')
+          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number, employer_id')
           .eq('id', contractData.promoter_id)
           .single();
 
@@ -164,6 +164,7 @@ export const POST = withAnyRBAC(
             promoter_passport_number: promoter.passport_number,
             promoter_email: promoter.email,
             promoter_mobile_number: promoter.mobile_number,
+            promoter_employer_id: promoter.employer_id,
             // Add aliases for template compatibility
             id_card_number: promoter.id_card_number, // Alias for promoter_id_card_number
             passport_number: promoter.passport_number, // Alias for promoter_passport_number
