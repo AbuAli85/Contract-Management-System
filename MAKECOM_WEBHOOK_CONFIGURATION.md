@@ -1,183 +1,123 @@
-# Make.com Webhook Configuration - Complete Guide
+# 🔧 Make.com Webhook Configuration Guide
 
-## 🎯 **Current Status**
+## 📋 **Current Setup**
 
-### ✅ **What's Working:**
-- Webhook endpoint is accessible
-- Authentication is working
-- Payload structure is correct
-- Field validation is implemented
+You now have **two contract generation systems** with **two separate Make.com scenarios**:
 
-### ⚠️ **Current Issue:**
-- Webhook returns 500 error: "Failed to fetch contract"
-- This is likely due to the webhook changes not being deployed yet
+### 1. **Simple Contracts (Employment)**
+- **Component**: `SimpleContractGenerator.tsx`
+- **API**: `/api/webhook/makecom-simple`
+- **Make.com Webhook**: Your existing webhook URL
+- **Contract Types**: Employment contracts (full-time, part-time, fixed-term, etc.)
+- **Template**: Promoter Contract template
 
-## 🔧 **Make.com HTTP Module Configuration**
+### 2. **General Contracts (Business)**
+- **Component**: `GeneralContractGenerator.tsx`
+- **API**: `/api/contracts/general/generate`
+- **Make.com Webhook**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
+- **Contract Types**: General business contracts (service, consulting, partnership, etc.)
+- **Template**: General Contract template
 
-### **Basic Settings:**
-```
-URL: https://portal.thesmartpro.io/api/webhook/makecom-simple
-Method: POST
-Content-Type: application/json
-Timeout: 300
-```
+## 🔗 **Environment Variables**
 
-### **Headers Configuration:**
-```
-1. Content-Type: application/json
-2. X-Webhook-Secret: make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806
-3. X-Request-ID: {{execution.id}}
-```
+Add these to your `.env.local` file:
 
-### **Request Body (JSON):**
-```json
-{
-  "contract_id": "{{53.contract_id}}",
-  "contract_number": "{{54.contract_number}}",
-  "contract_type": "{{55.stored_contract_type}}",
-  "promoter_id": "{{55.stored_promoter_id}}",
-  "first_party_id": "{{55.stored_first_party_id}}",
-  "second_party_id": "{{55.stored_second_party_id}}",
-  "job_title": "{{55.stored_job_title}}",
-  "department": "{{55.stored_department}}",
-  "work_location": "{{55.stored_work_location}}",
-  "basic_salary": "{{55.stored_basic_salary}}",
-  "contract_start_date": "{{55.stored_contract_start_date}}",
-  "contract_end_date": "{{55.stored_contract_end_date}}",
-  "special_terms": "{{55.stored_special_terms}}",
-  "header_logo": "{{55.stored_extra_logo_url}}"
-}
+```env
+# Make.com Integration
+MAKECOM_WEBHOOK_URL_SIMPLE=https://your-existing-simple-contract-webhook
+MAKECOM_WEBHOOK_URL_GENERAL=https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz
+
+# Webhook Secrets
+MAKE_WEBHOOK_SECRET=your-webhook-secret
+PDF_WEBHOOK_SECRET=your-pdf-webhook-secret
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
 
-### **Error Handling:**
-```
-Evaluate all states as errors (except for 2xx and 3xx): true
-```
+## 🎯 **Make.com Scenario Setup**
 
-## 🚀 **Deployment Steps**
+### **Scenario 1: Simple Contracts (Employment)**
+- **Webhook URL**: Your existing webhook
+- **Template ID**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
+- **Use Case**: Employment agreements, job contracts
+- **Fields**: Job title, department, salary, probation period, etc.
 
-### **1. Deploy the Webhook Changes**
-The webhook code has been updated but needs to be deployed. You need to:
+### **Scenario 2: General Contracts (Business)**
+- **Webhook URL**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
+- **Template ID**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
+- **Use Case**: Service agreements, consulting, partnerships
+- **Fields**: Product/service name, deliverables, payment terms, etc.
 
-1. **Commit the changes:**
-   ```bash
-   git add .
-   git commit -m "Fix webhook 500 error - improve error handling"
-   git push
-   ```
+## 🔄 **Make.com Flow Structure**
 
-2. **Deploy to your hosting platform** (Vercel, Netlify, etc.)
+Both scenarios follow the same structure based on your provided flow:
 
-3. **Wait for deployment to complete** (usually 1-2 minutes)
+1. **Webhook Trigger** - Receives contract data
+2. **Variable Setting** - Sets contract_id, contract_number, and all contract data
+3. **Data Retrieval** - Fetches promoter, client, and employer data from Supabase
+4. **Template Processing** - Gets Google Docs template
+5. **Document Creation** - Creates document from template with mapped variables
+6. **PDF Export** - Exports document as PDF
+7. **File Upload** - Uploads PDF to Supabase storage
+8. **Status Update** - Calls back to update contract status
 
-### **2. Test After Deployment**
-Once deployed, the webhook should work correctly with both:
-- Complete payloads (with all fields filled)
-- Incomplete payloads (with empty fields)
+## 📊 **Contract Types Supported**
 
-## 🧪 **Testing the Configuration**
+### **Simple Contracts (Employment)**
+- Full-Time Permanent Employment
+- Part-Time Contract
+- Fixed-Term Contract
+- Consulting Agreement
+- Service Contract
 
-### **Test 1: Complete Payload**
-```json
-{
-  "contract_id": "test-123",
-  "contract_number": "TEST-2025-001",
-  "contract_type": "full-time-permanent",
-  "promoter_id": "5106a3f8-a3db-44cc-b9c3-8e3c8768ff66",
-  "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce",
-  "second_party_id": "a7453123-f814-47a5-b3fa-e119eb5f2da6",
-  "job_title": "Sales Representative",
-  "department": "Sales",
-  "work_location": "Dubai",
-  "basic_salary": "250",
-  "contract_start_date": "2025-10-19",
-  "contract_end_date": "2026-10-18",
-  "special_terms": "Standard terms",
-  "header_logo": "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png"
-}
-```
+### **General Contracts (Business)**
+- General Service Contract
+- Consulting Agreement
+- Service Contract
+- Partnership Agreement
+- Vendor Agreement
+- Maintenance Contract
+- Supply Agreement
+- Distribution Agreement
+- Franchise Agreement
+- Licensing Agreement
 
-**Expected Response:**
-```json
-{
-  "success": true,
-  "message": "Contract created successfully",
-  "contract_id": "generated-uuid",
-  "contract_number": "TEST-2025-001",
-  "status": "created",
-  "template_id": "1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0"
-}
-```
+## 🚀 **Usage**
 
-### **Test 2: Empty Fields Payload**
-```json
-{
-  "contract_id": "test-124",
-  "contract_number": "TEST-2025-002",
-  "contract_type": "full-time-permanent",
-  "promoter_id": "5106a3f8-a3db-44cc-b9c3-8e3c8768ff66",
-  "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce",
-  "second_party_id": "a7453123-f814-47a5-b3fa-e119eb5f2da6",
-  "job_title": "",
-  "department": "",
-  "work_location": "",
-  "basic_salary": "250",
-  "contract_start_date": "2025-10-19",
-  "contract_end_date": "2026-10-18",
-  "special_terms": "",
-  "header_logo": "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/party-logos/extra%20logo1.png"
-}
-```
+### **Access Simple Contracts**
+Navigate to your existing simple contract generator page.
 
-**Expected Response:**
-```json
-{
-  "success": true,
-  "message": "Contract created successfully",
-  "contract_id": "generated-uuid",
-  "contract_number": "TEST-2025-002",
-  "status": "created",
-  "template_id": "1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0"
-}
-```
+### **Access General Contracts**
+Navigate to `/contracts/general` to use the new general contract generator.
 
-## 🔍 **Troubleshooting**
+## 🔧 **Testing**
 
-### **If Still Getting 500 Errors:**
+### **Test Simple Contracts**
+1. Use your existing simple contract generator
+2. Fill in employment contract details
+3. Generate contract
+4. Check Make.com scenario execution
 
-1. **Check Deployment Status:**
-   - Verify the webhook changes are deployed
-   - Check server logs for detailed error messages
+### **Test General Contracts**
+1. Navigate to `/contracts/general`
+2. Fill in general contract details
+3. Generate contract
+4. Check Make.com scenario execution at: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
 
-2. **Verify Database Connection:**
-   - Ensure Supabase connection is working
-   - Check if the contracts table exists
+## 📝 **Notes**
 
-3. **Check Required Fields:**
-   - Ensure `promoter_id` is valid
-   - Ensure `contract_type` is one of: `employment`, `service`, `consultancy`, `partnership`
+- Both systems are now fully integrated with Make.com
+- Each system uses its own webhook URL and template
+- The general contract system is ready for production use
+- All contract data is properly mapped to Make.com variables
+- PDF generation and status updates are handled automatically
 
-4. **Test with Minimal Payload:**
-   ```json
-   {
-     "contract_type": "full-time-permanent",
-     "promoter_id": "5106a3f8-a3db-44cc-b9c3-8e3c8768ff66"
-   }
-   ```
+## 🎉 **Status**
 
-## 📋 **Next Steps**
+✅ **Simple Contracts**: Ready (existing system)
+✅ **General Contracts**: Ready (new system with webhook: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`)
 
-1. **Deploy the webhook changes** to your hosting platform
-2. **Test the webhook** with the provided test payloads
-3. **Configure Make.com** with the exact settings above
-4. **Run a test scenario** in Make.com to verify everything works
-
-## 🎉 **Expected Results After Deployment**
-
-- ✅ **200 Status Code** for successful requests
-- ✅ **Contract Creation** in the database
-- ✅ **Proper Error Handling** for invalid requests
-- ✅ **Support for Empty Fields** without errors
-- ✅ **Detailed Response** with contract information
-
-The webhook should work perfectly once the changes are deployed! 🚀
+Both contract generation systems are now fully operational!
