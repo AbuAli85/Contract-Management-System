@@ -30,49 +30,27 @@ interface AppLayoutWithSidebarProps {
 export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [hasError, setHasError] = useState(false);
 
-  // Wrap hooks in try-catch for error handling
-  let user,
-    notificationCount,
-    highPriorityCount,
-    userProfile,
-    fetchUserProfile,
-    isUser,
-    roleInfo;
+  // Call all hooks at the top level - no conditional hook calls
+  const authResult = useAuth();
+  const user = authResult?.user;
 
-  try {
-    const authResult = useAuth();
-    user = authResult?.user;
+  const notificationResult = useNotifications();
+  const notificationCount = notificationResult?.unreadCount || 0;
+  const highPriorityCount = notificationResult?.highPriorityCount || 0;
 
-    const notificationResult = useNotifications();
-    notificationCount = notificationResult?.unreadCount || 0;
-    highPriorityCount = notificationResult?.highPriorityCount || 0;
+  const profileResult = useUserProfile();
+  const userProfile = profileResult?.profile;
+  const fetchUserProfile = profileResult?.fetchUserProfile;
 
-    const profileResult = useUserProfile();
-    userProfile = profileResult?.profile;
-    fetchUserProfile = profileResult?.fetchUserProfile;
+  const roleResult = useRolePermissions();
+  const isUser = roleResult?.isUser || false;
+  const roleInfo = roleResult?.roleInfo;
 
-    const roleResult = useRolePermissions();
-    isUser = roleResult?.isUser || false;
-    roleInfo = roleResult?.roleInfo;
-  } catch (error) {
-    console.error('Hook error in AppLayoutWithSidebar:', error);
-    setHasError(true);
-  }
-
-  // Safe parameter handling with error boundary
-  let params, pathname, locale;
-  try {
-    params = useSafeParams();
-    pathname = useSafePathname();
-    locale = useLocaleFromParams();
-  } catch (error) {
-    console.warn('Safe params error:', error);
-    params = {};
-    pathname = '/';
-    locale = 'en';
-  }
+  // Safe parameter handling - call hooks unconditionally
+  const params = useSafeParams();
+  const pathname = useSafePathname();
+  const locale = useLocaleFromParams();
 
   // Check if we're on pages that should NOT show sidebar/navbar
   const shouldHideSidebar =
@@ -120,34 +98,11 @@ export function AppLayoutWithSidebar({ children }: AppLayoutWithSidebarProps) {
   ]);
 
   // Silent session timeout - automatically logs out after 5 minutes of inactivity
-  try {
-    useSessionTimeout({
-      timeoutMinutes: 5,
-      enableLogging: false, // Set to true for debugging
-      silent: true, // Silent mode - no warnings, just automatic logout
-    });
-  } catch (error) {
-    console.warn('Session timeout error:', error);
-  }
-
-  // Error boundary fallback
-  if (hasError) {
-    return (
-      <div className='min-h-screen bg-background flex items-center justify-center'>
-        <div className='text-center'>
-          <p className='text-destructive mb-4'>
-            Something went wrong loading the layout
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className='px-4 py-2 bg-primary text-primary-foreground rounded'
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useSessionTimeout({
+    timeoutMinutes: 5,
+    enableLogging: false, // Set to true for debugging
+    silent: true, // Silent mode - no warnings, just automatic logout
+  });
 
   // Get current page title
   const getPageTitle = () => {

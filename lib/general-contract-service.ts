@@ -83,6 +83,13 @@ export class GeneralContractService {
     this.supabase = null;
   }
 
+  /**
+   * Type guard to ensure a value is a non-empty string
+   */
+  private isNonEmptyString(value: string | undefined): value is string {
+    return typeof value === 'string' && value.length > 0;
+  }
+
   private async getSupabaseClient() {
     if (!this.supabase) {
       this.supabase = await createClient();
@@ -352,9 +359,10 @@ export class GeneralContractService {
    * Format date to YYYY-MM-DD
    */
   private formatDate(dateString: string | undefined): string {
-    if (!dateString) return new Date().toISOString().split('T')[0];
+    if (!this.isNonEmptyString(dateString)) {
+      return new Date().toISOString().split('T')[0];
+    }
     
-    // At this point, dateString is guaranteed to be a string
     if (dateString.includes('-')) {
       const parts = dateString.split('-');
       if (parts[0] && parts[0].length === 4) {
@@ -401,11 +409,12 @@ export class GeneralContractService {
    * Extract department from description
    */
   private extractDepartment(description: string | undefined): string {
-    if (!description) return '';
+    if (!this.isNonEmptyString(description)) return '';
     const match = description.match(/Department:\s*(.+)/);
     if (match && match[1] && match[1].length > 0) {
       // At this point, match[1] is guaranteed to be a string
-      return match[1].split('\n')[0].trim();
+      const department: string = match[1] as string;
+      return department.split('\n')[0].trim();
     }
     return '';
   }
@@ -414,11 +423,12 @@ export class GeneralContractService {
    * Extract work location from description
    */
   private extractWorkLocation(description: string | undefined): string {
-    if (!description) return '';
+    if (!this.isNonEmptyString(description)) return '';
     const match = description.match(/Work Location:\s*(.+)/);
     if (match && match[1] && match[1].length > 0) {
       // At this point, match[1] is guaranteed to be a string
-      return match[1].split('\n')[0].trim();
+      const location: string = match[1] as string;
+      return location.split('\n')[0].trim();
     }
     return '';
   }
@@ -426,3 +436,4 @@ export class GeneralContractService {
 
 // Export singleton instance
 export const generalContractService = new GeneralContractService();
+// TypeScript fixes applied
