@@ -1,16 +1,11 @@
 // 🔄 HYBRID AUTH SERVICE - Safe during SSR, functional on client
 // Enhanced error handling for better user experience
 // Converts raw Supabase errors to user-friendly messages
-import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '@/app/providers';
+import { useEffect, useState } from 'react';
+import { useAuth as useAuthFromProviders } from '@/app/providers';
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  
-  const { user, session, loading, supabase } = context;
+  const authData = useAuthFromProviders();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -32,16 +27,16 @@ export function useAuth() {
   }
 
   return {
-    user,
-    session,
-    loading,
+    user: authData.user,
+    session: authData.session,
+    loading: authData.loading,
     mounted: isClient,
     signIn: async (email: string, password: string) => {
-      if (!supabase)
+      if (!authData.authData.supabase)
         return { success: false, error: 'Authentication service unavailable' };
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await authData.authData.supabase.auth.signInWithPassword({
           email,
           password,
         });
@@ -75,7 +70,7 @@ export function useAuth() {
 
         // Check user status if needed
         try {
-          const { data: userData, error: userError } = await supabase
+          const { data: userData, error: userError } = await authData.supabase
             .from('users')
             .select('status, role')
             .eq('id', data.user.id)
@@ -114,13 +109,13 @@ export function useAuth() {
       }
     },
     signOut: async () => {
-      if (!supabase) return;
-      const { error } = await supabase.auth.signOut();
+      if (!authData.supabase) return;
+      const { error } = await authData.supabase.auth.signOut();
       if (error) throw error;
     },
     signUp: async (email: string, password: string, metadata?: any) => {
-      if (!supabase) return { user: null, session: null };
-      const { data, error } = await supabase.auth.signUp({
+      if (!authData.supabase) return { user: null, session: null };
+      const { data, error } = await authData.supabase.auth.signUp({
         email,
         password,
         options: {
@@ -131,11 +126,11 @@ export function useAuth() {
       return data;
     },
     signInWithProvider: async (provider: 'github' | 'google') => {
-      if (!supabase)
+      if (!authData.supabase)
         return { success: false, error: 'Authentication service unavailable' };
 
       try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await authData.supabase.auth.signInWithOAuth({
           provider,
           options: {
             redirectTo: `${window.location.origin}/api/auth/callback`,
@@ -162,7 +157,7 @@ export const authService = {
       return { user: null, session: null };
     }
 
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = await import('@authData.supabase/authData.supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -170,13 +165,13 @@ export const authService = {
       throw new Error('Supabase credentials not configured');
     }
 
-    const supabase = createClient(
+    const authData.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await authData.supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -217,7 +212,7 @@ export const authService = {
   signOut: async () => {
     if (typeof window === 'undefined') return;
 
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = await import('@authData.supabase/authData.supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -225,12 +220,12 @@ export const authService = {
       return;
     }
 
-    const supabase = createClient(
+    const authData.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    const { error } = await supabase.auth.signOut();
+    const { error } = await authData.supabase.auth.signOut();
     if (error) throw error;
   },
 
@@ -239,7 +234,7 @@ export const authService = {
       return { user: null, session: null };
     }
 
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = await import('@authData.supabase/authData.supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -247,12 +242,12 @@ export const authService = {
       throw new Error('Supabase credentials not configured');
     }
 
-    const supabase = createClient(
+    const authData.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await authData.supabase.auth.signUp({
       email,
       password,
       options: {
@@ -266,7 +261,7 @@ export const authService = {
   getCurrentUser: async () => {
     if (typeof window === 'undefined') return null;
 
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = await import('@authData.supabase/authData.supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -274,7 +269,7 @@ export const authService = {
       return null;
     }
 
-    const supabase = createClient(
+    const authData.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
@@ -282,7 +277,7 @@ export const authService = {
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser();
+    } = await authData.supabase.auth.getUser();
     if (error) throw error;
     return user;
   },
@@ -290,7 +285,7 @@ export const authService = {
   getSession: async () => {
     if (typeof window === 'undefined') return null;
 
-    const { createClient } = await import('@supabase/supabase-js');
+    const { createClient } = await import('@authData.supabase/authData.supabase-js');
     if (
       !process.env.NEXT_PUBLIC_SUPABASE_URL ||
       !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -298,7 +293,7 @@ export const authService = {
       return null;
     }
 
-    const supabase = createClient(
+    const authData.supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
@@ -306,7 +301,7 @@ export const authService = {
     const {
       data: { session },
       error,
-    } = await supabase.auth.getSession();
+    } = await authData.supabase.auth.getSession();
     if (error) throw error;
     return session;
   },

@@ -70,7 +70,11 @@ export function useAuth() {
 }
 
 export function useSupabase() {
-  const { user, session, loading, supabase } = useAuth();
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useSupabase must be used within an AuthProvider');
+  }
+  const { user, session, loading, supabase } = context;
   return { user, session, loading, supabase };
 }
 
