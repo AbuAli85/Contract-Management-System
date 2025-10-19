@@ -77,11 +77,11 @@ export async function POST(request: NextRequest) {
         *,
         first_party:parties!first_party_id(
           id, name_en, name_ar, crn, address_en, address_ar, 
-          contact_person, contact_email, contact_phone, type
+          contact_person, contact_email, contact_phone, type, logo_url
         ),
         second_party:parties!second_party_id(
           id, name_en, name_ar, crn, address_en, address_ar,
-          contact_person, contact_email, contact_phone, type
+          contact_person, contact_email, contact_phone, type, logo_url
         ),
         promoter:promoters(
           id, name_en, name_ar, id_card_number, mobile_number, 
@@ -128,6 +128,8 @@ export async function POST(request: NextRequest) {
       first_party_contact_person: contract.first_party?.contact_person || '',
       first_party_contact_email: contract.first_party?.contact_email || '',
       first_party_contact_phone: contract.first_party?.contact_phone || '',
+      first_party_logo: contract.first_party?.logo_url || '',
+      first_party_logo_url: contract.first_party?.logo_url || '',
 
       // Second party (Employer) information
       second_party_name_en: contract.second_party?.name_en || '',
@@ -138,6 +140,8 @@ export async function POST(request: NextRequest) {
       second_party_contact_person: contract.second_party?.contact_person || '',
       second_party_contact_email: contract.second_party?.contact_email || '',
       second_party_contact_phone: contract.second_party?.contact_phone || '',
+      second_party_logo: contract.second_party?.logo_url || '',
+      second_party_logo_url: contract.second_party?.logo_url || '',
 
       // Promoter information
       promoter_name_en: contract.promoter?.name_en || '',

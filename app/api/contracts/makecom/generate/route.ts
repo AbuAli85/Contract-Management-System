@@ -178,7 +178,7 @@ export const POST = withAnyRBAC(
         const supabase = createSupabaseClient();
         const { data: firstParty, error: firstPartyError } = await supabase
           .from('parties')
-          .select('id, name_en, name_ar, crn')
+          .select('id, name_en, name_ar, crn, logo_url')
           .eq('id', contractData.first_party_id)
           .single();
 
@@ -189,6 +189,8 @@ export const POST = withAnyRBAC(
             first_party_name_en: firstParty.name_en,
             first_party_name_ar: firstParty.name_ar,
             first_party_crn: firstParty.crn,
+            first_party_logo: firstParty.logo_url,
+            first_party_logo_url: firstParty.logo_url,
           };
         } else {
           console.warn('⚠️ Could not fetch first party data:', firstPartyError);
@@ -200,7 +202,7 @@ export const POST = withAnyRBAC(
         const supabase = createSupabaseClient();
         const { data: secondParty, error: secondPartyError } = await supabase
           .from('parties')
-          .select('id, name_en, name_ar, crn')
+          .select('id, name_en, name_ar, crn, logo_url')
           .eq('id', contractData.second_party_id)
           .single();
 
@@ -211,6 +213,8 @@ export const POST = withAnyRBAC(
             second_party_name_en: secondParty.name_en,
             second_party_name_ar: secondParty.name_ar,
             second_party_crn: secondParty.crn,
+            second_party_logo: secondParty.logo_url,
+            second_party_logo_url: secondParty.logo_url,
           };
         } else {
           console.warn('⚠️ Could not fetch second party data:', secondPartyError);
