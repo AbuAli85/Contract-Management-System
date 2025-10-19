@@ -39,10 +39,8 @@ interface Promoter {
   id: string;
   name_en: string;
   name_ar: string;
-  email: string;
-  mobile_number: string;
+  mobile_number: string | null;
   id_card_number: string;
-  employer_id?: string | null;
 }
 
 interface Party {
@@ -130,10 +128,10 @@ export default function SimpleContractGenerator() {
       setClients(clientsList);
       setEmployers(employersList);
 
-      // Load promoters (will be filtered by selected employer later)
+      // Load promoters
       const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, email, mobile_number, id_card_number, employer_id')
+        .select('id, name_en, name_ar, mobile_number, id_card_number')
         .order('name_en');
 
       if (promotersError) {
@@ -163,28 +161,11 @@ export default function SimpleContractGenerator() {
       [field]: value,
     }));
 
-    // If employer is selected, filter promoters by that employer
-    if (field === 'second_party_id') {
-      const selectedEmployerId = value as string;
-      if (selectedEmployerId) {
-        const filteredPromoters = allPromoters.filter((promoter: any) => 
-          promoter.employer_id === selectedEmployerId
-        );
-        setPromoters(filteredPromoters);
-      } else {
-        // If no employer selected, show all promoters
-        setPromoters(allPromoters);
-      }
-    }
+    // Note: Promoter filtering by employer removed since employer_id column doesn't exist
   };
 
-  // Get filtered promoters based on selected employer
+  // Get all promoters (no filtering since employer_id column doesn't exist)
   const getFilteredPromoters = () => {
-    if (formData.second_party_id) {
-      return allPromoters.filter((promoter: any) => 
-        promoter.employer_id === formData.second_party_id
-      );
-    }
     return allPromoters;
   };
 
@@ -412,7 +393,7 @@ export default function SimpleContractGenerator() {
                 <strong>Note:</strong> 
                 <br />• <strong>First Party</strong> shows only <strong>Client</strong> type parties
                 <br />• <strong>Second Party</strong> shows only <strong>Employer</strong> type parties  
-                <br />• <strong>Promoters</strong> are filtered by the selected employer
+                <br />• <strong>Promoters</strong> are available for all contracts
               </p>
             </div>
             
@@ -435,7 +416,7 @@ export default function SimpleContractGenerator() {
                           <div>
                             <div className="font-medium">{promoter.name_en}</div>
                             <div className="text-sm text-muted-foreground">
-                              {promoter.email}
+                              {promoter.mobile_number || 'No phone'}
                             </div>
                           </div>
                         </div>
@@ -443,10 +424,7 @@ export default function SimpleContractGenerator() {
                     ))}
                     {getFilteredPromoters().length === 0 && (
                       <div className="p-2 text-sm text-muted-foreground">
-                        {formData.second_party_id 
-                          ? 'No promoters found for selected employer' 
-                          : 'Please select an employer first'
-                        }
+                        No promoters found
                       </div>
                     )}
                   </SelectContent>
