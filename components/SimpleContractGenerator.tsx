@@ -184,16 +184,38 @@ export default function SimpleContractGenerator() {
 
   // Get promoters filtered by selected employer
   const getFilteredPromoters = () => {
+    console.log('🔍 Filtering promoters:', {
+      selectedEmployer: formData.second_party_id,
+      totalPromoters: allPromoters.length,
+      firstPromoter: allPromoters[0] ? {
+        id: allPromoters[0].id,
+        name: allPromoters[0].name_en,
+        employer_id: allPromoters[0].employer_id
+      } : null
+    });
+
     if (!formData.second_party_id) {
       // If no employer is selected, show all promoters
+      console.log('📋 No employer selected, showing all promoters');
       return allPromoters;
     }
     
     // Filter promoters by the selected employer
-    // Note: This will work once employer_id column is added to the database
-    return allPromoters.filter((promoter: any) => 
-      promoter.employer_id === formData.second_party_id
-    );
+    // Check if employer_id exists on promoters (for backward compatibility)
+    const filteredPromoters = allPromoters.filter((promoter: any) => {
+      // If employer_id doesn't exist on promoter object, show all promoters
+      if (promoter.employer_id === undefined) {
+        console.log('⚠️ employer_id not found on promoter, showing all promoters');
+        return true; // Show all promoters if employer_id column doesn't exist
+      }
+      // If employer_id exists, filter by it
+      const matches = promoter.employer_id === formData.second_party_id;
+      console.log(`🔍 Promoter ${promoter.name_en}: employer_id=${promoter.employer_id}, matches=${matches}`);
+      return matches;
+    });
+    
+    console.log(`✅ Filtered promoters: ${filteredPromoters.length} out of ${allPromoters.length}`);
+    return filteredPromoters;
   };
 
   const validateForm = (): string[] => {
@@ -461,7 +483,7 @@ export default function SimpleContractGenerator() {
                     {getFilteredPromoters().length === 0 && (
                       <div className="p-2 text-sm text-muted-foreground">
                         {formData.second_party_id 
-                          ? "No promoters found for this employer" 
+                          ? "No promoters found for this employer. All promoters are shown until employer relationships are set up." 
                           : "Please select an employer first"
                         }
                       </div>
