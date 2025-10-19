@@ -221,9 +221,9 @@ export default function SimpleContractGenerator() {
       let response;
       let generationMethod = 'html'; // Default to HTML generation
       
-      // First try Google Docs (if available)
+      // First try Make.com integration (recommended)
       try {
-        response = await fetch('/api/contracts/google-docs-generate', {
+        response = await fetch('/api/contracts/makecom/generate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -232,12 +232,12 @@ export default function SimpleContractGenerator() {
         });
         
         if (response.ok) {
-          generationMethod = 'google-docs';
+          generationMethod = 'makecom';
         } else {
-          throw new Error('Google Docs not available');
+          throw new Error('Make.com integration not available');
         }
-      } catch (googleDocsError) {
-        console.log('Google Docs not available, trying alternative methods...');
+      } catch (makecomError) {
+        console.log('Make.com integration not available, trying alternative methods...');
         
         // Try HTML generation
         try {
