@@ -200,6 +200,7 @@ function ContractsContent() {
       setError(null);
 
       console.log('🔍 Contracts Page: Fetching contracts...');
+      console.log('🔍 Contracts Page: User:', user?.id, 'Auth loading:', authLoading);
       const response = await apiFetch('/api/contracts');
 
       if (!response.ok) {
@@ -885,6 +886,7 @@ function ContractsContent() {
         <div className='text-center'>
           <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
           <p className='text-muted-foreground'>Loading permissions...</p>
+          <p className='text-xs text-muted-foreground mt-2'>This should only take a moment</p>
         </div>
       </div>
     );
