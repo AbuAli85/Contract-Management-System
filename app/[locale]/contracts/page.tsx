@@ -125,7 +125,7 @@ interface ContractStats {
 
 type ContractStatus = 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
 
-const getContractStatus = (contract: ContractWithRelations): ContractStatus => {
+function getContractStatus(contract: ContractWithRelations): ContractStatus {
   if (!contract.contract_start_date || !contract.contract_end_date)
     return 'Unknown';
   const now = new Date();
@@ -135,9 +135,9 @@ const getContractStatus = (contract: ContractWithRelations): ContractStatus => {
   if (now > endDate) return 'Expired';
   if (now < startDate) return 'Upcoming';
   return 'Unknown';
-};
+}
 
-const enhanceContract = (contract: ContractWithRelations): EnhancedContract => {
+function enhanceContract(contract: ContractWithRelations): EnhancedContract {
   const status = getContractStatus(contract);
   const now = new Date();
 
@@ -172,7 +172,7 @@ const enhanceContract = (contract: ContractWithRelations): EnhancedContract => {
     contract_duration_days,
     age_days,
   } as EnhancedContract;
-};
+}
 
 export default function ContractsDashboardPage() {
   const params = useParams();
@@ -288,7 +288,7 @@ function ContractsContent() {
 
   // Calculate statistics BEFORE permission check
   const contractStats = useMemo((): ContractStats => {
-    if (!contracts)
+    if (!contracts || !Array.isArray(contracts))
       return {
         total: 0,
         active: 0,
@@ -300,7 +300,8 @@ function ContractsContent() {
         avg_duration: 0,
       };
 
-    const enhanced = contracts.map(enhanceContract);
+    try {
+      const enhanced = contracts.map(enhanceContract);
     const now = new Date();
 
     return {
@@ -320,16 +321,30 @@ function ContractsContent() {
         0
       ),
       avg_duration:
-        enhanced.reduce((sum, c) => sum + (c.contract_duration_days || 0), 0) /
+        enhanced.reduce((sum, c) => sum + (c.contract_duration_days || 0), 0) / 
           enhanced.length || 0,
     };
+    } catch (error) {
+      console.error('Error calculating contract stats:', error);
+      return {
+        total: 0,
+        active: 0,
+        expired: 0,
+        upcoming: 0,
+        unknown: 0,
+        expiring_soon: 0,
+        total_value: 0,
+        avg_duration: 0,
+      };
+    }
   }, [contracts]);
 
   // Enhanced filtering and sorting with pagination
   const filteredAndSortedContracts = useMemo(() => {
-    if (!contracts) return [];
+    if (!contracts || !Array.isArray(contracts)) return [];
 
-    const enhanced = contracts.map(enhanceContract);
+    try {
+      const enhanced = contracts.map(enhanceContract);
 
     const filtered = enhanced.filter(contract => {
       const contractStatus = getContractStatus(contract);
@@ -411,6 +426,10 @@ function ContractsContent() {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return sorted.slice(startIndex, endIndex);
+    } catch (error) {
+      console.error('Error filtering and sorting contracts:', error);
+      return [];
+    }
   }, [contracts, searchTerm, statusFilter, sortColumn, sortDirection, locale, currentPage, pageSize]);
 
   // Handler functions - moved BEFORE permission check
