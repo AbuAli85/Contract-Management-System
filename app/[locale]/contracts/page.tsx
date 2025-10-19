@@ -191,6 +191,7 @@ function ContractsContent() {
   const [contracts, setContracts] = useState<ContractWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch contracts data
   const fetchContracts = useCallback(async () => {
@@ -270,7 +271,6 @@ function ContractsContent() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [contractToDelete, setContractToDelete] =
     useState<ContractWithRelations | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showStats, setShowStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -1900,18 +1900,18 @@ interface EmailDialogProps {
 }
 
 function EmailDialog({ open, onOpenChange, contract, onSend, isSending }: EmailDialogProps) {
-  const [to, setTo] = useState('');
-  const [subject, setSubject] = useState('');
-  const [message, setMessage] = useState('');
+  const [to, setTo] = useState<string>('');
+  const [subject, setSubject] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
 
   useEffect(() => {
     if (contract && open) {
       // Auto-populate email fields
       const firstPartyEmail = contract.first_party && typeof contract.first_party === 'object' && 'email' in contract.first_party 
-        ? contract.first_party.email 
+        ? (contract.first_party.email as string) || ''
         : '';
       const secondPartyEmail = contract.second_party && typeof contract.second_party === 'object' && 'email' in contract.second_party 
-        ? contract.second_party.email 
+        ? (contract.second_party.email as string) || ''
         : '';
       
       setTo(firstPartyEmail || secondPartyEmail || '');
