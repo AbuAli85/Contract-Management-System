@@ -1,11 +1,16 @@
 // 🔄 HYBRID AUTH SERVICE - Safe during SSR, functional on client
 // Enhanced error handling for better user experience
 // Converts raw Supabase errors to user-friendly messages
-import { useSupabase } from '@/app/providers';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { AuthContext } from '@/app/providers';
 
 export function useAuth() {
-  const { user, session, loading, supabase } = useSupabase();
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  
+  const { user, session, loading, supabase } = context;
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -13,6 +18,7 @@ export function useAuth() {
   }, []);
 
   // Return safe values during SSR, real auth on client
+  // Note: All hooks must be called before any conditional returns
   if (!isClient) {
     return {
       user: null,

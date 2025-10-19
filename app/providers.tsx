@@ -52,7 +52,7 @@ interface RBACContextType {
 }
 
 // Auth Context
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   loading: false,
