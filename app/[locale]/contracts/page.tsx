@@ -91,6 +91,9 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
+  Mail,
+  Share,
+  FileDown,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -273,6 +276,10 @@ function ContractsContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [contractToEmail, setContractToEmail] = useState<ContractWithRelations | null>(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
   // All hooks must be called before any conditional returns
   const isMountedRef = useRef(true);
@@ -481,6 +488,94 @@ function ContractsContent() {
     }
   };
 
+  const handleDownloadContract = async (contract: ContractWithRelations) => {
+    if (!contract.pdf_url) {
+      toast({
+        title: 'No PDF Available',
+        description: 'This contract does not have a PDF file yet.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsDownloading(contract.id);
+    try {
+      const response = await fetch(contract.pdf_url);
+      if (!response.ok) throw new Error('Failed to download PDF');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${contract.contract_number || contract.id}-contract.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: '✅ Download Successful',
+        description: 'Contract PDF downloaded successfully',
+        variant: 'default',
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: '❌ Download Failed',
+        description: 'Failed to download contract PDF',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
+  const handleEmailContract = (contract: ContractWithRelations) => {
+    setContractToEmail(contract);
+    setShowEmailDialog(true);
+  };
+
+  const handleSendEmail = async (emailData: { to: string; subject: string; message: string }) => {
+    if (!contractToEmail) return;
+
+    setIsSendingEmail(true);
+    try {
+      const response = await fetch('/api/contracts/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contractId: contractToEmail.id,
+          to: emailData.to,
+          subject: emailData.subject,
+          message: emailData.message,
+          pdfUrl: contractToEmail.pdf_url,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to send email');
+
+      toast({
+        title: '✅ Email Sent',
+        description: `Contract sent to ${emailData.to} successfully`,
+        variant: 'default',
+      });
+
+      setShowEmailDialog(false);
+      setContractToEmail(null);
+    } catch (error) {
+      console.error('Email error:', error);
+      toast({
+        title: '❌ Email Failed',
+        description: 'Failed to send contract email',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
@@ -535,14 +630,14 @@ function ContractsContent() {
       window.URL.revokeObjectURL(url);
 
       toast({
-        title: 'Export Successful',
+        title: '✅ Export Successful',
         description: `Exported ${csvData.length} contracts to CSV`,
         variant: 'default',
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: 'Export Failed',
+        title: '❌ Export Failed',
         description: 'Failed to export contracts',
         variant: 'destructive',
       });
@@ -1291,15 +1386,18 @@ function ContractsContent() {
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <a
-                                      href={contract.pdf_url}
-                                      target='_blank'
-                                      rel='noopener noreferrer'
-                                      className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200'
+                                    <button
+                                      onClick={() => handleDownloadContract(contract)}
+                                      disabled={isDownloading === contract.id}
+                                      className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
                                       title='Download contract PDF'
                                     >
-                                      <Download className='h-4 w-4' />
-                                    </a>
+                                      {isDownloading === contract.id ? (
+                                        <Loader2 className='h-4 w-4 animate-spin' />
+                                      ) : (
+                                        <Download className='h-4 w-4' />
+                                      )}
+                                    </button>
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p>Download PDF</p>
@@ -1334,6 +1432,16 @@ function ContractsContent() {
                                     Details
                                   </DropdownMenuItem>
                                 </Link>
+                                {contract.pdf_url && (
+                                  <DropdownMenuItem onClick={() => handleDownloadContract(contract)}>
+                                    <FileDown className='mr-2 h-4 w-4' /> Download PDF
+                                  </DropdownMenuItem>
+                                )}
+                                {contract.pdf_url && (
+                                  <DropdownMenuItem onClick={() => handleEmailContract(contract)}>
+                                    <Mail className='mr-2 h-4 w-4' /> Send via Email
+                                  </DropdownMenuItem>
+                                )}
                                 {canEditContract && (
                                   <DropdownMenuItem>
                                     <Edit className='mr-2 h-4 w-4' /> Edit
@@ -1511,6 +1619,16 @@ function ContractsContent() {
                                   <Eye className='mr-2 h-4 w-4' /> View Details
                                 </DropdownMenuItem>
                               </Link>
+                              {contract.pdf_url && (
+                                <DropdownMenuItem onClick={() => handleDownloadContract(contract)}>
+                                  <FileDown className='mr-2 h-4 w-4' /> Download PDF
+                                </DropdownMenuItem>
+                              )}
+                              {contract.pdf_url && (
+                                <DropdownMenuItem onClick={() => handleEmailContract(contract)}>
+                                  <Mail className='mr-2 h-4 w-4' /> Send via Email
+                                </DropdownMenuItem>
+                              )}
                               {canEditContract && (
                                 <DropdownMenuItem>
                                   <Edit className='mr-2 h-4 w-4' /> Edit
@@ -1590,17 +1708,49 @@ function ContractsContent() {
                                   </>
                                 )}
                             </div>
-                            {contract.pdf_url && (
-                              <a
-                                href={contract.pdf_url}
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                className='text-primary hover:underline'
-                                title='Download contract PDF'
-                              >
-                                <Download className='h-4 w-4' />
-                              </a>
-                            )}
+                            <div className='flex items-center gap-2'>
+                              {contract.pdf_url && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => handleDownloadContract(contract)}
+                                        disabled={isDownloading === contract.id}
+                                        className='text-primary hover:text-primary/80 transition-colors disabled:opacity-50'
+                                        title='Download contract PDF'
+                                      >
+                                        {isDownloading === contract.id ? (
+                                          <Loader2 className='h-4 w-4 animate-spin' />
+                                        ) : (
+                                          <Download className='h-4 w-4' />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Download PDF</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                              {contract.pdf_url && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() => handleEmailContract(contract)}
+                                        className='text-primary hover:text-primary/80 transition-colors'
+                                        title='Send via email'
+                                      >
+                                        <Mail className='h-4 w-4' />
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Send via Email</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -1722,7 +1872,140 @@ function ContractsContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Email Dialog */}
+      <EmailDialog
+        open={showEmailDialog}
+        onOpenChange={setShowEmailDialog}
+        contract={contractToEmail}
+        onSend={handleSendEmail}
+        isSending={isSendingEmail}
+      />
     </>
+  );
+}
+
+// Email Dialog Component
+interface EmailDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  contract: ContractWithRelations | null;
+  onSend: (data: { to: string; subject: string; message: string }) => void;
+  isSending: boolean;
+}
+
+function EmailDialog({ open, onOpenChange, contract, onSend, isSending }: EmailDialogProps) {
+  const [to, setTo] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (contract && open) {
+      // Auto-populate email fields
+      const firstPartyEmail = contract.first_party && typeof contract.first_party === 'object' && 'email' in contract.first_party 
+        ? contract.first_party.email 
+        : '';
+      const secondPartyEmail = contract.second_party && typeof contract.second_party === 'object' && 'email' in contract.second_party 
+        ? contract.second_party.email 
+        : '';
+      
+      setTo(firstPartyEmail || secondPartyEmail || '');
+      setSubject(`Contract ${contract.contract_number || contract.id.substring(0, 8)} - Employment Agreement`);
+      setMessage(`Dear Sir/Madam,
+
+Please find attached the employment contract for your review and signature.
+
+Contract Details:
+- Contract Number: ${contract.contract_number || 'N/A'}
+- Job Title: ${contract.job_title || 'N/A'}
+- Start Date: ${contract.contract_start_date || 'N/A'}
+- End Date: ${contract.contract_end_date || 'N/A'}
+
+Please review the attached contract and let us know if you have any questions.
+
+Best regards,
+Contract Management Team`);
+    }
+  }, [contract, open]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (to && subject && message) {
+      onSend({ to, subject, message });
+    }
+  };
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className='max-w-2xl'>
+        <AlertDialogHeader>
+          <AlertDialogTitle className='flex items-center gap-2'>
+            <Mail className='h-5 w-5' />
+            Send Contract via Email
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            Send the contract PDF to the recipient via email.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div>
+            <label htmlFor='email-to' className='block text-sm font-medium mb-1'>
+              To Email Address
+            </label>
+            <Input
+              id='email-to'
+              type='email'
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              placeholder='recipient@example.com'
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor='email-subject' className='block text-sm font-medium mb-1'>
+              Subject
+            </label>
+            <Input
+              id='email-subject'
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder='Email subject'
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor='email-message' className='block text-sm font-medium mb-1'>
+              Message
+            </label>
+            <textarea
+              id='email-message'
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder='Email message'
+              className='w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              required
+            />
+          </div>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel type='button' disabled={isSending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              type='submit'
+              disabled={isSending || !to || !subject || !message}
+              className='bg-blue-600 hover:bg-blue-700'
+            >
+              {isSending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
+              Send Email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
