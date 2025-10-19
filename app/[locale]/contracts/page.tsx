@@ -618,14 +618,14 @@ function ContractsContent() {
           ? contract.promoters.name_en || 'N/A'
           : 'N/A',
         'Job Title': contract.job_title || 'N/A',
-        'Start Date': contract.contract_start_date || 'N/A',
-        'End Date': contract.contract_end_date || 'N/A',
+        'Start Date': contract.contract_start_date ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy') : 'N/A',
+        'End Date': contract.contract_end_date ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy') : 'N/A',
         Status: getContractStatus(contract),
         'Contract Value': contract.contract_value || 0,
         'Work Location': contract.work_location || 'N/A',
         Email: contract.email || 'N/A',
         'PDF URL': contract.pdf_url || 'N/A',
-        'Created At': contract.created_at || 'N/A',
+        'Created At': contract.created_at ? format(parseISO(contract.created_at), 'dd-MM-yyyy') : 'N/A',
         'Days Until Expiry': contract.days_until_expiry || 'N/A',
         'Contract Duration (Days)': contract.contract_duration_days || 'N/A',
       }));
@@ -1714,12 +1714,12 @@ function ContractsContent() {
                                   <>
                                     {format(
                                       parseISO(contract.contract_start_date),
-                                      'dd/MM/yy'
+                                      'dd-MM-yyyy'
                                     )}{' '}
                                     -{' '}
                                     {format(
                                       parseISO(contract.contract_end_date),
-                                      'dd/MM/yy'
+                                      'dd-MM-yyyy'
                                     )}
                                     {enhanced.days_until_expiry !== undefined &&
                                       enhanced.days_until_expiry <= 30 &&
@@ -1942,8 +1942,8 @@ Please find attached the employment contract for your review and signature.
 Contract Details:
 - Contract Number: ${contract.contract_number || 'N/A'}
 - Job Title: ${contract.job_title || 'N/A'}
-- Start Date: ${contract.contract_start_date || 'N/A'}
-- End Date: ${contract.contract_end_date || 'N/A'}
+- Start Date: ${contract.contract_start_date ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy') : 'N/A'}
+- End Date: ${contract.contract_end_date ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy') : 'N/A'}
 
 Please review the attached contract and let us know if you have any questions.
 
