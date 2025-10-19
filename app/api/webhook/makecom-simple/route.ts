@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     if (first_party_id) contractData.client_id = first_party_id;  // first_party is client
     if (second_party_id) contractData.employer_id = second_party_id;  // second_party is employer
     
-    // Map date fields from webhook data
+    // Map date fields from webhook data - ensure dates are always provided
     if (body.contract_start_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
       let startDate = body.contract_start_date;
@@ -202,7 +202,11 @@ export async function POST(request: NextRequest) {
           contractData.start_date = startDate;
         }
       }
+    } else {
+      // Set default start date if not provided
+      contractData.start_date = new Date().toISOString().split('T')[0];
     }
+    
     if (body.contract_end_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
       let endDate = body.contract_end_date;
@@ -217,6 +221,12 @@ export async function POST(request: NextRequest) {
           contractData.end_date = endDate;
         }
       }
+    } else {
+      // Set default end date (1 year from start date) if not provided
+      const startDate = contractData.start_date || new Date().toISOString().split('T')[0];
+      const endDate = new Date(startDate);
+      endDate.setFullYear(endDate.getFullYear() + 1);
+      contractData.end_date = endDate.toISOString().split('T')[0];
     }
     
     // Map other fields - ensure title is always set
