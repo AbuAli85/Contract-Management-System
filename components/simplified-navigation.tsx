@@ -79,9 +79,15 @@ export function SimplifiedNavigation({
       items: [
         {
           href: `/${locale}/generate-contract`,
-          label: 'Generate Contract',
-          labelAr: 'إنشاء عقد',
+          label: 'Simple Contracts',
+          labelAr: 'العقود البسيطة',
           icon: FilePlus,
+        },
+        {
+          href: `/${locale}/contracts/general`,
+          label: 'General Contracts',
+          labelAr: 'العقود العامة',
+          icon: FileEdit,
         },
         {
           href: `/${locale}/contracts`,

@@ -150,11 +150,18 @@ export function PermissionAwareSidebar({
       items: [
         {
           href: `/${locale}/generate-contract`,
-          label: 'Generate Contract',
-          labelAr: 'إنشاء عقد',
+          label: 'Simple Contracts',
+          labelAr: 'العقود البسيطة',
           icon: FilePlus,
           permission: 'contract:create',
-          badge: 'New',
+        },
+        {
+          href: `/${locale}/contracts/general`,
+          label: 'General Contracts',
+          labelAr: 'العقود العامة',
+          icon: FileEdit,
+          permission: 'contract:create',
+          badge: 'NEW',
           badgeVariant: 'default',
         },
         {

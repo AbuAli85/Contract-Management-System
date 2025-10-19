@@ -190,10 +190,17 @@ function SidebarContent({
           description: 'Overview and analytics',
         },
         {
-          title: 'Generate Contract',
+          title: 'Simple Contracts',
           href: '/generate-contract',
           icon: FilePlus,
-          description: 'Create new contracts',
+          description: 'Employment contracts',
+        },
+        {
+          title: 'General Contracts',
+          href: '/contracts/general',
+          icon: FileEdit,
+          description: 'Business contracts',
+          badge: 'New',
         },
         {
           title: 'View Contracts',

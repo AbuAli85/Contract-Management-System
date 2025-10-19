@@ -42,10 +42,17 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       badge: 'NEW',
     },
     {
-      label: 'Generate Contract',
+      label: 'Simple Contracts',
       href: '/en/generate-contract',
       icon: FileText,
-      description: 'Create new contracts',
+      description: 'Employment contracts',
+    },
+    {
+      label: 'General Contracts',
+      href: '/en/contracts/general',
+      icon: FileEdit,
+      description: 'Business contracts',
+      badge: 'NEW',
     },
     {
       label: 'Contracts',
