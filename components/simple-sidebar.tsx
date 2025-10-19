@@ -1,5 +1,6 @@
 'use client';
 
+// Simple sidebar component
 import React from 'react';
 import Link from 'next/link';
 import {
@@ -50,7 +51,7 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
     {
       label: 'General Contracts',
       href: '/en/contracts/general',
-      icon: FileEdit,
+      icon: Users,
       description: 'Business contracts',
       badge: 'NEW',
     },

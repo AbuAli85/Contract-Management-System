@@ -76,9 +76,9 @@ import { getRoleDisplay } from '@/lib/role-hierarchy';
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  locale?: string;
-  onSidebarToggle?: () => void;
-  isSidebarCollapsed?: boolean;
+  locale?: string | undefined;
+  onSidebarToggle?: (() => void) | undefined;
+  isSidebarCollapsed?: boolean | undefined;
 }
 
 function SidebarContent({
@@ -576,9 +576,9 @@ export function Sidebar({
     <SidebarContent
       isOpen={isOpen}
       onClose={onClose}
-      locale={locale}
-      onSidebarToggle={onSidebarToggle}
-      isSidebarCollapsed={isSidebarCollapsed}
+      locale={locale || undefined}
+      onSidebarToggle={onSidebarToggle || undefined}
+      isSidebarCollapsed={isSidebarCollapsed || undefined}
     />
   );
 }

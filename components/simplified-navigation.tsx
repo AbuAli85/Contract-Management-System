@@ -14,6 +14,7 @@ import {
   Home,
   Users,
   FilePlus,
+  FileEdit,
   FileSearch,
   Bell,
   FileCheck,
