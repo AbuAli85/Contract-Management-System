@@ -89,10 +89,11 @@ export async function POST(request: NextRequest) {
 
              if (contractError && contractError.code !== 'PGRST116') {
                console.error('❌ Error fetching contract:', contractError);
-               return NextResponse.json(
-                 { success: false, error: 'Failed to fetch contract' },
-                 { status: 500 }
-               );
+               console.error('❌ Contract ID:', finalContractId);
+               console.error('❌ Error code:', contractError.code);
+               console.error('❌ Error message:', contractError.message);
+               // Don't return error here, just log it and continue with contract creation
+               console.log('⚠️ Continuing with contract creation despite fetch error');
              }
 
              contract = existingContract;
@@ -107,10 +108,11 @@ export async function POST(request: NextRequest) {
 
              if (contractError && contractError.code !== 'PGRST116') {
                console.error('❌ Error fetching contract by number:', contractError);
-               return NextResponse.json(
-                 { success: false, error: 'Failed to fetch contract by number' },
-                 { status: 500 }
-               );
+               console.error('❌ Contract Number:', finalContractNumber);
+               console.error('❌ Error code:', contractError.code);
+               console.error('❌ Error message:', contractError.message);
+               // Don't return error here, just log it and continue with contract creation
+               console.log('⚠️ Continuing with contract creation despite fetch error');
              }
 
              contract = existingContract;
