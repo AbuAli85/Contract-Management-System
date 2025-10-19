@@ -66,7 +66,7 @@ interface ContractFormData {
   notice_period: string;
   working_hours: string;
   housing_allowance?: number;
-  transportation_allowance?: number;
+  transport_allowance?: number;
 }
 
 export default function SimpleContractGenerator() {
@@ -91,9 +91,9 @@ export default function SimpleContractGenerator() {
     special_terms: '',
     probation_period: '3_months',
     notice_period: '30_days',
-    working_hours: '40',
+    working_hours: '40_hours',
     housing_allowance: 0,
-    transportation_allowance: 0,
+    transport_allowance: 0,
   });
   const { toast } = useToast();
 
@@ -301,9 +301,9 @@ export default function SimpleContractGenerator() {
           special_terms: '',
           probation_period: '3_months',
           notice_period: '30_days',
-          working_hours: '40',
+          working_hours: '40_hours',
           housing_allowance: 0,
-          transportation_allowance: 0,
+          transport_allowance: 0,
         });
       } else {
         throw new Error(result.error || 'Contract generation failed');
@@ -623,10 +623,9 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select probation period" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1_month">1 Month</SelectItem>
-                    <SelectItem value="2_months">2 Months</SelectItem>
                     <SelectItem value="3_months">3 Months</SelectItem>
                     <SelectItem value="6_months">6 Months</SelectItem>
+                    <SelectItem value="12_months">12 Months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -642,7 +641,6 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select notice period" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15_days">15 Days</SelectItem>
                     <SelectItem value="30_days">30 Days</SelectItem>
                     <SelectItem value="60_days">60 Days</SelectItem>
                     <SelectItem value="90_days">90 Days</SelectItem>
@@ -661,10 +659,9 @@ export default function SimpleContractGenerator() {
                     <SelectValue placeholder="Select working hours" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="20">20 hours</SelectItem>
-                    <SelectItem value="30">30 hours</SelectItem>
-                    <SelectItem value="40">40 hours</SelectItem>
-                    <SelectItem value="48">48 hours</SelectItem>
+                    <SelectItem value="40_hours">40 Hours/Week</SelectItem>
+                    <SelectItem value="45_hours">45 Hours/Week</SelectItem>
+                    <SelectItem value="48_hours">48 Hours/Week</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -683,12 +680,12 @@ export default function SimpleContractGenerator() {
 
               {/* Transportation Allowance */}
               <div className="space-y-2">
-                <Label htmlFor="transportation_allowance">Transportation Allowance (OMR)</Label>
+                <Label htmlFor="transport_allowance">Transportation Allowance (OMR)</Label>
                 <Input
-                  id="transportation_allowance"
+                  id="transport_allowance"
                   type="number"
-                  value={formData.transportation_allowance || 0}
-                  onChange={(e) => handleInputChange('transportation_allowance', parseFloat(e.target.value) || 0)}
+                  value={formData.transport_allowance || 0}
+                  onChange={(e) => handleInputChange('transport_allowance', parseFloat(e.target.value) || 0)}
                   placeholder="0"
                 />
               </div>
