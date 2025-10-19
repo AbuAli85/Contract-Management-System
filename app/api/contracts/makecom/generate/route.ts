@@ -219,7 +219,21 @@ export const POST = withAnyRBAC(
       
       // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
       // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
-      const placeholderImage = 'https://via.placeholder.com/200x200.png?text=Image';
+      const placeholderImage = 'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
+      
+      // Function to ensure valid URL
+      const ensureValidUrl = (url: string | null | undefined): string => {
+        if (!url || url.trim() === '') {
+          return placeholderImage;
+        }
+        // Basic URL validation
+        try {
+          new URL(url);
+          return url;
+        } catch {
+          return placeholderImage;
+        }
+      };
       
       enrichedContractData = {
         ...enrichedContractData,
@@ -260,11 +274,11 @@ export const POST = withAnyRBAC(
         watermark: enrichedContractData.watermark || placeholderImage,
         background_image: enrichedContractData.background_image || placeholderImage,
         
-        // Promoter images (ensure these have placeholder URLs)
-        promoter_id_card_url: enrichedContractData.promoter_id_card_url || placeholderImage,
-        promoter_passport_url: enrichedContractData.promoter_passport_url || placeholderImage,
-        id_card_url: enrichedContractData.id_card_url || placeholderImage,
-        passport_url: enrichedContractData.passport_url || placeholderImage,
+        // Promoter images (ensure these have valid URLs)
+        promoter_id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url),
+        promoter_passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url),
+        id_card_url: ensureValidUrl(enrichedContractData.id_card_url),
+        passport_url: ensureValidUrl(enrichedContractData.passport_url),
         
         // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
         image_1: enrichedContractData.image_1 || placeholderImage,
@@ -280,6 +294,14 @@ export const POST = withAnyRBAC(
         image_11: enrichedContractData.image_11 || placeholderImage,
         image_12: enrichedContractData.image_12 || placeholderImage,
       };
+
+      // Log the enriched data for debugging
+      console.log('🔍 Enriched contract data with image URLs:', {
+        promoter_id_card_url: enrichedContractData.promoter_id_card_url,
+        promoter_passport_url: enrichedContractData.promoter_passport_url,
+        id_card_url: enrichedContractData.id_card_url,
+        passport_url: enrichedContractData.passport_url,
+      });
 
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
