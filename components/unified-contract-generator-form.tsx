@@ -190,18 +190,7 @@ function UnifiedContractGeneratorForm({
   mode = 'advanced',
   autoRedirect = true,
 }: UnifiedContractGeneratorFormProps) {
-  // Client-side guard to prevent SSR issues
-  if (!isClient) {
-    return (
-      <div className='flex items-center justify-center p-8'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
-          <p>Initializing contract form...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
   // Register this form to disable auto-refresh during form interactions
   useFormRegistration();
   const router = useRouter();
@@ -216,6 +205,18 @@ function UnifiedContractGeneratorForm({
     null
   );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+
+  // Client-side guard to prevent SSR issues - AFTER all hooks are called
+  if (!isClient) {
+    return (
+      <div className='flex items-center justify-center p-8'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4'></div>
+          <p>Initializing contract form...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Hydration check
   useEffect(() => {
