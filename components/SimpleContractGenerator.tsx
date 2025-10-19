@@ -62,6 +62,11 @@ interface ContractFormData {
   contract_start_date: string;
   contract_end_date: string;
   special_terms: string;
+  probation_period: string;
+  notice_period: string;
+  working_hours: string;
+  housing_allowance?: number;
+  transportation_allowance?: number;
 }
 
 export default function SimpleContractGenerator() {
@@ -84,6 +89,11 @@ export default function SimpleContractGenerator() {
     contract_start_date: '',
     contract_end_date: '',
     special_terms: '',
+    probation_period: '3_months',
+    notice_period: '30_days',
+    working_hours: '40',
+    housing_allowance: 0,
+    transportation_allowance: 0,
   });
   const { toast } = useToast();
 
@@ -289,6 +299,11 @@ export default function SimpleContractGenerator() {
           contract_start_date: '',
           contract_end_date: '',
           special_terms: '',
+          probation_period: '3_months',
+          notice_period: '30_days',
+          working_hours: '40',
+          housing_allowance: 0,
+          transportation_allowance: 0,
         });
       } else {
         throw new Error(result.error || 'Contract generation failed');
@@ -594,6 +609,87 @@ export default function SimpleContractGenerator() {
                   type="date"
                   value={formData.contract_end_date}
                   onChange={(e) => handleInputChange('contract_end_date', e.target.value)}
+                />
+              </div>
+
+              {/* Probation Period */}
+              <div className="space-y-2">
+                <Label htmlFor="probation_period">Probation Period *</Label>
+                <Select
+                  value={formData.probation_period}
+                  onValueChange={(value) => handleInputChange('probation_period', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select probation period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1_month">1 Month</SelectItem>
+                    <SelectItem value="2_months">2 Months</SelectItem>
+                    <SelectItem value="3_months">3 Months</SelectItem>
+                    <SelectItem value="6_months">6 Months</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Notice Period */}
+              <div className="space-y-2">
+                <Label htmlFor="notice_period">Notice Period *</Label>
+                <Select
+                  value={formData.notice_period}
+                  onValueChange={(value) => handleInputChange('notice_period', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select notice period" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15_days">15 Days</SelectItem>
+                    <SelectItem value="30_days">30 Days</SelectItem>
+                    <SelectItem value="60_days">60 Days</SelectItem>
+                    <SelectItem value="90_days">90 Days</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Working Hours */}
+              <div className="space-y-2">
+                <Label htmlFor="working_hours">Working Hours per Week *</Label>
+                <Select
+                  value={formData.working_hours}
+                  onValueChange={(value) => handleInputChange('working_hours', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select working hours" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20 hours</SelectItem>
+                    <SelectItem value="30">30 hours</SelectItem>
+                    <SelectItem value="40">40 hours</SelectItem>
+                    <SelectItem value="48">48 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Housing Allowance */}
+              <div className="space-y-2">
+                <Label htmlFor="housing_allowance">Housing Allowance (OMR)</Label>
+                <Input
+                  id="housing_allowance"
+                  type="number"
+                  value={formData.housing_allowance || 0}
+                  onChange={(e) => handleInputChange('housing_allowance', parseFloat(e.target.value) || 0)}
+                  placeholder="0"
+                />
+              </div>
+
+              {/* Transportation Allowance */}
+              <div className="space-y-2">
+                <Label htmlFor="transportation_allowance">Transportation Allowance (OMR)</Label>
+                <Input
+                  id="transportation_allowance"
+                  type="number"
+                  value={formData.transportation_allowance || 0}
+                  onChange={(e) => handleInputChange('transportation_allowance', parseFloat(e.target.value) || 0)}
+                  placeholder="0"
                 />
               </div>
             </div>
