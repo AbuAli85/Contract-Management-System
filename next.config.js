@@ -108,8 +108,6 @@ const nextConfig = {
   experimental: {
     // Enable modern features
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    // Disable Turbopack to prevent build issues
-    turbo: false,
   },
 
   // Compiler options
