@@ -4,9 +4,9 @@
 
 You have **two contract generation systems** that are properly configured and working independently:
 
-### ✅ **System 1: Simple Contracts (Employment)**
+### ✅ **System 1: Employment Contracts**
 - **Component**: `SimpleContractGenerator.tsx`
-- **API Endpoint**: `/api/webhook/makecom-simple`
+- **API Endpoint**: `/api/webhook/makecom-employment`
 - **Webhook URL**: ✅ Configured
 - **Contract Types**: Employment, full-time, part-time, fixed-term
 - **Template ID**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
@@ -44,10 +44,10 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 MAKE_WEBHOOK_SECRET=your-webhook-secret-here
 PDF_WEBHOOK_SECRET=your-pdf-webhook-secret-here
 
-# System 1: Simple Contracts (Employment)
-MAKE_WEBHOOK_URL_SIMPLE=https://hook.eu2.make.com/your-simple-contracts-webhook
-# OR use the general webhook for simple contracts
-MAKE_WEBHOOK_URL=https://hook.eu2.make.com/your-simple-contracts-webhook
+# System 1: Employment Contracts
+MAKE_WEBHOOK_URL_EMPLOYMENT=https://hook.eu2.make.com/your-employment-contracts-webhook
+# OR use the general webhook for employment contracts
+MAKE_WEBHOOK_URL=https://hook.eu2.make.com/your-employment-contracts-webhook
 
 # System 2: General Contracts (Business)
 MAKE_WEBHOOK_URL_GENERAL=https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz
@@ -60,8 +60,8 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 
 ## 🎯 **Make.com Scenario Setup**
 
-### **Scenario 1: Simple Contracts (Employment)**
-- **Webhook URL**: Use `MAKE_WEBHOOK_URL_SIMPLE` or `MAKE_WEBHOOK_URL`
+### **Scenario 1: Employment Contracts**
+- **Webhook URL**: Use `MAKE_WEBHOOK_URL_EMPLOYMENT` or `MAKE_WEBHOOK_URL`
 - **Template ID**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 - **Use Case**: Employment agreements, job contracts
 - **Fields**: Job title, department, salary, probation period, etc.
@@ -76,9 +76,9 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 
 ## 🔄 **Data Flow Architecture**
 
-### **System 1: Simple Contracts Flow**
+### **System 1: Employment Contracts Flow**
 ```
-User Input → SimpleContractGenerator.tsx → /api/webhook/makecom-simple →
+User Input → SimpleContractGenerator.tsx → /api/webhook/makecom-employment →
 Make.com Scenario 1 → Google Docs Template 1 → PDF Generation →
 Supabase Storage → Database Update → Notification
 ```
@@ -121,7 +121,7 @@ CREATE TABLE contracts (
 
 | Endpoint | Purpose | Status | System |
 |----------|---------|--------|--------|
-| `/api/webhook/makecom-simple` | Simple contracts webhook | ✅ Active | System 1 |
+| `/api/webhook/makecom-employment` | Employment contracts webhook | ✅ Active | System 1 |
 | `/api/webhook/makecom-general` | General contracts webhook | ✅ Active | System 2 |
 | `/api/webhook/makecom` | Legacy webhook | ✅ Active | Both |
 | `/api/webhook/contract-pdf-ready` | PDF ready callback | ✅ Active | System 1 |
@@ -133,7 +133,7 @@ CREATE TABLE contracts (
 
 ## 🧪 **Testing Both Systems**
 
-### **Test System 1: Simple Contracts**
+### **Test System 1: Employment Contracts**
 1. Navigate to `/contracts/simple` or use `SimpleContractGenerator.tsx`
 2. Fill in employment contract details
 3. Submit and verify webhook is called

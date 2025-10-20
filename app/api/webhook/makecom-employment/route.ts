@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔗 Make.com Simple Webhook received');
+    console.log('🔗 Make.com Employment Contracts Webhook received');
 
     // Get the webhook secret from headers
     const webhookSecret = request.headers.get('x-webhook-secret');
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Parse the request body
     const body = await request.json();
-    console.log('📤 Webhook payload:', body);
+    console.log('📤 Employment Contracts Webhook payload:', body);
 
     // Validate required fields
     const { contract_id, contract_number, contract_type, promoter_id, first_party_id, second_party_id } = body;
@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Make.com Simple Webhook Endpoint',
+    message: 'Make.com Employment Contracts Webhook Endpoint',
     status: 'active',
     usage: 'Send POST requests with contract data',
     required_headers: {

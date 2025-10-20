@@ -8,10 +8,10 @@ Ensure both contract systems work independently without affecting each other, wi
 
 ## 📋 **System Overview**
 
-### **System 1: Simple Contracts (Employment)**
+### **System 1: Employment Contracts**
 - **Purpose**: Employment agreements, job contracts
 - **Component**: `SimpleContractGenerator.tsx`
-- **API**: `/api/webhook/makecom-simple`
+- **API**: `/api/webhook/makecom-employment`
 - **Make.com Webhook**: `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4`
 - **Template**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 - **Status**: ✅ **Active & Working**
@@ -30,8 +30,8 @@ Ensure both contract systems work independently without affecting each other, wi
 
 ### **1. Separate API Endpoints**
 ```typescript
-// System 1: Simple Contracts
-POST /api/webhook/makecom-simple
+// System 1: Employment Contracts
+POST /api/webhook/makecom-employment
 POST /api/webhook/contract-pdf-ready
 
 // System 2: General Contracts  
@@ -41,7 +41,7 @@ POST /api/webhook/contract-pdf-ready-general
 
 ### **2. Different Make.com Webhooks**
 ```env
-# System 1: Simple Contracts
+# System 1: Employment Contracts
 MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 
 # System 2: General Contracts
@@ -95,7 +95,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 MAKE_WEBHOOK_SECRET=your-webhook-secret-here
 PDF_WEBHOOK_SECRET=your-pdf-webhook-secret-here
 
-# System 1: Simple Contracts
+# System 1: Employment Contracts
 MAKE_WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 
 # System 2: General Contracts
@@ -104,7 +104,7 @@ MAKE_WEBHOOK_URL_GENERAL=https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9op
 
 ### **Make.com Scenario Setup**
 
-#### **Scenario 1: Simple Contracts**
+#### **Scenario 1: Employment Contracts**
 - **Webhook URL**: `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4`
 - **Template ID**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 - **Contract Types**: `employment`, `full-time`, `part-time`, `fixed-term`
@@ -120,10 +120,10 @@ MAKE_WEBHOOK_URL_GENERAL=https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9op
 
 ## 🧪 **Testing Isolation**
 
-### **Test 1: System 1 (Simple Contracts)**
+### **Test 1: System 1 (Employment Contracts)**
 ```bash
-# Test Simple Contracts API
-curl -X POST http://localhost:3000/api/webhook/makecom-simple \
+# Test Employment Contracts API
+curl -X POST http://localhost:3000/api/webhook/makecom-employment \
   -H "Content-Type: application/json" \
   -H "x-webhook-secret: your-secret" \
   -d '{
@@ -160,10 +160,10 @@ curl -X POST http://localhost:3000/api/webhook/makecom-general \
 
 ### **System 1 Logs**
 ```typescript
-// Simple Contracts webhook logs
-console.log('🔗 Make.com Simple Webhook received');
-console.log('📤 Simple Contract payload:', body);
-console.log('✅ Simple contract processed successfully');
+// Employment Contracts webhook logs
+console.log('🔗 Make.com Employment Contracts Webhook received');
+console.log('📤 Employment Contracts Webhook payload:', body);
+console.log('✅ Employment contract processed successfully');
 ```
 
 ### **System 2 Logs**
@@ -231,9 +231,9 @@ ORDER BY created_at DESC;
 
 ## 📊 **Status Summary**
 
-| Component | System 1 (Simple) | System 2 (General) | Status |
+| Component | System 1 (Employment) | System 2 (General) | Status |
 |-----------|-------------------|-------------------|--------|
-| API Endpoint | `/api/webhook/makecom-simple` | `/api/webhook/makecom-general` | ✅ Working |
+| API Endpoint | `/api/webhook/makecom-employment` | `/api/webhook/makecom-general` | ✅ Working |
 | Make.com Webhook | `71go2x4zwsnha4r1f4en1g9gjxpk3ts4` | `j07svcht90xh6w0eblon81hrmu9opykz` | ✅ Working |
 | Google Docs Template | `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0` | `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA` | ✅ Working |
 | Database Schema | ✅ Aligned | ✅ Aligned | ✅ Working |
