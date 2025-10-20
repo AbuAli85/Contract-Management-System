@@ -4,16 +4,9 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "nodeVersion": "22.x",
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30,
-      "runtime": "nodejs22.x"
-    }
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
+      "maxDuration": 30
     }
   },
   "headers": [
