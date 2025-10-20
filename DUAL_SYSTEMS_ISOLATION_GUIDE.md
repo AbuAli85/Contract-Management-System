@@ -22,7 +22,49 @@ Ensure both contract systems work independently without affecting each other, wi
 - **API**: `/api/webhook/makecom-general`
 - **Make.com Webhook**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
 - **Template**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
+- **Special Features**: Location, Products, Logo (second party only), Promoters with employers
 - **Status**: ✅ **Active & Working**
+
+---
+
+## 🔄 **Workflow Comparison**
+
+Both systems follow the **same workflow** but with different features:
+
+### **Common Workflow:**
+1. **User Input** → Form submission
+2. **API Processing** → Webhook endpoint
+3. **Make.com Integration** → Scenario processing
+4. **Google Docs Template** → Document generation
+5. **PDF Generation** → Final document
+6. **Supabase Storage** → Database update
+7. **Notification** → Status update
+
+### **Feature Differences:**
+
+| Feature | Employment Contracts | General Contracts |
+|---------|---------------------|-------------------|
+| **Workflow** | ✅ Same | ✅ Same |
+| **Client (First Party)** | ✅ Same | ✅ Same |
+| **Employer (Second Party)** | ✅ Same | ✅ Same |
+| **Promoters** | ✅ Standard display | ✅ With their own employers |
+| **Location** | ❌ Not used | ✅ Business operations |
+| **Products** | ❌ Not used | ✅ Service/product details |
+| **Logo** | ❌ Not used | ✅ Second party only |
+| **Final Contract** | ✅ Same structure | ✅ Same structure |
+
+### **Key Differences:**
+
+#### **Employment Contracts (System 1)**
+- Standard employment fields (job title, department, salary)
+- No location, products, or logo placeholders
+- Promoters shown normally
+
+#### **General Contracts (System 2)**
+- Additional business fields (location, products, logo)
+- Logo integration for second party only
+- Promoters shown with their own employers
+- Same final contract structure
 
 ---
 

@@ -20,6 +20,7 @@ You have **two contract generation systems** that are properly configured and wo
 - **Contract Types**: Service, consulting, partnership, vendor
 - **Template ID**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
 - **Use Case**: Service agreements, consulting, partnerships
+- **Special Features**: Location, Products, Logo (second party only), Promoters with employers
 - **Status**: ✅ **Working**
 
 ---
@@ -70,7 +71,42 @@ WEBHOOK_URL=https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4
 - **Webhook URL**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
 - **Template ID**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
 - **Use Case**: Service agreements, consulting, partnerships
-- **Fields**: Product/service name, deliverables, payment terms, etc.
+- **Fields**: Product/service name, deliverables, payment terms, location, logo (second party only)
+- **Special Features**: 
+  - Location placeholders for business operations
+  - Product/service details
+  - Logo integration (second party only)
+  - Promoters showing with their own employers
+
+---
+
+## 🔍 **System Comparison**
+
+Both systems follow the **same workflow** but with different features:
+
+| Feature | Employment Contracts | General Contracts |
+|---------|---------------------|-------------------|
+| **Workflow** | ✅ Same | ✅ Same |
+| **Client (First Party)** | ✅ Same | ✅ Same |
+| **Employer (Second Party)** | ✅ Same | ✅ Same |
+| **Promoters** | ✅ Standard | ✅ With their own employers |
+| **Location** | ❌ Not used | ✅ Business operations |
+| **Products** | ❌ Not used | ✅ Service/product details |
+| **Logo** | ❌ Not used | ✅ Second party only |
+| **Final Contract** | ✅ Same structure | ✅ Same structure |
+
+### **Key Differences:**
+
+#### **Employment Contracts (System 1)**
+- Standard employment fields (job title, department, salary)
+- No location, products, or logo placeholders
+- Promoters shown normally
+
+#### **General Contracts (System 2)**
+- Additional business fields (location, products, logo)
+- Logo integration for second party only
+- Promoters shown with their own employers
+- Same final contract structure
 
 ---
 
