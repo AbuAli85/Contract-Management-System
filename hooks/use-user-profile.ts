@@ -80,9 +80,9 @@ export function useUserProfile() {
             id: user.id,
             email: user.email,
             full_name:
-              user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             display_name:
-              user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+              user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             role: 'user',
             status: 'active',
             avatar_url: user.user_metadata?.avatar_url || null,
@@ -98,9 +98,9 @@ export function useUserProfile() {
           id: user.id,
           email: user.email,
           full_name:
-            user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           display_name:
-            user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
           role: 'user',
           status: 'active',
           avatar_url: user.user_metadata?.avatar_url || null,
