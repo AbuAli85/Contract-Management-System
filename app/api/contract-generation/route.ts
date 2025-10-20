@@ -27,16 +27,15 @@ export const POST = withAnyRBAC(
         // Parse request body
         const body = await request.json();
 
-      // Authenticate user
+      // Authenticate user (RBAC guard already handles this, but keeping for safety)
       const supabase = await createClient();
       const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-      if (sessionError || !session?.user) {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-      const user = session.user;
 
       // 1. Call PDF generation API (internal or external based on configuration)
       // If PDF_API_URL is relative, we need to construct full URL for server-side fetch
@@ -68,26 +67,32 @@ export const POST = withAnyRBAC(
       const { contractId } = body;
       const { error: updateError } = await supabase
         .from('contracts')
-        .update({ pdf_url: pdfUrl, status: 'completed' })
+        .update({ pdf_url: pdfUrl, status: 'completed', updated_by: user.id })
         .eq('id', contractId);
       if (updateError) {
+        console.error('Contract update error:', updateError);
         return NextResponse.json(
-          { error: 'Failed to update contract with PDF URL' },
+          { error: 'Failed to update contract with PDF URL', details: updateError.message },
           { status: 500 }
         );
       }
 
-      // 3. Notify external webhook
-      const notifyPayload = {
-        contract_number: body.contractNumber,
-        pdf_url: pdfUrl,
-        status: 'ready',
-      };
-      await fetch(NOTIFY_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(notifyPayload),
-      });
+      // 3. Notify external webhook (optional, don't fail if webhook fails)
+      try {
+        const notifyPayload = {
+          contract_number: body.contractNumber,
+          pdf_url: pdfUrl,
+          status: 'ready',
+        };
+        await fetch(NOTIFY_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(notifyPayload),
+        });
+      } catch (webhookError) {
+        console.warn('Webhook notification failed:', webhookError);
+        // Don't fail the entire request if webhook fails
+      }
 
         // 4. Return PDF URL
         return NextResponse.json({ 
@@ -102,6 +107,7 @@ export const POST = withAnyRBAC(
       
     } catch (error) {
       const processingTime = Date.now() - startTime;
+      console.error('Contract generation error:', error);
       return NextResponse.json(
         { 
           error: 'Internal server error', 

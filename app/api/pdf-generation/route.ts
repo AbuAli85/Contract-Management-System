@@ -23,8 +23,18 @@ export async function POST(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
+    console.log('PDF Generation - Auth check:', { 
+      hasUser: !!user, 
+      authError: authError?.message,
+      userId: user?.id 
+    });
+
     if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      console.error('PDF Generation - Unauthorized:', authError);
+      return NextResponse.json({ 
+        error: 'Unauthorized',
+        details: authError?.message || 'No user found'
+      }, { status: 401 });
     }
 
     // Extract contract data
