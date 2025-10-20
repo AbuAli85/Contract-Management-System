@@ -24,10 +24,10 @@ export function useUserProfile() {
   const { user, session, supabase } = useSupabase();
   const [profile, setProfile] = useState<EnhancedUserProfile | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
+    setMounted(true);
   }, []);
 
   const createEnhancedProfile = (profileData: any): EnhancedUserProfile => {
@@ -59,7 +59,7 @@ export function useUserProfile() {
   };
 
   useEffect(() => {
-    if (!isClient || !user || !supabase) {
+    if (!mounted || !user || !supabase) {
       return;
     }
 
@@ -114,10 +114,10 @@ export function useUserProfile() {
     };
 
     fetchProfile();
-  }, [isClient, user, supabase]);
+  }, [mounted, user, supabase]);
 
   const fetchUserProfile = useCallback(async () => {
-    if (!isClient || !user || !supabase) return;
+    if (!mounted || !user || !supabase) return;
 
     const { data, error } = await supabase
       .from('profiles')
@@ -128,15 +128,15 @@ export function useUserProfile() {
     if (!error && data) {
       setProfile(createEnhancedProfile(data));
     }
-  }, [isClient, user, supabase]);
+  }, [mounted, user, supabase]);
 
   const syncUserProfile = useCallback(async () => {
-    if (!isClient || !user || !supabase) return;
+    if (!mounted || !user || !supabase) return;
     await fetchUserProfile();
-  }, [isClient, fetchUserProfile]);
+  }, [mounted, fetchUserProfile]);
 
-  // Return safe defaults during SSR
-  if (!isClient) {
+  // Return safe defaults during SSR - use mounted state instead of conditional return
+  if (!mounted) {
     const safeFallback = createEnhancedProfile({
       id: 'ssr-user',
       email: 'user@example.com',
