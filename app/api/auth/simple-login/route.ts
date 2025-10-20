@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check user status
-    const userStatus = profile?.status || 'active';
+    const userStatus = (profile as any)?.status || 'active';
     if (userStatus === 'pending') {
       return NextResponse.json(
         { error: 'Your account is pending approval. Please contact an administrator.' },
@@ -107,13 +107,50 @@ export async function POST(request: NextRequest) {
       user: authData.user,
       session: authData.session,
       profile: profile,
-      redirectPath: getRedirectPath(profile?.role || authData.user.user_metadata?.role || 'user')
+      redirectPath: getRedirectPath((profile as any)?.role || authData.user.user_metadata?.role || 'user')
     });
 
   } catch (error) {
     console.error('🔐 Simple Login - Exception:', error);
+    
+    // Enhanced error logging for debugging
+    if (error instanceof Error) {
+      console.error('🔐 Simple Login - Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // Check for specific Supabase client errors
+      if (error.message.includes('Supabase client initialization failed')) {
+        return NextResponse.json(
+          { 
+            error: 'Database connection failed. Please check server configuration.',
+            details: 'Supabase client could not be initialized',
+            code: 'SUPABASE_INIT_ERROR'
+          },
+          { status: 500 }
+        );
+      }
+      
+      if (error.message.includes('Missing Supabase environment variables')) {
+        return NextResponse.json(
+          { 
+            error: 'Server configuration error. Missing database credentials.',
+            details: 'Required environment variables are not set',
+            code: 'MISSING_ENV_VARS'
+          },
+          { status: 500 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        code: 'INTERNAL_ERROR'
+      },
       { status: 500 }
     );
   }
@@ -138,15 +175,43 @@ function getRedirectPath(role: string): string {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    const envCheck = {
+      supabaseUrl: supabaseUrl ? '✅ Set' : '❌ Missing',
+      supabaseAnonKey: supabaseAnonKey ? '✅ Set' : '❌ Missing',
+      environment: process.env.NODE_ENV,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Test Supabase client creation
+    let supabaseStatus = 'Unknown';
+    try {
+      const supabase = await createClient();
+      supabaseStatus = '✅ Connected';
+    } catch (error) {
+      supabaseStatus = `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    }
+    
     return NextResponse.json({
       captchaRequired: false,
       environment: process.env.NODE_ENV,
-      message: 'Simple login API is ready'
+      message: 'Simple login API is ready',
+      status: 'healthy',
+      environmentCheck: envCheck,
+      supabaseStatus,
+      ready: supabaseUrl && supabaseAnonKey && supabaseStatus.includes('✅')
     });
   } catch (error) {
     console.error('Simple login config error:', error);
     return NextResponse.json(
-      { error: 'Failed to get configuration' },
+      { 
+        error: 'Failed to get configuration',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        status: 'unhealthy'
+      },
       { status: 500 }
     );
   }
