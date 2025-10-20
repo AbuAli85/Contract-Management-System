@@ -64,20 +64,20 @@ export default function ContractReportsTable() {
         .from('contracts')
         .select(
           `id, 
-           contract_start_date, 
-           contract_end_date, 
+           start_date, 
+           end_date, 
            status,
-           job_title,
-           first_party:parties!first_party_id(name_en),
-           second_party:parties!second_party_id(name_en),
-           promoter:promoters!promoter_id(name_en)`
+           title,
+           first_party:parties!contracts_employer_id_fkey(name_en),
+           second_party:parties!contracts_client_id_fkey(name_en),
+           promoter_id`
         )
         .order(
           sortKey === 'start_date'
-            ? 'contract_start_date'
+            ? 'start_date'
             : sortKey === 'end_date'
-              ? 'contract_end_date'
-              : sortKey || 'contract_start_date',
+              ? 'end_date'
+              : sortKey || 'start_date',
           { ascending: sortDirection === 'asc' }
         );
 
@@ -88,11 +88,11 @@ export default function ContractReportsTable() {
         data?.map(contract => ({
           id: contract.id,
           contract_id: contract.id, // Using id as contract_id since contract_number doesn't exist
-          promoter_name: contract.promoter?.name_en || '',
-          employer_name: contract.second_party?.name_en || '', // Party B (Employer)
-          client_name: contract.first_party?.name_en || '', // Party A (Client)
-          start_date: contract.contract_start_date,
-          end_date: contract.contract_end_date,
+          promoter_name: contract.promoter_id || 'N/A',
+          employer_name: contract.first_party?.name_en || '', // Employer (first_party)
+          client_name: contract.second_party?.name_en || '', // Client (second_party)
+          start_date: contract.start_date,
+          end_date: contract.end_date,
           status: contract.status,
         })) || [];
 

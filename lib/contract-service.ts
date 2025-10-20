@@ -425,9 +425,9 @@ export class ContractService {
       let query = this.supabase.from('contracts').select(
         `
           *,
-          first_party:parties!first_party_id(*),
-          second_party:parties!second_party_id(*),
-          promoters(*)
+          first_party:parties!contracts_employer_id_fkey(*),
+          second_party:parties!contracts_client_id_fkey(*),
+          promoter_id
         `,
         { count: 'exact' }
       );

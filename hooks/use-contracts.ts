@@ -48,42 +48,18 @@ export type ContractInsert =
 // Fetch all contracts with their related party and promoter info
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
   const supabaseClient = createClient();
-  // Try the new schema first (first_party_id, second_party_id)
+  // Use the correct schema (employer_id, client_id)
   let { data, error } = await supabaseClient
     .from('contracts')
     .select(
       `
       *,
-      first_party:parties!contracts_first_party_id_fkey(id,name_en,name_ar,crn,type),
-      second_party:parties!contracts_second_party_id_fkey(id,name_en,name_ar,crn,type),
-      promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
+      first_party:parties!contracts_employer_id_fkey(id,name_en,name_ar,crn,type),
+      second_party:parties!contracts_client_id_fkey(id,name_en,name_ar,crn,type),
+      promoter_id
     `
     )
     .order('created_at', { ascending: false });
-
-  // If the new schema fails, try the old schema (employer_id, client_id)
-  if (error && error.message.includes('foreign key')) {
-    devLog('New schema failed, trying old schema...');
-    const { data: oldData, error: oldError } = await supabaseClient
-      .from('contracts')
-      .select(
-        `
-        *,
-        first_party:parties!contracts_employer_id_fkey(id,name_en,name_ar,crn,type),
-        second_party:parties!contracts_client_id_fkey(id,name_en,name_ar,crn,type),
-        promoters(id,name_en,name_ar,id_card_number,id_card_url,passport_url,status)
-      `
-      )
-      .order('created_at', { ascending: false });
-
-    if (oldError) {
-      devLog('Both schemas failed:', oldError);
-      throw new Error(oldError.message);
-    }
-
-    data = oldData as unknown as ContractWithRelations[]; // Replace 'any' with 'unknown'
-    error = null;
-  }
 
   if (error) {
     devLog('Error fetching contracts:', error);

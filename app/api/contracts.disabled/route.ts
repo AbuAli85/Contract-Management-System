@@ -64,16 +64,16 @@ export async function GET(request: NextRequest) {
             .from('contracts')
             .select(`
               *,
-              first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, crn, type),
-              second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, crn, type),
-              promoters(id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)
+              first_party:parties!contracts_employer_id_fkey(id, name_en, name_ar, crn, type),
+              second_party:parties!contracts_client_id_fkey(id, name_en, name_ar, crn, type),
+              promoter_id
             `)
-            .or(`first_party_id.eq.${partyId},second_party_id.eq.${partyId}`)
+            .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`)
             .eq('status', status);
 
           // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in
           if (!isAdmin) {
-            query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id}`);
+            query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id}`);
           }
 
           const { data: contracts, error: contractsError } = await query.limit(10);
