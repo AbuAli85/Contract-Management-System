@@ -37,7 +37,7 @@ interface PromotersHeaderProps {
   isFetching: boolean;
   onRefresh: () => void;
   onAddPromoter: () => void;
-  locale: string;
+  locale?: string;
 }
 
 export function PromotersHeader({
