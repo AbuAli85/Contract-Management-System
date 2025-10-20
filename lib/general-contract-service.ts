@@ -441,12 +441,12 @@ export class GeneralContractService {
         console.log('✅ Make.com webhook triggered successfully for general contract');
         
         // Update contract status
-        console.log('🔄 Updating contract status to processing...');
+        console.log('🔄 Updating contract status to pending...');
         const supabase = await this.getSupabaseClient();
         const { error: updateError } = await supabase
           .from('contracts')
           .update({ 
-            status: 'processing',
+            status: 'pending',
             updated_at: new Date().toISOString()
           })
           .eq('id', contractId);
