@@ -432,6 +432,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
 
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
       const { data, error } = await supabase
         .from('contracts')
         .select(
@@ -439,7 +442,7 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     *,
     employer:parties!contracts_employer_id_fkey (name_en, name_ar, crn),
     client:parties!contracts_client_id_fkey (name_en, name_ar, crn),
-    promoter:promoters!contracts_promoter_id_fkey (name_en, name_ar)
+    promoter_id
   `
         )
         .order('created_at', { ascending: false });
@@ -548,7 +551,10 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         };
 
         const supabase = createClient();
-        const { error } = await supabase.from('contracts').insert(newContract);
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
+        const { error } = await (supabase as any).from('contracts').insert(newContract);
 
         if (error) throw error;
 
@@ -574,7 +580,10 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     async (contractId: string) => {
       try {
         const supabase = createClient();
-        const { error } = await supabase
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
+        const { error } = await (supabase as any)
           .from('contracts')
           .update({ is_current: false, updated_at: new Date().toISOString() })
           .eq('id', contractId);
@@ -603,6 +612,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     async (contractId: string) => {
       try {
         const supabase = createClient();
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
         const { error } = await supabase
           .from('contracts')
           .delete()

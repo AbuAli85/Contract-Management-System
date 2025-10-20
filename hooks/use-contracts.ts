@@ -48,6 +48,9 @@ export type ContractInsert =
 // Fetch all contracts with their related party and promoter info
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
   const supabaseClient = createClient();
+  if (!supabaseClient) {
+    throw new Error('Failed to initialize Supabase client');
+  }
   // Use the correct schema (employer_id, client_id)
   let { data, error } = await supabaseClient
     .from('contracts')
@@ -74,7 +77,7 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
 
   // In fetchContracts, after fetching data, map to provide fallbacks for required fields
   if (data) {
-    data = data.map((contract: any) => ({
+    const mappedData = (data as any[]).map((contract: any) => ({
       ...contract,
       first_party: contract.first_party ?? {
         id: '',
@@ -100,9 +103,10 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
         status: null,
       },
     }));
+    return mappedData as ContractWithRelations[];
   }
 
-  return (data as ContractWithRelations[]) || [];
+  return data ? (data as ContractWithRelations[]) : ([] as ContractWithRelations[]);
 };
 
 export const useContracts = () => {
@@ -146,6 +150,9 @@ export const useContracts = () => {
     const setupSubscription = () => {
       try {
         const supabaseClient = createClient();
+        if (!supabaseClient) {
+          throw new Error('Failed to initialize Supabase client');
+        }
         const newChannel = supabaseClient
           .channel('public-contracts-realtime')
           .on(
@@ -187,7 +194,9 @@ export const useContracts = () => {
                 retryTimeout = setTimeout(() => {
                   if (channel) {
                     const supabaseClient = createClient();
-                    supabaseClient.removeChannel(channel);
+                    if (supabaseClient) {
+                      supabaseClient.removeChannel(channel);
+                    }
                   }
                   setupSubscription();
                 }, 2000 * retryCount); // Exponential backoff
@@ -207,7 +216,9 @@ export const useContracts = () => {
                 retryTimeout = setTimeout(() => {
                   if (channel) {
                     const supabaseClient = createClient();
-                    supabaseClient.removeChannel(channel);
+                    if (supabaseClient) {
+                      supabaseClient.removeChannel(channel);
+                    }
                   }
                   setupSubscription();
                 }, 2000 * retryCount); // Exponential backoff
@@ -234,7 +245,9 @@ export const useContracts = () => {
       }
       if (channel) {
         const supabaseClient = createClient();
-        supabaseClient.removeChannel(channel);
+        if (supabaseClient) {
+          supabaseClient.removeChannel(channel);
+        }
       }
     };
   }, [queryClient, queryKey, user, isFormActive]);
