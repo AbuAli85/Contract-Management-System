@@ -41,7 +41,7 @@ export async function PATCH(request: NextRequest) {
     await generalContractService.updateContractWithMakeComResults(contract_id, {
       pdf_url,
       google_drive_url,
-      status: status || 'completed', // Use 'completed' which is a valid status
+      status: 'completed', // Always use 'completed' which is a valid status
       images_processed: body.images_processed || {
         id_card: false,
         passport: false,

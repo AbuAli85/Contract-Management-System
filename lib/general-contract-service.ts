@@ -495,7 +495,7 @@ export class GeneralContractService {
     };
 
     if (results.pdf_url) updateData.pdf_url = results.pdf_url;
-    if (results.google_drive_url) updateData.document_url = results.google_drive_url;
+    if (results.google_drive_url) updateData.google_doc_url = results.google_drive_url;
     if (results.status) updateData.status = results.status;
 
     const { error } = await supabase
