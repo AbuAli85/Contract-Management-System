@@ -145,8 +145,8 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
 
-  // Output configuration
-  output: 'standalone',
+  // Output configuration - removed standalone for Vercel compatibility
+  // output: 'standalone', // Commented out - causes issues with Vercel
 };
 
 module.exports = withNextIntl(nextConfig);
