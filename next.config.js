@@ -43,72 +43,24 @@ const nextConfig = {
     ];
   },
 
-  // Webpack configuration with optimizations
-  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Optimize bundle splitting for better performance
-    if (!isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-          },
-          lucide: {
-            test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
-            name: 'lucide',
-            priority: 20,
-            chunks: 'all',
-          },
-          charts: {
-            test: /[\\/]node_modules[\\/](chart\.js|react-chartjs-2|recharts)[\\/]/,
-            name: 'charts',
-            priority: 15,
-            chunks: 'all',
-          },
-        },
-      };
-    }
-
-    // Handle webpack module resolution issues
+  // Simplified webpack configuration for debugging
+  webpack: (config, { isServer }) => {
+    // Basic fallbacks only
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
       tls: false,
-      // crypto needed for Next.js build process
     };
-
-    // Add webpack configuration to resolve module issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    };
-
-    // Handle webpack module resolution issues
-    config.module.rules.push({
-      test: /\.(js|jsx|ts|tsx)$/,
-      resolve: {
-        fullySpecified: false,
-      },
-    });
 
     return config;
   },
 
-  // Experimental features
-  experimental: {
-    // Enable modern features
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-  },
+  // Experimental features - temporarily disabled for debugging
+  // experimental: {
+  //   // Enable modern features
+  //   optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  // },
 
   // Compiler options
   compiler: {
