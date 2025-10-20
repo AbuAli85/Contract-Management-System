@@ -38,7 +38,7 @@ import { useContract } from '@/hooks/useContract';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 // Simple StatusBadge implementation
-function StatusBadge({ status }: { status?: string }) {
+function StatusBadge({ status }: { status?: string | undefined }) {
   let color = 'bg-gray-200 text-gray-800';
   let label = status || 'Unknown';
   if (status === 'active') {
@@ -365,7 +365,7 @@ export default function ContractDetailPage() {
                   <h1 className='text-3xl font-bold text-gray-900'>
                     Contract Details
                   </h1>
-                  <StatusBadge status={contract?.status ?? undefined} />
+                  <StatusBadge status={contract?.status || undefined} />
                   {isApproved && (
                     <Badge className='bg-green-100 text-green-800'>
                       <CheckCircleIcon className='mr-1 h-3 w-3' />
@@ -1050,7 +1050,7 @@ export default function ContractDetailPage() {
                         Current Status
                       </h5>
                       <div className='mt-1'>
-                        <StatusBadge status={contract?.status ?? undefined} />
+                        <StatusBadge status={contract?.status || undefined} />
                       </div>
                     </div>
 
