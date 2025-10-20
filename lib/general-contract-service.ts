@@ -163,8 +163,24 @@ export class GeneralContractService {
     // Generate contract number
     const contractNumber = this.generateContractNumber();
     
+    // Map contract type to valid database values
+    const mapContractType = (type: string): string => {
+      const typeMap: Record<string, string> = {
+        'general-service': 'service',
+        'consulting-agreement': 'consultancy',
+        'service-contract': 'service',
+        'partnership-agreement': 'partnership',
+        'employment': 'employment',
+        'service': 'service',
+        'consultancy': 'consultancy',
+        'partnership': 'partnership',
+      };
+      return typeMap[type] || 'service'; // Default to 'service' for unknown types
+    };
+    
+    const mappedContractType = mapContractType(data.contract_type);
     const contractData = {
-      contract_type: data.contract_type,
+      contract_type: mappedContractType,
       contract_number: contractNumber,
       title: `${data.job_title} - ${data.contract_type} Contract - ${contractNumber}`,
       status: 'draft',
@@ -359,23 +375,29 @@ export class GeneralContractService {
    * Format date to YYYY-MM-DD
    */
   private formatDate(dateString: string | undefined): string {
+    const defaultDate = new Date().toISOString().split('T')[0] || '2024-01-01';
+    
     if (!this.isNonEmptyString(dateString)) {
-      return new Date().toISOString().split('T')[0];
+      return defaultDate;
     }
     
-    if (dateString.includes('-')) {
-      const parts = dateString.split('-');
+    // At this point, dateString is guaranteed to be a non-empty string
+    const date = dateString as string;
+    
+    if (date.includes('-')) {
+      const parts = date.split('-');
       if (parts[0] && parts[0].length === 4) {
-        return dateString; // Already in YYYY-MM-DD format
+        return date; // Already in YYYY-MM-DD format
       } else {
         return parts.reverse().join('-'); // Convert DD-MM-YYYY to YYYY-MM-DD
       }
     }
     
     try {
-      return new Date(dateString).toISOString().split('T')[0];
+      const formattedDate = new Date(date).toISOString().split('T')[0];
+      return formattedDate || defaultDate;
     } catch {
-      return new Date().toISOString().split('T')[0];
+      return defaultDate;
     }
   }
 
@@ -413,8 +435,9 @@ export class GeneralContractService {
     const match = description.match(/Department:\s*(.+)/);
     if (match && match[1] && match[1].length > 0) {
       // At this point, match[1] is guaranteed to be a string
-      const department: string = match[1] as string;
-      return department.split('\n')[0].trim();
+      const department = match[1] as string;
+      const firstLine = department.split('\n')[0];
+      return firstLine ? firstLine.trim() : '';
     }
     return '';
   }
@@ -427,8 +450,9 @@ export class GeneralContractService {
     const match = description.match(/Work Location:\s*(.+)/);
     if (match && match[1] && match[1].length > 0) {
       // At this point, match[1] is guaranteed to be a string
-      const location: string = match[1] as string;
-      return location.split('\n')[0].trim();
+      const location = match[1] as string;
+      const firstLine = location.split('\n')[0];
+      return firstLine ? firstLine.trim() : '';
     }
     return '';
   }
