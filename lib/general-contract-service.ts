@@ -88,6 +88,16 @@ export interface MakeComPayload {
   second_party_name_ar?: string;
   second_party_crn?: string;
   second_party_logo?: string;
+  // Additional image fields for Make.com template compatibility
+  header_logo?: string;
+  footer_logo?: string;
+  company_logo?: string;
+  party_1_logo?: string;
+  party_2_logo?: string;
+  signature_1?: string;
+  signature_2?: string;
+  stamp_image?: string;
+  qr_code?: string;
 }
 
 export class GeneralContractService {
@@ -260,6 +270,20 @@ export class GeneralContractService {
   async prepareMakeComPayload(contractId: string): Promise<MakeComPayload> {
     const contract = await this.getContractWithRelatedData(contractId);
     
+    // Helper function to ensure valid image URLs
+    const ensureValidImageUrl = (url: string | null | undefined): string => {
+      if (!url || url.trim() === '') {
+        return 'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
+      }
+      // Basic URL validation
+      try {
+        new URL(url);
+        return url;
+      } catch {
+        return 'https://via.placeholder.com/200x200/cccccc/666666.png?text=Invalid+URL';
+      }
+    };
+    
     const payload: MakeComPayload = {
       contract_id: contract.id,
       contract_number: contract.contract_number,
@@ -281,24 +305,34 @@ export class GeneralContractService {
       location_ar: contract.location_ar || '',
       product_id: contract.product_id || '',
       location_id: contract.location_id || '',
-      // Promoter data
+      // Promoter data with validated image URLs
       promoter_name_en: contract.promoter?.name_en || '',
       promoter_name_ar: contract.promoter?.name_ar || '',
       promoter_mobile_number: contract.promoter?.mobile_number || '',
       promoter_email: contract.promoter?.email || '',
       promoter_id_card_number: contract.promoter?.id_card_number || '',
-      promoter_id_card_url: contract.promoter?.id_card_url || '',
-      promoter_passport_url: contract.promoter?.passport_url || '',
-      // First party (client) data
+      promoter_id_card_url: ensureValidImageUrl(contract.promoter?.id_card_url),
+      promoter_passport_url: ensureValidImageUrl(contract.promoter?.passport_url),
+      // First party (client) data with validated image URLs
       first_party_name_en: contract.client?.name_en || '',
       first_party_name_ar: contract.client?.name_ar || '',
       first_party_crn: contract.client?.crn || '',
-      first_party_logo: contract.client?.logo_url || '',
-      // Second party (employer) data
+      first_party_logo: ensureValidImageUrl(contract.client?.logo_url),
+      // Second party (employer) data with validated image URLs
       second_party_name_en: contract.employer?.name_en || '',
       second_party_name_ar: contract.employer?.name_ar || '',
       second_party_crn: contract.employer?.crn || '',
-      second_party_logo: contract.employer?.logo_url || '',
+      second_party_logo: ensureValidImageUrl(contract.employer?.logo_url),
+      // Additional image fields for Make.com template compatibility
+      header_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as header
+      footer_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as footer
+      company_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as company logo
+      party_1_logo: ensureValidImageUrl(contract.client?.logo_url), // Client logo
+      party_2_logo: ensureValidImageUrl(contract.employer?.logo_url), // Employer logo
+      signature_1: 'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+1', // Placeholder signature
+      signature_2: 'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+2', // Placeholder signature
+      stamp_image: 'https://via.placeholder.com/150x150/cccccc/666666.png?text=Stamp', // Placeholder stamp
+      qr_code: 'https://via.placeholder.com/100x100/cccccc/666666.png?text=QR+Code', // Placeholder QR code
     };
 
     return payload;
