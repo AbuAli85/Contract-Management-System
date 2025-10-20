@@ -13,7 +13,7 @@ export function UserProfile() {
   const { user } = useAuth();
   const { userRole, hasPermission, companyId, isCompanyMember } =
     useEnhancedRBAC();
-  const [profile, setProfile] = useState<any>(null);
+  const [, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

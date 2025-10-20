@@ -23,7 +23,6 @@ export async function rateLimit(
     ? config.keyGenerator(config.request)
     : getDefaultKey(config.request);
   const now = Date.now();
-  const windowStart = now - config.windowMs;
 
   // Clean up expired entries
   for (const [storeKey, data] of rateLimitStore.entries()) {

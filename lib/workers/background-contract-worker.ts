@@ -324,12 +324,9 @@ export class BackgroundContractWorker {
   }
 
   // Batch operations with progress tracking
-  async batchGeneratePDFs(
-    contractIds: string[],
-    onProgress?: (progress: number, total: number) => void
-  ) {
+  async batchGeneratePDFs(contractIds: string[]) {
     const results = [];
-    let completed = 0;
+    // let completed = 0;
 
     for (const contractId of contractIds) {
       try {
@@ -343,17 +340,13 @@ export class BackgroundContractWorker {
         });
       }
 
-      completed++;
-      onProgress?.(completed, contractIds.length);
+      // completed++;
     }
 
     return results;
   }
 
-  async batchSendReminders(
-    contractIds: string[],
-    onProgress?: (progress: number, total: number) => void
-  ) {
+  async batchSendReminders(contractIds: string[]) {
     return this.processContractBatch(contractIds, 'send_reminder');
   }
 

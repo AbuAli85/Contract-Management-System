@@ -471,7 +471,7 @@ export class PermissionEvaluator {
       // Try new RBAC tables first
       let roleAssignments: any[] | null = null;
       let rolesFetchError: any = null;
-      
+
       try {
         const r = await supabase
           .from('rbac_user_role_assignments')
@@ -494,7 +494,10 @@ export class PermissionEvaluator {
       }
 
       // Legacy fallback
-      if ((!roleAssignments || roleAssignments.length === 0) && rolesFetchError) {
+      if (
+        (!roleAssignments || roleAssignments.length === 0) &&
+        rolesFetchError
+      ) {
         const { data, error } = await supabase
           .from('user_role_assignments')
           .select(
@@ -523,15 +526,16 @@ export class PermissionEvaluator {
       }
 
       const roleIds = roleAssignments.map(ra => ra.role_id);
-      const roles = roleAssignments.map(ra =>
-        // Handle both rbac_roles and legacy roles linkage
-        (ra.rbac_roles?.name as string) || (ra.roles?.name as string)
+      const roles = roleAssignments.map(
+        ra =>
+          // Handle both rbac_roles and legacy roles linkage
+          (ra.rbac_roles?.name as string) || (ra.roles?.name as string)
       );
 
       // Get permissions for these roles (new RBAC first)
       let permissionsRows: any[] | null = null;
       let permError: any = null;
-      
+
       try {
         const pr = await supabase
           .from('rbac_role_permissions')
@@ -570,9 +574,9 @@ export class PermissionEvaluator {
         return { permissions: [], roles: [] };
       }
 
-      const permissionNames = (permissionsRows || []).map(row =>
-        row.rbac_permissions?.name || row.permissions?.name
-      ).filter(Boolean) as string[];
+      const permissionNames = (permissionsRows || [])
+        .map(row => row.rbac_permissions?.name || row.permissions?.name)
+        .filter(Boolean) as string[];
 
       return {
         permissions: permissionNames,

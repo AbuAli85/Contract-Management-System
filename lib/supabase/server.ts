@@ -52,7 +52,7 @@ export async function createClientWithAuth() {
     const supabase = await createClient();
     
     // Verify the client is working
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { error } = await supabase.auth.getSession();
     
     if (error) {
       console.error('Auth session check failed:', error);

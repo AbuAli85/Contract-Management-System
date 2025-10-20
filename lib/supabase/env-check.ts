@@ -7,7 +7,7 @@ export function validateSupabaseEnv() {
   };
 
   const missingVars = Object.entries(requiredVars)
-    .filter(([_, value]) => !value)
+    .filter(([, value]) => !value)
     .map(([key]) => key);
 
   if (missingVars.length > 0) {

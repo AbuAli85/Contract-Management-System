@@ -27,7 +27,7 @@ const createSupabaseClient = async () => {
   );
 };
 
-export async function getAuthCookie(name: string): Promise<string> {
+export async function getAuthCookie(): Promise<string> {
   const supabase = await createSupabaseClient();
   const {
     data: { session },

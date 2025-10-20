@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import { useSafePathname } from '@/hooks/use-safe-params';
-import { Inter } from 'next/font/google';
+// import { Inter } from 'next/font/google';
 import { ToastProvider } from '@/components/toast-notifications';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { ProfessionalSidebar } from '@/components/professional-sidebar';
@@ -13,7 +13,7 @@ import { PerformanceMonitor } from '@/components/performance-monitor';
 
 import { useAuth } from '@/lib/auth-service';
 
-const inter = Inter({ subsets: ['latin'] });
+// const inter = Inter({ subsets: ['latin'] });
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -22,7 +22,6 @@ interface ClientLayoutProps {
 
 function AuthenticatedAppLayout({
   children,
-  locale,
 }: {
   children: ReactNode;
   locale: string;

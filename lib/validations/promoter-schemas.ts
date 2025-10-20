@@ -3,43 +3,57 @@ import { z } from 'zod';
 // Basic promoter profile schema
 export const promoterProfileSchema = z.object({
   id: z.number().optional(),
-  first_name: z.string().min(1, 'First name is required').max(50, 'First name is too long'),
-  last_name: z.string().min(1, 'Last name is required').max(50, 'Last name is too long'),
+  first_name: z
+    .string()
+    .min(1, 'First name is required')
+    .max(50, 'First name is too long'),
+  last_name: z
+    .string()
+    .min(1, 'Last name is required')
+    .max(50, 'Last name is too long'),
   email: z.string().email('Invalid email format'),
   phone: z.string().optional(),
   nationality: z.string().optional(),
   date_of_birth: z.date().optional(),
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
-  
+
   // Address information
   address: z.string().optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
   postal_code: z.string().optional(),
-  
+
   // Professional information
   job_title: z.string().optional(),
   department: z.string().optional(),
   work_location: z.string().optional(),
-  employment_type: z.enum(['full_time', 'part_time', 'contract', 'freelance', 'internship']).optional(),
-  
+  employment_type: z
+    .enum(['full_time', 'part_time', 'contract', 'freelance', 'internship'])
+    .optional(),
+
   // Status and availability
-  status: z.enum(['active', 'inactive', 'pending', 'suspended']).default('pending'),
-  availability: z.enum(['available', 'busy', 'unavailable', 'part_time']).default('available'),
-  overall_status: z.enum(['excellent', 'good', 'fair', 'warning', 'critical']).default('good'),
-  
+  status: z
+    .enum(['active', 'inactive', 'pending', 'suspended'])
+    .default('pending'),
+  availability: z
+    .enum(['available', 'busy', 'unavailable', 'part_time'])
+    .default('available'),
+  overall_status: z
+    .enum(['excellent', 'good', 'fair', 'warning', 'critical'])
+    .default('good'),
+
   // Documents
   id_card_number: z.string().optional(),
   id_card_expiry_date: z.date().optional(),
   passport_number: z.string().optional(),
   passport_expiry_date: z.date().optional(),
-  
+
   // Additional information
   bio: z.string().max(1000, 'Bio is too long').optional(),
   notes: z.string().max(1000, 'Notes are too long').optional(),
   tags: z.array(z.string()).optional(),
-  
+
   // Timestamps
   created_at: z.date().optional(),
   updated_at: z.date().optional(),
@@ -49,9 +63,15 @@ export const promoterProfileSchema = z.object({
 export const promoterSkillSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  skill_name: z.string().min(1, 'Skill name is required').max(100, 'Skill name is too long'),
+  skill_name: z
+    .string()
+    .min(1, 'Skill name is required')
+    .max(100, 'Skill name is too long'),
   proficiency: z.enum(['beginner', 'intermediate', 'advanced', 'expert']),
-  years_of_experience: z.number().min(0, 'Years of experience must be positive').optional(),
+  years_of_experience: z
+    .number()
+    .min(0, 'Years of experience must be positive')
+    .optional(),
   certification: z.string().optional(),
   verified: z.boolean().default(false),
   verified_by: z.string().uuid('Invalid verifier ID').optional(),
@@ -62,8 +82,14 @@ export const promoterSkillSchema = z.object({
 export const promoterExperienceSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  company_name: z.string().min(1, 'Company name is required').max(255, 'Company name is too long'),
-  job_title: z.string().min(1, 'Job title is required').max(255, 'Job title is too long'),
+  company_name: z
+    .string()
+    .min(1, 'Company name is required')
+    .max(255, 'Company name is too long'),
+  job_title: z
+    .string()
+    .min(1, 'Job title is required')
+    .max(255, 'Job title is too long'),
   start_date: z.date(),
   end_date: z.date().optional(),
   is_current: z.boolean().default(false),
@@ -78,13 +104,26 @@ export const promoterExperienceSchema = z.object({
 export const promoterEducationSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  institution_name: z.string().min(1, 'Institution name is required').max(255, 'Institution name is too long'),
-  degree: z.string().min(1, 'Degree is required').max(255, 'Degree is required'),
-  field_of_study: z.string().min(1, 'Field of study is required').max(255, 'Field of study is required'),
+  institution_name: z
+    .string()
+    .min(1, 'Institution name is required')
+    .max(255, 'Institution name is too long'),
+  degree: z
+    .string()
+    .min(1, 'Degree is required')
+    .max(255, 'Degree is required'),
+  field_of_study: z
+    .string()
+    .min(1, 'Field of study is required')
+    .max(255, 'Field of study is required'),
   start_date: z.date(),
   end_date: z.date().optional(),
   is_current: z.boolean().default(false),
-  gpa: z.number().min(0, 'GPA must be positive').max(4, 'GPA cannot exceed 4').optional(),
+  gpa: z
+    .number()
+    .min(0, 'GPA must be positive')
+    .max(4, 'GPA cannot exceed 4')
+    .optional(),
   honors: z.string().optional(),
   description: z.string().max(1000, 'Description is too long').optional(),
   location: z.string().optional(),
@@ -94,8 +133,18 @@ export const promoterEducationSchema = z.object({
 export const promoterDocumentSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  document_type: z.enum(['cv', 'id_card', 'passport', 'certificate', 'reference_letter', 'other']),
-  file_name: z.string().min(1, 'File name is required').max(255, 'File name is too long'),
+  document_type: z.enum([
+    'cv',
+    'id_card',
+    'passport',
+    'certificate',
+    'reference_letter',
+    'other',
+  ]),
+  file_name: z
+    .string()
+    .min(1, 'File name is required')
+    .max(255, 'File name is too long'),
   file_path: z.string().min(1, 'File path is required'),
   file_size: z.number().positive('File size must be positive'),
   mime_type: z.string().min(1, 'MIME type is required'),
@@ -111,7 +160,10 @@ export const promoterDocumentSchema = z.object({
 export const promoterReferenceSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  reference_name: z.string().min(1, 'Reference name is required').max(255, 'Reference name is too long'),
+  reference_name: z
+    .string()
+    .min(1, 'Reference name is required')
+    .max(255, 'Reference name is too long'),
   reference_title: z.string().optional(),
   company: z.string().optional(),
   email: z.string().email('Invalid email format').optional(),
@@ -127,9 +179,21 @@ export const promoterReferenceSchema = z.object({
 export const promoterAvailabilitySchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
-  day_of_week: z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']),
-  start_time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
-  end_time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+  day_of_week: z.enum([
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ]),
+  start_time: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
+  end_time: z
+    .string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format'),
   is_available: z.boolean().default(true),
   notes: z.string().max(500, 'Notes are too long').optional(),
 });
@@ -139,12 +203,25 @@ export const promoterPerformanceSchema = z.object({
   id: z.number().optional(),
   promoter_id: z.number(),
   metric_date: z.date(),
-  contracts_completed: z.number().min(0, 'Contracts completed must be positive'),
-  contracts_cancelled: z.number().min(0, 'Contracts cancelled must be positive'),
+  contracts_completed: z
+    .number()
+    .min(0, 'Contracts completed must be positive'),
+  contracts_cancelled: z
+    .number()
+    .min(0, 'Contracts cancelled must be positive'),
   total_earnings: z.number().min(0, 'Total earnings must be positive'),
-  average_rating: z.number().min(0, 'Average rating must be positive').max(5, 'Average rating cannot exceed 5'),
-  on_time_delivery_rate: z.number().min(0, 'On-time delivery rate must be positive').max(100, 'On-time delivery rate cannot exceed 100'),
-  customer_satisfaction_score: z.number().min(0, 'Customer satisfaction score must be positive').max(10, 'Customer satisfaction score cannot exceed 10'),
+  average_rating: z
+    .number()
+    .min(0, 'Average rating must be positive')
+    .max(5, 'Average rating cannot exceed 5'),
+  on_time_delivery_rate: z
+    .number()
+    .min(0, 'On-time delivery rate must be positive')
+    .max(100, 'On-time delivery rate cannot exceed 100'),
+  customer_satisfaction_score: z
+    .number()
+    .min(0, 'Customer satisfaction score must be positive')
+    .max(10, 'Customer satisfaction score cannot exceed 10'),
   notes: z.string().max(500, 'Notes are too long').optional(),
 });
 
@@ -152,18 +229,38 @@ export const promoterPerformanceSchema = z.object({
 export const promoterSearchSchema = z.object({
   query: z.string().optional(),
   status: z.enum(['active', 'inactive', 'pending', 'suspended']).optional(),
-  availability: z.enum(['available', 'busy', 'unavailable', 'part_time']).optional(),
-  overall_status: z.enum(['excellent', 'good', 'fair', 'warning', 'critical']).optional(),
+  availability: z
+    .enum(['available', 'busy', 'unavailable', 'part_time'])
+    .optional(),
+  overall_status: z
+    .enum(['excellent', 'good', 'fair', 'warning', 'critical'])
+    .optional(),
   skills: z.array(z.string()).optional(),
-  experience_level: z.enum(['beginner', 'intermediate', 'advanced', 'expert']).optional(),
-  min_experience_years: z.number().min(0, 'Minimum experience years must be positive').optional(),
-  max_experience_years: z.number().min(0, 'Maximum experience years must be positive').optional(),
+  experience_level: z
+    .enum(['beginner', 'intermediate', 'advanced', 'expert'])
+    .optional(),
+  min_experience_years: z
+    .number()
+    .min(0, 'Minimum experience years must be positive')
+    .optional(),
+  max_experience_years: z
+    .number()
+    .min(0, 'Maximum experience years must be positive')
+    .optional(),
   location: z.string().optional(),
   department: z.string().optional(),
   job_title: z.string().optional(),
   nationality: z.string().optional(),
-  min_rating: z.number().min(0, 'Minimum rating must be positive').max(5, 'Minimum rating cannot exceed 5').optional(),
-  max_rating: z.number().min(0, 'Maximum rating must be positive').max(5, 'Maximum rating cannot exceed 5').optional(),
+  min_rating: z
+    .number()
+    .min(0, 'Minimum rating must be positive')
+    .max(5, 'Minimum rating cannot exceed 5')
+    .optional(),
+  max_rating: z
+    .number()
+    .min(0, 'Maximum rating must be positive')
+    .max(5, 'Maximum rating cannot exceed 5')
+    .optional(),
   tags: z.array(z.string()).optional(),
 });
 
@@ -178,7 +275,10 @@ export const promoterImportSchema = z.object({
   department: z.string().optional(),
   work_location: z.string().optional(),
   skills: z.string().optional(), // Comma-separated skills
-  experience_years: z.number().min(0, 'Experience years must be positive').optional(),
+  experience_years: z
+    .number()
+    .min(0, 'Experience years must be positive')
+    .optional(),
   education_level: z.string().optional(),
   status: z.enum(['active', 'inactive', 'pending']).default('pending'),
 });

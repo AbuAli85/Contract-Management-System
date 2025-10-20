@@ -94,13 +94,13 @@ export async function applyRateLimit(
   try {
     // Get identifier (IP address or custom identifier)
     const identifier = config.identifier || getClientIdentifier(request);
-    
+
     // Get the appropriate rate limiter
-    const limiter = config.customLimit 
+    const limiter = config.customLimit
       ? new Ratelimit({
           redis,
           limiter: Ratelimit.slidingWindow(
-            config.customLimit.requests, 
+            config.customLimit.requests,
             config.customLimit.window
           ),
           analytics: true,
@@ -116,12 +116,13 @@ export async function applyRateLimit(
       limit: result.limit,
       remaining: result.remaining,
       reset: result.reset,
-      retryAfter: result.success ? undefined : Math.ceil((result.reset - Date.now()) / 1000),
+      retryAfter: result.success
+        ? undefined
+        : Math.ceil((result.reset - Date.now()) / 1000),
     };
-
   } catch (error) {
     console.error('Rate limiting error:', error);
-    
+
     // In case of Redis failure, allow the request but log the error
     // This prevents the entire system from failing due to rate limiting issues
     return {
@@ -138,17 +139,18 @@ export async function applyRateLimit(
  */
 function getClientIdentifier(request: NextRequest): string {
   // Get IP address
-  const ip = request.ip || 
-             request.headers.get('x-forwarded-for')?.split(',')[0] || 
-             request.headers.get('x-real-ip') || 
-             'unknown';
-  
+  const ip =
+    request.ip ||
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+
   // Get user agent for additional context
   const userAgent = request.headers.get('user-agent') || 'unknown';
-  
+
   // Get path for endpoint-specific rate limiting
   const path = request.nextUrl.pathname;
-  
+
   // Create a unique identifier
   return `${ip}:${path}:${userAgent}`;
 }
@@ -156,7 +158,9 @@ function getClientIdentifier(request: NextRequest): string {
 /**
  * Get rate limit headers for response
  */
-export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
+export function getRateLimitHeaders(
+  result: RateLimitResult
+): Record<string, string> {
   const headers: Record<string, string> = {
     'X-RateLimit-Limit': result.limit.toString(),
     'X-RateLimit-Remaining': result.remaining.toString(),
@@ -205,9 +209,11 @@ export function withRateLimit(
 
       // Add rate limit headers to successful responses
       const headers = new Headers(response.headers);
-      Object.entries(getRateLimitHeaders(rateLimitResult)).forEach(([key, value]) => {
-        headers.set(key, value);
-      });
+      Object.entries(getRateLimitHeaders(rateLimitResult)).forEach(
+        ([key, value]) => {
+          headers.set(key, value);
+        }
+      );
 
       // Return response with rate limit headers
       return new Response(response.body, {
@@ -215,10 +221,9 @@ export function withRateLimit(
         statusText: response.statusText,
         headers,
       });
-
     } catch (error) {
       console.error('API handler error:', error);
-      
+
       // Return error response with rate limit headers
       return new Response(
         JSON.stringify({
@@ -247,12 +252,12 @@ export const RATE_LIMIT_CONFIGS = {
   '/api/auth/forgot-password': { type: 'passwordReset' as const },
   '/api/auth/reset-password': { type: 'passwordReset' as const },
   '/api/auth/verify-email': { type: 'auth' as const },
-  
+
   // API endpoints
   '/api/contracts': { type: 'api' as const },
   '/api/users': { type: 'api' as const },
   '/api/dashboard': { type: 'dashboard' as const },
-  
+
   // File uploads
   '/api/upload': { type: 'upload' as const },
   '/api/documents': { type: 'upload' as const },
@@ -261,7 +266,9 @@ export const RATE_LIMIT_CONFIGS = {
 /**
  * Get rate limit configuration for a specific endpoint
  */
-export function getRateLimitConfigForEndpoint(pathname: string): RateLimitConfig {
+export function getRateLimitConfigForEndpoint(
+  pathname: string
+): RateLimitConfig {
   // Find exact match first
   if (RATE_LIMIT_CONFIGS[pathname as keyof typeof RATE_LIMIT_CONFIGS]) {
     return RATE_LIMIT_CONFIGS[pathname as keyof typeof RATE_LIMIT_CONFIGS];

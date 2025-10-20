@@ -19,7 +19,10 @@ export interface GuardResult {
   allowed: boolean;
   reason: string;
   required_permission: string;
-  user_permissions: (string | { resource: string; action: string; scope: string })[];
+  user_permissions: (
+    | string
+    | { resource: string; action: string; scope: string }
+  )[];
   user_roles: string[];
   user_id: string | null;
   context?: Record<string, any>;
@@ -54,10 +57,19 @@ export async function checkPermission(
 
     // Evaluate permission
     const evalOptions: any = {};
-    if (typeof options.skipAudit === 'boolean') evalOptions.skipAudit = options.skipAudit;
-    if (typeof options.skipCache === 'boolean') evalOptions.skipCache = options.skipCache;
-    if (options.context && (options.context as any).user && (options.context as any).params) {
-      evalOptions.context = { ...(options.context as any), request: (options.context as any).request } as PermissionContext;
+    if (typeof options.skipAudit === 'boolean')
+      evalOptions.skipAudit = options.skipAudit;
+    if (typeof options.skipCache === 'boolean')
+      evalOptions.skipCache = options.skipCache;
+    if (
+      options.context &&
+      (options.context as any).user &&
+      (options.context as any).params
+    ) {
+      evalOptions.context = {
+        ...(options.context as any),
+        request: (options.context as any).request,
+      } as PermissionContext;
     }
 
     const normalizedOptions: any = {
@@ -67,7 +79,7 @@ export async function checkPermission(
     if (evalOptions.context) {
       normalizedOptions.context = evalOptions.context as PermissionContext;
     }
-    
+
     // First try with normal cache
     let result = await permissionEvaluator.evaluatePermission(
       user.id,
@@ -76,17 +88,25 @@ export async function checkPermission(
     );
 
     // If no permissions found, force direct database lookup as fallback
-    if (!result.allowed && (!result.user_permissions || result.user_permissions.length === 0)) {
-      console.warn('🔐 RBAC: No permissions found via cache, forcing direct lookup...');
+    if (
+      !result.allowed &&
+      (!result.user_permissions || result.user_permissions.length === 0)
+    ) {
+      console.warn(
+        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
+      );
       normalizedOptions.skipCache = true;
       result = await permissionEvaluator.evaluatePermission(
         user.id,
         requiredPermission,
         normalizedOptions
       );
-      
+
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log('🔐 RBAC: Direct lookup found permissions:', result.user_permissions.length);
+        console.log(
+          '🔐 RBAC: Direct lookup found permissions:',
+          result.user_permissions.length
+        );
       }
     }
 
@@ -129,8 +149,13 @@ export async function guardPermission(
     const enforcementMode = process.env.RBAC_ENFORCEMENT || 'enforce';
 
     // SECURITY FIX: Prevent dry-run mode in production
-    if (process.env.NODE_ENV === 'production' && enforcementMode !== 'enforce') {
-      console.warn('🔐 RBAC: Production environment detected, forcing enforce mode');
+    if (
+      process.env.NODE_ENV === 'production' &&
+      enforcementMode !== 'enforce'
+    ) {
+      console.warn(
+        '🔐 RBAC: Production environment detected, forcing enforce mode'
+      );
       // Don't throw error, just log warning and continue
     }
 
@@ -145,7 +170,10 @@ export async function guardPermission(
     // Optional: add audit logging here if needed
 
     // Handle dry-run mode (development only)
-    if (enforcementMode === 'dry-run' && process.env.NODE_ENV === 'development') {
+    if (
+      enforcementMode === 'dry-run' &&
+      process.env.NODE_ENV === 'development'
+    ) {
       if (!result.allowed) {
         console.log(
           `🔐 RBAC: WOULD_BLOCK - ${requiredPermission} for ${request.url}`
@@ -284,7 +312,10 @@ async function guardAnyPermission(
       if (result.user_permissions.length === 0) {
         console.error('🔐 RBAC DEBUG: User permissions array is empty!');
         console.error('🔐 RBAC DEBUG: User roles array:', result.user_roles);
-        console.error('🔐 RBAC DEBUG: Result object:', JSON.stringify(result, null, 2));
+        console.error(
+          '🔐 RBAC DEBUG: Result object:',
+          JSON.stringify(result, null, 2)
+        );
       }
 
       return NextResponse.json(
@@ -352,41 +383,56 @@ export async function checkAnyPermission(
       skipAudit: !!options.skipAudit,
       skipCache: !!options.skipCache,
     };
-    if (options.context) anyOptions.context = options.context as PermissionContext;
-    
-    console.log('🔐 RBAC DEBUG: Calling hasAnyPermission with options:', anyOptions);
+    if (options.context)
+      anyOptions.context = options.context as PermissionContext;
+
+    console.log(
+      '🔐 RBAC DEBUG: Calling hasAnyPermission with options:',
+      anyOptions
+    );
     let result = await permissionEvaluator.hasAnyPermission(
       user.id,
       requiredPermissions,
       anyOptions
     );
-    
+
     console.log('🔐 RBAC DEBUG: hasAnyPermission result:', {
       allowed: result.allowed,
       user_permissions_count: result.user_permissions?.length || 0,
       user_roles_count: result.user_roles?.length || 0,
-      reason: result.reason
+      reason: result.reason,
     });
 
     // If no permissions found, force direct database lookup as fallback
-    if (!result.allowed && (!result.user_permissions || result.user_permissions.length === 0)) {
-      console.warn('🔐 RBAC: No permissions found via cache, forcing direct lookup...');
+    if (
+      !result.allowed &&
+      (!result.user_permissions || result.user_permissions.length === 0)
+    ) {
+      console.warn(
+        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
+      );
       anyOptions.skipCache = true;
       result = await permissionEvaluator.hasAnyPermission(
         user.id,
         requiredPermissions,
         anyOptions
       );
-      
-      console.log('🔐 RBAC DEBUG: hasAnyPermission result after direct lookup:', {
-        allowed: result.allowed,
-        user_permissions_count: result.user_permissions?.length || 0,
-        user_roles_count: result.user_roles?.length || 0,
-        reason: result.reason
-      });
+
+      console.log(
+        '🔐 RBAC DEBUG: hasAnyPermission result after direct lookup:',
+        {
+          allowed: result.allowed,
+          user_permissions_count: result.user_permissions?.length || 0,
+          user_roles_count: result.user_roles?.length || 0,
+          reason: result.reason,
+        }
+      );
 
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log('🔐 RBAC: Direct lookup found permissions:', result.user_permissions.length);
+        console.log(
+          '🔐 RBAC: Direct lookup found permissions:',
+          result.user_permissions.length
+        );
       }
     }
 
@@ -443,8 +489,9 @@ export async function checkAllPermissions(
       skipAudit: !!options.skipAudit,
       skipCache: !!options.skipCache,
     };
-    if (options.context) allOptions.context = options.context as PermissionContext;
-    
+    if (options.context)
+      allOptions.context = options.context as PermissionContext;
+
     // First try with normal cache
     let result = await permissionEvaluator.hasAllPermissions(
       user.id,
@@ -453,17 +500,25 @@ export async function checkAllPermissions(
     );
 
     // If no permissions found, force direct database lookup as fallback
-    if (!result.allowed && (!result.user_permissions || result.user_permissions.length === 0)) {
-      console.warn('🔐 RBAC: No permissions found via cache, forcing direct lookup...');
+    if (
+      !result.allowed &&
+      (!result.user_permissions || result.user_permissions.length === 0)
+    ) {
+      console.warn(
+        '🔐 RBAC: No permissions found via cache, forcing direct lookup...'
+      );
       allOptions.skipCache = true;
       result = await permissionEvaluator.hasAllPermissions(
         user.id,
         requiredPermissions,
         allOptions
       );
-      
+
       if (result.user_permissions && result.user_permissions.length > 0) {
-        console.log('🔐 RBAC: Direct lookup found permissions:', result.user_permissions.length);
+        console.log(
+          '🔐 RBAC: Direct lookup found permissions:',
+          result.user_permissions.length
+        );
       }
     }
 

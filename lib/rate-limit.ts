@@ -1,16 +1,16 @@
 /**
  * Rate Limiting Utility
- * 
+ *
  * Provides rate limiting functionality to protect API endpoints from abuse.
  * Uses in-memory storage for development and can be extended to use Redis in production.
- * 
+ *
  * @example
  * ```typescript
  * import { ratelimit, getClientIdentifier } from '@/lib/rate-limit';
- * 
+ *
  * const identifier = getClientIdentifier(request);
  * const { success, remaining } = await ratelimit.limit(identifier);
- * 
+ *
  * if (!success) {
  *   return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
  * }
@@ -31,7 +31,7 @@ interface RateLimitConfig {
 
 /**
  * In-Memory Rate Limiter
- * 
+ *
  * Simple rate limiter using Map for development.
  * For production, consider using Redis with Upstash or similar.
  */
@@ -41,7 +41,7 @@ class InMemoryRateLimiter {
 
   constructor(config: RateLimitConfig) {
     this.config = config;
-    
+
     // Clean up old entries every minute
     setInterval(() => this.cleanup(), 60000);
   }
@@ -49,18 +49,18 @@ class InMemoryRateLimiter {
   async limit(identifier: string): Promise<RateLimitResult> {
     const now = Date.now();
     const windowStart = now - this.config.interval;
-    
+
     // Get existing requests for this identifier
     const userRequests = this.requests.get(identifier) || [];
-    
+
     // Filter to only recent requests within the time window
     const recentRequests = userRequests.filter(time => time > windowStart);
-    
+
     // Check if limit exceeded
     if (recentRequests.length >= this.config.maxRequests) {
       const oldestRequest = Math.min(...recentRequests);
       const resetTime = oldestRequest + this.config.interval;
-      
+
       return {
         success: false,
         remaining: 0,
@@ -68,14 +68,14 @@ class InMemoryRateLimiter {
         limit: this.config.maxRequests,
       };
     }
-    
+
     // Add current request
     recentRequests.push(now);
     this.requests.set(identifier, recentRequests);
-    
+
     const remaining = this.config.maxRequests - recentRequests.length;
     const resetTime = now + this.config.interval;
-    
+
     return {
       success: true,
       remaining,
@@ -86,11 +86,11 @@ class InMemoryRateLimiter {
 
   private cleanup() {
     const now = Date.now();
-    const cutoff = now - (this.config.interval * 2); // Keep 2x window for safety
-    
+    const cutoff = now - this.config.interval * 2; // Keep 2x window for safety
+
     for (const [identifier, requests] of this.requests.entries()) {
       const recentRequests = requests.filter(time => time > cutoff);
-      
+
       if (recentRequests.length === 0) {
         this.requests.delete(identifier);
       } else {
@@ -106,8 +106,10 @@ class InMemoryRateLimiter {
   getStats() {
     return {
       totalIdentifiers: this.requests.size,
-      totalRequests: Array.from(this.requests.values())
-        .reduce((sum, reqs) => sum + reqs.length, 0),
+      totalRequests: Array.from(this.requests.values()).reduce(
+        (sum, reqs) => sum + reqs.length,
+        0
+      ),
     };
   }
 }
@@ -121,19 +123,19 @@ const RATE_LIMIT_CONFIGS = {
     interval: 60 * 1000, // 1 minute
     maxRequests: 60,
   },
-  
+
   // Stricter limit for resource-intensive endpoints: 10 requests per minute
   apiStrict: {
     interval: 60 * 1000,
     maxRequests: 10,
   },
-  
+
   // Authentication endpoints: 5 requests per minute
   auth: {
     interval: 60 * 1000,
     maxRequests: 5,
   },
-  
+
   // Very strict for sensitive operations: 3 requests per minute
   sensitive: {
     interval: 60 * 1000,
@@ -143,16 +145,20 @@ const RATE_LIMIT_CONFIGS = {
 
 // Create rate limiter instances
 export const ratelimit = new InMemoryRateLimiter(RATE_LIMIT_CONFIGS.api);
-export const ratelimitStrict = new InMemoryRateLimiter(RATE_LIMIT_CONFIGS.apiStrict);
+export const ratelimitStrict = new InMemoryRateLimiter(
+  RATE_LIMIT_CONFIGS.apiStrict
+);
 export const ratelimitAuth = new InMemoryRateLimiter(RATE_LIMIT_CONFIGS.auth);
-export const ratelimitSensitive = new InMemoryRateLimiter(RATE_LIMIT_CONFIGS.sensitive);
+export const ratelimitSensitive = new InMemoryRateLimiter(
+  RATE_LIMIT_CONFIGS.sensitive
+);
 
 /**
  * Get client identifier from request
- * 
+ *
  * Attempts to get the client's IP address from various headers,
  * falling back to 'anonymous' if not available.
- * 
+ *
  * @param request - The incoming request
  * @returns Client identifier string
  */
@@ -164,24 +170,24 @@ export function getClientIdentifier(request: Request): string {
     const ips = forwarded.split(',').map(ip => ip.trim());
     return ips[0] || 'anonymous';
   }
-  
+
   const realIp = request.headers.get('x-real-ip');
   if (realIp) {
     return realIp;
   }
-  
+
   const cfConnectingIp = request.headers.get('cf-connecting-ip'); // Cloudflare
   if (cfConnectingIp) {
     return cfConnectingIp;
   }
-  
+
   // Fallback to anonymous if no IP found
   return 'anonymous';
 }
 
 /**
  * Format rate limit headers for response
- * 
+ *
  * @param result - Rate limit result
  * @returns Headers object
  */
@@ -198,13 +204,13 @@ export function getRateLimitHeaders(result: RateLimitResult): HeadersInit {
 
 /**
  * Create a rate limit response
- * 
+ *
  * @param result - Rate limit result
  * @returns Response with appropriate status and headers
  */
 export function createRateLimitResponse(result: RateLimitResult) {
   const retryAfter = Math.ceil((result.reset - Date.now()) / 1000);
-  
+
   return {
     success: false,
     error: 'Too many requests',
@@ -215,7 +221,7 @@ export function createRateLimitResponse(result: RateLimitResult) {
 
 /**
  * HOC to add rate limiting to API routes
- * 
+ *
  * @example
  * ```typescript
  * export const GET = withRateLimit(
@@ -233,11 +239,11 @@ export function withRateLimit(
   return async (request: Request, ...args: any[]) => {
     const identifier = getClientIdentifier(request);
     const result = await limiter.limit(identifier);
-    
+
     if (!result.success) {
       const headers = getRateLimitHeaders(result);
       const body = createRateLimitResponse(result);
-      
+
       return new Response(JSON.stringify(body), {
         status: 429,
         headers: {
@@ -246,16 +252,16 @@ export function withRateLimit(
         },
       });
     }
-    
+
     // Call the actual handler
     const response = await handler(request, ...args);
-    
+
     // Add rate limit headers to successful responses
     const headers = getRateLimitHeaders(result);
     Object.entries(headers).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
-    
+
     return response;
   };
 }

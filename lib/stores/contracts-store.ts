@@ -1,6 +1,6 @@
-import { create, StateCreator } from 'zustand';
+import { create } from 'zustand';
 import { createClient } from '@/lib/supabase/client';
-import { Contract, ContractStatus } from '@/lib/types';
+import type { Contract } from '@/lib/types';
 import { toast } from '@/hooks/use-toast';
 
 interface ContractStats {
@@ -25,7 +25,7 @@ interface ContractsStore {
   updateStats: () => void;
 }
 
-const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
+const createContractStore = (set: any, get: any) => ({
   contracts: [],
   stats: {
     total: 0,
@@ -40,6 +40,9 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     set({ isLoading: true });
     try {
       const supabaseClient = createClient();
+      if (!supabaseClient) {
+        throw new Error('Failed to create Supabase client');
+      }
       const { data, error } = await supabaseClient
         .from('contracts')
         .select('*')
@@ -48,7 +51,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
       if (error) throw error;
 
       // Transform data to handle nullable fields
-      const transformedContracts = (data || []).map(contract => ({
+      const transformedContracts = (data || []).map((contract: any) => ({
         ...contract,
         created_at: contract.created_at || new Date().toISOString(),
         updated_at: contract.updated_at || null,
@@ -65,7 +68,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     }
   },
 
-  generateContract: async contractData => {
+  generateContract: async (contractData: any) => {
     set({ isLoading: true });
     try {
       // Simulate API call
@@ -98,7 +101,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     console.log('Retrying contract:', contractId);
     // In a real app, you'd call an API to retry the contract generation
     // For now, we'll just move it back to 'pending'
-    const updatedContracts = get().contracts.map(contract =>
+    const updatedContracts = get().contracts.map((contract: any) =>
       contract.id === contractId ? { ...contract, status: 'pending' } : contract
     );
     set({ contracts: updatedContracts });
@@ -110,10 +113,10 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
     const stats = {
       total: contracts.length,
       pending: contracts.filter(
-        c => c.status === 'generating' || c.status === 'pending'
+        (c: any) => c.status === 'generating' || c.status === 'pending'
       ).length,
-      completed: contracts.filter(c => c.status === 'completed').length,
-      failed: contracts.filter(c => c.status === 'failed').length,
+      completed: contracts.filter((c: any) => c.status === 'completed').length,
+      failed: contracts.filter((c: any) => c.status === 'failed').length,
     };
     set({ stats });
   },
@@ -121,7 +124,7 @@ const createContractStore: StateCreator<ContractsStore> = (set, get) => ({
   clearError: () => set({ error: null }),
 
   getContractById: (id: string) => {
-    return get().contracts.find(c => c.id === id);
+    return get().contracts.find((c: Contract) => c.id === id);
   },
 });
 

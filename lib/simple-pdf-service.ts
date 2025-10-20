@@ -32,7 +32,7 @@ export class SimplePdfService {
 
       return {
         pdfBuffer: pdfContent,
-        documentUrl
+        documentUrl,
       };
     } catch (error) {
       console.error('❌ Simple PDF generation failed:', error);
@@ -188,18 +188,21 @@ startxref
   /**
    * Save PDF file
    */
-  private async savePdf(pdfBuffer: Buffer, data: ContractData): Promise<string> {
+  private async savePdf(
+    pdfBuffer: Buffer,
+    data: ContractData
+  ): Promise<string> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `Contract-${data.contract_number}-${timestamp}.pdf`;
-      
+
       // In a real implementation, you would save to:
       // 1. Local file system
       // 2. Cloud storage (AWS S3, Google Cloud Storage, etc.)
       // 3. Database
-      
+
       console.log(`💾 Saving PDF: ${fileName}`);
-      
+
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}`;
     } catch (error) {
