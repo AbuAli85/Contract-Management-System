@@ -77,7 +77,10 @@ export async function POST(request: NextRequest) {
     // Trigger Make.com webhook for general contracts
     let makecomResponse = null;
     try {
+      console.log('🔄 About to trigger Make.com webhook for contract:', contract.id);
       const makecomTriggered = await generalContractService.triggerMakeComWebhook(contract.id);
+      console.log('📊 Make.com webhook result:', makecomTriggered);
+      
       makecomResponse = {
         triggered: makecomTriggered,
         webhook_url: 'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz',

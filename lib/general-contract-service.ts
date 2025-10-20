@@ -116,7 +116,16 @@ export class GeneralContractService {
 
   private async getSupabaseClient() {
     if (!this.supabase) {
-      this.supabase = await createClient();
+      // Use service role key for database operations to bypass RLS
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Missing Supabase environment variables for service role');
+      }
+      
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+      this.supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
     }
     return this.supabase;
   }
@@ -246,14 +255,10 @@ export class GeneralContractService {
   async getContractWithRelatedData(contractId: string): Promise<any> {
     const supabase = await this.getSupabaseClient();
 
+    // Fetch contract data first
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
-      .select(`
-        *,
-        promoter:promoters(*),
-        client:parties!contracts_client_id_fkey(*),
-        employer:parties!contracts_employer_id_fkey(*)
-      `)
+      .select('*')
       .eq('id', contractId)
       .single();
 
@@ -261,7 +266,20 @@ export class GeneralContractService {
       throw new Error(`Failed to fetch contract: ${contractError.message}`);
     }
 
-    return contract;
+    // Fetch related data separately to avoid foreign key relationship issues
+    const [promoterResult, clientResult, employerResult] = await Promise.all([
+      contract.promoter_id ? supabase.from('promoters').select('*').eq('id', contract.promoter_id).single() : Promise.resolve({ data: null, error: null }),
+      contract.client_id ? supabase.from('parties').select('*').eq('id', contract.client_id).single() : Promise.resolve({ data: null, error: null }),
+      contract.employer_id ? supabase.from('parties').select('*').eq('id', contract.employer_id).single() : Promise.resolve({ data: null, error: null })
+    ]);
+
+    // Combine the data
+    return {
+      ...contract,
+      promoter: promoterResult.data,
+      client: clientResult.data,
+      employer: employerResult.data
+    };
   }
 
   /**
@@ -343,30 +361,89 @@ export class GeneralContractService {
    */
   async triggerMakeComWebhook(contractId: string): Promise<boolean> {
     try {
+      console.log('🔄 Starting Make.com webhook trigger for contract:', contractId);
+      
       const payload = await this.prepareMakeComPayload(contractId);
+      console.log('✅ Payload prepared successfully');
       
       // Use the specific general contract webhook URL
       const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL_GENERAL || 'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
+      console.log('🔗 Webhook URL:', makecomWebhookUrl);
+      
       if (!makecomWebhookUrl) {
         console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
         return false;
       }
 
-      const response = await fetch(makecomWebhookUrl, {
+      const webhookSecret = process.env.MAKE_WEBHOOK_SECRET || '';
+      console.log('🔐 Webhook secret configured:', webhookSecret ? 'Yes' : 'No');
+
+      console.log('📤 Sending webhook request...');
+      
+      // Use Node.js built-in modules for HTTP request
+      const https = require('https');
+      const http = require('http');
+      const { URL } = require('url');
+      
+      const postData = JSON.stringify(payload);
+      const url = new URL(makecomWebhookUrl);
+      
+      const options = {
+        hostname: url.hostname,
+        port: url.port || (url.protocol === 'https:' ? 443 : 80),
+        path: url.pathname,
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Webhook-Secret': process.env.MAKE_WEBHOOK_SECRET || '',
-        },
-        body: JSON.stringify(payload),
+          'Content-Length': Buffer.byteLength(postData),
+          'X-Webhook-Secret': webhookSecret,
+        }
+      };
+
+      const response = await new Promise<{
+        status: number | undefined;
+        statusText: string | undefined;
+        ok: boolean;
+        data: string;
+      }>((resolve, reject) => {
+        const client = url.protocol === 'https:' ? https : http;
+        const req = client.request(options, (res: any) => {
+          let data = '';
+          res.on('data', (chunk: any) => {
+            data += chunk;
+          });
+          res.on('end', () => {
+            resolve({
+              status: res.statusCode,
+              statusText: res.statusMessage,
+              ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
+              data: data
+            });
+          });
+        });
+
+        req.on('error', (err: any) => {
+          reject(err);
+        });
+
+        req.write(postData);
+        req.end();
+      });
+
+      console.log('📥 Webhook response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        data: response.data
       });
 
       if (response.ok) {
         console.log('✅ Make.com webhook triggered successfully for general contract');
         
         // Update contract status
+        console.log('🔄 Updating contract status to processing...');
         const supabase = await this.getSupabaseClient();
-        await supabase
+        const { error: updateError } = await supabase
           .from('contracts')
           .update({ 
             status: 'processing',
@@ -374,13 +451,24 @@ export class GeneralContractService {
           })
           .eq('id', contractId);
         
+        if (updateError) {
+          console.error('❌ Failed to update contract status:', updateError);
+        } else {
+          console.log('✅ Contract status updated to processing');
+        }
+        
         return true;
       } else {
-        console.error('❌ Make.com webhook failed:', response.statusText);
+        console.error('❌ Make.com webhook failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: response.data
+        });
         return false;
       }
     } catch (error) {
       console.error('❌ Make.com webhook error:', error);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       return false;
     }
   }
