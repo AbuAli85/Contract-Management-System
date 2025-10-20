@@ -2,11 +2,20 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  const TIMEOUT_MS = 100000; // 100 seconds timeout
+  
   try {
-    const body = await request.json();
-    const supabase = await createClient();
+    // Set up timeout handling
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('PDF generation timeout')), TIMEOUT_MS);
+    });
+    
+    const processPromise = (async () => {
+      const body = await request.json();
+      const supabase = await createClient();
 
-    console.log('🔍 PDF Generation API - Received request:', body);
+      console.log('🔍 PDF Generation API - Received request:', body);
 
     // Get current user to check permissions
     const {
@@ -161,19 +170,29 @@ export async function POST(request: NextRequest) {
       fileName,
     });
 
-    return NextResponse.json({
-      success: true,
-      pdf_url: publicUrl,
-      contract_number: contractNumber,
-      status: 'completed',
-      contract: updatedContract,
-    });
+      return NextResponse.json({
+        success: true,
+        pdf_url: publicUrl,
+        contract_number: contractNumber,
+        status: 'completed',
+        contract: updatedContract,
+        processing_time: Date.now() - startTime,
+      });
+    })();
+    
+    // Race between processing and timeout
+    return await Promise.race([processPromise, timeoutPromise]);
+    
   } catch (error) {
     console.error('PDF Generation API error:', error);
+    const processingTime = Date.now() - startTime;
+    
     return NextResponse.json(
       {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
+        processing_time: processingTime,
+        timeout: error instanceof Error && error.message.includes('timeout'),
       },
       { status: 500 }
     );

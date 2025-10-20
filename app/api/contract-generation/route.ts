@@ -13,10 +13,19 @@ const NOTIFY_WEBHOOK_URL =
 
 export const POST = withAnyRBAC(
   ['contract:generate:own', 'contract:create:own'],
-  async (request: Request) => {
+  async (request: Request): Promise<NextResponse> => {
+    const startTime = Date.now();
+    const TIMEOUT_MS = 80000; // 80 seconds timeout
+    
     try {
-      // Parse request body
-      const body = await request.json();
+      // Set up timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Contract generation timeout')), TIMEOUT_MS);
+      });
+      
+      const processPromise = (async () => {
+        // Parse request body
+        const body = await request.json();
 
       // Authenticate user
       const supabase = await createClient();
@@ -59,7 +68,6 @@ export const POST = withAnyRBAC(
       const { contractId } = body;
       const { error: updateError } = await supabase
         .from('contracts')
-        // @ts-expect-error - pdf_url column exists but types not yet regenerated after migration
         .update({ pdf_url: pdfUrl, status: 'completed' })
         .eq('id', contractId);
       if (updateError) {
@@ -81,11 +89,26 @@ export const POST = withAnyRBAC(
         body: JSON.stringify(notifyPayload),
       });
 
-      // 4. Return PDF URL
-      return NextResponse.json({ pdf_url: pdfUrl });
+        // 4. Return PDF URL
+        return NextResponse.json({ 
+          pdf_url: pdfUrl,
+          processing_time: Date.now() - startTime 
+        });
+      })();
+      
+      // Race between processing and timeout
+      const result = await Promise.race([processPromise, timeoutPromise]);
+      return result as NextResponse;
+      
     } catch (error) {
+      const processingTime = Date.now() - startTime;
       return NextResponse.json(
-        { error: 'Internal server error', details: (error as Error).message },
+        { 
+          error: 'Internal server error', 
+          details: (error as Error).message,
+          processing_time: processingTime,
+          timeout: error instanceof Error && error.message.includes('timeout')
+        },
         { status: 500 }
       );
     }

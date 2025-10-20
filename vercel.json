@@ -6,7 +6,19 @@
   "framework": "nextjs",
   "functions": {
     "app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "app/api/pdf-generation/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/contract-generation/route.ts": {
+      "maxDuration": 90
+    },
+    "app/api/webhook/**/*.ts": {
+      "maxDuration": 60
+    },
+    "app/api/dashboard/analytics/paginated/route.ts": {
+      "maxDuration": 45
     }
   },
   "headers": [
