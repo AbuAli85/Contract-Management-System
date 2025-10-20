@@ -3,44 +3,26 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withRBAC } from '@/lib/rbac/guard';
-import { ratelimitSensitive, getClientIdentifier, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rate-limit';
+import { ratelimitStrict, getClientIdentifier, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rate-limit';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
 // Validation schema for bulk actions
 const bulkActionSchema = z.object({
-  action: z.enum(['archive', 'delete', 'assign', 'notify', 'update_status']),
-  promoterIds: z.array(z.string().uuid()).min(1, 'At least one promoter ID is required').max(100, 'Maximum 100 promoters at once'),
-  // Optional fields based on action type
-  employerId: z.string().uuid().optional(), // For 'assign' action
-  status: z.enum(['active', 'inactive', 'suspended', 'holiday', 'on_leave', 'terminated']).optional(), // For 'update_status' action
-  notificationType: z.enum(['standard', 'urgent', 'reminder']).optional(), // For 'notify' action
-  message: z.string().optional(), // For 'notify' action
+  action: z.enum(['archive', 'delete', 'notify', 'assign', 'update_status']),
+  promoterIds: z.array(z.string().uuid()).min(1, 'At least one promoter ID is required'),
+  status: z.string().optional(),
+  notificationType: z.enum(['standard', 'urgent', 'reminder']).optional(),
+  companyId: z.string().uuid().optional(),
 });
 
-/**
- * Bulk Actions API
- * 
- * Handles bulk operations on multiple promoters at once.
- * Requires 'promoter:manage:own' permission.
- * 
- * @endpoint POST /api/promoters/bulk
- * 
- * @body {
- *   action: 'archive' | 'delete' | 'assign' | 'notify' | 'update_status',
- *   promoterIds: string[],
- *   employerId?: string,
- *   status?: string,
- *   notificationType?: string,
- *   message?: string
- * }
- */
+// ✅ SECURITY: RBAC enabled with rate limiting
 export const POST = withRBAC('promoter:manage:own', async (request: Request) => {
   try {
-    // ✅ SECURITY: Apply strict rate limiting (3 requests per minute)
+    // ✅ SECURITY: Apply rate limiting
     const identifier = getClientIdentifier(request);
-    const rateLimitResult = await ratelimitSensitive.limit(identifier);
+    const rateLimitResult = await ratelimitStrict.limit(identifier);
     
     if (!rateLimitResult.success) {
       const headers = getRateLimitHeaders(rateLimitResult);
@@ -56,23 +38,20 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
     }
 
     console.log('🔍 API /api/promoters/bulk POST called (RBAC ENABLED, Rate Limited)');
-
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = bulkActionSchema.parse(body);
-    const { action, promoterIds, employerId, status, notificationType, message } = validatedData;
-
-    console.log(`📦 Bulk action: ${action} on ${promoterIds.length} promoters`);
-
-    // Initialize Supabase client
+      
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Missing Supabase environment variables');
+      console.error('❌ Missing Supabase credentials');
+      return NextResponse.json(
+        { success: false, error: 'Server configuration error' },
+        { status: 500 }
+      );
     }
 
+    // ✅ SECURITY: Using ANON key with RLS policies
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
@@ -89,11 +68,8 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
     });
 
     // ✅ SECURITY: Verify authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
     if (authError || !user) {
       return NextResponse.json(
         { 
@@ -107,207 +83,247 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
 
     console.log('👤 Authenticated user:', user.email);
 
-    // Verify user has access to these promoters
-    // RLS policies will enforce this, but we can add additional checks here
-    const { data: accessiblePromoters, error: accessError } = await supabase
-      .from('promoters')
-      .select('id')
-      .in('id', promoterIds);
+    // Parse and validate request body
+    const body = await request.json();
+    const validatedData = bulkActionSchema.parse(body);
 
-    if (accessError) {
-      console.error('❌ Error checking promoter access:', accessError);
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Failed to verify promoter access',
-          details: process.env.NODE_ENV === 'development' ? accessError.message : undefined
-        },
-        { status: 500 }
-      );
-    }
+    const { action, promoterIds, status, notificationType, companyId } = validatedData;
 
-    const accessibleIds = new Set((accessiblePromoters || []).map((p: any) => p.id));
-    const inaccessibleIds = promoterIds.filter(id => !accessibleIds.has(id));
+    console.log('📊 Bulk action request:', { action, promoterCount: promoterIds.length });
 
-    if (inaccessibleIds.length > 0) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Access denied',
-          details: `You don't have access to ${inaccessibleIds.length} of the selected promoters`,
-          inaccessibleIds: process.env.NODE_ENV === 'development' ? inaccessibleIds : undefined
-        },
-        { status: 403 }
-      );
-    }
-
-    // Execute bulk action
-    let result;
-    let auditAction = '';
+    let result: any = { success: true, processed: 0, failed: 0, errors: [] };
 
     switch (action) {
       case 'archive': {
-        auditAction = 'bulk_archive';
-        const { error } = await supabase
+        // Archive promoters (soft delete by setting status to 'archived')
+        const { data: archivedPromoters, error: archiveError } = await supabase
           .from('promoters')
           .update({ 
-            status: 'inactive',
+            status: 'archived',
             updated_at: new Date().toISOString()
           })
-          .in('id', promoterIds);
+          .in('id', promoterIds)
+          .select('id, name_en, name_ar');
 
-        if (error) throw error;
+        if (archiveError) {
+          console.error('❌ Archive error:', archiveError);
+          return NextResponse.json(
+            { 
+              success: false,
+              error: 'Failed to archive promoters',
+              details: archiveError.message
+            },
+            { status: 500 }
+          );
+        }
 
-        result = {
-          success: true,
-          message: `Successfully archived ${promoterIds.length} promoter(s)`,
-          count: promoterIds.length,
-          action: 'archive',
-        };
+        result.processed = archivedPromoters?.length || 0;
+        result.message = `Successfully archived ${result.processed} promoters`;
+
+        // Create audit log
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'bulk_archive',
+            table_name: 'promoters',
+            record_id: null,
+            new_values: { promoter_ids: promoterIds, count: result.processed },
+            created_at: new Date().toISOString(),
+          });
+        } catch (auditError) {
+          console.error('Error creating audit log:', auditError);
+        }
         break;
       }
 
       case 'delete': {
-        auditAction = 'bulk_delete';
-        // Soft delete by setting status to terminated
-        const { error } = await supabase
+        // Soft delete promoters (set status to 'terminated')
+        const { data: deletedPromoters, error: deleteError } = await supabase
           .from('promoters')
           .update({ 
             status: 'terminated',
             updated_at: new Date().toISOString()
           })
-          .in('id', promoterIds);
+          .in('id', promoterIds)
+          .select('id, name_en, name_ar');
 
-        if (error) throw error;
-
-        result = {
-          success: true,
-          message: `Successfully deleted ${promoterIds.length} promoter(s)`,
-          count: promoterIds.length,
-          action: 'delete',
-        };
-        break;
-      }
-
-      case 'assign': {
-        if (!employerId) {
+        if (deleteError) {
+          console.error('❌ Delete error:', deleteError);
           return NextResponse.json(
-            { success: false, error: 'Employer ID is required for assign action' },
-            { status: 400 }
+            { 
+              success: false,
+              error: 'Failed to delete promoters',
+              details: deleteError.message
+            },
+            { status: 500 }
           );
         }
 
-        auditAction = 'bulk_assign';
-        const { error } = await supabase
-          .from('promoters')
-          .update({ 
-            employer_id: employerId,
-            updated_at: new Date().toISOString()
-          })
-          .in('id', promoterIds);
+        result.processed = deletedPromoters?.length || 0;
+        result.message = `Successfully deleted ${result.processed} promoters`;
 
-        if (error) throw error;
-
-        result = {
-          success: true,
-          message: `Successfully assigned ${promoterIds.length} promoter(s) to company`,
-          count: promoterIds.length,
-          action: 'assign',
-          employerId,
-        };
+        // Create audit log
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'bulk_delete',
+            table_name: 'promoters',
+            record_id: null,
+            new_values: { promoter_ids: promoterIds, count: result.processed },
+            created_at: new Date().toISOString(),
+          });
+        } catch (auditError) {
+          console.error('Error creating audit log:', auditError);
+        }
         break;
       }
 
       case 'update_status': {
         if (!status) {
           return NextResponse.json(
-            { success: false, error: 'Status is required for update_status action' },
+            { 
+              success: false,
+              error: 'Status is required for update_status action'
+            },
             { status: 400 }
           );
         }
 
-        auditAction = 'bulk_update_status';
-        const { error } = await supabase
+        const { data: updatedPromoters, error: updateError } = await supabase
           .from('promoters')
           .update({ 
             status,
             updated_at: new Date().toISOString()
           })
-          .in('id', promoterIds);
+          .in('id', promoterIds)
+          .select('id, name_en, name_ar');
 
-        if (error) throw error;
+        if (updateError) {
+          console.error('❌ Update error:', updateError);
+          return NextResponse.json(
+            { 
+              success: false,
+              error: 'Failed to update promoter status',
+              details: updateError.message
+            },
+            { status: 500 }
+          );
+        }
 
-        result = {
-          success: true,
-          message: `Successfully updated status for ${promoterIds.length} promoter(s) to ${status}`,
-          count: promoterIds.length,
-          action: 'update_status',
-          status,
-        };
+        result.processed = updatedPromoters?.length || 0;
+        result.message = `Successfully updated status for ${result.processed} promoters`;
+
+        // Create audit log
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'bulk_update_status',
+            table_name: 'promoters',
+            record_id: null,
+            new_values: { promoter_ids: promoterIds, status, count: result.processed },
+            created_at: new Date().toISOString(),
+          });
+        } catch (auditError) {
+          console.error('Error creating audit log:', auditError);
+        }
+        break;
+      }
+
+      case 'assign': {
+        if (!companyId) {
+          return NextResponse.json(
+            { 
+              success: false,
+              error: 'Company ID is required for assign action'
+            },
+            { status: 400 }
+          );
+        }
+
+        const { data: assignedPromoters, error: assignError } = await supabase
+          .from('promoters')
+          .update({ 
+            employer_id: companyId,
+            updated_at: new Date().toISOString()
+          })
+          .in('id', promoterIds)
+          .select('id, name_en, name_ar');
+
+        if (assignError) {
+          console.error('❌ Assign error:', assignError);
+          return NextResponse.json(
+            { 
+              success: false,
+              error: 'Failed to assign promoters',
+              details: assignError.message
+            },
+            { status: 500 }
+          );
+        }
+
+        result.processed = assignedPromoters?.length || 0;
+        result.message = `Successfully assigned ${result.processed} promoters to company`;
+
+        // Create audit log
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'bulk_assign',
+            table_name: 'promoters',
+            record_id: null,
+            new_values: { promoter_ids: promoterIds, company_id: companyId, count: result.processed },
+            created_at: new Date().toISOString(),
+          });
+        } catch (auditError) {
+          console.error('Error creating audit log:', auditError);
+        }
         break;
       }
 
       case 'notify': {
-        auditAction = 'bulk_notify';
-        // TODO: Integrate with actual notification service
-        // For now, just log the action
-        console.log('📧 Sending notifications:', {
-          type: notificationType || 'standard',
-          message,
-          recipientCount: promoterIds.length,
-        });
+        // For notifications, we'll just log the action and return success
+        // The actual notification sending would be handled by a separate service
+        result.processed = promoterIds.length;
+        result.message = `Notification queued for ${result.processed} promoters`;
 
-        // In production, you would:
-        // 1. Fetch promoter contact details
-        // 2. Send emails/SMS via service (SendGrid, Twilio, etc.)
-        // 3. Log notification history
-
-        result = {
-          success: true,
-          message: `Notifications sent to ${promoterIds.length} promoter(s)`,
-          count: promoterIds.length,
-          action: 'notify',
-          notificationType: notificationType || 'standard',
-        };
+        // Create audit log
+        try {
+          await supabase.from('audit_logs').insert({
+            user_id: user.id,
+            action: 'bulk_notify',
+            table_name: 'promoters',
+            record_id: null,
+            new_values: { 
+              promoter_ids: promoterIds, 
+              notification_type: notificationType || 'standard',
+              count: result.processed 
+            },
+            created_at: new Date().toISOString(),
+          });
+        } catch (auditError) {
+          console.error('Error creating audit log:', auditError);
+        }
         break;
       }
 
       default:
         return NextResponse.json(
-          { success: false, error: `Unknown action: ${action}` },
+          { 
+            success: false,
+            error: `Unknown action: ${action}`
+          },
           { status: 400 }
         );
     }
 
-    // Create audit log for bulk action
-    try {
-      await supabase.from('audit_logs').insert({
-        user_id: user.id,
-        action: auditAction,
-        table_name: 'promoters',
-        record_id: promoterIds[0], // Store first ID as reference
-        new_values: {
-          action,
-          promoterIds,
-          count: promoterIds.length,
-          ...validatedData,
-        },
-        created_at: new Date().toISOString(),
-      });
-    } catch (auditError) {
-      console.error('Error creating audit log:', auditError);
-      // Don't fail the request if audit logging fails
-    }
-
-    // Add rate limit headers
+    console.log(`✅ Bulk action completed: ${result.message}`);
+    
+    // Add rate limit headers to response
     const responseHeaders = getRateLimitHeaders(rateLimitResult);
-
-    console.log(`✅ Bulk action completed: ${action} on ${promoterIds.length} promoters`);
-
+    
     return NextResponse.json(result, {
       headers: responseHeaders,
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -320,12 +336,11 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
       );
     }
 
-    console.error('❌ Bulk action error:', error);
+    console.error('❌ API error:', error);
     return NextResponse.json(
       { 
-        success: false,
+        success: false, 
         error: 'Internal server error',
-        message: 'Failed to execute bulk action',
         details: process.env.NODE_ENV === 'development' 
           ? (error as Error).message 
           : undefined
@@ -334,4 +349,3 @@ export const POST = withRBAC('promoter:manage:own', async (request: Request) => 
     );
   }
 });
-
