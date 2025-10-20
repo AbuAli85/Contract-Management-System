@@ -74,9 +74,9 @@ export async function createContract(newContract: ContractInsert) {
        first_party_id,
        second_party_id,
        promoter_id,
-       first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
-       second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
+       first_party:parties!contracts_employer_id_fkey (id, name_en, name_ar, crn, type),
+       second_party:parties!contracts_client_id_fkey (id, name_en, name_ar, crn, type),
+       promoter_id`
     )
     .single();
 
@@ -206,9 +206,9 @@ export async function updateContract(
        first_party_id,
        second_party_id,
        promoter_id,
-       first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
-       second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
+       first_party:parties!contracts_employer_id_fkey (id, name_en, name_ar, crn, type),
+       second_party:parties!contracts_client_id_fkey (id, name_en, name_ar, crn, type),
+       promoter_id`
     )
     .single();
 
@@ -235,9 +235,9 @@ export async function getContractById(contractId: string) {
        first_party_id,
        second_party_id,
        promoter_id,
-       first_party:parties!contracts_first_party_id_fkey (id, name_en, name_ar, crn, type),
-       second_party:parties!contracts_second_party_id_fkey (id, name_en, name_ar, crn, type),
-       promoters (id, name_en, name_ar, id_card_number, id_card_url, passport_url, status)`
+       first_party:parties!contracts_employer_id_fkey (id, name_en, name_ar, crn, type),
+       second_party:parties!contracts_client_id_fkey (id, name_en, name_ar, crn, type),
+       promoter_id`
     )
     .eq('id', contractId)
     .single();

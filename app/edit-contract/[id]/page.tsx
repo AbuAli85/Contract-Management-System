@@ -78,9 +78,9 @@ export default function EditContractPage({
         .select(
           `
           *,
-          first_party:parties!contracts_first_party_id_fkey(name_en),
-          second_party:parties!contracts_second_party_id_fkey(name_en),
-          promoter:promoters(name_en)
+          first_party:parties!contracts_employer_id_fkey(name_en),
+          second_party:parties!contracts_client_id_fkey(name_en),
+          promoter_id
         `
         )
         .eq('id', contractId)
