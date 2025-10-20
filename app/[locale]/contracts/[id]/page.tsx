@@ -99,35 +99,6 @@ export default function ContractDetailPage() {
   // Add authentication check
   const { user, loading: authLoading } = useAuth();
 
-  // Show loading state while checking authentication
-  if (authLoading) {
-    return (
-      <div className='flex h-64 items-center justify-center'>
-        <div className='text-center'>
-          <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
-          <p className='text-muted-foreground'>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to login if not authenticated
-  if (!user) {
-    return (
-      <div className='flex h-64 items-center justify-center'>
-        <div className='text-center'>
-          <h2 className='mb-4 text-2xl font-bold'>Authentication Required</h2>
-          <p className='mb-4 text-muted-foreground'>
-            Please log in to access the contract details.
-          </p>
-          <Button asChild>
-            <Link href='/login'>Go to Login</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   const [pdfStatus, setPdfStatus] = useState<PDFStatus>({
     can_download: false,
     has_pdf: false,
@@ -330,6 +301,35 @@ export default function ContractDetailPage() {
 
   const isApproved = contract.approval_status === 'active';
   const hasPDF = !!contract.pdf_url;
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className='flex h-64 items-center justify-center'>
+        <div className='text-center'>
+          <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
+          <p className='text-muted-foreground'>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <div className='flex h-64 items-center justify-center'>
+        <div className='text-center'>
+          <h2 className='mb-4 text-2xl font-bold'>Authentication Required</h2>
+          <p className='mb-4 text-muted-foreground'>
+            Please log in to access the contract details.
+          </p>
+          <Button asChild>
+            <Link href='/login'>Go to Login</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-50 to-slate-100'>
