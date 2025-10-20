@@ -29,10 +29,12 @@ const importRequestSchema = z.object({
 export async function POST(request: Request) {
   try {
     console.log('🔍 API /api/promoters/import POST called');
-    
+
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('❌ Missing Supabase credentials');
@@ -64,10 +66,10 @@ export async function POST(request: Request) {
     if (!validation.success) {
       console.error('❌ Validation error:', validation.error);
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Invalid request data',
-          details: validation.error.format()
+          details: validation.error.format(),
         },
         { status: 400 }
       );
@@ -91,40 +93,50 @@ export async function POST(request: Request) {
           .eq('id_card_number', promoter.id_card_number)
           .single();
 
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 = no rows
-          console.error(`❌ Error checking duplicate for ${promoter.id_card_number}:`, checkError);
-          errors.push(`Error checking ${promoter.name_en}: ${checkError.message}`);
+        if (checkError && checkError.code !== 'PGRST116') {
+          // PGRST116 = no rows
+          console.error(
+            `❌ Error checking duplicate for ${promoter.id_card_number}:`,
+            checkError
+          );
+          errors.push(
+            `Error checking ${promoter.name_en}: ${checkError.message}`
+          );
           continue;
         }
 
         if (existing) {
-          console.log(`⚠️  Duplicate: ${promoter.name_en} (${promoter.id_card_number})`);
+          console.log(
+            `⚠️  Duplicate: ${promoter.name_en} (${promoter.id_card_number})`
+          );
           duplicates++;
           continue;
         }
 
         // Insert the promoter
-        const { error: insertError } = await supabase
-          .from('promoters')
-          .insert({
-            name_en: promoter.name_en,
-            name_ar: promoter.name_ar || promoter.name_en,
-            id_card_number: promoter.id_card_number,
-            passport_number: promoter.passport_number,
-            mobile_number: promoter.mobile_number,
-            email: promoter.email,
-            status: promoter.status || 'active',
-            employer_id: promoter.employer_id,
-            nationality: promoter.nationality,
-            id_card_expiry_date: promoter.id_card_expiry_date,
-            passport_expiry_date: promoter.passport_expiry_date,
-            notify_days_before_id_expiry: promoter.notify_days_before_id_expiry || 100,
-            notify_days_before_passport_expiry: promoter.notify_days_before_passport_expiry || 210,
-          });
+        const { error: insertError } = await supabase.from('promoters').insert({
+          name_en: promoter.name_en,
+          name_ar: promoter.name_ar || promoter.name_en,
+          id_card_number: promoter.id_card_number,
+          passport_number: promoter.passport_number,
+          mobile_number: promoter.mobile_number,
+          email: promoter.email,
+          status: promoter.status || 'active',
+          employer_id: promoter.employer_id,
+          nationality: promoter.nationality,
+          id_card_expiry_date: promoter.id_card_expiry_date,
+          passport_expiry_date: promoter.passport_expiry_date,
+          notify_days_before_id_expiry:
+            promoter.notify_days_before_id_expiry || 100,
+          notify_days_before_passport_expiry:
+            promoter.notify_days_before_passport_expiry || 210,
+        });
 
         if (insertError) {
           console.error(`❌ Error inserting ${promoter.name_en}:`, insertError);
-          errors.push(`Error inserting ${promoter.name_en}: ${insertError.message}`);
+          errors.push(
+            `Error inserting ${promoter.name_en}: ${insertError.message}`
+          );
           continue;
         }
 
@@ -133,14 +145,17 @@ export async function POST(request: Request) {
           importedWithCompany++;
         }
         console.log(`✅ Imported: ${promoter.name_en}`);
-
       } catch (error: any) {
         console.error(`❌ Unexpected error for ${promoter.name_en}:`, error);
-        errors.push(`Unexpected error for ${promoter.name_en}: ${error.message}`);
+        errors.push(
+          `Unexpected error for ${promoter.name_en}: ${error.message}`
+        );
       }
     }
 
-    console.log(`✅ Import complete: ${imported} imported, ${duplicates} duplicates, ${errors.length} errors`);
+    console.log(
+      `✅ Import complete: ${imported} imported, ${duplicates} duplicates, ${errors.length} errors`
+    );
 
     return NextResponse.json({
       success: true,
@@ -151,17 +166,15 @@ export async function POST(request: Request) {
       total: promoters.length,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error: any) {
     console.error('❌ API error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Internal server error',
-        details: error.message
+        details: error.message,
       },
       { status: 500 }
     );
   }
 }
-

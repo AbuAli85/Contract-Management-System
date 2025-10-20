@@ -104,24 +104,25 @@ export default function DashboardRoleRouter() {
         // Show role info for a moment before redirecting
         setTimeout(() => {
           setRedirecting(true);
-          const targetPath = roleConfig[role as UserRole]?.dashboardPath || '/dashboard/user';
+          const targetPath =
+            roleConfig[role as UserRole]?.dashboardPath || '/dashboard/user';
           console.log('Redirecting to:', targetPath);
-          
+
           // Force a small delay to show the role confirmation
           setTimeout(() => {
             router.push(targetPath);
           }, 1000);
         }, 2000);
-
       } catch (error) {
         console.error('Failed to fetch user role:', error);
         setUserRole('user'); // Default to user role
         toast({
           title: 'Error',
-          description: 'Failed to detect user role. Redirecting to default dashboard.',
+          description:
+            'Failed to detect user role. Redirecting to default dashboard.',
           variant: 'destructive',
         });
-        
+
         // Fallback to default dashboard
         setTimeout(() => {
           router.push('/dashboard/user');
@@ -136,7 +137,7 @@ export default function DashboardRoleRouter() {
     } else if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [user, authLoading, router, toast]);  // Auto-redirect to role-specific dashboard
+  }, [user, authLoading, router, toast]); // Auto-redirect to role-specific dashboard
   useEffect(() => {
     if (userRole && !redirecting) {
       const config = roleConfig[userRole];

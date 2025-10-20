@@ -13,29 +13,31 @@ Go to: `https://portal.thesmartpro.io/en/promoters`
 ---
 
 ## STAGE 1: Network Request ✅
+
 **Purpose:** Is the API call succeeding?
 
 ```javascript
 // In Console (F12), paste this:
-fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), { 
+fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), {
   cache: 'no-store',
-  headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+  headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
 })
-.then(r => {
-  console.log('📡 Response Status:', r.status, r.statusText);
-  console.log('📡 Is OK:', r.ok);
-  return r.json();
-})
-.then(data => {
-  console.log('📦 Response Data:', data);
-  console.log('   - Has promoters:', !!data.promoters);
-  console.log('   - Promoters count:', data.promoters?.length);
-  console.log('   - Success flag:', data.success);
-})
-.catch(err => console.error('❌ Error:', err.message));
+  .then(r => {
+    console.log('📡 Response Status:', r.status, r.statusText);
+    console.log('📡 Is OK:', r.ok);
+    return r.json();
+  })
+  .then(data => {
+    console.log('📦 Response Data:', data);
+    console.log('   - Has promoters:', !!data.promoters);
+    console.log('   - Promoters count:', data.promoters?.length);
+    console.log('   - Success flag:', data.success);
+  })
+  .catch(err => console.error('❌ Error:', err.message));
 ```
 
 **Expected Output:**
+
 ```
 📡 Response Status: 200 OK
 📡 Is OK: true
@@ -46,6 +48,7 @@ fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), {
 ```
 
 **If you see:**
+
 - `201 Unauthorized` → **Authentication issue**
 - `403 Forbidden` → **Permission issue**
 - `500 Internal Server Error` → **Server error**
@@ -54,6 +57,7 @@ fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), {
 ---
 
 ## STAGE 2: Component Render State ✅
+
 **Purpose:** Is React rendering the component correctly?
 
 ```javascript
@@ -76,11 +80,13 @@ fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), {
 ---
 
 ## STAGE 3: UI Display State ✅
+
 **Purpose:** What is actually visible on the page?
 
 Check which of these you see:
 
 ### Scenario A: ✅ **Page Loaded Successfully** (What you screenshot showed)
+
 ```
 ✅ Header: "Promoter Intelligence Hub"
 ✅ Metric Cards: (Total, Active workforce, Document alerts, Compliance rate)
@@ -88,52 +94,62 @@ Check which of these you see:
 ✅ Table with rows of promoters
 ✅ "More options" (⋮) button on each row
 ```
+
 → **This is WORKING correctly!**
 
 ### Scenario B: ⏳ **Loading Skeleton**
+
 ```
 Multiple gray loading bars/placeholders
 ```
+
 → **Component is fetching data, wait 3-5 seconds**
 
 ### Scenario C: ❌ **Error Card**
+
 ```
 🔴 "Unable to Load Promoters"
 Error message showing
 "Try Again" and "Go to Dashboard" buttons
 ```
+
 → **API request failed - Check STAGE 1 above**
 
 ### Scenario D: ⚠️ **Empty State**
+
 ```
 "No Promoters Found"
 Possible reasons: No promoters have been added...
 "Add First Promoter" button
 ```
+
 → **API returned successfully but no data in database**
 
 ---
 
 ## STAGE 4: Menu Interaction ✅
+
 **Purpose:** Does clicking the menu button work?
 
 1. **Click the "⋮" (More options) button** on any promoter row
 2. **Check if dropdown appears** with these items:
+
    ```
    VIEW & EDIT
    - 👁️ View profile
    - ✏️ Edit details
-   
+
    [conditional sections if applicable]
-   
+
    ACTIONS
    - 📧 Send notification
-   
+
    [destructive section]
    - 📦 Archive record
    ```
 
 **Testing the click handlers:**
+
 ```javascript
 // In Console, paste this:
 console.log('🎯 TESTING MENU CLICKS');
@@ -142,11 +158,11 @@ console.log('🎯 TESTING MENU CLICKS');
 const moreBtn = document.querySelector('button[title="More options"]');
 if (moreBtn) {
   console.log('✅ Found More options button');
-  
+
   // Simulate click
   console.log('🖱️ Simulating click...');
   moreBtn.click();
-  
+
   // Wait and check what appears
   setTimeout(() => {
     const menuItems = document.querySelectorAll('[role="menuitem"]');
@@ -163,35 +179,44 @@ if (moreBtn) {
 ---
 
 ## STAGE 5: Click Handler Response ✅
+
 **Purpose:** When you click a menu item, does ANYTHING happen?
 
 1. **Click "View profile"** in the dropdown
 2. **Check ONE of these:**
 
    **Option A: Toast notification appears**
+
    ```
    ✅ "Opening profile..." message appears briefly
    ```
+
    → **Handler fired!**
 
    **Option B: Page navigates**
+
    ```
    URL changes to something like:
    /en/promoters/[promoter-id]
    ```
+
    → **Click handler worked!**
 
    **Option C: Console shows handler output**
+
    ```javascript
    // Look in console for:
    [CLICK] View profile for: [Promoter Name]
    ```
+
    → **Handler was called!**
 
    **Option D: NOTHING happens**
+
    ```
    No toast, no navigation, no console output
    ```
+
    → **Click handler not firing - see TROUBLESHOOTING**
 
 ---
@@ -199,38 +224,48 @@ if (moreBtn) {
 ## TROUBLESHOOTING SPECIFIC ISSUES
 
 ### Issue: "Network Failed - 401 Unauthorized"
+
 **Cause:** Not authenticated or session expired
 **Fix:**
+
 1. Log out completely
 2. Log back in
 3. Refresh `/promoters` page
 4. Try again
 
-### Issue: "Network Failed - 403 Forbidden"  
+### Issue: "Network Failed - 403 Forbidden"
+
 **Cause:** User doesn't have permission to view promoters
 **Fix:**
+
 1. Check your user role (must be Admin or Manager)
 2. Contact system admin to grant "promoters:read" permission
 3. Log out and log back in
 
 ### Issue: "API returned 500"
+
 **Cause:** Server-side database or API error
 **Fix:**
+
 1. Check server logs
 2. Verify database connection
 3. Check if `/api/promoters` endpoint exists
 4. Run: `npm run build` and `npm run dev` to restart
 
 ### Issue: "No Promoters Found" (empty state)
+
 **Cause:** Database is empty or no promoters assigned to you
 **Fix:**
+
 1. Click "Add First Promoter" button
 2. Or contact admin to add promoters
 3. Or verify you have permission to see all promoters
 
 ### Issue: Menu clicks don't work
+
 **Cause:** Event handlers not firing or dropdown not opening
 **Fix:**
+
 1. Run Stage 4 console test above
 2. Check if button is disabled (grayed out)
 3. Check if any JavaScript errors in console
@@ -264,7 +299,9 @@ fetch('/api/promoters?page=1&limit=50&_t=' + Date.now(), { cache: 'no-store' })
 // 3. Check DOM elements
 console.log('\n3️⃣ CHECKING DOM ELEMENTS...');
 console.log(`   Header present: ${!!document.querySelector('h1')}`);
-console.log(`   More buttons: ${document.querySelectorAll('button[title="More options"]').length}`);
+console.log(
+  `   More buttons: ${document.querySelectorAll('button[title="More options"]').length}`
+);
 console.log(`   Table rows: ${document.querySelectorAll('tbody tr').length}`);
 
 // 4. Test click simulation

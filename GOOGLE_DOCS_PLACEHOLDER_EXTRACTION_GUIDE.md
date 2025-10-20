@@ -7,6 +7,7 @@
 #### **Module: "Google Docs" → "Get a document"**
 
 **Configuration:**
+
 ```
 Action: Get a document
 Document ID: {{template_id}}
@@ -19,6 +20,7 @@ Document ID: {{template_id}}
 #### **Module: "HTTP" → "Make an HTTP request"**
 
 **Configuration:**
+
 ```
 Method: GET
 URL: https://docs.googleapis.com/v1/documents/{{template_id}}
@@ -32,6 +34,7 @@ Headers:
 #### **Module: "Tools" → "Text parser"**
 
 **Configuration:**
+
 ```
 Input text: {{previous_module.document_content}}
 Pattern: \{\{([^}]+)\}\}
@@ -55,6 +58,7 @@ Response: JSON
 ```
 
 **Input fields:**
+
 - `template_id` (required)
 - `template_name` (optional)
 
@@ -96,6 +100,7 @@ Variables:
 ## 📋 **Common Placeholder Patterns**
 
 ### **Contract Placeholders**
+
 ```
 {{contract_number}}
 {{contract_date}}
@@ -105,6 +110,7 @@ Variables:
 ```
 
 ### **Promoter Placeholders**
+
 ```
 {{promoter_name_en}}
 {{promoter_name_ar}}
@@ -114,6 +120,7 @@ Variables:
 ```
 
 ### **Party Placeholders**
+
 ```
 {{first_party_name_en}}
 {{first_party_name_ar}}
@@ -124,6 +131,7 @@ Variables:
 ```
 
 ### **Salary Placeholders**
+
 ```
 {{basic_salary}}
 {{allowances}}
@@ -211,12 +219,12 @@ Variables: Map each placeholder to your data source
 
 ### **Common Issues**
 
-| Issue | Solution |
-|-------|----------|
-| Document not found | Check template ID and permissions |
+| Issue                 | Solution                                   |
+| --------------------- | ------------------------------------------ |
+| Document not found    | Check template ID and permissions          |
 | No placeholders found | Verify template has {{placeholder}} format |
-| Permission denied | Ensure Google Docs API access |
-| Empty content | Check document is not empty |
+| Permission denied     | Ensure Google Docs API access              |
+| Empty content         | Check document is not empty                |
 
 ### **Debug Steps**
 
@@ -229,12 +237,14 @@ Variables: Map each placeholder to your data source
 ## 📊 **Best Practices**
 
 ### **Template Design**
+
 - Use consistent placeholder format: `{{placeholder_name}}`
 - Avoid spaces in placeholder names
 - Use descriptive names (e.g., `{{promoter_name_en}}` not `{{name}}`)
 - Group related placeholders (e.g., `{{contract_*}}`, `{{promoter_*}}`)
 
 ### **Make.com Configuration**
+
 - Use error handling for failed extractions
 - Set appropriate timeouts for large documents
 - Log extraction results for debugging

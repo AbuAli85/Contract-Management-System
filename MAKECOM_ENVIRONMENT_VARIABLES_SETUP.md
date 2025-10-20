@@ -13,36 +13,42 @@ This guide shows you how to add all required environment variables in Make.com f
 Add the following 7 variables to your Make.com organization:
 
 ### 1. SUPABASE_URL
+
 - **Name**: `SUPABASE_URL`
 - **Data type**: `text`
 - **Value**: `https://reootcngcptfogfozlmz.supabase.co`
 - **Purpose**: Base URL for Supabase REST API calls
 
 ### 2. SUPABASE_ANON_KEY
+
 - **Name**: `SUPABASE_ANON_KEY`
 - **Data type**: `text`
 - **Value**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlb290Y25nY3B0Zm9nZm96bG16Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM0NDQzODIsImV4cCI6MjA2OTAyMDM4Mn0.WQwDpYX2M4pyPaliUqTinwy1xWWFKm4OntN2HUfP6n0`
 - **Purpose**: Anonymous key for public Supabase REST API access
 
 ### 3. SUPABASE_SERVICE_KEY
+
 - **Name**: `SUPABASE_SERVICE_KEY`
 - **Data type**: `text`
 - **Value**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlb290Y25nY3B0Zm9nZm96bG16Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzQ0NDM4MiwiZXhwIjoyMDY5MDIwMzgyfQ.BTLA-2wwXJgjW6MKoaw2ERbCr_fXF9w4zgLb70_5DAE`
 - **Purpose**: Service role key for privileged Supabase operations (bypasses RLS)
 
 ### 4. GOOGLE_DRIVE_FOLDER_ID
+
 - **Name**: `GOOGLE_DRIVE_FOLDER_ID`
 - **Data type**: `text`
 - **Value**: `1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a`
 - **Purpose**: Google Drive folder where contracts will be stored
 
 ### 5. CONTRACTS_API_URL
+
 - **Name**: `CONTRACTS_API_URL`
 - **Data type**: `text`
 - **Value**: `https://portal.thesmartpro.io`
 - **Purpose**: Base URL of your contract management API (for webhook callbacks)
 
 ### 6. PDF_WEBHOOK_SECRET
+
 - **Name**: `PDF_WEBHOOK_SECRET`
 - **Data type**: `text`
 - **Value**: `your-secret-key-here-replace-with-strong-value`
@@ -55,29 +61,37 @@ Add the following 7 variables to your Make.com organization:
 You have several options to generate a strong secret key:
 
 ### Option 1: Use OpenSSL (Recommended for Linux/Mac)
+
 ```bash
 openssl rand -base64 32
 ```
+
 **Output example**: `aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=`
 
 ### Option 2: Use Python
+
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
+
 **Output example**: `AbCdEfGhIjKlMnOpQrStUvWxYz1234567890_-`
 
 ### Option 3: Use Node.js
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
+
 **Output example**: `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6`
 
 ### Option 4: Use Online Generator (Quick)
+
 - Visit: https://www.uuidgenerator.net/
 - Copy the generated UUID
 - **Or** visit: https://www.random.org/strings/ and generate a random string
 
 ### Option 5: Use PowerShell (Windows)
+
 ```powershell
 [Convert]::ToBase64String((1..32 | ForEach-Object {Get-Random -Maximum 256}))
 ```
@@ -115,6 +129,7 @@ a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
 ## 🔒 Security Best Practices
 
 ⚠️ **Important**:
+
 - ✅ Use a **unique, strong secret** (at least 32 characters)
 - ✅ **Store it securely** (only in Make.com, not in code)
 - ✅ **Rotate it periodically** (e.g., every 3 months)
@@ -173,17 +188,18 @@ if (!verifyWebhookSignature(payload, signature, secret)) {
 
 ## 📝 Summary
 
-| Step | Action | Example |
-|------|--------|---------|
-| 1 | Generate secret | `openssl rand -base64 32` |
-| 2 | Copy result | `aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=` |
-| 3 | Add to Make.com | Variables → Add → Save |
-| 4 | Use in scenario | `{{PDF_WEBHOOK_SECRET}}` |
-| 5 | Validate in backend | HMAC-SHA256 verification (optional) |
+| Step | Action              | Example                                        |
+| ---- | ------------------- | ---------------------------------------------- |
+| 1    | Generate secret     | `openssl rand -base64 32`                      |
+| 2    | Copy result         | `aBcD1234EfGh5678IjKl9012MnOp3456QrSt7890UvW=` |
+| 3    | Add to Make.com     | Variables → Add → Save                         |
+| 4    | Use in scenario     | `{{PDF_WEBHOOK_SECRET}}`                       |
+| 5    | Validate in backend | HMAC-SHA256 verification (optional)            |
 
 **Done! Your webhook is now secured with a secret key.** 🔐
 
 ### 7. CONTRACTS_STORAGE_BUCKET
+
 - **Name**: `CONTRACTS_STORAGE_BUCKET`
 - **Data type**: `text`
 - **Value**: `contracts`
@@ -194,17 +210,19 @@ if (!verifyWebhookSignature(payload, signature, secret)) {
 ## ✅ Step-by-Step Instructions
 
 ### Step 1: Navigate to Variables
+
 1. Go to **Make.com Dashboard**
 2. Click **Organization settings** (top right)
 3. Select **Variables** tab
 4. Click **"Add organization variable"** button
 
 ### Step 2: Add Each Variable
+
 For each variable listed above:
 
 1. **Fill in the Name field**
    - Paste the variable name exactly as shown
-   - Only letters, digits, $ and _ symbols allowed
+   - Only letters, digits, $ and \_ symbols allowed
    - Cannot start with a digit
 
 2. **Select Data Type**
@@ -219,7 +237,9 @@ For each variable listed above:
 4. **Click "Save" button**
 
 ### Step 3: Verify Setup
+
 After adding all 7 variables, you should see:
+
 - ✅ SUPABASE_URL
 - ✅ SUPABASE_ANON_KEY
 - ✅ SUPABASE_SERVICE_KEY
@@ -232,7 +252,8 @@ After adding all 7 variables, you should see:
 
 ## 🔐 Security Notes
 
-⚠️ **Important**: 
+⚠️ **Important**:
+
 - These values are stored **unencrypted** in Make.com
 - Anyone with organization access can see them
 - Use service role keys carefully - they bypass security policies
@@ -257,7 +278,9 @@ After setup, test by:
 After adding variables, update these modules in your scenario:
 
 ### Module 2: Fetch Contract Data
+
 Replace hardcoded values with:
+
 ```
 url: {{SUPABASE_URL}}/rest/v1/contracts
 apikey: {{SUPABASE_ANON_KEY}}
@@ -265,26 +288,34 @@ Authorization: Bearer {{SUPABASE_SERVICE_KEY}}
 ```
 
 ### Module 6: Create Google Docs
+
 Replace hardcoded values with:
+
 ```
 folderId: {{GOOGLE_DRIVE_FOLDER_ID}}
 ```
 
 ### Module 20: Upload PDF to Storage
+
 Replace hardcoded values with:
+
 ```
 bucketID: {{CONTRACTS_STORAGE_BUCKET}}
 ```
 
 ### Module 21: Send Webhook Callback
+
 Replace hardcoded values with:
+
 ```
 url: {{CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready
 X-Webhook-Secret: {{PDF_WEBHOOK_SECRET}}
 ```
 
 ### Module 22: Respond
+
 Replace hardcoded values with:
+
 ```
 pdf_url: {{SUPABASE_URL}}/storage/v1/object/public/{{CONTRACTS_STORAGE_BUCKET}}/{{20.file_name}}
 ```
@@ -294,20 +325,24 @@ pdf_url: {{SUPABASE_URL}}/storage/v1/object/public/{{CONTRACTS_STORAGE_BUCKET}}/
 ## 🚨 Troubleshooting
 
 ### Variables not showing up?
+
 - **Solution**: Refresh the page (F5)
 - Refresh Make.com scenario editor
 - Check if you clicked "Save" button
 
 ### "Variable not found" error?
+
 - **Solution**: Variable name must match exactly (case-sensitive)
 - Verify spelling: `SUPABASE_URL` not `supabase_url` or `Supabase_Url`
 
 ### Webhook callback failing?
+
 - **Solution**: Verify `CONTRACTS_API_URL` is correct
 - Check if your backend is accessible from Make.com IP range
 - Verify webhook endpoint exists: `/api/webhook/contract-pdf-ready`
 
 ### "Unauthorized" errors?
+
 - **Solution**: Verify Supabase keys are correct
 - Check if keys have expired
 - Verify Supabase RLS policies allow access

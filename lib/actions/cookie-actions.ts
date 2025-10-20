@@ -32,7 +32,7 @@ export function setCookie(
   options: CookieOptions = {}
 ): NextResponse {
   const cookieOptions = { ...DEFAULT_COOKIE_OPTIONS, ...options };
-  
+
   response.cookies.set(name, value, cookieOptions);
   return response;
 }
@@ -40,7 +40,10 @@ export function setCookie(
 /**
  * Get a cookie value from the request
  */
-export function getCookie(request: NextRequest, name: string): string | undefined {
+export function getCookie(
+  request: NextRequest,
+  name: string
+): string | undefined {
   return request.cookies.get(name)?.value;
 }
 
@@ -60,13 +63,13 @@ export function deleteCookie(
   name: string,
   options: CookieOptions = {}
 ): NextResponse {
-  const cookieOptions = { 
-    ...DEFAULT_COOKIE_OPTIONS, 
+  const cookieOptions = {
+    ...DEFAULT_COOKIE_OPTIONS,
     ...options,
     maxAge: 0,
-    expires: new Date(0)
+    expires: new Date(0),
   };
-  
+
   response.cookies.set(name, '', cookieOptions);
   return response;
 }
@@ -117,7 +120,7 @@ export function getAuthTokens(request: NextRequest): {
 } {
   const accessToken = getCookie(request, 'access_token');
   const refreshToken = getCookie(request, 'refresh_token');
-  
+
   return {
     ...(accessToken && { accessToken }),
     ...(refreshToken && { refreshToken }),
@@ -133,7 +136,7 @@ export function getServerAuthTokens(): {
 } {
   const accessToken = getServerCookie('access_token');
   const refreshToken = getServerCookie('refresh_token');
-  
+
   return {
     ...(accessToken && { accessToken }),
     ...(refreshToken && { refreshToken }),
@@ -236,7 +239,10 @@ export function formatAuthError(error: any): FormattedAuthError {
   }
 
   // Invalid credentials
-  if (errorCode === 'INVALID_CREDENTIALS' || errorMessage.includes('Invalid credentials')) {
+  if (
+    errorCode === 'INVALID_CREDENTIALS' ||
+    errorMessage.includes('Invalid credentials')
+  ) {
     return {
       message: 'Invalid email or password',
       severity: 'error',
@@ -269,7 +275,7 @@ export function formatAuthError(error: any): FormattedAuthError {
  */
 export function isNetworkError(error: any): boolean {
   if (!error) return false;
-  
+
   const networkCodes = [
     'NETWORK_ERROR',
     'ECONNREFUSED',
@@ -278,7 +284,7 @@ export function isNetworkError(error: any): boolean {
     'ECONNRESET',
     'ENETUNREACH',
   ];
-  
+
   return (
     networkCodes.includes(error.code) ||
     error.message?.includes('network') ||
@@ -292,7 +298,7 @@ export function isNetworkError(error: any): boolean {
  */
 export function isRateLimitError(error: any): boolean {
   if (!error) return false;
-  
+
   return (
     error.code === 'RATE_LIMIT_EXCEEDED' ||
     error.message?.includes('rate limit') ||
@@ -306,7 +312,7 @@ export function isRateLimitError(error: any): boolean {
  */
 export function isSessionExpiredError(error: any): boolean {
   if (!error) return false;
-  
+
   return (
     error.code === 'SESSION_EXPIRED' ||
     error.code === 'TOKEN_EXPIRED' ||
@@ -336,17 +342,19 @@ export interface Session {
  */
 export function isSessionExpired(session: Session | null): boolean {
   if (!session) return true;
-  
+
   const now = Date.now();
   const expiresAt = session.expires_at * 1000; // Convert to milliseconds
-  
+
   return now >= expiresAt;
 }
 
 /**
  * Refresh session using refresh token
  */
-export async function refreshSession(session: { refresh_token: string }): Promise<{ data: Session | null; error: any }> {
+export async function refreshSession(session: {
+  refresh_token: string;
+}): Promise<{ data: Session | null; error: any }> {
   try {
     // Mock implementation for testing
     // In real implementation, this would call your auth API

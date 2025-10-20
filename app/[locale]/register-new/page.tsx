@@ -129,8 +129,10 @@ export default function RegisterNewUserPage() {
       // Note: User status is set to 'pending' by default for security
       // Only 'provider', 'client', and 'user' roles are allowed for self-registration
       const allowedRoles = ['provider', 'client', 'user'];
-      const safeRole = allowedRoles.includes(formData.role) ? formData.role : 'user';
-      
+      const safeRole = allowedRoles.includes(formData.role)
+        ? formData.role
+        : 'user';
+
       const { error: publicUserError } = await supabase.from('users').insert({
         id: authData.user.id,
         email: formData.email,

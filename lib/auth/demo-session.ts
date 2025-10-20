@@ -20,7 +20,7 @@ export class DemoSessionManager {
   private sessionKey = 'demo-user-session';
   private roleKey = 'user-role';
   private authModeKey = 'auth-mode';
-  
+
   // COMPLETELY DISABLE DEMO MODE
   private demoModeEnabled = false;
 
@@ -34,14 +34,20 @@ export class DemoSessionManager {
   }
 
   // Create demo session - COMPLETELY DISABLED
-  createSession(user: Omit<DemoUser, 'id' | 'authenticated' | 'authMode' | 'loginTime'>): null {
-    console.warn('🚫 Demo mode is completely disabled. Cannot create demo session.');
+  createSession(
+    user: Omit<DemoUser, 'id' | 'authenticated' | 'authMode' | 'loginTime'>
+  ): null {
+    console.warn(
+      '🚫 Demo mode is completely disabled. Cannot create demo session.'
+    );
     return null;
   }
 
   // Get current session - COMPLETELY DISABLED
   getSession(): null {
-    console.warn('🚫 Demo mode is completely disabled. Cannot get demo session.');
+    console.warn(
+      '🚫 Demo mode is completely disabled. Cannot get demo session.'
+    );
     return null;
   }
 
@@ -80,7 +86,9 @@ export class DemoSessionManager {
 
   // Update session - COMPLETELY DISABLED
   updateSession(updates: Partial<DemoUser>): false {
-    console.warn('🚫 Demo mode is completely disabled. Cannot update demo session.');
+    console.warn(
+      '🚫 Demo mode is completely disabled. Cannot update demo session.'
+    );
     return false;
   }
 
@@ -98,13 +106,15 @@ export class DemoSessionManager {
       isDemoMode: false,
       user: null,
       demoModeEnabled: false,
-      status: 'DEMO_MODE_DISABLED'
+      status: 'DEMO_MODE_DISABLED',
     };
   }
 
   // Enable demo mode (for development only) - DISABLED
   enableDemoMode(): void {
-    console.warn('🚫 Demo mode cannot be enabled - completely disabled for security');
+    console.warn(
+      '🚫 Demo mode cannot be enabled - completely disabled for security'
+    );
     this.demoModeEnabled = false;
   }
 

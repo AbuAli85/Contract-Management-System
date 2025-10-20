@@ -30,19 +30,25 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     // Attempt authentication
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
 
     if (authError) {
       console.error('🔐 Simple Login - Auth error:', authError);
-      
+
       // Check if it's a CAPTCHA error
-      if (authError.message.includes('captcha') || authError.message.includes('verification') || authError.message.includes('unexpected_failure')) {
+      if (
+        authError.message.includes('captcha') ||
+        authError.message.includes('verification') ||
+        authError.message.includes('unexpected_failure')
+      ) {
         return NextResponse.json(
-          { 
-            error: 'CAPTCHA verification required. Please disable CAPTCHA in your Supabase Dashboard.',
+          {
+            error:
+              'CAPTCHA verification required. Please disable CAPTCHA in your Supabase Dashboard.',
             captchaRequired: true,
             instructions: {
               title: 'Disable CAPTCHA in Supabase',
@@ -51,15 +57,15 @@ export async function POST(request: NextRequest) {
                 '2. Navigate to Authentication → Settings',
                 '3. Find the CAPTCHA section',
                 '4. Disable CAPTCHA verification',
-                '5. Save changes'
+                '5. Save changes',
               ],
-              dashboardUrl: 'https://supabase.com/dashboard'
-            }
+              dashboardUrl: 'https://supabase.com/dashboard',
+            },
           },
           { status: 400 }
         );
       }
-      
+
       return NextResponse.json(
         { error: `Login failed: ${authError.message}` },
         { status: 400 }
@@ -90,14 +96,20 @@ export async function POST(request: NextRequest) {
     const userStatus = (profile as any)?.status || 'active';
     if (userStatus === 'pending') {
       return NextResponse.json(
-        { error: 'Your account is pending approval. Please contact an administrator.' },
+        {
+          error:
+            'Your account is pending approval. Please contact an administrator.',
+        },
         { status: 400 }
       );
     }
 
     if (userStatus === 'inactive') {
       return NextResponse.json(
-        { error: 'Your account has been deactivated. Please contact an administrator.' },
+        {
+          error:
+            'Your account has been deactivated. Please contact an administrator.',
+        },
         { status: 400 }
       );
     }
@@ -107,49 +119,51 @@ export async function POST(request: NextRequest) {
       user: authData.user,
       session: authData.session,
       profile: profile,
-      redirectPath: getRedirectPath((profile as any)?.role || authData.user.user_metadata?.role || 'user')
+      redirectPath: getRedirectPath(
+        (profile as any)?.role || authData.user.user_metadata?.role || 'user'
+      ),
     });
-
   } catch (error) {
     console.error('🔐 Simple Login - Exception:', error);
-    
+
     // Enhanced error logging for debugging
     if (error instanceof Error) {
       console.error('🔐 Simple Login - Error details:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       });
-      
+
       // Check for specific Supabase client errors
       if (error.message.includes('Supabase client initialization failed')) {
         return NextResponse.json(
-          { 
-            error: 'Database connection failed. Please check server configuration.',
+          {
+            error:
+              'Database connection failed. Please check server configuration.',
             details: 'Supabase client could not be initialized',
-            code: 'SUPABASE_INIT_ERROR'
+            code: 'SUPABASE_INIT_ERROR',
           },
           { status: 500 }
         );
       }
-      
+
       if (error.message.includes('Missing Supabase environment variables')) {
         return NextResponse.json(
-          { 
+          {
             error: 'Server configuration error. Missing database credentials.',
             details: 'Required environment variables are not set',
-            code: 'MISSING_ENV_VARS'
+            code: 'MISSING_ENV_VARS',
           },
           { status: 500 }
         );
       }
     }
-    
+
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
       { status: 500 }
     );
@@ -178,14 +192,14 @@ export async function GET(request: NextRequest) {
     // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     const envCheck = {
       supabaseUrl: supabaseUrl ? '✅ Set' : '❌ Missing',
       supabaseAnonKey: supabaseAnonKey ? '✅ Set' : '❌ Missing',
       environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
+
     // Test Supabase client creation
     let supabaseStatus = 'Unknown';
     try {
@@ -194,7 +208,7 @@ export async function GET(request: NextRequest) {
     } catch (error) {
       supabaseStatus = `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
     }
-    
+
     return NextResponse.json({
       captchaRequired: false,
       environment: process.env.NODE_ENV,
@@ -202,15 +216,15 @@ export async function GET(request: NextRequest) {
       status: 'healthy',
       environmentCheck: envCheck,
       supabaseStatus,
-      ready: supabaseUrl && supabaseAnonKey && supabaseStatus.includes('✅')
+      ready: supabaseUrl && supabaseAnonKey && supabaseStatus.includes('✅'),
     });
   } catch (error) {
     console.error('Simple login config error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Failed to get configuration',
         details: error instanceof Error ? error.message : 'Unknown error',
-        status: 'unhealthy'
+        status: 'unhealthy',
       },
       { status: 500 }
     );

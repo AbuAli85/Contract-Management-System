@@ -106,7 +106,9 @@ const fetchContracts = async (): Promise<ContractWithRelations[]> => {
     return mappedData as ContractWithRelations[];
   }
 
-  return data ? (data as ContractWithRelations[]) : ([] as ContractWithRelations[]);
+  return data
+    ? (data as ContractWithRelations[])
+    : ([] as ContractWithRelations[]);
 };
 
 export const useContracts = () => {

@@ -24,9 +24,9 @@ CREATE INDEX IF NOT EXISTS idx_parties_logo_url ON parties(logo_url) WHERE logo_
 Check your parties table structure:
 
 ```sql
-SELECT column_name, data_type, is_nullable 
-FROM information_schema.columns 
-WHERE table_name = 'parties' 
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_name = 'parties'
 ORDER BY ordinal_position;
 ```
 
@@ -51,14 +51,14 @@ FOR SELECT USING (bucket_id = 'party-logos');
 -- Allow authenticated users to upload party logos
 CREATE POLICY "Authenticated users can upload party logos" ON storage.objects
 FOR INSERT WITH CHECK (
-  bucket_id = 'party-logos' 
+  bucket_id = 'party-logos'
   AND auth.role() = 'authenticated'
 );
 
 -- Allow authenticated users to update party logos
 CREATE POLICY "Authenticated users can update party logos" ON storage.objects
 FOR UPDATE USING (
-  bucket_id = 'party-logos' 
+  bucket_id = 'party-logos'
   AND auth.role() = 'authenticated'
 );
 ```
@@ -80,18 +80,18 @@ You can upload logos in two ways:
 // Example: Upload logo via API
 const uploadLogo = async (file, partyId) => {
   const fileName = `party-${partyId}-logo-${Date.now()}.${file.name.split('.').pop()}`;
-  
+
   const { data, error } = await supabase.storage
     .from('party-logos')
     .upload(fileName, file);
-    
+
   if (error) throw error;
-  
+
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('party-logos')
-    .getPublicUrl(fileName);
-    
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from('party-logos').getPublicUrl(fileName);
+
   return publicUrl;
 };
 ```
@@ -102,7 +102,7 @@ const uploadLogo = async (file, partyId) => {
 
 ```sql
 -- Example: Update a party with logo URL
-UPDATE parties 
+UPDATE parties
 SET logo_url = 'https://your-project.supabase.co/storage/v1/object/public/party-logos/party-123-logo.png'
 WHERE id = 'your-party-id';
 ```
@@ -111,8 +111,8 @@ WHERE id = 'your-party-id';
 
 ```sql
 -- Example: Update multiple parties
-UPDATE parties 
-SET logo_url = CASE 
+UPDATE parties
+SET logo_url = CASE
   WHEN name_en = 'Company A' THEN 'https://your-project.supabase.co/storage/v1/object/public/party-logos/company-a-logo.png'
   WHEN name_en = 'Company B' THEN 'https://your-project.supabase.co/storage/v1/object/public/party-logos/company-b-logo.png'
   -- Add more cases as needed
@@ -193,7 +193,7 @@ If logos don't appear:
    ```javascript
    console.log('Logo URLs in webhook:', {
      first_party_logo: webhookData.first_party_logo,
-     header_logo: webhookData.header_logo
+     header_logo: webhookData.header_logo,
    });
    ```
 
@@ -222,7 +222,7 @@ export function PartyLogoUpload({ partyId, currentLogo, onLogoUpdate }) {
   const [uploading, setUploading] = useState(false);
   const supabase = createClient();
 
-  const handleLogoUpload = async (event) => {
+  const handleLogoUpload = async event => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -237,9 +237,9 @@ export function PartyLogoUpload({ partyId, currentLogo, onLogoUpdate }) {
       if (error) throw error;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('party-logos')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('party-logos').getPublicUrl(fileName);
 
       // Update party record
       const { error: updateError } = await supabase
@@ -258,17 +258,17 @@ export function PartyLogoUpload({ partyId, currentLogo, onLogoUpdate }) {
   };
 
   return (
-    <div className="logo-upload">
+    <div className='logo-upload'>
       {currentLogo && (
-        <img 
-          src={currentLogo} 
-          alt="Party logo" 
-          className="w-24 h-24 object-cover rounded-lg"
+        <img
+          src={currentLogo}
+          alt='Party logo'
+          className='w-24 h-24 object-cover rounded-lg'
         />
       )}
       <input
-        type="file"
-        accept="image/*"
+        type='file'
+        accept='image/*'
         onChange={handleLogoUpload}
         disabled={uploading}
       />
@@ -282,10 +282,10 @@ export function PartyLogoUpload({ partyId, currentLogo, onLogoUpdate }) {
 
 ```tsx
 // In your party edit form
-<PartyLogoUpload 
+<PartyLogoUpload
   partyId={party.id}
   currentLogo={party.logo_url}
-  onLogoUpdate={(newLogoUrl) => {
+  onLogoUpdate={newLogoUrl => {
     setParty(prev => ({ ...prev, logo_url: newLogoUrl }));
   }}
 />
@@ -331,7 +331,6 @@ MAKECOM_WEBHOOK_URL=your-makecom-webhook-url
    - Review webhook payload structure
 
 3. **Google Docs API errors:**
-
    - Ensure image URLs are accessible
    - Check image format compatibility
    - Verify Google Docs template structure

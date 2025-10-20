@@ -5,12 +5,14 @@ A focused system for managing promoters and their development letters/contracts 
 ## 🎯 Core Purpose
 
 This system is specifically designed for:
+
 1. **Promoter Management** - Complete lifecycle management of promoters/workers
 2. **Contract Generation** - Generate and manage development letters and work contracts
 
 ## ✨ Key Features
 
 ### Promoter Management
+
 - 📋 **Complete Promoter Database**
   - Personal information (Name, ID, Passport)
   - Employment details and employer associations
@@ -28,6 +30,7 @@ This system is specifically designed for:
   - Monitor employment relationships
 
 ### Contract Management
+
 - 📝 **Contract Generation**
   - Generate development letters automatically
   - Create work contracts with dynamic data
@@ -44,6 +47,7 @@ This system is specifically designed for:
   - Historical contract records
 
 ### Party Management
+
 - 🏢 **Employer/Party Database**
   - Manage all parties (Employers, Clients)
   - Track company registration details
@@ -52,6 +56,7 @@ This system is specifically designed for:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - Supabase account (for database)
 - Vercel account (for deployment, optional)
@@ -87,6 +92,7 @@ Visit `http://localhost:3000` to access the system.
 ## 🗂️ Database Tables
 
 ### Core Tables
+
 1. **promoters** - Promoter/worker information
 2. **contracts** - Generated contracts and development letters
 3. **parties** - Employers and other parties
@@ -119,4 +125,3 @@ For support, email support@thesmartpro.io or visit our documentation.
 ---
 
 **Built for efficient promoter and contract management in Oman** 🇴🇲
-

@@ -16,7 +16,7 @@ export default function DebugLoginPage() {
             Test and debug login functionality
           </p>
         </div>
-        
+
         <LoginDebugger />
       </div>
     </div>

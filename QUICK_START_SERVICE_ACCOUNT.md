@@ -1,4 +1,5 @@
 # Quick Start - Service Account Setup
+
 ## For: contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
 
 ---
@@ -34,6 +35,7 @@
 2. **Click "Share"**
 
 3. **Add this email:**
+
    ```
    contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
    ```
@@ -62,7 +64,8 @@ GOOGLE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"nth-segment-
 GOOGLE_DOCS_TEMPLATE_ID=1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
 ```
 
-**IMPORTANT:** 
+**IMPORTANT:**
+
 - Wrap JSON in single quotes `'...'`
 - Keep on ONE line
 - Include entire JSON content
@@ -84,6 +87,7 @@ npm run dev
 **Visit:** http://localhost:3000/api/test-google-sa
 
 **Expected result:**
+
 ```json
 {
   "success": true,
@@ -97,6 +101,7 @@ npm run dev
 ```
 
 **If successful:**
+
 - ✅ Open the `documentUrl` to see the generated contract
 - ✅ All {{placeholders}} should be replaced with data
 - ✅ Contract is ready!
@@ -106,19 +111,23 @@ npm run dev
 ## 🚨 **Troubleshooting**
 
 ### **Error: "Invalid JWT Signature"**
+
 - JSON key is malformed
 - Check `.env.local` has correct JSON
 - Make sure private_key has `\n` (not actual line breaks)
 
 ### **Error: "Insufficient Permission" or "403"**
+
 - Template not shared with service account
 - Go back to Step 2 and share the template
 
 ### **Error: "File not found"**
+
 - Wrong template ID
 - Verify: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 
 ### **Error: "The caller does not have permission"**
+
 - APIs not enabled
 - Enable: Google Docs API and Google Drive API
 - https://console.cloud.google.com/apis/library?project=nth-segment-475411-g1
@@ -139,6 +148,7 @@ Once the test endpoint works:
 ## 📞 **Need Help?**
 
 If you get stuck, share:
+
 1. The error message you see
 2. Which step you're on
 3. Screenshot if helpful
@@ -157,4 +167,3 @@ If you get stuck, share:
 - ☐ Verified placeholders replaced
 
 **When all checked:** You're done! 🚀
-

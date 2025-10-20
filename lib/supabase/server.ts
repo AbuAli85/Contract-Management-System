@@ -20,7 +20,7 @@ const validateEnvironmentVariables = () => {
 export async function createClient() {
   try {
     const { supabaseUrl, supabaseAnonKey } = validateEnvironmentVariables();
-    
+
     const cookieStore = await cookies();
 
     return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -50,15 +50,15 @@ export async function createClient() {
 export async function createClientWithAuth() {
   try {
     const supabase = await createClient();
-    
+
     // Verify the client is working
     const { error } = await supabase.auth.getSession();
-    
+
     if (error) {
       console.error('Auth session check failed:', error);
       throw new Error('Authentication service unavailable');
     }
-    
+
     return supabase;
   } catch (error) {
     console.error('Failed to create authenticated Supabase client:', error);

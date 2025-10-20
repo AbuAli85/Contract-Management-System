@@ -1,6 +1,7 @@
 # 🔧 Enable Google APIs for Service Account
 
 ## 🔴 **Current Error:**
+
 ```
 Method doesn't allow unregistered callers (callers without established identity).
 Please use API Key or other form of API consumer identity to call this API.
@@ -42,6 +43,7 @@ After enabling both APIs, you can verify they're active:
 https://console.cloud.google.com/apis/dashboard?project=nth-segment-475411-g1
 
 You should see:
+
 - ✓ Google Drive API
 - ✓ Google Docs API
 
@@ -56,6 +58,7 @@ node scripts/test-service-account.js
 ```
 
 **Expected output:**
+
 ```
 ✅ Service account key found
 ✅ Credentials parsed successfully
@@ -89,15 +92,18 @@ If the direct links don't work:
 ## 🔍 **Troubleshooting**
 
 ### **If you see "Enable Billing" error:**
+
 - Your Google Cloud Project needs billing enabled
 - Go to: https://console.cloud.google.com/billing?project=nth-segment-475411-g1
 - Add a billing account (free tier is usually enough)
 
 ### **If you see "Permission Denied":**
+
 - You might not be the owner of the GCP project
 - Contact the project owner to enable the APIs
 
 ### **If APIs are already enabled:**
+
 - Wait 1-2 minutes for changes to propagate
 - Try running the test script again
 
@@ -121,4 +127,3 @@ If the direct links don't work:
 ---
 
 **🎯 Once the APIs are enabled, everything should work!**
-

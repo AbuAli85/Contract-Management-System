@@ -6,14 +6,14 @@ export async function GET() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       message: 'Contract Management System is running',
-      version: '1.0.0'
+      version: '1.0.0',
     });
   } catch (error) {
     return NextResponse.json(
       {
         status: 'error',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

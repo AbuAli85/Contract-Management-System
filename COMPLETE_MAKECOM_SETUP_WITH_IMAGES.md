@@ -1,4 +1,5 @@
 # Complete Make.com Setup Guide - Text + Images
+
 ## For Your Promoter Assignment Contract Template
 
 ---
@@ -8,6 +9,7 @@
 Based on your template, you need:
 
 ### **Text Replacements: 12 fields**
+
 1. `{{ref_number}}`
 2. `{{first_party_name_ar}}`
 3. `{{first_party_crn}}`
@@ -22,6 +24,7 @@ Based on your template, you need:
 12. `{{promoter_name_en}}`
 
 ### **Image Replacements: 2 images**
+
 1. **ID Card Photo** (صورة البطاقة)
 2. **Passport Photo** (صورة الجواز)
 
@@ -96,16 +99,16 @@ Replace a Text: [Turn OFF "Map" toggle, then add 12 items]
 Module: Google Docs → Replace Image in a Document
 
 Connection: My Google connection
-Document ID: {{previous_module.id}}
+Document ID: { { previous_module.id } }
 
 Images to Replace:
   Item 1:
     Image to Replace: image_1
-    New Image URL: {{1.promoter_id_card_url}}
-  
+    New Image URL: { { 1.promoter_id_card_url } }
+
   Item 2:
     Image to Replace: image_2
-    New Image URL: {{1.promoter_passport_url}}
+    New Image URL: { { 1.promoter_passport_url } }
 ```
 
 **If you DON'T find it:** Use Option B below.
@@ -124,12 +127,13 @@ First, add a temporary module to inspect the document:
 Module: Google Docs → Get a Document
 
 Connection: My Google connection
-Document ID: {{previous_module.id}}
+Document ID: { { previous_module.id } }
 ```
 
 Run scenario once, then check this module's output for `inlineObjects` section.
 
 You'll find IDs like:
+
 - `"kix.abc123"` for image_1
 - `"kix.def456"` for image_2
 
@@ -240,6 +244,7 @@ Your final Make.com scenario should look like:
 ### **Verify Image URLs:**
 
 Before testing, check if image URLs work:
+
 1. Copy `promoter_id_card_url` from Module 1 output
 2. Paste in browser
 3. Should show the ID card image
@@ -250,6 +255,7 @@ Before testing, check if image URLs work:
 ## **✅ Success Checklist**
 
 ### **Phase 1 - Text (Must complete first):**
+
 - ☐ Template has all 12 text placeholders
 - ☐ Make.com module configured with 12 text items
 - ☐ "Map" toggle is OFF
@@ -259,6 +265,7 @@ Before testing, check if image URLs work:
 - ☐ No {{placeholders}} remain in document
 
 ### **Phase 2 - Images (After text works):**
+
 - ☐ Template has 2 placeholder images
 - ☐ Images have Alt text set (image_1, image_2)
 - ☐ Image replacement module added
@@ -272,20 +279,24 @@ Before testing, check if image URLs work:
 ## **🚨 Troubleshooting**
 
 ### **Text not replacing:**
+
 - Check spelling: `{{first_party_name_ar}}` vs `{{firstPartyNameAr}}`
 - Verify "Map" toggle is OFF
 - Check Module 1 output has the field
 
 ### **[object Object] error:**
+
 - Turn OFF "Map" toggle
 - Delete module and create fresh
 
 ### **Images not replacing:**
+
 - Verify URLs work in browser
 - Check Alt text is exactly `image_1` and `image_2`
 - Verify object IDs are correct (for API method)
 
 ### **Empty image URLs:**
+
 - Check promoter has both ID and passport URLs in database
 - Run the SQL scripts to populate missing URLs
 - Verify storage bucket is public
@@ -306,11 +317,13 @@ I've created these detailed guides:
 ## **🎯 Recommended Approach**
 
 ### **Today: Focus on Text**
+
 1. Configure the 12 text replacements
 2. Test thoroughly
 3. Verify all text works perfectly
 
 ### **Tomorrow: Add Images**
+
 1. Add placeholder images to template
 2. Set Alt text
 3. Configure image replacement module
@@ -323,12 +336,14 @@ I've created these detailed guides:
 ## **🚀 Quick Start Commands**
 
 ### **To deploy latest backend changes:**
+
 ```bash
 cd C:\Users\HP\Documents\GitHub\Contract-Management-System
 git pull
 ```
 
 Your backend already has:
+
 - ✅ Correct template ID
 - ✅ All field aliases (ref_number, id_card_number)
 - ✅ Image URLs included in webhook payload
@@ -337,8 +352,9 @@ Your backend already has:
 ### **To test image URLs manually:**
 
 Run this query in Supabase SQL Editor:
+
 ```sql
-SELECT 
+SELECT
   name_en,
   id_card_url,
   passport_url
@@ -353,4 +369,3 @@ Use one of these promoters for testing!
 ---
 
 **Start with Phase 1 (text). Once that works perfectly, we'll add images in Phase 2!** 🎯
-

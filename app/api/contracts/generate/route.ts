@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id'];
     const missingFields = requiredFields.filter(field => !body[field]);
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -36,46 +36,48 @@ export async function POST(request: NextRequest) {
       if (!type) return 'employment';
       const typeLower = String(type).toLowerCase();
       const typeMap: Record<string, string> = {
-        'employment': 'employment',
+        employment: 'employment',
         'full-time-permanent': 'employment',
         'full-time-fixed': 'employment',
         'part-time-permanent': 'employment',
         'part-time-fixed': 'employment',
-        'probationary': 'employment',
+        probationary: 'employment',
         'training-contract': 'employment',
-        'internship': 'employment',
+        internship: 'employment',
         'graduate-trainee': 'employment',
-        'service': 'service',
-        'freelance': 'service',
-        'contractor': 'service',
-        'consultant': 'consultancy',
-        'consulting': 'consultancy',
+        service: 'service',
+        freelance: 'service',
+        contractor: 'service',
+        consultant: 'consultancy',
+        consulting: 'consultancy',
         'consulting-agreement': 'consultancy',
         'project-based': 'consultancy',
-        'partnership': 'partnership',
-        'temporary': 'service',
-        'seasonal': 'service',
-        'executive': 'employment',
-        'management': 'employment',
-        'director': 'employment',
+        partnership: 'partnership',
+        temporary: 'service',
+        seasonal: 'service',
+        executive: 'employment',
+        management: 'employment',
+        director: 'employment',
         'remote-work': 'employment',
         'hybrid-work': 'employment',
-        'secondment': 'service',
-        'apprenticeship': 'employment',
+        secondment: 'service',
+        apprenticeship: 'employment',
         'service-agreement': 'service',
-        'retainer': 'service',
+        retainer: 'service',
       };
       return typeMap[typeLower] || 'employment';
     };
 
-    const contractType = mapContractType(body.contract_type || 'full-time-permanent');
+    const contractType = mapContractType(
+      body.contract_type || 'full-time-permanent'
+    );
 
     // Create contract record with correct field mapping
     const contractData = {
       contract_number: contractNumber,
       promoter_id: body.promoter_id,
       employer_id: body.second_party_id, // Fixed: second_party = employer
-      client_id: body.first_party_id,    // Fixed: first_party = client
+      client_id: body.first_party_id, // Fixed: first_party = client
       title: body.job_title || 'Employment Contract',
       description: body.special_terms || '',
       contract_type: contractType,
@@ -97,12 +99,12 @@ export async function POST(request: NextRequest) {
     if (contractError) {
       console.error('❌ Failed to create contract:', contractError);
       return NextResponse.json(
-        { 
+        {
           error: 'Failed to create contract record',
-          domain: "protal.thesmartpro.io",
+          domain: 'protal.thesmartpro.io',
           details: contractError.message,
           code: contractError.code,
-          hint: contractError.hint
+          hint: contractError.hint,
         },
         { status: 500 }
       );
@@ -111,14 +113,35 @@ export async function POST(request: NextRequest) {
     console.log('✅ Contract created:', (contract as any)?.id);
 
     // Fetch all required data
-    const [promoterResult, firstPartyResult, secondPartyResult] = await Promise.all([
-      supabase.from('promoters').select('*').eq('id', body.promoter_id).single(),
-      supabase.from('parties').select('*').eq('id', body.first_party_id).single(),
-      supabase.from('parties').select('*').eq('id', body.second_party_id).single()
-    ]);
+    const [promoterResult, firstPartyResult, secondPartyResult] =
+      await Promise.all([
+        supabase
+          .from('promoters')
+          .select('*')
+          .eq('id', body.promoter_id)
+          .single(),
+        supabase
+          .from('parties')
+          .select('*')
+          .eq('id', body.first_party_id)
+          .single(),
+        supabase
+          .from('parties')
+          .select('*')
+          .eq('id', body.second_party_id)
+          .single(),
+      ]);
 
-    if (promoterResult.error || firstPartyResult.error || secondPartyResult.error) {
-      console.error('❌ Failed to fetch data:', { promoterResult, firstPartyResult, secondPartyResult });
+    if (
+      promoterResult.error ||
+      firstPartyResult.error ||
+      secondPartyResult.error
+    ) {
+      console.error('❌ Failed to fetch data:', {
+        promoterResult,
+        firstPartyResult,
+        secondPartyResult,
+      });
       return NextResponse.json(
         { error: 'Failed to fetch required data' },
         { status: 500 }
@@ -135,7 +158,7 @@ export async function POST(request: NextRequest) {
       contract_number: (contract as any)?.contract_number,
       contract_type: body.contract_type,
       contract_date: new Date().toISOString().split('T')[0] || '',
-      
+
       // Promoter data
       promoter_name_en: promoter.name_en,
       promoter_name_ar: promoter.name_ar,
@@ -145,21 +168,21 @@ export async function POST(request: NextRequest) {
       promoter_passport_number: promoter.passport_number || '',
       promoter_id_card_url: promoter.id_card_url,
       promoter_passport_url: promoter.passport_url,
-      
+
       // First party (Client) data
       first_party_name_en: firstParty.name_en,
       first_party_name_ar: firstParty.name_ar,
       first_party_crn: firstParty.crn,
       first_party_email: firstParty.email,
       first_party_phone: firstParty.phone,
-      
+
       // Second party (Employer) data
       second_party_name_en: secondParty.name_en,
       second_party_name_ar: secondParty.name_ar,
       second_party_crn: secondParty.crn,
       second_party_email: secondParty.email,
       second_party_phone: secondParty.phone,
-      
+
       // Contract details
       job_title: body.job_title,
       department: body.department,
@@ -173,49 +196,56 @@ export async function POST(request: NextRequest) {
 
     // Try different generation methods
     const generationMethod = body.generation_method || 'html'; // html, pdf, makecom
-    
+
     let result;
-    
+
     switch (generationMethod) {
       case 'html':
         console.log('🔄 Using HTML generation method...');
         const htmlService = new HtmlContractService({
           templatePath: '/templates/contract.html',
-          outputPath: '/output/contracts'
+          outputPath: '/output/contracts',
         });
-        result = await htmlService.generateContract(contractDataForGeneration as any);
+        result = await htmlService.generateContract(
+          contractDataForGeneration as any
+        );
         break;
-        
+
       case 'pdf':
         console.log('🔄 Using simple PDF generation method...');
         const pdfService = new SimplePdfService({
-          outputPath: '/output/contracts'
+          outputPath: '/output/contracts',
         });
-        result = await pdfService.generateContract(contractDataForGeneration as any);
+        result = await pdfService.generateContract(
+          contractDataForGeneration as any
+        );
         break;
-        
+
       case 'makecom':
         console.log('🔄 Using Make.com generation method...');
         // Redirect to Make.com endpoint
-        const makecomResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/contracts/makecom-generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(body),
-        });
-        
+        const makecomResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_APP_URL}/api/contracts/makecom-generate`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          }
+        );
+
         if (!makecomResponse.ok) {
           throw new Error('Make.com generation failed');
         }
-        
+
         const makecomResult = await makecomResponse.json();
         result = {
           documentUrl: makecomResult.data?.document_url || 'Processing...',
-          pdfUrl: makecomResult.data?.pdf_url || 'Processing...'
+          pdfUrl: makecomResult.data?.pdf_url || 'Processing...',
         };
         break;
-        
+
       default:
         throw new Error(`Unknown generation method: ${generationMethod}`);
     }
@@ -238,7 +268,7 @@ export async function POST(request: NextRequest) {
         .from('contracts')
         .update(updateData as any)
         .eq('id', (contract as any)?.id);
-      
+
       if (updateError) {
         console.error('❌ Failed to update contract:', updateError);
       }
@@ -256,16 +286,15 @@ export async function POST(request: NextRequest) {
         generation_method: generationMethod,
         document_url: result.documentUrl,
         pdf_url: (result as any).pdfUrl || undefined,
-        generated_at: new Date().toISOString()
-      }
+        generated_at: new Date().toISOString(),
+      },
     });
-
   } catch (error) {
     console.error('❌ Contract generation error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Contract generation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

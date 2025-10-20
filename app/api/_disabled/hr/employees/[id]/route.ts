@@ -19,7 +19,9 @@ const EmployeeUpdateSchema = z.object({
   address: z.string().optional(),
   city: z.string().optional(),
   country: z.string().optional(),
-  employment_status: z.enum(['active', 'probation', 'on_leave', 'terminated']).optional(),
+  employment_status: z
+    .enum(['active', 'probation', 'on_leave', 'terminated'])
+    .optional(),
   hire_date: z.string().optional(),
   termination_date: z.string().optional(),
   salary: z.number().optional(),
@@ -39,12 +41,16 @@ export async function GET(
     const employeeId = parseInt(params.id);
 
     if (isNaN(employeeId)) {
-      return NextResponse.json({ error: 'Invalid employee ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid employee ID' },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabase
       .from('hr.employees')
-      .select(`
+      .select(
+        `
         id, employee_code, full_name, first_name, last_name, 
         nationality, gender, date_of_birth, job_title, 
         department_id, manager_employee_id, phone, email, 
@@ -55,20 +61,26 @@ export async function GET(
         emergency_contact_relationship, created_at, updated_at,
         departments!inner(name),
         manager:hr.employees!manager_employee_id(id, full_name, employee_code)
-      `)
+      `
+      )
       .eq('id', employeeId)
       .single();
 
     if (error) {
       console.error('Error fetching employee:', error);
-      return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Employee not found' },
+        { status: 404 }
+      );
     }
 
     return NextResponse.json(data);
-
   } catch (error) {
     console.error('Error in GET /api/hr/employees/[id]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -82,13 +94,16 @@ export async function PUT(
     const body = await request.json();
 
     if (isNaN(employeeId)) {
-      return NextResponse.json({ error: 'Invalid employee ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid employee ID' },
+        { status: 400 }
+      );
     }
 
     const parsed = EmployeeUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.format() }, 
+        { error: 'Validation failed', details: parsed.error.format() },
         { status: 400 }
       );
     }
@@ -97,7 +112,8 @@ export async function PUT(
       .from('hr.employees')
       .update(parsed.data)
       .eq('id', employeeId)
-      .select(`
+      .select(
+        `
         id, employee_code, full_name, first_name, last_name, 
         nationality, gender, date_of_birth, job_title, 
         department_id, manager_employee_id, phone, email, 
@@ -106,19 +122,25 @@ export async function PUT(
         salary, currency, work_location, 
         emergency_contact_name, emergency_contact_phone, 
         emergency_contact_relationship, created_at, updated_at
-      `)
+      `
+      )
       .single();
 
     if (error) {
       console.error('Error updating employee:', error);
-      return NextResponse.json({ error: 'Failed to update employee' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to update employee' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(data);
-
   } catch (error) {
     console.error('Error in PUT /api/hr/employees/[id]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -131,15 +153,18 @@ export async function DELETE(
     const employeeId = parseInt(params.id);
 
     if (isNaN(employeeId)) {
-      return NextResponse.json({ error: 'Invalid employee ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Invalid employee ID' },
+        { status: 400 }
+      );
     }
 
     // Soft delete by updating employment status
     const { data, error } = await supabase
       .from('hr.employees')
-      .update({ 
+      .update({
         employment_status: 'terminated',
-        termination_date: new Date().toISOString().split('T')[0]
+        termination_date: new Date().toISOString().split('T')[0],
       })
       .eq('id', employeeId)
       .select('id, full_name, employment_status')
@@ -147,16 +172,21 @@ export async function DELETE(
 
     if (error) {
       console.error('Error deleting employee:', error);
-      return NextResponse.json({ error: 'Failed to delete employee' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to delete employee' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Employee terminated successfully',
-      data 
+      data,
     });
-
   } catch (error) {
     console.error('Error in DELETE /api/hr/employees/[id]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

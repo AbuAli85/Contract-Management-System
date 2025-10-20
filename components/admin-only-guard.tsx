@@ -22,25 +22,34 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
 
   useEffect(() => {
     const checkAdminRole = async () => {
-      console.log('🔍 AdminOnlyGuard: Checking admin role...', { user, loading });
-      
+      console.log('🔍 AdminOnlyGuard: Checking admin role...', {
+        user,
+        loading,
+      });
+
       if (loading) return;
-      
+
       if (!user) {
-        console.log('🔍 AdminOnlyGuard: No user, attempting session refresh...');
+        console.log(
+          '🔍 AdminOnlyGuard: No user, attempting session refresh...'
+        );
         try {
           await refreshSession();
           // Wait a bit for the session to refresh
           await new Promise(resolve => setTimeout(resolve, 1000));
-          
+
           // Check again after refresh
           if (!user) {
-            console.log('🔍 AdminOnlyGuard: Still no user after refresh, redirecting to login');
+            console.log(
+              '🔍 AdminOnlyGuard: Still no user after refresh, redirecting to login'
+            );
             router.push(`/${locale || 'en'}/auth/login`);
             return;
           }
         } catch (error) {
-          console.log('🔍 AdminOnlyGuard: Session refresh failed, redirecting to login');
+          console.log(
+            '🔍 AdminOnlyGuard: Session refresh failed, redirecting to login'
+          );
           router.push(`/${locale || 'en'}/auth/login`);
           return;
         }
@@ -54,7 +63,10 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
         const response = await fetch('/api/get-user-role');
         const data = await response.json();
 
-        console.log('🔍 Admin check response:', { status: response.status, data });
+        console.log('🔍 Admin check response:', {
+          status: response.status,
+          data,
+        });
 
         if (response.ok && data.success) {
           setUserRole(data.role.value);
@@ -62,7 +74,9 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
             setError(`Access denied: Role '${data.role.value}' is not admin`);
           }
         } else {
-          setError(`Failed to verify admin permissions: ${data.error || 'Unknown error'}`);
+          setError(
+            `Failed to verify admin permissions: ${data.error || 'Unknown error'}`
+          );
         }
       } catch (err) {
         console.error('Admin check error:', err);
@@ -122,17 +136,14 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
                 <br />
                 <br />
                 <strong>Current Status:</strong>
-                <br />
-                • Email: {user.email}
-                <br />
-                • Role: {userRole || 'Unknown'}
-                <br />
-                • Required: Admin
+                <br />• Email: {user.email}
+                <br />• Role: {userRole || 'Unknown'}
+                <br />• Required: Admin
               </AlertDescription>
             </Alert>
-            
+
             <div className='flex gap-3'>
-              <Button 
+              <Button
                 onClick={handleRetry}
                 variant='outline'
                 className='flex-1'
@@ -140,7 +151,7 @@ export function AdminOnlyGuard({ children, locale }: AdminGuardProps) {
                 <RefreshCw className='h-4 w-4 mr-2' />
                 Retry
               </Button>
-              <Button 
+              <Button
                 onClick={() => router.push(`/${locale || 'en'}/dashboard`)}
                 className='flex-1'
               >

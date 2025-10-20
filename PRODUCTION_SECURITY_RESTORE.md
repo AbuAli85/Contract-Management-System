@@ -1,6 +1,7 @@
 # 🔒 Production Security Restoration Guide
 
 ## ✅ Current Status
+
 - 112 promoters successfully imported and displaying
 - API working correctly
 - UI fully functional
@@ -11,11 +12,13 @@
 ## 🚨 Security Features Currently Disabled
 
 ### 1. Row Level Security (RLS)
+
 - **Status:** DISABLED on `promoters` table
 - **Risk:** Any authenticated user can access all data
 - **Fix:** Run `scripts/enable_promoters_rls.sql`
 
 ### 2. RBAC on API Endpoints
+
 - **Status:** BYPASSED in `/api/promoters/route.ts`
 - **Risk:** Permission checks not enforced
 - **Fix:** Re-enable RBAC guards (see below)
@@ -41,16 +44,19 @@
 **In `app/api/promoters/route.ts`:**
 
 Change line 53 from:
+
 ```typescript
 export async function GET(request: Request) {
 ```
 
 Back to:
+
 ```typescript
 export const GET = withRBAC('promoter:read:own', async (request: Request) => {
 ```
 
 And remove the closing brace at line 156, replacing with:
+
 ```typescript
 }); // Close withRBAC wrapper
 ```
@@ -85,17 +91,21 @@ WHERE u.email = 'your@email.com';
 ## ⚠️ Important Notes
 
 ### Why We Disabled Security
+
 During debugging, we discovered:
+
 1. RBAC tables were missing/misconfigured
 2. RLS policies were blocking even SERVICE_ROLE access
 3. Empty database was causing API to return 0 records
 
 ### Current State is SAFE for Development
+
 - Still requires authentication
 - Still uses SERVICE_ROLE key (only server has access)
 - Users can't directly access database
 
 ### Before Going to Production
+
 - ✅ Re-enable RLS
 - ✅ Re-enable RBAC
 - ✅ Assign proper user roles
@@ -107,12 +117,14 @@ During debugging, we discovered:
 ## 🧪 Testing After Re-enabling Security
 
 ### Test 1: RLS
+
 ```sql
 -- Should return 112
 SELECT COUNT(*) FROM promoters;
 ```
 
 ### Test 2: API
+
 ```javascript
 // Should return 112 (or based on user's permissions)
 fetch('/api/promoters?page=1&limit=10')
@@ -121,6 +133,7 @@ fetch('/api/promoters?page=1&limit=10')
 ```
 
 ### Test 3: UI
+
 - Navigate to `/en/promoters`
 - Should see all promoters (based on your role)
 - Document alerts should work
@@ -151,4 +164,3 @@ If you encounter issues after re-enabling security:
 ---
 
 **Don't rush this!** Security is important. Test each step thoroughly before moving to the next.
-

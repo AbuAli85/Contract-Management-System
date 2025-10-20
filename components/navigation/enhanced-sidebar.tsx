@@ -276,7 +276,8 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
           href={`/dashboard/${userRole === 'super_admin' || userRole === 'admin' ? 'admin' : userRole}`}
           className={cn(
             'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-            pathname?.includes('/dashboard') && !pathname?.includes('/dashboard/')
+            pathname?.includes('/dashboard') &&
+              !pathname?.includes('/dashboard/')
               ? 'bg-blue-100 text-blue-700'
               : 'text-gray-700 hover:bg-gray-100'
           )}

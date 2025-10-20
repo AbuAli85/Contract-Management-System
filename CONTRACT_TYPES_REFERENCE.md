@@ -12,38 +12,38 @@
 
 These are the **9 enhanced contract types** configured in the system:
 
-| ID | Name | Category | Status |
-|----|------|----------|--------|
-| `full-time-permanent` | Full-Time Permanent Employment | Employment | ✅ Active |
-| `part-time-fixed` | Part-Time Fixed-Term Contract | Employment | ✅ Active |
-| `consulting-agreement` | Consulting Services Agreement | Consulting | ✅ Active |
-| `service-contract` | Professional Services Contract | Service | ✅ Active |
-| `freelance-project` | Freelance Project Contract | Freelance | ✅ Active |
+| ID                      | Name                           | Category    | Status    |
+| ----------------------- | ------------------------------ | ----------- | --------- |
+| `full-time-permanent`   | Full-Time Permanent Employment | Employment  | ✅ Active |
+| `part-time-fixed`       | Part-Time Fixed-Term Contract  | Employment  | ✅ Active |
+| `consulting-agreement`  | Consulting Services Agreement  | Consulting  | ✅ Active |
+| `service-contract`      | Professional Services Contract | Service     | ✅ Active |
+| `freelance-project`     | Freelance Project Contract     | Freelance   | ✅ Active |
 | `partnership-agreement` | Business Partnership Agreement | Partnership | ✅ Active |
-| `nda-standard` | Non-Disclosure Agreement (NDA) | NDA | ✅ Active |
-| `vendor-supply` | Vendor Supply Agreement | Vendor | ✅ Active |
-| `lease-equipment` | Equipment Lease Agreement | Lease | ✅ Active |
+| `nda-standard`          | Non-Disclosure Agreement (NDA) | NDA         | ✅ Active |
+| `vendor-supply`         | Vendor Supply Agreement        | Vendor      | ✅ Active |
+| `lease-equipment`       | Equipment Lease Agreement      | Lease       | ✅ Active |
 
 ### **Make.com Automated Contract Types**
 
 These are **Oman Labor Law compliant** contract types with automated PDF generation:
 
-| ID | Name | Status |
-|----|------|--------|
-| `oman-unlimited-makecom` | 🤖 Oman Unlimited Contract (Auto PDF) | ✅ Active |
+| ID                        | Name                                   | Status    |
+| ------------------------- | -------------------------------------- | --------- |
+| `oman-unlimited-makecom`  | 🤖 Oman Unlimited Contract (Auto PDF)  | ✅ Active |
 | `oman-fixed-term-makecom` | 🤖 Oman Fixed-Term Contract (Auto PDF) | ✅ Active |
-| `oman-part-time-makecom` | 🤖 Oman Part-Time Contract (Auto PDF) | ✅ Active |
+| `oman-part-time-makecom`  | 🤖 Oman Part-Time Contract (Auto PDF)  | ✅ Active |
 
 ### **Database Values (for existing contracts)**
 
 These are **legacy values** stored in the database:
 
-| Value | Description | Valid |
-|-------|-------------|-------|
-| `employment` | Employment contract | ✅ Yes |
-| `service` | Service contract | ✅ Yes |
+| Value         | Description          | Valid  |
+| ------------- | -------------------- | ------ |
+| `employment`  | Employment contract  | ✅ Yes |
+| `service`     | Service contract     | ✅ Yes |
 | `consultancy` | Consultancy contract | ✅ Yes |
-| `partnership` | Partnership | ✅ Yes |
+| `partnership` | Partnership          | ✅ Yes |
 
 ---
 
@@ -75,8 +75,8 @@ const formData = {
 
 ```sql
 -- See what contract types currently exist in your database
-SELECT DISTINCT contract_type, COUNT(*) 
-FROM contracts 
+SELECT DISTINCT contract_type, COUNT(*)
+FROM contracts
 GROUP BY contract_type;
 ```
 
@@ -90,7 +90,7 @@ If you have old contracts with invalid types:
 
 ```sql
 -- Map old types to new enhanced types
-UPDATE contracts 
+UPDATE contracts
 SET contract_type = CASE
   WHEN contract_type IN ('unlimited-contract', 'full-time-permanent-old') THEN 'full-time-permanent'
   WHEN contract_type IN ('limited-contract', 'part-time') THEN 'part-time-fixed'
@@ -120,13 +120,13 @@ Ensure your contract form uses the correct dropdown options:
 // ✅ CORRECT - Use enhanced contract types
 import { enhancedContractTypes } from '@/lib/contract-type-config';
 
-<select name="contract_type">
+<select name='contract_type'>
   {enhancedContractTypes.map(type => (
     <option key={type.id} value={type.id}>
       {type.name}
     </option>
   ))}
-</select>
+</select>;
 
 // ❌ WRONG - Don't use old CONTRACT_TYPES constant
 import { CONTRACT_TYPES } from '@/constants/contract-options';
@@ -143,22 +143,22 @@ export function getEnhancedContractTypeConfig(
 ): ContractTypeConfig | null {
   // Try exact match first
   let config = enhancedContractTypes.find(type => type.id === contractTypeId);
-  
+
   // Fallback mapping for legacy types
   if (!config) {
     const legacyMap: Record<string, string> = {
-      'employment': 'full-time-permanent',
-      'service': 'service-contract',
-      'consultancy': 'consulting-agreement',
-      'partnership': 'partnership-agreement',
+      employment: 'full-time-permanent',
+      service: 'service-contract',
+      consultancy: 'consulting-agreement',
+      partnership: 'partnership-agreement',
     };
-    
+
     const mappedId = legacyMap[contractTypeId];
     if (mappedId) {
       config = enhancedContractTypes.find(type => type.id === mappedId);
     }
   }
-  
+
   return config || null;
 }
 ```
@@ -168,6 +168,7 @@ export function getEnhancedContractTypeConfig(
 ## 📊 Contract Type Configuration Details
 
 ### **Full-Time Permanent**
+
 ```typescript
 {
   id: 'full-time-permanent',
@@ -180,6 +181,7 @@ export function getEnhancedContractTypeConfig(
 ```
 
 ### **Required Fields:**
+
 - job_title
 - department
 - basic_salary
@@ -217,7 +219,10 @@ export function getEnhancedContractTypeConfig(
 ```javascript
 // Check available contract types
 import { enhancedContractTypes } from '@/lib/contract-type-config';
-console.log('Available types:', enhancedContractTypes.map(t => t.id));
+console.log(
+  'Available types:',
+  enhancedContractTypes.map(t => t.id)
+);
 
 // Validate a contract type
 import { validateContractTypeData } from '@/lib/contract-type-config';
@@ -233,6 +238,7 @@ console.log('Validation result:', result);
 ## 📝 Summary
 
 **Valid Enhanced Contract Type IDs (9):**
+
 1. `full-time-permanent`
 2. `part-time-fixed`
 3. `consulting-agreement`
@@ -244,11 +250,13 @@ console.log('Validation result:', result);
 9. `lease-equipment`
 
 **Valid Make.com Automated Types (3):**
+
 1. `oman-unlimited-makecom` 🤖
 2. `oman-fixed-term-makecom` 🤖
 3. `oman-part-time-makecom` 🤖
 
 **Legacy Database Values (4, still supported):**
+
 - `employment`
 - `service`
 - `consultancy`
@@ -257,6 +265,7 @@ console.log('Validation result:', result);
 **Total: 16 valid contract types**
 
 **Action Required:**
+
 - Check what `contract_type` value is being sent
 - Ensure it matches one of the 16 valid types listed above
 - Update any old references to use new IDs
@@ -265,4 +274,3 @@ console.log('Validation result:', result);
 ---
 
 **Last Updated:** October 16, 2025
-

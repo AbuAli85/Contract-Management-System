@@ -1,4 +1,5 @@
 # Google Cloud Setup Guide
+
 ## For Backend Contract Generation (Bypasses Make.com Restrictions)
 
 ---
@@ -8,6 +9,7 @@
 Make.com doesn't allow restricted Google API scopes with Gmail (@gmail.com) accounts.
 
 **Solution:** Your backend will handle Google Docs operations directly using:
+
 - ✅ Google Docs API (copy and replace text)
 - ✅ Google Drive API (file management)
 - ✅ OAuth 2.0 authentication
@@ -156,6 +158,7 @@ export async function GET() {
 Visit: `http://localhost:3000/api/test-google`
 
 **Expected result:**
+
 ```json
 {
   "success": true,
@@ -170,19 +173,23 @@ Visit: `http://localhost:3000/api/test-google`
 ## **🔧 Troubleshooting**
 
 ### **Error: "invalid_client"**
+
 - Check Client ID and Secret are correct
 - Make sure they're from the same project
 
 ### **Error: "redirect_uri_mismatch"**
+
 - Add the redirect URI to OAuth consent screen
 - Must match exactly (including http/https)
 
 ### **Error: "Invalid Credentials"**
+
 - Access token expired (they expire in ~1 hour)
 - Refresh token should get a new access token automatically
 - If refresh token is missing, redo OAuth flow
 
 ### **Error: "insufficient permissions"**
+
 - Make sure you authorized the correct scopes:
   - `https://www.googleapis.com/auth/documents`
   - `https://www.googleapis.com/auth/drive.file`
@@ -210,16 +217,15 @@ The googleapis library automatically refreshes access tokens using the refresh t
 
 ## **📊 Comparison: Make.com vs Backend**
 
-| Feature | Make.com | Backend (This Solution) |
-|---------|----------|------------------------|
-| Gmail Support | ❌ Restricted | ✅ Full support |
-| Text Replacement | ⚠️ UI issues | ✅ Direct API |
-| Image Support | ⚠️ Complex | ✅ Easier |
-| Error Handling | ❌ Limited | ✅ Full control |
-| Cost | 💰 Per operation | ✅ Free (just Google API) |
-| Reliability | ⚠️ Depends on Make | ✅ Your control |
+| Feature          | Make.com           | Backend (This Solution)   |
+| ---------------- | ------------------ | ------------------------- |
+| Gmail Support    | ❌ Restricted      | ✅ Full support           |
+| Text Replacement | ⚠️ UI issues       | ✅ Direct API             |
+| Image Support    | ⚠️ Complex         | ✅ Easier                 |
+| Error Handling   | ❌ Limited         | ✅ Full control           |
+| Cost             | 💰 Per operation   | ✅ Free (just Google API) |
+| Reliability      | ⚠️ Depends on Make | ✅ Your control           |
 
 ---
 
 **This backend approach is more reliable and gives you full control!** 🚀
-

@@ -16,7 +16,7 @@ export async function POST(
     // Rate limiting
     const identifier = getClientIdentifier(request);
     const { success } = await ratelimitSensitive.limit(identifier);
-    
+
     if (!success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
@@ -26,13 +26,13 @@ export async function POST(
 
     // Authentication and authorization
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check user permissions (simplified for now)
@@ -51,7 +51,7 @@ export async function POST(
     // 4. Log the action
 
     const archiveId = `archive_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Simulate archive creation
     const archivedPromoter = {
       id: params.id,
@@ -73,10 +73,9 @@ export async function POST(
       },
       message: `Promoter has been successfully archived.`,
     });
-
   } catch (error) {
     console.error('Error in archive promoter API:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },
@@ -99,7 +98,7 @@ export async function DELETE(
     // Rate limiting
     const identifier = getClientIdentifier(request);
     const { success } = await ratelimitSensitive.limit(identifier);
-    
+
     if (!success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
@@ -109,13 +108,13 @@ export async function DELETE(
 
     // Authentication and authorization
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check user permissions (simplified for now)
@@ -132,7 +131,6 @@ export async function DELETE(
       success: true,
       message: `Promoter has been permanently deleted.`,
     });
-
   } catch (error) {
     console.error('Error in delete promoter API:', error);
     return NextResponse.json(

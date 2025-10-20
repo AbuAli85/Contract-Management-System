@@ -150,14 +150,14 @@ export function DashboardAuthGuard({
   // Check user role when required
   useEffect(() => {
     const checkUserRole = async () => {
-      console.log('🔐 DashboardAuthGuard: Starting role check', { 
-        hasSession: !!session?.user, 
-        checkingRole, 
-        requiredRole 
+      console.log('🔐 DashboardAuthGuard: Starting role check', {
+        hasSession: !!session?.user,
+        checkingRole,
+        requiredRole,
       });
-      
+
       if (!session?.user || checkingRole) return;
-      
+
       // If no role requirement, allow access
       if (!requiredRole) {
         console.log('🔐 No role requirement - allowing access');
@@ -181,19 +181,23 @@ export function DashboardAuthGuard({
           setUserRole(data.role.value);
 
           // Check if user has any of the required roles
-          const hasRequiredRole = Array.isArray(requiredRole) 
+          const hasRequiredRole = Array.isArray(requiredRole)
             ? requiredRole.includes(data.role.value)
             : data.role.value === requiredRole;
 
           // Admin users should have access to everything
           if (data.role.value === 'admin') {
-            console.log('🔐 Admin user detected - granting access to all dashboards');
+            console.log(
+              '🔐 Admin user detected - granting access to all dashboards'
+            );
             setUserRole(data.role.value);
             return;
           }
 
           if (!hasRequiredRole) {
-            const requiredRoleDisplay = Array.isArray(requiredRole) ? requiredRole.join(' or ') : requiredRole;
+            const requiredRoleDisplay = Array.isArray(requiredRole)
+              ? requiredRole.join(' or ')
+              : requiredRole;
             const redirectUrl = locale
               ? `/${locale}/auth/unauthorized?required=${requiredRoleDisplay}&current=${data.role.value}`
               : `/auth/unauthorized?required=${requiredRoleDisplay}&current=${data.role.value}`;

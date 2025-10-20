@@ -72,16 +72,16 @@ interface PromoterFormProps {
 }
 
 const SECTION_ICONS: Record<FormSection, React.ReactNode> = {
-  basic: <User className="h-5 w-5" />,
-  contact: <Phone className="h-5 w-5" />,
-  personal: <Users className="h-5 w-5" />,
-  documents: <Shield className="h-5 w-5" />,
-  emergency: <AlertCircle className="h-5 w-5" />,
-  employment: <Briefcase className="h-5 w-5" />,
-  education: <GraduationCap className="h-5 w-5" />,
-  banking: <CreditCard className="h-5 w-5" />,
-  status: <Star className="h-5 w-5" />,
-  additional: <FileText className="h-5 w-5" />,
+  basic: <User className='h-5 w-5' />,
+  contact: <Phone className='h-5 w-5' />,
+  personal: <Users className='h-5 w-5' />,
+  documents: <Shield className='h-5 w-5' />,
+  emergency: <AlertCircle className='h-5 w-5' />,
+  employment: <Briefcase className='h-5 w-5' />,
+  education: <GraduationCap className='h-5 w-5' />,
+  banking: <CreditCard className='h-5 w-5' />,
+  status: <Star className='h-5 w-5' />,
+  additional: <FileText className='h-5 w-5' />,
 };
 
 export function PromoterFormComprehensive({
@@ -106,13 +106,16 @@ export function PromoterFormComprehensive({
       mobile_number: initialData?.mobile_number ?? '',
       profile_picture_url: initialData?.profile_picture_url ?? '',
       id_card_number: initialData?.id_card_number ?? '',
-      id_card_expiry_date: initialData?.id_card_expiry_date ?? new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+      id_card_expiry_date:
+        initialData?.id_card_expiry_date ??
+        new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
       passport_number: initialData?.passport_number ?? '',
       passport_expiry_date: initialData?.passport_expiry_date ?? undefined,
       visa_number: initialData?.visa_number ?? '',
       visa_expiry_date: initialData?.visa_expiry_date ?? undefined,
       work_permit_number: initialData?.work_permit_number ?? '',
-      work_permit_expiry_date: initialData?.work_permit_expiry_date ?? undefined,
+      work_permit_expiry_date:
+        initialData?.work_permit_expiry_date ?? undefined,
       nationality: initialData?.nationality ?? '',
       date_of_birth: initialData?.date_of_birth ?? undefined,
       gender: initialData?.gender ?? undefined,
@@ -148,8 +151,10 @@ export function PromoterFormComprehensive({
       special_requirements: initialData?.special_requirements ?? '',
       notes: initialData?.notes ?? '',
       employer_id: initialData?.employer_id ?? '',
-      notify_days_before_id_expiry: initialData?.notify_days_before_id_expiry ?? 100,
-      notify_days_before_passport_expiry: initialData?.notify_days_before_passport_expiry ?? 210,
+      notify_days_before_id_expiry:
+        initialData?.notify_days_before_id_expiry ?? 100,
+      notify_days_before_passport_expiry:
+        initialData?.notify_days_before_passport_expiry ?? 210,
     },
   });
 
@@ -182,15 +187,15 @@ export function PromoterFormComprehensive({
     try {
       await onSubmit(data);
       toast.success(
-        mode === 'create' 
-          ? 'Promoter created successfully!' 
+        mode === 'create'
+          ? 'Promoter created successfully!'
           : 'Promoter updated successfully!'
       );
     } catch (error) {
       console.error('Error submitting form:', error);
       toast.error(
-        error instanceof Error 
-          ? error.message 
+        error instanceof Error
+          ? error.message
           : 'Failed to save promoter. Please try again.'
       );
     } finally {
@@ -199,16 +204,16 @@ export function PromoterFormComprehensive({
   };
 
   const renderBasicSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="first_name"
+          name='first_name'
           render={({ field }) => (
             <FormItem>
               <FormLabel>First Name *</FormLabel>
               <FormControl>
-                <Input placeholder="John" {...field} />
+                <Input placeholder='John' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -217,12 +222,12 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="last_name"
+          name='last_name'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Last Name *</FormLabel>
               <FormControl>
-                <Input placeholder="Doe" {...field} />
+                <Input placeholder='Doe' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -230,18 +235,18 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="name_en"
+          name='name_en'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name (English)</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="John Doe" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='John Doe'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -251,16 +256,16 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="name_ar"
+          name='name_ar'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name (Arabic)</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="جون دو" 
-                  {...field} 
-                  value={field.value || ''} 
-                  dir="rtl"
+                <Input
+                  placeholder='جون دو'
+                  {...field}
+                  value={field.value || ''}
+                  dir='rtl'
                 />
               </FormControl>
               <FormMessage />
@@ -271,16 +276,16 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="profile_picture_url"
+        name='profile_picture_url'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Profile Picture URL</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="https://example.com/image.jpg" 
-                type="url"
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='https://example.com/image.jpg'
+                type='url'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormDescription>
@@ -294,20 +299,20 @@ export function PromoterFormComprehensive({
   );
 
   const renderContactSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="email"
+          name='email'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input 
-                  type="email"
-                  placeholder="john.doe@example.com" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  type='email'
+                  placeholder='john.doe@example.com'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -317,15 +322,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="phone"
+          name='phone'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="+968 9123 4567" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='+968 9123 4567'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -336,15 +341,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="mobile_number"
+        name='mobile_number'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Mobile Number</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="+968 9876 5432" 
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='+968 9876 5432'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />
@@ -354,15 +359,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="address"
+        name='address'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Address</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Street address" 
-                {...field} 
-                value={field.value || ''} 
+              <Textarea
+                placeholder='Street address'
+                {...field}
+                value={field.value || ''}
                 rows={3}
               />
             </FormControl>
@@ -371,18 +376,18 @@ export function PromoterFormComprehensive({
         )}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="city"
+          name='city'
           render={({ field }) => (
             <FormItem>
               <FormLabel>City</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Muscat" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Muscat'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -392,15 +397,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="state"
+          name='state'
           render={({ field }) => (
             <FormItem>
               <FormLabel>State/Province</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Muscat Governorate" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Muscat Governorate'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -409,18 +414,18 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="country"
+          name='country'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Country</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Oman" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Oman'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -430,16 +435,12 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="postal_code"
+          name='postal_code'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Postal Code</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="100" 
-                  {...field} 
-                  value={field.value || ''} 
-                />
+                <Input placeholder='100' {...field} value={field.value || ''} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -450,19 +451,19 @@ export function PromoterFormComprehensive({
   );
 
   const renderPersonalSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="nationality"
+          name='nationality'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Nationality</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Omani" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Omani'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -470,46 +471,45 @@ export function PromoterFormComprehensive({
           )}
         />
 
-          <FormField
-            control={form.control}
-            name="date_of_birth"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Date of Birth</FormLabel>
-                <FormControl>
-                  <DatePickerWithManualInput
-                    date={field.value === null ? undefined : field.value}
-                    onDateChange={field.onChange}
-                    placeholder="Select date of birth"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
           control={form.control}
-          name="gender"
+          name='date_of_birth'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date of Birth</FormLabel>
+              <FormControl>
+                <DatePickerWithManualInput
+                  date={field.value === null ? undefined : field.value}
+                  onDateChange={field.onChange}
+                  placeholder='Select date of birth'
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+        <FormField
+          control={form.control}
+          name='gender'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Gender</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value ?? ''}
-              >
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder='Select gender' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                  <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                  <SelectItem value='male'>Male</SelectItem>
+                  <SelectItem value='female'>Female</SelectItem>
+                  <SelectItem value='other'>Other</SelectItem>
+                  <SelectItem value='prefer_not_to_say'>
+                    Prefer not to say
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -519,24 +519,21 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="marital_status"
+          name='marital_status'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Marital Status</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value ?? ''}
-              >
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder='Select status' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="married">Married</SelectItem>
-                  <SelectItem value="divorced">Divorced</SelectItem>
-                  <SelectItem value="widowed">Widowed</SelectItem>
+                  <SelectItem value='single'>Single</SelectItem>
+                  <SelectItem value='married'>Married</SelectItem>
+                  <SelectItem value='divorced'>Divorced</SelectItem>
+                  <SelectItem value='widowed'>Widowed</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -548,22 +545,22 @@ export function PromoterFormComprehensive({
   );
 
   const renderDocumentsSection = () => (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* ID Card */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h4 className="font-medium flex items-center gap-2">
-          <Shield className="h-4 w-4" />
+      <div className='space-y-4 p-4 border rounded-lg'>
+        <h4 className='font-medium flex items-center gap-2'>
+          <Shield className='h-4 w-4' />
           ID Card
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={form.control}
-            name="id_card_number"
+            name='id_card_number'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>ID Card Number *</FormLabel>
                 <FormControl>
-                  <Input placeholder="12345678" {...field} />
+                  <Input placeholder='12345678' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -572,7 +569,7 @@ export function PromoterFormComprehensive({
 
           <FormField
             control={form.control}
-            name="id_card_expiry_date"
+            name='id_card_expiry_date'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>ID Card Expiry Date *</FormLabel>
@@ -580,7 +577,7 @@ export function PromoterFormComprehensive({
                   <DatePickerWithManualInput
                     date={field.value}
                     onDateChange={field.onChange}
-                    placeholder="Select expiry date"
+                    placeholder='Select expiry date'
                   />
                 </FormControl>
                 <FormMessage />
@@ -591,23 +588,23 @@ export function PromoterFormComprehensive({
       </div>
 
       {/* Passport */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h4 className="font-medium flex items-center gap-2">
-          <Globe className="h-4 w-4" />
+      <div className='space-y-4 p-4 border rounded-lg'>
+        <h4 className='font-medium flex items-center gap-2'>
+          <Globe className='h-4 w-4' />
           Passport
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={form.control}
-            name="passport_number"
+            name='passport_number'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Passport Number</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="A12345678" 
-                    {...field} 
-                    value={field.value || ''} 
+                  <Input
+                    placeholder='A12345678'
+                    {...field}
+                    value={field.value || ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -617,7 +614,7 @@ export function PromoterFormComprehensive({
 
           <FormField
             control={form.control}
-            name="passport_expiry_date"
+            name='passport_expiry_date'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Passport Expiry Date</FormLabel>
@@ -625,7 +622,7 @@ export function PromoterFormComprehensive({
                   <DatePickerWithManualInput
                     date={field.value === null ? undefined : field.value}
                     onDateChange={field.onChange}
-                    placeholder="Select expiry date"
+                    placeholder='Select expiry date'
                   />
                 </FormControl>
                 <FormMessage />
@@ -636,20 +633,20 @@ export function PromoterFormComprehensive({
       </div>
 
       {/* Visa */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h4 className="font-medium">Visa</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='space-y-4 p-4 border rounded-lg'>
+        <h4 className='font-medium'>Visa</h4>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={form.control}
-            name="visa_number"
+            name='visa_number'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Visa Number</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="V123456789" 
-                    {...field} 
-                    value={field.value || ''} 
+                  <Input
+                    placeholder='V123456789'
+                    {...field}
+                    value={field.value || ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -659,7 +656,7 @@ export function PromoterFormComprehensive({
 
           <FormField
             control={form.control}
-            name="visa_expiry_date"
+            name='visa_expiry_date'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Visa Expiry Date</FormLabel>
@@ -667,7 +664,7 @@ export function PromoterFormComprehensive({
                   <DatePickerWithManualInput
                     date={field.value === null ? undefined : field.value}
                     onDateChange={field.onChange}
-                    placeholder="Select expiry date"
+                    placeholder='Select expiry date'
                   />
                 </FormControl>
                 <FormMessage />
@@ -678,20 +675,20 @@ export function PromoterFormComprehensive({
       </div>
 
       {/* Work Permit */}
-      <div className="space-y-4 p-4 border rounded-lg">
-        <h4 className="font-medium">Work Permit</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='space-y-4 p-4 border rounded-lg'>
+        <h4 className='font-medium'>Work Permit</h4>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={form.control}
-            name="work_permit_number"
+            name='work_permit_number'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Work Permit Number</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="WP123456" 
-                    {...field} 
-                    value={field.value || ''} 
+                  <Input
+                    placeholder='WP123456'
+                    {...field}
+                    value={field.value || ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -701,7 +698,7 @@ export function PromoterFormComprehensive({
 
           <FormField
             control={form.control}
-            name="work_permit_expiry_date"
+            name='work_permit_expiry_date'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Work Permit Expiry Date</FormLabel>
@@ -709,7 +706,7 @@ export function PromoterFormComprehensive({
                   <DatePickerWithManualInput
                     date={field.value === null ? undefined : field.value}
                     onDateChange={field.onChange}
-                    placeholder="Select expiry date"
+                    placeholder='Select expiry date'
                   />
                 </FormControl>
                 <FormMessage />
@@ -722,18 +719,18 @@ export function PromoterFormComprehensive({
   );
 
   const renderEmergencySection = () => (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       <FormField
         control={form.control}
-        name="emergency_contact"
+        name='emergency_contact'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Emergency Contact Name</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="Jane Doe" 
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='Jane Doe'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormDescription>
@@ -746,15 +743,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="emergency_phone"
+        name='emergency_phone'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Emergency Phone Number</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="+968 9123 4567" 
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='+968 9123 4567'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />
@@ -765,19 +762,19 @@ export function PromoterFormComprehensive({
   );
 
   const renderEmploymentSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="job_title"
+          name='job_title'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Job Title</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Senior Developer" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Senior Developer'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -787,15 +784,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="company"
+          name='company'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Company</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Tech Solutions Inc." 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Tech Solutions Inc.'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -804,18 +801,18 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="department"
+          name='department'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Department</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Engineering" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Engineering'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -825,15 +822,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="specialization"
+          name='specialization'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Specialization</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Full Stack Development" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Full Stack Development'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -844,17 +841,21 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="experience_years"
+        name='experience_years'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Years of Experience</FormLabel>
             <FormControl>
-              <Input 
-                type="number"
-                placeholder="5" 
-                {...field} 
-                value={field.value || ''} 
-                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+              <Input
+                type='number'
+                placeholder='5'
+                {...field}
+                value={field.value || ''}
+                onChange={e =>
+                  field.onChange(
+                    e.target.value ? parseInt(e.target.value) : undefined
+                  )
+                }
               />
             </FormControl>
             <FormMessage />
@@ -864,15 +865,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="employer_id"
+        name='employer_id'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Employer ID</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="UUID of employer (from parties table)" 
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='UUID of employer (from parties table)'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormDescription>
@@ -886,30 +887,27 @@ export function PromoterFormComprehensive({
   );
 
   const renderEducationSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="education_level"
+          name='education_level'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Education Level</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                value={field.value ?? ''}
-              >
+              <Select onValueChange={field.onChange} value={field.value ?? ''}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
+                    <SelectValue placeholder='Select level' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="high_school">High School</SelectItem>
-                  <SelectItem value="diploma">Diploma</SelectItem>
-                  <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-                  <SelectItem value="master">Master's Degree</SelectItem>
-                  <SelectItem value="phd">PhD</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value='high_school'>High School</SelectItem>
+                  <SelectItem value='diploma'>Diploma</SelectItem>
+                  <SelectItem value='bachelor'>Bachelor's Degree</SelectItem>
+                  <SelectItem value='master'>Master's Degree</SelectItem>
+                  <SelectItem value='phd'>PhD</SelectItem>
+                  <SelectItem value='other'>Other</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -919,15 +917,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="university"
+          name='university'
           render={({ field }) => (
             <FormItem>
               <FormLabel>University</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Sultan Qaboos University" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Sultan Qaboos University'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -938,17 +936,21 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="graduation_year"
+        name='graduation_year'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Graduation Year</FormLabel>
             <FormControl>
-              <Input 
-                type="number"
-                placeholder="2020" 
-                {...field} 
-                value={field.value || ''} 
-                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+              <Input
+                type='number'
+                placeholder='2020'
+                {...field}
+                value={field.value || ''}
+                onChange={e =>
+                  field.onChange(
+                    e.target.value ? parseInt(e.target.value) : undefined
+                  )
+                }
               />
             </FormControl>
             <FormMessage />
@@ -958,21 +960,19 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="skills"
+        name='skills'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Skills</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="JavaScript, TypeScript, React, Node.js..." 
-                {...field} 
-                value={field.value || ''} 
+              <Textarea
+                placeholder='JavaScript, TypeScript, React, Node.js...'
+                {...field}
+                value={field.value || ''}
                 rows={3}
               />
             </FormControl>
-            <FormDescription>
-              List skills separated by commas
-            </FormDescription>
+            <FormDescription>List skills separated by commas</FormDescription>
             <FormMessage />
           </FormItem>
         )}
@@ -980,15 +980,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="certifications"
+        name='certifications'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Certifications</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="AWS Certified Developer, PMP..." 
-                {...field} 
-                value={field.value || ''} 
+              <Textarea
+                placeholder='AWS Certified Developer, PMP...'
+                {...field}
+                value={field.value || ''}
                 rows={3}
               />
             </FormControl>
@@ -1003,19 +1003,19 @@ export function PromoterFormComprehensive({
   );
 
   const renderBankingSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="bank_name"
+          name='bank_name'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bank Name</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Bank Muscat" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Bank Muscat'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -1025,15 +1025,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="account_number"
+          name='account_number'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Account Number</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="1234567890" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='1234567890'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -1042,18 +1042,18 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="iban"
+          name='iban'
           render={({ field }) => (
             <FormItem>
               <FormLabel>IBAN</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="OM12 3456 7890 1234 5678 90" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='OM12 3456 7890 1234 5678 90'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -1063,15 +1063,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="swift_code"
+          name='swift_code'
           render={({ field }) => (
             <FormItem>
               <FormLabel>SWIFT Code</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="BMUSOMRX" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='BMUSOMRX'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -1082,15 +1082,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="tax_id"
+        name='tax_id'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Tax ID</FormLabel>
             <FormControl>
-              <Input 
-                placeholder="TAX123456789" 
-                {...field} 
-                value={field.value || ''} 
+              <Input
+                placeholder='TAX123456789'
+                {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />
@@ -1101,26 +1101,26 @@ export function PromoterFormComprehensive({
   );
 
   const renderStatusSection = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className='space-y-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="status"
+          name='status'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder='Select status' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
+                  <SelectItem value='active'>Active</SelectItem>
+                  <SelectItem value='inactive'>Inactive</SelectItem>
+                  <SelectItem value='pending'>Pending</SelectItem>
+                  <SelectItem value='suspended'>Suspended</SelectItem>
+                  <SelectItem value='on_leave'>On Leave</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -1130,22 +1130,22 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="overall_status"
+          name='overall_status'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Overall Status</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select overall status" />
+                    <SelectValue placeholder='Select overall status' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="excellent">Excellent</SelectItem>
-                  <SelectItem value="good">Good</SelectItem>
-                  <SelectItem value="fair">Fair</SelectItem>
-                  <SelectItem value="warning">Warning</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
+                  <SelectItem value='excellent'>Excellent</SelectItem>
+                  <SelectItem value='good'>Good</SelectItem>
+                  <SelectItem value='fair'>Fair</SelectItem>
+                  <SelectItem value='warning'>Warning</SelectItem>
+                  <SelectItem value='critical'>Critical</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -1154,23 +1154,27 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="rating"
+          name='rating'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Rating (0-5)</FormLabel>
               <FormControl>
-                <Input 
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  placeholder="4.5" 
-                  {...field} 
-                  value={field.value || ''} 
-                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                <Input
+                  type='number'
+                  step='0.1'
+                  min='0'
+                  max='5'
+                  placeholder='4.5'
+                  {...field}
+                  value={field.value || ''}
+                  onChange={e =>
+                    field.onChange(
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -1180,21 +1184,21 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="availability"
+          name='availability'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Availability</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select availability" />
+                    <SelectValue placeholder='Select availability' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="available">Available</SelectItem>
-                  <SelectItem value="busy">Busy</SelectItem>
-                  <SelectItem value="unavailable">Unavailable</SelectItem>
-                  <SelectItem value="part_time">Part Time</SelectItem>
+                  <SelectItem value='available'>Available</SelectItem>
+                  <SelectItem value='busy'>Busy</SelectItem>
+                  <SelectItem value='unavailable'>Unavailable</SelectItem>
+                  <SelectItem value='part_time'>Part Time</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -1203,23 +1207,23 @@ export function PromoterFormComprehensive({
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         <FormField
           control={form.control}
-          name="preferred_language"
+          name='preferred_language'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Preferred Language</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder='Select language' />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ar">Arabic</SelectItem>
-                  <SelectItem value="both">Both</SelectItem>
+                  <SelectItem value='en'>English</SelectItem>
+                  <SelectItem value='ar'>Arabic</SelectItem>
+                  <SelectItem value='both'>Both</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -1229,15 +1233,15 @@ export function PromoterFormComprehensive({
 
         <FormField
           control={form.control}
-          name="timezone"
+          name='timezone'
           render={({ field }) => (
             <FormItem>
               <FormLabel>Timezone</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="Asia/Muscat" 
-                  {...field} 
-                  value={field.value || ''} 
+                <Input
+                  placeholder='Asia/Muscat'
+                  {...field}
+                  value={field.value || ''}
                 />
               </FormControl>
               <FormMessage />
@@ -1249,18 +1253,18 @@ export function PromoterFormComprehensive({
   );
 
   const renderAdditionalSection = () => (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       <FormField
         control={form.control}
-        name="special_requirements"
+        name='special_requirements'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Special Requirements</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Any special requirements or accommodations needed..." 
-                {...field} 
-                value={field.value || ''} 
+              <Textarea
+                placeholder='Any special requirements or accommodations needed...'
+                {...field}
+                value={field.value || ''}
                 rows={4}
               />
             </FormControl>
@@ -1271,15 +1275,15 @@ export function PromoterFormComprehensive({
 
       <FormField
         control={form.control}
-        name="notes"
+        name='notes'
         render={({ field }) => (
           <FormItem>
             <FormLabel>Notes</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Additional notes or comments..." 
-                {...field} 
-                value={field.value || ''} 
+              <Textarea
+                placeholder='Additional notes or comments...'
+                {...field}
+                value={field.value || ''}
                 rows={4}
               />
             </FormControl>
@@ -1290,22 +1294,26 @@ export function PromoterFormComprehensive({
 
       <Separator />
 
-      <div className="space-y-4">
-        <h4 className="font-medium">Notification Settings</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className='space-y-4'>
+        <h4 className='font-medium'>Notification Settings</h4>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <FormField
             control={form.control}
-            name="notify_days_before_id_expiry"
+            name='notify_days_before_id_expiry'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>ID Card Expiry Notification (days)</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number"
-                    placeholder="100" 
-                    {...field} 
-                    value={field.value || ''} 
-                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                  <Input
+                    type='number'
+                    placeholder='100'
+                    {...field}
+                    value={field.value || ''}
+                    onChange={e =>
+                      field.onChange(
+                        e.target.value ? parseInt(e.target.value) : undefined
+                      )
+                    }
                   />
                 </FormControl>
                 <FormDescription>
@@ -1318,17 +1326,21 @@ export function PromoterFormComprehensive({
 
           <FormField
             control={form.control}
-            name="notify_days_before_passport_expiry"
+            name='notify_days_before_passport_expiry'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Passport Expiry Notification (days)</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number"
-                    placeholder="210" 
-                    {...field} 
-                    value={field.value || ''} 
-                    onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                  <Input
+                    type='number'
+                    placeholder='210'
+                    {...field}
+                    value={field.value || ''}
+                    onChange={e =>
+                      field.onChange(
+                        e.target.value ? parseInt(e.target.value) : undefined
+                      )
+                    }
                   />
                 </FormControl>
                 <FormDescription>
@@ -1371,43 +1383,43 @@ export function PromoterFormComprehensive({
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className='text-2xl font-bold tracking-tight'>
           {mode === 'create' ? 'Add New Promoter' : 'Edit Promoter'}
         </h2>
-        <p className="text-muted-foreground">
-          {mode === 'create' 
-            ? 'Fill in the promoter information across multiple sections.' 
+        <p className='text-muted-foreground'>
+          {mode === 'create'
+            ? 'Fill in the promoter information across multiple sections.'
             : 'Update the promoter information.'}
         </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
+      <div className='space-y-2'>
+        <div className='flex items-center justify-between text-sm'>
+          <span className='text-muted-foreground'>
             Section {currentSectionIndex + 1} of {sections.length}
           </span>
-          <span className="font-medium">{Math.round(progress)}% Complete</span>
+          <span className='font-medium'>{Math.round(progress)}% Complete</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <Progress value={progress} className='h-2' />
       </div>
 
       {/* Section Navigation */}
-      <div className="flex flex-wrap gap-2">
-        {sections.map((section) => (
+      <div className='flex flex-wrap gap-2'>
+        {sections.map(section => (
           <Button
             key={section}
-            type="button"
+            type='button'
             variant={currentSection === section ? 'default' : 'outline'}
-            size="sm"
+            size='sm'
             onClick={() => setCurrentSection(section)}
-            className="flex items-center gap-2"
+            className='flex items-center gap-2'
           >
             {SECTION_ICONS[section]}
-            <span className="hidden sm:inline">
+            <span className='hidden sm:inline'>
               {FORM_SECTIONS[section].title}
             </span>
           </Button>
@@ -1416,10 +1428,13 @@ export function PromoterFormComprehensive({
 
       {/* Form */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className='space-y-6'
+        >
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className='flex items-center gap-2'>
                 {SECTION_ICONS[currentSection]}
                 {FORM_SECTIONS[currentSection].title}
               </CardTitle>
@@ -1428,7 +1443,7 @@ export function PromoterFormComprehensive({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode='wait'>
                 <motion.div
                   key={currentSection}
                   initial={{ opacity: 0, x: 20 }}
@@ -1443,25 +1458,25 @@ export function PromoterFormComprehensive({
           </Card>
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex gap-2">
+          <div className='flex items-center justify-between gap-4'>
+            <div className='flex gap-2'>
               {currentSectionIndex > 0 && (
                 <Button
-                  type="button"
-                  variant="outline"
+                  type='button'
+                  variant='outline'
                   onClick={handlePrevious}
                 >
-                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  <ChevronLeft className='h-4 w-4 mr-2' />
                   Previous
                 </Button>
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className='flex gap-2'>
               {onCancel && (
                 <Button
-                  type="button"
-                  variant="ghost"
+                  type='button'
+                  variant='ghost'
                   onClick={onCancel}
                   disabled={isSubmitting}
                 >
@@ -1470,21 +1485,23 @@ export function PromoterFormComprehensive({
               )}
 
               {currentSectionIndex < sections.length - 1 ? (
-                <Button type="button" onClick={handleNext}>
+                <Button type='button' onClick={handleNext}>
                   Next
-                  <ChevronRight className="h-4 w-4 ml-2" />
+                  <ChevronRight className='h-4 w-4 ml-2' />
                 </Button>
               ) : (
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type='submit' disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save className="h-4 w-4 mr-2" />
-                      {mode === 'create' ? 'Create Promoter' : 'Update Promoter'}
+                      <Save className='h-4 w-4 mr-2' />
+                      {mode === 'create'
+                        ? 'Create Promoter'
+                        : 'Update Promoter'}
                     </>
                   )}
                 </Button>
@@ -1496,4 +1513,3 @@ export function PromoterFormComprehensive({
     </div>
   );
 }
-

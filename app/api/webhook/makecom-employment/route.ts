@@ -27,7 +27,14 @@ export async function POST(request: NextRequest) {
     console.log('📤 Employment Contracts Webhook payload:', body);
 
     // Validate required fields
-    const { contract_id, contract_number, contract_type, promoter_id, first_party_id, second_party_id } = body;
+    const {
+      contract_id,
+      contract_number,
+      contract_type,
+      promoter_id,
+      first_party_id,
+      second_party_id,
+    } = body;
 
     // Validate required fields
     if (!contract_type) {
@@ -56,11 +63,14 @@ export async function POST(request: NextRequest) {
 
     if (!finalContractId || finalContractId.trim() === '') {
       // Generate a UUID for contract_id using a more compatible method
-      finalContractId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
+      finalContractId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        /[xy]/g,
+        function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
       console.log('🆔 Generated contract_id:', finalContractId);
     }
 
@@ -78,58 +88,58 @@ export async function POST(request: NextRequest) {
     // Create Supabase client
     const supabase = await createClient();
 
-           // Check if contract already exists
-           let contract: any = null;
-           if (finalContractId) {
-             const { data: existingContract, error: contractError } = await supabase
-               .from('contracts')
-               .select('*')
-               .eq('id', finalContractId)
-               .single();
+    // Check if contract already exists
+    let contract: any = null;
+    if (finalContractId) {
+      const { data: existingContract, error: contractError } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('id', finalContractId)
+        .single();
 
-             if (contractError && contractError.code !== 'PGRST116') {
-               console.error('❌ Error fetching contract:', contractError);
-               console.error('❌ Contract ID:', finalContractId);
-               console.error('❌ Error code:', contractError.code);
-               console.error('❌ Error message:', contractError.message);
-               // Don't return error here, just log it and continue with contract creation
-               console.log('⚠️ Continuing with contract creation despite fetch error');
-             }
+      if (contractError && contractError.code !== 'PGRST116') {
+        console.error('❌ Error fetching contract:', contractError);
+        console.error('❌ Contract ID:', finalContractId);
+        console.error('❌ Error code:', contractError.code);
+        console.error('❌ Error message:', contractError.message);
+        // Don't return error here, just log it and continue with contract creation
+        console.log('⚠️ Continuing with contract creation despite fetch error');
+      }
 
-             contract = existingContract;
-           }
+      contract = existingContract;
+    }
 
-           if (finalContractNumber && !contract) {
-             const { data: existingContract, error: contractError } = await supabase
-               .from('contracts')
-               .select('*')
-               .eq('contract_number', finalContractNumber)
-               .single();
+    if (finalContractNumber && !contract) {
+      const { data: existingContract, error: contractError } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('contract_number', finalContractNumber)
+        .single();
 
-             if (contractError && contractError.code !== 'PGRST116') {
-               console.error('❌ Error fetching contract by number:', contractError);
-               console.error('❌ Contract Number:', finalContractNumber);
-               console.error('❌ Error code:', contractError.code);
-               console.error('❌ Error message:', contractError.message);
-               // Don't return error here, just log it and continue with contract creation
-               console.log('⚠️ Continuing with contract creation despite fetch error');
-             }
+      if (contractError && contractError.code !== 'PGRST116') {
+        console.error('❌ Error fetching contract by number:', contractError);
+        console.error('❌ Contract Number:', finalContractNumber);
+        console.error('❌ Error code:', contractError.code);
+        console.error('❌ Error message:', contractError.message);
+        // Don't return error here, just log it and continue with contract creation
+        console.log('⚠️ Continuing with contract creation despite fetch error');
+      }
 
-             contract = existingContract;
-           }
+      contract = existingContract;
+    }
 
     // If contract exists, update it
     if (contract) {
       console.log('📝 Updating existing contract:', (contract as any).id);
-      
+
       const updateData: any = {
         contract_type,
         updated_at: new Date().toISOString(),
       };
 
       if (promoter_id) updateData.promoter_id = promoter_id;
-      if (first_party_id) updateData.client_id = first_party_id;  // first_party is client
-      if (second_party_id) updateData.employer_id = second_party_id;  // second_party is employer
+      if (first_party_id) updateData.client_id = first_party_id; // first_party is client
+      if (second_party_id) updateData.employer_id = second_party_id; // second_party is employer
 
       const supabaseClient = supabase as any;
       const { data: updatedContract, error: updateError } = await supabaseClient
@@ -160,20 +170,20 @@ export async function POST(request: NextRequest) {
           promoter_id_card_image: {
             placeholder: '{{promoter_id_card_image}}',
             url: body.promoter_id_card_url || '', // Will be empty if not provided
-            alt_text: 'ID Card'
+            alt_text: 'ID Card',
           },
           promoter_passport_image: {
             placeholder: '{{promoter_passport_image}}',
             url: body.promoter_passport_url || '', // Will be empty if not provided
-            alt_text: 'Passport'
-          }
-        }
+            alt_text: 'Passport',
+          },
+        },
       });
     }
 
     // Create new contract
     console.log('🆕 Creating new contract');
-    
+
     const contractData: any = {
       contract_type,
       contract_number: finalContractNumber,
@@ -184,9 +194,9 @@ export async function POST(request: NextRequest) {
     };
 
     if (promoter_id) contractData.promoter_id = promoter_id;
-    if (first_party_id) contractData.client_id = first_party_id;  // first_party is client
-    if (second_party_id) contractData.employer_id = second_party_id;  // second_party is employer
-    
+    if (first_party_id) contractData.client_id = first_party_id; // first_party is client
+    if (second_party_id) contractData.employer_id = second_party_id; // second_party is employer
+
     // Map date fields from webhook data - ensure dates are always provided
     if (body.contract_start_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
@@ -206,7 +216,7 @@ export async function POST(request: NextRequest) {
       // Set default start date if not provided
       contractData.start_date = new Date().toISOString().split('T')[0];
     }
-    
+
     if (body.contract_end_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
       let endDate = body.contract_end_date;
@@ -223,28 +233,31 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Set default end date (1 year from start date) if not provided
-      const startDate = contractData.start_date || new Date().toISOString().split('T')[0];
+      const startDate =
+        contractData.start_date || new Date().toISOString().split('T')[0];
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + 1);
       contractData.end_date = endDate.toISOString().split('T')[0];
     }
-    
+
     // Map other fields - ensure title is always set
     if (body.job_title && body.job_title.trim() !== '') {
       contractData.title = `${body.job_title} - ${contract_type} Contract - ${finalContractNumber}`;
     } else {
       contractData.title = `${contract_type} Contract - ${finalContractNumber}`;
     }
-    
+
     if (body.basic_salary) contractData.value = parseFloat(body.basic_salary);
     if (body.special_terms) contractData.terms = body.special_terms;
-    
+
     // Add additional fields if provided
     if (body.department && body.department.trim() !== '') {
       contractData.description = `Department: ${body.department}`;
     }
     if (body.work_location && body.work_location.trim() !== '') {
-      contractData.description = (contractData.description || '') + `\nWork Location: ${body.work_location}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nWork Location: ${body.work_location}`;
     }
 
     const { data: newContract, error: createError } = await (supabase as any)
@@ -260,14 +273,14 @@ export async function POST(request: NextRequest) {
       console.error('❌ Error details:', createError.details);
       console.error('❌ Error hint:', createError.hint);
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Failed to create contract',
           details: createError.message,
           error_code: createError.code,
           error_hint: createError.hint,
           contract_data: contractData,
-          domain: "portal.thesmartpro.io"
+          domain: 'portal.thesmartpro.io',
         },
         { status: 500 }
       );
@@ -286,25 +299,27 @@ export async function POST(request: NextRequest) {
         promoter_id_card_image: {
           placeholder: '{{promoter_id_card_image}}',
           url: body.promoter_id_card_url || '', // Will be empty if not provided
-          alt_text: 'ID Card'
+          alt_text: 'ID Card',
         },
         promoter_passport_image: {
           placeholder: '{{promoter_passport_image}}',
           url: body.promoter_passport_url || '', // Will be empty if not provided
-          alt_text: 'Passport'
-        }
-      }
+          alt_text: 'Passport',
+        },
+      },
     });
-
   } catch (error) {
     console.error('❌ Webhook processing failed:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error(
+      '❌ Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
-        domain: "portal.thesmartpro.io"
+        domain: 'portal.thesmartpro.io',
       },
       { status: 500 }
     );
@@ -318,7 +333,7 @@ export async function GET() {
     usage: 'Send POST requests with contract data',
     required_headers: {
       'Content-Type': 'application/json',
-      'X-Webhook-Secret': 'Your webhook secret'
+      'X-Webhook-Secret': 'Your webhook secret',
     },
     required_fields: {
       contract_type: 'string (required)',
@@ -326,7 +341,7 @@ export async function GET() {
       contract_number: 'string (optional)',
       promoter_id: 'string (optional)',
       first_party_id: 'string (optional)',
-      second_party_id: 'string (optional)'
-    }
+      second_party_id: 'string (optional)',
+    },
   });
 }

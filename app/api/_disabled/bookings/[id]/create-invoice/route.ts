@@ -7,7 +7,7 @@ import { canCreateInvoices } from '@/lib/acl';
 // Create Supabase client helper
 function createClient() {
   const cookieStore = cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -25,7 +25,7 @@ const createInvoiceFromBookingSchema = z.object({
   vat_rate: z.number().min(0).max(100).default(5),
   description: z.string().optional(),
   due_days: z.number().min(1).max(365).default(30),
-  currency: z.string().optional()
+  currency: z.string().optional(),
 });
 
 export async function POST(
@@ -39,9 +39,15 @@ export async function POST(
     const body = createInvoiceFromBookingSchema.parse(payload);
 
     // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Authentication required' }), { status: 401 });
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401 }
+      );
     }
 
     // Get user profile and check permissions
@@ -52,13 +58,17 @@ export async function POST(
       .single();
 
     if (!profile || !canCreateInvoices(profile.role)) {
-      return new Response(JSON.stringify({ error: 'Insufficient permissions' }), { status: 403 });
+      return new Response(
+        JSON.stringify({ error: 'Insufficient permissions' }),
+        { status: 403 }
+      );
     }
 
     // Get booking with related data
     const { data: booking, error: bookingError } = await supabase
       .from('bookings')
-      .select(`
+      .select(
+        `
         *,
         service:services(
           provider_id,
@@ -70,20 +80,26 @@ export async function POST(
           email,
           phone
         )
-      `)
+      `
+      )
       .eq('id', bookingId)
       .single();
 
     if (bookingError || !booking) {
-      return new Response(JSON.stringify({ error: 'Booking not found' }), { status: 404 });
+      return new Response(JSON.stringify({ error: 'Booking not found' }), {
+        status: 404,
+      });
     }
 
     // Check if user can create invoice for this booking
     const isProvider = booking.service.provider_id === user.id;
     const isAdmin = ['admin', 'manager'].includes(profile.role);
-    
+
     if (!isProvider && !isAdmin) {
-      return new Response(JSON.stringify({ error: 'Cannot create invoice for this booking' }), { status: 403 });
+      return new Response(
+        JSON.stringify({ error: 'Cannot create invoice for this booking' }),
+        { status: 403 }
+      );
     }
 
     // Check if invoice already exists
@@ -94,10 +110,13 @@ export async function POST(
       .single();
 
     if (existingInvoice) {
-      return new Response(JSON.stringify({ 
-        error: 'Invoice already exists for this booking',
-        existing_invoice: existingInvoice
-      }), { status: 400 });
+      return new Response(
+        JSON.stringify({
+          error: 'Invoice already exists for this booking',
+          existing_invoice: existingInvoice,
+        }),
+        { status: 400 }
+      );
     }
 
     // Generate invoice number
@@ -108,10 +127,10 @@ export async function POST(
       .limit(1)
       .single();
 
-    const nextNumber = lastInvoice?.invoice_number 
-      ? parseInt(lastInvoice.invoice_number.replace('INV', '')) + 1 
+    const nextNumber = lastInvoice?.invoice_number
+      ? parseInt(lastInvoice.invoice_number.replace('INV', '')) + 1
       : 1;
-    
+
     const invoiceNumber = `INV${nextNumber.toString().padStart(6, '0')}`;
 
     // Prepare invoice data
@@ -131,23 +150,27 @@ export async function POST(
       description: body.description || `Service: ${booking.service.title}`,
       status: 'pending',
       invoice_date: new Date().toISOString().split('T')[0],
-      due_date: dueDate.toISOString().split('T')[0]
+      due_date: dueDate.toISOString().split('T')[0],
     };
 
     // Create invoice
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .insert(invoiceData)
-      .select(`
+      .select(
+        `
         *,
         booking:bookings(*),
         provider:profiles!invoices_provider_id_fkey(full_name, email, company_name)
-      `)
+      `
+      )
       .single();
 
     if (invoiceError) {
       console.error('Invoice creation error:', invoiceError);
-      return new Response(JSON.stringify({ error: invoiceError.message }), { status: 400 });
+      return new Response(JSON.stringify({ error: invoiceError.message }), {
+        status: 400,
+      });
     }
 
     // Calculate totals for response
@@ -157,20 +180,24 @@ export async function POST(
     const invoiceWithTotals = {
       ...invoice,
       vat_amount: vatAmount,
-      total_amount: totalAmount
+      total_amount: totalAmount,
     };
 
-    return Response.json({ 
+    return Response.json({
       success: true,
       data: invoiceWithTotals,
-      message: 'Invoice created successfully'
+      message: 'Invoice created successfully',
     });
-
   } catch (error) {
     console.error('Create invoice from booking API error:', error);
     if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify({ error: 'Invalid input', details: error.errors }), { status: 400 });
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: error.errors }),
+        { status: 400 }
+      );
     }
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+    });
   }
 }

@@ -157,15 +157,15 @@ export function SimplifiedNavigation({
   };
 
   return (
-    <nav className="space-y-6 px-3 py-4">
+    <nav className='space-y-6 px-3 py-4'>
       {navigationSections.map((section, sectionIdx) => (
-        <div key={sectionIdx} className="space-y-2">
+        <div key={sectionIdx} className='space-y-2'>
           {!isCollapsed && (
-            <h3 className="px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <h3 className='px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
               {locale === 'ar' ? section.titleAr : section.title}
             </h3>
           )}
-          <div className="space-y-1">
+          <div className='space-y-1'>
             {section.items.map((item, itemIdx) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -186,7 +186,7 @@ export function SimplifiedNavigation({
                       <span>{locale === 'ar' ? item.labelAr : item.label}</span>
                     )}
                     {!isCollapsed && active && (
-                      <ChevronRight className="ml-auto h-4 w-4" />
+                      <ChevronRight className='ml-auto h-4 w-4' />
                     )}
                   </Button>
                 </Link>
@@ -198,4 +198,3 @@ export function SimplifiedNavigation({
     </nav>
   );
 }
-

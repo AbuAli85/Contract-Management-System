@@ -28,7 +28,7 @@ I've updated `lib/google-docs-service.ts` to:
 // Get the template file to find its parent folder (user's personal drive)
 const templateFile = await this.drive.files.get({
   fileId: this.config.templateId,
-  fields: 'parents'
+  fields: 'parents',
 });
 
 // Copy to the same parent folder as the template (user's personal drive)
@@ -36,8 +36,8 @@ response = await this.drive.files.copy({
   fileId: this.config.templateId,
   requestBody: {
     name: fileName,
-    parents: templateFile.data.parents || []
-  }
+    parents: templateFile.data.parents || [],
+  },
 });
 ```
 
@@ -56,9 +56,11 @@ After deploying, test the contract generation again. It should work perfectly.
 If you can't deploy immediately, here's a temporary workaround:
 
 ### **Option 1: Use HTML Generation (Already Working)**
+
 Your HTML contract generation is working perfectly. You can use this while the Google Docs fix is being deployed.
 
 ### **Option 2: Create a New Template in Service Account Drive**
+
 1. Create a new Google Docs template
 2. Share it with the service account
 3. Update the `GOOGLE_DOCS_TEMPLATE_ID` environment variable
@@ -103,6 +105,7 @@ Once the updated code is deployed, you'll get:
 The fix is ready and applied locally. You just need to **deploy the updated code to production** and the Google Drive quota issue will be completely resolved!
 
 **Your contract management system will then have:**
+
 - ✅ **Google Docs generation** (after deployment)
 - ✅ **HTML generation** (already working)
 - ✅ **PDF generation** (already working)

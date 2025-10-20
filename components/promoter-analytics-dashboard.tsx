@@ -84,63 +84,88 @@ interface AnalyticsMetrics {
   monthlyGrowth: TimeSeriesData[];
 }
 
-export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps) {
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
-  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'health'>('overview');
+export function PromoterAnalyticsDashboard({
+  promoters,
+}: PromoterAnalyticsProps) {
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>(
+    '30d'
+  );
+  const [activeTab, setActiveTab] = useState<'overview' | 'trends' | 'health'>(
+    'overview'
+  );
 
   const analytics = useMemo<AnalyticsMetrics>(() => {
     const totalPromoters = promoters.length;
-    const activePromoters = promoters.filter(p => p.overallStatus === 'active').length;
-    const criticalAlerts = promoters.filter(p => p.overallStatus === 'critical').length;
-    
-    // Compliance rate calculation
-    const compliantPromoters = promoters.filter(p => 
-      p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
+    const activePromoters = promoters.filter(
+      p => p.overallStatus === 'active'
     ).length;
-    const complianceRate = totalPromoters > 0 ? Math.round((compliantPromoters / totalPromoters) * 100) : 0;
+    const criticalAlerts = promoters.filter(
+      p => p.overallStatus === 'critical'
+    ).length;
+
+    // Compliance rate calculation
+    const compliantPromoters = promoters.filter(
+      p =>
+        p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
+    ).length;
+    const complianceRate =
+      totalPromoters > 0
+        ? Math.round((compliantPromoters / totalPromoters) * 100)
+        : 0;
 
     // Growth rate calculation (comparing last 30 days vs previous 30 days)
     const now = new Date();
     const thirtyDaysAgo = subDays(now, 30);
     const sixtyDaysAgo = subDays(now, 60);
-    
+
     const recentPromoters = promoters.filter(p => {
       if (!p.created_at) return false;
       const created = new Date(p.created_at);
       return created >= thirtyDaysAgo;
     }).length;
-    
+
     const previousPromoters = promoters.filter(p => {
       if (!p.created_at) return false;
       const created = new Date(p.created_at);
       return created >= sixtyDaysAgo && created < thirtyDaysAgo;
     }).length;
-    
-    const growthRate = previousPromoters > 0 
-      ? Math.round(((recentPromoters - previousPromoters) / previousPromoters) * 100)
-      : recentPromoters > 0 ? 100 : 0;
+
+    const growthRate =
+      previousPromoters > 0
+        ? Math.round(
+            ((recentPromoters - previousPromoters) / previousPromoters) * 100
+          )
+        : recentPromoters > 0
+          ? 100
+          : 0;
 
     // Average documents per promoter
-    const promotersWithDocuments = promoters.filter(p => 
-      p.idDocument.status !== 'missing' || p.passportDocument.status !== 'missing'
+    const promotersWithDocuments = promoters.filter(
+      p =>
+        p.idDocument.status !== 'missing' ||
+        p.passportDocument.status !== 'missing'
     ).length;
-    const avgDocumentsPerPromoter = totalPromoters > 0 
-      ? Math.round((promotersWithDocuments / totalPromoters) * 100) 
-      : 0;
+    const avgDocumentsPerPromoter =
+      totalPromoters > 0
+        ? Math.round((promotersWithDocuments / totalPromoters) * 100)
+        : 0;
 
     // Top companies
     const companyCounts = new Map<string, number>();
     promoters.forEach(p => {
       if (p.employer_id && p.organisationLabel !== 'Unassigned') {
-        companyCounts.set(p.organisationLabel, (companyCounts.get(p.organisationLabel) || 0) + 1);
+        companyCounts.set(
+          p.organisationLabel,
+          (companyCounts.get(p.organisationLabel) || 0) + 1
+        );
       }
     });
-    
+
     const topCompanies = Array.from(companyCounts.entries())
       .map(([name, count]) => ({
         name,
         count,
-        percentage: Math.round((count / totalPromoters) * 100)
+        percentage: Math.round((count / totalPromoters) * 100),
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
@@ -148,21 +173,24 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
     // Status distribution
     const statusCounts = new Map<string, number>();
     promoters.forEach(p => {
-      statusCounts.set(p.overallStatus, (statusCounts.get(p.overallStatus) || 0) + 1);
+      statusCounts.set(
+        p.overallStatus,
+        (statusCounts.get(p.overallStatus) || 0) + 1
+      );
     });
 
     const statusColors = {
       active: 'bg-emerald-500',
       warning: 'bg-amber-500',
       critical: 'bg-red-500',
-      inactive: 'bg-slate-500'
+      inactive: 'bg-slate-500',
     };
 
     const statusLabels = {
       active: 'Operational',
       warning: 'Attention',
       critical: 'Critical',
-      inactive: 'Inactive'
+      inactive: 'Inactive',
     };
 
     const statusDistribution = Array.from(statusCounts.entries())
@@ -170,19 +198,32 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
         status: statusLabels[status as keyof typeof statusLabels] || status,
         count,
         percentage: Math.round((count / totalPromoters) * 100),
-        color: statusColors[status as keyof typeof statusColors] || 'bg-slate-500'
+        color:
+          statusColors[status as keyof typeof statusColors] || 'bg-slate-500',
       }))
       .sort((a, b) => b.count - a.count);
 
     // Document health trend (simplified - showing current state)
     const documentHealthTrend: TimeSeriesData[] = [
-      { date: 'Current', value: complianceRate, label: `${complianceRate}% Compliant` }
+      {
+        date: 'Current',
+        value: complianceRate,
+        label: `${complianceRate}% Compliant`,
+      },
     ];
 
     // Monthly growth trend (simplified)
     const monthlyGrowth: TimeSeriesData[] = [
-      { date: 'This Month', value: recentPromoters, label: `${recentPromoters} New` },
-      { date: 'Last Month', value: previousPromoters, label: `${previousPromoters} New` }
+      {
+        date: 'This Month',
+        value: recentPromoters,
+        label: `${recentPromoters} New`,
+      },
+      {
+        date: 'Last Month',
+        value: previousPromoters,
+        label: `${previousPromoters} New`,
+      },
     ];
 
     return {
@@ -195,7 +236,7 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
       topCompanies,
       statusDistribution,
       documentHealthTrend,
-      monthlyGrowth
+      monthlyGrowth,
     };
   }, [promoters]);
 
@@ -204,12 +245,17 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
       {/* Analytics Header */}
       <div className='flex items-center justify-between'>
         <div>
-          <h2 className='text-2xl font-bold tracking-tight'>Analytics Dashboard</h2>
+          <h2 className='text-2xl font-bold tracking-tight'>
+            Analytics Dashboard
+          </h2>
           <p className='text-muted-foreground'>
             Insights into your promoter workforce and compliance metrics
           </p>
         </div>
-        <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+        <Select
+          value={timeRange}
+          onValueChange={(value: any) => setTimeRange(value)}
+        >
           <SelectTrigger className='w-32'>
             <SelectValue />
           </SelectTrigger>
@@ -250,14 +296,20 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
         <AnalyticsCard
           title='Active Workforce'
           value={analytics.activePromoters}
-          change={analytics.activePromoters - (analytics.totalPromoters - analytics.activePromoters)}
+          change={
+            analytics.activePromoters -
+            (analytics.totalPromoters - analytics.activePromoters)
+          }
           icon={Activity}
           description='Currently operational'
         />
       </div>
 
       {/* Detailed Analytics */}
-      <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value: any) => setActiveTab(value)}
+      >
         <TabsList className='grid w-full grid-cols-3'>
           <TabsTrigger value='overview'>Overview</TabsTrigger>
           <TabsTrigger value='trends'>Trends</TabsTrigger>
@@ -279,7 +331,7 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
-                  {analytics.statusDistribution.map((status) => (
+                  {analytics.statusDistribution.map(status => (
                     <div key={status.status} className='space-y-2'>
                       <div className='flex items-center justify-between text-sm'>
                         <span className='font-medium'>{status.status}</span>
@@ -287,10 +339,7 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                           {status.count} ({status.percentage}%)
                         </span>
                       </div>
-                      <Progress 
-                        value={status.percentage} 
-                        className='h-2'
-                      />
+                      <Progress value={status.percentage} className='h-2' />
                     </div>
                   ))}
                 </div>
@@ -304,28 +353,29 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   <Building2 className='h-5 w-5' />
                   Top Companies
                 </CardTitle>
-                <CardDescription>
-                  Promoters by organization
-                </CardDescription>
+                <CardDescription>Promoters by organization</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
                   {analytics.topCompanies.map((company, index) => (
-                    <div key={company.name} className='flex items-center justify-between'>
+                    <div
+                      key={company.name}
+                      className='flex items-center justify-between'
+                    >
                       <div className='flex items-center gap-3'>
                         <div className='flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-medium'>
                           {index + 1}
                         </div>
                         <div>
-                          <div className='font-medium text-sm'>{company.name}</div>
+                          <div className='font-medium text-sm'>
+                            {company.name}
+                          </div>
                           <div className='text-xs text-muted-foreground'>
                             {company.count} promoters
                           </div>
                         </div>
                       </div>
-                      <Badge variant='outline'>
-                        {company.percentage}%
-                      </Badge>
+                      <Badge variant='outline'>{company.percentage}%</Badge>
                     </div>
                   ))}
                   {analytics.topCompanies.length === 0 && (
@@ -348,17 +398,20 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   <BarChart3 className='h-5 w-5' />
                   Growth Trend
                 </CardTitle>
-                <CardDescription>
-                  Promoter additions over time
-                </CardDescription>
+                <CardDescription>Promoter additions over time</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
-                  {analytics.monthlyGrowth.map((data) => (
-                    <div key={data.date} className='flex items-center justify-between p-3 rounded-lg bg-muted/50'>
+                  {analytics.monthlyGrowth.map(data => (
+                    <div
+                      key={data.date}
+                      className='flex items-center justify-between p-3 rounded-lg bg-muted/50'
+                    >
                       <div>
                         <div className='font-medium'>{data.date}</div>
-                        <div className='text-sm text-muted-foreground'>{data.label}</div>
+                        <div className='text-sm text-muted-foreground'>
+                          {data.label}
+                        </div>
                       </div>
                       <div className='text-2xl font-bold'>{data.value}</div>
                     </div>
@@ -370,7 +423,8 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                       <TrendingDown className='h-4 w-4 text-red-500' />
                     )}
                     <span className='text-sm font-medium'>
-                      {analytics.growthRate > 0 ? '+' : ''}{analytics.growthRate}% growth rate
+                      {analytics.growthRate > 0 ? '+' : ''}
+                      {analytics.growthRate}% growth rate
                     </span>
                   </div>
                 </div>
@@ -384,22 +438,19 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   <ShieldAlert className='h-5 w-5' />
                   Compliance Trend
                 </CardTitle>
-                <CardDescription>
-                  Document compliance over time
-                </CardDescription>
+                <CardDescription>Document compliance over time</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
-                  {analytics.documentHealthTrend.map((data) => (
+                  {analytics.documentHealthTrend.map(data => (
                     <div key={data.date} className='space-y-2'>
                       <div className='flex items-center justify-between text-sm'>
                         <span className='font-medium'>{data.date}</span>
-                        <span className='text-muted-foreground'>{data.label}</span>
+                        <span className='text-muted-foreground'>
+                          {data.label}
+                        </span>
                       </div>
-                      <Progress 
-                        value={data.value} 
-                        className='h-3'
-                      />
+                      <Progress value={data.value} className='h-3' />
                     </div>
                   ))}
                   <div className='flex items-center gap-2 pt-2 border-t'>
@@ -431,9 +482,13 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                 <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
                   <HealthMetricCard
                     title='Valid Documents'
-                    value={promoters.filter(p => 
-                      p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
-                    ).length}
+                    value={
+                      promoters.filter(
+                        p =>
+                          p.idDocument.status === 'valid' &&
+                          p.passportDocument.status === 'valid'
+                      ).length
+                    }
                     total={promoters.length}
                     icon={CheckCircle}
                     color='text-green-600'
@@ -441,9 +496,13 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   />
                   <HealthMetricCard
                     title='Expiring Soon'
-                    value={promoters.filter(p => 
-                      p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring'
-                    ).length}
+                    value={
+                      promoters.filter(
+                        p =>
+                          p.idDocument.status === 'expiring' ||
+                          p.passportDocument.status === 'expiring'
+                      ).length
+                    }
                     total={promoters.length}
                     icon={Clock}
                     color='text-amber-600'
@@ -451,9 +510,13 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   />
                   <HealthMetricCard
                     title='Expired'
-                    value={promoters.filter(p => 
-                      p.idDocument.status === 'expired' || p.passportDocument.status === 'expired'
-                    ).length}
+                    value={
+                      promoters.filter(
+                        p =>
+                          p.idDocument.status === 'expired' ||
+                          p.passportDocument.status === 'expired'
+                      ).length
+                    }
                     total={promoters.length}
                     icon={XCircle}
                     color='text-red-600'
@@ -461,9 +524,13 @@ export function PromoterAnalyticsDashboard({ promoters }: PromoterAnalyticsProps
                   />
                   <HealthMetricCard
                     title='Missing'
-                    value={promoters.filter(p => 
-                      p.idDocument.status === 'missing' || p.passportDocument.status === 'missing'
-                    ).length}
+                    value={
+                      promoters.filter(
+                        p =>
+                          p.idDocument.status === 'missing' ||
+                          p.passportDocument.status === 'missing'
+                      ).length
+                    }
                     total={promoters.length}
                     icon={AlertTriangle}
                     color='text-slate-600'
@@ -494,7 +561,7 @@ function AnalyticsCard({
   change,
   icon: Icon,
   description,
-  variant = 'default'
+  variant = 'default',
 }: AnalyticsCardProps) {
   const isPositive = change > 0;
   const isNegative = change < 0;
@@ -513,7 +580,8 @@ function AnalyticsCard({
           {isPositive && <TrendingUp className='h-3 w-3 text-green-500' />}
           {isNegative && <TrendingDown className='h-3 w-3 text-red-500' />}
           <span>
-            {isPositive && '+'}{change}% from last period
+            {isPositive && '+'}
+            {change}% from last period
           </span>
         </div>
         <p className='text-xs text-muted-foreground mt-1'>{description}</p>
@@ -537,7 +605,7 @@ function HealthMetricCard({
   total,
   icon: Icon,
   color,
-  bgColor
+  bgColor,
 }: HealthMetricCardProps) {
   const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
@@ -551,7 +619,9 @@ function HealthMetricCard({
       </div>
       <div className='space-y-1'>
         <div className='text-sm font-medium'>{title}</div>
-        <div className='text-xs text-muted-foreground'>{percentage}% of total</div>
+        <div className='text-xs text-muted-foreground'>
+          {percentage}% of total
+        </div>
       </div>
     </div>
   );

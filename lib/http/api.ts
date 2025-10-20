@@ -5,7 +5,9 @@ export function getBaseUrl(): string {
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.APP_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000');
   return appUrl.replace(/\/+$/, '');
 }
 
@@ -25,9 +27,9 @@ export async function apiJson<T>(path: string, init: RequestInit = {}) {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`);
+    throw new Error(
+      `${res.status} ${res.statusText}${text ? ` - ${text}` : ''}`
+    );
   }
   return (await res.json()) as T;
 }
-
-

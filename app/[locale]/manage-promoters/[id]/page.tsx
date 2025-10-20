@@ -191,7 +191,8 @@ export default function PromoterDetailPage() {
 
       const normalized = (data || []).map((p: any) => ({
         ...p,
-        name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+        name_en:
+          p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
       }));
       setAllPromoters(normalized);
       setFilteredPromoters(normalized);

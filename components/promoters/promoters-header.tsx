@@ -31,7 +31,6 @@ import {
 import type { DashboardMetrics } from './types';
 import { PromotersKeyboardShortcuts } from './promoters-keyboard-shortcuts';
 
-
 interface PromotersHeaderProps {
   metrics: DashboardMetrics;
   isFetching: boolean;
@@ -90,7 +89,9 @@ export function PromotersHeader({
               </CardTitle>
             </div>
             <CardDescription className='max-w-3xl text-base text-white/80'>
-              Monitor workforce readiness, document compliance, and partner coverage in real-time to keep every engagement on track. {metrics.total} promoters in system.
+              Monitor workforce readiness, document compliance, and partner
+              coverage in real-time to keep every engagement on track.{' '}
+              {metrics.total} promoters in system.
             </CardDescription>
             <div className='flex flex-wrap items-center gap-3 text-sm text-white/70 pt-2'>
               <Badge className='bg-white/10 text-white border-white/20'>
@@ -112,8 +113,8 @@ export function PromotersHeader({
             </div>
           </div>
           <div className='flex flex-wrap items-center gap-3'>
-            <Button 
-              onClick={handleAddPromoter} 
+            <Button
+              onClick={handleAddPromoter}
               className='bg-white text-slate-900 hover:bg-white/90 font-semibold shadow-lg transition-all hover:shadow-xl focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900'
               size='lg'
               aria-label='Add new promoter to the system'
@@ -129,10 +130,17 @@ export function PromotersHeader({
                     className='bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm border-white/10 focus:ring-2 focus:ring-white/50 focus:ring-offset-2 focus:ring-offset-slate-900'
                     onClick={onRefresh}
                     disabled={isFetching}
-                    aria-label={isFetching ? 'Refreshing promoter data' : 'Refresh promoter data'}
+                    aria-label={
+                      isFetching
+                        ? 'Refreshing promoter data'
+                        : 'Refresh promoter data'
+                    }
                   >
                     <RefreshCw
-                      className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin')}
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        isFetching && 'animate-spin'
+                      )}
                       aria-hidden='true'
                     />
                     {isFetching ? 'Refreshing...' : 'Refresh'}

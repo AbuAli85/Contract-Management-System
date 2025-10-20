@@ -31,7 +31,7 @@ export default function ProductionCaptcha({
   siteKey,
   theme = 'light',
   size = 'normal',
-  className = ''
+  className = '',
 }: ProductionCaptchaProps) {
   const captchaRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -40,8 +40,11 @@ export default function ProductionCaptcha({
   const [isReady, setIsReady] = useState(false);
 
   // Get site key from environment or props
-  const captchaSiteKey = siteKey || 
-    (provider === 'hcaptcha' ? process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY : process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+  const captchaSiteKey =
+    siteKey ||
+    (provider === 'hcaptcha'
+      ? process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY
+      : process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
 
   useEffect(() => {
     if (!captchaSiteKey) {
@@ -85,7 +88,7 @@ export default function ProductionCaptcha({
         script.src = `https://js.hcaptcha.com/1/api.js?onload=onHCaptchaLoad&render=explicit`;
         script.async = true;
         script.defer = true;
-        
+
         window.onHCaptchaLoad = () => {
           try {
             renderHCaptcha();
@@ -114,7 +117,7 @@ export default function ProductionCaptcha({
         script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit`;
         script.async = true;
         script.defer = true;
-        
+
         window.onTurnstileLoad = () => {
           try {
             renderTurnstile();
@@ -208,7 +211,15 @@ export default function ProductionCaptcha({
         }
       }
     };
-  }, [provider, captchaSiteKey, theme, size, onCaptchaReady, onCaptchaError, onCaptchaExpired]);
+  }, [
+    provider,
+    captchaSiteKey,
+    theme,
+    size,
+    onCaptchaReady,
+    onCaptchaError,
+    onCaptchaExpired,
+  ]);
 
   const reset = () => {
     if (widgetIdRef.current) {
@@ -249,10 +260,14 @@ export default function ProductionCaptcha({
 
   if (!captchaSiteKey) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
+      <Alert variant='destructive'>
+        <AlertCircle className='h-4 w-4' />
         <AlertDescription>
-          CAPTCHA site key not configured. Please set {provider === 'hcaptcha' ? 'NEXT_PUBLIC_HCAPTCHA_SITE_KEY' : 'NEXT_PUBLIC_TURNSTILE_SITE_KEY'} in your environment variables.
+          CAPTCHA site key not configured. Please set{' '}
+          {provider === 'hcaptcha'
+            ? 'NEXT_PUBLIC_HCAPTCHA_SITE_KEY'
+            : 'NEXT_PUBLIC_TURNSTILE_SITE_KEY'}{' '}
+          in your environment variables.
         </AlertDescription>
       </Alert>
     );
@@ -261,7 +276,7 @@ export default function ProductionCaptcha({
   if (loading) {
     return (
       <div className={`flex items-center justify-center p-4 ${className}`}>
-        <Loader2 className="h-6 w-6 animate-spin mr-2" />
+        <Loader2 className='h-6 w-6 animate-spin mr-2' />
         <span>Loading CAPTCHA...</span>
       </div>
     );
@@ -269,21 +284,19 @@ export default function ProductionCaptcha({
 
   if (error) {
     return (
-      <Alert variant="destructive" className={className}>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          CAPTCHA Error: {error}
-        </AlertDescription>
+      <Alert variant='destructive' className={className}>
+        <AlertCircle className='h-4 w-4' />
+        <AlertDescription>CAPTCHA Error: {error}</AlertDescription>
       </Alert>
     );
   }
 
   return (
     <div className={`captcha-container ${className}`}>
-      <div ref={captchaRef} className="captcha-widget" />
+      <div ref={captchaRef} className='captcha-widget' />
       {isReady && (
-        <div className="flex items-center mt-2 text-sm text-green-600">
-          <CheckCircle className="h-4 w-4 mr-1" />
+        <div className='flex items-center mt-2 text-sm text-green-600'>
+          <CheckCircle className='h-4 w-4 mr-1' />
           Verified
         </div>
       )}

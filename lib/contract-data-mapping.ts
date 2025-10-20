@@ -457,7 +457,11 @@ export function validateAndMapContractData(
   const mappedSourceFields = new Set(
     templatePlaceholders
       .map((p: TemplatePlaceholder) => p.sourceField)
-      .filter((field: keyof ContractGeneratorFormData | undefined): field is keyof ContractGeneratorFormData => field !== undefined)
+      .filter(
+        (
+          field: keyof ContractGeneratorFormData | undefined
+        ): field is keyof ContractGeneratorFormData => field !== undefined
+      )
   );
 
   Object.keys(formData).forEach(field => {
@@ -548,16 +552,14 @@ export function validateTemplatePlaceholders(
   // Check for unknown placeholders in template
   const knownPlaceholders = new Set(placeholders.map(p => p.key));
   const templatePlaceholderRegex = /\{\{([^}]+)\}\}/g;
-  
+
   const matches = templateContent.matchAll(templatePlaceholderRegex);
   for (const match of matches) {
     if (match.length > 1 && match[1]) {
       const placeholderKey = match[1];
       const trimmedKey = placeholderKey.trim();
       if (!knownPlaceholders.has(trimmedKey)) {
-        warnings.push(
-          `Unknown placeholder '${trimmedKey}' found in template`
-        );
+        warnings.push(`Unknown placeholder '${trimmedKey}' found in template`);
       }
     }
   }

@@ -7,6 +7,7 @@ This guide covers deploying your Contract Management System to production with p
 ## 📋 **Pre-Deployment Checklist**
 
 ### ✅ **Environment Setup**
+
 - [ ] Production environment variables configured
 - [ ] CAPTCHA provider keys obtained and configured
 - [ ] Supabase project configured for production
@@ -15,6 +16,7 @@ This guide covers deploying your Contract Management System to production with p
 - [ ] Domain name configured
 
 ### ✅ **Security Configuration**
+
 - [ ] CAPTCHA enabled and configured
 - [ ] Rate limiting configured
 - [ ] CORS settings configured
@@ -23,6 +25,7 @@ This guide covers deploying your Contract Management System to production with p
 - [ ] Audit logging enabled
 
 ### ✅ **Monitoring Setup**
+
 - [ ] Error tracking configured (Sentry)
 - [ ] Analytics configured (Google Analytics)
 - [ ] Logging service configured
@@ -34,6 +37,7 @@ This guide covers deploying your Contract Management System to production with p
 ### Step 1: Configure CAPTCHA Provider
 
 #### Option A: hCaptcha (Recommended)
+
 1. **Sign up for hCaptcha**
    - Go to [https://www.hcaptcha.com/](https://www.hcaptcha.com/)
    - Create an account
@@ -51,6 +55,7 @@ This guide covers deploying your Contract Management System to production with p
    - Enable CAPTCHA
 
 #### Option B: Cloudflare Turnstile
+
 1. **Sign up for Turnstile**
    - Go to [https://dash.cloudflare.com/](https://dash.cloudflare.com/)
    - Navigate to Turnstile
@@ -114,16 +119,19 @@ FEATURE_AUDIT_LOGGING_ENABLED=true
 ### Step 3: Deploy to Vercel
 
 1. **Install Vercel CLI**
+
    ```bash
    npm i -g vercel
    ```
 
 2. **Login to Vercel**
+
    ```bash
    vercel login
    ```
 
 3. **Deploy to production**
+
    ```bash
    vercel --prod
    ```
@@ -150,6 +158,7 @@ FEATURE_AUDIT_LOGGING_ENABLED=true
 ### Step 5: Configure Monitoring
 
 #### Sentry Error Tracking
+
 1. **Create Sentry project**
    - Go to [https://sentry.io/](https://sentry.io/)
    - Create a new project
@@ -160,6 +169,7 @@ FEATURE_AUDIT_LOGGING_ENABLED=true
    - Sentry will automatically track errors
 
 #### Google Analytics
+
 1. **Create GA4 property**
    - Go to [https://analytics.google.com/](https://analytics.google.com/)
    - Create a new GA4 property
@@ -172,25 +182,28 @@ FEATURE_AUDIT_LOGGING_ENABLED=true
 ## 🔒 **Security Configuration**
 
 ### CAPTCHA Configuration
+
 ```typescript
 // In your production environment
-NEXT_PUBLIC_CAPTCHA_PROVIDER=hcaptcha
-NEXT_PUBLIC_HCAPTCHA_SITE_KEY=your_site_key
-HCAPTCHA_SECRET_KEY=your_secret_key
-FEATURE_CAPTCHA_ENABLED=true
+NEXT_PUBLIC_CAPTCHA_PROVIDER = hcaptcha;
+NEXT_PUBLIC_HCAPTCHA_SITE_KEY = your_site_key;
+HCAPTCHA_SECRET_KEY = your_secret_key;
+FEATURE_CAPTCHA_ENABLED = true;
 ```
 
 ### Rate Limiting
+
 ```typescript
 // Configure rate limiting
-UPSTASH_REDIS_REST_URL=your_redis_url
-UPSTASH_REDIS_REST_TOKEN=your_redis_token
-API_RATE_LIMIT_ENABLED=true
-API_RATE_LIMIT_WINDOW=900000
-API_RATE_LIMIT_MAX_REQUESTS=100
+UPSTASH_REDIS_REST_URL = your_redis_url;
+UPSTASH_REDIS_REST_TOKEN = your_redis_token;
+API_RATE_LIMIT_ENABLED = true;
+API_RATE_LIMIT_WINDOW = 900000;
+API_RATE_LIMIT_MAX_REQUESTS = 100;
 ```
 
 ### CORS Configuration
+
 ```typescript
 // Configure CORS for production
 ALLOWED_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com
@@ -199,16 +212,19 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com
 ## 📊 **Monitoring and Analytics**
 
 ### Error Tracking
+
 - **Sentry**: Automatic error tracking and alerting
 - **Console Logs**: Structured logging for debugging
 - **Audit Logs**: Security event logging
 
 ### Performance Monitoring
+
 - **Vercel Analytics**: Built-in performance monitoring
 - **Google Analytics**: User behavior tracking
 - **Uptime Monitoring**: Service availability monitoring
 
 ### Security Monitoring
+
 - **Failed Login Attempts**: Track and alert on suspicious activity
 - **CAPTCHA Failures**: Monitor CAPTCHA verification failures
 - **Rate Limiting**: Monitor API rate limiting triggers
@@ -216,6 +232,7 @@ ALLOWED_ORIGINS=https://yourdomain.com,https://admin.yourdomain.com
 ## 🧪 **Testing Production Deployment**
 
 ### 1. Test Authentication Flow
+
 ```bash
 # Test login with CAPTCHA
 curl -X POST https://yourdomain.com/api/auth/production-login \
@@ -224,12 +241,14 @@ curl -X POST https://yourdomain.com/api/auth/production-login \
 ```
 
 ### 2. Test CAPTCHA Configuration
+
 ```bash
 # Get CAPTCHA configuration
 curl https://yourdomain.com/api/auth/production-login
 ```
 
 ### 3. Test User Registration
+
 ```bash
 # Test registration with CAPTCHA
 curl -X POST https://yourdomain.com/api/auth/production-register \
@@ -242,6 +261,7 @@ curl -X POST https://yourdomain.com/api/auth/production-register \
 ### Common Issues
 
 #### CAPTCHA Not Working
+
 1. **Check environment variables**
    - Verify CAPTCHA keys are set correctly
    - Check provider configuration
@@ -255,6 +275,7 @@ curl -X POST https://yourdomain.com/api/auth/production-register \
    - Check network requests
 
 #### Authentication Errors
+
 1. **Check Supabase configuration**
    - Verify project URL and keys
    - Check authentication settings
@@ -283,13 +304,15 @@ npm run auth:fix-captcha
 ## 📈 **Performance Optimization**
 
 ### 1. Enable Caching
+
 ```typescript
 // Configure Redis caching
-REDIS_URL=your_redis_url
-REDIS_PASSWORD=your_redis_password
+REDIS_URL = your_redis_url;
+REDIS_PASSWORD = your_redis_password;
 ```
 
 ### 2. Enable CDN
+
 ```typescript
 // Configure CDN
 CDN_URL=https://cdn.yourdomain.com
@@ -297,6 +320,7 @@ CDN_CACHE_TTL=3600
 ```
 
 ### 3. Optimize Images
+
 - Use Next.js Image component
 - Configure image optimization
 - Use WebP format when possible
@@ -304,6 +328,7 @@ CDN_CACHE_TTL=3600
 ## 🔄 **Maintenance**
 
 ### Regular Tasks
+
 1. **Monitor error rates**
 2. **Check CAPTCHA success rates**
 3. **Review security logs**
@@ -311,6 +336,7 @@ CDN_CACHE_TTL=3600
 5. **Monitor performance metrics**
 
 ### Backup Strategy
+
 1. **Database backups** (handled by Supabase)
 2. **Environment variable backups**
 3. **Code repository backups**
@@ -319,12 +345,14 @@ CDN_CACHE_TTL=3600
 ## 📞 **Support**
 
 ### Getting Help
+
 1. **Check logs** in Vercel Dashboard
 2. **Check Supabase logs** in Supabase Dashboard
 3. **Check Sentry** for error details
 4. **Review this guide** for common issues
 
 ### Emergency Contacts
+
 - **Vercel Support**: [https://vercel.com/support](https://vercel.com/support)
 - **Supabase Support**: [https://supabase.com/support](https://supabase.com/support)
 - **hCaptcha Support**: [https://www.hcaptcha.com/help](https://www.hcaptcha.com/help)
@@ -334,6 +362,7 @@ CDN_CACHE_TTL=3600
 ## ✅ **Deployment Complete!**
 
 Your Contract Management System is now deployed to production with:
+
 - ✅ CAPTCHA protection enabled
 - ✅ Security measures configured
 - ✅ Monitoring and analytics set up

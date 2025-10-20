@@ -103,30 +103,40 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         setLoading(true);
         const client = createClient();
-        
+
         if (!client) {
           console.error('Failed to create Supabase client');
           setLoading(false);
           return;
         }
-        
+
         setSupabase(client);
 
         // Check for emergency bypass in development
-        const hasEmergencyBypass = typeof window !== 'undefined' && localStorage.getItem('emergency-bypass') === 'true';
-        
+        const hasEmergencyBypass =
+          typeof window !== 'undefined' &&
+          localStorage.getItem('emergency-bypass') === 'true';
+
         if (hasEmergencyBypass) {
-          console.log('🚨 Emergency bypass detected - preserving existing session');
+          console.log(
+            '🚨 Emergency bypass detected - preserving existing session'
+          );
           // Don't clear sessions when bypass is active
         } else {
           // Only clear sessions if there's a specific security issue
           console.log('🔐 Checking session security...');
           try {
-            const { data: { session: existingSession } } = await client.auth.getSession();
+            const {
+              data: { session: existingSession },
+            } = await client.auth.getSession();
             if (existingSession) {
               // Only clear if it's the blocked admin account
-              if (existingSession.user.email === 'admin@contractmanagement.com') {
-                console.log('🚫 Detected blocked admin account - clearing session');
+              if (
+                existingSession.user.email === 'admin@contractmanagement.com'
+              ) {
+                console.log(
+                  '🚫 Detected blocked admin account - clearing session'
+                );
                 await client.auth.signOut();
               } else {
                 console.log('✅ Valid session found, preserving...');
@@ -161,14 +171,17 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             data: { session },
             error,
           } = await client.auth.getSession();
-          
+
           if (error) {
             console.error('Error getting session:', error);
             // If there's a session error, try to clear corrupted data
             try {
               await client.auth.signOut();
             } catch (signOutError) {
-              console.warn('Could not sign out after session error:', signOutError);
+              console.warn(
+                'Could not sign out after session error:',
+                signOutError
+              );
             }
             setSession(null);
             setUser(null);
@@ -177,7 +190,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session.user.id && session.user.email) {
               // Check if this is the blocked admin account
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn('🚫 Detected admin@contractmanagement.com - forcing logout');
+                console.warn(
+                  '🚫 Detected admin@contractmanagement.com - forcing logout'
+                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -197,12 +212,18 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
           }
         } catch (sessionError) {
-          console.error('Critical session error, clearing all auth data:', sessionError);
+          console.error(
+            'Critical session error, clearing all auth data:',
+            sessionError
+          );
           // Clear all auth data and force fresh start
           try {
             await client.auth.signOut();
           } catch (signOutError) {
-            console.warn('Could not sign out after critical error:', signOutError);
+            console.warn(
+              'Could not sign out after critical error:',
+              signOutError
+            );
           }
           setSession(null);
           setUser(null);
@@ -216,12 +237,14 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
             console.log('Auth state changed:', event, session?.user?.email);
           }
-          
+
           if (event === 'SIGNED_IN' && session?.user) {
             if (session.user.id && session.user.email) {
               // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn('🚫 Blocked admin@contractmanagement.com login - forcing logout');
+                console.warn(
+                  '🚫 Blocked admin@contractmanagement.com login - forcing logout'
+                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -239,7 +262,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session.user.id && session.user.email) {
               // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
               if (session.user.email === 'admin@contractmanagement.com') {
-                console.warn('🚫 Blocked admin@contractmanagement.com token refresh - forcing logout');
+                console.warn(
+                  '🚫 Blocked admin@contractmanagement.com token refresh - forcing logout'
+                );
                 await client.auth.signOut();
                 setSession(null);
                 setUser(null);
@@ -290,7 +315,9 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session.user.id && session.user.email) {
             // DOUBLE CHECK - if this is admin@contractmanagement.com, force logout
             if (session.user.email === 'admin@contractmanagement.com') {
-              console.warn('🚫 Blocked admin@contractmanagement.com token refresh - forcing logout');
+              console.warn(
+                '🚫 Blocked admin@contractmanagement.com token refresh - forcing logout'
+              );
               await supabase.auth.signOut();
               setSession(null);
               setUser(null);

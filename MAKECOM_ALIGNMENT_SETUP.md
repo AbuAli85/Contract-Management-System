@@ -3,6 +3,7 @@
 ## 🎯 **Current System Overview**
 
 Your contract management system has multiple generation methods:
+
 1. **Google Docs Direct Integration** (Primary)
 2. **HTML Template Engine** (Fallback)
 3. **Simple PDF Generation** (Fallback)
@@ -141,15 +142,16 @@ GOOGLE_DOCS_TEMPLATE_ID=your_google_docs_template_id
    - **Module**: Email → Send an email
    - **To**: `{{1.recipient_email}}`
    - **Subject**: `Contract {{1.contract_number}} is Ready`
-   - **Body**: 
+   - **Body**:
+
      ```
      Dear {{1.recipient_name}},
-     
+
      Your contract {{1.contract_number}} has been generated and is ready for review.
-     
+
      Document URL: {{1.document_url}}
      PDF URL: {{1.pdf_url}}
-     
+
      Best regards,
      Contract Management System
      ```
@@ -232,13 +234,13 @@ curl -X POST https://hook.eu2.make.com/YOUR_CONTRACT_GENERATION_WEBHOOK_ID \
 
 ### **5.3 Common Issues and Solutions**
 
-| Issue | Solution |
-|-------|----------|
-| 404 Webhook Error | Check webhook URL in environment variables |
-| Template Not Found | Verify Google Docs template ID |
-| Authentication Error | Check Google Docs API credentials |
-| Upload Failed | Verify Supabase connection and permissions |
-| PDF Generation Failed | Check Google Docs export permissions |
+| Issue                 | Solution                                   |
+| --------------------- | ------------------------------------------ |
+| 404 Webhook Error     | Check webhook URL in environment variables |
+| Template Not Found    | Verify Google Docs template ID             |
+| Authentication Error  | Check Google Docs API credentials          |
+| Upload Failed         | Verify Supabase connection and permissions |
+| PDF Generation Failed | Check Google Docs export permissions       |
 
 ## 📊 **Step 6: Performance Optimization**
 
@@ -252,6 +254,7 @@ curl -X POST https://hook.eu2.make.com/YOUR_CONTRACT_GENERATION_WEBHOOK_ID \
 ### **6.2 Fallback Strategy**
 
 Your system already has multiple fallback methods:
+
 1. **Primary**: Google Docs Direct Integration
 2. **Fallback 1**: HTML Template Engine
 3. **Fallback 2**: Simple PDF Generation

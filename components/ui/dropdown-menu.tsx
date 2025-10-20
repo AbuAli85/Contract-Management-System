@@ -106,7 +106,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ children }) => {
         document.removeEventListener('keydown', handleEscape);
       };
     }
-    
+
     return undefined;
   }, [isOpen]);
 
@@ -144,8 +144,8 @@ const DropdownMenuTrigger = React.forwardRef<
   return (
     <button
       ref={ref}
-      type="button"
-      aria-haspopup="menu"
+      type='button'
+      aria-haspopup='menu'
       aria-expanded={isOpen}
       className={cn(
         'inline-flex items-center justify-center rounded-lg text-sm font-medium ring-offset-background transition-all duration-150',
@@ -231,7 +231,7 @@ const DropdownMenuItem = React.forwardRef<
       )}
       onClick={handleClick}
       tabIndex={disabled ? -1 : 0}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if ((e.key === 'Enter' || e.key === ' ') && !disabled) {
           e.preventDefault();
           e.stopPropagation();

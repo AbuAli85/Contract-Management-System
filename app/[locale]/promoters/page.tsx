@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Promoters | Contract Management System',
-  description: 'Manage promoters and staff members with advanced analytics and notifications',
+  description:
+    'Manage promoters and staff members with advanced analytics and notifications',
 };
 
 import { EnhancedPromotersViewRefactored } from '@/components/promoters/enhanced-promoters-view-refactored';
@@ -16,10 +17,10 @@ export default function PromotersPage({
 }) {
   // ✅ SECURITY FIX: Only show debug component in development
   const isDevelopment = process.env.NODE_ENV === 'development';
-  
+
   return (
-    <ErrorBoundary componentName="Promoters Page">
-      <div className="space-y-6">
+    <ErrorBoundary componentName='Promoters Page'>
+      <div className='space-y-6'>
         {isDevelopment && <PromotersDebugInfo />}
         <EnhancedPromotersViewRefactored locale={params.locale} />
       </div>

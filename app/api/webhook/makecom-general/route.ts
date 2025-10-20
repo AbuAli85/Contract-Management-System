@@ -27,17 +27,17 @@ export async function POST(request: NextRequest) {
     console.log('📤 General Contract Webhook payload:', body);
 
     // Validate required fields
-    const { 
-      contract_type, 
-      promoter_id, 
-      first_party_id, 
+    const {
+      contract_type,
+      promoter_id,
+      first_party_id,
       second_party_id,
       job_title,
       department,
       work_location,
       basic_salary,
       contract_start_date,
-      contract_end_date
+      contract_end_date,
     } = body;
 
     // Validate required fields
@@ -87,11 +87,14 @@ export async function POST(request: NextRequest) {
 
     if (!finalContractId || finalContractId.trim() === '') {
       // Generate a UUID for contract_id using a more compatible method
-      finalContractId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-      });
+      finalContractId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
+        /[xy]/g,
+        function (c) {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
       console.log('🆔 Generated contract_id:', finalContractId);
     }
 
@@ -149,16 +152,19 @@ export async function POST(request: NextRequest) {
 
     // If contract exists, update it
     if (contract) {
-      console.log('📝 Updating existing general contract:', (contract as any).id);
-      
+      console.log(
+        '📝 Updating existing general contract:',
+        (contract as any).id
+      );
+
       const updateData: any = {
         contract_type,
         updated_at: new Date().toISOString(),
       };
 
       if (promoter_id) updateData.promoter_id = promoter_id;
-      if (first_party_id) updateData.client_id = first_party_id;  // first_party is client
-      if (second_party_id) updateData.employer_id = second_party_id;  // second_party is employer
+      if (first_party_id) updateData.client_id = first_party_id; // first_party is client
+      if (second_party_id) updateData.employer_id = second_party_id; // second_party is employer
 
       const supabaseClient = supabase as any;
       const { data: updatedContract, error: updateError } = await supabaseClient
@@ -189,20 +195,20 @@ export async function POST(request: NextRequest) {
           promoter_id_card_image: {
             placeholder: '{{promoter_id_card_image}}',
             url: body.promoter_id_card_url || '',
-            alt_text: 'ID Card'
+            alt_text: 'ID Card',
           },
           promoter_passport_image: {
             placeholder: '{{promoter_passport_image}}',
             url: body.promoter_passport_url || '',
-            alt_text: 'Passport'
-          }
-        }
+            alt_text: 'Passport',
+          },
+        },
       });
     }
 
     // Create new general contract
     console.log('🆕 Creating new general contract');
-    
+
     const contractData: any = {
       contract_type,
       contract_number: finalContractNumber,
@@ -213,9 +219,9 @@ export async function POST(request: NextRequest) {
     };
 
     if (promoter_id) contractData.promoter_id = promoter_id;
-    if (first_party_id) contractData.client_id = first_party_id;  // first_party is client
-    if (second_party_id) contractData.employer_id = second_party_id;  // second_party is employer
-    
+    if (first_party_id) contractData.client_id = first_party_id; // first_party is client
+    if (second_party_id) contractData.employer_id = second_party_id; // second_party is employer
+
     // Map date fields from webhook data - ensure dates are always provided
     if (body.contract_start_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
@@ -235,7 +241,7 @@ export async function POST(request: NextRequest) {
       // Set default start date if not provided
       contractData.start_date = new Date().toISOString().split('T')[0];
     }
-    
+
     if (body.contract_end_date) {
       // Handle both YYYY-MM-DD and DD-MM-YYYY formats
       let endDate = body.contract_end_date;
@@ -252,45 +258,58 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Set default end date (1 year from start date) if not provided
-      const startDate = contractData.start_date || new Date().toISOString().split('T')[0];
+      const startDate =
+        contractData.start_date || new Date().toISOString().split('T')[0];
       const endDate = new Date(startDate);
       endDate.setFullYear(endDate.getFullYear() + 1);
       contractData.end_date = endDate.toISOString().split('T')[0];
     }
-    
+
     // Map other fields - ensure title is always set
     if (body.job_title && body.job_title.trim() !== '') {
       contractData.title = `${body.job_title} - ${contract_type} Contract - ${finalContractNumber}`;
     } else {
       contractData.title = `${contract_type} Contract - ${finalContractNumber}`;
     }
-    
+
     if (body.basic_salary) contractData.value = parseFloat(body.basic_salary);
     if (body.special_terms) contractData.terms = body.special_terms;
-    
+
     // Add additional fields if provided
     if (body.department && body.department.trim() !== '') {
       contractData.description = `Department: ${body.department}`;
     }
     if (body.work_location && body.work_location.trim() !== '') {
-      contractData.description = (contractData.description || '') + `\nWork Location: ${body.work_location}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nWork Location: ${body.work_location}`;
     }
 
     // Add general contract specific fields
     if (body.product_name) {
-      contractData.description = (contractData.description || '') + `\nProduct/Service: ${body.product_name}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nProduct/Service: ${body.product_name}`;
     }
     if (body.service_description) {
-      contractData.description = (contractData.description || '') + `\nService Description: ${body.service_description}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nService Description: ${body.service_description}`;
     }
     if (body.project_duration) {
-      contractData.description = (contractData.description || '') + `\nProject Duration: ${body.project_duration}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nProject Duration: ${body.project_duration}`;
     }
     if (body.deliverables) {
-      contractData.description = (contractData.description || '') + `\nDeliverables: ${body.deliverables}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nDeliverables: ${body.deliverables}`;
     }
     if (body.payment_terms) {
-      contractData.description = (contractData.description || '') + `\nPayment Terms: ${body.payment_terms}`;
+      contractData.description =
+        (contractData.description || '') +
+        `\nPayment Terms: ${body.payment_terms}`;
     }
 
     const { data: newContract, error: createError } = await (supabase as any)
@@ -306,14 +325,14 @@ export async function POST(request: NextRequest) {
       console.error('❌ Error details:', createError.details);
       console.error('❌ Error hint:', createError.hint);
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Failed to create general contract',
           details: createError.message,
           error_code: createError.code,
           error_hint: createError.hint,
           contract_data: contractData,
-          domain: "portal.thesmartpro.io"
+          domain: 'portal.thesmartpro.io',
         },
         { status: 500 }
       );
@@ -332,25 +351,27 @@ export async function POST(request: NextRequest) {
         promoter_id_card_image: {
           placeholder: '{{promoter_id_card_image}}',
           url: body.promoter_id_card_url || '',
-          alt_text: 'ID Card'
+          alt_text: 'ID Card',
         },
         promoter_passport_image: {
           placeholder: '{{promoter_passport_image}}',
           url: body.promoter_passport_url || '',
-          alt_text: 'Passport'
-        }
-      }
+          alt_text: 'Passport',
+        },
+      },
     });
-
   } catch (error) {
     console.error('❌ General contract webhook processing failed:', error);
-    console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error(
+      '❌ Error stack:',
+      error instanceof Error ? error.stack : 'No stack trace'
+    );
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
         details: error instanceof Error ? error.message : 'Unknown error',
-        domain: "portal.thesmartpro.io"
+        domain: 'portal.thesmartpro.io',
       },
       { status: 500 }
     );
@@ -364,7 +385,7 @@ export async function GET() {
     usage: 'Send POST requests with general contract data',
     required_headers: {
       'Content-Type': 'application/json',
-      'X-Webhook-Secret': 'Your webhook secret'
+      'X-Webhook-Secret': 'Your webhook secret',
     },
     required_fields: {
       contract_type: 'string (required)',
@@ -376,7 +397,7 @@ export async function GET() {
       work_location: 'string (required)',
       basic_salary: 'number (required)',
       contract_start_date: 'string (required)',
-      contract_end_date: 'string (required)'
+      contract_end_date: 'string (required)',
     },
     optional_fields: {
       product_name: 'string',
@@ -394,7 +415,7 @@ export async function GET() {
       notice_period: 'string',
       working_hours: 'string',
       housing_allowance: 'number',
-      transport_allowance: 'number'
-    }
+      transport_allowance: 'number',
+    },
   });
 }

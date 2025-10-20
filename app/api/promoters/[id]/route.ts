@@ -46,7 +46,8 @@ const promoterUpdateSchema = z.object({
   notify_days_before_passport_expiry: z.number().min(1).max(365).optional(),
 });
 
-export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'],
+export const GET = withAnyRBAC(
+  ['promoter:read:own', 'promoter:manage:own'],
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
     try {
       const { id } = await params;
@@ -193,285 +194,285 @@ export const GET = withAnyRBAC(['promoter:read:own', 'promoter:manage:own'],
 export const PUT = withRBAC(
   'promoter:update',
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
-  try {
-    const { id } = await params;
-    const cookieStore = await cookies();
+    try {
+      const { id } = await params;
+      const cookieStore = await cookies();
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet: any) {
-            try {
-              cookiesToSet.forEach(({ name, value, ...options }: any) => {
-                cookieStore.set(
-                  name,
-                  value,
-                  options as {
-                    path?: string;
-                    domain?: string;
-                    maxAge?: number;
-                    secure?: boolean;
-                    httpOnly?: boolean;
-                    sameSite?: 'strict' | 'lax' | 'none';
-                  }
-                );
-              });
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        } as any,
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+            setAll(cookiesToSet: any) {
+              try {
+                cookiesToSet.forEach(({ name, value, ...options }: any) => {
+                  cookieStore.set(
+                    name,
+                    value,
+                    options as {
+                      path?: string;
+                      domain?: string;
+                      maxAge?: number;
+                      secure?: boolean;
+                      httpOnly?: boolean;
+                      sameSite?: 'strict' | 'lax' | 'none';
+                    }
+                  );
+                });
+              } catch {
+                // The `setAll` method was called from a Server Component.
+                // This can be ignored if you have middleware refreshing
+                // user sessions.
+              }
+            },
+          } as any,
+        }
+      );
+
+      // Get user session
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
-    );
 
-    // Get user session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
+      // Parse and validate request body
+      const body = await request.json();
+      const validatedData = promoterUpdateSchema.parse(body);
 
-    if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+      // Check if ID card number is being updated and if it already exists
+      if (validatedData.id_card_number) {
+        const { data: existingPromoter, error: checkError } = await supabase
+          .from('promoters')
+          .select('id')
+          .eq('id_card_number', validatedData.id_card_number)
+          .neq('id', id)
+          .single();
 
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = promoterUpdateSchema.parse(body);
+        if (checkError && checkError.code !== 'PGRST116') {
+          console.error('Error checking ID card number:', checkError);
+          return NextResponse.json(
+            { error: 'Failed to validate ID card number' },
+            { status: 500 }
+          );
+        }
 
-    // Check if ID card number is being updated and if it already exists
-    if (validatedData.id_card_number) {
-      const { data: existingPromoter, error: checkError } = await supabase
+        if (existingPromoter) {
+          return NextResponse.json(
+            { error: 'ID card number already exists for another promoter' },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Update promoter in database
+      const { data: promoter, error } = await supabase
         .from('promoters')
-        .select('id')
-        .eq('id_card_number', validatedData.id_card_number)
-        .neq('id', id)
+        .update({
+          ...validatedData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
         .single();
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking ID card number:', checkError);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Promoter not found' },
+            { status: 404 }
+          );
+        }
+        console.error('Error updating promoter:', error);
         return NextResponse.json(
-          { error: 'Failed to validate ID card number' },
+          {
+            error: 'Failed to update promoter',
+            details: error.message,
+          },
           { status: 500 }
         );
       }
 
-      if (existingPromoter) {
+      // After successful update, create audit log
+      try {
+        await supabase.from('audit_logs').insert({
+          user_id: session.user.id,
+          action: 'update',
+          table_name: 'promoters',
+          record_id: id,
+          new_values: validatedData,
+          created_at: new Date().toISOString(),
+        });
+      } catch (auditError) {
+        console.error('Error creating audit log:', auditError);
+        // Don't fail the request if audit logging fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        promoter,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'ID card number already exists for another promoter' },
+          {
+            error: 'Validation error',
+            details: error.issues,
+          },
           { status: 400 }
         );
       }
-    }
 
-    // Update promoter in database
-    const { data: promoter, error } = await supabase
-      .from('promoters')
-      .update({
-        ...validatedData,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Promoter not found' },
-          { status: 404 }
-        );
-      }
-      console.error('Error updating promoter:', error);
+      console.error('API error:', error);
       return NextResponse.json(
-        {
-          error: 'Failed to update promoter',
-          details: error.message,
-        },
+        { error: 'Internal server error' },
         { status: 500 }
       );
     }
-
-    // After successful update, create audit log
-    try {
-      await supabase.from('audit_logs').insert({
-        user_id: session.user.id,
-        action: 'update',
-        table_name: 'promoters',
-        record_id: id,
-        new_values: validatedData,
-        created_at: new Date().toISOString(),
-      });
-    } catch (auditError) {
-      console.error('Error creating audit log:', auditError);
-      // Don't fail the request if audit logging fails
-    }
-
-    return NextResponse.json({
-      success: true,
-      promoter,
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: 'Validation error',
-          details: error.issues,
-        },
-        { status: 400 }
-      );
-    }
-
-    console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-});
+);
 
 // ✅ SECURITY FIX: Added RBAC guard for promoter deletion
 export const DELETE = withRBAC(
   'promoter:delete',
   async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
-  try {
-    const { id } = await params;
-    const cookieStore = await cookies();
+    try {
+      const { id } = await params;
+      const cookieStore = await cookies();
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet: any) {
-            try {
-              cookiesToSet.forEach(({ name, value, ...options }: any) => {
-                cookieStore.set(
-                  name,
-                  value,
-                  options as {
-                    path?: string;
-                    domain?: string;
-                    maxAge?: number;
-                    secure?: boolean;
-                    httpOnly?: boolean;
-                    sameSite?: 'strict' | 'lax' | 'none';
-                  }
-                );
-              });
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          },
-        } as any,
-      }
-    );
-
-    // Get user session
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user has permission to delete (admin or manager)
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    if (!userProfile || !['admin', 'manager'].includes(userProfile.role)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Insufficient permissions' },
-        { status: 403 }
-      );
-    }
-
-    // Check if promoter has active contracts
-    const { data: activeContracts, error: contractsError } = await supabase
-      .from('contracts')
-      .select('id')
-      .eq('promoter_id', id)
-      .eq('status', 'active');
-
-    if (contractsError) {
-      console.error('Error checking contracts:', contractsError);
-      return NextResponse.json(
-        { error: 'Failed to check contracts' },
-        { status: 500 }
-      );
-    }
-
-    if (activeContracts && activeContracts.length > 0) {
-      return NextResponse.json(
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
-          error: 'Cannot delete promoter with active contracts',
-          activeContractsCount: activeContracts.length,
-        },
-        { status: 400 }
+          cookies: {
+            getAll() {
+              return cookieStore.getAll();
+            },
+            setAll(cookiesToSet: any) {
+              try {
+                cookiesToSet.forEach(({ name, value, ...options }: any) => {
+                  cookieStore.set(
+                    name,
+                    value,
+                    options as {
+                      path?: string;
+                      domain?: string;
+                      maxAge?: number;
+                      secure?: boolean;
+                      httpOnly?: boolean;
+                      sameSite?: 'strict' | 'lax' | 'none';
+                    }
+                  );
+                });
+              } catch {
+                // The `setAll` method was called from a Server Component.
+                // This can be ignored if you have middleware refreshing
+                // user sessions.
+              }
+            },
+          } as any,
+        }
       );
-    }
 
-    // Delete promoter
-    const { error } = await supabase.from('promoters').delete().eq('id', id);
+      // Get user session
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+      if (sessionError || !session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      // Check if user has permission to delete (admin or manager)
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!userProfile || !['admin', 'manager'].includes(userProfile.role)) {
         return NextResponse.json(
-          { error: 'Promoter not found' },
-          { status: 404 }
+          { error: 'Forbidden: Insufficient permissions' },
+          { status: 403 }
         );
       }
-      console.error('Error deleting promoter:', error);
+
+      // Check if promoter has active contracts
+      const { data: activeContracts, error: contractsError } = await supabase
+        .from('contracts')
+        .select('id')
+        .eq('promoter_id', id)
+        .eq('status', 'active');
+
+      if (contractsError) {
+        console.error('Error checking contracts:', contractsError);
+        return NextResponse.json(
+          { error: 'Failed to check contracts' },
+          { status: 500 }
+        );
+      }
+
+      if (activeContracts && activeContracts.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'Cannot delete promoter with active contracts',
+            activeContractsCount: activeContracts.length,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Delete promoter
+      const { error } = await supabase.from('promoters').delete().eq('id', id);
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json(
+            { error: 'Promoter not found' },
+            { status: 404 }
+          );
+        }
+        console.error('Error deleting promoter:', error);
+        return NextResponse.json(
+          {
+            error: 'Failed to delete promoter',
+            details: error.message,
+          },
+          { status: 500 }
+        );
+      }
+
+      // After successful delete, create audit log
+      try {
+        await supabase.from('audit_logs').insert({
+          user_id: session.user.id,
+          action: 'delete',
+          table_name: 'promoters',
+          record_id: id,
+          created_at: new Date().toISOString(),
+        });
+      } catch (auditError) {
+        console.error('Error creating audit log:', auditError);
+        // Don't fail the request if audit logging fails
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Promoter deleted successfully',
+      });
+    } catch (error) {
+      console.error('API error:', error);
       return NextResponse.json(
-        {
-          error: 'Failed to delete promoter',
-          details: error.message,
-        },
+        { error: 'Internal server error' },
         { status: 500 }
       );
     }
-
-    // After successful delete, create audit log
-    try {
-      await supabase.from('audit_logs').insert({
-        user_id: session.user.id,
-        action: 'delete',
-        table_name: 'promoters',
-        record_id: id,
-        created_at: new Date().toISOString(),
-      });
-    } catch (auditError) {
-      console.error('Error creating audit log:', auditError);
-      // Don't fail the request if audit logging fails
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Promoter deleted successfully',
-    });
-  } catch (error) {
-    console.error('API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
   }
-});
-
-
+);

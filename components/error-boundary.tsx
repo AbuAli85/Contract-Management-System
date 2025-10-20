@@ -28,10 +28,10 @@ interface State {
 
 /**
  * Error Boundary Component
- * 
+ *
  * Catches JavaScript errors anywhere in the child component tree,
  * logs those errors, and displays a fallback UI instead of crashing.
- * 
+ *
  * @example
  * ```tsx
  * <ErrorBoundary componentName="Promoters Page">
@@ -124,38 +124,43 @@ export class ErrorBoundary extends Component<Props, State> {
                     Something went wrong
                   </CardTitle>
                   <CardDescription>
-                    {this.props.componentName || 'This page'} encountered an unexpected error
+                    {this.props.componentName || 'This page'} encountered an
+                    unexpected error
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className='space-y-4'>
               {/* Error Message */}
               <Alert variant='destructive'>
                 <AlertDescription>
-                  <strong>Error:</strong> {this.state.error?.message || 'Unknown error occurred'}
+                  <strong>Error:</strong>{' '}
+                  {this.state.error?.message || 'Unknown error occurred'}
                 </AlertDescription>
               </Alert>
 
               {/* Error Details (Development Only) */}
-              {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                <details className='text-sm'>
-                  <summary className='cursor-pointer font-semibold text-gray-700 hover:text-gray-900'>
-                    Technical Details (Development)
-                  </summary>
-                  <pre className='mt-2 overflow-auto rounded-lg bg-gray-100 p-4 text-xs'>
-                    {this.state.error?.stack}
-                    {'\n\n'}
-                    Component Stack:
-                    {this.state.errorInfo.componentStack}
-                  </pre>
-                </details>
-              )}
+              {process.env.NODE_ENV === 'development' &&
+                this.state.errorInfo && (
+                  <details className='text-sm'>
+                    <summary className='cursor-pointer font-semibold text-gray-700 hover:text-gray-900'>
+                      Technical Details (Development)
+                    </summary>
+                    <pre className='mt-2 overflow-auto rounded-lg bg-gray-100 p-4 text-xs'>
+                      {this.state.error?.stack}
+                      {'\n\n'}
+                      Component Stack:
+                      {this.state.errorInfo.componentStack}
+                    </pre>
+                  </details>
+                )}
 
               {/* Troubleshooting Tips */}
               <div className='rounded-lg bg-blue-50 p-4'>
-                <h3 className='font-semibold text-blue-900 mb-2'>What you can try:</h3>
+                <h3 className='font-semibold text-blue-900 mb-2'>
+                  What you can try:
+                </h3>
                 <ul className='space-y-1 text-sm text-blue-800'>
                   <li>• Refresh the page to try again</li>
                   <li>• Clear your browser cache and cookies</li>
@@ -170,12 +175,12 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Try Again
                 </Button>
-                
+
                 <Button onClick={this.handleReload} variant='outline'>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Reload Page
                 </Button>
-                
+
                 <Button onClick={this.handleGoHome} variant='outline'>
                   <Home className='mr-2 h-4 w-4' />
                   Go to Home
@@ -210,11 +215,11 @@ export class ErrorBoundary extends Component<Props, State> {
  * Simple Error Fallback Component
  * Can be used as a custom fallback prop
  */
-export function SimpleErrorFallback({ 
-  error, 
-  resetErrorAction 
-}: { 
-  error?: Error; 
+export function SimpleErrorFallback({
+  error,
+  resetErrorAction,
+}: {
+  error?: Error;
   resetErrorAction?: () => void;
 }) {
   return (

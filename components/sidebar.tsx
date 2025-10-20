@@ -291,7 +291,8 @@ function SidebarContent({
 
   // Determine what to render based on auth state
   const shouldShowEmergencyNavigation = showEmergencyNavigation;
-  const shouldShowLoginPrompt = !user && authMounted && !loading && !pathname?.includes('/dashboard');
+  const shouldShowLoginPrompt =
+    !user && authMounted && !loading && !pathname?.includes('/dashboard');
   const shouldShowLoading = !authMounted || loading;
 
   // Handle different rendering states
@@ -528,7 +529,7 @@ function SidebarContent({
             </h3>
 
             <Link
-                              href={'/dashboard/users'}
+              href={'/dashboard/users'}
               onClick={onClose}
               className='group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground'
             >

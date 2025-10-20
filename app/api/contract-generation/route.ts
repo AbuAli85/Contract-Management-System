@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 import { withAnyRBAC } from '@/lib/rbac/guard';
 
 // PDF Generation API endpoint - Use environment variable or construct from current host
-const PDF_API_URL = process.env.NEXT_PUBLIC_API_URL 
+const PDF_API_URL = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api/pdf-generation`
   : '/api/pdf-generation';
 // External webhook to notify when PDF is ready
-const NOTIFY_WEBHOOK_URL = process.env.WEBHOOK_URL || 
+const NOTIFY_WEBHOOK_URL =
+  process.env.WEBHOOK_URL ||
   'https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4';
 
 export const POST = withAnyRBAC(
@@ -30,10 +31,10 @@ export const POST = withAnyRBAC(
 
       // 1. Call PDF generation API (internal or external based on configuration)
       // If PDF_API_URL is relative, we need to construct full URL for server-side fetch
-      const apiUrl = PDF_API_URL.startsWith('http') 
-        ? PDF_API_URL 
+      const apiUrl = PDF_API_URL.startsWith('http')
+        ? PDF_API_URL
         : `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${PDF_API_URL}`;
-      
+
       const pdfRes = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

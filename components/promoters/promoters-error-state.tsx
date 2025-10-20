@@ -1,7 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw, XCircle, AlertTriangle } from 'lucide-react';
 
@@ -11,7 +17,11 @@ interface PromotersErrorStateProps {
   onGoToDashboard: () => void;
 }
 
-export function PromotersErrorState({ error, onRetry, onGoToDashboard }: PromotersErrorStateProps) {
+export function PromotersErrorState({
+  error,
+  onRetry,
+  onGoToDashboard,
+}: PromotersErrorStateProps) {
   return (
     <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       <Card>
@@ -21,7 +31,8 @@ export function PromotersErrorState({ error, onRetry, onGoToDashboard }: Promote
             Unable to Load Promoters
           </CardTitle>
           <CardDescription>
-            {error?.message || 'An error occurred while loading promoters data.'}
+            {error?.message ||
+              'An error occurred while loading promoters data.'}
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>

@@ -45,7 +45,7 @@ export function PendingApprovalsList() {
 
       const response = await fetch('/api/users/approval', {
         credentials: 'include', // Include cookies for authentication
-        cache: 'no-store'
+        cache: 'no-store',
       });
       console.log('📊 API Response status:', response.status);
 

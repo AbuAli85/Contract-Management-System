@@ -4,7 +4,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
@@ -31,10 +37,13 @@ export function LoginDebugger() {
 
       const requestBody = {
         email: email.trim(),
-        password: password
+        password: password,
       };
 
-      console.log('🔍 Debug Login - Request body:', { ...requestBody, password: '[HIDDEN]' });
+      console.log('🔍 Debug Login - Request body:', {
+        ...requestBody,
+        password: '[HIDDEN]',
+      });
 
       const response = await fetch('/api/auth/simple-login', {
         method: 'POST',
@@ -45,7 +54,10 @@ export function LoginDebugger() {
       });
 
       console.log('🔍 Debug Login - Response status:', response.status);
-      console.log('🔍 Debug Login - Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log(
+        '🔍 Debug Login - Response headers:',
+        Object.fromEntries(response.headers.entries())
+      );
 
       const responseText = await response.text();
       console.log('🔍 Debug Login - Response text:', responseText);
@@ -66,7 +78,7 @@ export function LoginDebugger() {
         headers: Object.fromEntries(response.headers.entries()),
         body: responseData,
         timestamp: new Date().toISOString(),
-        requestBody: { ...requestBody, password: '[HIDDEN]' }
+        requestBody: { ...requestBody, password: '[HIDDEN]' },
       };
 
       setDebugInfo(debugData);
@@ -74,15 +86,21 @@ export function LoginDebugger() {
       if (response.ok) {
         console.log('🔍 Debug Login - Login successful!');
         console.log('✅ Login successful:', responseData);
-        setSuccess(`Login successful! Welcome ${responseData.user?.user_metadata?.full_name || responseData.user?.email}`);
+        setSuccess(
+          `Login successful! Welcome ${responseData.user?.user_metadata?.full_name || responseData.user?.email}`
+        );
       } else {
         console.error('🔍 Debug Login - Login failed:', responseData);
-        setError(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
+        setError(
+          responseData.error ||
+            `HTTP ${response.status}: ${response.statusText}`
+        );
       }
-
     } catch (fetchError) {
       console.error('🔍 Debug Login - Fetch error:', fetchError);
-      setError(`Network error: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+      setError(
+        `Network error: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -96,28 +114,29 @@ export function LoginDebugger() {
 
     try {
       console.log('🔍 Debug Login - Testing GET endpoint...');
-      
+
       const response = await fetch('/api/auth/simple-login', {
         method: 'GET',
       });
 
       const responseData = await response.json();
-      
+
       const debugData = {
         status: response.status,
         statusText: response.statusText,
         headers: Object.fromEntries(response.headers.entries()),
         body: responseData,
         timestamp: new Date().toISOString(),
-        testType: 'GET'
+        testType: 'GET',
       };
 
       setDebugInfo(debugData);
       console.log('🔍 Debug Login - GET test result:', responseData);
-
     } catch (fetchError) {
       console.error('🔍 Debug Login - GET test error:', fetchError);
-      setError(`GET test failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`);
+      setError(
+        `GET test failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +163,7 @@ export function LoginDebugger() {
                 type='email'
                 placeholder='Enter email address'
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
               />
             </div>
             <div className='space-y-2'>
@@ -155,7 +174,7 @@ export function LoginDebugger() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder='Enter password'
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                 />
                 <Button
                   type='button'
@@ -175,8 +194,8 @@ export function LoginDebugger() {
           </div>
 
           <div className='flex gap-2'>
-            <Button 
-              onClick={handleLogin} 
+            <Button
+              onClick={handleLogin}
               disabled={isLoading || !email || !password}
               className='flex-1'
             >
@@ -189,8 +208,8 @@ export function LoginDebugger() {
                 'Test Login'
               )}
             </Button>
-            <Button 
-              onClick={handleTestEndpoint} 
+            <Button
+              onClick={handleTestEndpoint}
               disabled={isLoading}
               variant='outline'
             >
@@ -226,8 +245,12 @@ export function LoginDebugger() {
               </CardHeader>
               <CardContent className='space-y-4'>
                 <div className='flex items-center gap-2'>
-                  <Badge 
-                    variant={debugInfo.status >= 200 && debugInfo.status < 300 ? 'default' : 'destructive'}
+                  <Badge
+                    variant={
+                      debugInfo.status >= 200 && debugInfo.status < 300
+                        ? 'default'
+                        : 'destructive'
+                    }
                   >
                     {debugInfo.status} {debugInfo.statusText}
                   </Badge>
@@ -276,10 +299,11 @@ export function LoginDebugger() {
           <div className='space-y-2'>
             <h4 className='font-medium text-green-600'>✅ Success (200)</h4>
             <p className='text-sm text-muted-foreground'>
-              Login successful. Check the response body for user data and redirect path.
+              Login successful. Check the response body for user data and
+              redirect path.
             </p>
           </div>
-          
+
           <div className='space-y-2'>
             <h4 className='font-medium text-red-600'>❌ 400 Bad Request</h4>
             <ul className='text-sm text-muted-foreground space-y-1 ml-4'>
@@ -293,7 +317,9 @@ export function LoginDebugger() {
           </div>
 
           <div className='space-y-2'>
-            <h4 className='font-medium text-red-600'>❌ 500 Internal Server Error</h4>
+            <h4 className='font-medium text-red-600'>
+              ❌ 500 Internal Server Error
+            </h4>
             <ul className='text-sm text-muted-foreground space-y-1 ml-4'>
               <li>• Supabase connection issues</li>
               <li>• Environment variables missing</li>

@@ -20,13 +20,17 @@ export default function SimpleWorkingLogin() {
       <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
         <div className='w-full max-w-md bg-white rounded-lg shadow-md p-6'>
           <div className='text-center'>
-            <h1 className='text-2xl font-bold text-red-600 mb-4'>Configuration Error</h1>
+            <h1 className='text-2xl font-bold text-red-600 mb-4'>
+              Configuration Error
+            </h1>
             <p className='text-gray-600 mb-4'>
-              Supabase client is not properly configured. Please check your environment variables.
+              Supabase client is not properly configured. Please check your
+              environment variables.
             </p>
             <div className='p-3 bg-red-50 border border-red-200 rounded-md'>
               <p className='text-red-800 text-sm'>
-                NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.
+                NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must
+                be set.
               </p>
             </div>
           </div>
@@ -129,7 +133,9 @@ export default function SimpleWorkingLogin() {
     <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
       <div className='w-full max-w-md bg-white rounded-lg shadow-md p-6'>
         <div className='text-center mb-6'>
-          <h1 className='text-2xl font-bold text-gray-900'>Simple Login Test</h1>
+          <h1 className='text-2xl font-bold text-gray-900'>
+            Simple Login Test
+          </h1>
           <p className='text-sm text-gray-600'>
             Direct Supabase authentication
           </p>
@@ -141,7 +147,10 @@ export default function SimpleWorkingLogin() {
           className='space-y-4'
         >
           <div>
-            <label htmlFor='email' className='block text-sm font-medium text-gray-700 mb-1'>
+            <label
+              htmlFor='email'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Email
             </label>
             <input
@@ -156,7 +165,10 @@ export default function SimpleWorkingLogin() {
           </div>
 
           <div>
-            <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-1'>
+            <label
+              htmlFor='password'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Password
             </label>
             <input
@@ -178,9 +190,7 @@ export default function SimpleWorkingLogin() {
 
           {message && (
             <div className='p-3 bg-green-50 border border-green-200 rounded-md'>
-              <p className='text-green-800 text-sm'>
-                {message}
-              </p>
+              <p className='text-green-800 text-sm'>{message}</p>
             </div>
           )}
 

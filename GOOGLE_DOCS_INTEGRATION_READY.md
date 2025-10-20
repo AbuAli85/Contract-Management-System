@@ -16,6 +16,7 @@ Your Google Docs direct integration is now **fully implemented** and ready for u
 ## 🚀 **Quick Start Guide**
 
 ### **Step 1: Create Google Docs Template**
+
 1. Go to [Google Docs](https://docs.google.com/document/create)
 2. Create a template with these placeholders:
 
@@ -51,20 +52,24 @@ Passport: {{promoter_passport_image}}
 ```
 
 ### **Step 2: Share Template**
+
 1. Click **Share** in Google Docs
 2. Add: `contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com`
 3. Set permission to **Editor**
 
 ### **Step 3: Get Template ID**
+
 1. Copy document ID from URL: `https://docs.google.com/document/d/DOCUMENT_ID/edit`
 2. Update `GOOGLE_DOCS_TEMPLATE_ID` in your `.env.local` file
 
 ### **Step 4: Enable APIs**
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com)
 2. Project: `nth-segment-475411-g1`
 3. Enable: **Google Docs API** and **Google Drive API**
 
 ### **Step 5: Test Integration**
+
 ```bash
 # Start development server
 npm run dev
@@ -76,12 +81,14 @@ curl http://localhost:3000/api/test/google-docs
 ## 🎯 **How to Use**
 
 ### **From Frontend:**
+
 1. Go to `/simple-contract` or `/generate-contract`
 2. Fill out the contract form
 3. Click "Generate Contract"
 4. Get document and PDF links
 
 ### **From API:**
+
 ```bash
 curl -X POST http://localhost:3000/api/contracts/google-docs-generate \
   -H "Content-Type: application/json" \
@@ -113,21 +120,25 @@ curl -X POST http://localhost:3000/api/contracts/google-docs-generate \
 ## 🎨 **Features Available:**
 
 ### **✅ Text Replacement**
+
 - All `{{placeholder}}` text automatically replaced
 - Supports all contract data fields
 - Case-insensitive matching
 
 ### **✅ Image Insertion**
+
 - ID card images automatically inserted
 - Passport images automatically inserted
 - Proper sizing and formatting
 
 ### **✅ PDF Generation**
+
 - Automatic PDF creation
 - Public access links
 - Google Drive storage
 
 ### **✅ Document Management**
+
 - New document per contract
 - Timestamped naming
 - Organized storage
@@ -143,11 +154,13 @@ GOOGLE_DRIVE_OUTPUT_FOLDER_ID=your-folder-id-here
 ## 🧪 **Testing:**
 
 ### **Test Endpoint:**
+
 - **URL:** `http://localhost:3000/api/test/google-docs`
 - **Method:** GET
 - **Purpose:** Test integration with sample data
 
 ### **Expected Response:**
+
 ```json
 {
   "status": "success",
@@ -163,12 +176,14 @@ GOOGLE_DRIVE_OUTPUT_FOLDER_ID=your-folder-id-here
 ## 🚨 **Troubleshooting:**
 
 ### **Common Issues:**
+
 1. **"Template not found"** → Check template ID and sharing
 2. **"Permission denied"** → Verify service account access
 3. **"API not enabled"** → Enable Google Docs & Drive APIs
 4. **"Invalid credentials"** → Check service account key format
 
 ### **Quick Fixes:**
+
 - Ensure template is shared with service account
 - Check Google Cloud APIs are enabled
 - Verify environment variables are set correctly

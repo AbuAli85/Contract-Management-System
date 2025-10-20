@@ -3,9 +3,10 @@
 ## 🎯 DIAGNOSIS CONFIRMED
 
 Your test results show:
+
 - ✅ Page rendering (table with data)
 - ❌ Header missing
-- ❌ Menu won't open  
+- ❌ Menu won't open
 - ❌ API call hung/no response
 
 **Root cause:** Component partially initialized but failed on main rendering pass.
@@ -17,6 +18,7 @@ Your test results show:
 ### STEP 1: Try Quick Fixes (Recommended Order)
 
 **Option A: Hard Refresh Cache** ⚡ (30 seconds)
+
 ```
 1. Press: Ctrl + Shift + Delete
 2. Select: "Clear all time" + "Cached images and files"
@@ -26,6 +28,7 @@ Your test results show:
 ```
 
 **Option B: Log Out & Back In** 🔐 (1 minute)
+
 ```javascript
 // In browser console:
 window.location.href = '/en/auth/logout';
@@ -33,6 +36,7 @@ window.location.href = '/en/auth/logout';
 ```
 
 **Option C: Restart Dev Server** 🔄 (2 minutes)
+
 ```bash
 # In terminal where npm run dev is running:
 Ctrl + C
@@ -45,6 +49,7 @@ npm run dev
 ### STEP 2: Verify It's Fixed
 
 After trying a fix, the page should show:
+
 - ✅ "Promoter Intelligence Hub" header
 - ✅ Metric cards visible
 - ✅ Filters working
@@ -66,7 +71,10 @@ console.log('=== PROMOTERS PAGE DEBUG ===\n');
 const text = document.body.innerText;
 console.log('Page shows header:', text.includes('Promoter Intelligence Hub'));
 console.log('Page shows table:', !!document.querySelector('table'));
-console.log('Page shows errors:', text.includes('Unable') || text.includes('Error'));
+console.log(
+  'Page shows errors:',
+  text.includes('Unable') || text.includes('Error')
+);
 
 // API test
 console.log('\n=== API TEST ===');
@@ -87,6 +95,7 @@ fetch('/api/auth/me')
 ```
 
 Then share:
+
 1. **Full console output** (screenshot or copy-paste)
 2. **What you see on page** (header? table? errors?)
 3. **Your browser** (Chrome, Firefox, Safari?)
@@ -109,6 +118,7 @@ Based on your symptoms (API hung + header missing), this is probably:
 ## 📞 IF YOU NEED DEEPER HELP
 
 I can:
+
 - Check the API endpoint (`/api/promoters`)
 - Review authentication flow
 - Debug React Query configuration

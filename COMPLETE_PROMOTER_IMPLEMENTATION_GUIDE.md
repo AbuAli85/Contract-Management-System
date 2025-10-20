@@ -15,6 +15,7 @@ git push origin main
 ```
 
 **Why this matters:**
+
 - ✅ 15 CRITICAL security vulnerabilities fixed (invaluable work!)
 - ✅ 450+ items cleaned (massive achievement!)
 - ✅ ~12 hours invested (don't risk losing it!)
@@ -28,6 +29,7 @@ git push origin main
 ## 📊 Implementation Scope
 
 ### Phase 1: Backend Foundation (4-5 hours)
+
 - Replace all mock handlers with real CRUD
 - Implement withRBAC on all endpoints
 - Add unified Zod validation
@@ -35,12 +37,14 @@ git push origin main
 - Proper audit logging
 
 ### Phase 2: Frontend Integration (3-4 hours)
+
 - Server components for data fetching
 - Client hooks for real-time updates
 - Document upload with Supabase Storage
 - Proper error/loading states
 
 ### Phase 3: Testing & QA (2-3 hours)
+
 - Integration tests with Playwright
 - Component tests
 - E2E promoter workflows
@@ -87,7 +91,17 @@ import { z } from 'zod';
 
 // Unified validation schema
 const documentSchema = z.object({
-  document_type: z.enum(['id_card', 'passport', 'visa', 'work_permit', 'certificate', 'contract', 'insurance', 'medical', 'other']),
+  document_type: z.enum([
+    'id_card',
+    'passport',
+    'visa',
+    'work_permit',
+    'certificate',
+    'contract',
+    'insurance',
+    'medical',
+    'other',
+  ]),
   file_name: z.string().min(1),
   file_path: z.string().url(),
   file_size: z.number().optional(),
@@ -98,13 +112,18 @@ const documentSchema = z.object({
 // GET - List documents
 export const GET = withRBAC(
   'promoter:documents:read',
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     try {
       const { id: promoterId } = await params;
       const supabase = await createClient();
-      
+
       // Get session for audit
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -125,10 +144,13 @@ export const GET = withRBAC(
       });
     } catch (error) {
       console.error('Error fetching documents:', error);
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to fetch documents',
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to fetch documents',
+        },
+        { status: 500 }
+      );
     }
   }
 );
@@ -136,12 +158,17 @@ export const GET = withRBAC(
 // POST - Upload document
 export const POST = withRBAC(
   'promoter:documents:create',
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     try {
       const { id: promoterId } = await params;
       const supabase = await createClient();
-      
-      const { data: { user } } = await supabase.auth.getUser();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -168,7 +195,10 @@ export const POST = withRBAC(
         action: 'promoter_document_created',
         table_name: 'promoter_documents',
         record_id: data.id,
-        metadata: { promoter_id: promoterId, document_type: validated.document_type },
+        metadata: {
+          promoter_id: promoterId,
+          document_type: validated.document_type,
+        },
       });
 
       return NextResponse.json({
@@ -177,18 +207,24 @@ export const POST = withRBAC(
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return NextResponse.json({
-          success: false,
-          error: 'Validation failed',
-          details: error.errors,
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Validation failed',
+            details: error.errors,
+          },
+          { status: 400 }
+        );
       }
-      
+
       console.error('Error creating document:', error);
-      return NextResponse.json({
-        success: false,
-        error: 'Failed to create document',
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to create document',
+        },
+        { status: 500 }
+      );
     }
   }
 );
@@ -196,7 +232,10 @@ export const POST = withRBAC(
 // PUT - Update document
 export const PUT = withRBAC(
   'promoter:documents:update',
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     // Similar implementation...
   }
 );
@@ -204,7 +243,10 @@ export const PUT = withRBAC(
 // DELETE - Remove document
 export const DELETE = withRBAC(
   'promoter:documents:delete',
-  async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+  async (
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
+  ) => {
     // Similar implementation...
   }
 );
@@ -374,7 +416,7 @@ export function DocumentUpload({ promoterId }: { promoterId: string }) {
 
   const handleUpload = async (file: File, type: string) => {
     setUploading(true);
-    
+
     try {
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -423,17 +465,17 @@ test.describe('Promoter Management', () => {
   test('should create and view promoter', async ({ page }) => {
     // Navigate to manage promoters
     await page.goto('/en/manage-promoters');
-    
+
     // Click create new
     await page.click('[data-testid="create-promoter"]');
-    
+
     // Fill form
     await page.fill('[name="name_en"]', 'Test Promoter');
     await page.fill('[name="id_card_number"]', '12345678');
-    
+
     // Submit
     await page.click('[type="submit"]');
-    
+
     // Verify created
     await expect(page.locator('text=Test Promoter')).toBeVisible();
   });
@@ -449,6 +491,7 @@ test.describe('Promoter Management', () => {
 ## 📋 IMPLEMENTATION CHECKLIST
 
 ### Backend (Must Do)
+
 - [ ] Apply simplified migration (20250114000001)
 - [ ] Implement documents API with RBAC
 - [ ] Implement education API with RBAC
@@ -460,6 +503,7 @@ test.describe('Promoter Management', () => {
 - [ ] Update promoter service with analytics
 
 ### Frontend (Must Do)
+
 - [ ] Create usePromoterDetails hook
 - [ ] Create usePromoterDocuments hook
 - [ ] Update manage-promoters to server component
@@ -468,11 +512,13 @@ test.describe('Promoter Management', () => {
 - [ ] Implement optimistic UI updates
 
 ### Testing (Nice to Have)
+
 - [ ] Playwright integration tests
 - [ ] Component tests for critical flows
 - [ ] E2E promoter workflow test
 
 ### Observability (Nice to Have)
+
 - [ ] Add structured logging
 - [ ] Add metrics/monitoring
 - [ ] Rate limiting on bulk APIs
@@ -481,18 +527,19 @@ test.describe('Promoter Management', () => {
 
 ## ⏰ TIME ESTIMATES
 
-| Phase | Tasks | Time |
-|-------|-------|------|
-| Backend Foundation | 6 API endpoints + validation | 4-5 hours |
-| Frontend Integration | Hooks + components + upload | 3-4 hours |
-| Testing & QA | Tests + verification | 2-3 hours |
-| **TOTAL** | Complete implementation | **9-12 hours** |
+| Phase                | Tasks                        | Time           |
+| -------------------- | ---------------------------- | -------------- |
+| Backend Foundation   | 6 API endpoints + validation | 4-5 hours      |
+| Frontend Integration | Hooks + components + upload  | 3-4 hours      |
+| Testing & QA         | Tests + verification         | 2-3 hours      |
+| **TOTAL**            | Complete implementation      | **9-12 hours** |
 
 ---
 
 ## 💡 MY STRONG RECOMMENDATION
 
 ### TODAY (Right Now):
+
 ```bash
 # Commit your CRITICAL security work!
 git add .
@@ -501,6 +548,7 @@ git push origin main
 ```
 
 **You've accomplished:**
+
 - 15 security vulnerabilities fixed (INVALUABLE!)
 - 450+ items cleaned (MASSIVE!)
 - 12+ hours of excellent work
@@ -512,14 +560,17 @@ git push origin main
 ### TOMORROW (Fresh Start):
 
 **Day 1: Backend (4-5 hours)**
+
 - Morning: Implement all 4 API endpoints
 - Afternoon: Add validation + audit logging
 
 **Day 2: Frontend (3-4 hours)**
+
 - Morning: Update hooks + components
 - Afternoon: Document upload + UI polish
 
 **Day 3: Testing (2-3 hours)**
+
 - Write integration tests
 - E2E verification
 - Documentation
@@ -529,18 +580,21 @@ git push origin main
 ## 🎯 DECISION TIME
 
 **Option A: COMMIT NOW** ⭐ (STRONGLY Recommended)
+
 - Save your critical security work
 - Implement promoters tomorrow fresh
 - No risk, no pressure
 - **Time: 5 minutes**
 
 **Option B: CREATE BACKEND NOW** (1-2 hours minimum)
+
 - Implement just the documents endpoint
 - With full CRUD, validation, RBAC
 - Then commit everything
 - **Time: 1-2 hours more**
 
 **Option C: FULL GUIDE** (30 min)
+
 - I create complete code for all endpoints
 - You implement when ready (tomorrow)
 - Detailed, copy-paste ready
@@ -553,11 +607,10 @@ git push origin main
 **15 vulnerabilities fixed**  
 **450+ items cleaned**  
 **12 hours invested**  
-**Production-ready security**  
+**Production-ready security**
 
 **Please commit this work before continuing!**
 
 ---
 
 **What would you like? (A, B, or C)**
-

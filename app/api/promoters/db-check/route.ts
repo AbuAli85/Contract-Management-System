@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     console.log('🔍 Direct database check starting...');
-    
+
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -21,14 +21,17 @@ export async function GET() {
     });
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing Supabase credentials',
-        details: {
-          hasUrl: !!supabaseUrl,
-          hasServiceKey: !!supabaseServiceKey,
-        }
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Missing Supabase credentials',
+          details: {
+            hasUrl: !!supabaseUrl,
+            hasServiceKey: !!supabaseServiceKey,
+          },
+        },
+        { status: 500 }
+      );
     }
 
     // Create client with SERVICE_ROLE key (bypasses RLS)
@@ -63,10 +66,10 @@ export async function GET() {
       .limit(5)
       .order('created_at', { ascending: false });
 
-    console.log('📊 Fetch result:', { 
-      count: promoters?.length, 
+    console.log('📊 Fetch result:', {
+      count: promoters?.length,
       error: fetchError,
-      firstRecord: promoters?.[0]
+      firstRecord: promoters?.[0],
     });
 
     // Test 3: Check RLS policies
@@ -97,17 +100,18 @@ export async function GET() {
         supabaseUrl,
         keyType: 'SERVICE_ROLE',
         rlsPoliciesChecked: !policiesError,
-      }
+      },
     });
-
   } catch (error: any) {
     console.error('❌ Database check error:', error);
-    return NextResponse.json({
-      success: false,
-      error: 'Database check failed',
-      details: error.message,
-      stack: error.stack,
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Database check failed',
+        details: error.message,
+        stack: error.stack,
+      },
+      { status: 500 }
+    );
   }
 }
-

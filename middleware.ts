@@ -8,9 +8,9 @@ const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_CONFIG = {
   '/api/auth/check-session': {
     windowMs: 60000, // 1 minute
-    maxRequests: 5,  // 5 requests per minute
+    maxRequests: 5, // 5 requests per minute
     skipSuccessfulRequests: true, // Don't count successful requests
-  }
+  },
 };
 
 function isRateLimited(path: string, ip: string): boolean {
@@ -36,10 +36,12 @@ function isRateLimited(path: string, ip: string): boolean {
 }
 
 function getClientIP(request: NextRequest): string {
-  return request.ip || 
-         request.headers.get('x-forwarded-for')?.split(',')[0] || 
-         request.headers.get('x-real-ip') || 
-         'unknown';
+  return (
+    request.ip ||
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    'unknown'
+  );
 }
 
 export function middleware(request: NextRequest) {
@@ -53,24 +55,26 @@ export function middleware(request: NextRequest) {
       // Log rate limiting only once per window to reduce spam
       const key = `${ip}:${pathname}`;
       const requestData = rateLimitStore.get(key);
-      
+
       if (requestData && requestData.count === 1) {
-        console.log(`🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`);
+        console.log(
+          `🚫 Middleware: Rate limit exceeded for ${pathname} from IP: ${ip}`
+        );
       }
 
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
           message: 'Too many requests. Please wait 1 minute and try again.',
-          retryAfter: 60
+          retryAfter: 60,
         },
         {
           status: 429,
           headers: {
             'Retry-After': '60',
             'X-RateLimit-Limit': '5',
-            'X-RateLimit-Window': '60'
-          }
+            'X-RateLimit-Window': '60',
+          },
         }
       );
     }
@@ -78,15 +82,15 @@ export function middleware(request: NextRequest) {
     // Log successful processing (but not every request to reduce spam)
     const key = `${ip}:${pathname}`;
     const requestData = rateLimitStore.get(key);
-    
+
     if (!requestData || requestData.count === 1) {
       console.log(`🔐 Middleware: Processing request for path: ${pathname}`);
     }
 
     // Continue with the request
-      return NextResponse.next();
+    return NextResponse.next();
   }
-  
+
   // For non-rate-limited paths, just continue
   return NextResponse.next();
 }

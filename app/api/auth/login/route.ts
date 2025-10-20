@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AuthErrorHandler } from '@/lib/auth-error-handler';
 import { ApiErrorHandler } from '@/lib/api-error-handler';
-import { ratelimitAuth, getClientIdentifier, getRateLimitHeaders, createRateLimitResponse } from '@/lib/rate-limit';
+import {
+  ratelimitAuth,
+  getClientIdentifier,
+  getRateLimitHeaders,
+  createRateLimitResponse,
+} from '@/lib/rate-limit';
 import { createAuditLog, logAuditEvent } from '@/lib/security';
 
 // Force dynamic rendering for this API route
@@ -13,18 +18,18 @@ export async function POST(request: NextRequest) {
     // ✅ SECURITY: Apply strict rate limiting for auth (5 requests per minute)
     const identifier = getClientIdentifier(request);
     const rateLimitResult = await ratelimitAuth.limit(identifier);
-    
+
     if (!rateLimitResult.success) {
       const headers = getRateLimitHeaders(rateLimitResult);
       const body = createRateLimitResponse(rateLimitResult);
-      
+
       // Log rate limit hit
       const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
         identifier,
         attemptsRemaining: rateLimitResult.remaining,
       });
       logAuditEvent(auditEntry);
-      
+
       return NextResponse.json(body, {
         status: 429,
         headers,
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('🔐 Server login error:', error);
-      
+
       // Log failed login attempt
       const auditEntry = createAuditLog(request, 'LOGIN_FAILED', false, {
         email,
@@ -121,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     // Add rate limit headers to response
     const responseHeaders = getRateLimitHeaders(rateLimitResult);
-    
+
     // Create response with success
     const response = NextResponse.json(
       AuthErrorHandler.createSuccess(

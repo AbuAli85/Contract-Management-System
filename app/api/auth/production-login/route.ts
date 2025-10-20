@@ -20,13 +20,13 @@ export async function POST(request: NextRequest) {
 
     // Check if CAPTCHA is required
     const captchaRequired = productionAuthService.isCaptchaRequired(request);
-    
+
     if (captchaRequired && !captchaToken) {
       return NextResponse.json(
-        { 
+        {
           error: 'CAPTCHA verification required',
           captchaRequired: true,
-          captchaConfig: productionAuthService.getCaptchaConfig()
+          captchaConfig: productionAuthService.getCaptchaConfig(),
         },
         { status: 400 }
       );
@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
         user: authData.user,
         session: authData.session,
       });
-
     } catch (authError) {
       // Log failed authentication
       await productionAuthService.logAuthAttempt(
@@ -67,24 +66,31 @@ export async function POST(request: NextRequest) {
       );
 
       // Check if it's a CAPTCHA error
-      if (authError instanceof Error && 
-          (authError.message.includes('captcha') || authError.message.includes('verification'))) {
+      if (
+        authError instanceof Error &&
+        (authError.message.includes('captcha') ||
+          authError.message.includes('verification'))
+      ) {
         return NextResponse.json(
-          { 
+          {
             error: 'CAPTCHA verification failed',
             captchaRequired: true,
-            captchaConfig: productionAuthService.getCaptchaConfig()
+            captchaConfig: productionAuthService.getCaptchaConfig(),
           },
           { status: 400 }
         );
       }
 
       return NextResponse.json(
-        { error: authError instanceof Error ? authError.message : 'Authentication failed' },
+        {
+          error:
+            authError instanceof Error
+              ? authError.message
+              : 'Authentication failed',
+        },
         { status: 400 }
       );
     }
-
   } catch (error) {
     console.error('Production login error:', error);
     return NextResponse.json(
@@ -105,7 +111,6 @@ export async function GET(request: NextRequest) {
       captchaConfig,
       environment: process.env.NODE_ENV,
     });
-
   } catch (error) {
     console.error('Production login config error:', error);
     return NextResponse.json(

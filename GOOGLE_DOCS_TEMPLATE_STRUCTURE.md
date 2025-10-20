@@ -1,4 +1,5 @@
 # Employment Contract Template Structure
+
 ## For Google Docs Template: 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
 
 ---
@@ -18,6 +19,7 @@
 ## PARTIES TO THE CONTRACT
 
 ### FIRST PARTY (EMPLOYER)
+
 **Company Name (English):** {{first_party_name_en}}  
 **Company Name (Arabic):** {{first_party_name_ar}}  
 **Commercial Registration Number:** {{first_party_crn}}  
@@ -25,6 +27,7 @@
 **Email:** {{first_party_email}}
 
 ### SECOND PARTY (CLIENT/SPONSOR)
+
 **Company Name (English):** {{second_party_name_en}}  
 **Company Name (Arabic):** {{second_party_name_ar}}  
 **Commercial Registration Number:** {{second_party_crn}}  
@@ -32,6 +35,7 @@
 **Email:** {{second_party_email}}
 
 ### THIRD PARTY (EMPLOYEE/PROMOTER)
+
 **Name (English):** {{promoter_name_en}}  
 **Name (Arabic):** {{promoter_name_ar}}  
 **ID Card Number:** {{promoter_id_card_number}}  
@@ -51,21 +55,25 @@
 ## CONTRACT TERMS
 
 ### 1. POSITION AND DUTIES
+
 **Job Title:** {{job_title}}  
 **Department:** {{department}}  
 **Work Location:** {{work_location}}
 
 ### 2. CONTRACT DURATION
+
 **Start Date:** {{contract_start_date}}  
 **End Date:** {{contract_end_date}}  
 **Contract Type:** {{contract_type}}
 
 ### 3. WORKING HOURS
+
 **Work Schedule:** {{work_schedule}}  
 **Weekly Hours:** {{weekly_hours}} hours per week  
 **Daily Hours:** {{working_hours_numeric}} hours per day
 
 ### 4. COMPENSATION
+
 **Basic Salary:** {{basic_salary}} {{currency}}  
 **Currency:** {{currency}}  
 **Housing Allowance:** {{housing_allowance}} {{currency}}  
@@ -73,10 +81,12 @@
 **Hourly Rate:** {{hourly_rate}} {{currency}}/hour (if applicable)
 
 ### 5. PROBATION AND NOTICE PERIODS
+
 **Probation Period:** {{probation_period_numeric}} months  
 **Notice Period:** {{notice_period_numeric}} days
 
 ### 6. SPECIAL TERMS AND CONDITIONS
+
 {{special_terms}}
 
 ---
@@ -86,16 +96,16 @@
 **First Party (Employer)**  
 [Insert placeholder image here - set Alt text to: image_8]  
 Signature  
-Date: ________________
+Date: ******\_\_\_\_******
 
 **Second Party (Client)**  
 [Insert placeholder image here - set Alt text to: image_9]  
 Signature  
-Date: ________________
+Date: ******\_\_\_\_******
 
 **Third Party (Employee)**  
-Signature: ________________  
-Date: ________________
+Signature: ******\_\_\_\_******  
+Date: ******\_\_\_\_******
 
 ---
 
@@ -138,6 +148,7 @@ For each placeholder image mentioned above:
 All text placeholders use this format: `{{placeholder_name}}`
 
 ### Contract Info (5)
+
 - {{contract_number}}
 - {{contract_type}}
 - {{contract_start_date}}
@@ -145,6 +156,7 @@ All text placeholders use this format: `{{placeholder_name}}`
 - {{special_terms}}
 
 ### Job Details (7)
+
 - {{job_title}}
 - {{department}}
 - {{work_location}}
@@ -153,6 +165,7 @@ All text placeholders use this format: `{{placeholder_name}}`
 - {{working_hours_numeric}}
 
 ### Compensation (5)
+
 - {{basic_salary}}
 - {{currency}}
 - {{housing_allowance}}
@@ -160,10 +173,12 @@ All text placeholders use this format: `{{placeholder_name}}`
 - {{hourly_rate}}
 
 ### Time Periods (2)
+
 - {{probation_period_numeric}}
 - {{notice_period_numeric}}
 
 ### First Party (5)
+
 - {{first_party_name_en}}
 - {{first_party_name_ar}}
 - {{first_party_crn}}
@@ -171,6 +186,7 @@ All text placeholders use this format: `{{placeholder_name}}`
 - {{first_party_email}}
 
 ### Second Party (5)
+
 - {{second_party_name_en}}
 - {{second_party_name_ar}}
 - {{second_party_crn}}
@@ -178,6 +194,7 @@ All text placeholders use this format: `{{placeholder_name}}`
 - {{second_party_email}}
 
 ### Promoter (8)
+
 - {{promoter_name_en}}
 - {{promoter_name_ar}}
 - {{promoter_id_card_number}}
@@ -217,4 +234,3 @@ Before using the template in Make.com:
 - ☐ Template is saved
 - ☐ Template sharing set to "Anyone with the link can view"
 - ☐ Template ID copied: 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
-

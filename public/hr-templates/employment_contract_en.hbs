@@ -1,137 +1,166 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Employment Contract</title>
     <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            line-height: 1.6;
-            margin: 40px;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .contract-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 30px 0 20px 0;
-        }
-        .section {
-            margin-bottom: 25px;
-        }
-        .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-decoration: underline;
-        }
-        .employee-info {
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-left: 4px solid #007bff;
-            margin: 20px 0;
-        }
-        .signature-section {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .signature-box {
-            width: 45%;
-            text-align: center;
-        }
-        .signature-line {
-            border-bottom: 1px solid #333;
-            margin: 40px 0 10px 0;
-        }
-        .date {
-            text-align: right;
-            margin-bottom: 30px;
-        }
+      body {
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+        margin: 40px;
+        color: #333;
+      }
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+      }
+      .company-name {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .contract-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 30px 0 20px 0;
+      }
+      .section {
+        margin-bottom: 25px;
+      }
+      .section-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-decoration: underline;
+      }
+      .employee-info {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+        margin: 20px 0;
+      }
+      .signature-section {
+        margin-top: 50px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .signature-box {
+        width: 45%;
+        text-align: center;
+      }
+      .signature-line {
+        border-bottom: 1px solid #333;
+        margin: 40px 0 10px 0;
+      }
+      .date {
+        text-align: right;
+        margin-bottom: 30px;
+      }
     </style>
-</head>
-<body>
-    <div class="header">
-        <div class="company-name">{{company.name}}</div>
-        <div>{{company.address}}</div>
-        <div>Phone: {{company.phone}} | Email: {{company.email}}</div>
+  </head>
+  <body>
+    <div class='header'>
+      <div class='company-name'>{{company.name}}</div>
+      <div>{{company.address}}</div>
+      <div>Phone: {{company.phone}} | Email: {{company.email}}</div>
     </div>
 
-    <div class="date">
-        <strong>Date:</strong> {{employee.current_date}}
+    <div class='date'>
+      <strong>Date:</strong>
+      {{employee.current_date}}
     </div>
 
-    <div class="contract-title">EMPLOYMENT CONTRACT</div>
+    <div class='contract-title'>EMPLOYMENT CONTRACT</div>
 
-    <div class="employee-info">
-        <strong>Employee Details:</strong><br>
-        Name: {{employee.full_name}}<br>
-        Employee Code: {{employee.employee_code}}<br>
-        Position: {{employee.job_title}}<br>
-        Department: {{employee.department_name}}<br>
-        Email: {{employee.email}}<br>
-        Phone: {{employee.phone}}
+    <div class='employee-info'>
+      <strong>Employee Details:</strong><br />
+      Name:
+      {{employee.full_name}}<br />
+      Employee Code:
+      {{employee.employee_code}}<br />
+      Position:
+      {{employee.job_title}}<br />
+      Department:
+      {{employee.department_name}}<br />
+      Email:
+      {{employee.email}}<br />
+      Phone:
+      {{employee.phone}}
     </div>
 
-    <div class="section">
-        <div class="section-title">1. POSITION AND DUTIES</div>
-        <p>The Employee agrees to serve as {{employee.job_title}} in the {{employee.department_name}} department. The Employee shall perform all duties and responsibilities as assigned by the Company and shall devote their full time, attention, and efforts to the business of the Company.</p>
+    <div class='section'>
+      <div class='section-title'>1. POSITION AND DUTIES</div>
+      <p>The Employee agrees to serve as
+        {{employee.job_title}}
+        in the
+        {{employee.department_name}}
+        department. The Employee shall perform all duties and responsibilities
+        as assigned by the Company and shall devote their full time, attention,
+        and efforts to the business of the Company.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">2. COMPENSATION</div>
-        <p>The Employee shall receive a salary of {{employee.formatted_salary}} per month, payable in accordance with the Company's standard payroll practices. The salary may be reviewed annually at the Company's discretion.</p>
+    <div class='section'>
+      <div class='section-title'>2. COMPENSATION</div>
+      <p>The Employee shall receive a salary of
+        {{employee.formatted_salary}}
+        per month, payable in accordance with the Company's standard payroll
+        practices. The salary may be reviewed annually at the Company's
+        discretion.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">3. WORKING HOURS</div>
-        <p>The Employee's normal working hours shall be from 9:00 AM to 5:00 PM, Monday through Friday, with a one-hour lunch break. The Employee may be required to work additional hours as necessary to fulfill their job responsibilities.</p>
+    <div class='section'>
+      <div class='section-title'>3. WORKING HOURS</div>
+      <p>The Employee's normal working hours shall be from 9:00 AM to 5:00 PM,
+        Monday through Friday, with a one-hour lunch break. The Employee may be
+        required to work additional hours as necessary to fulfill their job
+        responsibilities.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">4. START DATE</div>
-        <p>This employment shall commence on {{employee.formatted_hire_date}} and shall continue until terminated by either party in accordance with the terms of this contract.</p>
+    <div class='section'>
+      <div class='section-title'>4. START DATE</div>
+      <p>This employment shall commence on
+        {{employee.formatted_hire_date}}
+        and shall continue until terminated by either party in accordance with
+        the terms of this contract.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">5. TERMINATION</div>
-        <p>Either party may terminate this employment relationship at any time with or without cause, with written notice as required by applicable law. Upon termination, the Employee shall return all Company property and confidential information.</p>
+    <div class='section'>
+      <div class='section-title'>5. TERMINATION</div>
+      <p>Either party may terminate this employment relationship at any time
+        with or without cause, with written notice as required by applicable
+        law. Upon termination, the Employee shall return all Company property
+        and confidential information.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">6. CONFIDENTIALITY</div>
-        <p>The Employee agrees to maintain the confidentiality of all Company information, including but not limited to trade secrets, customer lists, financial information, and proprietary processes. This obligation shall survive the termination of employment.</p>
+    <div class='section'>
+      <div class='section-title'>6. CONFIDENTIALITY</div>
+      <p>The Employee agrees to maintain the confidentiality of all Company
+        information, including but not limited to trade secrets, customer lists,
+        financial information, and proprietary processes. This obligation shall
+        survive the termination of employment.</p>
     </div>
 
-    <div class="section">
-        <div class="section-title">7. GOVERNING LAW</div>
-        <p>This contract shall be governed by and construed in accordance with the laws of the jurisdiction in which the Company operates.</p>
+    <div class='section'>
+      <div class='section-title'>7. GOVERNING LAW</div>
+      <p>This contract shall be governed by and construed in accordance with the
+        laws of the jurisdiction in which the Company operates.</p>
     </div>
 
-    <div class="signature-section">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div><strong>Employee Signature</strong></div>
-            <div>{{employee.full_name}}</div>
-            <div>Date: _______________</div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div><strong>Company Representative</strong></div>
-            <div>HR Manager</div>
-            <div>Date: _______________</div>
-        </div>
+    <div class='signature-section'>
+      <div class='signature-box'>
+        <div class='signature-line'></div>
+        <div><strong>Employee Signature</strong></div>
+        <div>{{employee.full_name}}</div>
+        <div>Date: _______________</div>
+      </div>
+      <div class='signature-box'>
+        <div class='signature-line'></div>
+        <div><strong>Company Representative</strong></div>
+        <div>HR Manager</div>
+        <div>Date: _______________</div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

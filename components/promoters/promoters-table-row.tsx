@@ -6,10 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
+import { TableCell, TableRow } from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,11 +51,11 @@ import {
   HelpCircle,
 } from 'lucide-react';
 
-import type { 
-  DocumentStatus, 
-  OverallStatus, 
-  DocumentHealth, 
-  DashboardPromoter 
+import type {
+  DocumentStatus,
+  OverallStatus,
+  DocumentHealth,
+  DashboardPromoter,
 } from './types';
 
 interface PromotersTableRowProps {
@@ -145,16 +142,20 @@ interface EnhancedActionsMenuProps {
   onEdit: () => void;
 }
 
-function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuProps) {
+function EnhancedActionsMenu({
+  promoter,
+  onView,
+  onEdit,
+}: EnhancedActionsMenuProps) {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // Determine context-aware actions based on promoter status
-  const isAtRisk = 
-    promoter.idDocument.status !== 'valid' || 
+  const isAtRisk =
+    promoter.idDocument.status !== 'valid' ||
     promoter.passportDocument.status !== 'valid';
-  
+
   const isCritical = promoter.overallStatus === 'critical';
   const isUnassigned = promoter.assignmentStatus === 'unassigned';
 
@@ -204,18 +205,19 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           type,
           promoterName: promoter.displayName,
           email: promoter.contactEmail,
         }),
       }).catch(() => ({ ok: true }));
 
-      const notificationText = type === 'urgent' 
-        ? 'Urgent notification sent' 
-        : type === 'reminder'
-        ? 'Renewal reminder sent'
-        : 'Notification sent';
+      const notificationText =
+        type === 'urgent'
+          ? 'Urgent notification sent'
+          : type === 'reminder'
+            ? 'Renewal reminder sent'
+            : 'Notification sent';
 
       toast({
         title: '✓ ' + notificationText,
@@ -272,10 +274,12 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             disabled={isLoading}
             title='More options'
           >
-            <MoreHorizontal className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            <MoreHorizontal
+              className={cn('h-4 w-4', isLoading && 'animate-spin')}
+            />
           </Button>
         </DropdownMenuTrigger>
-        
+
         <DropdownMenuContent align='end' className='w-56'>
           {/* Primary Actions Section */}
           <div className='px-2 py-1.5 pointer-events-none'>
@@ -283,8 +287,8 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
               View & Edit
             </p>
           </div>
-          
-          <DropdownMenuItem 
+
+          <DropdownMenuItem
             onClick={onClickView}
             disabled={isLoading}
             className='cursor-pointer'
@@ -299,7 +303,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             </kbd>
           </DropdownMenuItem>
 
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={onClickEdit}
             disabled={isLoading}
             className='cursor-pointer'
@@ -307,7 +311,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             <Edit className='h-4 w-4 text-amber-500 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Edit details</div>
-              <div className='text-xs text-muted-foreground'>Update information</div>
+              <div className='text-xs text-muted-foreground'>
+                Update information
+              </div>
             </div>
             <kbd className='pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex ml-auto'>
               <span className='text-xs'>⌘</span>E
@@ -324,7 +330,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   ⚠️ At Risk
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onClickNotify('reminder')}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -332,7 +338,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <AlertTriangle className='h-4 w-4 text-amber-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Remind to renew docs</div>
-                  <div className='text-xs text-muted-foreground'>Send alert</div>
+                  <div className='text-xs text-muted-foreground'>
+                    Send alert
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -346,7 +354,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   🚨 Critical
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onClickNotify('urgent')}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -354,7 +362,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <Send className='h-4 w-4 text-red-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Urgent notification</div>
-                  <div className='text-xs text-muted-foreground'>High priority alert</div>
+                  <div className='text-xs text-muted-foreground'>
+                    High priority alert
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -368,7 +378,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   Unassigned
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={onClickEdit}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -376,7 +386,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <Building2 className='h-4 w-4 text-slate-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Assign to company</div>
-                  <div className='text-xs text-muted-foreground'>Set employer</div>
+                  <div className='text-xs text-muted-foreground'>
+                    Set employer
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -389,8 +401,8 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
               Actions
             </p>
           </div>
-          
-          <DropdownMenuItem 
+
+          <DropdownMenuItem
             onClick={() => onClickNotify('standard')}
             disabled={isLoading}
             className='cursor-pointer'
@@ -404,7 +416,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
           {/* Destructive Actions */}
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setShowArchiveDialog(true)}
             disabled={isLoading}
             className='cursor-pointer text-destructive hover:bg-destructive/10'
@@ -412,7 +424,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             <Archive className='h-4 w-4 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Archive record</div>
-              <div className='text-xs text-muted-foreground'>Hide from active list</div>
+              <div className='text-xs text-muted-foreground'>
+                Hide from active list
+              </div>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -424,12 +438,13 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Record?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This can be undone.
+              Are you sure you want to archive{' '}
+              <strong>{promoter.displayName}</strong>? This can be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={onClickArchive}
               disabled={isLoading}
               className='bg-destructive hover:bg-destructive/90'
@@ -454,8 +469,10 @@ export function PromotersTableRow({
     <TableRow
       className={cn(
         'group transition-all duration-200 hover:bg-muted/50',
-        promoter.overallStatus === 'critical' && 'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
-        promoter.overallStatus === 'warning' && 'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
+        promoter.overallStatus === 'critical' &&
+          'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
+        promoter.overallStatus === 'warning' &&
+          'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
         isSelected && 'bg-primary/10 border-l-4 border-l-primary'
       )}
     >
@@ -502,7 +519,10 @@ export function PromotersTableRow({
       <TableCell>
         <div className='space-y-1'>
           <DocumentStatusPill label='ID' health={promoter.idDocument} />
-          <DocumentStatusPill label='Passport' health={promoter.passportDocument} />
+          <DocumentStatusPill
+            label='Passport'
+            health={promoter.passportDocument}
+          />
         </div>
       </TableCell>
       <TableCell>
@@ -519,7 +539,9 @@ export function PromotersTableRow({
                 : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             )}
           >
-            {promoter.assignmentStatus === 'assigned' ? '✓ Assigned' : '○ Unassigned'}
+            {promoter.assignmentStatus === 'assigned'
+              ? '✓ Assigned'
+              : '○ Unassigned'}
           </Badge>
         </div>
       </TableCell>
@@ -546,8 +568,7 @@ export function PromotersTableRow({
           {promoter.overallStatus === 'critical' && '🔴'}
           {promoter.overallStatus === 'warning' && '🟡'}
           {promoter.overallStatus === 'active' && '🟢'}
-          {promoter.overallStatus === 'inactive' && '⚪'}
-          {' '}
+          {promoter.overallStatus === 'inactive' && '⚪'}{' '}
           {OVERALL_STATUS_LABELS[promoter.overallStatus]}
         </Badge>
       </TableCell>

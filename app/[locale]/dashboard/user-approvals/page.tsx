@@ -41,7 +41,7 @@ export default function UserApprovalsPage({
   const [stats, setStats] = useState({
     pending: 0,
     approvedToday: 0,
-    rejectedToday: 0
+    rejectedToday: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -50,9 +50,9 @@ export default function UserApprovalsPage({
     try {
       const response = await fetch('/api/users/approval', {
         credentials: 'include',
-        cache: 'no-store'
+        cache: 'no-store',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
@@ -62,7 +62,7 @@ export default function UserApprovalsPage({
           setStats({
             pending: pendingCount,
             approvedToday: 0,
-            rejectedToday: 0
+            rejectedToday: 0,
           });
         }
       }

@@ -18,13 +18,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Search,
-  Download,
-  RefreshCw,
-} from 'lucide-react';
+import { Search, Download, RefreshCw } from 'lucide-react';
 import type { OverallStatus } from './types';
-
 
 interface PromotersFiltersProps {
   searchTerm: string;
@@ -32,7 +27,9 @@ interface PromotersFiltersProps {
   statusFilter: OverallStatus | 'all';
   onStatusFilterChange: (value: OverallStatus | 'all') => void;
   documentFilter: 'all' | 'expired' | 'expiring' | 'missing';
-  onDocumentFilterChange: (value: 'all' | 'expired' | 'expiring' | 'missing') => void;
+  onDocumentFilterChange: (
+    value: 'all' | 'expired' | 'expiring' | 'missing'
+  ) => void;
   assignmentFilter: 'all' | 'assigned' | 'unassigned';
   onAssignmentFilterChange: (value: 'all' | 'assigned' | 'unassigned') => void;
   hasFiltersApplied: boolean;
@@ -62,7 +59,8 @@ export function PromotersFilters({
       <CardHeader className='pb-5'>
         <CardTitle className='text-lg'>Smart filters</CardTitle>
         <CardDescription>
-          Refine the promoter roster by lifecycle stage, document health, or assignment.
+          Refine the promoter roster by lifecycle stage, document health, or
+          assignment.
         </CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
@@ -87,7 +85,9 @@ export function PromotersFilters({
               <Label>Lifecycle</Label>
               <Select
                 value={statusFilter}
-                onValueChange={value => onStatusFilterChange(value as OverallStatus | 'all')}
+                onValueChange={value =>
+                  onStatusFilterChange(value as OverallStatus | 'all')
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder='All statuses' />
@@ -106,7 +106,9 @@ export function PromotersFilters({
               <Select
                 value={documentFilter}
                 onValueChange={value =>
-                  onDocumentFilterChange(value as 'all' | 'expired' | 'expiring' | 'missing')
+                  onDocumentFilterChange(
+                    value as 'all' | 'expired' | 'expiring' | 'missing'
+                  )
                 }
               >
                 <SelectTrigger>
@@ -125,7 +127,9 @@ export function PromotersFilters({
               <Select
                 value={assignmentFilter}
                 onValueChange={value =>
-                  onAssignmentFilterChange(value as 'all' | 'assigned' | 'unassigned')
+                  onAssignmentFilterChange(
+                    value as 'all' | 'assigned' | 'unassigned'
+                  )
                 }
               >
                 <SelectTrigger>
@@ -140,30 +144,36 @@ export function PromotersFilters({
             </div>
           </div>
           <div className='flex flex-wrap items-center gap-3'>
-            <Button 
-              variant='outline' 
-              onClick={onResetFilters} 
+            <Button
+              variant='outline'
+              onClick={onResetFilters}
               disabled={!hasFiltersApplied}
               aria-label='Reset all filters to default values'
             >
               Reset filters
             </Button>
-            <Button 
-              variant='outline' 
-              className='flex items-center' 
+            <Button
+              variant='outline'
+              className='flex items-center'
               onClick={onExport}
               aria-label='Export current view to CSV file'
             >
               <Download className='mr-2 h-4 w-4' aria-hidden='true' />
               Export view
             </Button>
-            <Button 
-              onClick={onRefresh} 
-              variant='outline' 
+            <Button
+              onClick={onRefresh}
+              variant='outline'
               disabled={isFetching}
               aria-label={isFetching ? 'Syncing data' : 'Sync data with server'}
             >
-              <RefreshCw className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin text-muted-foreground')} aria-hidden='true' />
+              <RefreshCw
+                className={cn(
+                  'mr-2 h-4 w-4',
+                  isFetching && 'animate-spin text-muted-foreground'
+                )}
+                aria-hidden='true'
+              />
               Sync
             </Button>
           </div>

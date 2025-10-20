@@ -12,11 +12,13 @@
 ### **Step 1: Create Make.com Scenario**
 
 #### **1.1 Go to Make.com**
+
 1. Visit [https://www.make.com/](https://www.make.com/)
 2. Sign in to your account
 3. Click **"Create a new scenario"**
 
 #### **1.2 Add Webhook Trigger**
+
 1. **Search for**: "Webhooks"
 2. **Select**: "Custom webhook"
 3. **Configure**:
@@ -26,18 +28,19 @@
 4. **Save** and copy the webhook URL
 
 #### **1.3 Add HTTP Request (Get Contract Data)**
+
 1. **Add module**: "HTTP" → "Make an HTTP request"
 2. **Configure**:
    - **URL**: `https://portal.thesmartpro.io/api/contracts/makecom/generate`
    - **Method**: POST
-   - **Headers**: 
+   - **Headers**:
      ```json
      {
        "Content-Type": "application/json",
        "Authorization": "Bearer YOUR_API_KEY"
      }
      ```
-   - **Body**: 
+   - **Body**:
      ```json
      {
        "contractType": "{{1.contract_type}}",
@@ -58,6 +61,7 @@
      ```
 
 #### **1.4 Add Google Docs (Create Document)**
+
 1. **Add module**: "Google Docs" → "Create a document from template"
 2. **Configure**:
    - **Template ID**: `{{2.data.template_config.googleDocsTemplateId}}`
@@ -65,12 +69,14 @@
    - **Variables**: Map all template placeholders
 
 #### **1.5 Add Google Docs (Export as PDF)**
+
 1. **Add module**: "Google Docs" → "Export a document"
 2. **Configure**:
    - **Document ID**: `{{3.document_id}}`
    - **Format**: PDF
 
 #### **1.6 Add Supabase (Upload PDF)**
+
 1. **Add module**: "Supabase" → "Upload a file"
 2. **Configure**:
    - **Connection**: Your Supabase connection
@@ -79,6 +85,7 @@
    - **File name**: `{{2.data.data.contract_number}}.pdf`
 
 #### **1.7 Add HTTP Request (Update Contract)**
+
 1. **Add module**: "HTTP" → "Make an HTTP request"
 2. **Configure**:
    - **URL**: `https://portal.thesmartpro.io/api/contracts/{{2.data.data.contract_id}}`
@@ -95,6 +102,7 @@
      ```
 
 #### **1.8 Save and Activate**
+
 1. **Save** the scenario
 2. **Activate** it
 3. **Copy** the webhook URL
@@ -108,6 +116,7 @@ MAKECOM_WEBHOOK_URL=https://hook.make.com/YOUR_WEBHOOK_ID
 ```
 
 **For Vercel:**
+
 1. Go to Vercel Dashboard
 2. Select your project
 3. Go to Settings → Environment Variables
@@ -118,6 +127,7 @@ MAKECOM_WEBHOOK_URL=https://hook.make.com/YOUR_WEBHOOK_ID
 5. Redeploy
 
 **For Netlify:**
+
 1. Go to Netlify Dashboard
 2. Select your site
 3. Go to Site settings → Environment variables
@@ -129,6 +139,7 @@ MAKECOM_WEBHOOK_URL=https://hook.make.com/YOUR_WEBHOOK_ID
 ### **Step 3: Test the Integration**
 
 #### **3.1 Test Webhook Directly**
+
 ```bash
 curl -X POST https://hook.make.com/YOUR_WEBHOOK_ID \
   -H "Content-Type: application/json" \
@@ -148,6 +159,7 @@ curl -X POST https://hook.make.com/YOUR_WEBHOOK_ID \
 ```
 
 #### **3.2 Test Through Your Application**
+
 1. Go to your contract generation form
 2. Fill in the contract details
 3. Submit the form
@@ -157,11 +169,13 @@ curl -X POST https://hook.make.com/YOUR_WEBHOOK_ID \
 ### **Step 4: Verify Integration**
 
 #### **4.1 Check Environment Variable**
+
 ```bash
 curl -X GET https://portal.thesmartpro.io/api/debug/contract-generation
 ```
 
 Should show:
+
 ```json
 {
   "environment": {
@@ -171,6 +185,7 @@ Should show:
 ```
 
 #### **4.2 Test Make.com Endpoint**
+
 ```bash
 curl -X GET https://portal.thesmartpro.io/api/contracts/makecom/generate?action=types
 ```
@@ -182,11 +197,13 @@ Should return available contract types.
 After completing the setup:
 
 ### **✅ Working Flow:**
+
 ```
 Frontend → API → Make.com → Google Docs → PDF → Supabase → Status Update
 ```
 
 ### **✅ Response Format:**
+
 ```json
 {
   "success": true,

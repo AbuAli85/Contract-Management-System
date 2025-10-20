@@ -12,4 +12,3 @@ export const defaultLocale = 'en' as const;
 // Create navigation utilities with shared pathnames across locales
 export const { Link, redirect, usePathname, useRouter } =
   createSharedPathnamesNavigation({ locales });
-

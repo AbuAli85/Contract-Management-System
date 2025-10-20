@@ -5,6 +5,7 @@
 You now have **two contract generation systems** with **two separate Make.com scenarios**:
 
 ### 1. **Simple Contracts (Employment)**
+
 - **Component**: `SimpleContractGenerator.tsx`
 - **API**: `/api/webhook/makecom-simple`
 - **Make.com Webhook**: Your existing webhook URL
@@ -12,6 +13,7 @@ You now have **two contract generation systems** with **two separate Make.com sc
 - **Template**: Promoter Contract template
 
 ### 2. **General Contracts (Business)**
+
 - **Component**: `GeneralContractGenerator.tsx`
 - **API**: `/api/contracts/general/generate`
 - **Make.com Webhook**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
@@ -40,12 +42,14 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ## 🎯 **Make.com Scenario Setup**
 
 ### **Scenario 1: Simple Contracts (Employment)**
+
 - **Webhook URL**: Your existing webhook
 - **Template ID**: `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0`
 - **Use Case**: Employment agreements, job contracts
 - **Fields**: Job title, department, salary, probation period, etc.
 
 ### **Scenario 2: General Contracts (Business)**
+
 - **Webhook URL**: `https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz`
 - **Template ID**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
 - **Use Case**: Service agreements, consulting, partnerships
@@ -67,6 +71,7 @@ Both scenarios follow the same structure based on your provided flow:
 ## 📊 **Contract Types Supported**
 
 ### **Simple Contracts (Employment)**
+
 - Full-Time Permanent Employment
 - Part-Time Contract
 - Fixed-Term Contract
@@ -74,6 +79,7 @@ Both scenarios follow the same structure based on your provided flow:
 - Service Contract
 
 ### **General Contracts (Business)**
+
 - General Service Contract
 - Consulting Agreement
 - Service Contract
@@ -88,20 +94,24 @@ Both scenarios follow the same structure based on your provided flow:
 ## 🚀 **Usage**
 
 ### **Access Simple Contracts**
+
 Navigate to your existing simple contract generator page.
 
 ### **Access General Contracts**
+
 Navigate to `/contracts/general` to use the new general contract generator.
 
 ## 🔧 **Testing**
 
 ### **Test Simple Contracts**
+
 1. Use your existing simple contract generator
 2. Fill in employment contract details
 3. Generate contract
 4. Check Make.com scenario execution
 
 ### **Test General Contracts**
+
 1. Navigate to `/contracts/general`
 2. Fill in general contract details
 3. Generate contract

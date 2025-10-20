@@ -9,4 +9,3 @@ export default function ContractsNewPage({
   // Redirect to the correct generate contract page
   redirect(`/${params.locale}/generate-contract`);
 }
-

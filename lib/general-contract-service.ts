@@ -119,12 +119,16 @@ export class GeneralContractService {
       // Use service role key for database operations to bypass RLS
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      
+
       if (!supabaseUrl || !supabaseServiceKey) {
-        throw new Error('Missing Supabase environment variables for service role');
+        throw new Error(
+          'Missing Supabase environment variables for service role'
+        );
       }
-      
-      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+
+      const { createClient: createSupabaseClient } = await import(
+        '@supabase/supabase-js'
+      );
       this.supabase = createSupabaseClient(supabaseUrl, supabaseServiceKey);
     }
     return this.supabase;
@@ -192,10 +196,10 @@ export class GeneralContractService {
    */
   async createContract(data: GeneralContractData): Promise<any> {
     const supabase = await this.getSupabaseClient();
-    
+
     // Generate contract number
     const contractNumber = this.generateContractNumber();
-    
+
     // Map contract type to valid database values
     const mapContractType = (type: string): string => {
       const typeMap: Record<string, string> = {
@@ -203,14 +207,14 @@ export class GeneralContractService {
         'consulting-agreement': 'consultancy',
         'service-contract': 'service',
         'partnership-agreement': 'partnership',
-        'employment': 'employment',
-        'service': 'service',
-        'consultancy': 'consultancy',
-        'partnership': 'partnership',
+        employment: 'employment',
+        service: 'service',
+        consultancy: 'consultancy',
+        partnership: 'partnership',
       };
       return typeMap[type] || 'service'; // Default to 'service' for unknown types
     };
-    
+
     const mappedContractType = mapContractType(data.contract_type);
     const contractData = {
       contract_type: mappedContractType,
@@ -268,9 +272,27 @@ export class GeneralContractService {
 
     // Fetch related data separately to avoid foreign key relationship issues
     const [promoterResult, clientResult, employerResult] = await Promise.all([
-      contract.promoter_id ? supabase.from('promoters').select('*').eq('id', contract.promoter_id).single() : Promise.resolve({ data: null, error: null }),
-      contract.client_id ? supabase.from('parties').select('*').eq('id', contract.client_id).single() : Promise.resolve({ data: null, error: null }),
-      contract.employer_id ? supabase.from('parties').select('*').eq('id', contract.employer_id).single() : Promise.resolve({ data: null, error: null })
+      contract.promoter_id
+        ? supabase
+            .from('promoters')
+            .select('*')
+            .eq('id', contract.promoter_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      contract.client_id
+        ? supabase
+            .from('parties')
+            .select('*')
+            .eq('id', contract.client_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
+      contract.employer_id
+        ? supabase
+            .from('parties')
+            .select('*')
+            .eq('id', contract.employer_id)
+            .single()
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
     // Combine the data
@@ -278,7 +300,7 @@ export class GeneralContractService {
       ...contract,
       promoter: promoterResult.data,
       client: clientResult.data,
-      employer: employerResult.data
+      employer: employerResult.data,
     };
   }
 
@@ -287,7 +309,7 @@ export class GeneralContractService {
    */
   async prepareMakeComPayload(contractId: string): Promise<MakeComPayload> {
     const contract = await this.getContractWithRelatedData(contractId);
-    
+
     // Helper function to ensure valid image URLs
     const ensureValidImageUrl = (url: string | null | undefined): string => {
       if (!url || url.trim() === '') {
@@ -301,7 +323,7 @@ export class GeneralContractService {
         return 'https://via.placeholder.com/200x200/cccccc/666666.png?text=Invalid+URL';
       }
     };
-    
+
     const payload: MakeComPayload = {
       contract_id: contract.id,
       contract_number: contract.contract_number,
@@ -330,7 +352,9 @@ export class GeneralContractService {
       promoter_email: contract.promoter?.email || '',
       promoter_id_card_number: contract.promoter?.id_card_number || '',
       promoter_id_card_url: ensureValidImageUrl(contract.promoter?.id_card_url),
-      promoter_passport_url: ensureValidImageUrl(contract.promoter?.passport_url),
+      promoter_passport_url: ensureValidImageUrl(
+        contract.promoter?.passport_url
+      ),
       // First party (client) data with validated image URLs
       first_party_name_en: contract.client?.name_en || '',
       first_party_name_ar: contract.client?.name_ar || '',
@@ -347,10 +371,14 @@ export class GeneralContractService {
       company_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as company logo
       party_1_logo: ensureValidImageUrl(contract.client?.logo_url), // Client logo
       party_2_logo: ensureValidImageUrl(contract.employer?.logo_url), // Employer logo
-      signature_1: 'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+1', // Placeholder signature
-      signature_2: 'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+2', // Placeholder signature
-      stamp_image: 'https://via.placeholder.com/150x150/cccccc/666666.png?text=Stamp', // Placeholder stamp
-      qr_code: 'https://via.placeholder.com/100x100/cccccc/666666.png?text=QR+Code', // Placeholder QR code
+      signature_1:
+        'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+1', // Placeholder signature
+      signature_2:
+        'https://via.placeholder.com/200x100/cccccc/666666.png?text=Signature+2', // Placeholder signature
+      stamp_image:
+        'https://via.placeholder.com/150x150/cccccc/666666.png?text=Stamp', // Placeholder stamp
+      qr_code:
+        'https://via.placeholder.com/100x100/cccccc/666666.png?text=QR+Code', // Placeholder QR code
     };
 
     return payload;
@@ -361,33 +389,41 @@ export class GeneralContractService {
    */
   async triggerMakeComWebhook(contractId: string): Promise<boolean> {
     try {
-      console.log('🔄 Starting Make.com webhook trigger for contract:', contractId);
-      
+      console.log(
+        '🔄 Starting Make.com webhook trigger for contract:',
+        contractId
+      );
+
       const payload = await this.prepareMakeComPayload(contractId);
       console.log('✅ Payload prepared successfully');
-      
+
       // Use the specific general contract webhook URL
-      const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL_GENERAL || 'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
+      const makecomWebhookUrl =
+        process.env.MAKECOM_WEBHOOK_URL_GENERAL ||
+        'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
       console.log('🔗 Webhook URL:', makecomWebhookUrl);
-      
+
       if (!makecomWebhookUrl) {
         console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
         return false;
       }
 
       const webhookSecret = process.env.MAKE_WEBHOOK_SECRET || '';
-      console.log('🔐 Webhook secret configured:', webhookSecret ? 'Yes' : 'No');
+      console.log(
+        '🔐 Webhook secret configured:',
+        webhookSecret ? 'Yes' : 'No'
+      );
 
       console.log('📤 Sending webhook request...');
-      
+
       // Use Node.js built-in modules for HTTP request
       const https = require('https');
       const http = require('http');
       const { URL } = require('url');
-      
+
       const postData = JSON.stringify(payload);
       const url = new URL(makecomWebhookUrl);
-      
+
       const options = {
         hostname: url.hostname,
         port: url.port || (url.protocol === 'https:' ? 443 : 80),
@@ -397,7 +433,7 @@ export class GeneralContractService {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(postData),
           'X-Webhook-Secret': webhookSecret,
-        }
+        },
       };
 
       const response = await new Promise<{
@@ -417,7 +453,7 @@ export class GeneralContractService {
               status: res.statusCode,
               statusText: res.statusMessage,
               ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
-              data: data
+              data: data,
             });
           });
         });
@@ -434,41 +470,46 @@ export class GeneralContractService {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
-        data: response.data
+        data: response.data,
       });
 
       if (response.ok) {
-        console.log('✅ Make.com webhook triggered successfully for general contract');
-        
+        console.log(
+          '✅ Make.com webhook triggered successfully for general contract'
+        );
+
         // Update contract status
         console.log('🔄 Updating contract status to pending...');
         const supabase = await this.getSupabaseClient();
         const { error: updateError } = await supabase
           .from('contracts')
-          .update({ 
+          .update({
             status: 'pending',
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq('id', contractId);
-        
+
         if (updateError) {
           console.error('❌ Failed to update contract status:', updateError);
         } else {
           console.log('✅ Contract status updated to processing');
         }
-        
+
         return true;
       } else {
         console.error('❌ Make.com webhook failed:', {
           status: response.status,
           statusText: response.statusText,
-          error: response.data
+          error: response.data,
         });
         return false;
       }
     } catch (error) {
       console.error('❌ Make.com webhook error:', error);
-      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      console.error(
+        '❌ Error stack:',
+        error instanceof Error ? error.stack : 'No stack trace'
+      );
       return false;
     }
   }
@@ -477,7 +518,7 @@ export class GeneralContractService {
    * Update contract with Make.com results
    */
   async updateContractWithMakeComResults(
-    contractId: string, 
+    contractId: string,
     results: {
       pdf_url?: string;
       google_drive_url?: string;
@@ -489,13 +530,14 @@ export class GeneralContractService {
     }
   ): Promise<void> {
     const supabase = await this.getSupabaseClient();
-    
+
     const updateData: any = {
       updated_at: new Date().toISOString(),
     };
 
     if (results.pdf_url) updateData.pdf_url = results.pdf_url;
-    if (results.google_drive_url) updateData.google_doc_url = results.google_drive_url;
+    if (results.google_drive_url)
+      updateData.google_doc_url = results.google_drive_url;
     if (results.status) updateData.status = results.status;
 
     const { error } = await supabase
@@ -504,7 +546,10 @@ export class GeneralContractService {
       .eq('id', contractId);
 
     if (error) {
-      console.error('❌ Failed to update contract with Make.com results:', error);
+      console.error(
+        '❌ Failed to update contract with Make.com results:',
+        error
+      );
       throw new Error(`Failed to update contract: ${error.message}`);
     }
   }
@@ -526,14 +571,14 @@ export class GeneralContractService {
    */
   private formatDate(dateString: string | undefined): string {
     const defaultDate = new Date().toISOString().split('T')[0] || '2024-01-01';
-    
+
     if (!this.isNonEmptyString(dateString)) {
       return defaultDate;
     }
-    
+
     // At this point, dateString is guaranteed to be a non-empty string
     const date = dateString as string;
-    
+
     if (date.includes('-')) {
       const parts = date.split('-');
       if (parts[0] && parts[0].length === 4) {
@@ -542,7 +587,7 @@ export class GeneralContractService {
         return parts.reverse().join('-'); // Convert DD-MM-YYYY to YYYY-MM-DD
       }
     }
-    
+
     try {
       const formattedDate = new Date(date).toISOString().split('T')[0];
       return formattedDate || defaultDate;
@@ -556,15 +601,17 @@ export class GeneralContractService {
    */
   private buildDescription(data: GeneralContractData): string {
     const parts: string[] = [];
-    
+
     if (data.department) parts.push(`Department: ${data.department}`);
     if (data.work_location) parts.push(`Work Location: ${data.work_location}`);
     if (data.product_name) parts.push(`Product/Service: ${data.product_name}`);
-    if (data.service_description) parts.push(`Service Description: ${data.service_description}`);
-    if (data.project_duration) parts.push(`Project Duration: ${data.project_duration}`);
+    if (data.service_description)
+      parts.push(`Service Description: ${data.service_description}`);
+    if (data.project_duration)
+      parts.push(`Project Duration: ${data.project_duration}`);
     if (data.deliverables) parts.push(`Deliverables: ${data.deliverables}`);
     if (data.payment_terms) parts.push(`Payment Terms: ${data.payment_terms}`);
-    
+
     return parts.join('\n');
   }
 

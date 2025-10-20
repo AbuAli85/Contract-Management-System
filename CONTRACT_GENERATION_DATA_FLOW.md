@@ -15,12 +15,14 @@ The contract generation system uses **BOTH Supabase and Make.com** in a hybrid a
 ## 🗄️ **Data Sources**
 
 ### **1. Supabase Database (Primary Source)**
+
 - **Promoters Table**: `promoters` - Contains promoter information
-- **Parties Table**: `parties` - Contains employer/client information  
+- **Parties Table**: `parties` - Contains employer/client information
 - **Contracts Table**: `contracts` - Stores contract records
 - **Storage**: `contracts` bucket - Stores generated PDFs
 
 ### **2. Make.com (Processing Engine)**
+
 - **Webhook URL**: `MAKE_WEBHOOK_URL` environment variable
 - **Template Processing**: Handles document generation
 - **PDF Creation**: Generates final contract documents
@@ -30,10 +32,11 @@ The contract generation system uses **BOTH Supabase and Make.com** in a hybrid a
 ## 🔍 **Detailed Data Flow**
 
 ### **Step 1: Data Input**
+
 ```json
 {
   "promoter_id": "2df30edb-2bd3-4a31-869f-2394feed0f19",
-  "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce", 
+  "first_party_id": "4cc8417a-3ff2-46a6-b901-1f9c8bd8b6ce",
   "second_party_id": "8776a032-5dad-4cd0-b0f8-c3cdd64e2831",
   "contract_type": "full-time-permanent",
   "job_title": "promoter",
@@ -44,17 +47,20 @@ The contract generation system uses **BOTH Supabase and Make.com** in a hybrid a
 ```
 
 ### **Step 2: Supabase Data Enrichment**
+
 The system fetches additional data from Supabase:
 
 ```typescript
 // From promoters table
 const promoter = await supabase
   .from('promoters')
-  .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number')
+  .select(
+    'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number'
+  )
   .eq('id', contractData.promoter_id)
   .single();
 
-// From parties table  
+// From parties table
 const firstParty = await supabase
   .from('parties')
   .select('id, name_en, name_ar, email, phone, address')
@@ -69,24 +75,26 @@ const secondParty = await supabase
 ```
 
 ### **Step 3: Contract Record Creation**
+
 ```typescript
 const contractData = {
-  contract_number: "PAC-18102025-8SAY",
+  contract_number: 'PAC-18102025-8SAY',
   promoter_id: body.promoter_id,
-  employer_id: body.second_party_id,  // second_party = employer
-  client_id: body.first_party_id,     // first_party = client
+  employer_id: body.second_party_id, // second_party = employer
+  client_id: body.first_party_id, // first_party = client
   title: body.job_title,
-  contract_type: "employment",
-  start_date: "2025-10-18",
-  end_date: "2026-10-17",
+  contract_type: 'employment',
+  start_date: '2025-10-18',
+  end_date: '2026-10-17',
   value: 250,
-  status: "draft"
+  status: 'draft',
 };
 
 await supabase.from('contracts').insert(contractData);
 ```
 
 ### **Step 4: Make.com Webhook Trigger**
+
 ```typescript
 await fetch(process.env.MAKE_WEBHOOK_URL, {
   method: 'POST',
@@ -96,13 +104,15 @@ await fetch(process.env.MAKE_WEBHOOK_URL, {
     contractNumber,
     update_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/generate-contract`,
     // All enriched data from Supabase
-    ...enrichedContractData
-  })
+    ...enrichedContractData,
+  }),
 });
 ```
 
 ### **Step 5: Make.com Processing**
+
 Make.com receives the webhook and:
+
 1. **Template Selection**: Chooses appropriate contract template
 2. **Data Mapping**: Maps Supabase data to template placeholders
 3. **Document Generation**: Creates PDF using Google Docs API
@@ -114,18 +124,21 @@ Make.com receives the webhook and:
 ## 🎯 **Key Data Sources by Component**
 
 ### **Supabase Tables Used:**
+
 - `promoters` - Promoter personal information, documents, contact details
 - `parties` - Employer and client company information
 - `contracts` - Contract records, status, metadata
 - `contracts` storage bucket - Generated PDF files
 
 ### **Make.com Integration:**
+
 - **Webhook Endpoint**: Receives contract data
 - **Google Docs API**: Template processing and PDF generation
 - **Google Drive**: Document storage and sharing
 - **Email Integration**: Contract delivery
 
 ### **Environment Variables:**
+
 - `MAKE_WEBHOOK_URL` - Make.com webhook endpoint
 - `GOOGLE_SERVICE_ACCOUNT_KEY` - Google API credentials
 - `GOOGLE_DOCS_TEMPLATE_ID` - Template document ID
@@ -136,17 +149,20 @@ Make.com receives the webhook and:
 ## 🔄 **Data Enrichment Process**
 
 ### **Input Data** (from user/form):
+
 - Basic contract details
 - IDs for promoter, first party, second party
 - Contract terms and dates
 
 ### **Enriched Data** (from Supabase):
+
 - Promoter: Full name, ID numbers, document URLs, contact info
 - First Party: Company name, address, contact details
 - Second Party: Company name, address, contact details
 - Contract: Generated number, status, timestamps
 
 ### **Final Data** (sent to Make.com):
+
 - Complete promoter information with document URLs
 - Full party details for both employer and client
 - All contract terms and metadata
@@ -157,11 +173,13 @@ Make.com receives the webhook and:
 ## 📋 **Summary**
 
 **Data Sources:**
+
 - ✅ **Supabase**: Primary database for all business data
 - ✅ **Make.com**: Document processing and generation engine
 - ✅ **Google APIs**: Template processing and file storage
 
 **Data Flow:**
+
 1. User submits contract data
 2. System enriches data from Supabase tables
 3. Contract record created in Supabase

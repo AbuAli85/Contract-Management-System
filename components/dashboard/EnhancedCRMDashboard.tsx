@@ -106,35 +106,35 @@ export default function EnhancedCRMDashboard() {
     setLoading(true);
     try {
       const supabase = createClient();
-      
+
       // Load promoters
-      const { data: promotersData } = await supabase
+      const { data: promotersData } = (await supabase
         ?.from('promoters')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10) || { data: null };
+        .limit(10)) || { data: null };
 
       // Load contracts
-      const { data: contractsData } = await supabase
+      const { data: contractsData } = (await supabase
         ?.from('contracts')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(10) || { data: null };
+        .limit(10)) || { data: null };
 
       // Calculate stats
-      const { count: totalPromoters } = await supabase
+      const { count: totalPromoters } = (await supabase
         ?.from('promoters')
-        .select('*', { count: 'exact', head: true }) || { count: 0 };
+        .select('*', { count: 'exact', head: true })) || { count: 0 };
 
-      const { count: activeContracts } = await supabase
+      const { count: activeContracts } = (await supabase
         ?.from('contracts')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'active') || { count: 0 };
+        .eq('status', 'active')) || { count: 0 };
 
-      const { count: pendingDocuments } = await supabase
+      const { count: pendingDocuments } = (await supabase
         ?.from('contracts')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending') || { count: 0 };
+        .eq('status', 'pending')) || { count: 0 };
 
       // Mock recent activity (you can replace with real data)
       const mockActivity: RecentActivity[] = [
@@ -192,7 +192,7 @@ export default function EnhancedCRMDashboard() {
       id: 'generate-contract',
       title: 'Generate Contract',
       description: 'Create new employment or service contract',
-      icon: <FileText className="h-6 w-6" />,
+      icon: <FileText className='h-6 w-6' />,
       action: () => setShowWorkflowWizard(true),
       color: 'bg-blue-500',
     },
@@ -200,24 +200,30 @@ export default function EnhancedCRMDashboard() {
       id: 'add-promoter',
       title: 'Add Promoter',
       description: 'Register new promoter in the system',
-      icon: <User className="h-6 w-6" />,
-      action: () => toast({ title: 'Coming Soon', description: 'Promoter registration form' }),
+      icon: <User className='h-6 w-6' />,
+      action: () =>
+        toast({
+          title: 'Coming Soon',
+          description: 'Promoter registration form',
+        }),
       color: 'bg-green-500',
     },
     {
       id: 'bulk-import',
       title: 'Bulk Import',
       description: 'Import multiple promoters from Excel',
-      icon: <Download className="h-6 w-6" />,
-      action: () => toast({ title: 'Coming Soon', description: 'Bulk import feature' }),
+      icon: <Download className='h-6 w-6' />,
+      action: () =>
+        toast({ title: 'Coming Soon', description: 'Bulk import feature' }),
       color: 'bg-purple-500',
     },
     {
       id: 'automation-setup',
       title: 'Setup Automation',
       description: 'Configure Make.com workflows',
-      icon: <Zap className="h-6 w-6" />,
-      action: () => toast({ title: 'Coming Soon', description: 'Automation setup' }),
+      icon: <Zap className='h-6 w-6' />,
+      action: () =>
+        toast({ title: 'Coming Soon', description: 'Automation setup' }),
       color: 'bg-orange-500',
     },
   ];
@@ -238,21 +244,21 @@ export default function EnhancedCRMDashboard() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'contract':
-        return <FileText className="h-4 w-4" />;
+        return <FileText className='h-4 w-4' />;
       case 'promoter':
-        return <User className="h-4 w-4" />;
+        return <User className='h-4 w-4' />;
       case 'document':
-        return <FileImage className="h-4 w-4" />;
+        return <FileImage className='h-4 w-4' />;
       default:
-        return <Clock className="h-4 w-4" />;
+        return <Clock className='h-4 w-4' />;
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+      <div className='flex items-center justify-center py-12'>
+        <div className='text-center'>
+          <RefreshCw className='h-8 w-8 animate-spin mx-auto mb-4' />
           <p>Loading dashboard...</p>
         </div>
       </div>
@@ -260,78 +266,90 @@ export default function EnhancedCRMDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">CRM Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold'>CRM Dashboard</h1>
+          <p className='text-muted-foreground'>
             Manage promoters, contracts, and document generation
           </p>
         </div>
         <Button onClick={() => setShowWorkflowWizard(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className='h-4 w-4 mr-2' />
           Generate Document
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4'>
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Promoters</p>
-                <p className="text-2xl font-bold">{stats.totalPromoters}</p>
+          <CardContent className='pt-6'>
+            <div className='flex items-center'>
+              <Users className='h-8 w-8 text-blue-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-muted-foreground'>
+                  Total Promoters
+                </p>
+                <p className='text-2xl font-bold'>{stats.totalPromoters}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <FileText className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Active Contracts</p>
-                <p className="text-2xl font-bold">{stats.activeContracts}</p>
+          <CardContent className='pt-6'>
+            <div className='flex items-center'>
+              <FileText className='h-8 w-8 text-green-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-muted-foreground'>
+                  Active Contracts
+                </p>
+                <p className='text-2xl font-bold'>{stats.activeContracts}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Pending Documents</p>
-                <p className="text-2xl font-bold">{stats.pendingDocuments}</p>
+          <CardContent className='pt-6'>
+            <div className='flex items-center'>
+              <Clock className='h-8 w-8 text-yellow-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-muted-foreground'>
+                  Pending Documents
+                </p>
+                <p className='text-2xl font-bold'>{stats.pendingDocuments}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Completed This Month</p>
-                <p className="text-2xl font-bold">{stats.completedThisMonth}</p>
+          <CardContent className='pt-6'>
+            <div className='flex items-center'>
+              <CheckCircle className='h-8 w-8 text-purple-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-muted-foreground'>
+                  Completed This Month
+                </p>
+                <p className='text-2xl font-bold'>{stats.completedThisMonth}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-emerald-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold">${stats.totalValue.toLocaleString()}</p>
+          <CardContent className='pt-6'>
+            <div className='flex items-center'>
+              <DollarSign className='h-8 w-8 text-emerald-600' />
+              <div className='ml-4'>
+                <p className='text-sm font-medium text-muted-foreground'>
+                  Total Value
+                </p>
+                <p className='text-2xl font-bold'>
+                  ${stats.totalValue.toLocaleString()}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -347,25 +365,29 @@ export default function EnhancedCRMDashboard() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+            {quickActions.map(action => (
               <motion.div
                 key={action.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <Card
-                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  className='cursor-pointer hover:shadow-md transition-shadow'
                   onClick={action.action}
                 >
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-4">
-                      <div className={`h-12 w-12 rounded-lg ${action.color} flex items-center justify-center text-white`}>
+                  <CardContent className='pt-6'>
+                    <div className='flex items-center space-x-4'>
+                      <div
+                        className={`h-12 w-12 rounded-lg ${action.color} flex items-center justify-center text-white`}
+                      >
                         {action.icon}
                       </div>
                       <div>
-                        <h3 className="font-semibold">{action.title}</h3>
-                        <p className="text-sm text-muted-foreground">{action.description}</p>
+                        <h3 className='font-semibold'>{action.title}</h3>
+                        <p className='text-sm text-muted-foreground'>
+                          {action.description}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -377,36 +399,41 @@ export default function EnhancedCRMDashboard() {
       </Card>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue='overview' className='space-y-4'>
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="promoters">Promoters</TabsTrigger>
-          <TabsTrigger value="contracts">Contracts</TabsTrigger>
-          <TabsTrigger value="activity">Recent Activity</TabsTrigger>
+          <TabsTrigger value='overview'>Overview</TabsTrigger>
+          <TabsTrigger value='promoters'>Promoters</TabsTrigger>
+          <TabsTrigger value='contracts'>Contracts</TabsTrigger>
+          <TabsTrigger value='activity'>Recent Activity</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value='overview' className='space-y-4'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             {/* Recent Promoters */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <Users className='h-5 w-5' />
                   Recent Promoters
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {promoters.slice(0, 5).map((promoter) => (
-                    <div key={promoter.id} className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
+                <div className='space-y-4'>
+                  {promoters.slice(0, 5).map(promoter => (
+                    <div
+                      key={promoter.id}
+                      className='flex items-center space-x-4'
+                    >
+                      <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center'>
+                        <User className='h-5 w-5 text-primary' />
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{promoter.name_en}</p>
-                        <p className="text-sm text-muted-foreground">{promoter.email}</p>
+                      <div className='flex-1'>
+                        <p className='font-medium'>{promoter.name_en}</p>
+                        <p className='text-sm text-muted-foreground'>
+                          {promoter.email}
+                        </p>
                       </div>
-                      <Badge variant="outline">{promoter.status}</Badge>
+                      <Badge variant='outline'>{promoter.status}</Badge>
                     </div>
                   ))}
                 </div>
@@ -416,21 +443,24 @@ export default function EnhancedCRMDashboard() {
             {/* Recent Contracts */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
+                <CardTitle className='flex items-center gap-2'>
+                  <FileText className='h-5 w-5' />
                   Recent Contracts
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {contracts.slice(0, 5).map((contract) => (
-                    <div key={contract.id} className="flex items-center space-x-4">
-                      <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-green-600" />
+                <div className='space-y-4'>
+                  {contracts.slice(0, 5).map(contract => (
+                    <div
+                      key={contract.id}
+                      className='flex items-center space-x-4'
+                    >
+                      <div className='h-10 w-10 rounded-full bg-green-100 flex items-center justify-center'>
+                        <FileText className='h-5 w-5 text-green-600' />
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium">{contract.title}</p>
-                        <p className="text-sm text-muted-foreground">
+                      <div className='flex-1'>
+                        <p className='font-medium'>{contract.title}</p>
+                        <p className='text-sm text-muted-foreground'>
                           {contract.contract_number}
                         </p>
                       </div>
@@ -445,50 +475,54 @@ export default function EnhancedCRMDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="promoters" className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
+        <TabsContent value='promoters' className='space-y-4'>
+          <div className='flex items-center space-x-4'>
+            <div className='flex-1'>
               <Input
-                placeholder="Search promoters..."
+                placeholder='Search promoters...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='max-w-sm'
               />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className='w-40'>
+                <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='active'>Active</SelectItem>
+                <SelectItem value='inactive'>Inactive</SelectItem>
+                <SelectItem value='pending'>Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {promoters.map((promoter) => (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+            {promoters.map(promoter => (
               <Card key={promoter.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
+                <CardContent className='pt-6'>
+                  <div className='flex items-center space-x-4'>
+                    <div className='h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center'>
+                      <User className='h-6 w-6 text-primary' />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{promoter.name_en}</h3>
-                      <p className="text-sm text-muted-foreground">{promoter.email}</p>
-                      <p className="text-sm text-muted-foreground">{promoter.mobile_number}</p>
+                    <div className='flex-1'>
+                      <h3 className='font-semibold'>{promoter.name_en}</h3>
+                      <p className='text-sm text-muted-foreground'>
+                        {promoter.email}
+                      </p>
+                      <p className='text-sm text-muted-foreground'>
+                        {promoter.mobile_number}
+                      </p>
                     </div>
-                    <Badge variant="outline">{promoter.status}</Badge>
+                    <Badge variant='outline'>{promoter.status}</Badge>
                   </div>
-                  <div className="mt-4 flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-4 w-4" />
+                  <div className='mt-4 flex space-x-2'>
+                    <Button size='sm' variant='outline'>
+                      <Eye className='h-4 w-4' />
                     </Button>
-                    <Button size="sm" variant="outline">
-                      <Edit className="h-4 w-4" />
+                    <Button size='sm' variant='outline'>
+                      <Edit className='h-4 w-4' />
                     </Button>
                   </div>
                 </CardContent>
@@ -497,58 +531,58 @@ export default function EnhancedCRMDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="contracts" className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
+        <TabsContent value='contracts' className='space-y-4'>
+          <div className='flex items-center space-x-4'>
+            <div className='flex-1'>
               <Input
-                placeholder="Search contracts..."
+                placeholder='Search contracts...'
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+                onChange={e => setSearchTerm(e.target.value)}
+                className='max-w-sm'
               />
             </div>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger className='w-40'>
+                <SelectValue placeholder='Filter by status' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value='all'>All Status</SelectItem>
+                <SelectItem value='active'>Active</SelectItem>
+                <SelectItem value='pending'>Pending</SelectItem>
+                <SelectItem value='processing'>Processing</SelectItem>
+                <SelectItem value='completed'>Completed</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-4">
-            {contracts.map((contract) => (
+          <div className='space-y-4'>
+            {contracts.map(contract => (
               <Card key={contract.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <div className="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-green-600" />
+                <CardContent className='pt-6'>
+                  <div className='flex items-center justify-between'>
+                    <div className='flex items-center space-x-4'>
+                      <div className='h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center'>
+                        <FileText className='h-6 w-6 text-green-600' />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{contract.title}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className='font-semibold'>{contract.title}</h3>
+                        <p className='text-sm text-muted-foreground'>
                           {contract.contract_number} • {contract.contract_type}
                         </p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className='text-sm text-muted-foreground'>
                           Value: {contract.currency} {contract.value}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
+                    <div className='flex items-center space-x-2'>
                       <Badge className={getStatusColor(contract.status)}>
                         {contract.status}
                       </Badge>
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
+                      <Button size='sm' variant='outline'>
+                        <Eye className='h-4 w-4' />
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4" />
+                      <Button size='sm' variant='outline'>
+                        <Download className='h-4 w-4' />
                       </Button>
                     </div>
                   </div>
@@ -558,7 +592,7 @@ export default function EnhancedCRMDashboard() {
           </div>
         </TabsContent>
 
-        <TabsContent value="activity" className="space-y-4">
+        <TabsContent value='activity' className='space-y-4'>
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
@@ -567,16 +601,23 @@ export default function EnhancedCRMDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center space-x-4">
-                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <div className='space-y-4'>
+                {recentActivity.map(activity => (
+                  <div
+                    key={activity.id}
+                    className='flex items-center space-x-4'
+                  >
+                    <div className='h-10 w-10 rounded-full bg-muted flex items-center justify-center'>
                       {getActivityIcon(activity.type)}
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">{activity.timestamp}</p>
+                    <div className='flex-1'>
+                      <p className='font-medium'>{activity.title}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {activity.description}
+                      </p>
+                      <p className='text-xs text-muted-foreground'>
+                        {activity.timestamp}
+                      </p>
                     </div>
                     <Badge className={getStatusColor(activity.status)}>
                       {activity.status}
@@ -591,7 +632,7 @@ export default function EnhancedCRMDashboard() {
 
       {/* Workflow Wizard Dialog */}
       <Dialog open={showWorkflowWizard} onOpenChange={setShowWorkflowWizard}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className='max-w-6xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>Document Generation Workflow</DialogTitle>
             <DialogDescription>

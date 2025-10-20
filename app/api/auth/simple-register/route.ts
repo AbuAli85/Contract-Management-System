@@ -4,14 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      email, 
-      password, 
-      fullName, 
-      role, 
-      phone, 
-      company 
-    } = body;
+    const { email, password, fullName, role, phone, company } = body;
 
     // Validate required fields
     if (!email || !password || !fullName || !role) {
@@ -42,7 +35,9 @@ export async function POST(request: NextRequest) {
     const validRoles = ['user', 'provider', 'client', 'admin'];
     if (!validRoles.includes(role)) {
       return NextResponse.json(
-        { error: 'Invalid role. Must be one of: user, provider, client, admin' },
+        {
+          error: 'Invalid role. Must be one of: user, provider, client, admin',
+        },
         { status: 400 }
       );
     }
@@ -70,12 +65,17 @@ export async function POST(request: NextRequest) {
 
     if (authError) {
       console.error('🔐 Simple Register - Auth error:', authError);
-      
+
       // Check if it's a CAPTCHA error
-      if (authError.message.includes('captcha') || authError.message.includes('verification') || authError.message.includes('unexpected_failure')) {
+      if (
+        authError.message.includes('captcha') ||
+        authError.message.includes('verification') ||
+        authError.message.includes('unexpected_failure')
+      ) {
         return NextResponse.json(
-          { 
-            error: 'CAPTCHA verification required. Please disable CAPTCHA in your Supabase Dashboard.',
+          {
+            error:
+              'CAPTCHA verification required. Please disable CAPTCHA in your Supabase Dashboard.',
             captchaRequired: true,
             instructions: {
               title: 'Disable CAPTCHA in Supabase',
@@ -84,15 +84,15 @@ export async function POST(request: NextRequest) {
                 '2. Navigate to Authentication → Settings',
                 '3. Find the CAPTCHA section',
                 '4. Disable CAPTCHA verification',
-                '5. Save changes'
+                '5. Save changes',
               ],
-              dashboardUrl: 'https://supabase.com/dashboard'
-            }
+              dashboardUrl: 'https://supabase.com/dashboard',
+            },
           },
           { status: 400 }
         );
       }
-      
+
       return NextResponse.json(
         { error: `Registration failed: ${authError.message}` },
         { status: 400 }
@@ -123,7 +123,9 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('🔐 Simple Register - Profile error:', profileError);
       // Don't fail the registration if profile creation fails
-      console.warn('Profile creation failed, but auth user was created successfully');
+      console.warn(
+        'Profile creation failed, but auth user was created successfully'
+      );
     } else {
       console.log('🔐 Simple Register - Profile created successfully');
     }
@@ -156,7 +158,6 @@ export async function POST(request: NextRequest) {
         status: 'active',
       },
     });
-
   } catch (error) {
     console.error('🔐 Simple Register - Exception:', error);
     return NextResponse.json(
@@ -172,7 +173,7 @@ export async function GET(request: NextRequest) {
       captchaRequired: false,
       environment: process.env.NODE_ENV,
       validRoles: ['user', 'provider', 'client', 'admin'],
-      message: 'Simple register API is ready'
+      message: 'Simple register API is ready',
     });
   } catch (error) {
     console.error('Simple register config error:', error);

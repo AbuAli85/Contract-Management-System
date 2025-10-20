@@ -8,7 +8,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+  Shield,
+} from 'lucide-react';
 import ProductionCaptcha from './production-captcha';
 
 interface LoginFormData {
@@ -41,7 +49,9 @@ export default function ProductionLoginForm() {
   const [success, setSuccess] = useState('');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaConfig, setCaptchaConfig] = useState<CaptchaConfig | null>(null);
+  const [captchaConfig, setCaptchaConfig] = useState<CaptchaConfig | null>(
+    null
+  );
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [captchaError, setCaptchaError] = useState('');
@@ -59,7 +69,7 @@ export default function ProductionLoginForm() {
     try {
       const response = await fetch('/api/auth/production-login');
       const data = await response.json();
-      
+
       if (response.ok) {
         setCaptchaConfig(data.captchaConfig);
         setCaptchaRequired(data.captchaRequired);
@@ -72,16 +82,19 @@ export default function ProductionLoginForm() {
   // Check if Supabase client is available
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+        <Card className='w-full max-w-md'>
           <CardHeader>
-            <CardTitle className="text-center text-red-600">Configuration Error</CardTitle>
+            <CardTitle className='text-center text-red-600'>
+              Configuration Error
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>
-                Supabase client is not properly configured. Please check your environment variables.
+                Supabase client is not properly configured. Please check your
+                environment variables.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -118,7 +131,7 @@ export default function ProductionLoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -165,7 +178,7 @@ export default function ProductionLoginForm() {
           setError('Please complete the CAPTCHA verification');
           return;
         }
-        
+
         setError(data.error || 'Login failed');
         return;
       }
@@ -187,13 +200,17 @@ export default function ProductionLoginForm() {
       // Check user status
       const userStatus = profile?.status || 'active';
       if (userStatus === 'pending') {
-        setError('Your account is pending approval. Please contact an administrator.');
+        setError(
+          'Your account is pending approval. Please contact an administrator.'
+        );
         await supabase.auth.signOut();
         return;
       }
 
       if (userStatus === 'inactive') {
-        setError('Your account has been deactivated. Please contact an administrator.');
+        setError(
+          'Your account has been deactivated. Please contact an administrator.'
+        );
         await supabase.auth.signOut();
         return;
       }
@@ -227,10 +244,11 @@ export default function ProductionLoginForm() {
       setTimeout(() => {
         router.push(redirectPath);
       }, 1500);
-
     } catch (error) {
       console.error('🔐 Production Login - Exception:', error);
-      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(
+        `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -265,22 +283,22 @@ export default function ProductionLoginForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-2">
-            <Shield className="h-6 w-6 text-blue-600 mr-2" />
-            <CardTitle className="text-2xl font-bold text-gray-900">
+    <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+      <Card className='w-full max-w-md'>
+        <CardHeader className='text-center'>
+          <div className='flex items-center justify-center mb-2'>
+            <Shield className='h-6 w-6 text-blue-600 mr-2' />
+            <CardTitle className='text-2xl font-bold text-gray-900'>
               Production Login
             </CardTitle>
           </div>
-          <p className="text-sm text-gray-600">
+          <p className='text-sm text-gray-600'>
             Secure authentication with CAPTCHA protection
           </p>
           {captchaConfig?.enabled && (
-            <div className="mt-2">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                <Shield className="h-3 w-3 mr-1" />
+            <div className='mt-2'>
+              <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                <Shield className='h-3 w-3 mr-1' />
                 CAPTCHA Protected
               </span>
             </div>
@@ -288,46 +306,46 @@ export default function ProductionLoginForm() {
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+          <form onSubmit={handleLogin} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='email'>Email Address</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id='email'
+                name='email'
+                type='email'
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="Enter your email"
+                placeholder='Enter your email'
                 required
                 disabled={loading}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+            <div className='space-y-2'>
+              <Label htmlFor='password'>Password</Label>
+              <div className='relative'>
                 <Input
-                  id="password"
-                  name="password"
+                  id='password'
+                  name='password'
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Enter your password"
+                  placeholder='Enter your password'
                   required
                   disabled={loading}
                 />
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className='h-4 w-4' />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className='h-4 w-4' />
                   )}
                 </Button>
               </div>
@@ -335,9 +353,9 @@ export default function ProductionLoginForm() {
 
             {/* CAPTCHA Section */}
             {showCaptcha && captchaConfig?.enabled && (
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Security Verification</Label>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   <ProductionCaptcha
                     ref={captchaRef}
                     provider={captchaConfig.provider || 'hcaptcha'}
@@ -345,46 +363,48 @@ export default function ProductionLoginForm() {
                     onCaptchaReady={handleCaptchaReady}
                     onCaptchaError={handleCaptchaError}
                     onCaptchaExpired={handleCaptchaExpired}
-                    className="flex-1"
+                    className='flex-1'
                   />
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    type='button'
+                    variant='outline'
+                    size='sm'
                     onClick={resetCaptcha}
                     disabled={loading}
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className='h-4 w-4' />
                   </Button>
                 </div>
                 {captchaError && (
-                  <p className="text-sm text-red-600">{captchaError}</p>
+                  <p className='text-sm text-red-600'>{captchaError}</p>
                 )}
               </div>
             )}
 
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">{success}</AlertDescription>
+              <Alert className='border-green-200 bg-green-50'>
+                <CheckCircle className='h-4 w-4 text-green-600' />
+                <AlertDescription className='text-green-800'>
+                  {success}
+                </AlertDescription>
               </Alert>
             )}
 
             <Button
-              type="submit"
-              className="w-full"
+              type='submit'
+              className='w-full'
               disabled={loading || (captchaRequired && !captchaToken)}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Signing in...
                 </>
               ) : (
@@ -395,28 +415,30 @@ export default function ProductionLoginForm() {
 
           {/* Quick Test Buttons (only in development) */}
           {process.env.NODE_ENV === 'development' && (
-            <div className="mt-6 pt-4 border-t">
-              <p className="text-sm text-gray-600 mb-3">Quick test accounts:</p>
-              <div className="grid grid-cols-1 gap-2">
+            <div className='mt-6 pt-4 border-t'>
+              <p className='text-sm text-gray-600 mb-3'>Quick test accounts:</p>
+              <div className='grid grid-cols-1 gap-2'>
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    quickLogin('provider@test.com', 'TestPass123!')
+                  }
                   disabled={loading}
                 >
                   Test Provider Account
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => quickLogin('client@test.com', 'TestPass123!')}
                   disabled={loading}
                 >
                   Test Client Account
                 </Button>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant='outline'
+                  size='sm'
                   onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
                   disabled={loading}
                 >
@@ -427,17 +449,17 @@ export default function ProductionLoginForm() {
           )}
 
           {/* Navigation */}
-          <div className="mt-6 pt-4 border-t space-y-2">
+          <div className='mt-6 pt-4 border-t space-y-2'>
             <Button
-              variant="ghost"
-              className="w-full"
+              variant='ghost'
+              className='w-full'
               onClick={() => router.push('/en/auth/register')}
             >
               Don't have an account? Sign up
             </Button>
             <Button
-              variant="ghost"
-              className="w-full"
+              variant='ghost'
+              className='w-full'
               onClick={() => router.push('/en/auth/forgot-password')}
             >
               Forgot your password?
@@ -446,18 +468,20 @@ export default function ProductionLoginForm() {
 
           {/* User Profile Display */}
           {userProfile && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Welcome, {userProfile.full_name || userProfile.email}!</strong>
+            <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md'>
+              <p className='text-sm text-blue-800'>
+                <strong>
+                  Welcome, {userProfile.full_name || userProfile.email}!
+                </strong>
               </p>
-              <p className="text-xs text-blue-600">
+              <p className='text-xs text-blue-600'>
                 Role: {userProfile.role} | Status: {userProfile.status}
               </p>
             </div>
           )}
 
           {/* Environment Info */}
-          <div className="text-xs text-gray-500 border-t pt-2 mt-4">
+          <div className='text-xs text-gray-500 border-t pt-2 mt-4'>
             <p>Environment: {process.env.NODE_ENV}</p>
             <p>CAPTCHA: {captchaConfig?.enabled ? 'Enabled' : 'Disabled'}</p>
             <p>Provider: {captchaConfig?.provider || 'None'}</p>

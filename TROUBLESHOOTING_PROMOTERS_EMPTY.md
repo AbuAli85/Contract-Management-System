@@ -1,9 +1,11 @@
 # 🔧 Troubleshooting: Promoters Not Displaying
 
 ## Problem
+
 The promoters page shows "No promoters yet" even though data exists in the database.
 
 ## Root Cause
+
 Missing Supabase environment variables in `.env.local` file.
 
 ---
@@ -55,6 +57,7 @@ npm run dev
 Open your browser console (F12) and check the terminal for these logs:
 
 ✅ **Success logs:**
+
 ```
 🔍 API /api/promoters called
 🔑 Environment check: { hasUrl: true, hasServiceKey: true, ... }
@@ -63,6 +66,7 @@ Open your browser console (F12) and check the terminal for these logs:
 ```
 
 ❌ **Error logs:**
+
 ```
 ❌ Missing Supabase credentials!
 NEXT_PUBLIC_SUPABASE_URL: MISSING
@@ -76,6 +80,7 @@ After setting up `.env.local`, test the API directly:
 
 1. Open: http://localhost:3000/api/promoters
 2. You should see:
+
 ```json
 {
   "success": true,
@@ -108,6 +113,7 @@ echo $NEXT_PUBLIC_SUPABASE_URL
 ### Enable Debug Mode
 
 Add to `.env.local`:
+
 ```bash
 DEBUG=true
 DEBUG_API=true
@@ -126,10 +132,8 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function test() {
-  const { data, error } = await supabase
-    .from('promoters')
-    .select('count');
-  
+  const { data, error } = await supabase.from('promoters').select('count');
+
   if (error) {
     console.error('❌ Error:', error);
   } else {
@@ -141,6 +145,7 @@ test();
 ```
 
 Run it:
+
 ```bash
 node test-supabase.js
 ```
@@ -150,16 +155,20 @@ node test-supabase.js
 ## 📝 Common Issues
 
 ### Issue 1: "Missing Supabase environment variables"
+
 **Solution:** Create `.env.local` with correct credentials
 
 ### Issue 2: "Failed to fetch promoters"
+
 **Possible causes:**
+
 - Wrong Supabase URL or keys
 - Database table `promoters` doesn't exist
 - Row Level Security (RLS) blocking access
 - Network/firewall issues
 
 **Solution:** Check Supabase dashboard → SQL Editor:
+
 ```sql
 -- Check if promoters table exists
 SELECT COUNT(*) FROM promoters;
@@ -169,7 +178,9 @@ SELECT * FROM pg_policies WHERE tablename = 'promoters';
 ```
 
 ### Issue 3: Empty array despite data in database
+
 **Possible causes:**
+
 - RLS policies filtering out data
 - Using anon key without proper policies
 - Wrong database/project
@@ -177,7 +188,9 @@ SELECT * FROM pg_policies WHERE tablename = 'promoters';
 **Solution:** Use service role key which bypasses RLS
 
 ### Issue 4: Works on Vercel but not locally
-**Solution:** 
+
+**Solution:**
+
 - Check Vercel environment variables
 - Copy them to `.env.local`
 - Make sure `.env.local` is in `.gitignore`
@@ -209,8 +222,8 @@ SELECT * FROM pg_policies WHERE tablename = 'promoters';
 ## 📞 Need Help?
 
 If you're still experiencing issues, provide:
+
 1. Terminal output (sanitize any sensitive data)
 2. Browser console errors
 3. Network tab response for `/api/promoters`
 4. Supabase project status (active/paused?)
-

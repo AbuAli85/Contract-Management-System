@@ -1,6 +1,7 @@
 # 📋 Contracts Data Integration Guide
 
 ## Overview
+
 The contracts page in the Contract Management System integrates with **Make.com** and **Google Docs** to provide contract generation, PDF creation, and document management capabilities.
 
 ---
@@ -21,7 +22,7 @@ The contracts page in the Contract Management System integrates with **Make.com*
         ├─────────────────┤
         │ /api/contracts  │ ◄── GET: Fetch all contracts
         │ /api/contract-  │     (from Supabase database)
-        │   generation    │ ◄── POST: Generate PDF via 
+        │   generation    │ ◄── POST: Generate PDF via
         │                 │     /api/pdf-generation
         │ /api/contracts/ │ ◄── POST: Handle Make.com
         │   makecom/      │     webhook & generate via
@@ -33,7 +34,7 @@ The contracts page in the Contract Management System integrates with **Make.com*
      ▼           ▼              ▼
  Supabase    PDF Generation  Make.com
  Database    API             Templates
-             
+
  • Contracts • /api/pdf-    • Contract
  • Parties     generation     templates
  • Promoters              • Webhooks
@@ -58,6 +59,7 @@ const fetchContracts = useCallback(async () => {
 ```
 
 **What's returned:**
+
 ```json
 {
   "success": true,
@@ -93,12 +95,14 @@ const fetchContracts = useCallback(async () => {
 **File:** `app/api/contracts/route.ts`
 
 **What it does:**
+
 - Fetches contracts from Supabase `contracts` table
 - Joins with `parties` and `promoters` tables
 - Applies user permissions (non-admin users only see their contracts)
 - Returns paginated results
 
 **Key Database Columns:**
+
 ```sql
 contracts
 ├── id (UUID)
@@ -123,7 +127,9 @@ contracts
 ## 🔗 Integration 1: Make.com Contract Generation
 
 ### Overview
+
 The system integrates with **Make.com** to:
+
 1. Generate contract templates
 2. Create webhooks that trigger contract generation workflows
 3. Store generated PDFs back in Supabase
@@ -176,10 +182,16 @@ Returns Make.com template configuration:
 {
   "success": true,
   "data": {
-    "contractConfig": { /* contract type config */ },
-    "templateConfig": { /* Make.com template settings */ },
+    "contractConfig": {
+      /* contract type config */
+    },
+    "templateConfig": {
+      /* Make.com template settings */
+    },
     "googleDocsTemplateId": "docs-id-123",
-    "makecomModuleConfig": { /* webhook config */ }
+    "makecomModuleConfig": {
+      /* webhook config */
+    }
   }
 }
 ```
@@ -189,6 +201,7 @@ Returns Make.com template configuration:
 Generates a contract via Make.com:
 
 **Request:**
+
 ```json
 {
   "contractType": "employment_contract",
@@ -205,11 +218,14 @@ Generates a contract via Make.com:
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "contractId": "contract-1",
-  "webhookPayload": { /* Make.com payload */ },
+  "webhookPayload": {
+    /* Make.com payload */
+  },
   "pdfUrl": "https://storage.example.com/contracts/pdf/contract-1.pdf"
 }
 ```
@@ -252,6 +268,7 @@ SUPABASE_SERVICE_ROLE_KEY=xxx
 ### API Endpoint: `POST /api/contract-generation`
 
 **Request:**
+
 ```json
 {
   "contractId": "contract-1",
@@ -261,6 +278,7 @@ SUPABASE_SERVICE_ROLE_KEY=xxx
 ```
 
 **Response:**
+
 ```json
 {
   "pdf_url": "https://storage.example.com/contracts/pdf/contract-1.pdf"
@@ -316,13 +334,13 @@ Contracts ──┬──► Parties (first_party_id)
 
 ### When is Contract Data Updated?
 
-| Event | Trigger | Updates |
-|-------|---------|---------|
-| Contract Created | User submits form | All fields + timestamps |
-| PDF Generated | Make.com or /api/pdf-generation | `pdf_url`, `status` |
-| Contract Approved | User clicks approve | `status` to 'approved' |
-| Document Uploaded | User uploads to contract | `pdf_url` or `google_doc_url` |
-| Contract Expired | Auto-check (daily) | `status` to 'expired' |
+| Event             | Trigger                         | Updates                       |
+| ----------------- | ------------------------------- | ----------------------------- |
+| Contract Created  | User submits form               | All fields + timestamps       |
+| PDF Generated     | Make.com or /api/pdf-generation | `pdf_url`, `status`           |
+| Contract Approved | User clicks approve             | `status` to 'approved'        |
+| Document Uploaded | User uploads to contract        | `pdf_url` or `google_doc_url` |
+| Contract Expired  | Auto-check (daily)              | `status` to 'expired'         |
 
 ---
 
@@ -362,7 +380,7 @@ Contracts ──┬──► Parties (first_party_id)
 
 ```sql
 -- View all contracts with relationships
-SELECT 
+SELECT
   c.id,
   c.contract_number,
   c.status,
@@ -401,22 +419,25 @@ curl -X POST http://localhost:3000/api/contracts/makecom/generate \
 ```javascript
 // Check what data the frontend received
 console.log('Contracts:', window.contractsData);
-console.log('PDF URLs:', window.contractsData.map(c => c.pdf_url));
+console.log(
+  'PDF URLs:',
+  window.contractsData.map(c => c.pdf_url)
+);
 ```
 
 ---
 
 ## 📋 Summary
 
-| Aspect | Status | Details |
-|--------|--------|---------|
-| **Frontend Display** | ✅ Working | 33 contracts showing correctly |
-| **Database Storage** | ✅ Working | All data persisted in Supabase |
-| **PDF URL Storage** | ✅ Working | `contracts.pdf_url` column active |
-| **Google Docs URLs** | ✅ Working | `contracts.google_doc_url` column active |
-| **Make.com Webhook** | ⚠️ Configured | Needs verification in Make.com |
-| **PDF Generation API** | ⚠️ Needed | Need to implement `/api/pdf-generation` |
-| **Data Fetching** | ✅ Working | `/api/contracts` returns all data correctly |
+| Aspect                 | Status        | Details                                     |
+| ---------------------- | ------------- | ------------------------------------------- |
+| **Frontend Display**   | ✅ Working    | 33 contracts showing correctly              |
+| **Database Storage**   | ✅ Working    | All data persisted in Supabase              |
+| **PDF URL Storage**    | ✅ Working    | `contracts.pdf_url` column active           |
+| **Google Docs URLs**   | ✅ Working    | `contracts.google_doc_url` column active    |
+| **Make.com Webhook**   | ⚠️ Configured | Needs verification in Make.com              |
+| **PDF Generation API** | ⚠️ Needed     | Need to implement `/api/pdf-generation`     |
+| **Data Fetching**      | ✅ Working    | `/api/contracts` returns all data correctly |
 
 ---
 
@@ -441,4 +462,3 @@ console.log('PDF URLs:', window.contractsData.map(c => c.pdf_url));
    - Use Google Docs API
    - Auto-generate docs from templates
    - Share documents with parties
-

@@ -1,7 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw, XCircle, AlertTriangle } from 'lucide-react';
 
@@ -10,7 +16,10 @@ interface PromotersTimeoutStateProps {
   onRetry: () => void;
 }
 
-export function PromotersTimeoutState({ onReload, onRetry }: PromotersTimeoutStateProps) {
+export function PromotersTimeoutState({
+  onReload,
+  onRetry,
+}: PromotersTimeoutStateProps) {
   return (
     <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       <Card>

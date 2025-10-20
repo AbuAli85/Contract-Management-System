@@ -14,6 +14,7 @@ This guide shows how to set up direct Google Docs integration for contract gener
 ## 🔧 **Step 1: Google Cloud Setup**
 
 ### **1.1 Enable APIs**
+
 ```bash
 # Enable required APIs in Google Cloud Console
 - Google Docs API
@@ -21,6 +22,7 @@ This guide shows how to set up direct Google Docs integration for contract gener
 ```
 
 ### **1.2 Create Service Account**
+
 1. Go to **Google Cloud Console** → **IAM & Admin** → **Service Accounts**
 2. Click **Create Service Account**
 3. Name: `contract-generator`
@@ -28,16 +30,15 @@ This guide shows how to set up direct Google Docs integration for contract gener
 5. Click **Create and Continue**
 
 ### **1.3 Grant Permissions**
+
 ```json
 {
-  "roles": [
-    "roles/documents.editor",
-    "roles/drive.file"
-  ]
+  "roles": ["roles/documents.editor", "roles/drive.file"]
 }
 ```
 
 ### **1.4 Generate Service Account Key**
+
 1. Click on the service account
 2. Go to **Keys** tab
 3. Click **Add Key** → **Create New Key**
@@ -112,6 +113,7 @@ Passport: {{promoter_passport_image}}
 ### **3.2 Image Placeholders**
 
 For image placeholders, use:
+
 - `{{promoter_id_card_image}}` - Will be replaced with ID card image
 - `{{promoter_passport_image}}` - Will be replaced with passport image
 
@@ -132,7 +134,7 @@ POST /api/contracts/google-docs-generate
 // Request body
 {
   "promoter_id": "uuid",
-  "first_party_id": "uuid", 
+  "first_party_id": "uuid",
   "second_party_id": "uuid",
   "contract_type": "full-time-permanent",
   "job_title": "Software Engineer",
@@ -162,22 +164,26 @@ POST /api/contracts/google-docs-generate
 ## 🎨 **Step 5: Features**
 
 ### **✅ Text Placeholder Replacement**
+
 - All `{{placeholder}}` text is replaced with actual data
 - Case-insensitive matching
 - Supports all contract data fields
 
 ### **✅ Image Replacement**
+
 - ID card images automatically inserted
 - Passport images automatically inserted
 - Images uploaded to Google Drive
 - Proper sizing and formatting
 
 ### **✅ PDF Generation**
+
 - Automatic PDF creation
 - Public access links
 - Stored in Google Drive
 
 ### **✅ Document Management**
+
 - New document created for each contract
 - Timestamped naming
 - Organized in output folder
@@ -197,11 +203,13 @@ POST /api/contracts/google-docs-generate
 ## 🚀 **Step 7: Testing**
 
 ### **7.1 Test Template**
+
 1. Create a simple test template
 2. Add basic placeholders
 3. Test with sample data
 
 ### **7.2 Test API**
+
 ```bash
 curl -X POST http://localhost:3000/api/contracts/google-docs-generate \
   -H "Content-Type: application/json" \
@@ -242,12 +250,14 @@ curl -X POST http://localhost:3000/api/contracts/google-docs-generate \
 ## 📊 **Step 9: Monitoring**
 
 ### **Logs to Monitor:**
+
 - Google API quota usage
 - Document generation success rate
 - Image upload failures
 - PDF generation errors
 
 ### **Metrics to Track:**
+
 - Contracts generated per day
 - Average generation time
 - Error rates by type
@@ -264,6 +274,7 @@ curl -X POST http://localhost:3000/api/contracts/google-docs-generate \
 ## 🎉 **Ready to Use!**
 
 Your Google Docs direct integration is now ready for production use with:
+
 - ✅ Template-based contract generation
 - ✅ Automatic placeholder replacement
 - ✅ Image insertion (ID cards, passports)

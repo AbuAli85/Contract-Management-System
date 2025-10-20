@@ -11,9 +11,9 @@ export default function SimpleContractPage() {
 
   if (loading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary mx-auto mb-4"></div>
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-primary mx-auto mb-4'></div>
           <p>Loading authentication...</p>
         </div>
       </div>
@@ -22,10 +22,10 @@ export default function SimpleContractPage() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <h1 className='text-2xl font-bold mb-4'>Access Denied</h1>
+          <p className='text-muted-foreground'>
             You don't have permission to access contract generation.
           </p>
         </div>
@@ -34,7 +34,7 @@ export default function SimpleContractPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className='container mx-auto py-6'>
       <SimpleContractGenerator />
     </div>
   );

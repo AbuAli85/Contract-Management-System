@@ -36,10 +36,12 @@ export function useAuth() {
         return { success: false, error: 'Authentication service unavailable' };
 
       try {
-        const { data, error } = await authData.supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const { data, error } = await authData.supabase.auth.signInWithPassword(
+          {
+            email,
+            password,
+          }
+        );
 
         if (error) {
           // Format the error message for better user experience

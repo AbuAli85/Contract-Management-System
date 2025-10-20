@@ -7,6 +7,7 @@ The General Contract Generation System is a comprehensive solution for creating 
 ## 🎯 Features
 
 ### ✅ Core Features
+
 - **Multi-Contract Type Support**: 10+ different contract types
 - **Automated PDF Generation**: Via Make.com integration
 - **Real-time Form Validation**: Client-side and server-side validation
@@ -17,6 +18,7 @@ The General Contract Generation System is a comprehensive solution for creating 
 - **Status Tracking**: Real-time contract status updates
 
 ### 🎨 UI/UX Features
+
 - **Responsive Design**: Mobile-first approach
 - **Modern Interface**: Clean, professional design
 - **Progress Indicators**: Visual feedback during generation
@@ -27,6 +29,7 @@ The General Contract Generation System is a comprehensive solution for creating 
 ## 🏗️ Architecture
 
 ### Frontend Components
+
 ```
 components/
 ├── GeneralContractGenerator.tsx    # Main UI component
@@ -39,6 +42,7 @@ components/
 ```
 
 ### Backend Services
+
 ```
 lib/
 ├── general-contract-service.ts    # Core business logic
@@ -47,6 +51,7 @@ lib/
 ```
 
 ### API Endpoints
+
 ```
 app/api/
 ├── contracts/general/generate/     # Contract creation
@@ -56,22 +61,23 @@ app/api/
 
 ## 📊 Contract Types Supported
 
-| Contract Type | Description | Use Case |
-|---------------|-------------|----------|
-| `general-service` | General Service Contract | Standard service agreements |
-| `consulting-agreement` | Consulting Agreement | Professional consulting services |
-| `service-contract` | Service Contract | Specific service delivery |
-| `partnership-agreement` | Partnership Agreement | Business partnerships |
-| `vendor-agreement` | Vendor Agreement | Supplier relationships |
-| `maintenance-contract` | Maintenance Contract | Equipment maintenance |
-| `supply-agreement` | Supply Agreement | Product supply |
-| `distribution-agreement` | Distribution Agreement | Product distribution |
-| `franchise-agreement` | Franchise Agreement | Franchise operations |
-| `licensing-agreement` | Licensing Agreement | Intellectual property licensing |
+| Contract Type            | Description              | Use Case                         |
+| ------------------------ | ------------------------ | -------------------------------- |
+| `general-service`        | General Service Contract | Standard service agreements      |
+| `consulting-agreement`   | Consulting Agreement     | Professional consulting services |
+| `service-contract`       | Service Contract         | Specific service delivery        |
+| `partnership-agreement`  | Partnership Agreement    | Business partnerships            |
+| `vendor-agreement`       | Vendor Agreement         | Supplier relationships           |
+| `maintenance-contract`   | Maintenance Contract     | Equipment maintenance            |
+| `supply-agreement`       | Supply Agreement         | Product supply                   |
+| `distribution-agreement` | Distribution Agreement   | Product distribution             |
+| `franchise-agreement`    | Franchise Agreement      | Franchise operations             |
+| `licensing-agreement`    | Licensing Agreement      | Intellectual property licensing  |
 
 ## 🔄 Make.com Integration Flow
 
 ### 1. Contract Creation Flow
+
 ```mermaid
 graph TD
     A[User Fills Form] --> B[Validate Data]
@@ -84,6 +90,7 @@ graph TD
 ```
 
 ### 2. Make.com Scenario Structure
+
 Based on the provided Make.com flow:
 
 1. **Webhook Trigger** (Module 1)
@@ -123,6 +130,7 @@ Based on the provided Make.com flow:
 ## 🛠️ Setup Instructions
 
 ### 1. Environment Variables
+
 ```env
 # Make.com Integration
 MAKECOM_WEBHOOK_URL=https://hook.eu2.make.com/your-webhook-url
@@ -138,13 +146,16 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ### 2. Make.com Scenario Setup
 
 #### Step 1: Create Webhook Trigger
+
 1. Go to Make.com
 2. Create new scenario
 3. Add "Custom Webhook" trigger
 4. Copy webhook URL to `MAKECOM_WEBHOOK_URL`
 
 #### Step 2: Configure Modules
+
 Use the provided Make.com flow JSON to set up all modules:
+
 - Webhook trigger
 - Variable setting modules
 - Supabase data retrieval
@@ -153,12 +164,16 @@ Use the provided Make.com flow JSON to set up all modules:
 - Status update callbacks
 
 #### Step 3: Set Template IDs
+
 Update these template IDs in your Make.com scenario:
+
 - **General Contract Template**: `1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA`
 - **Google Drive Folder**: `/1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a/1v8x-WIRVpYdIoO72LVTKpePB5z-bjOep/1qjY2Jjn9BkzlckqolWCTS64k-y6zIeBw`
 
 ### 3. Database Setup
+
 Ensure your Supabase database has these tables:
+
 - `contracts` - Main contract storage
 - `promoters` - Promoter information
 - `parties` - Client and employer data
@@ -167,22 +182,27 @@ Ensure your Supabase database has these tables:
 ## 📱 Usage Guide
 
 ### 1. Access the Interface
+
 Navigate to `/contracts/general` to access the General Contract Generator.
 
 ### 2. Fill Contract Details
+
 1. **Select Parties**: Choose promoter, client, and employer
 2. **Contract Details**: Fill in job title, department, location, salary
 3. **General Contract Fields**: Add product/service specific information
 4. **Terms & Conditions**: Include special terms, payment terms, etc.
 
 ### 3. Generate Contract
+
 Click "Generate General Contract" to:
+
 - Create contract in database
 - Trigger Make.com automation
 - Generate professional PDF
 - Update contract status
 
 ### 4. Monitor Progress
+
 - Real-time status updates
 - Email notifications (if configured)
 - Contract tracking in dashboard
@@ -190,6 +210,7 @@ Click "Generate General Contract" to:
 ## 🔧 API Reference
 
 ### Create General Contract
+
 ```http
 POST /api/contracts/general/generate
 Content-Type: application/json
@@ -212,6 +233,7 @@ Content-Type: application/json
 ```
 
 ### Make.com Webhook
+
 ```http
 POST /api/webhook/makecom-general
 Content-Type: application/json
@@ -227,6 +249,7 @@ X-Webhook-Secret: your-secret
 ```
 
 ### PDF Ready Callback
+
 ```http
 PATCH /api/webhook/contract-pdf-ready-general
 Content-Type: application/json
@@ -244,16 +267,19 @@ X-Webhook-Secret: your-pdf-secret
 ## 🧪 Testing
 
 ### 1. Unit Tests
+
 ```bash
 npm test -- --testPathPattern=general-contract
 ```
 
 ### 2. Integration Tests
+
 ```bash
 npm run test:integration
 ```
 
 ### 3. Manual Testing
+
 1. Create test contract via UI
 2. Verify database entry
 3. Check Make.com webhook trigger
@@ -263,34 +289,41 @@ npm run test:integration
 ## 🚀 Deployment
 
 ### 1. Build Application
+
 ```bash
 npm run build
 ```
 
 ### 2. Deploy to Production
+
 ```bash
 npm run deploy
 ```
 
 ### 3. Verify Environment Variables
+
 Ensure all required environment variables are set in production.
 
 ### 4. Test Make.com Integration
+
 Run end-to-end test to verify Make.com webhook integration.
 
 ## 📈 Monitoring & Analytics
 
 ### 1. Contract Generation Metrics
+
 - Success rate
 - Average processing time
 - Error rates by contract type
 
 ### 2. Make.com Performance
+
 - Webhook response times
 - PDF generation success rate
 - Template processing efficiency
 
 ### 3. User Experience
+
 - Form completion rates
 - Error frequency
 - User satisfaction scores
@@ -298,16 +331,19 @@ Run end-to-end test to verify Make.com webhook integration.
 ## 🔒 Security Considerations
 
 ### 1. Webhook Security
+
 - Secret verification for all webhooks
 - Rate limiting on API endpoints
 - Input validation and sanitization
 
 ### 2. Data Protection
+
 - Encrypted data transmission
 - Secure file storage
 - Access control and permissions
 
 ### 3. Audit Trail
+
 - Contract creation logs
 - Status change tracking
 - User action logging
@@ -317,22 +353,27 @@ Run end-to-end test to verify Make.com webhook integration.
 ### Common Issues
 
 #### 1. Make.com Webhook Not Triggering
+
 - Check `MAKECOM_WEBHOOK_URL` environment variable
 - Verify webhook secret configuration
 - Check Make.com scenario status
 
 #### 2. PDF Generation Fails
+
 - Verify Google Docs template access
 - Check template ID configuration
 - Validate image URLs
 
 #### 3. Database Errors
+
 - Check Supabase connection
 - Verify table permissions
 - Review data validation
 
 ### Debug Mode
+
 Enable debug logging by setting:
+
 ```env
 DEBUG=general-contract:*
 ```
@@ -340,6 +381,7 @@ DEBUG=general-contract:*
 ## 📞 Support
 
 For technical support or questions:
+
 - **Documentation**: Check this file and inline code comments
 - **Issues**: Create GitHub issue with detailed description
 - **Contact**: Reach out to development team
@@ -347,12 +389,14 @@ For technical support or questions:
 ## 🔄 Updates & Maintenance
 
 ### Regular Maintenance
+
 - Update Make.com templates
 - Review and update contract types
 - Monitor performance metrics
 - Security updates and patches
 
 ### Version History
+
 - **v1.0.0**: Initial release with basic functionality
 - **v1.1.0**: Added advanced contract types
 - **v1.2.0**: Enhanced Make.com integration
@@ -363,6 +407,7 @@ For technical support or questions:
 ## 📝 Notes
 
 This system is designed to be:
+
 - **Scalable**: Handle high volume of contract generation
 - **Reliable**: Robust error handling and recovery
 - **User-friendly**: Intuitive interface and clear feedback

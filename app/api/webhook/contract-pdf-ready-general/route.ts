@@ -25,7 +25,8 @@ export async function PATCH(request: NextRequest) {
     console.log('📤 PDF Ready payload:', body);
 
     // Validate required fields
-    const { contract_id, contract_number, pdf_url, google_drive_url, status } = body;
+    const { contract_id, contract_number, pdf_url, google_drive_url, status } =
+      body;
 
     if (!contract_id) {
       return NextResponse.json(
@@ -57,9 +58,11 @@ export async function PATCH(request: NextRequest) {
       contract_number,
       status: 'completed',
     });
-
   } catch (error) {
-    console.error('❌ General contract PDF ready webhook processing failed:', error);
+    console.error(
+      '❌ General contract PDF ready webhook processing failed:',
+      error
+    );
     return NextResponse.json(
       {
         success: false,
@@ -78,17 +81,17 @@ export async function GET() {
     usage: 'Send PATCH requests when general contract PDF is ready',
     required_headers: {
       'Content-Type': 'application/json',
-      'X-Webhook-Secret': 'Your PDF webhook secret'
+      'X-Webhook-Secret': 'Your PDF webhook secret',
     },
     required_fields: {
       contract_id: 'string (required)',
       contract_number: 'string (optional)',
       pdf_url: 'string (optional)',
       google_drive_url: 'string (optional)',
-      status: 'string (optional)'
+      status: 'string (optional)',
     },
     optional_fields: {
-      images_processed: 'object with id_card and passport boolean fields'
-    }
+      images_processed: 'object with id_card and passport boolean fields',
+    },
   });
 }

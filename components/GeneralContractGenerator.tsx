@@ -209,11 +209,11 @@ export default function GeneralContractGenerator() {
     setLoading(true);
     try {
       const supabase = createClient();
-      
+
       if (!supabase) {
         throw new Error('Supabase client not available');
       }
-      
+
       // Load all parties first
       const { data: partiesData, error: partiesError } = await supabase
         .from('parties')
@@ -227,8 +227,12 @@ export default function GeneralContractGenerator() {
 
       // Filter parties by type
       const allPartiesList = partiesData || [];
-      const clientsList = allPartiesList.filter((party: any) => party.type === 'Client');
-      const employersList = allPartiesList.filter((party: any) => party.type === 'Employer');
+      const clientsList = allPartiesList.filter(
+        (party: any) => party.type === 'Client'
+      );
+      const employersList = allPartiesList.filter(
+        (party: any) => party.type === 'Employer'
+      );
 
       setAllParties(allPartiesList);
       setClients(clientsList);
@@ -237,7 +241,9 @@ export default function GeneralContractGenerator() {
       // Load promoters
       const { data: promotersData, error: promotersError } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url')
+        .select(
+          'id, name_en, name_ar, mobile_number, id_card_number, employer_id, status, profile_picture_url'
+        )
         .order('name_en');
 
       if (promotersError) {
@@ -251,7 +257,9 @@ export default function GeneralContractGenerator() {
       // Load products
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name_en, name_ar, description_en, description_ar, category_en, category_ar, status')
+        .select(
+          'id, name_en, name_ar, description_en, description_ar, category_en, category_ar, status'
+        )
         .eq('status', 'active')
         .order('name_en');
 
@@ -265,7 +273,9 @@ export default function GeneralContractGenerator() {
       // Load locations
       const { data: locationsData, error: locationsError } = await supabase
         .from('locations')
-        .select('id, name_en, name_ar, country_en, country_ar, city_en, city_ar, status')
+        .select(
+          'id, name_en, name_ar, country_en, country_ar, city_en, city_ar, status'
+        )
         .eq('status', 'active')
         .order('name_en');
 
@@ -275,13 +285,18 @@ export default function GeneralContractGenerator() {
       }
 
       setLocations(locationsData || []);
-      
-      console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${productsData?.length || 0} products, ${locationsData?.length || 0} locations`);
+
+      console.log(
+        `✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${productsData?.length || 0} products, ${locationsData?.length || 0} locations`
+      );
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load promoters and parties',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to load promoters and parties',
         variant: 'destructive',
       });
     } finally {
@@ -289,7 +304,10 @@ export default function GeneralContractGenerator() {
     }
   };
 
-  const handleInputChange = (field: keyof GeneralContractFormData, value: string | number) => {
+  const handleInputChange = (
+    field: keyof GeneralContractFormData,
+    value: string | number
+  ) => {
     setFormData(prev => {
       const newData = {
         ...prev,
@@ -302,7 +320,10 @@ export default function GeneralContractGenerator() {
       }
 
       // Auto-save to localStorage
-      localStorage.setItem('general-contract-form-draft', JSON.stringify(newData));
+      localStorage.setItem(
+        'general-contract-form-draft',
+        JSON.stringify(newData)
+      );
       setLastSaved(new Date());
 
       return newData;
@@ -320,7 +341,10 @@ export default function GeneralContractGenerator() {
           products_en: selectedProduct.name_en,
           products_ar: selectedProduct.name_ar,
         };
-        localStorage.setItem('general-contract-form-draft', JSON.stringify(newData));
+        localStorage.setItem(
+          'general-contract-form-draft',
+          JSON.stringify(newData)
+        );
         setLastSaved(new Date());
         return newData;
       });
@@ -338,7 +362,10 @@ export default function GeneralContractGenerator() {
           location_en: selectedLocation.name_en,
           location_ar: selectedLocation.name_ar,
         };
-        localStorage.setItem('general-contract-form-draft', JSON.stringify(newData));
+        localStorage.setItem(
+          'general-contract-form-draft',
+          JSON.stringify(newData)
+        );
         setLastSaved(new Date());
         return newData;
       });
@@ -358,7 +385,7 @@ export default function GeneralContractGenerator() {
         return promoter.employer_id === formData.second_party_id;
       });
     }
-    
+
     // Filter by search term if provided
     if (promoterSearchTerm.trim()) {
       const searchLower = promoterSearchTerm.toLowerCase();
@@ -371,23 +398,28 @@ export default function GeneralContractGenerator() {
         );
       });
     }
-    
+
     return filteredPromoters;
   };
 
   const validateForm = (): string[] => {
     const errors: string[] = [];
-    
+
     if (!formData.promoter_id) errors.push('Please select a promoter');
-    if (!formData.first_party_id) errors.push('Please select the first party (client)');
-    if (!formData.second_party_id) errors.push('Please select the second party (employer)');
+    if (!formData.first_party_id)
+      errors.push('Please select the first party (client)');
+    if (!formData.second_party_id)
+      errors.push('Please select the second party (employer)');
     if (!formData.job_title) errors.push('Job title is required');
     if (!formData.department) errors.push('Department is required');
     if (!formData.work_location) errors.push('Work location is required');
-    if (!formData.basic_salary || formData.basic_salary <= 0) errors.push('Basic salary must be greater than 0');
-    if (!formData.contract_start_date) errors.push('Contract start date is required');
-    if (!formData.contract_end_date) errors.push('Contract end date is required');
-    
+    if (!formData.basic_salary || formData.basic_salary <= 0)
+      errors.push('Basic salary must be greater than 0');
+    if (!formData.contract_start_date)
+      errors.push('Contract start date is required');
+    if (!formData.contract_end_date)
+      errors.push('Contract end date is required');
+
     return errors;
   };
 
@@ -469,11 +501,11 @@ export default function GeneralContractGenerator() {
             });
           }, 1000);
         }
-        
+
         // Clear saved draft
         localStorage.removeItem('general-contract-form-draft');
         setLastSaved(null);
-        
+
         // Reset form
         setFormData({
           promoter_id: '',
@@ -517,7 +549,10 @@ export default function GeneralContractGenerator() {
       console.error('Contract generation error:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to generate contract',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate contract',
         variant: 'destructive',
       });
     } finally {
@@ -527,11 +562,11 @@ export default function GeneralContractGenerator() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+      <div className='flex items-center justify-center py-12'>
+        <div className='text-center'>
+          <Loader2 className='h-8 w-8 animate-spin mx-auto mb-4' />
           <p>Loading promoters and parties...</p>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className='text-sm text-muted-foreground mt-2'>
             Please wait while we fetch your data
           </p>
         </div>
@@ -542,31 +577,33 @@ export default function GeneralContractGenerator() {
   // Handle case where no data is loaded
   if (promoters.length === 0 || allParties.length === 0) {
     return (
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Generate General Contract</h1>
-          <p className="text-muted-foreground">
+      <div className='max-w-6xl mx-auto space-y-6'>
+        <div className='text-center space-y-2'>
+          <h1 className='text-3xl font-bold'>Generate General Contract</h1>
+          <p className='text-muted-foreground'>
             Create professional general contracts with automated processing
           </p>
         </div>
-        
-        <div className="text-center py-12">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-            <h2 className="text-xl font-semibold mb-2">No Data Available</h2>
-            <p className="text-muted-foreground mb-4">
-              {promoters.length === 0 && allParties.length === 0 
-                ? "No promoters or parties found. Please add some data first."
-                : promoters.length === 0 
-                ? "No promoters found. Please add some promoters first."
-                : "No parties found. Please add some parties first."
-              }
+
+        <div className='text-center py-12'>
+          <div className='text-center'>
+            <AlertTriangle className='h-12 w-12 mx-auto mb-4 text-yellow-500' />
+            <h2 className='text-xl font-semibold mb-2'>No Data Available</h2>
+            <p className='text-muted-foreground mb-4'>
+              {promoters.length === 0 && allParties.length === 0
+                ? 'No promoters or parties found. Please add some data first.'
+                : promoters.length === 0
+                  ? 'No promoters found. Please add some promoters first.'
+                  : 'No parties found. Please add some parties first.'}
             </p>
-            <Button onClick={() => {
-              setLoading(true);
-              loadData();
-            }} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
+            <Button
+              onClick={() => {
+                setLoading(true);
+                loadData();
+              }}
+              variant='outline'
+            >
+              <RefreshCw className='h-4 w-4 mr-2' />
               Retry Loading Data
             </Button>
           </div>
@@ -576,112 +613,122 @@ export default function GeneralContractGenerator() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className='max-w-6xl mx-auto space-y-6'>
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold">Generate General Contract</h1>
-        <p className="text-muted-foreground">
-          Create professional general contracts with automated processing via Make.com
+      <div className='text-center space-y-2'>
+        <h1 className='text-3xl font-bold'>Generate General Contract</h1>
+        <p className='text-muted-foreground'>
+          Create professional general contracts with automated processing via
+          Make.com
         </p>
       </div>
 
       {/* Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
+          <CardTitle className='flex items-center gap-2'>
+            <FileText className='h-5 w-5' />
             General Contract Details
           </CardTitle>
           <CardDescription>
             Fill in the required information to generate your general contract
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className='space-y-6'>
           {/* Step 1: Select Parties */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5" />
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold flex items-center gap-2'>
+              <Users className='h-5 w-5' />
               Select Parties
             </h3>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
-                <strong>Note:</strong> 
-                <br />• <strong>First Party</strong> shows only <strong>Client</strong> type parties
-                <br />• <strong>Second Party</strong> shows only <strong>Employer</strong> type parties  
-                <br />• <strong>Promoters</strong> are filtered by selected employer
-                <br />• <strong>Auto-save</strong> is enabled - your progress is saved automatically
+            <div className='bg-blue-50 border border-blue-200 rounded-lg p-3'>
+              <p className='text-sm text-blue-800'>
+                <strong>Note:</strong>
+                <br />• <strong>First Party</strong> shows only{' '}
+                <strong>Client</strong> type parties
+                <br />• <strong>Second Party</strong> shows only{' '}
+                <strong>Employer</strong> type parties
+                <br />• <strong>Promoters</strong> are filtered by selected
+                employer
+                <br />• <strong>Auto-save</strong> is enabled - your progress is
+                saved automatically
               </p>
             </div>
-            
+
             {/* Auto-save status indicator */}
             {lastSaved && (
-              <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-2">
-                <CheckCircle className="h-4 w-4" />
+              <div className='flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-2'>
+                <CheckCircle className='h-4 w-4' />
                 <span>Last saved: {lastSaved.toLocaleTimeString()}</span>
               </div>
             )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               {/* Promoter Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="promoter">Promoter *</Label>
-                <div className="space-y-2">
+              <div className='space-y-2'>
+                <Label htmlFor='promoter'>Promoter *</Label>
+                <div className='space-y-2'>
                   <Input
-                    placeholder="Search promoters..."
+                    placeholder='Search promoters...'
                     value={promoterSearchTerm}
-                    onChange={(e) => setPromoterSearchTerm(e.target.value)}
-                    className="text-sm"
+                    onChange={e => setPromoterSearchTerm(e.target.value)}
+                    className='text-sm'
                   />
                   <Select
                     value={formData.promoter_id}
-                    onValueChange={(value) => handleInputChange('promoter_id', value)}
+                    onValueChange={value =>
+                      handleInputChange('promoter_id', value)
+                    }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select promoter" />
+                      <SelectValue placeholder='Select promoter' />
                     </SelectTrigger>
                     <SelectContent>
-                    {getFilteredPromoters().map((promoter) => (
-                      <SelectItem key={promoter.id} value={promoter.id}>
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="flex-shrink-0">
-                            {promoter.profile_picture_url ? (
-                              <img 
-                                src={promoter.profile_picture_url} 
-                                alt={promoter.name_en}
-                                className="w-8 h-8 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                <User className="h-4 w-4 text-blue-600" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{promoter.name_en}</div>
-                            <div className="text-xs text-muted-foreground truncate">
-                              {promoter.mobile_number || 'No phone'}
+                      {getFilteredPromoters().map(promoter => (
+                        <SelectItem key={promoter.id} value={promoter.id}>
+                          <div className='flex items-center gap-3 w-full'>
+                            <div className='flex-shrink-0'>
+                              {promoter.profile_picture_url ? (
+                                <img
+                                  src={promoter.profile_picture_url}
+                                  alt={promoter.name_en}
+                                  className='w-8 h-8 rounded-full object-cover'
+                                />
+                              ) : (
+                                <div className='w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center'>
+                                  <User className='h-4 w-4 text-blue-600' />
+                                </div>
+                              )}
                             </div>
-                            {promoter.status && (
-                              <div className="text-xs">
-                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-                                  promoter.status === 'active' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {promoter.status}
-                                </span>
+                            <div className='flex-1 min-w-0'>
+                              <div className='font-medium text-sm truncate'>
+                                {promoter.name_en}
                               </div>
-                            )}
+                              <div className='text-xs text-muted-foreground truncate'>
+                                {promoter.mobile_number || 'No phone'}
+                              </div>
+                              {promoter.status && (
+                                <div className='text-xs'>
+                                  <span
+                                    className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                                      promoter.status === 'active'
+                                        ? 'bg-green-100 text-green-800'
+                                        : 'bg-gray-100 text-gray-800'
+                                    }`}
+                                  >
+                                    {promoter.status}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </SelectItem>
-                    ))}
+                        </SelectItem>
+                      ))}
                       {getFilteredPromoters().length === 0 && (
-                        <div className="p-2 text-sm text-muted-foreground">
-                          {formData.second_party_id 
-                            ? "No promoters found for this employer. All promoters are shown until employer relationships are set up." 
-                            : "Please select an employer first"
-                          }
+                        <div className='p-2 text-sm text-muted-foreground'>
+                          {formData.second_party_id
+                            ? 'No promoters found for this employer. All promoters are shown until employer relationships are set up.'
+                            : 'Please select an employer first'}
                         </div>
                       )}
                     </SelectContent>
@@ -690,23 +737,25 @@ export default function GeneralContractGenerator() {
               </div>
 
               {/* First Party Selection (Client) */}
-              <div className="space-y-2">
-                <Label htmlFor="first_party">First Party (Client) *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='first_party'>First Party (Client) *</Label>
                 <Select
                   value={formData.first_party_id}
-                  onValueChange={(value) => handleInputChange('first_party_id', value)}
+                  onValueChange={value =>
+                    handleInputChange('first_party_id', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
+                    <SelectValue placeholder='Select client' />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients.map((party) => (
+                    {clients.map(party => (
                       <SelectItem key={party.id} value={party.id}>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
+                        <div className='flex items-center gap-2'>
+                          <Building className='h-4 w-4' />
                           <div>
-                            <div className="font-medium">{party.name_en}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className='font-medium'>{party.name_en}</div>
+                            <div className='text-sm text-muted-foreground'>
                               CRN: {party.crn}
                             </div>
                           </div>
@@ -714,7 +763,7 @@ export default function GeneralContractGenerator() {
                       </SelectItem>
                     ))}
                     {clients.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
+                      <div className='p-2 text-sm text-muted-foreground'>
                         No clients found
                       </div>
                     )}
@@ -723,23 +772,25 @@ export default function GeneralContractGenerator() {
               </div>
 
               {/* Second Party Selection (Employer) */}
-              <div className="space-y-2">
-                <Label htmlFor="second_party">Second Party (Employer) *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='second_party'>Second Party (Employer) *</Label>
                 <Select
                   value={formData.second_party_id}
-                  onValueChange={(value) => handleInputChange('second_party_id', value)}
+                  onValueChange={value =>
+                    handleInputChange('second_party_id', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select employer" />
+                    <SelectValue placeholder='Select employer' />
                   </SelectTrigger>
                   <SelectContent>
-                    {employers.map((party) => (
+                    {employers.map(party => (
                       <SelectItem key={party.id} value={party.id}>
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
+                        <div className='flex items-center gap-2'>
+                          <Building className='h-4 w-4' />
                           <div>
-                            <div className="font-medium">{party.name_en}</div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className='font-medium'>{party.name_en}</div>
+                            <div className='text-sm text-muted-foreground'>
                               CRN: {party.crn}
                             </div>
                           </div>
@@ -747,7 +798,7 @@ export default function GeneralContractGenerator() {
                       </SelectItem>
                     ))}
                     {employers.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
+                      <div className='p-2 text-sm text-muted-foreground'>
                         No employers found
                       </div>
                     )}
@@ -758,25 +809,27 @@ export default function GeneralContractGenerator() {
           </div>
 
           {/* Step 2: Contract Details */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold flex items-center gap-2'>
+              <FileText className='h-5 w-5' />
               Contract Details
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               {/* Contract Type */}
-              <div className="space-y-2">
-                <Label htmlFor="contract_type">Contract Type *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='contract_type'>Contract Type *</Label>
                 <Select
                   value={formData.contract_type}
-                  onValueChange={(value) => handleInputChange('contract_type', value)}
+                  onValueChange={value =>
+                    handleInputChange('contract_type', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select contract type" />
+                    <SelectValue placeholder='Select contract type' />
                   </SelectTrigger>
                   <SelectContent>
-                    {contractTypes.map((type) => (
+                    {contractTypes.map(type => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -786,183 +839,220 @@ export default function GeneralContractGenerator() {
               </div>
 
               {/* Job Title */}
-              <div className="space-y-2">
-                <Label htmlFor="job_title">Job Title *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='job_title'>Job Title *</Label>
                 <Input
-                  id="job_title"
+                  id='job_title'
                   value={formData.job_title}
-                  onChange={(e) => handleInputChange('job_title', e.target.value)}
-                  placeholder="e.g., Software Engineer"
+                  onChange={e => handleInputChange('job_title', e.target.value)}
+                  placeholder='e.g., Software Engineer'
                 />
               </div>
 
               {/* Department */}
-              <div className="space-y-2">
-                <Label htmlFor="department">Department *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='department'>Department *</Label>
                 <Input
-                  id="department"
+                  id='department'
                   value={formData.department}
-                  onChange={(e) => handleInputChange('department', e.target.value)}
-                  placeholder="e.g., IT Department"
+                  onChange={e =>
+                    handleInputChange('department', e.target.value)
+                  }
+                  placeholder='e.g., IT Department'
                 />
               </div>
 
               {/* Work Location */}
-              <div className="space-y-2">
-                <Label htmlFor="work_location">Work Location *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='work_location'>Work Location *</Label>
                 <Input
-                  id="work_location"
+                  id='work_location'
                   value={formData.work_location}
-                  onChange={(e) => handleInputChange('work_location', e.target.value)}
-                  placeholder="e.g., Muscat, Oman"
+                  onChange={e =>
+                    handleInputChange('work_location', e.target.value)
+                  }
+                  placeholder='e.g., Muscat, Oman'
                 />
               </div>
 
               {/* Basic Salary */}
-              <div className="space-y-2">
-                <Label htmlFor="basic_salary">Basic Salary (OMR) *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='basic_salary'>Basic Salary (OMR) *</Label>
                 <Input
-                  id="basic_salary"
-                  type="number"
+                  id='basic_salary'
+                  type='number'
                   value={formData.basic_salary}
-                  onChange={(e) => handleInputChange('basic_salary', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  onChange={e =>
+                    handleInputChange(
+                      'basic_salary',
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  placeholder='0'
                 />
               </div>
 
               {/* Contract Dates */}
-              <div className="space-y-2">
-                <Label htmlFor="contract_start_date">Start Date *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='contract_start_date'>Start Date *</Label>
                 <Input
-                  id="contract_start_date"
-                  type="date"
+                  id='contract_start_date'
+                  type='date'
                   value={formData.contract_start_date}
-                  onChange={(e) => handleInputChange('contract_start_date', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('contract_start_date', e.target.value)
+                  }
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="contract_end_date">End Date *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='contract_end_date'>End Date *</Label>
                 <Input
-                  id="contract_end_date"
-                  type="date"
+                  id='contract_end_date'
+                  type='date'
                   value={formData.contract_end_date}
-                  onChange={(e) => handleInputChange('contract_end_date', e.target.value)}
+                  onChange={e =>
+                    handleInputChange('contract_end_date', e.target.value)
+                  }
                 />
               </div>
 
               {/* Probation Period */}
-              <div className="space-y-2">
-                <Label htmlFor="probation_period">Probation Period *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='probation_period'>Probation Period *</Label>
                 <Select
                   value={formData.probation_period}
-                  onValueChange={(value) => handleInputChange('probation_period', value)}
+                  onValueChange={value =>
+                    handleInputChange('probation_period', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select probation period" />
+                    <SelectValue placeholder='Select probation period' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="3_months">3 Months</SelectItem>
-                    <SelectItem value="6_months">6 Months</SelectItem>
-                    <SelectItem value="12_months">12 Months</SelectItem>
+                    <SelectItem value='3_months'>3 Months</SelectItem>
+                    <SelectItem value='6_months'>6 Months</SelectItem>
+                    <SelectItem value='12_months'>12 Months</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Notice Period */}
-              <div className="space-y-2">
-                <Label htmlFor="notice_period">Notice Period *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='notice_period'>Notice Period *</Label>
                 <Select
                   value={formData.notice_period}
-                  onValueChange={(value) => handleInputChange('notice_period', value)}
+                  onValueChange={value =>
+                    handleInputChange('notice_period', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select notice period" />
+                    <SelectValue placeholder='Select notice period' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="30_days">30 Days</SelectItem>
-                    <SelectItem value="60_days">60 Days</SelectItem>
-                    <SelectItem value="90_days">90 Days</SelectItem>
+                    <SelectItem value='30_days'>30 Days</SelectItem>
+                    <SelectItem value='60_days'>60 Days</SelectItem>
+                    <SelectItem value='90_days'>90 Days</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Working Hours */}
-              <div className="space-y-2">
-                <Label htmlFor="working_hours">Working Hours per Week *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='working_hours'>Working Hours per Week *</Label>
                 <Select
                   value={formData.working_hours}
-                  onValueChange={(value) => handleInputChange('working_hours', value)}
+                  onValueChange={value =>
+                    handleInputChange('working_hours', value)
+                  }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select working hours" />
+                    <SelectValue placeholder='Select working hours' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="40_hours">40 Hours/Week</SelectItem>
-                    <SelectItem value="45_hours">45 Hours/Week</SelectItem>
-                    <SelectItem value="48_hours">48 Hours/Week</SelectItem>
+                    <SelectItem value='40_hours'>40 Hours/Week</SelectItem>
+                    <SelectItem value='45_hours'>45 Hours/Week</SelectItem>
+                    <SelectItem value='48_hours'>48 Hours/Week</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Housing Allowance */}
-              <div className="space-y-2">
-                <Label htmlFor="housing_allowance">Housing Allowance (OMR)</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='housing_allowance'>
+                  Housing Allowance (OMR)
+                </Label>
                 <Input
-                  id="housing_allowance"
-                  type="number"
+                  id='housing_allowance'
+                  type='number'
                   value={formData.housing_allowance || 0}
-                  onChange={(e) => handleInputChange('housing_allowance', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  onChange={e =>
+                    handleInputChange(
+                      'housing_allowance',
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  placeholder='0'
                 />
               </div>
 
               {/* Transportation Allowance */}
-              <div className="space-y-2">
-                <Label htmlFor="transport_allowance">Transportation Allowance (OMR)</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='transport_allowance'>
+                  Transportation Allowance (OMR)
+                </Label>
                 <Input
-                  id="transport_allowance"
-                  type="number"
+                  id='transport_allowance'
+                  type='number'
                   value={formData.transport_allowance || 0}
-                  onChange={(e) => handleInputChange('transport_allowance', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
+                  onChange={e =>
+                    handleInputChange(
+                      'transport_allowance',
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  placeholder='0'
                 />
               </div>
             </div>
           </div>
 
           {/* Step 3: General Contract Specific Fields */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Briefcase className="h-5 w-5" />
+          <div className='space-y-4'>
+            <h3 className='text-lg font-semibold flex items-center gap-2'>
+              <Briefcase className='h-5 w-5' />
               General Contract Specific Details
             </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               {/* Product Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="product_id">Products/Services *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='product_id'>Products/Services *</Label>
                 <Select
                   value={formData.product_id || ''}
                   onValueChange={handleProductChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select product/service" />
+                    <SelectValue placeholder='Select product/service' />
                   </SelectTrigger>
                   <SelectContent>
-                    {products.map((product) => (
+                    {products.map(product => (
                       <SelectItem key={product.id} value={product.id}>
-                        <div className="flex flex-col">
-                          <div className="font-medium">{product.name_en}</div>
-                          <div className="text-sm text-muted-foreground">{product.name_ar}</div>
+                        <div className='flex flex-col'>
+                          <div className='font-medium'>{product.name_en}</div>
+                          <div className='text-sm text-muted-foreground'>
+                            {product.name_ar}
+                          </div>
                           {product.category_en && (
-                            <div className="text-xs text-blue-600">{product.category_en}</div>
+                            <div className='text-xs text-blue-600'>
+                              {product.category_en}
+                            </div>
                           )}
                         </div>
                       </SelectItem>
                     ))}
                     {products.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
+                      <div className='p-2 text-sm text-muted-foreground'>
                         No products available
                       </div>
                     )}
@@ -971,29 +1061,33 @@ export default function GeneralContractGenerator() {
               </div>
 
               {/* Location Selection */}
-              <div className="space-y-2">
-                <Label htmlFor="location_id">Location *</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='location_id'>Location *</Label>
                 <Select
                   value={formData.location_id || ''}
                   onValueChange={handleLocationChange}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select location" />
+                    <SelectValue placeholder='Select location' />
                   </SelectTrigger>
                   <SelectContent>
-                    {locations.map((location) => (
+                    {locations.map(location => (
                       <SelectItem key={location.id} value={location.id}>
-                        <div className="flex flex-col">
-                          <div className="font-medium">{location.name_en}</div>
-                          <div className="text-sm text-muted-foreground">{location.name_ar}</div>
+                        <div className='flex flex-col'>
+                          <div className='font-medium'>{location.name_en}</div>
+                          <div className='text-sm text-muted-foreground'>
+                            {location.name_ar}
+                          </div>
                           {location.country_en && (
-                            <div className="text-xs text-blue-600">{location.country_en}</div>
+                            <div className='text-xs text-blue-600'>
+                              {location.country_en}
+                            </div>
                           )}
                         </div>
                       </SelectItem>
                     ))}
                     {locations.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
+                      <div className='p-2 text-sm text-muted-foreground'>
                         No locations available
                       </div>
                     )}
@@ -1002,130 +1096,158 @@ export default function GeneralContractGenerator() {
               </div>
 
               {/* Product Name (Legacy field - keep for backward compatibility) */}
-              <div className="space-y-2">
-                <Label htmlFor="product_name">Product/Service Name (Legacy)</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='product_name'>
+                  Product/Service Name (Legacy)
+                </Label>
                 <Input
-                  id="product_name"
+                  id='product_name'
                   value={formData.product_name || ''}
-                  onChange={(e) => handleInputChange('product_name', e.target.value)}
-                  placeholder="e.g., Software Development Services"
+                  onChange={e =>
+                    handleInputChange('product_name', e.target.value)
+                  }
+                  placeholder='e.g., Software Development Services'
                 />
               </div>
 
               {/* Project Duration */}
-              <div className="space-y-2">
-                <Label htmlFor="project_duration">Project Duration</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='project_duration'>Project Duration</Label>
                 <Input
-                  id="project_duration"
+                  id='project_duration'
                   value={formData.project_duration || ''}
-                  onChange={(e) => handleInputChange('project_duration', e.target.value)}
-                  placeholder="e.g., 6 months"
+                  onChange={e =>
+                    handleInputChange('project_duration', e.target.value)
+                  }
+                  placeholder='e.g., 6 months'
                 />
               </div>
 
               {/* Payment Terms */}
-              <div className="space-y-2">
-                <Label htmlFor="payment_terms">Payment Terms</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='payment_terms'>Payment Terms</Label>
                 <Input
-                  id="payment_terms"
+                  id='payment_terms'
                   value={formData.payment_terms || ''}
-                  onChange={(e) => handleInputChange('payment_terms', e.target.value)}
-                  placeholder="e.g., Net 30 days"
+                  onChange={e =>
+                    handleInputChange('payment_terms', e.target.value)
+                  }
+                  placeholder='e.g., Net 30 days'
                 />
               </div>
 
               {/* Liability Insurance */}
-              <div className="space-y-2">
-                <Label htmlFor="liability_insurance">Liability Insurance</Label>
+              <div className='space-y-2'>
+                <Label htmlFor='liability_insurance'>Liability Insurance</Label>
                 <Input
-                  id="liability_insurance"
+                  id='liability_insurance'
                   value={formData.liability_insurance || ''}
-                  onChange={(e) => handleInputChange('liability_insurance', e.target.value)}
-                  placeholder="e.g., $1,000,000 coverage"
+                  onChange={e =>
+                    handleInputChange('liability_insurance', e.target.value)
+                  }
+                  placeholder='e.g., $1,000,000 coverage'
                 />
               </div>
             </div>
 
             {/* Service Description */}
-            <div className="space-y-2">
-              <Label htmlFor="service_description">Service Description</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='service_description'>Service Description</Label>
               <Textarea
-                id="service_description"
+                id='service_description'
                 value={formData.service_description || ''}
-                onChange={(e) => handleInputChange('service_description', e.target.value)}
-                placeholder="Detailed description of the services to be provided..."
+                onChange={e =>
+                  handleInputChange('service_description', e.target.value)
+                }
+                placeholder='Detailed description of the services to be provided...'
                 rows={3}
               />
             </div>
 
             {/* Deliverables */}
-            <div className="space-y-2">
-              <Label htmlFor="deliverables">Deliverables</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='deliverables'>Deliverables</Label>
               <Textarea
-                id="deliverables"
+                id='deliverables'
                 value={formData.deliverables || ''}
-                onChange={(e) => handleInputChange('deliverables', e.target.value)}
-                placeholder="List of specific deliverables and milestones..."
+                onChange={e =>
+                  handleInputChange('deliverables', e.target.value)
+                }
+                placeholder='List of specific deliverables and milestones...'
                 rows={3}
               />
             </div>
 
             {/* Termination Clause */}
-            <div className="space-y-2">
-              <Label htmlFor="termination_clause">Termination Clause</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='termination_clause'>Termination Clause</Label>
               <Textarea
-                id="termination_clause"
+                id='termination_clause'
                 value={formData.termination_clause || ''}
-                onChange={(e) => handleInputChange('termination_clause', e.target.value)}
-                placeholder="Terms and conditions for contract termination..."
+                onChange={e =>
+                  handleInputChange('termination_clause', e.target.value)
+                }
+                placeholder='Terms and conditions for contract termination...'
                 rows={2}
               />
             </div>
 
             {/* Confidentiality Clause */}
-            <div className="space-y-2">
-              <Label htmlFor="confidentiality_clause">Confidentiality Clause</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='confidentiality_clause'>
+                Confidentiality Clause
+              </Label>
               <Textarea
-                id="confidentiality_clause"
+                id='confidentiality_clause'
                 value={formData.confidentiality_clause || ''}
-                onChange={(e) => handleInputChange('confidentiality_clause', e.target.value)}
-                placeholder="Confidentiality and non-disclosure terms..."
+                onChange={e =>
+                  handleInputChange('confidentiality_clause', e.target.value)
+                }
+                placeholder='Confidentiality and non-disclosure terms...'
                 rows={2}
               />
             </div>
 
             {/* Intellectual Property */}
-            <div className="space-y-2">
-              <Label htmlFor="intellectual_property">Intellectual Property</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='intellectual_property'>
+                Intellectual Property
+              </Label>
               <Textarea
-                id="intellectual_property"
+                id='intellectual_property'
                 value={formData.intellectual_property || ''}
-                onChange={(e) => handleInputChange('intellectual_property', e.target.value)}
-                placeholder="Intellectual property rights and ownership terms..."
+                onChange={e =>
+                  handleInputChange('intellectual_property', e.target.value)
+                }
+                placeholder='Intellectual property rights and ownership terms...'
                 rows={2}
               />
             </div>
 
             {/* Force Majeure */}
-            <div className="space-y-2">
-              <Label htmlFor="force_majeure">Force Majeure</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='force_majeure'>Force Majeure</Label>
               <Textarea
-                id="force_majeure"
+                id='force_majeure'
                 value={formData.force_majeure || ''}
-                onChange={(e) => handleInputChange('force_majeure', e.target.value)}
-                placeholder="Force majeure and act of God clauses..."
+                onChange={e =>
+                  handleInputChange('force_majeure', e.target.value)
+                }
+                placeholder='Force majeure and act of God clauses...'
                 rows={2}
               />
             </div>
 
             {/* Special Terms */}
-            <div className="space-y-2">
-              <Label htmlFor="special_terms">Special Terms</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='special_terms'>Special Terms</Label>
               <Textarea
-                id="special_terms"
+                id='special_terms'
                 value={formData.special_terms}
-                onChange={(e) => handleInputChange('special_terms', e.target.value)}
-                placeholder="Any special terms or conditions..."
+                onChange={e =>
+                  handleInputChange('special_terms', e.target.value)
+                }
+                placeholder='Any special terms or conditions...'
                 rows={3}
               />
             </div>
@@ -1133,33 +1255,53 @@ export default function GeneralContractGenerator() {
 
           {/* Contract Summary */}
           {(formData.contract_start_date || formData.contract_end_date) && (
-            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
+            <div className='bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+              <h3 className='font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center'>
+                <Calendar className='h-4 w-4 mr-2' />
                 Contract Summary
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
                 {formData.contract_start_date && (
                   <div>
-                    <span className="font-medium text-blue-800 dark:text-blue-200">Start Date:</span>
-                    <span className="ml-2 text-blue-700 dark:text-blue-300">
-                      {format(parseISO(formData.contract_start_date), 'dd-MM-yyyy')}
+                    <span className='font-medium text-blue-800 dark:text-blue-200'>
+                      Start Date:
+                    </span>
+                    <span className='ml-2 text-blue-700 dark:text-blue-300'>
+                      {format(
+                        parseISO(formData.contract_start_date),
+                        'dd-MM-yyyy'
+                      )}
                     </span>
                   </div>
                 )}
                 {formData.contract_end_date && (
                   <div>
-                    <span className="font-medium text-blue-800 dark:text-blue-200">End Date:</span>
-                    <span className="ml-2 text-blue-700 dark:text-blue-300">
-                      {format(parseISO(formData.contract_end_date), 'dd-MM-yyyy')}
+                    <span className='font-medium text-blue-800 dark:text-blue-200'>
+                      End Date:
+                    </span>
+                    <span className='ml-2 text-blue-700 dark:text-blue-300'>
+                      {format(
+                        parseISO(formData.contract_end_date),
+                        'dd-MM-yyyy'
+                      )}
                     </span>
                   </div>
                 )}
                 {formData.contract_start_date && formData.contract_end_date && (
-                  <div className="md:col-span-2">
-                    <span className="font-medium text-blue-800 dark:text-blue-200">Duration:</span>
-                    <span className="ml-2 text-blue-700 dark:text-blue-300">
-                      {format(parseISO(formData.contract_start_date), 'dd-MM-yyyy')} to {format(parseISO(formData.contract_end_date), 'dd-MM-yyyy')}
+                  <div className='md:col-span-2'>
+                    <span className='font-medium text-blue-800 dark:text-blue-200'>
+                      Duration:
+                    </span>
+                    <span className='ml-2 text-blue-700 dark:text-blue-300'>
+                      {format(
+                        parseISO(formData.contract_start_date),
+                        'dd-MM-yyyy'
+                      )}{' '}
+                      to{' '}
+                      {format(
+                        parseISO(formData.contract_end_date),
+                        'dd-MM-yyyy'
+                      )}
                     </span>
                   </div>
                 )}
@@ -1168,21 +1310,21 @@ export default function GeneralContractGenerator() {
           )}
 
           {/* Generate Button */}
-          <div className="flex justify-center pt-4">
+          <div className='flex justify-center pt-4'>
             <Button
               onClick={handleGenerateContract}
               disabled={generating}
-              size="lg"
-              className="min-w-[200px]"
+              size='lg'
+              className='min-w-[200px]'
             >
               {generating ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   Generating...
                 </>
               ) : (
                 <>
-                  <FileText className="h-4 w-4 mr-2" />
+                  <FileText className='h-4 w-4 mr-2' />
                   Generate General Contract
                 </>
               )}
@@ -1191,10 +1333,12 @@ export default function GeneralContractGenerator() {
 
           {/* Info Alert */}
           <Alert>
-            <CheckCircle className="h-4 w-4" />
+            <CheckCircle className='h-4 w-4' />
             <AlertDescription>
-              This will create a general contract in the database and trigger the Make.com automation 
-              to generate a professional PDF document with all required signatures and stamps using the general contract template.
+              This will create a general contract in the database and trigger
+              the Make.com automation to generate a professional PDF document
+              with all required signatures and stamps using the general contract
+              template.
             </AlertDescription>
           </Alert>
         </CardContent>

@@ -62,6 +62,7 @@
 **File:** `app/[locale]/dashboard/generate-contract/page.tsx`
 
 User fills in:
+
 - Contract Type (employment, service, consultancy, partnership) ✅ - enforced by database CHECK constraint
 - First Party (Company A)
 - Second Party (Company B)
@@ -99,11 +100,13 @@ User fills in:
 
 ```typescript
 // Line 11 in app/api/contract-generation/route.ts
-const NOTIFY_WEBHOOK_URL = process.env.WEBHOOK_URL || 
+const NOTIFY_WEBHOOK_URL =
+  process.env.WEBHOOK_URL ||
   'https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4';
 ```
 
 **What happens:**
+
 1. ✅ Backend calls Make.com webhook
 2. ✅ Sends contract data & template config
 3. ✅ Make.com generates document (Word/PDF)
@@ -189,10 +192,16 @@ Returns Make.com template configuration:
 {
   "success": true,
   "data": {
-    "contractConfig": { /* contract type settings */ },
-    "templateConfig": { /* Make.com template */ },
+    "contractConfig": {
+      /* contract type settings */
+    },
+    "templateConfig": {
+      /* Make.com template */
+    },
     "googleDocsTemplateId": "docs-template-id",
-    "makecomModuleConfig": { /* webhook config */ }
+    "makecomModuleConfig": {
+      /* webhook config */
+    }
   }
 }
 ```
@@ -209,7 +218,9 @@ Returns Make.com automation blueprint:
   "data": {
     "id": "blueprint-id",
     "name": "Employment Contract Generation",
-    "modules": [ /* Make.com modules config */ ]
+    "modules": [
+      /* Make.com modules config */
+    ]
   }
 }
 ```
@@ -221,6 +232,7 @@ Returns Make.com automation blueprint:
 Generates contract using Make.com templates:
 
 **Request:**
+
 ```json
 {
   "contractType": "employment_contract",
@@ -236,12 +248,15 @@ Generates contract using Make.com templates:
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
   "contractId": "contract-uuid",
   "pdfUrl": "https://storage.../contract.pdf",
-  "webhookPayload": { /* payload sent to Make.com */ }
+  "webhookPayload": {
+    /* payload sent to Make.com */
+  }
 }
 ```
 
@@ -257,16 +272,16 @@ CREATE TABLE contracts (
   contract_number TEXT,
   contract_type TEXT,
   status VARCHAR,
-  
+
   -- Make.com integration columns
   pdf_url TEXT,           -- ⭐ Generated PDF URL
   google_doc_url TEXT,    -- ⭐ Google Docs link
-  
+
   -- Relationships
   first_party_id UUID → parties.id,
   second_party_id UUID → parties.id,
   promoter_id UUID → promoters.id,
-  
+
   -- Timestamps
   created_at TIMESTAMP,
   updated_at TIMESTAMP
@@ -277,16 +292,16 @@ CREATE TABLE contracts (
 
 ## ✅ **Current Implementation Status**
 
-| Feature | Status | Details |
-|---------|--------|---------|
-| **Contract Types** | ✅ Implemented | 4 types defined (employment, service, consultancy, partnership) |
-| **Make.com Blueprint** | ✅ Implemented | Automation workflows defined |
-| **Webhook URL** | ✅ Configured | `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4` |
-| **PDF Generation** | ✅ Configured | Calls `/api/pdf-generation` internally |
-| **Database Storage** | ✅ Implemented | `pdf_url` column stores generated PDFs |
-| **API Endpoints** | ✅ Implemented | GET types, templates, blueprints + POST generate |
-| **Frontend Integration** | ✅ Implemented | "Create New Contract" button → generation form |
-| **RBAC Guards** | ✅ Implemented | Requires `contract:generate:own` permission |
+| Feature                  | Status         | Details                                                         |
+| ------------------------ | -------------- | --------------------------------------------------------------- |
+| **Contract Types**       | ✅ Implemented | 4 types defined (employment, service, consultancy, partnership) |
+| **Make.com Blueprint**   | ✅ Implemented | Automation workflows defined                                    |
+| **Webhook URL**          | ✅ Configured  | `https://hook.eu2.make.com/71go2x4zwsnha4r1f4en1g9gjxpk3ts4`    |
+| **PDF Generation**       | ✅ Configured  | Calls `/api/pdf-generation` internally                          |
+| **Database Storage**     | ✅ Implemented | `pdf_url` column stores generated PDFs                          |
+| **API Endpoints**        | ✅ Implemented | GET types, templates, blueprints + POST generate                |
+| **Frontend Integration** | ✅ Implemented | "Create New Contract" button → generation form                  |
+| **RBAC Guards**          | ✅ Implemented | Requires `contract:generate:own` permission                     |
 
 ---
 
@@ -337,14 +352,14 @@ SUPABASE_SERVICE_ROLE_KEY=xxx
 
 ## 📝 **Key Files**
 
-| File | Purpose |
-|------|---------|
-| `app/api/contracts/makecom/generate/route.ts` | Make.com contract generation API |
-| `app/api/contract-generation/route.ts` | PDF generation & Make.com notification |
-| `app/actions/contracts.ts` | Contract business logic & Make.com integration |
-| `app/[locale]/dashboard/generate-contract/page.tsx` | Contract generation form UI |
-| `lib/contract-type-config.ts` | Contract types & Make.com configurations |
-| `lib/makecom-template-config.ts` | Make.com template definitions |
+| File                                                | Purpose                                        |
+| --------------------------------------------------- | ---------------------------------------------- |
+| `app/api/contracts/makecom/generate/route.ts`       | Make.com contract generation API               |
+| `app/api/contract-generation/route.ts`              | PDF generation & Make.com notification         |
+| `app/actions/contracts.ts`                          | Contract business logic & Make.com integration |
+| `app/[locale]/dashboard/generate-contract/page.tsx` | Contract generation form UI                    |
+| `lib/contract-type-config.ts`                       | Contract types & Make.com configurations       |
+| `lib/makecom-template-config.ts`                    | Make.com template definitions                  |
 
 ---
 
@@ -365,6 +380,7 @@ SUPABASE_SERVICE_ROLE_KEY=xxx
 **YES - The contracts system IS using Make.com!**
 
 The entire contract generation pipeline is integrated with Make.com:
+
 1. Users create contracts via web form
 2. System validates and prepares data
 3. Make.com generates the actual document

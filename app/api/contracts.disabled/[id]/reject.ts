@@ -4,10 +4,7 @@ import { withRBAC } from '@/lib/rbac/guard';
 
 export const POST = withRBAC(
   'contract:approve:all',
-  async (
-    request: Request,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: Request, { params }: { params: { id: string } }) => {
     const supabase = await createClient();
     const {
       data: { session },

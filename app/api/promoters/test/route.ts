@@ -9,10 +9,12 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     console.log('🔧 TEST: API /api/promoters/test called (NO RBAC)');
-    
+
     const cookieStore = await cookies();
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseKey =
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     console.log('🔧 TEST: Supabase config:', {
       hasUrl: !!supabaseUrl,
@@ -45,12 +47,18 @@ export async function GET() {
     });
 
     // Get authenticated user
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     console.log('🔧 TEST: Authenticated user:', user?.email);
 
     // Execute query - SERVICE_ROLE key bypasses RLS
     console.log('🔧 TEST: Executing Supabase query...');
-    const { data: promoters, error, count } = await supabase
+    const {
+      data: promoters,
+      error,
+      count,
+    } = await supabase
       .from('promoters')
       .select('*', { count: 'exact' })
       .range(0, 4) // Just get first 5 for testing
@@ -59,22 +67,24 @@ export async function GET() {
     if (error) {
       console.error('❌ TEST: Database error:', error);
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Failed to fetch promoters',
           details: error.message,
-          code: error.code 
+          code: error.code,
         },
         { status: 500 }
       );
     }
 
-    console.log(`✅ TEST: Fetched ${promoters?.length || 0} promoters (total: ${count})`);
-    
+    console.log(
+      `✅ TEST: Fetched ${promoters?.length || 0} promoters (total: ${count})`
+    );
+
     if (promoters && promoters.length > 0) {
       console.log('🔧 TEST: First promoter:', promoters[0].name_en);
     }
-    
+
     return NextResponse.json({
       success: true,
       promoters: promoters || [],
@@ -85,7 +95,7 @@ export async function GET() {
         userEmail: user?.email,
         usingServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
         hasPromoters: (promoters?.length || 0) > 0,
-      }
+      },
     });
   } catch (error) {
     console.error('❌ TEST: API error:', error);

@@ -1,6 +1,7 @@
 # Enhanced Promoters View - Implementation Guide
 
 ## 📋 Table of Contents
+
 1. [Overview](#overview)
 2. [Component Architecture](#component-architecture)
 3. [Key Features](#key-features)
@@ -15,11 +16,13 @@
 The `EnhancedPromotersView` component is a sophisticated, feature-rich interface for managing promoter records. It combines data visualization, smart actions, and improved UX into a single cohesive system.
 
 ### File Location
+
 ```
 components/enhanced-promoters-view.tsx
 ```
 
 ### Dependencies
+
 - React 18+
 - Next.js 14+
 - TanStack React Query
@@ -34,52 +37,77 @@ components/enhanced-promoters-view.tsx
 ### Main Components
 
 #### 1. **EnhancedPromotersView**
+
 The main component that orchestrates the entire view.
 
 ```typescript
-export function EnhancedPromotersView({ locale }: PromotersViewProps)
+export function EnhancedPromotersView({ locale }: PromotersViewProps);
 ```
 
 **Responsibilities:**
+
 - Fetching promoter data
 - Managing filters and sorting
 - Rendering header, metrics, and table
 - Handling bulk actions
 
 #### 2. **EnhancedActionsMenu**
+
 Context-aware dropdown menu for individual promoter actions.
 
 ```typescript
-function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuProps)
+function EnhancedActionsMenu({
+  promoter,
+  onView,
+  onEdit,
+}: EnhancedActionsMenuProps);
 ```
 
 **Features:**
+
 - Dynamic action visibility based on status
 - Keyboard shortcut hints
 - Confirmation dialogs for destructive actions
 - Toast notifications
 
 #### 3. **EnhancedPromoterRow**
+
 Individual row in the promoter table.
 
 ```typescript
-function EnhancedPromoterRow({ promoter, isSelected, onSelect, onView, onEdit }: EnhancedPromoterRowProps)
+function EnhancedPromoterRow({
+  promoter,
+  isSelected,
+  onSelect,
+  onView,
+  onEdit,
+}: EnhancedPromoterRowProps);
 ```
 
 **Features:**
+
 - Status-based row styling
 - Hover animations
 - Tooltip integration
 - Selection checkbox
 
 #### 4. **EnhancedStatCard**
+
 Summary statistics card.
 
 ```typescript
-function EnhancedStatCard({ title, value, helper, icon, variant, trend }: EnhancedStatCardProps)
+function EnhancedStatCard({
+  title,
+  value,
+  helper,
+  icon,
+  variant,
+  trend,
+}: EnhancedStatCardProps);
 ```
 
 **Features:**
+
 - Multiple style variants
 - Hover animations
 - Trend indicators
@@ -95,8 +123,8 @@ The actions menu dynamically adapts based on promoter status:
 
 ```typescript
 // At Risk Detection
-const isAtRisk = 
-  promoter.idDocument.status !== 'valid' || 
+const isAtRisk =
+  promoter.idDocument.status !== 'valid' ||
   promoter.passportDocument.status !== 'valid';
 
 // Critical Detection
@@ -228,6 +256,7 @@ interface Promoter {
 To add a new action to the menu:
 
 1. **Add the action handler:**
+
 ```typescript
 const handleNewAction = () => {
   toast({
@@ -238,6 +267,7 @@ const handleNewAction = () => {
 ```
 
 2. **Add the menu item:**
+
 ```typescript
 <DropdownMenuItem onClick={handleNewAction} className='cursor-pointer gap-2'>
   <YourIcon className='h-4 w-4 text-color-500' />
@@ -267,7 +297,7 @@ Modify notification days in your constants:
 
 ```typescript
 export const PROMOTER_NOTIFICATION_DAYS = {
-  ID_EXPIRY: 30,      // Days before ID expires
+  ID_EXPIRY: 30, // Days before ID expires
   PASSPORT_EXPIRY: 90, // Days before passport expires
 };
 ```
@@ -279,12 +309,14 @@ export const PROMOTER_NOTIFICATION_DAYS = {
 ### Issue: Promoters Not Displaying
 
 **Check:**
+
 1. API endpoint is responding correctly
 2. Response format matches expected structure
 3. Browser console for network errors
 4. Check user permissions
 
 **Debug:**
+
 ```typescript
 console.log('🔄 Fetching promoters from API...');
 console.log('📦 API Payload received:', payload);
@@ -293,6 +325,7 @@ console.log('📦 API Payload received:', payload);
 ### Issue: Actions Menu Not Showing
 
 **Check:**
+
 1. DropdownMenu component is imported
 2. TooltipProvider is wrapping the component
 3. CSS classes are applied correctly
@@ -300,6 +333,7 @@ console.log('📦 API Payload received:', payload);
 ### Issue: Sorting Not Working
 
 **Check:**
+
 1. sortField and sortOrder state are updating
 2. handleSort function is connected
 3. Data is being sorted in useMemo
@@ -307,6 +341,7 @@ console.log('📦 API Payload received:', payload);
 ### Issue: Filters Not Applied
 
 **Check:**
+
 1. Filter state is updating on change
 2. filteredPromoters useMemo has correct dependencies
 3. Filters are being applied in correct order
@@ -316,17 +351,19 @@ console.log('📦 API Payload received:', payload);
 ## Performance Optimization Tips
 
 ### 1. **Data Fetching**
+
 ```typescript
 const { data: response } = useQuery({
   queryKey: ['promoters', page, limit],
   queryFn: () => fetchPromoters(page, limit),
-  staleTime: 30_000,      // 30 seconds
-  retry: 1,               // Only retry once
+  staleTime: 30_000, // 30 seconds
+  retry: 1, // Only retry once
   refetchOnWindowFocus: false,
 });
 ```
 
 ### 2. **Memoization**
+
 ```typescript
 const dashboardPromoters = useMemo(() => {
   return promoters.map(/* transformation */);
@@ -334,7 +371,9 @@ const dashboardPromoters = useMemo(() => {
 ```
 
 ### 3. **Virtualization Ready**
+
 The component is prepared for virtualization:
+
 ```typescript
 // Commented out but available:
 // const virtualizer = useVirtualizer({...});
@@ -369,6 +408,7 @@ The component is prepared for virtualization:
 If migrating from an older promoters view:
 
 1. **Update imports:**
+
 ```typescript
 // Old
 import { PromotersView } from '@/components/promoters-view';
@@ -378,6 +418,7 @@ import { EnhancedPromotersView } from '@/components/enhanced-promoters-view';
 ```
 
 2. **Update component usage:**
+
 ```typescript
 // Old
 <PromotersView locale={locale} />
@@ -397,11 +438,13 @@ import { EnhancedPromotersView } from '@/components/enhanced-promoters-view';
 ### GET /api/promoters
 
 **Query Parameters:**
+
 - `page` (number): Page number (1-based)
 - `limit` (number): Records per page (default: 50)
 - `_t` (timestamp): Cache-busting parameter
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -457,6 +500,7 @@ import { EnhancedPromotersView } from '@/components/enhanced-promoters-view';
 ## Support & Maintenance
 
 For issues or questions:
+
 1. Check console logs (F12)
 2. Review this guide
 3. Check browser compatibility
@@ -468,6 +512,7 @@ For issues or questions:
 ## Version History
 
 ### v2.0.0 (Current)
+
 - ✅ Context-aware actions
 - ✅ Enhanced tooltips
 - ✅ Confirmation dialogs
@@ -476,6 +521,7 @@ For issues or questions:
 - ✅ Better accessibility
 
 ### v1.0.0 (Legacy)
+
 - Basic promoter listing
 - Simple actions menu
 - Standard filtering

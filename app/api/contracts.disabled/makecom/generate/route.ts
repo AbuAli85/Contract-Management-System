@@ -147,12 +147,17 @@ export const POST = withAnyRBAC(
         const supabase = createSupabaseClient();
         const { data: promoter, error: promoterError } = await supabase
           .from('promoters')
-          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number, employer_id')
+          .select(
+            'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number, employer_id'
+          )
           .eq('id', contractData.promoter_id)
           .single();
 
         if (!promoterError && promoter) {
-          console.log('✅ Fetched promoter data for contract generation:', promoter.name_en);
+          console.log(
+            '✅ Fetched promoter data for contract generation:',
+            promoter.name_en
+          );
           // Add promoter image URLs to contract data for webhook
           enrichedContractData = {
             ...enrichedContractData,
@@ -218,14 +223,18 @@ export const POST = withAnyRBAC(
             second_party_logo_url: secondParty.logo_url,
           };
         } else {
-          console.warn('⚠️ Could not fetch second party data:', secondPartyError);
+          console.warn(
+            '⚠️ Could not fetch second party data:',
+            secondPartyError
+          );
         }
       }
-      
+
       // Add default placeholder URLs for ALL possible template images to prevent empty URL errors
       // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
-      const placeholderImage = 'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
-      
+      const placeholderImage =
+        'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
+
       // Function to ensure valid URL
       const ensureValidUrl = (url: string | null | undefined): string => {
         if (!url || url.trim() === '') {
@@ -239,7 +248,7 @@ export const POST = withAnyRBAC(
           return placeholderImage;
         }
       };
-      
+
       enrichedContractData = {
         ...enrichedContractData,
         // Header/Footer images (various naming conventions)
@@ -247,44 +256,57 @@ export const POST = withAnyRBAC(
         footer_logo: enrichedContractData.footer_logo || placeholderImage,
         header_image: enrichedContractData.header_image || placeholderImage,
         footer_image: enrichedContractData.footer_image || placeholderImage,
-        
+
         // Company/Party logos
         company_logo: enrichedContractData.company_logo || placeholderImage,
-        company_logo_url: enrichedContractData.company_logo_url || placeholderImage,
-        first_party_logo: enrichedContractData.first_party_logo || placeholderImage,
-        second_party_logo: enrichedContractData.second_party_logo || placeholderImage,
+        company_logo_url:
+          enrichedContractData.company_logo_url || placeholderImage,
+        first_party_logo:
+          enrichedContractData.first_party_logo || placeholderImage,
+        second_party_logo:
+          enrichedContractData.second_party_logo || placeholderImage,
         party_1_logo: enrichedContractData.party_1_logo || placeholderImage,
         party_2_logo: enrichedContractData.party_2_logo || placeholderImage,
-        
+
         // Signature images
-        first_party_signature: enrichedContractData.first_party_signature || placeholderImage,
-        second_party_signature: enrichedContractData.second_party_signature || placeholderImage,
-        party_1_signature: enrichedContractData.party_1_signature || placeholderImage,
-        party_2_signature: enrichedContractData.party_2_signature || placeholderImage,
-        witness_signature: enrichedContractData.witness_signature || placeholderImage,
+        first_party_signature:
+          enrichedContractData.first_party_signature || placeholderImage,
+        second_party_signature:
+          enrichedContractData.second_party_signature || placeholderImage,
+        party_1_signature:
+          enrichedContractData.party_1_signature || placeholderImage,
+        party_2_signature:
+          enrichedContractData.party_2_signature || placeholderImage,
+        witness_signature:
+          enrichedContractData.witness_signature || placeholderImage,
         signature_1: enrichedContractData.signature_1 || placeholderImage,
         signature_2: enrichedContractData.signature_2 || placeholderImage,
-        
+
         // Official stamps/seals
         stamp_image: enrichedContractData.stamp_image || placeholderImage,
         stamp: enrichedContractData.stamp || placeholderImage,
         official_stamp: enrichedContractData.official_stamp || placeholderImage,
         seal: enrichedContractData.seal || placeholderImage,
-        
+
         // QR codes/Barcodes
         qr_code: enrichedContractData.qr_code || placeholderImage,
         barcode: enrichedContractData.barcode || placeholderImage,
-        
+
         // Watermarks/Background
         watermark: enrichedContractData.watermark || placeholderImage,
-        background_image: enrichedContractData.background_image || placeholderImage,
-        
+        background_image:
+          enrichedContractData.background_image || placeholderImage,
+
         // Promoter images (ensure these have valid URLs)
-        promoter_id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url),
-        promoter_passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url),
+        promoter_id_card_url: ensureValidUrl(
+          enrichedContractData.promoter_id_card_url
+        ),
+        promoter_passport_url: ensureValidUrl(
+          enrichedContractData.promoter_passport_url
+        ),
         id_card_url: ensureValidUrl(enrichedContractData.id_card_url),
         passport_url: ensureValidUrl(enrichedContractData.passport_url),
-        
+
         // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
         image_1: enrichedContractData.image_1 || placeholderImage,
         image_2: enrichedContractData.image_2 || placeholderImage,
@@ -350,7 +372,9 @@ export const POST = withAnyRBAC(
           currency: contractData.currency || 'OMR',
           is_current: true,
         })
-        .select('id, contract_number, contract_type, status, promoter_id, start_date, end_date, title, value, currency, created_at, updated_at')
+        .select(
+          'id, contract_number, contract_type, status, promoter_id, start_date, end_date, title, value, currency, created_at, updated_at'
+        )
         .single();
 
       if (contractError) {
@@ -368,7 +392,7 @@ export const POST = withAnyRBAC(
       // Add the party IDs back to the contract object (they weren't selected to avoid foreign key expansion)
       (contract as any).first_party_id = contractData.first_party_id;
       (contract as any).second_party_id = contractData.second_party_id;
-      
+
       console.log('✅ Contract created:', contract.id);
 
       // If triggerMakecom is true, send webhook to Make.com
@@ -382,8 +406,8 @@ export const POST = withAnyRBAC(
             process.env.VERCEL_URL?.startsWith('http')
               ? process.env.VERCEL_URL
               : process.env.VERCEL_URL
-              ? `https://${process.env.VERCEL_URL}`
-              : 'http://localhost:3000';
+                ? `https://${process.env.VERCEL_URL}`
+                : 'http://localhost:3000';
 
           // Pull Google Drive settings from Make.com template config (if available)
           const makeTemplate = templateConfig?.makecomTemplateId
@@ -404,8 +428,7 @@ export const POST = withAnyRBAC(
                     makeTemplate.makecomModuleConfig.googleDriveSettings
                       .folderId,
                   file_naming_pattern:
-                    makeTemplate.makecomModuleConfig.googleDriveSettings
-                      .naming,
+                    makeTemplate.makecomModuleConfig.googleDriveSettings.naming,
                 }
               : {}),
           };

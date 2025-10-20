@@ -3,10 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Card,
-  CardContent,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
 import {
   Download,
@@ -99,7 +96,9 @@ export function PromotersBulkActions({
             {BULK_ACTIONS.map(action => (
               <Button
                 key={action.id}
-                variant={action.variant === 'destructive' ? 'destructive' : 'outline'}
+                variant={
+                  action.variant === 'destructive' ? 'destructive' : 'outline'
+                }
                 size='sm'
                 onClick={() => onBulkAction(action.id)}
                 disabled={isPerformingAction}

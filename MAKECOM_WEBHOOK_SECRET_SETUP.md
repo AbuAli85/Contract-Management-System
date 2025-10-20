@@ -11,21 +11,25 @@ The `{{var.organization.MAKE_WEBHOOK_SECRET}}` is a security token that your app
 You can generate a secure secret key using any of these methods:
 
 #### **Method 1: Online Generator**
+
 1. **Go to**: https://www.uuidgenerator.net/
 2. **Generate** a UUID v4
 3. **Copy** the generated UUID
 
 #### **Method 2: Command Line (if you have Node.js)**
+
 ```bash
 node -e "console.log(require('crypto').randomUUID())"
 ```
 
 #### **Method 3: PowerShell (Windows)**
+
 ```powershell
 [System.Guid]::NewGuid().ToString()
 ```
 
 #### **Method 4: Manual Generation**
+
 Create a random string like: `make_webhook_2024_abc123def456ghi789`
 
 ### **Step 2: Set in Make.com Organization**
@@ -47,11 +51,13 @@ Create a random string like: `make_webhook_2024_abc123def456ghi789`
 Add the same secret to your application's environment variables:
 
 #### **In your .env.local file:**
+
 ```bash
 MAKE_WEBHOOK_SECRET=your_generated_secret_here
 ```
 
 #### **In your production environment:**
+
 ```bash
 MAKE_WEBHOOK_SECRET=your_generated_secret_here
 ```
@@ -59,11 +65,13 @@ MAKE_WEBHOOK_SECRET=your_generated_secret_here
 ## 🔍 **How to Verify It's Working**
 
 ### **Step 1: Check Make.com Variable**
+
 1. **Go to** Make.com organization settings
 2. **Check** that `MAKE_WEBHOOK_SECRET` is listed
 3. **Verify** the value matches your application
 
 ### **Step 2: Test Webhook**
+
 ```bash
 curl -X POST https://portal.thesmartpro.io/api/webhook/makecom \
   -H "Content-Type: application/json" \
@@ -76,6 +84,7 @@ curl -X POST https://portal.thesmartpro.io/api/webhook/makecom \
 ```
 
 ### **Step 3: Check Application Logs**
+
 Look for successful webhook processing in your application logs.
 
 ## 🛠️ **Alternative: Use a Simple String**
@@ -83,6 +92,7 @@ Look for successful webhook processing in your application logs.
 If you don't want to use organization variables, you can use a simple string directly:
 
 ### **In Make.com HTTP Module:**
+
 ```json
 {
   "name": "X-Webhook-Secret",
@@ -91,6 +101,7 @@ If you don't want to use organization variables, you can use a simple string dir
 ```
 
 ### **In your application .env.local:**
+
 ```bash
 MAKE_WEBHOOK_SECRET=my_secure_webhook_secret_2024
 ```
@@ -98,16 +109,19 @@ MAKE_WEBHOOK_SECRET=my_secure_webhook_secret_2024
 ## 🔐 **Security Best Practices**
 
 ### **1. Use Strong Secrets**
+
 - **Length**: At least 32 characters
 - **Complexity**: Mix letters, numbers, and symbols
 - **Uniqueness**: Don't reuse secrets from other services
 
 ### **2. Rotate Regularly**
+
 - **Change** the secret every 3-6 months
 - **Update** both Make.com and your application
 - **Test** after each rotation
 
 ### **3. Keep Secrets Secure**
+
 - **Never** commit secrets to version control
 - **Use** environment variables
 - **Restrict** access to production secrets

@@ -5,6 +5,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 ## 🎯 Core Features
 
 ### Contract Management
+
 - **Create & Edit Contracts** - Intuitive form-based contract creation
 - **Approval Workflows** - Multi-step approval process with notifications
 - **Document Generation** - Auto-generate PDF contracts from templates
@@ -12,6 +13,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **Status Tracking** - Monitor contract lifecycle from draft to execution
 
 ### User & Access Management
+
 - **Role-Based Access Control (RBAC)** - Granular permissions system
 - **Multi-Factor Authentication (MFA)** - Enhanced security with TOTP
 - **User Approval System** - Admin approval for new registrations
@@ -19,6 +21,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **Session Management** - Secure session handling with automatic refresh
 
 ### Business Modules
+
 - **Promoter Management** - Manage contractors and service providers
 - **Booking System** - Schedule and track service bookings
 - **Invoice Management** - Generate and manage invoices
@@ -26,6 +29,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **Real-time Updates** - Live synchronization across dashboards
 
 ### Additional Features
+
 - **Multi-language Support** - Built-in i18n (English, Arabic, more)
 - **Responsive Design** - Works seamlessly on all devices
 - **Excel Import/Export** - Bulk data operations
@@ -35,6 +39,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **UI Components**: shadcn/ui + Radix UI
@@ -44,6 +49,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **Charts**: Chart.js + Recharts
 
 ### Backend
+
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth + Custom RBAC
 - **Real-time**: Supabase Realtime subscriptions
@@ -52,6 +58,7 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **PDF Generation**: jsPDF
 
 ### Security
+
 - **MFA**: TOTP-based (otplib)
 - **Rate Limiting**: Upstash Redis
 - **RLS**: Row Level Security policies
@@ -59,12 +66,14 @@ A professional enterprise-grade contract management system built with Next.js 14
 - **Session Security**: HTTP-only cookies
 
 ### Testing & Quality
+
 - **Testing**: Jest + React Testing Library
 - **E2E Testing**: Cypress
 - **Linting**: ESLint + Prettier
 - **Type Safety**: TypeScript (strict mode)
 
 ### Deployment
+
 - **Hosting**: Vercel
 - **Database**: Supabase Cloud
 - **CDN**: Vercel Edge Network
@@ -185,12 +194,14 @@ contract-management-system/
 ## 🔑 Key Features
 
 ### Authentication Flow
+
 1. User registers → Status: "pending"
 2. Admin approves → Status: "active"
 3. User logs in with email/password
 4. Optional: Enable MFA for enhanced security
 
 ### Contract Workflow
+
 1. Create contract (draft status)
 2. Submit for approval
 3. Approval chain (based on roles)
@@ -198,6 +209,7 @@ contract-management-system/
 5. Execute and archive
 
 ### RBAC System
+
 - Predefined roles: admin, user, provider, client
 - Custom permissions per role
 - Route-level and component-level guards
@@ -266,6 +278,7 @@ See [SECURITY_PATCH_SUMMARY.md](./SECURITY_PATCH_SUMMARY.md) for details.
 ## 🌍 Internationalization
 
 Supports multiple languages via next-intl:
+
 - English (en)
 - Arabic (ar)
 - Extensible for more languages
@@ -281,6 +294,7 @@ Add translations in `i18n/messages/`.
 5. Open a Pull Request
 
 ### Code Standards
+
 - Follow TypeScript strict mode
 - Use Prettier for formatting
 - Write tests for new features

@@ -126,7 +126,10 @@ import {
   DEPARTMENTS,
   CONTRACT_TYPES,
 } from '@/constants/contract-options';
-import { updateContract, generateContractWithMakecom } from '@/app/actions/contracts';
+import {
+  updateContract,
+  generateContractWithMakecom,
+} from '@/app/actions/contracts';
 import type { ContractInsert } from '@/app/actions/contracts';
 import {
   analyzeContractDuration,
@@ -206,8 +209,12 @@ export default function EnhancedContractForm({
     resolver: zodResolver(contractGeneratorSchema),
     mode: 'onTouched',
     defaultValues: {
-      ...(contract?.first_party_id ? { first_party_id: contract.first_party_id } : {}),
-      ...(contract?.second_party_id ? { second_party_id: contract.second_party_id } : {}),
+      ...(contract?.first_party_id
+        ? { first_party_id: contract.first_party_id }
+        : {}),
+      ...(contract?.second_party_id
+        ? { second_party_id: contract.second_party_id }
+        : {}),
       ...(contract?.promoter_id ? { promoter_id: contract.promoter_id } : {}),
       contract_start_date: contract?.contract_start_date
         ? parseISO(contract.contract_start_date)
@@ -284,62 +291,65 @@ export default function EnhancedContractForm({
   }, [watchedSecondParty, promoters, form]);
 
   // Form sections
-  const sections: FormSection[] = React.useMemo(() => [
-    {
-      id: 'parties',
-      title: 'Contracting Parties',
-      description: 'Select the parties involved in the contract',
-      icon: Users,
-      required: true,
-      completed: false,
-      fields: ['first_party_id', 'second_party_id'],
-    },
-    {
-      id: 'promoter',
-      title: 'Promoter Information',
-      description: 'Select the promoter for this contract',
-      icon: UserCheck,
-      required: true,
-      completed: false,
-      fields: ['promoter_id'],
-    },
-    {
-      id: 'period',
-      title: 'Contract Period',
-      description: 'Define the contract start and end dates',
-      icon: Calendar,
-      required: true,
-      completed: false,
-      fields: ['contract_start_date', 'contract_end_date'],
-    },
-    {
-      id: 'employment',
-      title: 'Employment Details',
-      description: 'Job title, department, and work location',
-      icon: Briefcase,
-      required: false,
-      completed: false,
-      fields: ['job_title', 'department', 'work_location'],
-    },
-    {
-      id: 'compensation',
-      title: 'Compensation',
-      description: 'Salary, allowances, and benefits',
-      icon: DollarSign,
-      required: false,
-      completed: false,
-      fields: ['basic_salary', 'allowances', 'currency'],
-    },
-    {
-      id: 'terms',
-      title: 'Additional Terms',
-      description: 'Special terms and conditions',
-      icon: FileText,
-      required: false,
-      completed: false,
-      fields: ['special_terms'],
-    },
-  ], []);
+  const sections: FormSection[] = React.useMemo(
+    () => [
+      {
+        id: 'parties',
+        title: 'Contracting Parties',
+        description: 'Select the parties involved in the contract',
+        icon: Users,
+        required: true,
+        completed: false,
+        fields: ['first_party_id', 'second_party_id'],
+      },
+      {
+        id: 'promoter',
+        title: 'Promoter Information',
+        description: 'Select the promoter for this contract',
+        icon: UserCheck,
+        required: true,
+        completed: false,
+        fields: ['promoter_id'],
+      },
+      {
+        id: 'period',
+        title: 'Contract Period',
+        description: 'Define the contract start and end dates',
+        icon: Calendar,
+        required: true,
+        completed: false,
+        fields: ['contract_start_date', 'contract_end_date'],
+      },
+      {
+        id: 'employment',
+        title: 'Employment Details',
+        description: 'Job title, department, and work location',
+        icon: Briefcase,
+        required: false,
+        completed: false,
+        fields: ['job_title', 'department', 'work_location'],
+      },
+      {
+        id: 'compensation',
+        title: 'Compensation',
+        description: 'Salary, allowances, and benefits',
+        icon: DollarSign,
+        required: false,
+        completed: false,
+        fields: ['basic_salary', 'allowances', 'currency'],
+      },
+      {
+        id: 'terms',
+        title: 'Additional Terms',
+        description: 'Special terms and conditions',
+        icon: FileText,
+        required: false,
+        completed: false,
+        fields: ['special_terms'],
+      },
+    ],
+    []
+  );
 
   // Removed analyzeFormData function to prevent circular dependencies
 
@@ -588,7 +598,8 @@ export default function EnhancedContractForm({
         second_party_id: formValues.second_party_id || null,
         promoter_id: formValues.promoter_id || null,
         client_id: formValues.first_party_id || formValues.client_id || null,
-        employer_id: formValues.second_party_id || formValues.employer_id || null,
+        employer_id:
+          formValues.second_party_id || formValues.employer_id || null,
         // Use date-only to match DATE columns across environments
         start_date: toDateOnly(
           formValues.contract_start_date || formValues.start_date
@@ -638,7 +649,9 @@ export default function EnhancedContractForm({
         if (alt.ok) {
           return altJson;
         }
-        throw new Error(altJson?.error || statusText || 'Failed to create contract');
+        throw new Error(
+          altJson?.error || statusText || 'Failed to create contract'
+        );
       }
       throw new Error(statusText || 'Failed to create contract');
     },
@@ -721,8 +734,15 @@ export default function EnhancedContractForm({
 
       // Debug logging
       console.log('🔍 Form values:', formValues);
-      console.log('🔍 Contract type being sent:', formValues.contract_type || 'full-time-permanent');
-      console.log('🔍 Mapped values:', { probationPeriod, noticePeriod, workingHours });
+      console.log(
+        '🔍 Contract type being sent:',
+        formValues.contract_type || 'full-time-permanent'
+      );
+      console.log('🔍 Mapped values:', {
+        probationPeriod,
+        noticePeriod,
+        workingHours,
+      });
       console.log('🔍 Final payload:', payload);
 
       const res = await fetch('/api/contracts/makecom/generate', {
@@ -733,7 +753,9 @@ export default function EnhancedContractForm({
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(json?.details || json?.error || 'Failed to generate contract');
+        throw new Error(
+          json?.details || json?.error || 'Failed to generate contract'
+        );
       }
       return json;
     },
@@ -903,11 +925,17 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' aria-disabled='true'>
+                                <SelectItem
+                                  value='loading'
+                                  aria-disabled='true'
+                                >
                                   Loading clients...
                                 </SelectItem>
                               ) : clientParties.length === 0 ? (
-                                <SelectItem value='no-clients' aria-disabled='true'>
+                                <SelectItem
+                                  value='no-clients'
+                                  aria-disabled='true'
+                                >
                                   No clients found. Please add a client in Party
                                   Management.
                                 </SelectItem>
@@ -946,11 +974,17 @@ export default function EnhancedContractForm({
                             </FormControl>
                             <SelectContent>
                               {isLoadingParties ? (
-                                <SelectItem value='loading' aria-disabled='true'>
+                                <SelectItem
+                                  value='loading'
+                                  aria-disabled='true'
+                                >
                                   Loading employers...
                                 </SelectItem>
                               ) : employerParties.length === 0 ? (
-                                <SelectItem value='no-employers' aria-disabled='true'>
+                                <SelectItem
+                                  value='no-employers'
+                                  aria-disabled='true'
+                                >
                                   No employers found. Please add an employer in
                                   Party Management.
                                 </SelectItem>

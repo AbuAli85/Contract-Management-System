@@ -2,7 +2,13 @@
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Shield, LogIn, AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -18,7 +24,7 @@ let globalAuthState: {
   lastCheck: 0,
   user: null,
   error: null,
-  lastSuccessfulCheck: 0
+  lastSuccessfulCheck: 0,
 };
 
 // Global rate limiting
@@ -42,7 +48,11 @@ interface User {
   full_name?: string;
 }
 
-export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: AuthGuardProps) {
+export function AuthGuard({
+  children,
+  requireAuth = true,
+  allowedRoles = [],
+}: AuthGuardProps) {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,98 +61,103 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
   const isCheckingRef = useRef(false);
   const isMountedRef = useRef(true);
 
-  const checkAuth = useCallback(async (force = false) => {
-    // Check if component is still mounted
-    if (!isMountedRef.current) {
-      console.log('⏱️ AuthGuard: Component unmounted, skipping auth check');
-      return;
-    }
-
-    // Global rate limiting check
-    const now = Date.now();
-    if (!force && now - globalAuthState.lastCheck < AUTH_CHECK_INTERVAL) {
-      console.log('⏱️ AuthGuard: Using cached auth state (rate limited)');
-      if (globalAuthState.user) {
-        setUser(globalAuthState.user);
-        setError(globalAuthState.error);
+  const checkAuth = useCallback(
+    async (force = false) => {
+      // Check if component is still mounted
+      if (!isMountedRef.current) {
+        console.log('⏱️ AuthGuard: Component unmounted, skipping auth check');
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    // Check if there's already a pending auth check
-    if (pendingAuthCheck && !force) {
-      console.log('⏱️ AuthGuard: Waiting for pending auth check...');
+      // Global rate limiting check
+      const now = Date.now();
+      if (!force && now - globalAuthState.lastCheck < AUTH_CHECK_INTERVAL) {
+        console.log('⏱️ AuthGuard: Using cached auth state (rate limited)');
+        if (globalAuthState.user) {
+          setUser(globalAuthState.user);
+          setError(globalAuthState.error);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Check if there's already a pending auth check
+      if (pendingAuthCheck && !force) {
+        console.log('⏱️ AuthGuard: Waiting for pending auth check...');
+        try {
+          const result = await pendingAuthCheck;
+          if (isMountedRef.current && result.user) {
+            setUser(result.user);
+            setError(result.error);
+          }
+          if (isMountedRef.current) {
+            setLoading(false);
+          }
+          return;
+        } catch (error) {
+          console.log(
+            '⚠️ AuthGuard: Pending auth check failed, proceeding with new check'
+          );
+        }
+      }
+
+      // Prevent multiple simultaneous checks
+      if (isCheckingRef.current) {
+        console.log('⏱️ AuthGuard: Already checking, skipping...');
+        return;
+      }
+
+      // Check if we're being rate limited
+      if (now - globalAuthState.lastCheck < RATE_LIMIT_WINDOW) {
+        console.log('⏱️ AuthGuard: Rate limiting - skipping check');
+        return;
+      }
+
+      isCheckingRef.current = true;
+      globalAuthState.isChecking = true;
+
+      // Create the auth check promise for deduplication
+      pendingAuthCheck = performAuthCheck();
+
       try {
         const result = await pendingAuthCheck;
-        if (isMountedRef.current && result.user) {
-          setUser(result.user);
-          setError(result.error);
-        }
+
+        // Only update state if component is still mounted
         if (isMountedRef.current) {
+          if (result.user) {
+            setUser(result.user);
+            setError(result.error);
+            globalAuthState.user = result.user;
+            globalAuthState.error = result.error;
+            globalAuthState.lastSuccessfulCheck = now;
+          } else {
+            setUser(null);
+            setError(result.error);
+            globalAuthState.user = null;
+            globalAuthState.error = result.error;
+          }
           setLoading(false);
         }
-        return;
       } catch (error) {
-        console.log('⚠️ AuthGuard: Pending auth check failed, proceeding with new check');
-      }
-    }
-
-    // Prevent multiple simultaneous checks
-    if (isCheckingRef.current) {
-      console.log('⏱️ AuthGuard: Already checking, skipping...');
-      return;
-    }
-
-    // Check if we're being rate limited
-    if (now - globalAuthState.lastCheck < RATE_LIMIT_WINDOW) {
-      console.log('⏱️ AuthGuard: Rate limiting - skipping check');
-      return;
-    }
-
-    isCheckingRef.current = true;
-    globalAuthState.isChecking = true;
-
-    // Create the auth check promise for deduplication
-    pendingAuthCheck = performAuthCheck();
-    
-    try {
-      const result = await pendingAuthCheck;
-      
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
-        if (result.user) {
-          setUser(result.user);
-          setError(result.error);
-          globalAuthState.user = result.user;
-          globalAuthState.error = result.error;
-          globalAuthState.lastSuccessfulCheck = now;
-        } else {
+        if (isMountedRef.current) {
+          console.error('❌ AuthGuard: Error during auth check:', error);
+          setError('Authentication error');
           setUser(null);
-          setError(result.error);
           globalAuthState.user = null;
-          globalAuthState.error = result.error;
+          globalAuthState.error = 'Authentication error';
+          setLoading(false);
         }
-        setLoading(false);
+      } finally {
+        if (isMountedRef.current) {
+          isCheckingRef.current = false;
+          globalAuthState.isChecking = false;
+          globalAuthState.lastCheck = now;
+          pendingAuthCheck = null;
+        }
       }
-    } catch (error) {
-      if (isMountedRef.current) {
-        console.error('❌ AuthGuard: Error during auth check:', error);
-        setError('Authentication error');
-        setUser(null);
-        globalAuthState.user = null;
-        globalAuthState.error = 'Authentication error';
-        setLoading(false);
-      }
-    } finally {
-      if (isMountedRef.current) {
-        isCheckingRef.current = false;
-        globalAuthState.isChecking = false;
-        globalAuthState.lastCheck = now;
-        pendingAuthCheck = null;
-      }
-    }
-  }, [allowedRoles]);
+    },
+    [allowedRoles]
+  );
 
   // Separate function for the actual auth check
   const performAuthCheck = async () => {
@@ -157,27 +172,36 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
+          Pragma: 'no-cache',
         },
-        signal: abortController.signal
+        signal: abortController.signal,
       });
 
       if (response.status === 429) {
         console.warn('⚠️ AuthGuard: Rate limited, will retry later');
-        return { user: null, error: 'Too many requests. Please wait a moment and try again.' };
+        return {
+          user: null,
+          error: 'Too many requests. Please wait a moment and try again.',
+        };
       }
 
       if (response.ok) {
         const data = await response.json();
-        
+
         if (data.authenticated && data.user && data.user.id) {
           // Check role permissions if specified
-          if (allowedRoles.length > 0 && !allowedRoles.includes(data.user.role)) {
+          if (
+            allowedRoles.length > 0 &&
+            !allowedRoles.includes(data.user.role)
+          ) {
             const errorMsg = `Access denied. Required role: ${allowedRoles.join(' or ')}`;
             console.warn('🚫 AuthGuard:', errorMsg);
             return { user: null, error: errorMsg };
           } else {
-            console.log('✅ AuthGuard: User authenticated:', data.user.email || data.user.id);
+            console.log(
+              '✅ AuthGuard: User authenticated:',
+              data.user.email || data.user.id
+            );
             return { user: data.user, error: null };
           }
         } else {
@@ -185,7 +209,10 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
           return { user: null, error: 'Authentication required' };
         }
       } else {
-        console.warn('⚠️ AuthGuard: Authentication check failed:', response.status);
+        console.warn(
+          '⚠️ AuthGuard: Authentication check failed:',
+          response.status
+        );
         return { user: null, error: 'Authentication check failed' };
       }
     } catch (error) {
@@ -193,7 +220,7 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
         console.log('🔄 AuthGuard: Request aborted');
         return { user: null, error: 'Request aborted' };
       }
-      
+
       console.error('❌ AuthGuard: Error checking authentication:', error);
       return { user: null, error: 'Authentication error' };
     }
@@ -209,7 +236,10 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
     }
 
     // Set up console commands for development
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      typeof window !== 'undefined'
+    ) {
       // @ts-ignore - Adding to window for development
       window.enableBypass = () => {
         localStorage.setItem('emergency-bypass', 'true');
@@ -218,7 +248,7 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
         console.log('🚨 Bypass enabled via console command');
         window.location.reload();
       };
-      
+
       // @ts-ignore - Adding to window for development
       window.disableBypass = () => {
         localStorage.removeItem('emergency-bypass');
@@ -237,19 +267,19 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
           full_name: 'Emergency User',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          user_metadata: { role: role }
+          user_metadata: { role: role },
         };
-        
+
         globalAuthState.user = mockUser;
         globalAuthState.error = null;
         globalAuthState.lastSuccessfulCheck = Date.now();
-        
+
         if (isMountedRef.current) {
           setUser(mockUser);
           setError(null);
           setLoading(false);
         }
-        
+
         console.log('🚨 Force auth enabled for:', email, 'with role:', role);
       };
 
@@ -260,7 +290,7 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
           'admin@example.com': { role: 'admin', name: 'System Administrator' },
           'manager@example.com': { role: 'manager', name: 'Project Manager' },
           'promoter@example.com': { role: 'promoter', name: 'Sales Promoter' },
-          'client@example.com': { role: 'client', name: 'Business Client' }
+          'client@example.com': { role: 'client', name: 'Business Client' },
         };
 
         const userInfo = userMap[email];
@@ -272,44 +302,72 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
             full_name: userInfo.name,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            user_metadata: { role: userInfo.role }
+            user_metadata: { role: userInfo.role },
           };
-          
+
           globalAuthState.user = mockUser;
           globalAuthState.error = null;
           globalAuthState.lastSuccessfulCheck = Date.now();
-          
+
           if (isMountedRef.current) {
             setUser(mockUser);
             setError(null);
             setLoading(false);
           }
-          
-          console.log('🔄 Switched to user:', email, 'with role:', userInfo.role);
+
+          console.log(
+            '🔄 Switched to user:',
+            email,
+            'with role:',
+            userInfo.role
+          );
         } else {
-          console.log('❌ User not found. Available users:', Object.keys(userMap));
+          console.log(
+            '❌ User not found. Available users:',
+            Object.keys(userMap)
+          );
         }
       };
 
       // @ts-ignore - Adding to window for development
       window.listUsers = () => {
         console.log('👥 Available test users:');
-        console.log('  window.switchToUser("luxsess2001@gmail.com")     - Admin (Luxsess)');
-        console.log('  window.switchToUser("admin@example.com")         - Admin (System)');
-        console.log('  window.switchToUser("manager@example.com")       - Manager');
-        console.log('  window.switchToUser("promoter@example.com")      - Promoter');
-        console.log('  window.switchToUser("client@example.com")        - Client');
+        console.log(
+          '  window.switchToUser("luxsess2001@gmail.com")     - Admin (Luxsess)'
+        );
+        console.log(
+          '  window.switchToUser("admin@example.com")         - Admin (System)'
+        );
+        console.log(
+          '  window.switchToUser("manager@example.com")       - Manager'
+        );
+        console.log(
+          '  window.switchToUser("promoter@example.com")      - Promoter'
+        );
+        console.log(
+          '  window.switchToUser("client@example.com")        - Client'
+        );
         console.log('');
-        console.log('  window.forceAuth("email@example.com", "role")    - Custom user');
-        console.log('  window.enableBypass()                            - Enable bypass');
-        console.log('  window.disableBypass()                           - Disable bypass');
+        console.log(
+          '  window.forceAuth("email@example.com", "role")    - Custom user'
+        );
+        console.log(
+          '  window.enableBypass()                            - Enable bypass'
+        );
+        console.log(
+          '  window.disableBypass()                           - Disable bypass'
+        );
       };
-      
+
       console.log('🔧 Development console commands available:');
       console.log('  window.enableBypass()  - Enable emergency bypass');
       console.log('  window.disableBypass() - Disable emergency bypass');
-      console.log('  window.forceAuth("email@example.com", "admin") - Force authentication');
-      console.log('  window.switchToUser("email@example.com") - Switch to test user');
+      console.log(
+        '  window.forceAuth("email@example.com", "admin") - Force authentication'
+      );
+      console.log(
+        '  window.switchToUser("email@example.com") - Switch to test user'
+      );
       console.log('  window.listUsers() - List all available test users');
     }
 
@@ -322,7 +380,12 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
 
     // Set up periodic check with reduced frequency
     const interval = setInterval(() => {
-      if (isMountedRef.current && !isCheckingRef.current && !globalAuthState.isChecking && !pendingAuthCheck) {
+      if (
+        isMountedRef.current &&
+        !isCheckingRef.current &&
+        !globalAuthState.isChecking &&
+        !pendingAuthCheck
+      ) {
         checkAuth();
       }
     }, AUTH_CHECK_INTERVAL); // Check every 5 minutes instead of 2 minutes
@@ -330,16 +393,18 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
     return () => {
       // Mark component as unmounted
       isMountedRef.current = false;
-      
+
       clearTimeout(initialCheckTimer);
       clearInterval(interval);
-      
+
       // Only abort if we have a current request and it's not completed
       if (abortControllerRef.current && isCheckingRef.current) {
-        console.log('🔄 AuthGuard: Aborting pending auth request due to unmount');
+        console.log(
+          '🔄 AuthGuard: Aborting pending auth request due to unmount'
+        );
         abortControllerRef.current.abort();
       }
-      
+
       // Clear pending auth check on unmount
       pendingAuthCheck = null;
     };
@@ -348,10 +413,10 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Verifying authentication...</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Verifying authentication...</p>
         </div>
       </div>
     );
@@ -360,101 +425,103 @@ export function AuthGuard({ children, requireAuth = true, allowedRoles = [] }: A
   // Show error state for authentication failures
   if (error || (requireAuth && !user)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <Shield className="h-6 w-6 text-red-600" />
+      <div className='min-h-screen flex items-center justify-center bg-gray-50'>
+        <Card className='w-full max-w-md'>
+          <CardHeader className='text-center'>
+            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100'>
+              <Shield className='h-6 w-6 text-red-600' />
             </div>
-            <CardTitle className="text-xl text-red-600">Access Denied</CardTitle>
+            <CardTitle className='text-xl text-red-600'>
+              Access Denied
+            </CardTitle>
             <CardDescription>
               {error || 'Authentication required to access this page'}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-center text-sm text-gray-600">
-              <AlertCircle className="inline h-4 w-4 mr-1" />
+          <CardContent className='space-y-4'>
+            <div className='text-center text-sm text-gray-600'>
+              <AlertCircle className='inline h-4 w-4 mr-1' />
               Please log in to continue
             </div>
-            <div className="flex space-x-3">
-              <Button 
+            <div className='flex space-x-3'>
+              <Button
                 onClick={() => router.push('/en/auth/login')}
-                className="flex-1"
+                className='flex-1'
               >
-                <LogIn className="h-4 w-4 mr-2" />
+                <LogIn className='h-4 w-4 mr-2' />
                 Go to Login
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant='outline'
                 onClick={() => router.push('/en')}
-                className="flex-1"
+                className='flex-1'
               >
                 Go Home
               </Button>
             </div>
-            
+
             {/* Always show retry button for better UX */}
-            <div className="text-center">
-              <Button 
-                variant="ghost" 
+            <div className='text-center'>
+              <Button
+                variant='ghost'
                 onClick={() => {
                   setError(null);
                   setLoading(true);
                   checkAuth(true);
                 }}
-                className="text-sm"
+                className='text-sm'
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className='h-4 w-4 mr-2' />
                 Retry Authentication
               </Button>
             </div>
 
             {/* Development mode quick bypass */}
             {process.env.NODE_ENV === 'development' && (
-              <div className="border-t pt-4">
-                <div className="text-center text-xs text-gray-500 mb-2">
+              <div className='border-t pt-4'>
+                <div className='text-center text-xs text-gray-500 mb-2'>
                   Development Mode - Emergency Access
                 </div>
-                <div className="space-y-2">
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
+                <div className='space-y-2'>
+                  <Button
+                    variant='destructive'
+                    size='sm'
                     onClick={() => {
                       localStorage.setItem('emergency-bypass', 'true');
                       localStorage.setItem('dev-bypass', 'true');
                       localStorage.setItem('force-bypass', 'true');
                       window.location.reload();
                     }}
-                    className="w-full text-xs"
+                    className='w-full text-xs'
                   >
                     🚨 EMERGENCY BYPASS (IMMEDIATE)
                   </Button>
-                  <div className="flex space-x-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
+                  <div className='flex space-x-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
                       onClick={() => {
                         localStorage.setItem('emergency-bypass', 'true');
                         window.location.reload();
                       }}
-                      className="flex-1 text-xs"
+                      className='flex-1 text-xs'
                     >
                       Quick Bypass
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
+                    <Button
+                      variant='outline'
+                      size='sm'
                       onClick={() => router.push('/emergency-bypass')}
-                      className="flex-1 text-xs"
+                      className='flex-1 text-xs'
                     >
                       Test Bypass
                     </Button>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
+                  <Button
+                    variant='ghost'
+                    size='sm'
                     onClick={() => router.push('/dev-status')}
-                    className="w-full text-xs"
+                    className='w-full text-xs'
                   >
                     🔧 Development Status
                   </Button>

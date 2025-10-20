@@ -4,10 +4,18 @@ import { z } from 'zod';
 
 const LeaveRequestSchema = z.object({
   employee_id: z.number(),
-  leave_type: z.enum(['annual', 'sick', 'personal', 'maternity', 'paternity', 'unpaid', 'other']),
+  leave_type: z.enum([
+    'annual',
+    'sick',
+    'personal',
+    'maternity',
+    'paternity',
+    'unpaid',
+    'other',
+  ]),
   start_date: z.string(),
   end_date: z.string(),
-  reason: z.string().optional()
+  reason: z.string().optional(),
 });
 
 const LeaveQuerySchema = z.object({
@@ -17,14 +25,14 @@ const LeaveQuerySchema = z.object({
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   page: z.string().default('1'),
-  limit: z.string().default('10')
+  limit: z.string().default('10'),
 });
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();
     const { searchParams } = new URL(request.url);
-    
+
     const queryParams = {
       employee_id: searchParams.get('employee_id'),
       status: searchParams.get('status'),
@@ -32,13 +40,13 @@ export async function GET(request: NextRequest) {
       start_date: searchParams.get('start_date'),
       end_date: searchParams.get('end_date'),
       page: searchParams.get('page') || '1',
-      limit: searchParams.get('limit') || '10'
+      limit: searchParams.get('limit') || '10',
     };
 
     const parsed = LeaveQuerySchema.safeParse(queryParams);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: parsed.error.format() }, 
+        { error: 'Invalid query parameters', details: parsed.error.format() },
         { status: 400 }
       );
     }
@@ -49,13 +57,15 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('hr.leave_requests')
-      .select(`
+      .select(
+        `
         id, employee_id, leave_type, start_date, end_date, total_days,
         reason, approval_status, approved_by, approved_at, rejection_reason,
         created_at, updated_at,
         employees!inner(full_name, employee_code, job_title),
         approver:hr.employees!approved_by(full_name, employee_code)
-      `)
+      `
+      )
       .order('created_at', { ascending: false });
 
     // Apply filters
@@ -81,14 +91,16 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     const { count } = await query.select('*', { count: 'exact', head: true });
-    
+
     // Get paginated results
-    const { data, error } = await query
-      .range(offset, offset + limit - 1);
+    const { data, error } = await query.range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching leave requests:', error);
-      return NextResponse.json({ error: 'Failed to fetch leave requests' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch leave requests' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -97,13 +109,15 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total: count || 0,
-        pages: Math.ceil((count || 0) / limit)
-      }
+        pages: Math.ceil((count || 0) / limit),
+      },
     });
-
   } catch (error) {
     console.error('Error in GET /api/hr/leave-requests:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -111,16 +125,17 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createClient();
     const body = await request.json();
-    
+
     const parsed = LeaveRequestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.format() }, 
+        { error: 'Validation failed', details: parsed.error.format() },
         { status: 400 }
       );
     }
 
-    const { employee_id, leave_type, start_date, end_date, reason } = parsed.data;
+    const { employee_id, leave_type, start_date, end_date, reason } =
+      parsed.data;
 
     // Calculate total days
     const start = new Date(start_date);
@@ -130,7 +145,7 @@ export async function POST(request: NextRequest) {
 
     if (totalDays <= 0) {
       return NextResponse.json(
-        { error: 'End date must be after start date' }, 
+        { error: 'End date must be after start date' },
         { status: 400 }
       );
     }
@@ -145,7 +160,7 @@ export async function POST(request: NextRequest) {
 
     if (overlappingRequests && overlappingRequests.length > 0) {
       return NextResponse.json(
-        { error: 'You have overlapping leave requests for this period' }, 
+        { error: 'You have overlapping leave requests for this period' },
         { status: 400 }
       );
     }
@@ -158,26 +173,36 @@ export async function POST(request: NextRequest) {
         start_date,
         end_date,
         total_days: totalDays,
-        reason
+        reason,
       })
-      .select(`
+      .select(
+        `
         id, employee_id, leave_type, start_date, end_date, total_days,
         reason, approval_status, created_at, updated_at
-      `)
+      `
+      )
       .single();
 
     if (error) {
       console.error('Error creating leave request:', error);
-      return NextResponse.json({ error: 'Failed to create leave request' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create leave request' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ 
-      message: 'Leave request submitted successfully',
-      data 
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        message: 'Leave request submitted successfully',
+        data,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Error in POST /api/hr/leave-requests:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

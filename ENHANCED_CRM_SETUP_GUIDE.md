@@ -7,18 +7,21 @@ The Enhanced CRM System provides a comprehensive workflow for managing promoters
 ## 🎯 Key Features
 
 ### ✅ **Streamlined Workflow**
+
 - **5-Step Document Generation**: Simple wizard interface
 - **Smart Data Integration**: Automatic promoter and party data fetching
 - **Real-time Validation**: Instant feedback on required fields
 - **One-Click Generation**: Automated processing through Make.com
 
 ### ✅ **Comprehensive Dashboard**
+
 - **Real-time Statistics**: Live metrics and KPIs
 - **Quick Actions**: Fast access to common tasks
 - **Recent Activity**: Track all system activities
 - **Advanced Filtering**: Search and filter across all data
 
 ### ✅ **Document Types Supported**
+
 1. **Full-Time Permanent Employment** - Standard employment contracts
 2. **Part-Time Contract** - Flexible work arrangements
 3. **Fixed-Term Contract** - Project-based contracts
@@ -70,6 +73,7 @@ GOOGLE_DRIVE_EMPLOYMENT_FOLDER=your-employment-folder-id
 #### **3.1 Promoter Data**
 
 Ensure your promoters table has:
+
 - `name_en` and `name_ar` (English and Arabic names)
 - `email` and `mobile_number`
 - `id_card_number` and `passport_number`
@@ -78,6 +82,7 @@ Ensure your promoters table has:
 #### **3.2 Party Data**
 
 Ensure your parties table has:
+
 - `name_en` and `name_ar`
 - `crn` (Commercial Registration Number)
 - `email` and `phone`
@@ -98,6 +103,7 @@ Ensure your parties table has:
 ### **Dashboard Features**
 
 #### **Statistics Overview**
+
 - **Total Promoters**: Count of all registered promoters
 - **Active Contracts**: Currently active contracts
 - **Pending Documents**: Documents awaiting processing
@@ -105,12 +111,14 @@ Ensure your parties table has:
 - **Total Value**: Sum of all contract values
 
 #### **Quick Actions**
+
 - **Generate Contract**: Start document generation workflow
 - **Add Promoter**: Register new promoter (coming soon)
 - **Bulk Import**: Import multiple promoters (coming soon)
 - **Setup Automation**: Configure Make.com workflows (coming soon)
 
 #### **Data Management**
+
 - **Search & Filter**: Find promoters and contracts quickly
 - **Status Tracking**: Monitor document processing status
 - **Recent Activity**: View latest system activities
@@ -144,12 +152,14 @@ Ensure your parties table has:
 ## 📊 Monitoring & Analytics
 
 ### **Real-time Metrics**
+
 - Document generation success rate
 - Processing time averages
 - Error frequency and types
 - User activity patterns
 
 ### **Status Tracking**
+
 - **Pending**: Document queued for processing
 - **Processing**: Being handled by Make.com
 - **Completed**: Successfully generated
@@ -160,16 +170,19 @@ Ensure your parties table has:
 ### **Common Issues**
 
 #### **1. Make.com Webhook Not Working**
+
 - **Check URL**: Verify `MAKECOM_WEBHOOK_URL` is correct
 - **Test Connection**: Use the testing tab in the interface
 - **Check Logs**: Review browser console and server logs
 
 #### **2. Template Not Found**
+
 - **Verify Template ID**: Check Google Docs template ID
 - **Check Permissions**: Ensure Make.com can access the template
 - **Update Configuration**: Refresh template configuration
 
 #### **3. Data Not Loading**
+
 - **Check Database**: Verify promoters and parties exist
 - **Check Permissions**: Ensure user has proper RBAC permissions
 - **Refresh Page**: Try reloading the dashboard
@@ -177,6 +190,7 @@ Ensure your parties table has:
 ### **Debug Mode**
 
 Enable debug logging by adding to `.env.local`:
+
 ```bash
 DEBUG_CRM_WORKFLOW=true
 DEBUG_MAKECOM_INTEGRATION=true
@@ -185,18 +199,21 @@ DEBUG_MAKECOM_INTEGRATION=true
 ## 🚀 Advanced Features
 
 ### **Custom Templates**
+
 - Create custom contract templates
 - Add company branding and logos
 - Configure automatic signatures
 - Set up approval workflows
 
 ### **Bulk Operations**
+
 - Generate multiple contracts at once
 - Import promoter data from Excel
 - Export contract data and reports
 - Schedule automated document generation
 
 ### **Integration Options**
+
 - **Slack Notifications**: Get notified of document status
 - **Email Alerts**: Receive email confirmations
 - **API Access**: Integrate with external systems
@@ -205,12 +222,14 @@ DEBUG_MAKECOM_INTEGRATION=true
 ## 📈 Performance Optimization
 
 ### **Best Practices**
+
 - **Batch Processing**: Process multiple documents together
 - **Caching**: Cache frequently accessed data
 - **Image Optimization**: Compress document images
 - **Database Indexing**: Optimize query performance
 
 ### **Scaling Considerations**
+
 - **Rate Limiting**: Implement webhook rate limits
 - **Queue Management**: Handle high-volume processing
 - **Error Recovery**: Automatic retry mechanisms
@@ -226,6 +245,7 @@ DEBUG_MAKECOM_INTEGRATION=true
 ## 📞 Support
 
 For technical support or questions:
+
 - **Documentation**: Check this guide and inline help
 - **Logs**: Review browser console and server logs
 - **Testing**: Use the built-in testing features

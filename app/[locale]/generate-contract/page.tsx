@@ -12,19 +12,19 @@ export default function GenerateContractPage() {
 
   if (loading || isLoading) {
     return (
-      <LoadingPage 
-        message="Loading your dashboard..."
-        subMessage="Please wait while we prepare your workspace"
+      <LoadingPage
+        message='Loading your dashboard...'
+        subMessage='Please wait while we prepare your workspace'
       />
     );
   }
 
   if (!isAuthorized) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-          <p className="text-muted-foreground">
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <h1 className='text-2xl font-bold mb-4'>Access Denied</h1>
+          <p className='text-muted-foreground'>
             You don't have permission to access contract generation.
           </p>
         </div>
@@ -33,7 +33,7 @@ export default function GenerateContractPage() {
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className='container mx-auto py-6'>
       <SimpleContractGenerator />
     </div>
   );

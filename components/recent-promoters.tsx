@@ -38,7 +38,9 @@ export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
 
       const { data, error } = await supabase
         .from('promoters')
-        .select('id, name_en, name_ar, status, created_at, first_name, last_name')
+        .select(
+          'id, name_en, name_ar, status, created_at, first_name, last_name'
+        )
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -48,7 +50,8 @@ export function RecentPromoters({ limit = 3 }: RecentPromotersProps) {
 
       const normalized = (data || []).map((p: any) => ({
         ...p,
-        name_en: p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
+        name_en:
+          p.name_en || [p.first_name, p.last_name].filter(Boolean).join(' '),
       }));
       setPromoters(normalized);
     } catch (error) {

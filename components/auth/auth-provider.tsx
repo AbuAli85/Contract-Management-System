@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     // Clear any existing session
     setUser(null);
-    
+
     // Redirect to home or login
     router.push('/en/auth/login');
   };
@@ -62,11 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     updateUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -80,34 +76,41 @@ export function useAuth() {
 // Helper hook for role-based access
 export function useRequireAuth(requiredRole?: string) {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirect to login if not authenticated
       router.push('/en/auth/login');
       return;
     }
-    
-    if (!isLoading && isAuthenticated && requiredRole && user?.role !== requiredRole) {
+
+    if (
+      !isLoading &&
+      isAuthenticated &&
+      requiredRole &&
+      user?.role !== requiredRole
+    ) {
       // Redirect to appropriate dashboard if wrong role
       const dashboardMap = {
         provider: '/en/dashboard/provider-comprehensive',
-        admin: '/en/dashboard', 
+        admin: '/en/dashboard',
         client: '/en/dashboard/client-comprehensive',
       };
-      
-      router.push(dashboardMap[user?.role as keyof typeof dashboardMap] || '/en');
+
+      router.push(
+        dashboardMap[user?.role as keyof typeof dashboardMap] || '/en'
+      );
       return;
     }
   }, [user, isAuthenticated, isLoading, requiredRole]);
-  
+
   return { user, isAuthenticated, isLoading };
 }
 
 // Helper hook for role checking
 export function useRole() {
   const { user } = useAuth();
-  
+
   return {
     role: user?.role,
     isProvider: user?.role === 'provider',

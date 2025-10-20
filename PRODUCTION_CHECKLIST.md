@@ -15,12 +15,14 @@ Use this checklist to ensure everything is configured correctly for production.
 ### **How to verify:**
 
 **For Vercel:**
+
 1. Go to: https://vercel.com/dashboard
 2. Select your project
 3. Settings → Environment Variables
 4. You should see both variables listed
 
 **For Railway/Netlify/Other:**
+
 - Check your platform's environment variables section
 - Both variables should be present
 
@@ -42,10 +44,12 @@ Use this checklist to ensure everything is configured correctly for production.
 ### **If not enabled:**
 
 **Enable Google Drive API:**
+
 - https://console.cloud.google.com/apis/library/drive.googleapis.com?project=nth-segment-475411-g1
 - Click "ENABLE"
 
 **Enable Google Docs API:**
+
 - https://console.cloud.google.com/apis/library/docs.googleapis.com?project=nth-segment-475411-g1
 - Click "ENABLE"
 
@@ -63,6 +67,7 @@ Use this checklist to ensure everything is configured correctly for production.
 2. **Click "Share" button** (top-right)
 
 3. **Look for this email in the shared list:**
+
    ```
    contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
    ```
@@ -87,11 +92,13 @@ Use this checklist to ensure everything is configured correctly for production.
 ### **How to verify:**
 
 **For Vercel:**
+
 1. Go to: https://vercel.com/dashboard/deployments
 2. Latest deployment should include commit: `feat: add detailed error diagnostics`
 3. If not, trigger a redeploy
 
 **For other platforms:**
+
 - Make sure your latest GitHub push is deployed
 - Check deployment logs for any errors
 
@@ -152,6 +159,7 @@ The new error response will now include detailed diagnostics:
 ### **Error: "Missing Google Service Account credentials"**
 
 **Solution:**
+
 - Environment variables not set in production
 - Go back to Step 1
 - Make sure you used `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` (not just `GOOGLE_SERVICE_ACCOUNT_KEY`)
@@ -160,6 +168,7 @@ The new error response will now include detailed diagnostics:
 ### **Error: "The caller does not have permission"**
 
 **Solution:**
+
 - Google Drive API or Google Docs API not enabled
 - Go to Step 2
 - Enable both APIs
@@ -168,6 +177,7 @@ The new error response will now include detailed diagnostics:
 ### **Error: "File not found" or "Requested entity was not found"**
 
 **Solution:**
+
 - Template not shared with service account
 - Go to Step 3
 - Make sure you share with the EXACT email (copy-paste it)
@@ -176,6 +186,7 @@ The new error response will now include detailed diagnostics:
 ### **Error: "Invalid JWT Signature"**
 
 **Solution:**
+
 - Service account key is malformed or incorrect
 - Regenerate the Base64 key:
   ```bash
@@ -190,26 +201,31 @@ The new error response will now include detailed diagnostics:
 ## 📝 **Quick Reference**
 
 **Service Account Email:**
+
 ```
 contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
 ```
 
 **Template ID:**
+
 ```
 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
 ```
 
 **Template URL:**
+
 ```
 https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit
 ```
 
 **Google Cloud Console:**
+
 ```
 https://console.cloud.google.com/apis/dashboard?project=nth-segment-475411-g1
 ```
 
 **Production Test Endpoint:**
+
 ```
 https://portal.thesmartpro.io/api/test-google-sa
 ```
@@ -228,4 +244,3 @@ Once the test endpoint returns success:
 ---
 
 **Need help?** Share the error message with `errorDetails` from the test endpoint!
-

@@ -9,21 +9,26 @@ This guide provides a **secure, production-ready** Make.com scenario configurati
 ## ⚠️ CRITICAL SECURITY FIXES
 
 ### Issue 1: Hardcoded API Keys ❌ → ✅
+
 **Before (INSECURE)**:
+
 ```json
-{"name": "apikey", "value": "eyJhbGciOiJIUzI1NiIs..."}
+{ "name": "apikey", "value": "eyJhbGciOiJIUzI1NiIs..." }
 ```
 
 **After (SECURE)**:
+
 ```json
-{"name": "apikey", "value": "{{env(\"SUPABASE_ANON_KEY\")}}"}
+{ "name": "apikey", "value": "{{env(\"SUPABASE_ANON_KEY\")}}" }
 ```
 
 ### Issue 2: Hardcoded Database URL ❌ → ✅
+
 **Before**: `https://reootcngcptfogfozlmz.supabase.co/rest/v1/contracts`  
 **After**: `{{env(\"SUPABASE_URL\")}}/rest/v1/contracts`
 
 ### Issue 3: Template Variable Syntax Error ❌ → ✅
+
 **Before**: `"first_party_name_en": "{14.value.first_party.name_en}}"`  
 **After**: `"first_party_name_en": "{{14.value.first_party.name_en}}"`
 
@@ -218,6 +223,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
 ### Webhook Endpoint: POST /api/webhook/contract-pdf-ready
 
 **Expected Payload**:
+
 ```json
 {
   "contract_id": "uuid",
@@ -233,6 +239,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
 ```
 
 **Response Expected**:
+
 ```json
 {
   "success": true,
@@ -288,6 +295,7 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
 ### Test the Workflow:
 
 1. **Trigger contract generation**:
+
    ```bash
    curl -X POST https://portal.thesmartpro.io/api/contracts/makecom/generate \
      -H "Content-Type: application/json" \
@@ -311,19 +319,20 @@ PDF_WEBHOOK_SECRET = your-secret-key-here
 
 ## 🔧 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| "Module 2 failed" | Check Supabase credentials in env vars |
-| "Images not uploading" | Verify Google Drive folder permissions |
-| "Template not found" | Verify document IDs in requests object |
-| "PDF generation fails" | Check Google Docs template structure |
-| "Webhook callback fails" | Verify backend endpoint is accessible |
+| Issue                    | Solution                               |
+| ------------------------ | -------------------------------------- |
+| "Module 2 failed"        | Check Supabase credentials in env vars |
+| "Images not uploading"   | Verify Google Drive folder permissions |
+| "Template not found"     | Verify document IDs in requests object |
+| "PDF generation fails"   | Check Google Docs template structure   |
+| "Webhook callback fails" | Verify backend endpoint is accessible  |
 
 ---
 
 ## 📞 Support
 
 For issues with:
+
 - **Make.com**: Check scenario execution logs in Make.com dashboard
 - **Supabase**: Verify API keys and RLS policies
 - **Google**: Check Drive permissions and API quotas

@@ -13,14 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { SimplifiedNavigation } from '@/components/simplified-navigation';
-import {
-  User,
-  Menu,
-  X,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { User, Menu, X, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -70,13 +63,13 @@ export function SidebarSimplified({
   };
 
   const userInitials = user?.email
-    ? (user.email
+    ? user.email
         .split('@')[0]
         ?.split('.')
-        ?.map((n) => n?.[0] || '')
+        ?.map(n => n?.[0] || '')
         ?.join('')
         ?.toUpperCase()
-        ?.slice(0, 2) || 'U')
+        ?.slice(0, 2) || 'U'
     : 'U';
 
   return (
@@ -172,7 +165,9 @@ export function SidebarSimplified({
                   src={user?.user_metadata?.avatar_url}
                   alt={user?.email || 'User'}
                 />
-                <AvatarFallback className='text-xs'>{userInitials}</AvatarFallback>
+                <AvatarFallback className='text-xs'>
+                  {userInitials}
+                </AvatarFallback>
               </Avatar>
               <Button
                 variant='ghost'
@@ -192,4 +187,3 @@ export function SidebarSimplified({
 
 // Export as Sidebar for easy replacement
 export { SidebarSimplified as Sidebar };
-

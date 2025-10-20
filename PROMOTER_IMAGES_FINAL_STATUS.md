@@ -8,12 +8,14 @@
 ## ✅ What We've Accomplished
 
 ### 1. **Database Setup** ✅ COMPLETE
+
 - [x] 40 promoters have full HTTPS URLs
 - [x] `id_card_url` populated with full Supabase URLs
 - [x] `passport_url` populated with full Supabase URLs
 - [x] Script: `scripts/update-40-promoters-with-urls.sql` (executed successfully)
 
 **Verification Query:**
+
 ```sql
 SELECT COUNT(*) as total,
        COUNT(CASE WHEN id_card_url LIKE 'https://%' THEN 1 END) as have_id_urls,
@@ -24,27 +26,32 @@ WHERE id IN (
   -- ... 39 more promoters
 );
 ```
+
 **Result:** 40/40 promoters ready ✅
 
 ---
 
 ### 2. **Storage Bucket Configuration** ✅ COMPLETE
+
 - [x] Bucket `promoter-documents` created
 - [x] Bucket set to `public = true`
 - [x] 80+ files uploaded (ID cards and passports)
 - [x] Files follow naming pattern: `[name]_[number].[ext]`
 
 **Verification:**
+
 ```sql
-SELECT id, name, public 
-FROM storage.buckets 
+SELECT id, name, public
+FROM storage.buckets
 WHERE id = 'promoter-documents';
 ```
+
 **Result:** `public = true` ✅
 
 ---
 
 ### 3. **RLS Policies** ⚠️ **NEEDS VERIFICATION**
+
 - [x] Public read policy created (`promoter-documents-public-select`)
 - [ ] **NOT YET TESTED:** Incognito browser test
 
@@ -55,17 +62,20 @@ WHERE id = 'promoter-documents';
 ---
 
 ### 4. **Contract Type Validation** ✅ COMPLETE
+
 - [x] `oman-unlimited-makecom` added to validation array
 - [x] `oman-unlimited-makecom` added to legacy type mapping
 - [x] Maps to `full-time-permanent` contract configuration
 
 **Files Modified:**
+
 - `lib/contract-generation-service.ts`
 - `lib/contract-type-config.ts`
 
 ---
 
 ### 5. **TypeScript Compilation** ✅ COMPLETE
+
 - [x] No linting errors
 - [x] Optional properties explicitly allow `undefined`
 - [x] All type errors resolved
@@ -77,12 +87,14 @@ WHERE id = 'promoter-documents';
 ### **CRITICAL: Verify Image Accessibility**
 
 **The Test:**
+
 ```
 Open incognito browser → Paste URL → Check if image displays
 URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg
 ```
 
 **Why This Matters:**
+
 - ✅ If image displays → System is working, issue is with Make.com config
 - ❌ If 403 error → RLS policy not working correctly
 
@@ -92,14 +104,14 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 
 ## 📊 System Readiness Checklist
 
-| Component | Status | Verified |
-|-----------|--------|----------|
-| Database URLs (40 promoters) | ✅ READY | Yes |
-| Storage Files | ✅ READY | Yes |
-| Bucket Public | ✅ READY | Yes |
-| RLS Public Read Policy | ⚠️ UNKNOWN | **NO - NEEDS TEST** |
-| Contract Type Validation | ✅ READY | Yes |
-| TypeScript Compilation | ✅ READY | Yes |
+| Component                    | Status     | Verified            |
+| ---------------------------- | ---------- | ------------------- |
+| Database URLs (40 promoters) | ✅ READY   | Yes                 |
+| Storage Files                | ✅ READY   | Yes                 |
+| Bucket Public                | ✅ READY   | Yes                 |
+| RLS Public Read Policy       | ⚠️ UNKNOWN | **NO - NEEDS TEST** |
+| Contract Type Validation     | ✅ READY   | Yes                 |
+| TypeScript Compilation       | ✅ READY   | Yes                 |
 
 **Overall:** 5/6 Complete (83%) - One critical test remaining
 
@@ -110,6 +122,7 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 ### **Step 1: Verify Image Access** 🚨 CRITICAL
 
 **Instructions:**
+
 1. Open incognito browser
 2. Visit: `https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg`
 3. Record result:
@@ -119,6 +132,7 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 ### **Step 2: Test Make.com Integration**
 
 **Test Payload:**
+
 ```json
 {
   "contractType": "oman-unlimited-makecom",
@@ -141,6 +155,7 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 ```
 
 **Expected:**
+
 - Module 1-5: Process data
 - Module 6: Replace images (should work if Step 1 passed)
 - Module 7-8: Generate PDF and save
@@ -148,6 +163,7 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 ### **Step 3: Verify Final Result**
 
 **Check:**
+
 - [ ] Contract PDF generated
 - [ ] Abdul Basit's ID card photo embedded in document
 - [ ] Abdul Basit's passport photo embedded in document
@@ -161,23 +177,27 @@ URL: https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-
 ### **If Incognito Test Shows 403 Forbidden:**
 
 **Option A: Disable RLS Temporarily (for testing)**
+
 ```sql
 ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 ```
+
 Then test again. If it works, re-enable RLS and fix policies.
 
 **Option B: Check Policy Priority**
+
 ```sql
 -- See all policies affecting the bucket
 SELECT policyname, cmd, roles, qual
 FROM pg_policies
-WHERE schemaname = 'storage' 
+WHERE schemaname = 'storage'
   AND tablename = 'objects'
   AND qual LIKE '%promoter-documents%'
 ORDER BY cmd, policyname;
 ```
 
 **Option C: Create Most Permissive Policy**
+
 ```sql
 CREATE POLICY "allow-all-public-read-promoter-docs"
   ON storage.objects
@@ -189,6 +209,7 @@ CREATE POLICY "allow-all-public-read-promoter-docs"
 ### **If Incognito Test Shows 404:**
 
 **Check if file exists:**
+
 ```sql
 SELECT name, metadata
 FROM storage.objects
@@ -199,6 +220,7 @@ WHERE bucket_id = 'promoter-documents'
 ### **If Make.com Still Fails After Incognito Test Passes:**
 
 **Check Make.com Module 6 Configuration:**
+
 1. Find: `{{promoter_id_card_photo}}`
 2. Replace with URL: `{{1.promoter_id_card_url}}`
    - Make sure module number `1` matches your webhook module
@@ -211,28 +233,31 @@ WHERE bucket_id = 'promoter-documents'
 
 All scripts are in the `scripts/` directory:
 
-| Script | Purpose | Status |
-|--------|---------|--------|
-| `update-40-promoters-with-urls.sql` | Link files to promoters | ✅ Executed |
-| `add-public-read-policy-simple.sql` | Add public read policy | ✅ Executed |
-| `diagnose-image-access.sql` | Full diagnostic | Available |
-| `reset-storage-rls-policies.sql` | Reset all policies | Available (use if needed) |
+| Script                              | Purpose                 | Status                    |
+| ----------------------------------- | ----------------------- | ------------------------- |
+| `update-40-promoters-with-urls.sql` | Link files to promoters | ✅ Executed               |
+| `add-public-read-policy-simple.sql` | Add public read policy  | ✅ Executed               |
+| `diagnose-image-access.sql`         | Full diagnostic         | Available                 |
+| `reset-storage-rls-policies.sql`    | Reset all policies      | Available (use if needed) |
 
 ---
 
 ## 🎯 Quick Reference
 
 **Test Promoters (with files):**
+
 - Abdul Basit: `2df30edb-2bd3-4a31-869f-2394feed0f19`
 - Ali Turab Shah: `4835e55b-f73f-4136-914a-fa6fd19635fb`
 - Muhammad Ehtisham Zubair: `9cd6bf5c-2998-4302-a1ca-92d1c35ebab3`
 
 **Test URL (Abdul Basit's ID Card):**
+
 ```
 https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg
 ```
 
 **Valid Contract Types:**
+
 - `oman-unlimited-makecom` ✅
 - `oman-fixed-term-makecom` ✅
 - `oman-part-time-makecom` ✅
@@ -243,12 +268,14 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-docum
 ## 📞 Support
 
 **Documentation Files:**
+
 - `CONTRACT_TYPES_REFERENCE.md` - All valid contract types
 - `SUPABASE_RLS_PUBLIC_READ_FIX.md` - RLS policy guide
 - `MAKECOM_IMAGE_ACCESS_TROUBLESHOOTING.md` - Make.com debugging
 - `PROMOTERS_ALIGNMENT_COMPLETE.md` - Employer assignments
 
 **Diagnostic Scripts:**
+
 - `scripts/diagnose-image-access.sql` - Full system check
 - `scripts/smart-match-promoter-documents.sql` - Find file matches
 
@@ -256,7 +283,3 @@ https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-docum
 
 **Last Updated:** October 16, 2025  
 **Next Action:** 🚨 **TEST IMAGE URL IN INCOGNITO BROWSER** 🚨
-
-
-
-

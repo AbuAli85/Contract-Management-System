@@ -14,7 +14,7 @@ export const POST = withAnyRBAC(
       // Validate required fields
       const requiredFields = [
         'promoter_id',
-        'first_party_id', 
+        'first_party_id',
         'second_party_id',
         'job_title',
         'department',
@@ -22,7 +22,7 @@ export const POST = withAnyRBAC(
         'basic_salary',
         'contract_start_date',
         'contract_end_date',
-        'contract_type'
+        'contract_type',
       ];
 
       const missingFields = requiredFields.filter(field => !body[field]);
@@ -41,7 +41,9 @@ export const POST = withAnyRBAC(
       const day = now.getDate().toString().padStart(2, '0');
       const month = (now.getMonth() + 1).toString().padStart(2, '0');
       const year = now.getFullYear();
-      const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const random = Math.floor(Math.random() * 10000)
+        .toString()
+        .padStart(4, '0');
       const contractNumber = `PAC-${day}${month}${year}-${random}`;
 
       // Create contract in database
@@ -81,23 +83,26 @@ export const POST = withAnyRBAC(
       console.log('✅ Contract created:', (contract as any)?.id);
 
       // Fetch promoter and party data for Make.com
-      const [promoterResult, firstPartyResult, secondPartyResult] = await Promise.all([
-        supabase
-          .from('promoters')
-          .select('id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url, employer_id')
-          .eq('id', body.promoter_id)
-          .single(),
-        supabase
-          .from('parties')
-          .select('id, name_en, name_ar, crn, email, phone')
-          .eq('id', body.first_party_id)
-          .single(),
-        supabase
-          .from('parties')
-          .select('id, name_en, name_ar, crn, email, phone')
-          .eq('id', body.second_party_id)
-          .single(),
-      ]);
+      const [promoterResult, firstPartyResult, secondPartyResult] =
+        await Promise.all([
+          supabase
+            .from('promoters')
+            .select(
+              'id, name_en, name_ar, email, mobile_number, id_card_number, passport_number, id_card_url, passport_url, employer_id'
+            )
+            .eq('id', body.promoter_id)
+            .single(),
+          supabase
+            .from('parties')
+            .select('id, name_en, name_ar, crn, email, phone')
+            .eq('id', body.first_party_id)
+            .single(),
+          supabase
+            .from('parties')
+            .select('id, name_en, name_ar, crn, email, phone')
+            .eq('id', body.second_party_id)
+            .single(),
+        ]);
 
       const promoter = promoterResult.data as any;
       const firstParty = firstPartyResult.data as any;
@@ -108,7 +113,7 @@ export const POST = withAnyRBAC(
         contract_id: (contract as any)?.id,
         contract_number: (contract as any)?.contract_number,
         contract_type: body.contract_type,
-        
+
         // Promoter data
         promoter_id: body.promoter_id,
         promoter_name_en: promoter?.name_en,
@@ -119,7 +124,7 @@ export const POST = withAnyRBAC(
         promoter_passport_number: promoter?.passport_number,
         promoter_id_card_url: promoter?.id_card_url,
         promoter_passport_url: promoter?.passport_url,
-        
+
         // First party data (Client)
         first_party_id: body.first_party_id,
         first_party_name_en: firstParty?.name_en,
@@ -127,7 +132,7 @@ export const POST = withAnyRBAC(
         first_party_crn: firstParty?.crn,
         first_party_email: firstParty?.email,
         first_party_phone: firstParty?.phone,
-        
+
         // Second party data (Employer)
         second_party_id: body.second_party_id,
         second_party_name_en: secondParty?.name_en,
@@ -135,7 +140,7 @@ export const POST = withAnyRBAC(
         second_party_crn: secondParty?.crn,
         second_party_email: secondParty?.email,
         second_party_phone: secondParty?.phone,
-        
+
         // Contract details
         job_title: body.job_title,
         department: body.department,
@@ -145,7 +150,7 @@ export const POST = withAnyRBAC(
         contract_end_date: body.contract_end_date,
         special_terms: body.special_terms || '',
         currency: 'OMR',
-        
+
         // Additional fields for templates
         contract_date: new Date().toISOString().split('T')[0],
         generated_at: new Date().toISOString(),
@@ -154,7 +159,7 @@ export const POST = withAnyRBAC(
       // Trigger Make.com webhook if configured
       let makecomResponse = null;
       const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL;
-      
+
       if (makecomWebhookUrl) {
         try {
           const response = await fetch(makecomWebhookUrl, {
@@ -173,7 +178,7 @@ export const POST = withAnyRBAC(
 
           if (response.ok) {
             console.log('✅ Make.com webhook triggered successfully');
-            
+
             // Update contract status
             await (supabase as any)
               .from('contracts')
@@ -187,7 +192,10 @@ export const POST = withAnyRBAC(
           makecomResponse = {
             status: 500,
             success: false,
-            error: makecomError instanceof Error ? makecomError.message : 'Unknown error',
+            error:
+              makecomError instanceof Error
+                ? makecomError.message
+                : 'Unknown error',
             timestamp: new Date().toISOString(),
           };
         }
@@ -206,7 +214,6 @@ export const POST = withAnyRBAC(
         },
         message: 'Contract created successfully',
       });
-
     } catch (error) {
       console.error('❌ Simple contract generation error:', error);
       return NextResponse.json(

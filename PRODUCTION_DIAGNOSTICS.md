@@ -3,6 +3,7 @@
 ## 🔍 Live Site Diagnostics (portal.thesmartpro.io/en/promoters)
 
 ### Step 1: Open Browser DevTools
+
 ```
 Press F12 on your keyboard
 This opens the Developer Tools
@@ -15,6 +16,7 @@ This opens the Developer Tools
 ### Test 1: VIEW PROFILE FUNCTIONALITY
 
 **Steps:**
+
 1. Open the promoters page
 2. Find any promoter in the table
 3. Look for the three-dots (•••) button at the end of the row
@@ -23,11 +25,13 @@ This opens the Developer Tools
 6. Click "View profile"
 
 **Expected Result:**
+
 - Menu closes
 - Page navigates to promoter's profile page
 - URL changes to something like `/en/promoters/{id}`
 
 **If NOT working:**
+
 - Go to F12 Console tab
 - Look for red error messages
 - Screenshot and share the error
@@ -37,15 +41,18 @@ This opens the Developer Tools
 ### Test 2: EDIT DETAILS FUNCTIONALITY
 
 **Steps:**
+
 1. Click three-dots (•••) button on any promoter
 2. Click "Edit details"
 
 **Expected Result:**
+
 - Menu closes
 - Page navigates to edit form
 - URL changes to something like `/en/manage-promoters/{id}`
 
 **If NOT working:**
+
 - Check F12 Console for errors
 - Screenshot the error
 
@@ -54,16 +61,19 @@ This opens the Developer Tools
 ### Test 3: SEND NOTIFICATION FUNCTIONALITY
 
 **Steps:**
+
 1. Click three-dots (•••) on any promoter
 2. Look for "Send notification" or "Remind to renew docs"
 3. Click one of these options
 
 **Expected Result:**
+
 - A toast notification appears at bottom-right saying "✓ Notification sent"
 - Menu closes
 - No errors in console
 
 **If NOT working:**
+
 - Check F12 Network tab
 - Look for a POST request to `/api/promoters/*/notify`
 - Check if it's failing (red X status)
@@ -73,11 +83,13 @@ This opens the Developer Tools
 ### Test 4: ARCHIVE FUNCTIONALITY
 
 **Steps:**
+
 1. Click three-dots (•••) on any promoter
 2. Scroll down to "Archive record"
 3. Click "Archive record"
 
 **Expected Result:**
+
 - A confirmation dialog appears
 - Shows promoter name asking "Are you sure?"
 - Two buttons: "Cancel" and "Archive"
@@ -85,6 +97,7 @@ This opens the Developer Tools
 - Toast appears: "✓ Record Archived"
 
 **If NOT working:**
+
 - Dialog doesn't appear → Check console for errors
 - Click Archive but nothing happens → Check Network tab for failed requests
 - Error appears in dialog → Check `/api/promoters/:id/archive` endpoint
@@ -94,14 +107,17 @@ This opens the Developer Tools
 ### Test 5: CONTEXT-AWARE ACTIONS
 
 **Steps:**
+
 1. Find a promoter with **expiring documents** (shown in yellow/amber)
 2. Click three-dots
 3. Look for "⚠️ At Risk" section
 
 **Expected Result:**
+
 - Should see "Remind to renew docs" option
 
 **If NOT showing:**
+
 - Promoter's documents might be valid
 - Try finding a different promoter with expiring docs
 - Check if `idDocument.status` or `passportDocument.status` is 'expiring'
@@ -111,14 +127,17 @@ This opens the Developer Tools
 ### Test 6: CRITICAL ACTIONS
 
 **Steps:**
+
 1. Find a promoter with **expired documents** (shown in red)
 2. Click three-dots
 3. Look for "🚨 Critical" section
 
 **Expected Result:**
+
 - Should see "Urgent notification" option
 
 **If NOT showing:**
+
 - All documents might be valid
 - Check status badges in table
 
@@ -127,14 +146,17 @@ This opens the Developer Tools
 ### Test 7: UNASSIGNED ACTIONS
 
 **Steps:**
+
 1. Find a promoter with "○ Unassigned" status
 2. Click three-dots
 
 **Expected Result:**
+
 - Should see "Unassigned" section
 - Should see "Assign to company" option
 
 **If NOT showing:**
+
 - All promoters might be assigned
 - Check Assignment column for "Unassigned" status
 
@@ -145,6 +167,7 @@ This opens the Developer Tools
 ### Problem 1: Menu Doesn't Open
 
 **Diagnosis:**
+
 ```
 1. F12 → Console tab
 2. Click three-dots button
@@ -152,11 +175,13 @@ This opens the Developer Tools
 ```
 
 **Common Causes:**
+
 - Dropdown Menu component not imported
 - Permissions issue
 - JavaScript error
 
 **Solution:**
+
 - Check console for errors
 - Report the exact error message
 
@@ -165,6 +190,7 @@ This opens the Developer Tools
 ### Problem 2: Menu Opens But Items Don't Work
 
 **Diagnosis:**
+
 ```
 1. F12 → Console tab
 2. Click a menu item
@@ -174,11 +200,13 @@ This opens the Developer Tools
 ```
 
 **Common Causes:**
+
 - `onView` or `onEdit` handlers not passed correctly
 - Missing API endpoints
 - Authentication issues
 
 **Solution:**
+
 - Check if handlers are provided
 - Implement missing API endpoints
 
@@ -187,6 +215,7 @@ This opens the Developer Tools
 ### Problem 3: Toast Notifications Don't Appear
 
 **Diagnosis:**
+
 ```
 1. F12 → Console tab
 2. Click any action (Send notification, etc.)
@@ -194,11 +223,13 @@ This opens the Developer Tools
 ```
 
 **Common Causes:**
+
 - Toast provider not set up
 - `useToast` hook not working
 - Toast style CSS missing
 
 **Solution:**
+
 - Verify ToastProvider is wrapping the app
 - Check if toast CSS is loaded
 
@@ -207,6 +238,7 @@ This opens the Developer Tools
 ### Problem 4: "Send Notification" Shows Error
 
 **Diagnosis:**
+
 ```
 1. F12 → Console tab
 2. Click "Send notification"
@@ -217,6 +249,7 @@ This opens the Developer Tools
 ```
 
 **Common Causes:**
+
 - API endpoint not implemented
 - Authentication failed
 - Email service not configured
@@ -224,16 +257,19 @@ This opens the Developer Tools
 **Solutions:**
 
 **If 404 error:**
+
 - Endpoint `/api/promoters/:id/notify` doesn't exist
 - Implement the endpoint (see API_ENDPOINTS_REQUIRED.md)
 - OR the component has fallback - should show success anyway
 
 **If 401 error:**
+
 - Authentication failed
 - Check if auth token is valid
 - Verify user permissions
 
 **If 500 error:**
+
 - Server error
 - Check server logs
 - Verify email service is running
@@ -243,6 +279,7 @@ This opens the Developer Tools
 ### Problem 5: Archive Shows Dialog But Nothing Happens
 
 **Diagnosis:**
+
 ```
 1. F12 → Network tab
 2. Click Archive button in dialog
@@ -251,11 +288,13 @@ This opens the Developer Tools
 ```
 
 **Common Causes:**
+
 - API endpoint not implemented
 - Database error
 - Permission denied
 
 **Solution:**
+
 - Implement `/api/promoters/:id/archive` endpoint
 - Check server logs
 - Verify user has permission
@@ -279,17 +318,20 @@ This opens the Developer Tools
 ### Expected Network Requests
 
 **When clicking "View profile":**
+
 - Type: Navigation
 - Should load new page
 - No API call
 
 **When clicking "Send notification":**
+
 - Type: XHR (XMLHttpRequest)
 - Method: POST
 - URL: `/api/promoters/{id}/notify`
 - Status: Should be 200 (or 404 if not implemented)
 
 **When archiving:**
+
 - Type: XHR
 - Method: PUT
 - URL: `/api/promoters/{id}/archive`
@@ -330,13 +372,19 @@ When reporting a problem, provide:
 
 ```typescript
 // Make sure these functions exist:
-const handleViewPromoter = useCallback((promoter) => {
-  router.push(`/${locale}/promoters/${promoter.id}`);
-}, [router, locale]);
+const handleViewPromoter = useCallback(
+  promoter => {
+    router.push(`/${locale}/promoters/${promoter.id}`);
+  },
+  [router, locale]
+);
 
-const handleEditPromoter = useCallback((promoter) => {
-  router.push(`/${locale}/manage-promoters/${promoter.id}`);
-}, [router, locale]);
+const handleEditPromoter = useCallback(
+  promoter => {
+    router.push(`/${locale}/manage-promoters/${promoter.id}`);
+  },
+  [router, locale]
+);
 ```
 
 ---
@@ -361,7 +409,7 @@ const response = await fetch(`/api/promoters/${id}/notify`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,  // Add if needed
+    Authorization: `Bearer ${token}`, // Add if needed
   },
   body: JSON.stringify({ type: 'standard' }),
 });
@@ -405,14 +453,14 @@ import { useToast } from 'sonner'; // Wrong
 
 ### Common Solutions:
 
-| Symptom | Solution |
-|---------|----------|
-| Menu doesn't open | Check console for errors, verify DropdownMenu component |
-| Menu opens but items don't work | Verify onView/onEdit handlers passed, check console |
-| Send notification fails with 404 | Implement `/api/promoters/:id/notify` endpoint |
-| Archive fails with 404 | Implement `/api/promoters/:id/archive` endpoint |
-| Toast doesn't appear | Verify ToastProvider at root, check use-toast import |
-| Page doesn't navigate | Verify router is provided and locale is correct |
+| Symptom                          | Solution                                                |
+| -------------------------------- | ------------------------------------------------------- |
+| Menu doesn't open                | Check console for errors, verify DropdownMenu component |
+| Menu opens but items don't work  | Verify onView/onEdit handlers passed, check console     |
+| Send notification fails with 404 | Implement `/api/promoters/:id/notify` endpoint          |
+| Archive fails with 404           | Implement `/api/promoters/:id/archive` endpoint         |
+| Toast doesn't appear             | Verify ToastProvider at root, check use-toast import    |
+| Page doesn't navigate            | Verify router is provided and locale is correct         |
 
 ---
 
@@ -430,6 +478,7 @@ import { useToast } from 'sonner'; // Wrong
 ## ✅ VERIFICATION
 
 Once fixed, verify:
+
 - [ ] View Profile navigates correctly
 - [ ] Edit Details opens edit form
 - [ ] Send Notification shows success toast

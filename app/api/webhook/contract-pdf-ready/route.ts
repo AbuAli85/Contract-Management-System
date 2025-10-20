@@ -31,7 +31,10 @@ export async function POST(request: NextRequest) {
       }
 
       if (verification.idempotent) {
-        return NextResponse.json({ success: true, message: 'Already processed' });
+        return NextResponse.json({
+          success: true,
+          message: 'Already processed',
+        });
       }
 
       body = verification.payload;
@@ -134,7 +137,10 @@ export async function PATCH(request: NextRequest) {
       }
 
       if (verification.idempotent) {
-        return NextResponse.json({ success: true, message: 'Already processed' });
+        return NextResponse.json({
+          success: true,
+          message: 'Already processed',
+        });
       }
 
       body = verification.payload;
@@ -154,7 +160,7 @@ export async function PATCH(request: NextRequest) {
       contract_number,
       pdf_url,
       google_drive_url,
-      status
+      status,
     });
 
     if (!contract_id && !contract_number) {
@@ -180,31 +186,33 @@ export async function PATCH(request: NextRequest) {
     // Check if URLs are complete (not just base URLs)
     let finalPdfUrl = pdf_url;
     let finalGoogleDriveUrl = google_drive_url;
-    
+
     if (pdf_url.endsWith('/') || pdf_url.includes('/d//')) {
       console.warn('⚠️ Incomplete URLs detected:', {
         pdf_url,
         google_drive_url,
-        full_payload: body
+        full_payload: body,
       });
-      
+
       // For now, let's accept incomplete URLs and log them for debugging
-      console.log('🔍 Make.com scenario issue - URLs are incomplete. This suggests:');
+      console.log(
+        '🔍 Make.com scenario issue - URLs are incomplete. This suggests:'
+      );
       console.log('1. Google Docs document creation may have failed');
       console.log('2. PDF export may have failed');
       console.log('3. File upload to Supabase storage may have failed');
       console.log('4. Make.com scenario may have incorrect field mappings');
-      
+
       // Continue processing but with warning
       console.warn('⚠️ Proceeding with incomplete URLs for debugging purposes');
-      
+
       // Set placeholder URLs for now
       finalPdfUrl = `https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/contracts/contract-${contract_number || 'unknown'}.pdf`;
       finalGoogleDriveUrl = `https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit`;
-      
+
       console.log('🔧 Using placeholder URLs:', {
         pdf_url: finalPdfUrl,
-        google_drive_url: finalGoogleDriveUrl
+        google_drive_url: finalGoogleDriveUrl,
       });
     }
 
@@ -213,9 +221,9 @@ export async function PATCH(request: NextRequest) {
       contract_id,
       contract_number,
       finalPdfUrl,
-      finalGoogleDriveUrl
+      finalGoogleDriveUrl,
     });
-    
+
     // For now, let's just return success since the PDF was generated successfully
     // The contract update can be handled separately or the contract might already exist
     console.log('✅ PDF generation completed successfully');

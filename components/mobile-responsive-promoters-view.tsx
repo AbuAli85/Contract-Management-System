@@ -87,89 +87,121 @@ interface MobileResponsivePromotersViewProps {
 type ViewMode = 'cards' | 'list' | 'table';
 type SortField = 'name' | 'status' | 'created' | 'documents';
 
-export function MobileResponsivePromotersView({ 
-  promoters, 
-  locale 
+export function MobileResponsivePromotersView({
+  promoters,
+  locale,
 }: MobileResponsivePromotersViewProps) {
   const router = useRouter();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'warning' | 'critical' | 'inactive'>('all');
-  const [documentFilter, setDocumentFilter] = useState<'all' | 'expired' | 'expiring' | 'missing'>('all');
-  const [assignmentFilter, setAssignmentFilter] = useState<'all' | 'assigned' | 'unassigned'>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'cards' : 'table');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'warning' | 'critical' | 'inactive'
+  >('all');
+  const [documentFilter, setDocumentFilter] = useState<
+    'all' | 'expired' | 'expiring' | 'missing'
+  >('all');
+  const [assignmentFilter, setAssignmentFilter] = useState<
+    'all' | 'assigned' | 'unassigned'
+  >('all');
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    isMobile ? 'cards' : 'table'
+  );
   const [sortField, setSortField] = useState<SortField>('name');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPromoter, setSelectedPromoter] = useState<DashboardPromoter | null>(null);
+  const [selectedPromoter, setSelectedPromoter] =
+    useState<DashboardPromoter | null>(null);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
   // Filter and sort promoters
   const filteredPromoters = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    
-    return promoters.filter(promoter => {
-      const matchesSearch = !normalizedSearch ||
-        promoter.displayName.toLowerCase().includes(normalizedSearch) ||
-        promoter.contactEmail?.toLowerCase().includes(normalizedSearch) ||
-        promoter.contactPhone?.toLowerCase().includes(normalizedSearch) ||
-        promoter.organisationLabel?.toLowerCase().includes(normalizedSearch);
 
-      const matchesStatus = statusFilter === 'all' || promoter.overallStatus === statusFilter;
-      
-      const matchesDocument = documentFilter === 'all' ||
-        (documentFilter === 'expired' && (
-          promoter.idDocument.status === 'expired' || 
-          promoter.passportDocument.status === 'expired'
-        )) ||
-        (documentFilter === 'expiring' && (
-          promoter.idDocument.status === 'expiring' || 
-          promoter.passportDocument.status === 'expiring'
-        )) ||
-        (documentFilter === 'missing' && (
-          promoter.idDocument.status === 'missing' || 
-          promoter.passportDocument.status === 'missing'
-        ));
+    return promoters
+      .filter(promoter => {
+        const matchesSearch =
+          !normalizedSearch ||
+          promoter.displayName.toLowerCase().includes(normalizedSearch) ||
+          promoter.contactEmail?.toLowerCase().includes(normalizedSearch) ||
+          promoter.contactPhone?.toLowerCase().includes(normalizedSearch) ||
+          promoter.organisationLabel?.toLowerCase().includes(normalizedSearch);
 
-      const matchesAssignment = assignmentFilter === 'all' || 
-        promoter.assignmentStatus === assignmentFilter;
+        const matchesStatus =
+          statusFilter === 'all' || promoter.overallStatus === statusFilter;
 
-      return matchesSearch && matchesStatus && matchesDocument && matchesAssignment;
-    }).sort((a, b) => {
-      switch (sortField) {
-        case 'name':
-          return a.displayName.localeCompare(b.displayName);
-        case 'status':
-          const statusOrder: Record<string, number> = { critical: 0, warning: 1, active: 2, inactive: 3 };
-          return (statusOrder[a.overallStatus] || 3) - (statusOrder[b.overallStatus] || 3);
-        case 'created':
-          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
-          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
-          return dateA - dateB;
-        case 'documents':
-          const aDays = Math.min(
-            a.idDocument.daysRemaining ?? Number.POSITIVE_INFINITY,
-            a.passportDocument.daysRemaining ?? Number.POSITIVE_INFINITY
-          );
-          const bDays = Math.min(
-            b.idDocument.daysRemaining ?? Number.POSITIVE_INFINITY,
-            b.passportDocument.daysRemaining ?? Number.POSITIVE_INFINITY
-          );
-          return aDays - bDays;
-        default:
-          return 0;
+        const matchesDocument =
+          documentFilter === 'all' ||
+          (documentFilter === 'expired' &&
+            (promoter.idDocument.status === 'expired' ||
+              promoter.passportDocument.status === 'expired')) ||
+          (documentFilter === 'expiring' &&
+            (promoter.idDocument.status === 'expiring' ||
+              promoter.passportDocument.status === 'expiring')) ||
+          (documentFilter === 'missing' &&
+            (promoter.idDocument.status === 'missing' ||
+              promoter.passportDocument.status === 'missing'));
+
+        const matchesAssignment =
+          assignmentFilter === 'all' ||
+          promoter.assignmentStatus === assignmentFilter;
+
+        return (
+          matchesSearch && matchesStatus && matchesDocument && matchesAssignment
+        );
+      })
+      .sort((a, b) => {
+        switch (sortField) {
+          case 'name':
+            return a.displayName.localeCompare(b.displayName);
+          case 'status':
+            const statusOrder: Record<string, number> = {
+              critical: 0,
+              warning: 1,
+              active: 2,
+              inactive: 3,
+            };
+            return (
+              (statusOrder[a.overallStatus] || 3) -
+              (statusOrder[b.overallStatus] || 3)
+            );
+          case 'created':
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return dateA - dateB;
+          case 'documents':
+            const aDays = Math.min(
+              a.idDocument.daysRemaining ?? Number.POSITIVE_INFINITY,
+              a.passportDocument.daysRemaining ?? Number.POSITIVE_INFINITY
+            );
+            const bDays = Math.min(
+              b.idDocument.daysRemaining ?? Number.POSITIVE_INFINITY,
+              b.passportDocument.daysRemaining ?? Number.POSITIVE_INFINITY
+            );
+            return aDays - bDays;
+          default:
+            return 0;
+        }
+      });
+  }, [
+    promoters,
+    searchTerm,
+    statusFilter,
+    documentFilter,
+    assignmentFilter,
+    sortField,
+  ]);
+
+  const handlePromoterAction = useCallback(
+    (promoter: DashboardPromoter, action: 'view' | 'edit') => {
+      if (action === 'view') {
+        router.push(`/${locale}/promoters/${promoter.id}`);
+      } else {
+        router.push(`/${locale}/manage-promoters/${promoter.id}`);
       }
-    });
-  }, [promoters, searchTerm, statusFilter, documentFilter, assignmentFilter, sortField]);
-
-  const handlePromoterAction = useCallback((promoter: DashboardPromoter, action: 'view' | 'edit') => {
-    if (action === 'view') {
-      router.push(`/${locale}/promoters/${promoter.id}`);
-    } else {
-      router.push(`/${locale}/manage-promoters/${promoter.id}`);
-    }
-  }, [router, locale]);
+    },
+    [router, locale]
+  );
 
   const toggleCardExpansion = useCallback((promoterId: string) => {
     setExpandedCards(prev => {
@@ -190,8 +222,11 @@ export function MobileResponsivePromotersView({
     setAssignmentFilter('all');
   }, []);
 
-  const hasFiltersApplied = searchTerm || statusFilter !== 'all' || 
-    documentFilter !== 'all' || assignmentFilter !== 'all';
+  const hasFiltersApplied =
+    searchTerm ||
+    statusFilter !== 'all' ||
+    documentFilter !== 'all' ||
+    assignmentFilter !== 'all';
 
   return (
     <div className='space-y-4 p-4'>
@@ -233,7 +268,7 @@ export function MobileResponsivePromotersView({
               </Button>
             )}
           </div>
-          
+
           {/* Filters Toggle */}
           <Sheet open={showFilters} onOpenChange={setShowFilters}>
             <SheetTrigger asChild>
@@ -241,7 +276,10 @@ export function MobileResponsivePromotersView({
                 <Filter className='h-4 w-4 mr-2' />
                 Filters
                 {hasFiltersApplied && (
-                  <Badge variant='secondary' className='ml-2 h-5 w-5 p-0 text-xs'>
+                  <Badge
+                    variant='secondary'
+                    className='ml-2 h-5 w-5 p-0 text-xs'
+                  >
                     !
                   </Badge>
                 )}
@@ -265,7 +303,7 @@ export function MobileResponsivePromotersView({
                       placeholder='Search promoters...'
                       className='pl-10'
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={e => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
@@ -273,7 +311,10 @@ export function MobileResponsivePromotersView({
                 {/* Status Filter */}
                 <div className='space-y-2'>
                   <Label>Status</Label>
-                  <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                  <Select
+                    value={statusFilter}
+                    onValueChange={(value: any) => setStatusFilter(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -290,7 +331,10 @@ export function MobileResponsivePromotersView({
                 {/* Document Filter */}
                 <div className='space-y-2'>
                   <Label>Document Health</Label>
-                  <Select value={documentFilter} onValueChange={(value: any) => setDocumentFilter(value)}>
+                  <Select
+                    value={documentFilter}
+                    onValueChange={(value: any) => setDocumentFilter(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -306,7 +350,10 @@ export function MobileResponsivePromotersView({
                 {/* Assignment Filter */}
                 <div className='space-y-2'>
                   <Label>Assignment</Label>
-                  <Select value={assignmentFilter} onValueChange={(value: any) => setAssignmentFilter(value)}>
+                  <Select
+                    value={assignmentFilter}
+                    onValueChange={(value: any) => setAssignmentFilter(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -321,7 +368,10 @@ export function MobileResponsivePromotersView({
                 {/* Sort */}
                 <div className='space-y-2'>
                   <Label>Sort By</Label>
-                  <Select value={sortField} onValueChange={(value: any) => setSortField(value)}>
+                  <Select
+                    value={sortField}
+                    onValueChange={(value: any) => setSortField(value)}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -335,8 +385,8 @@ export function MobileResponsivePromotersView({
                 </div>
 
                 {/* Reset Button */}
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   onClick={resetFilters}
                   disabled={!hasFiltersApplied}
                   className='w-full'
@@ -356,13 +406,14 @@ export function MobileResponsivePromotersView({
           <CardContent className='flex flex-col items-center justify-center py-12'>
             <Users className='h-12 w-12 text-muted-foreground mb-4' />
             <h3 className='text-lg font-semibold mb-2'>
-              {hasFiltersApplied ? 'No promoters match your filters' : 'No promoters found'}
+              {hasFiltersApplied
+                ? 'No promoters match your filters'
+                : 'No promoters found'}
             </h3>
             <p className='text-muted-foreground text-center mb-4'>
-              {hasFiltersApplied 
+              {hasFiltersApplied
                 ? 'Try adjusting your filters to see more results.'
-                : 'Get started by adding your first promoter.'
-              }
+                : 'Get started by adding your first promoter.'}
             </p>
             {hasFiltersApplied && (
               <Button onClick={resetFilters} variant='outline'>
@@ -407,8 +458,8 @@ export function MobileResponsivePromotersView({
             {viewMode === 'table' && !isMobile && (
               <PromoterTable
                 promoters={filteredPromoters}
-                onView={(promoter) => handlePromoterAction(promoter, 'view')}
-                onEdit={(promoter) => handlePromoterAction(promoter, 'edit')}
+                onView={promoter => handlePromoterAction(promoter, 'view')}
+                onEdit={promoter => handlePromoterAction(promoter, 'edit')}
               />
             )}
           </div>
@@ -416,7 +467,10 @@ export function MobileResponsivePromotersView({
       )}
 
       {/* Promoter Details Dialog */}
-      <Dialog open={!!selectedPromoter} onOpenChange={() => setSelectedPromoter(null)}>
+      <Dialog
+        open={!!selectedPromoter}
+        onOpenChange={() => setSelectedPromoter(null)}
+      >
         <DialogContent className='max-w-md'>
           {selectedPromoter && (
             <>
@@ -428,15 +482,15 @@ export function MobileResponsivePromotersView({
               </DialogHeader>
               <PromoterDetailsContent promoter={selectedPromoter} />
               <div className='flex gap-2'>
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   onClick={() => handlePromoterAction(selectedPromoter, 'view')}
                   className='flex-1'
                 >
                   <Eye className='h-4 w-4 mr-2' />
                   View Full Profile
                 </Button>
-                <Button 
+                <Button
                   onClick={() => handlePromoterAction(selectedPromoter, 'edit')}
                   className='flex-1'
                 >
@@ -462,13 +516,13 @@ interface PromoterCardProps {
   onSelect: () => void;
 }
 
-function PromoterCard({ 
-  promoter, 
-  isExpanded, 
-  onToggleExpansion, 
-  onView, 
-  onEdit, 
-  onSelect 
+function PromoterCard({
+  promoter,
+  isExpanded,
+  onToggleExpansion,
+  onView,
+  onEdit,
+  onSelect,
 }: PromoterCardProps) {
   const statusColors = {
     active: 'bg-green-100 text-green-800 border-green-200',
@@ -493,7 +547,9 @@ function PromoterCard({
               <Users className='h-5 w-5 text-primary' />
             </div>
             <div>
-              <CardTitle className='text-base'>{promoter.displayName}</CardTitle>
+              <CardTitle className='text-base'>
+                {promoter.displayName}
+              </CardTitle>
               <CardDescription className='text-sm'>
                 {promoter.job_title || promoter.work_location || '—'}
               </CardDescription>
@@ -512,15 +568,15 @@ function PromoterCard({
             )}
           </Button>
         </div>
-        
+
         <div className='flex items-center gap-2'>
-          <Badge 
-            variant='outline' 
+          <Badge
+            variant='outline'
             className={cn('text-xs', statusColors[promoter.overallStatus])}
           >
             {statusLabels[promoter.overallStatus]}
           </Badge>
-          <Badge 
+          <Badge
             variant='outline'
             className={cn(
               'text-xs',
@@ -529,7 +585,9 @@ function PromoterCard({
                 : 'bg-slate-50 text-slate-700 border-slate-200'
             )}
           >
-            {promoter.assignmentStatus === 'assigned' ? 'Assigned' : 'Unassigned'}
+            {promoter.assignmentStatus === 'assigned'
+              ? 'Assigned'
+              : 'Unassigned'}
           </Badge>
         </div>
       </CardHeader>
@@ -561,13 +619,10 @@ function PromoterCard({
           <div className='space-y-2'>
             <h4 className='text-sm font-medium'>Document Status</h4>
             <div className='space-y-2'>
-              <DocumentStatusRow 
-                label='ID' 
-                health={promoter.idDocument} 
-              />
-              <DocumentStatusRow 
-                label='Passport' 
-                health={promoter.passportDocument} 
+              <DocumentStatusRow label='ID' health={promoter.idDocument} />
+              <DocumentStatusRow
+                label='Passport'
+                health={promoter.passportDocument}
               />
             </div>
           </div>
@@ -582,28 +637,20 @@ function PromoterCard({
 
           {/* Actions */}
           <div className='flex gap-2 pt-2 border-t'>
-            <Button 
-              variant='outline' 
-              size='sm' 
+            <Button
+              variant='outline'
+              size='sm'
               onClick={onView}
               className='flex-1'
             >
               <Eye className='h-4 w-4 mr-2' />
               View
             </Button>
-            <Button 
-              size='sm' 
-              onClick={onEdit}
-              className='flex-1'
-            >
+            <Button size='sm' onClick={onEdit} className='flex-1'>
               <Edit className='h-4 w-4 mr-2' />
               Edit
             </Button>
-            <Button 
-              variant='ghost' 
-              size='sm'
-              onClick={onSelect}
-            >
+            <Button variant='ghost' size='sm' onClick={onSelect}>
               <MoreHorizontal className='h-4 w-4' />
             </Button>
           </div>
@@ -621,7 +668,12 @@ interface PromoterListItemProps {
   onSelect: () => void;
 }
 
-function PromoterListItem({ promoter, onView, onEdit, onSelect }: PromoterListItemProps) {
+function PromoterListItem({
+  promoter,
+  onView,
+  onEdit,
+  onSelect,
+}: PromoterListItemProps) {
   return (
     <Card className='group hover:shadow-sm transition-shadow'>
       <CardContent className='p-4'>
@@ -637,9 +689,9 @@ function PromoterListItem({ promoter, onView, onEdit, onSelect }: PromoterListIt
               </p>
               <div className='flex items-center gap-2 mt-1'>
                 <StatusBadge status={promoter.overallStatus} />
-                <DocumentStatusBadges 
-                  idDoc={promoter.idDocument} 
-                  passportDoc={promoter.passportDocument} 
+                <DocumentStatusBadges
+                  idDoc={promoter.idDocument}
+                  passportDoc={promoter.passportDocument}
                 />
               </div>
             </div>
@@ -699,7 +751,7 @@ function PromoterTable({ promoters, onView, onEdit }: PromoterTableProps) {
                   </td>
                   <td className='p-4'>
                     <div className='text-sm'>{promoter.organisationLabel}</div>
-                    <Badge 
+                    <Badge
                       variant='outline'
                       className={cn(
                         'text-xs mt-1',
@@ -712,17 +764,25 @@ function PromoterTable({ promoters, onView, onEdit }: PromoterTableProps) {
                     </Badge>
                   </td>
                   <td className='p-4'>
-                    <DocumentStatusBadges 
-                      idDoc={promoter.idDocument} 
-                      passportDoc={promoter.passportDocument} 
+                    <DocumentStatusBadges
+                      idDoc={promoter.idDocument}
+                      passportDoc={promoter.passportDocument}
                     />
                   </td>
                   <td className='p-4'>
                     <div className='flex items-center gap-1'>
-                      <Button variant='ghost' size='sm' onClick={() => onView(promoter)}>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => onView(promoter)}
+                      >
                         <Eye className='h-4 w-4' />
                       </Button>
-                      <Button variant='ghost' size='sm' onClick={() => onEdit(promoter)}>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => onEdit(promoter)}
+                      >
                         <Edit className='h-4 w-4' />
                       </Button>
                     </div>
@@ -738,7 +798,11 @@ function PromoterTable({ promoters, onView, onEdit }: PromoterTableProps) {
 }
 
 // Helper Components
-function StatusBadge({ status }: { status: 'active' | 'warning' | 'critical' | 'inactive' }) {
+function StatusBadge({
+  status,
+}: {
+  status: 'active' | 'warning' | 'critical' | 'inactive';
+}) {
   const colors: Record<string, string> = {
     active: 'bg-green-100 text-green-800 border-green-200',
     warning: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -760,44 +824,54 @@ function StatusBadge({ status }: { status: 'active' | 'warning' | 'critical' | '
   );
 }
 
-function DocumentStatusBadges({ 
-  idDoc, 
-  passportDoc 
-}: { 
-  idDoc: any; 
-  passportDoc: any; 
+function DocumentStatusBadges({
+  idDoc,
+  passportDoc,
+}: {
+  idDoc: any;
+  passportDoc: any;
 }) {
   const getIcon = (status: string) => {
     switch (status) {
-      case 'valid': return ShieldCheck;
-      case 'expiring': return Clock;
-      case 'expired': return AlertTriangle;
-      case 'missing': return HelpCircle;
-      default: return HelpCircle;
+      case 'valid':
+        return ShieldCheck;
+      case 'expiring':
+        return Clock;
+      case 'expired':
+        return AlertTriangle;
+      case 'missing':
+        return HelpCircle;
+      default:
+        return HelpCircle;
     }
   };
 
   const getColor = (status: string) => {
     switch (status) {
-      case 'valid': return 'text-green-600';
-      case 'expiring': return 'text-amber-600';
-      case 'expired': return 'text-red-600';
-      case 'missing': return 'text-slate-600';
-      default: return 'text-slate-600';
+      case 'valid':
+        return 'text-green-600';
+      case 'expiring':
+        return 'text-amber-600';
+      case 'expired':
+        return 'text-red-600';
+      case 'missing':
+        return 'text-slate-600';
+      default:
+        return 'text-slate-600';
     }
   };
 
   return (
     <div className='flex items-center gap-1'>
       <div className='flex items-center gap-1'>
-        {React.createElement(getIcon(idDoc.status), { 
-          className: cn('h-3 w-3', getColor(idDoc.status)) 
+        {React.createElement(getIcon(idDoc.status), {
+          className: cn('h-3 w-3', getColor(idDoc.status)),
         })}
         <span className='text-xs text-muted-foreground'>ID</span>
       </div>
       <div className='flex items-center gap-1'>
-        {React.createElement(getIcon(passportDoc.status), { 
-          className: cn('h-3 w-3', getColor(passportDoc.status)) 
+        {React.createElement(getIcon(passportDoc.status), {
+          className: cn('h-3 w-3', getColor(passportDoc.status)),
         })}
         <span className='text-xs text-muted-foreground'>PP</span>
       </div>
@@ -805,30 +879,34 @@ function DocumentStatusBadges({
   );
 }
 
-function DocumentStatusRow({ 
-  label, 
-  health 
-}: { 
-  label: string; 
-  health: any; 
-}) {
+function DocumentStatusRow({ label, health }: { label: string; health: any }) {
   const getIcon = (status: string) => {
     switch (status) {
-      case 'valid': return ShieldCheck;
-      case 'expiring': return Clock;
-      case 'expired': return AlertTriangle;
-      case 'missing': return HelpCircle;
-      default: return HelpCircle;
+      case 'valid':
+        return ShieldCheck;
+      case 'expiring':
+        return Clock;
+      case 'expired':
+        return AlertTriangle;
+      case 'missing':
+        return HelpCircle;
+      default:
+        return HelpCircle;
     }
   };
 
   const getColor = (status: string) => {
     switch (status) {
-      case 'valid': return 'text-green-600';
-      case 'expiring': return 'text-amber-600';
-      case 'expired': return 'text-red-600';
-      case 'missing': return 'text-slate-600';
-      default: return 'text-slate-600';
+      case 'valid':
+        return 'text-green-600';
+      case 'expiring':
+        return 'text-amber-600';
+      case 'expired':
+        return 'text-red-600';
+      case 'missing':
+        return 'text-slate-600';
+      default:
+        return 'text-slate-600';
     }
   };
 
@@ -889,7 +967,10 @@ function PromoterDetailsContent({ promoter }: { promoter: DashboardPromoter }) {
         <h4 className='font-medium'>Document Status</h4>
         <div className='space-y-2'>
           <DocumentStatusRow label='ID Document' health={promoter.idDocument} />
-          <DocumentStatusRow label='Passport' health={promoter.passportDocument} />
+          <DocumentStatusRow
+            label='Passport'
+            health={promoter.passportDocument}
+          />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@
 ## 🎯 Executive Summary
 
 Security audit revealed **8 critical/high vulnerabilities** in Promoter and Contract modules that allow:
+
 - Unauthorized data access
 - Privilege escalation
 - Data tampering
@@ -21,12 +22,14 @@ Security audit revealed **8 critical/high vulnerabilities** in Promoter and Cont
 ## 🚨 Critical Issues Summary
 
 ### Promoter Module
+
 1. ❌ **Missing RBAC** - Any user can create/update/delete any promoter
 2. ❌ **No Data Scoping** - Users see all promoters (data leak)
 3. ⚠️ **Fake Success** - Stub endpoints pretend to save data
 4. ⚠️ **Silent Failures** - No error messages for guests
 
 ### Contract Module
+
 5. ❌ **Service-Role Abuse** - Bypasses all security policies
 6. ❌ **Unscoped Queries** - Users see all contracts
 7. ⚠️ **Hard-Coded URLs** - Cannot disable integrations
@@ -37,6 +40,7 @@ Security audit revealed **8 critical/high vulnerabilities** in Promoter and Cont
 ## 📋 Implementation Priority
 
 ### 🔴 **Day 1 - CRITICAL (Stop-Ship)**
+
 **Must fix before ANY production deployment**
 
 1. **Add RBAC to Promoter APIs** (2-3 hours)
@@ -97,6 +101,7 @@ Security audit revealed **8 critical/high vulnerabilities** in Promoter and Cont
 ## 🛠️ Quick Start Implementation
 
 ### Step 1: Read Documentation
+
 ```bash
 # Review these files:
 cat SECURITY_AUDIT_PROMOTERS_CONTRACTS.md
@@ -104,6 +109,7 @@ cat SECURITY_FIXES_IMPLEMENTATION.md
 ```
 
 ### Step 2: Branch & Setup
+
 ```bash
 # Create feature branch
 git checkout -b security/fix-promoters-contracts
@@ -116,6 +122,7 @@ npm run dev
 ```
 
 ### Step 3: Implement Critical Fixes
+
 ```bash
 # Work through Day 1 fixes:
 # 1. app/api/promoters/route.ts - Add RBAC
@@ -128,6 +135,7 @@ npm test
 ```
 
 ### Step 4: Test Thoroughly
+
 ```bash
 # Run all tests
 npm run test
@@ -142,6 +150,7 @@ npm run test:e2e
 ```
 
 ### Step 5: Deploy to Staging
+
 ```bash
 # Commit changes
 git add .
@@ -158,6 +167,7 @@ git push origin security/fix-promoters-contracts
 ## 📝 Implementation Checklist
 
 ### Critical Fixes (Day 1)
+
 - [ ] Add `withRBAC('promoter:create')` to POST /api/promoters
 - [ ] Add `withRBAC('promoter:update')` to PUT /api/promoters/[id]
 - [ ] Add `withRBAC('promoter:delete')` to DELETE /api/promoters/[id]
@@ -168,6 +178,7 @@ git push origin security/fix-promoters-contracts
 - [ ] Test unauthorized access returns 403
 
 ### High Priority (Day 2)
+
 - [ ] Return 501 from stub endpoints
 - [ ] Create `lib/config/external-apis.ts`
 - [ ] Move PDF generator URL to env
@@ -176,6 +187,7 @@ git push origin security/fix-promoters-contracts
 - [ ] Test with APIs disabled
 
 ### Medium Priority (Day 3)
+
 - [ ] Add error handling to contract generation
 - [ ] Update contract status on failures
 - [ ] Add timeout to external API calls
@@ -183,6 +195,7 @@ git push origin security/fix-promoters-contracts
 - [ ] Document test scenarios
 
 ### Pre-Deployment
+
 - [ ] All tests passing
 - [ ] Security team review
 - [ ] Staging deployment successful
@@ -194,6 +207,7 @@ git push origin security/fix-promoters-contracts
 ## 🧪 Testing Scenarios
 
 ### Test 1: Unauthorized Promoter Access
+
 ```bash
 # As User A:
 curl -H "Authorization: Bearer $USER_A_TOKEN" \
@@ -204,6 +218,7 @@ curl -H "Authorization: Bearer $USER_A_TOKEN" \
 ```
 
 ### Test 2: Data Scoping
+
 ```bash
 # As User A:
 curl -H "Authorization: Bearer $USER_A_TOKEN" \
@@ -213,6 +228,7 @@ curl -H "Authorization: Bearer $USER_A_TOKEN" \
 ```
 
 ### Test 3: Admin Access
+
 ```bash
 # As Admin:
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -222,6 +238,7 @@ curl -H "Authorization: Bearer $ADMIN_TOKEN" \
 ```
 
 ### Test 4: Contract Security
+
 ```bash
 # Without auth:
 curl POST /api/contracts \
@@ -235,12 +252,14 @@ curl POST /api/contracts \
 ## 📊 Success Metrics
 
 ### Before Fixes
+
 - ❌ Any user can access all promoters
 - ❌ Any user can create contracts as anyone
 - ❌ No audit trail
 - ❌ Service-role key exposed in API
 
 ### After Fixes
+
 - ✅ Users only see their own data
 - ✅ RBAC enforced on all mutations
 - ✅ Audit trail via created_by
@@ -253,6 +272,7 @@ curl POST /api/contracts \
 ## 🚀 Deployment Strategy
 
 ### Staging Deployment
+
 1. Deploy fixes to staging
 2. Run automated tests
 3. Manual security testing
@@ -260,6 +280,7 @@ curl POST /api/contracts \
 5. Team review
 
 ### Production Deployment
+
 1. ✅ All staging tests passed
 2. ✅ Security team sign-off
 3. ✅ Database RLS policies verified
@@ -272,12 +293,14 @@ curl POST /api/contracts \
 ## 📞 Support & Resources
 
 ### Documentation
+
 - **Security Audit:** `SECURITY_AUDIT_PROMOTERS_CONTRACTS.md`
 - **Implementation Guide:** `SECURITY_FIXES_IMPLEMENTATION.md`
 - **RBAC System:** `README_RBAC.md`
 - **Security Patches:** `CRITICAL_SECURITY_FIXES.md`
 
 ### Team Contacts
+
 - **Security Lead:** Review and approve fixes
 - **Backend Team:** Implement API changes
 - **QA Team:** Test security scenarios
@@ -288,6 +311,7 @@ curl POST /api/contracts \
 ## ⚠️ CRITICAL REMINDER
 
 **DO NOT DEPLOY TO PRODUCTION UNTIL:**
+
 1. ✅ All Day 1 fixes implemented
 2. ✅ Tests passing
 3. ✅ Security team approval
@@ -300,12 +324,12 @@ curl POST /api/contracts \
 
 ## 🎯 Timeline
 
-| Day | Tasks | Hours | Status |
-|-----|-------|-------|--------|
-| Day 1 | Critical fixes | 5-8h | ⏳ Ready |
-| Day 2 | High priority | 4-6h | ⏳ Ready |
-| Day 3 | Testing & docs | 5-7h | ⏳ Ready |
-| **Total** | **All fixes** | **14-21h** | ⏳ **2-3 days** |
+| Day       | Tasks          | Hours      | Status          |
+| --------- | -------------- | ---------- | --------------- |
+| Day 1     | Critical fixes | 5-8h       | ⏳ Ready        |
+| Day 2     | High priority  | 4-6h       | ⏳ Ready        |
+| Day 3     | Testing & docs | 5-7h       | ⏳ Ready        |
+| **Total** | **All fixes**  | **14-21h** | ⏳ **2-3 days** |
 
 ---
 
@@ -317,5 +341,4 @@ curl POST /api/contracts \
 
 ---
 
-*All security issues must be resolved before production deployment. No exceptions.*
-
+_All security issues must be resolved before production deployment. No exceptions._

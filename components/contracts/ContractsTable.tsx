@@ -554,7 +554,9 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
         if (!supabase) {
           throw new Error('Failed to initialize Supabase client');
         }
-        const { error } = await (supabase as any).from('contracts').insert(newContract);
+        const { error } = await (supabase as any)
+          .from('contracts')
+          .insert(newContract);
 
         if (error) throw error;
 

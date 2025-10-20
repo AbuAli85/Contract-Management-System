@@ -10,9 +10,11 @@
 
 ### Promoter Management Module
 
-#### 1. **CRITICAL - Missing RBAC Guards** 
+#### 1. **CRITICAL - Missing RBAC Guards**
+
 **Severity:** HIGH  
 **Files:**
+
 - `app/api/promoters/route.ts:160` (POST - create)
 - `app/api/promoters/[id]/route.ts:248` (PUT - update)
 - `app/api/promoters/[id]/route.ts:274` (DELETE - delete)
@@ -20,6 +22,7 @@
 **Issue:** Any authenticated user can create, update, or delete ANY promoter record.
 
 **Impact:**
+
 - Data tampering by unauthorized users
 - Privilege escalation
 - Data loss from malicious deletions
@@ -29,14 +32,17 @@
 ---
 
 #### 2. **HIGH - Data Leakage in GET Endpoints**
+
 **Severity:** HIGH  
 **Files:**
+
 - `app/api/promoters/route.ts:84` (GET list)
 - `app/api/promoters/[id]/route.ts:102` (GET single)
 
 **Issue:** Endpoints return full promoter table without scoping to requester.
 
 **Impact:**
+
 - Users can access other users' sensitive data
 - No data isolation between tenants/users
 - GDPR/privacy violations
@@ -46,8 +52,10 @@
 ---
 
 #### 3. **MEDIUM - Stub Endpoints Faking Success**
+
 **Severity:** MEDIUM  
 **Files:**
+
 - `app/api/promoters/[id]/documents.ts:20`
 - `app/api/promoters/[id]/education.ts:19`
 - `app/api/promoters/[id]/experience.ts:21`
@@ -56,6 +64,7 @@
 **Issue:** Endpoints return 200 success but don't actually store data.
 
 **Impact:**
+
 - Data loss - users think data is saved
 - Business logic failures
 - User confusion and support burden
@@ -65,12 +74,14 @@
 ---
 
 #### 4. **MEDIUM - No Server-Side Fallbacks**
+
 **Severity:** MEDIUM  
 **File:** `hooks/use-promoters.ts:24`
 
 **Issue:** Client-side only with no fallbacks; guests see silent failures.
 
 **Impact:**
+
 - Poor UX - no error messages
 - Debugging difficulty
 - Confusion about auth state
@@ -82,14 +93,17 @@
 ### Contracts & Letters Module
 
 #### 5. **CRITICAL - Service-Role Key Abuse**
+
 **Severity:** CRITICAL  
 **Files:**
+
 - `app/api/contracts/route.ts:205` (POST with service-role)
 - `app/api/contracts/route.ts:363` (Multiple schema writes)
 
 **Issue:** Uses service-role key to bypass RLS; allows arbitrary contract creation.
 
 **Impact:**
+
 - Complete bypass of security policies
 - Users can create contracts as any user
 - Data integrity compromised
@@ -99,12 +113,14 @@
 ---
 
 #### 6. **HIGH - Unscoped Contract List**
+
 **Severity:** HIGH  
 **File:** `app/api/contracts/route.ts:83`
 
 **Issue:** Tagged as `contract:read:own` but fetches entire contracts table.
 
 **Impact:**
+
 - Users can see all contracts
 - Confidential business data exposed
 - Competitive intelligence leakage
@@ -114,14 +130,17 @@
 ---
 
 #### 7. **MEDIUM - Hard-Coded External URLs**
+
 **Severity:** MEDIUM  
 **Files:**
+
 - `app/api/contract-generation/route.ts:6`
 - `app/api/contract-generation/route.ts:8`
 
 **Issue:** External API/webhook URLs hard-coded; no config management.
 
 **Impact:**
+
 - Cannot change vendors easily
 - Cannot disable integrations
 - Secrets in code
@@ -131,12 +150,14 @@
 ---
 
 #### 8. **MEDIUM - No Async Error Handling**
+
 **Severity:** MEDIUM  
 **File:** `app/api/contract-generation/route.ts:50`
 
 **Issue:** PDF generation failures leave contract as "completed" with no retry.
 
 **Impact:**
+
 - Contracts marked complete without PDFs
 - No visibility into failures
 - Manual intervention required
@@ -148,17 +169,20 @@
 ## 📋 Fix Priority
 
 ### 🔴 IMMEDIATE (Today)
+
 1. **Add RBAC guards to promoter mutations**
 2. **Remove service-role key from contract POST**
 3. **Scope contract list queries to user**
 4. **Add authentication checks to promoter GET endpoints**
 
 ### 🟠 HIGH PRIORITY (This Week)
+
 5. **Implement or remove stub promoter endpoints**
 6. **Move external URLs to environment config**
 7. **Add error handling to async operations**
 
 ### 🟡 MEDIUM PRIORITY (Next Sprint)
+
 8. **Add server components for read-heavy pages**
 9. **Implement retry logic for external calls**
 10. **Add integration tests for critical flows**
@@ -189,8 +213,10 @@ export const GET = withRBAC(
   'contract:read:own',
   async (request: NextRequest) => {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     // Scope to user
     const { data } = await supabase
       .from('contracts')
@@ -207,13 +233,16 @@ export const GET = withRBAC(
 export async function POST(request: NextRequest) {
   // Use authenticated client, not service-role
   const supabase = await createClient(); // Uses anon key + RLS
-  
+
   // Verify user is authenticated
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  
+
   // Now RLS policies will enforce security
   const { data, error: insertError } = await supabase
     .from('contracts')
@@ -235,7 +264,7 @@ export const externalAPIs = {
     enabled: process.env.MAKE_WEBHOOK_ENABLED === 'true',
     url: process.env.MAKE_WEBHOOK_URL,
     secret: process.env.MAKE_WEBHOOK_SECRET,
-  }
+  },
 };
 ```
 
@@ -270,19 +299,20 @@ export const externalAPIs = {
 
 **Exploitability:** High - Any authenticated user  
 **Impact:** Severe - Data breach, tampering, loss  
-**Detection:** Low - No audit trails for unauthorized access  
+**Detection:** Low - No audit trails for unauthorized access
 
 ### After Fixes: 🟢 **LOW**
 
 **Exploitability:** Low - Requires specific permissions  
 **Impact:** Limited - RLS + RBAC enforce boundaries  
-**Detection:** High - Audit logs track all access  
+**Detection:** High - Audit logs track all access
 
 ---
 
 ## 📞 Action Items
 
 ### Development Team
+
 - [ ] Review this audit
 - [ ] Prioritize fixes
 - [ ] Implement RBAC guards
@@ -291,6 +321,7 @@ export const externalAPIs = {
 - [ ] Run penetration tests
 
 ### Security Team
+
 - [ ] Verify fixes in staging
 - [ ] Review RLS policies
 - [ ] Audit external API security
@@ -312,5 +343,4 @@ export const externalAPIs = {
 
 ---
 
-*This audit is part of ongoing security review. All findings must be addressed before production deployment.*
-
+_This audit is part of ongoing security review. All findings must be addressed before production deployment._

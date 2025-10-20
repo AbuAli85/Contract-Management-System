@@ -3,10 +3,10 @@ import { NextRequest } from 'next/server';
 
 /**
  * ⚠️ WARNING: MOCK DATA IMPLEMENTATION
- * 
+ *
  * This endpoint currently returns MOCK DATA because the `promoter_tasks` table
  * does not exist in the database schema.
- * 
+ *
  * TODO before production:
  * 1. Create `promoter_tasks` table in Supabase
  * 2. Add proper RLS policies for the table
@@ -14,7 +14,7 @@ import { NextRequest } from 'next/server';
  * 4. Add RBAC guards using withRBAC() for all endpoints
  * 5. Add proper validation schemas with Zod
  * 6. Implement audit logging for task operations
- * 
+ *
  * UI features that depend on this endpoint will NOT persist data until fixed.
  */
 

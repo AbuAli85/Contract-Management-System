@@ -1,12 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { LucideIcon } from 'lucide-react';
 import {
   Users,
@@ -16,7 +11,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import type { DashboardMetrics } from './types';
-
 
 interface PromotersMetricsCardsProps {
   metrics: DashboardMetrics;
@@ -51,10 +45,12 @@ interface EnhancedStatCardProps {
   helper?: string;
   icon: LucideIcon;
   variant?: keyof typeof STAT_CARD_STYLES;
-  trend?: {
-    value: number;
-    label: string;
-  } | undefined;
+  trend?:
+    | {
+        value: number;
+        label: string;
+      }
+    | undefined;
 }
 
 function EnhancedStatCard({
@@ -68,10 +64,12 @@ function EnhancedStatCard({
   const styles = STAT_CARD_STYLES[variant];
 
   return (
-    <Card className={cn(
-      'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
-      styles.container
-    )}>
+    <Card
+      className={cn(
+        'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
+        styles.container
+      )}
+    >
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
         <div className='space-y-1'>
           <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
@@ -89,13 +87,13 @@ function EnhancedStatCard({
         </div>
       </CardHeader>
       <CardContent className='space-y-2'>
-        {helper && (
-          <p className='text-sm text-muted-foreground'>{helper}</p>
-        )}
+        {helper && <p className='text-sm text-muted-foreground'>{helper}</p>}
         {trend && (
           <div className='flex items-center gap-2 rounded-lg bg-green-50/50 p-2 text-xs text-green-700'>
             <TrendingUp className='h-4 w-4' />
-            <span className='font-semibold'>+{trend.value} {trend.label}</span>
+            <span className='font-semibold'>
+              +{trend.value} {trend.label}
+            </span>
           </div>
         )}
       </CardContent>
@@ -112,7 +110,11 @@ export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
         helper={`${metrics.active} active right now`}
         icon={Users}
         variant='primary'
-        trend={metrics.recentlyAdded > 0 ? { value: metrics.recentlyAdded, label: 'new this week' } : undefined}
+        trend={
+          metrics.recentlyAdded > 0
+            ? { value: metrics.recentlyAdded, label: 'new this week' }
+            : undefined
+        }
       />
       <EnhancedStatCard
         title='Active workforce'

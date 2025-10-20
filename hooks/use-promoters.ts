@@ -69,7 +69,7 @@ export const usePromoters = (enableRealtime: boolean = true) => {
   // Hooks must be called at the top level - no try-catch around hooks
   const authResult = useAuth();
   const formContext = useFormContext();
-  
+
   // Safe extraction with fallbacks
   const user = authResult?.user || null;
   const isFormActive = formContext?.isFormActive || false;

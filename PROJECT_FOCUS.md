@@ -9,9 +9,11 @@ This system is specifically designed for **managing promoters (workers) and thei
 ## ✅ Core Features (KEEP & MAINTAIN)
 
 ### 1. Promoter Management
+
 **Purpose**: Complete lifecycle management of workers/promoters
 
 **Features**:
+
 - ✅ View all promoters with comprehensive details
 - ✅ Add new promoters with full information
 - ✅ Edit existing promoter records
@@ -21,6 +23,7 @@ This system is specifically designed for **managing promoters (workers) and thei
 - ✅ Status management (Active, Inactive, etc.)
 
 **Key Files**:
+
 - `/app/[locale]/promoters/page.tsx` - Main promoters view
 - `/app/[locale]/manage-promoters/page.tsx` - Management interface
 - `/app/api/promoters/route.ts` - API endpoint
@@ -31,9 +34,11 @@ This system is specifically designed for **managing promoters (workers) and thei
 ---
 
 ### 2. Contract Management
+
 **Purpose**: Generate and manage development letters and work contracts
 
 **Features**:
+
 - ✅ Generate new contracts/development letters
 - ✅ View all contracts
 - ✅ Filter by status (Pending, Approved, Rejected)
@@ -42,6 +47,7 @@ This system is specifically designed for **managing promoters (workers) and thei
 - ✅ Bilingual support (English/Arabic)
 
 **Key Files**:
+
 - `/app/[locale]/generate-contract/page.tsx` - Contract generation
 - `/app/[locale]/contracts/page.tsx` - All contracts view
 - `/app/[locale]/contracts/pending/page.tsx` - Pending contracts
@@ -53,15 +59,18 @@ This system is specifically designed for **managing promoters (workers) and thei
 ---
 
 ### 3. Party/Employer Management
+
 **Purpose**: Manage employers and other parties associated with contracts
 
 **Features**:
+
 - ✅ Manage employer/party records
 - ✅ Link employers to promoters
 - ✅ Link parties to contracts
 - ✅ Track company registration details
 
 **Key Files**:
+
 - `/app/[locale]/manage-parties/page.tsx` - Party management
 - `/app/api/parties/route.ts` - API endpoint
 
@@ -70,7 +79,9 @@ This system is specifically designed for **managing promoters (workers) and thei
 ---
 
 ### 4. Essential System Features
+
 **Features**:
+
 - ✅ User authentication (Supabase Auth)
 - ✅ Role-based access control (RBAC)
 - ✅ Dashboard overview
@@ -84,37 +95,44 @@ This system is specifically designed for **managing promoters (workers) and thei
 The following features have been removed or hidden as they are outside the core scope:
 
 ### 1. CRM Features
+
 - ❌ CRM Dashboard
 - ❌ Lead management
 - ❌ Sales pipeline
 - ❌ Customer relationship tracking
 
 ### 2. Booking System
+
 - ❌ Resource booking
 - ❌ Meeting room reservations
 - ❌ Equipment booking
 
 ### 3. Tracking System
+
 - ❌ Project tracking
 - ❌ Time tracking
 - ❌ Task management
 
 ### 4. Advanced Analytics
+
 - ❌ Complex analytics dashboards
 - ❌ Advanced reporting
 - ❌ Data visualization beyond basic stats
 
 ### 5. Communications
+
 - ❌ Email integration
 - ❌ SMS messaging
 - ❌ Communication history
 
 ### 6. Advanced User Management
+
 - ❌ Bulk user import
 - ❌ Advanced role management
 - ❌ User activity monitoring (beyond basic)
 
 ### 7. Data Management Tools
+
 - ❌ Bulk import/export tools
 - ❌ Data migration tools
 - ❌ Backup/restore interface
@@ -151,27 +169,35 @@ The following features have been removed or hidden as they are outside the core 
 ## 📊 Database Schema (Core Tables Only)
 
 ### 1. `promoters`
+
 Main table for promoter/worker information
+
 - Personal details (name, ID, passport)
 - Employment information
 - Document tracking
 - Status management
 
 ### 2. `contracts`
+
 Contract and development letter records
+
 - Contract details
 - Associated promoter and parties
 - Status tracking
 - Approval workflow
 
 ### 3. `parties`
+
 Employers and other parties
+
 - Company information
 - Registration details
 - Contact information
 
 ### 4. `users`
+
 System users with RBAC
+
 - Authentication
 - Role management
 - Permissions
@@ -191,7 +217,9 @@ System users with RBAC
 ## 🚀 Development Guidelines
 
 ### When Adding New Features
+
 Ask yourself:
+
 1. **Does this directly support promoter management?**
 2. **Does this directly support contract generation/management?**
 3. **Is this essential for the parties/employers management?**
@@ -199,6 +227,7 @@ Ask yourself:
 If the answer is NO to all three → **Don't add it**
 
 ### Code Organization
+
 - Keep API routes focused on core tables only
 - Maintain clean separation between features
 - Use simplified navigation component
@@ -232,5 +261,4 @@ If the answer is NO to all three → **Don't add it**
 
 ---
 
-*This document serves as the guiding principle for all future development. Any feature additions must align with the core purpose of promoter and contract management.*
-
+_This document serves as the guiding principle for all future development. Any feature additions must align with the core purpose of promoter and contract management._

@@ -1,7 +1,13 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Plus, RefreshCw, HelpCircle } from 'lucide-react';
 
@@ -10,7 +16,10 @@ interface PromotersEmptyStateProps {
   onRefresh: () => void;
 }
 
-export function PromotersEmptyState({ onAddPromoter, onRefresh }: PromotersEmptyStateProps) {
+export function PromotersEmptyState({
+  onAddPromoter,
+  onRefresh,
+}: PromotersEmptyStateProps) {
   return (
     <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       <Card>
@@ -49,7 +58,8 @@ export function PromotersEmptyState({ onAddPromoter, onRefresh }: PromotersEmpty
           <div className='rounded-lg bg-blue-50 p-4 text-sm'>
             <strong className='text-blue-900'>Development Mode:</strong>
             <div className='mt-1 text-blue-700'>
-              Check browser console (F12) and server logs for detailed debugging information.
+              Check browser console (F12) and server logs for detailed debugging
+              information.
             </div>
           </div>
         </CardContent>

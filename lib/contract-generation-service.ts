@@ -229,13 +229,18 @@ class ContractGenerationService {
       if (contract.promoter_id) {
         const { data: promoter, error: promoterError } = await this.supabase
           .from('promoters')
-          .select('id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number')
+          .select(
+            'id, name_en, name_ar, id_card_number, passport_number, id_card_url, passport_url, email, mobile_number'
+          )
           .eq('id', contract.promoter_id)
           .single();
 
         if (!promoterError && promoter) {
           promoterData = promoter;
-          console.log('✅ Fetched promoter data for webhook:', promoter.name_en);
+          console.log(
+            '✅ Fetched promoter data for webhook:',
+            promoter.name_en
+          );
         } else {
           console.warn('⚠️ Could not fetch promoter data:', promoterError);
         }
@@ -349,15 +354,24 @@ class ContractGenerationService {
         'vendor-supply',
         'lease-equipment',
       ];
-      const validDatabaseTypes = ['employment', 'service', 'consultancy', 'partnership'];
+      const validDatabaseTypes = [
+        'employment',
+        'service',
+        'consultancy',
+        'partnership',
+      ];
       const validMakecomTypes = [
         'oman-unlimited-makecom',
         'oman-fixed-term-makecom',
         'oman-part-time-makecom',
       ];
-      const allValidTypes = [...validEnhancedTypes, ...validDatabaseTypes, ...validMakecomTypes];
+      const allValidTypes = [
+        ...validEnhancedTypes,
+        ...validDatabaseTypes,
+        ...validMakecomTypes,
+      ];
       const normalizedType = String(data.contract_type).toLowerCase();
-      
+
       if (!allValidTypes.includes(normalizedType)) {
         return {
           success: false,
@@ -365,7 +379,9 @@ class ContractGenerationService {
           contract_number: '',
           status: 'failed',
           message: `Contract type '${data.contract_type}' is not valid`,
-          errors: [`Invalid contract type. Valid types are: ${allValidTypes.join(', ')}`],
+          errors: [
+            `Invalid contract type. Valid types are: ${allValidTypes.join(', ')}`,
+          ],
         };
       }
 
@@ -394,8 +410,7 @@ class ContractGenerationService {
             contract_id: contract.id,
             contract_number: contractNumber,
             status: 'processing',
-            message:
-              'Contract created and sent to Make.com for processing',
+            message: 'Contract created and sent to Make.com for processing',
             google_drive_url: this.googleDriveFolderId
               ? `https://drive.google.com/drive/folders/${this.googleDriveFolderId}`
               : undefined,
@@ -718,9 +733,10 @@ class ContractGenerationService {
       } as Record<string, unknown>;
 
       // Attempt to update by UUID id first
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        contractIdOrNumber
-      );
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          contractIdOrNumber
+        );
 
       if (isUuid) {
         const { data: byIdData, error: byIdError } = await this.supabase

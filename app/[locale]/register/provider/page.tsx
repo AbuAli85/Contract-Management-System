@@ -49,7 +49,7 @@ export default function ProviderRegistrationPage() {
     city: '',
     postalCode: '',
     description: '',
-    acceptTerms: false
+    acceptTerms: false,
   });
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function ProviderRegistrationPage() {
   const isFormValid = () => {
     const requiredFields = [
       'companyName',
-      'businessType', 
+      'businessType',
       'registrationNumber',
       'taxNumber',
       'phoneNumber',
@@ -71,12 +71,12 @@ export default function ProviderRegistrationPage() {
       'address',
       'city',
       'postalCode',
-      'description'
+      'description',
     ];
 
     // Check if all required fields are filled
-    const allFieldsFilled = requiredFields.every(field => 
-      formData[field].trim() !== ''
+    const allFieldsFilled = requiredFields.every(
+      field => formData[field].trim() !== ''
     );
 
     // Check if description meets minimum length requirement
@@ -99,7 +99,7 @@ export default function ProviderRegistrationPage() {
 
     try {
       setIsLoading(true);
-      
+
       // Prepare registration data
       const registrationData = {
         email: formData.email,
@@ -116,7 +116,7 @@ export default function ProviderRegistrationPage() {
         address: formData.address,
         city: formData.city,
         postalCode: formData.postalCode,
-        description: formData.description
+        description: formData.description,
       };
 
       console.log('🚀 Submitting professional registration:', registrationData);
@@ -205,7 +205,8 @@ export default function ProviderRegistrationPage() {
                 Registration Submitted!
               </CardTitle>
               <CardDescription>
-                Your professional service provider application has been submitted for review.
+                Your professional service provider application has been
+                submitted for review.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -217,8 +218,7 @@ export default function ProviderRegistrationPage() {
                   • Our team will review your application within 24-48 hours
                   <br />
                   • You'll receive an email notification once approved
-                  <br />
-                  • Check your registration status at any time
+                  <br />• Check your registration status at any time
                 </AlertDescription>
               </Alert>
 
@@ -379,35 +379,54 @@ export default function ProviderRegistrationPage() {
                 Professional Company Registration
               </CardTitle>
               <CardDescription className='text-base'>
-                Complete all required fields to register your company as a verified service provider
+                Complete all required fields to register your company as a
+                verified service provider
               </CardDescription>
             </CardHeader>
             <CardContent className='space-y-6 p-8'>
               {/* Company Information Section */}
               <div className='border-l-4 border-blue-500 pl-4'>
-                <h3 className='text-lg font-semibold text-gray-800 mb-4'>Company Information</h3>
+                <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+                  Company Information
+                </h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2'>
-                    <Label htmlFor='companyName' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='companyName'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Company Name <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='companyName'
                       value={formData.companyName}
-                      onChange={(e) => setFormData({...formData, companyName: e.target.value})}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          companyName: e.target.value,
+                        })
+                      }
                       placeholder='Enter your official company name'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='businessType' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='businessType'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Business Type <span className='text-red-500'>*</span>
                     </Label>
                     <select
                       id='businessType'
                       value={formData.businessType}
-                      onChange={(e) => setFormData({...formData, businessType: e.target.value})}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          businessType: e.target.value,
+                        })
+                      }
                       className='w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none'
                       required
                     >
@@ -418,33 +437,50 @@ export default function ProviderRegistrationPage() {
                       <option value='technology'>Technology Services</option>
                       <option value='healthcare'>Healthcare</option>
                       <option value='education'>Education & Training</option>
-                      <option value='logistics'>Logistics & Transportation</option>
+                      <option value='logistics'>
+                        Logistics & Transportation
+                      </option>
                       <option value='finance'>Financial Services</option>
                       <option value='retail'>Retail & Commerce</option>
                       <option value='other'>Other</option>
                     </select>
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='registrationNumber' className='text-sm font-medium text-gray-700'>
-                      Commercial Registration Number <span className='text-red-500'>*</span>
+                    <Label
+                      htmlFor='registrationNumber'
+                      className='text-sm font-medium text-gray-700'
+                    >
+                      Commercial Registration Number{' '}
+                      <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='registrationNumber'
                       value={formData.registrationNumber}
-                      onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          registrationNumber: e.target.value,
+                        })
+                      }
                       placeholder='e.g., 1010123456'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='taxNumber' className='text-sm font-medium text-gray-700'>
-                      Tax Registration Number <span className='text-red-500'>*</span>
+                    <Label
+                      htmlFor='taxNumber'
+                      className='text-sm font-medium text-gray-700'
+                    >
+                      Tax Registration Number{' '}
+                      <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='taxNumber'
                       value={formData.taxNumber}
-                      onChange={(e) => setFormData({...formData, taxNumber: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, taxNumber: e.target.value })
+                      }
                       placeholder='Enter tax registration number'
                       className='border-2 focus:border-blue-500'
                       required
@@ -455,57 +491,86 @@ export default function ProviderRegistrationPage() {
 
               {/* Contact Information Section */}
               <div className='border-l-4 border-green-500 pl-4'>
-                <h3 className='text-lg font-semibold text-gray-800 mb-4'>Contact Information</h3>
+                <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+                  Contact Information
+                </h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2'>
-                    <Label htmlFor='phoneNumber' className='text-sm font-medium text-gray-700'>
-                      Business Phone Number <span className='text-red-500'>*</span>
+                    <Label
+                      htmlFor='phoneNumber'
+                      className='text-sm font-medium text-gray-700'
+                    >
+                      Business Phone Number{' '}
+                      <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='phoneNumber'
                       type='tel'
                       value={formData.phoneNumber}
-                      onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          phoneNumber: e.target.value,
+                        })
+                      }
                       placeholder='+966 11 123 4567'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='email' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='email'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Business Email <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='email'
                       type='email'
                       value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       placeholder='info@yourcompany.com'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='website' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='website'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Company Website
                     </Label>
                     <Input
                       id='website'
                       type='url'
                       value={formData.website}
-                      onChange={(e) => setFormData({...formData, website: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, website: e.target.value })
+                      }
                       placeholder='https://yourcompany.com'
                       className='border-2 focus:border-blue-500'
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='contactPerson' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='contactPerson'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Contact Person <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='contactPerson'
                       value={formData.contactPerson}
-                      onChange={(e) => setFormData({...formData, contactPerson: e.target.value})}
+                      onChange={e =>
+                        setFormData({
+                          ...formData,
+                          contactPerson: e.target.value,
+                        })
+                      }
                       placeholder='Full name of primary contact'
                       className='border-2 focus:border-blue-500'
                       required
@@ -516,42 +581,60 @@ export default function ProviderRegistrationPage() {
 
               {/* Address Information Section */}
               <div className='border-l-4 border-purple-500 pl-4'>
-                <h3 className='text-lg font-semibold text-gray-800 mb-4'>Business Address</h3>
+                <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+                  Business Address
+                </h3>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                   <div className='space-y-2 md:col-span-2'>
-                    <Label htmlFor='address' className='text-sm font-medium text-gray-700'>
-                      Full Business Address <span className='text-red-500'>*</span>
+                    <Label
+                      htmlFor='address'
+                      className='text-sm font-medium text-gray-700'
+                    >
+                      Full Business Address{' '}
+                      <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='address'
                       value={formData.address}
-                      onChange={(e) => setFormData({...formData, address: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
                       placeholder='Street address, building number, district'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='city' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='city'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       City <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='city'
                       value={formData.city}
-                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, city: e.target.value })
+                      }
                       placeholder='City name'
                       className='border-2 focus:border-blue-500'
                       required
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='postalCode' className='text-sm font-medium text-gray-700'>
+                    <Label
+                      htmlFor='postalCode'
+                      className='text-sm font-medium text-gray-700'
+                    >
                       Postal Code <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='postalCode'
                       value={formData.postalCode}
-                      onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                      onChange={e =>
+                        setFormData({ ...formData, postalCode: e.target.value })
+                      }
                       placeholder='12345'
                       className='border-2 focus:border-blue-500'
                       required
@@ -562,15 +645,23 @@ export default function ProviderRegistrationPage() {
 
               {/* Company Description Section */}
               <div className='border-l-4 border-orange-500 pl-4'>
-                <h3 className='text-lg font-semibold text-gray-800 mb-4'>Company Description</h3>
+                <h3 className='text-lg font-semibold text-gray-800 mb-4'>
+                  Company Description
+                </h3>
                 <div className='space-y-2'>
-                  <Label htmlFor='description' className='text-sm font-medium text-gray-700'>
-                    Detailed Company Description <span className='text-red-500'>*</span>
+                  <Label
+                    htmlFor='description'
+                    className='text-sm font-medium text-gray-700'
+                  >
+                    Detailed Company Description{' '}
+                    <span className='text-red-500'>*</span>
                   </Label>
                   <textarea
                     id='description'
                     value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    onChange={e =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder='Provide a comprehensive description of your company, services offered, experience, and capabilities (minimum 100 characters)'
                     className='w-full px-3 py-2 border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none resize-none'
                     rows={4}
@@ -590,21 +681,36 @@ export default function ProviderRegistrationPage() {
                     type='checkbox'
                     id='terms'
                     checked={formData.acceptTerms}
-                    onChange={(e) => setFormData({...formData, acceptTerms: e.target.checked})}
+                    onChange={e =>
+                      setFormData({
+                        ...formData,
+                        acceptTerms: e.target.checked,
+                      })
+                    }
                     className='mt-1'
                     required
                   />
-                  <Label htmlFor='terms' className='text-sm text-gray-700 leading-relaxed'>
-                    I agree to the <a href='#' className='text-blue-600 hover:underline'>Terms and Conditions</a> and 
-                    <a href='#' className='text-blue-600 hover:underline ml-1'>Privacy Policy</a>. 
-                    I confirm that all information provided is accurate and up-to-date.
+                  <Label
+                    htmlFor='terms'
+                    className='text-sm text-gray-700 leading-relaxed'
+                  >
+                    I agree to the{' '}
+                    <a href='#' className='text-blue-600 hover:underline'>
+                      Terms and Conditions
+                    </a>{' '}
+                    and
+                    <a href='#' className='text-blue-600 hover:underline ml-1'>
+                      Privacy Policy
+                    </a>
+                    . I confirm that all information provided is accurate and
+                    up-to-date.
                     <span className='text-red-500 ml-1'>*</span>
                   </Label>
                 </div>
               </div>
-              
+
               <div className='flex justify-center mt-8'>
-                <Button 
+                <Button
                   onClick={handleRegistrationSubmit}
                   className='px-12 py-3 text-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-lg'
                   size='lg'
@@ -623,10 +729,11 @@ export default function ProviderRegistrationPage() {
                   )}
                 </Button>
               </div>
-              
+
               <p className='text-sm text-gray-600 text-center mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200'>
-                <span className='font-medium'>Important:</span> All fields marked with <span className='text-red-500'>*</span> are required. 
-                Your registration will be reviewed within 24-48 hours.
+                <span className='font-medium'>Important:</span> All fields
+                marked with <span className='text-red-500'>*</span> are
+                required. Your registration will be reviewed within 24-48 hours.
               </p>
             </CardContent>
           </Card>

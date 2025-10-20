@@ -16,9 +16,12 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createClient();
-    
+
     // Verify user is authenticated
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
     if (userError || !user) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -29,12 +32,14 @@ export async function POST(request: NextRequest) {
     // Get contract details
     const { data: contract, error: contractError } = await supabase
       .from('contracts')
-      .select(`
+      .select(
+        `
         *,
         first_party:parties!contracts_first_party_id_fkey(id, name_en, name_ar, email),
         second_party:parties!contracts_second_party_id_fkey(id, name_en, name_ar, email),
         promoters(id, name_en, name_ar)
-      `)
+      `
+      )
       .eq('id', contractId)
       .single();
 
@@ -72,7 +77,7 @@ export async function POST(request: NextRequest) {
     // - Nodemailer with SMTP
     // - Resend
     // - Mailgun
-    
+
     console.log('📧 Email would be sent with data:', {
       to,
       subject,
@@ -85,19 +90,17 @@ export async function POST(request: NextRequest) {
 
     // Log the email activity (optional)
     try {
-      await supabase
-        .from('contract_activities')
-        .insert({
-          contract_id: contractId,
-          user_id: user.id,
-          activity_type: 'email_sent',
-          description: `Contract sent via email to ${to}`,
-          metadata: {
-            recipient: to,
-            subject,
-            pdf_attached: !!pdfUrl,
-          },
-        });
+      await supabase.from('contract_activities').insert({
+        contract_id: contractId,
+        user_id: user.id,
+        activity_type: 'email_sent',
+        description: `Contract sent via email to ${to}`,
+        metadata: {
+          recipient: to,
+          subject,
+          pdf_attached: !!pdfUrl,
+        },
+      });
     } catch (logError) {
       console.warn('Failed to log email activity:', logError);
     }
@@ -112,7 +115,6 @@ export async function POST(request: NextRequest) {
         sentAt: new Date().toISOString(),
       },
     });
-
   } catch (error) {
     console.error('❌ Email API error:', error);
     return NextResponse.json(

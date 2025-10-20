@@ -103,11 +103,36 @@ interface PromotersTableProps {
 }
 
 const STATUS_CONFIG = {
-  active: { label: 'Active', variant: 'default' as const, icon: CheckCircle2, color: 'text-green-600' },
-  inactive: { label: 'Inactive', variant: 'secondary' as const, icon: XCircle, color: 'text-gray-600' },
-  pending: { label: 'Pending', variant: 'outline' as const, icon: Clock, color: 'text-yellow-600' },
-  suspended: { label: 'Suspended', variant: 'destructive' as const, icon: AlertCircle, color: 'text-red-600' },
-  on_leave: { label: 'On Leave', variant: 'secondary' as const, icon: Calendar, color: 'text-blue-600' },
+  active: {
+    label: 'Active',
+    variant: 'default' as const,
+    icon: CheckCircle2,
+    color: 'text-green-600',
+  },
+  inactive: {
+    label: 'Inactive',
+    variant: 'secondary' as const,
+    icon: XCircle,
+    color: 'text-gray-600',
+  },
+  pending: {
+    label: 'Pending',
+    variant: 'outline' as const,
+    icon: Clock,
+    color: 'text-yellow-600',
+  },
+  suspended: {
+    label: 'Suspended',
+    variant: 'destructive' as const,
+    icon: AlertCircle,
+    color: 'text-red-600',
+  },
+  on_leave: {
+    label: 'On Leave',
+    variant: 'secondary' as const,
+    icon: Calendar,
+    color: 'text-blue-600',
+  },
 };
 
 const OVERALL_STATUS_CONFIG = {
@@ -140,15 +165,18 @@ export function PromotersTable({
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Filter promoters based on search and status
-  const filteredPromoters = promoters.filter((promoter) => {
-    const matchesSearch = 
+  const filteredPromoters = promoters.filter(promoter => {
+    const matchesSearch =
       searchQuery === '' ||
-      `${promoter.first_name} ${promoter.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `${promoter.first_name} ${promoter.last_name}`
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       promoter.name_en?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       promoter.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       promoter.id_card_number.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = statusFilter === 'all' || promoter.status === statusFilter;
+    const matchesStatus =
+      statusFilter === 'all' || promoter.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -185,7 +213,7 @@ export function PromotersTable({
       'Department',
     ];
 
-    const rows = filteredPromoters.map((p) => [
+    const rows = filteredPromoters.map(p => [
       p.id,
       p.first_name,
       p.last_name,
@@ -200,7 +228,7 @@ export function PromotersTable({
 
     const csvContent = [
       headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(',')),
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -219,7 +247,10 @@ export function PromotersTable({
   };
 
   const getStatusConfig = (status: string) => {
-    return STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.active;
+    return (
+      STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] ||
+      STATUS_CONFIG.active
+    );
   };
 
   const renderStatusBadge = (promoter: Promoter) => {
@@ -227,8 +258,8 @@ export function PromotersTable({
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
-        <Icon className="h-3 w-3" />
+      <Badge variant={config.variant} className='flex items-center gap-1'>
+        <Icon className='h-3 w-3' />
         {config.label}
       </Badge>
     );
@@ -236,22 +267,24 @@ export function PromotersTable({
 
   const renderOverallStatus = (status?: string | null) => {
     if (!status) return null;
-    
-    const config = OVERALL_STATUS_CONFIG[status as keyof typeof OVERALL_STATUS_CONFIG];
+
+    const config =
+      OVERALL_STATUS_CONFIG[status as keyof typeof OVERALL_STATUS_CONFIG];
     if (!config) return null;
 
     return (
-      <div className="flex items-center gap-2">
+      <div className='flex items-center gap-2'>
         <div className={`h-2 w-2 rounded-full ${config.color}`} />
-        <span className="text-sm text-muted-foreground">{config.label}</span>
+        <span className='text-sm text-muted-foreground'>{config.label}</span>
       </div>
     );
   };
 
   const renderAvailability = (availability?: string | null) => {
     if (!availability) return null;
-    
-    const config = AVAILABILITY_CONFIG[availability as keyof typeof AVAILABILITY_CONFIG];
+
+    const config =
+      AVAILABILITY_CONFIG[availability as keyof typeof AVAILABILITY_CONFIG];
     if (!config) return null;
 
     return (
@@ -262,11 +295,11 @@ export function PromotersTable({
   };
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* Header and Filters */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className='flex items-center justify-between'>
             <div>
               <CardTitle>Promoters</CardTitle>
               <CardDescription>
@@ -275,57 +308,57 @@ export function PromotersTable({
             </div>
             <Button
               onClick={() => router.push('/manage-promoters/new')}
-              className="flex items-center gap-2"
+              className='flex items-center gap-2'
             >
-              <Plus className="h-4 w-4" />
+              <Plus className='h-4 w-4' />
               Add Promoter
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             {/* Search */}
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className='relative flex-1 max-w-sm'>
+              <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
               <Input
-                placeholder="Search promoters..."
+                placeholder='Search promoters...'
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
+                onChange={e => setSearchQuery(e.target.value)}
+                className='pl-8'
               />
             </div>
 
             {/* Filters */}
-            <div className="flex items-center gap-2">
+            <div className='flex items-center gap-2'>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <Filter className="mr-2 h-4 w-4" />
-                  <SelectValue placeholder="Status" />
+                <SelectTrigger className='w-[150px]'>
+                  <Filter className='mr-2 h-4 w-4' />
+                  <SelectValue placeholder='Status' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="on_leave">On Leave</SelectItem>
+                  <SelectItem value='all'>All Status</SelectItem>
+                  <SelectItem value='active'>Active</SelectItem>
+                  <SelectItem value='inactive'>Inactive</SelectItem>
+                  <SelectItem value='pending'>Pending</SelectItem>
+                  <SelectItem value='suspended'>Suspended</SelectItem>
+                  <SelectItem value='on_leave'>On Leave</SelectItem>
                 </SelectContent>
               </Select>
 
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={handleExport}
                 disabled={filteredPromoters.length === 0}
               >
-                <Download className="mr-2 h-4 w-4" />
+                <Download className='mr-2 h-4 w-4' />
                 Export
               </Button>
             </div>
           </div>
 
           {/* Results Count */}
-          <div className="mt-4 text-sm text-muted-foreground">
+          <div className='mt-4 text-sm text-muted-foreground'>
             Showing {filteredPromoters.length} of {promoters.length} promoters
           </div>
         </CardContent>
@@ -333,12 +366,12 @@ export function PromotersTable({
 
       {/* Table */}
       <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border">
+        <CardContent className='p-0'>
+          <div className='rounded-md border'>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[60px]"></TableHead>
+                  <TableHead className='w-[60px]'></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>ID Card</TableHead>
@@ -346,33 +379,35 @@ export function PromotersTable({
                   <TableHead>Status</TableHead>
                   <TableHead>Overall</TableHead>
                   <TableHead>Availability</TableHead>
-                  <TableHead className="w-[80px]">Actions</TableHead>
+                  <TableHead className='w-[80px]'>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        <span className="text-muted-foreground">Loading promoters...</span>
+                    <TableCell colSpan={9} className='text-center py-8'>
+                      <div className='flex items-center justify-center gap-2'>
+                        <div className='h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent' />
+                        <span className='text-muted-foreground'>
+                          Loading promoters...
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredPromoters.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
-                      <div className="flex flex-col items-center gap-2">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
+                    <TableCell colSpan={9} className='text-center py-8'>
+                      <div className='flex flex-col items-center gap-2'>
+                        <User className='h-8 w-8 text-muted-foreground' />
+                        <p className='text-muted-foreground'>
                           {searchQuery || statusFilter !== 'all'
                             ? 'No promoters found matching your filters'
                             : 'No promoters found'}
                         </p>
                         {searchQuery || statusFilter !== 'all' ? (
                           <Button
-                            variant="outline"
-                            size="sm"
+                            variant='outline'
+                            size='sm'
                             onClick={() => {
                               setSearchQuery('');
                               setStatusFilter('all');
@@ -385,14 +420,19 @@ export function PromotersTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPromoters.map((promoter) => (
+                  filteredPromoters.map(promoter => (
                     <TableRow key={promoter.id}>
                       {/* Avatar */}
                       <TableCell>
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={promoter.profile_picture_url || undefined} />
+                        <Avatar className='h-10 w-10'>
+                          <AvatarImage
+                            src={promoter.profile_picture_url || undefined}
+                          />
                           <AvatarFallback>
-                            {getInitials(promoter.first_name, promoter.last_name)}
+                            {getInitials(
+                              promoter.first_name,
+                              promoter.last_name
+                            )}
                           </AvatarFallback>
                         </Avatar>
                       </TableCell>
@@ -400,11 +440,11 @@ export function PromotersTable({
                       {/* Name */}
                       <TableCell>
                         <div>
-                          <div className="font-medium">
+                          <div className='font-medium'>
                             {promoter.first_name} {promoter.last_name}
                           </div>
                           {promoter.name_en && (
-                            <div className="text-sm text-muted-foreground">
+                            <div className='text-sm text-muted-foreground'>
                               {promoter.name_en}
                             </div>
                           )}
@@ -413,19 +453,21 @@ export function PromotersTable({
 
                       {/* Contact */}
                       <TableCell>
-                        <div className="space-y-1">
+                        <div className='space-y-1'>
                           {promoter.email && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Mail className="h-3 w-3 text-muted-foreground" />
-                              <span className="truncate max-w-[200px]">
+                            <div className='flex items-center gap-1 text-sm'>
+                              <Mail className='h-3 w-3 text-muted-foreground' />
+                              <span className='truncate max-w-[200px]'>
                                 {promoter.email}
                               </span>
                             </div>
                           )}
                           {(promoter.phone || promoter.mobile_number) && (
-                            <div className="flex items-center gap-1 text-sm">
-                              <Phone className="h-3 w-3 text-muted-foreground" />
-                              <span>{promoter.phone || promoter.mobile_number}</span>
+                            <div className='flex items-center gap-1 text-sm'>
+                              <Phone className='h-3 w-3 text-muted-foreground' />
+                              <span>
+                                {promoter.phone || promoter.mobile_number}
+                              </span>
                             </div>
                           )}
                         </div>
@@ -433,10 +475,12 @@ export function PromotersTable({
 
                       {/* ID Card */}
                       <TableCell>
-                        <div className="text-sm">
-                          <div className="font-mono">{promoter.id_card_number}</div>
+                        <div className='text-sm'>
+                          <div className='font-mono'>
+                            {promoter.id_card_number}
+                          </div>
                           {promoter.nationality && (
-                            <div className="text-muted-foreground">
+                            <div className='text-muted-foreground'>
                               {promoter.nationality}
                             </div>
                           )}
@@ -445,10 +489,10 @@ export function PromotersTable({
 
                       {/* Job Title */}
                       <TableCell>
-                        <div className="text-sm">
+                        <div className='text-sm'>
                           {promoter.job_title || '-'}
                           {promoter.department && (
-                            <div className="text-muted-foreground">
+                            <div className='text-muted-foreground'>
                               {promoter.department}
                             </div>
                           )}
@@ -459,31 +503,39 @@ export function PromotersTable({
                       <TableCell>{renderStatusBadge(promoter)}</TableCell>
 
                       {/* Overall Status */}
-                      <TableCell>{renderOverallStatus(promoter.overall_status)}</TableCell>
+                      <TableCell>
+                        {renderOverallStatus(promoter.overall_status)}
+                      </TableCell>
 
                       {/* Availability */}
-                      <TableCell>{renderAvailability(promoter.availability)}</TableCell>
+                      <TableCell>
+                        {renderAvailability(promoter.availability)}
+                      </TableCell>
 
                       {/* Actions */}
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
+                            <Button variant='ghost' size='sm'>
+                              <MoreHorizontal className='h-4 w-4' />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align='end'>
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             {onView && (
-                              <DropdownMenuItem onClick={() => onView(promoter.id)}>
-                                <Eye className="mr-2 h-4 w-4" />
+                              <DropdownMenuItem
+                                onClick={() => onView(promoter.id)}
+                              >
+                                <Eye className='mr-2 h-4 w-4' />
                                 View Details
                               </DropdownMenuItem>
                             )}
                             {onEdit && (
-                              <DropdownMenuItem onClick={() => onEdit(promoter.id)}>
-                                <Pencil className="mr-2 h-4 w-4" />
+                              <DropdownMenuItem
+                                onClick={() => onEdit(promoter.id)}
+                              >
+                                <Pencil className='mr-2 h-4 w-4' />
                                 Edit
                               </DropdownMenuItem>
                             )}
@@ -492,9 +544,9 @@ export function PromotersTable({
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   onClick={() => setDeletePromoter(promoter)}
-                                  className="text-destructive"
+                                  className='text-destructive'
                                 >
-                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  <Trash2 className='mr-2 h-4 w-4' />
                                   Delete
                                 </DropdownMenuItem>
                               </>
@@ -512,7 +564,10 @@ export function PromotersTable({
       </Card>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletePromoter} onOpenChange={() => setDeletePromoter(null)}>
+      <AlertDialog
+        open={!!deletePromoter}
+        onOpenChange={() => setDeletePromoter(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -529,7 +584,7 @@ export function PromotersTable({
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className='bg-destructive text-destructive-foreground hover:bg-destructive/90'
             >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
@@ -539,4 +594,3 @@ export function PromotersTable({
     </div>
   );
 }
-

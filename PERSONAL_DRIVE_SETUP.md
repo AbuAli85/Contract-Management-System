@@ -70,11 +70,13 @@ GOOGLE_DOCS_TEMPLATE_ID=your-document-id-from-personal-drive
 ## 🧪 **Test the Setup**
 
 ### **Step 1: Test Configuration**
+
 ```
 https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 ### **Step 2: Test Integration**
+
 ```
 https://portal.thesmartpro.io/api/test/google-docs-simple
 ```
@@ -100,11 +102,13 @@ After setup, you should see:
 Use these placeholders in your template:
 
 ### **Contract Info**
+
 - `{{contract_number}}` - Contract number
 - `{{contract_date}}` - Contract date
 - `{{contract_type}}` - Contract type
 
 ### **Client (First Party)**
+
 - `{{first_party_name_en}}` - Client name (English)
 - `{{first_party_name_ar}}` - Client name (Arabic)
 - `{{first_party_crn}}` - Client CRN
@@ -112,6 +116,7 @@ Use these placeholders in your template:
 - `{{first_party_phone}}` - Client phone
 
 ### **Employer (Second Party)**
+
 - `{{second_party_name_en}}` - Employer name (English)
 - `{{second_party_name_ar}}` - Employer name (Arabic)
 - `{{second_party_crn}}` - Employer CRN
@@ -119,6 +124,7 @@ Use these placeholders in your template:
 - `{{second_party_phone}}` - Employer phone
 
 ### **Promoter**
+
 - `{{promoter_name_en}}` - Promoter name (English)
 - `{{promoter_name_ar}}` - Promoter name (Arabic)
 - `{{promoter_email}}` - Promoter email
@@ -127,6 +133,7 @@ Use these placeholders in your template:
 - `{{promoter_passport_number}}` - Passport number
 
 ### **Contract Details**
+
 - `{{job_title}}` - Job title
 - `{{department}}` - Department
 - `{{work_location}}` - Work location
@@ -143,7 +150,7 @@ Use these placeholders in your template:
 ✅ **No additional costs**  
 ✅ **Full contract generation functionality**  
 ✅ **Documents saved to your personal drive**  
-✅ **Easy to manage and organize**  
+✅ **Easy to manage and organize**
 
 ## 🚀 **How It Works**
 

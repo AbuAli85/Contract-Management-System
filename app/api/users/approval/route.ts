@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     // Check if user has admin permissions
     let userRole = null;
-    
+
     // Try to get role from profiles table first
     try {
       const { data: profileData, error: profileErr } = await supabase
@@ -27,14 +27,14 @@ export async function GET(request: NextRequest) {
         .select('role')
         .eq('id', user.id)
         .single();
-      
+
       if (!profileErr && profileData?.role) {
         userRole = profileData.role;
       }
     } catch (err) {
       // Continue to users table if profiles fails
     }
-    
+
     // If no role from profiles, try users table
     if (!userRole) {
       try {
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           .select('role')
           .eq('id', user.id)
           .single();
-        
+
         if (!userErr && userData?.role) {
           userRole = userData.role;
         }
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
 
     // Use admin client for admin operations
     const adminClient = getSupabaseAdmin();
-    
+
     // Fetch pending users
     const { data: pendingUsers, error } = await adminClient
       .from('users')

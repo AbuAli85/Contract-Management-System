@@ -97,7 +97,11 @@ export const PUT = withRBAC(
         .eq('id', user.id)
         .single();
 
-      if (userError || !userProfile || !['admin', 'manager'].includes((userProfile as any)?.role)) {
+      if (
+        userError ||
+        !userProfile ||
+        !['admin', 'manager'].includes((userProfile as any)?.role)
+      ) {
         return NextResponse.json(
           { error: 'Insufficient permissions to edit contracts' },
           { status: 403 }
@@ -116,15 +120,19 @@ export const PUT = withRBAC(
       if (body.status) dataToUpdate.status = body.status;
       if (body.start_date) dataToUpdate.start_date = body.start_date;
       if (body.end_date) dataToUpdate.end_date = body.end_date;
-      if (body.contract_start_date) dataToUpdate.start_date = body.contract_start_date;
-      if (body.contract_end_date) dataToUpdate.end_date = body.contract_end_date;
+      if (body.contract_start_date)
+        dataToUpdate.start_date = body.contract_start_date;
+      if (body.contract_end_date)
+        dataToUpdate.end_date = body.contract_end_date;
       if (body.value !== undefined) dataToUpdate.value = body.value;
-      if (body.basic_salary !== undefined) dataToUpdate.value = body.basic_salary;
+      if (body.basic_salary !== undefined)
+        dataToUpdate.value = body.basic_salary;
       if (body.currency) dataToUpdate.currency = body.currency;
       if (body.title) dataToUpdate.title = body.title;
       if (body.job_title) dataToUpdate.title = body.job_title;
       if (body.contract_type) dataToUpdate.contract_type = body.contract_type;
-      if (body.contract_number) dataToUpdate.contract_number = body.contract_number;
+      if (body.contract_number)
+        dataToUpdate.contract_number = body.contract_number;
       if (body.description) dataToUpdate.description = body.description;
       if (body.terms) dataToUpdate.terms = body.terms;
 

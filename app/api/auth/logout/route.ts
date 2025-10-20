@@ -20,13 +20,12 @@ export async function POST(request: NextRequest) {
     await clearAuthCookies(response);
 
     return response;
-
   } catch (error) {
     console.error('Logout error:', error);
-    
+
     // Even if there's an error, try to clear cookies
     const response = NextResponse.json({ message: 'Logged out successfully' });
-    
+
     try {
       await clearAuthCookies(response);
     } catch (cookieError) {

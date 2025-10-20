@@ -12,11 +12,7 @@
         "response": "JSON",
         "description": "Receives template ID for placeholder extraction"
       },
-      "outputs": [
-        "template_id",
-        "template_name",
-        "analysis_type"
-      ]
+      "outputs": ["template_id", "template_name", "analysis_type"]
     },
     {
       "id": 2,

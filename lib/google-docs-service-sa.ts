@@ -33,7 +33,7 @@ export class GoogleDocsServiceSA {
     // Parse service account credentials from environment
     // Support both direct JSON and Base64 encoded JSON
     let credentials: any;
-    
+
     if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY_BASE64) {
       // Decode from Base64 (recommended for production)
       const decoded = Buffer.from(
@@ -47,7 +47,7 @@ export class GoogleDocsServiceSA {
     } else {
       throw new Error(
         'Missing Google Service Account credentials. ' +
-        'Set either GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_SERVICE_ACCOUNT_KEY_BASE64'
+          'Set either GOOGLE_SERVICE_ACCOUNT_KEY or GOOGLE_SERVICE_ACCOUNT_KEY_BASE64'
       );
     }
 
@@ -91,7 +91,9 @@ export class GoogleDocsServiceSA {
           const limit = parseInt(quota.limit);
           const available = limit - used;
           const usedPercent = ((used / limit) * 100).toFixed(1);
-          console.log(`💾 Storage: ${usedPercent}% used (${Math.round(available / 1024 / 1024)} MB available)`);
+          console.log(
+            `💾 Storage: ${usedPercent}% used (${Math.round(available / 1024 / 1024)} MB available)`
+          );
         }
       } catch (quotaError) {
         console.log('⚠️ Could not check storage quota:', quotaError);
@@ -100,8 +102,8 @@ export class GoogleDocsServiceSA {
       // Step 1: Copy template
       const copyResult = await this.copyTemplate(contractData.contract_number);
       if (!copyResult.success || !copyResult.documentId) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: copyResult.error || 'Failed to copy template',
           errorDetails: copyResult.errorDetails,
         };
@@ -111,7 +113,10 @@ export class GoogleDocsServiceSA {
       console.log(`✅ Template copied: ${documentId}`);
 
       // Step 2: Replace all text placeholders
-      const replaceResult = await this.replaceTextInDocument(documentId, contractData);
+      const replaceResult = await this.replaceTextInDocument(
+        documentId,
+        contractData
+      );
       if (!replaceResult.success) {
         return { success: false, error: 'Failed to replace text' };
       }
@@ -150,7 +155,7 @@ export class GoogleDocsServiceSA {
       console.log('🔍 Attempting to copy template...');
       console.log('   Template ID:', TEMPLATE_ID);
       console.log('   New name:', `Contract - ${contractNumber}`);
-      
+
       // First, let's try to get template info to verify access
       try {
         const templateInfo = await this.drive.files.get({
@@ -169,7 +174,7 @@ export class GoogleDocsServiceSA {
           },
         };
       }
-      
+
       const response = await this.drive.files.copy({
         fileId: TEMPLATE_ID,
         requestBody: {
@@ -184,11 +189,11 @@ export class GoogleDocsServiceSA {
       };
     } catch (error: any) {
       console.error('❌ Copy template error:', error);
-      
+
       // Provide detailed error information
       let errorMessage = 'Unknown error';
       let errorDetails: any = {};
-      
+
       if (error.response) {
         errorMessage = error.response.data?.error?.message || error.message;
         errorDetails = {
@@ -203,7 +208,7 @@ export class GoogleDocsServiceSA {
         errorMessage = error.message;
         errorDetails = { message: error.message };
       }
-      
+
       return {
         success: false,
         error: errorMessage,
@@ -222,22 +227,43 @@ export class GoogleDocsServiceSA {
     try {
       // Define all text replacements
       const replacements = [
-        { find: '{{ref_number}}', replace: data.ref_number || data.contract_number },
-        { find: '{{first_party_name_ar}}', replace: data.first_party_name_ar || '' },
-        { find: '{{first_party_name_en}}', replace: data.first_party_name_en || '' },
+        {
+          find: '{{ref_number}}',
+          replace: data.ref_number || data.contract_number,
+        },
+        {
+          find: '{{first_party_name_ar}}',
+          replace: data.first_party_name_ar || '',
+        },
+        {
+          find: '{{first_party_name_en}}',
+          replace: data.first_party_name_en || '',
+        },
         { find: '{{first_party_crn}}', replace: data.first_party_crn || '' },
-        { find: '{{second_party_name_ar}}', replace: data.second_party_name_ar || '' },
-        { find: '{{second_party_name_en}}', replace: data.second_party_name_en || '' },
+        {
+          find: '{{second_party_name_ar}}',
+          replace: data.second_party_name_ar || '',
+        },
+        {
+          find: '{{second_party_name_en}}',
+          replace: data.second_party_name_en || '',
+        },
         { find: '{{second_party_crn}}', replace: data.second_party_crn || '' },
         { find: '{{promoter_name_ar}}', replace: data.promoter_name_ar || '' },
         { find: '{{promoter_name_en}}', replace: data.promoter_name_en || '' },
         { find: '{{id_card_number}}', replace: data.id_card_number || '' },
-        { find: '{{contract_start_date}}', replace: data.contract_start_date || '' },
-        { find: '{{contract_end_date}}', replace: data.contract_end_date || '' },
+        {
+          find: '{{contract_start_date}}',
+          replace: data.contract_start_date || '',
+        },
+        {
+          find: '{{contract_end_date}}',
+          replace: data.contract_end_date || '',
+        },
       ];
 
       // Build requests array for batchUpdate
-      const requests = replacements.map((item) => ({
+      const requests = replacements.map(item => ({
         replaceAllText: {
           containsText: {
             text: item.find,
@@ -303,4 +329,3 @@ export class GoogleDocsServiceSA {
 // Export singleton instance
 // Temporarily disabled for build
 // export const googleDocsServiceSA = new GoogleDocsServiceSA();
-

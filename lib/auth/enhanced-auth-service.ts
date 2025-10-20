@@ -26,16 +26,16 @@ export class AuthService {
       if (this.supabase?.auth) {
         await this.supabase.auth.signOut();
       }
-      
+
       // Clear localStorage
-      const keysToRemove = Object.keys(localStorage).filter(key => 
-        key.includes('supabase') || key.includes('sb-')
+      const keysToRemove = Object.keys(localStorage).filter(
+        key => key.includes('supabase') || key.includes('sb-')
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      
+
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       console.log('Auth cleared successfully');
     } catch (error) {
       console.error('Error clearing auth:', error);
@@ -53,20 +53,23 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.getSession();
-      
+
       if (error) {
         console.error('Session error:', error);
-        
+
         // If it's a refresh token error, clear auth and return null
-        if (error.message.includes('refresh') || error.message.includes('Invalid')) {
+        if (
+          error.message.includes('refresh') ||
+          error.message.includes('Invalid')
+        ) {
           console.log('Clearing invalid session...');
           await this.clearAuth();
           return { session: null, user: null };
         }
-        
+
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get session:', error);
@@ -84,7 +87,7 @@ export class AuthService {
 
       // Clear any existing bad tokens first
       await this.clearAuth();
-      
+
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
         password,
@@ -154,20 +157,23 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.getUser();
-      
+
       if (error) {
         console.error('Get user error:', error);
-        
+
         // If it's an auth error, try to get a fresh session
-        if (error.message.includes('JWT') || error.message.includes('refresh')) {
+        if (
+          error.message.includes('JWT') ||
+          error.message.includes('refresh')
+        ) {
           console.log('Attempting to refresh session...');
           const sessionData = await this.getSession();
           return { user: sessionData.session?.user || null };
         }
-        
+
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get user:', error);
@@ -209,7 +215,7 @@ export class AuthService {
     }
 
     this.refreshPromise = this._performRefresh();
-    
+
     try {
       const result = await this.refreshPromise;
       this.refreshPromise = null;
@@ -227,14 +233,14 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.refreshSession();
-      
+
       if (error) {
         console.error('Refresh session error:', error);
         // Clear auth on refresh failure
         await this.clearAuth();
         throw error;
       }
-      
+
       console.log('Session refreshed successfully');
       return data;
     } catch (error) {
@@ -253,7 +259,7 @@ export class AuthService {
 
     return this.supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state change:', event);
-      
+
       if (event === 'TOKEN_REFRESHED') {
         console.log('Token refreshed');
       } else if (event === 'SIGNED_OUT') {
@@ -262,7 +268,7 @@ export class AuthService {
       } else if (event === 'SIGNED_IN') {
         console.log('User signed in');
       }
-      
+
       callback(event, session);
     });
   }

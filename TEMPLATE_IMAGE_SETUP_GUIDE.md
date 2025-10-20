@@ -1,4 +1,5 @@
 # Google Docs Template - Image Setup Guide
+
 ## For ID Card and Passport Photos
 
 ---
@@ -6,6 +7,7 @@
 ## **🎯 How to Add Image Placeholders in Your Template**
 
 Your template needs 2 image placeholders:
+
 1. **ID Card Photo** (بطاقة)
 2. **Passport Photo** (جواز السفر)
 
@@ -36,6 +38,7 @@ URL: https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gp
 This is CRITICAL for Make.com to find and replace the images.
 
 **For ID Card Image:**
+
 1. Right-click the ID card placeholder image
 2. Select **"Alt text"**
 3. In the **Title** field, enter exactly: `image_1`
@@ -43,6 +46,7 @@ This is CRITICAL for Make.com to find and replace the images.
 5. Click **Save**
 
 **For Passport Image:**
+
 1. Right-click the passport placeholder image
 2. Select **"Alt text"**
 3. In the **Title** field, enter exactly: `image_2`
@@ -140,15 +144,19 @@ The actual images from your database will be resized to fit these dimensions.
 ## **🚨 Common Issues**
 
 ### **Issue: Images are too small in generated document**
+
 - Solution: Make placeholder images larger in template
 
 ### **Issue: Images are distorted**
+
 - Solution: Match aspect ratio of placeholder to actual images
 
 ### **Issue: Make.com can't find images to replace**
+
 - Solution: Verify Alt text is set exactly as `image_1` and `image_2`
 
 ### **Issue: Images don't appear at all**
+
 - Solution: Check that image URLs are publicly accessible
 
 ---
@@ -163,4 +171,3 @@ After setting up images in template:
 4. ✅ Test with real data
 
 See `MAKECOM_IMAGE_MODULE_CONFIG.md` for Make.com configuration!
-

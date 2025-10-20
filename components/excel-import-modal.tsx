@@ -221,24 +221,20 @@ export default function ExcelImportModal({
             .trim();
 
         const idx = {
-          name_en:
-            headers.findIndex(h =>
-              [
-                'name en',
-                'english name',
-                'name',
-                'full name english',
-                'name english',
-                'name_en',
-              ].includes(normalize(h))
-            ),
-          name_ar: headers.findIndex(h =>
+          name_en: headers.findIndex(h =>
             [
-              'name ar',
-              'arabic name',
-              'full name arabic',
-              'name_ar',
+              'name en',
+              'english name',
+              'name',
+              'full name english',
+              'name english',
+              'name_en',
             ].includes(normalize(h))
+          ),
+          name_ar: headers.findIndex(h =>
+            ['name ar', 'arabic name', 'full name arabic', 'name_ar'].includes(
+              normalize(h)
+            )
           ),
           first_name: headers.findIndex(h =>
             ['first name', 'firstname', 'first_name'].includes(normalize(h))
@@ -263,11 +259,16 @@ export default function ExcelImportModal({
             )
           ),
           passport_number: headers.findIndex(h =>
-            ['passport number', 'passport', 'passport_no', 'passport_number'].includes(
-              normalize(h)
-            )
+            [
+              'passport number',
+              'passport',
+              'passport_no',
+              'passport_number',
+            ].includes(normalize(h))
           ),
-          nationality: headers.findIndex(h => ['nationality'].includes(normalize(h))),
+          nationality: headers.findIndex(h =>
+            ['nationality'].includes(normalize(h))
+          ),
           id_card_expiry_date: headers.findIndex(h =>
             ['id expiry date', 'id card expiry date', 'id expiry'].includes(
               normalize(h)
@@ -276,7 +277,9 @@ export default function ExcelImportModal({
           passport_expiry_date: headers.findIndex(h =>
             ['passport expiry date', 'passport expiry'].includes(normalize(h))
           ),
-          notes: headers.findIndex(h => ['notes', 'note'].includes(normalize(h))),
+          notes: headers.findIndex(h =>
+            ['notes', 'note'].includes(normalize(h))
+          ),
           status: headers.findIndex(h => ['status'].includes(normalize(h))),
           employer_id: headers.findIndex(h =>
             [
@@ -287,9 +290,7 @@ export default function ExcelImportModal({
               'company_id',
               'employer_id',
               'employer uuid',
-            ].includes(
-              normalize(h)
-            )
+            ].includes(normalize(h))
           ),
         };
 
@@ -310,8 +311,11 @@ export default function ExcelImportModal({
 
             // Excel serial number
             if (typeof value === 'number') {
-              const jsDate = new Date(Math.round((value - 25569) * 86400 * 1000));
-              if (!isNaN(jsDate.getTime())) return jsDate.toISOString().slice(0, 10);
+              const jsDate = new Date(
+                Math.round((value - 25569) * 86400 * 1000)
+              );
+              if (!isNaN(jsDate.getTime()))
+                return jsDate.toISOString().slice(0, 10);
             }
 
             const dateStr = String(value).trim();
@@ -381,10 +385,14 @@ export default function ExcelImportModal({
             name_ar: String(cell(row, idx.name_ar) || '').trim(),
             id_card_number: String(cell(row, idx.id_card_number) || '').trim(),
             mobile_number: String(cell(row, idx.mobile_number) || '').trim(),
-            passport_number: String(cell(row, idx.passport_number) || '').trim(),
+            passport_number: String(
+              cell(row, idx.passport_number) || ''
+            ).trim(),
             nationality: String(cell(row, idx.nationality) || '').trim(),
             id_card_expiry_date: toISODate(cell(row, idx.id_card_expiry_date)),
-            passport_expiry_date: toISODate(cell(row, idx.passport_expiry_date)),
+            passport_expiry_date: toISODate(
+              cell(row, idx.passport_expiry_date)
+            ),
             notes: String(cell(row, idx.notes) || '').trim(),
             status: String(cell(row, idx.status) || 'active').trim(),
             employer_id:
@@ -469,7 +477,11 @@ export default function ExcelImportModal({
 
     try {
       console.log('=== IMPORT DEBUG START ===');
-      console.log('Starting import process for', previewData.length, 'promoters');
+      console.log(
+        'Starting import process for',
+        previewData.length,
+        'promoters'
+      );
       setProgress(10);
 
       const response = await fetch('/api/promoters/import', {
@@ -485,7 +497,12 @@ export default function ExcelImportModal({
       }
 
       const result = await response.json();
-      const { imported = 0, duplicates = 0, errors = [], importedWithCompany = 0 } = result || {};
+      const {
+        imported = 0,
+        duplicates = 0,
+        errors = [],
+        importedWithCompany = 0,
+      } = result || {};
 
       setProgress(100);
 
@@ -504,14 +521,19 @@ export default function ExcelImportModal({
       } else {
         toast({
           title: 'Import failed',
-          description: errors?.[0] || 'No promoters were processed. Check the data and try again.',
+          description:
+            errors?.[0] ||
+            'No promoters were processed. Check the data and try again.',
           variant: 'destructive',
         });
       }
 
       setImportResult({
         success: imported > 0,
-        message: imported > 0 ? 'Import successful' : 'Import completed with no new records',
+        message:
+          imported > 0
+            ? 'Import successful'
+            : 'Import completed with no new records',
         imported,
         duplicates,
         errors,

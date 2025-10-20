@@ -1,137 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang='en'>
+  <head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
     <title>Job Offer Letter</title>
     <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            line-height: 1.6;
-            margin: 40px;
-            color: #333;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-        .company-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .letter-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 30px 0 20px 0;
-        }
-        .section {
-            margin-bottom: 25px;
-        }
-        .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-decoration: underline;
-        }
-        .employee-info {
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-left: 4px solid #007bff;
-            margin: 20px 0;
-        }
-        .signature-section {
-            margin-top: 50px;
-            display: flex;
-            justify-content: space-between;
-        }
-        .signature-box {
-            width: 45%;
-            text-align: center;
-        }
-        .signature-line {
-            border-bottom: 1px solid #333;
-            margin: 40px 0 10px 0;
-        }
-        .date {
-            text-align: right;
-            margin-bottom: 30px;
-        }
-        .greeting {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
+      body {
+        font-family: 'Times New Roman', serif;
+        line-height: 1.6;
+        margin: 40px;
+        color: #333;
+      }
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #333;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+      }
+      .company-name {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .letter-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin: 30px 0 20px 0;
+      }
+      .section {
+        margin-bottom: 25px;
+      }
+      .section-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-decoration: underline;
+      }
+      .employee-info {
+        background-color: #f5f5f5;
+        padding: 15px;
+        border-left: 4px solid #007bff;
+        margin: 20px 0;
+      }
+      .signature-section {
+        margin-top: 50px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .signature-box {
+        width: 45%;
+        text-align: center;
+      }
+      .signature-line {
+        border-bottom: 1px solid #333;
+        margin: 40px 0 10px 0;
+      }
+      .date {
+        text-align: right;
+        margin-bottom: 30px;
+      }
+      .greeting {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
     </style>
-</head>
-<body>
-    <div class="header">
-        <div class="company-name">{{company.name}}</div>
-        <div>{{company.address}}</div>
-        <div>Phone: {{company.phone}} | Email: {{company.email}}</div>
+  </head>
+  <body>
+    <div class='header'>
+      <div class='company-name'>{{company.name}}</div>
+      <div>{{company.address}}</div>
+      <div>Phone: {{company.phone}} | Email: {{company.email}}</div>
     </div>
 
-    <div class="date">
-        <strong>Date:</strong> {{employee.current_date}}
+    <div class='date'>
+      <strong>Date:</strong>
+      {{employee.current_date}}
     </div>
 
-    <div class="greeting">
-        Dear {{employee.full_name}},
+    <div class='greeting'>
+      Dear
+      {{employee.full_name}},
     </div>
 
-    <div class="letter-title">JOB OFFER LETTER</div>
+    <div class='letter-title'>JOB OFFER LETTER</div>
 
-    <p>We are pleased to offer you the position of <strong>{{employee.job_title}}</strong> in our {{employee.department_name}} department. We believe your skills and experience will be a valuable addition to our team.</p>
+    <p>We are pleased to offer you the position of
+      <strong>{{employee.job_title}}</strong>
+      in our
+      {{employee.department_name}}
+      department. We believe your skills and experience will be a valuable
+      addition to our team.</p>
 
-    <div class="employee-info">
-        <strong>Position Details:</strong><br>
-        Job Title: {{employee.job_title}}<br>
-        Department: {{employee.department_name}}<br>
-        Start Date: {{employee.formatted_hire_date}}<br>
-        Salary: {{employee.formatted_salary}} per month<br>
-        Employee Code: {{employee.employee_code}}
+    <div class='employee-info'>
+      <strong>Position Details:</strong><br />
+      Job Title:
+      {{employee.job_title}}<br />
+      Department:
+      {{employee.department_name}}<br />
+      Start Date:
+      {{employee.formatted_hire_date}}<br />
+      Salary:
+      {{employee.formatted_salary}}
+      per month<br />
+      Employee Code:
+      {{employee.employee_code}}
     </div>
 
-    <div class="section">
-        <div class="section-title">Terms and Conditions</div>
-        <p>This offer is subject to the following terms and conditions:</p>
-        <ul>
-            <li>You will report to the Department Manager</li>
-            <li>Your normal working hours will be 9:00 AM to 5:00 PM, Monday through Friday</li>
-            <li>You will be entitled to all benefits as per company policy</li>
-            <li>This offer is valid for 7 days from the date of this letter</li>
-            <li>Your employment will be subject to a probationary period of 3 months</li>
-        </ul>
+    <div class='section'>
+      <div class='section-title'>Terms and Conditions</div>
+      <p>This offer is subject to the following terms and conditions:</p>
+      <ul>
+        <li>You will report to the Department Manager</li>
+        <li>Your normal working hours will be 9:00 AM to 5:00 PM, Monday through
+          Friday</li>
+        <li>You will be entitled to all benefits as per company policy</li>
+        <li>This offer is valid for 7 days from the date of this letter</li>
+        <li>Your employment will be subject to a probationary period of 3 months</li>
+      </ul>
     </div>
 
-    <div class="section">
-        <div class="section-title">Next Steps</div>
-        <p>To accept this offer, please:</p>
-        <ol>
-            <li>Sign and return this letter within 7 days</li>
-            <li>Complete the required documentation</li>
-            <li>Attend the orientation session on your start date</li>
-        </ol>
+    <div class='section'>
+      <div class='section-title'>Next Steps</div>
+      <p>To accept this offer, please:</p>
+      <ol>
+        <li>Sign and return this letter within 7 days</li>
+        <li>Complete the required documentation</li>
+        <li>Attend the orientation session on your start date</li>
+      </ol>
     </div>
 
-    <p>We look forward to welcoming you to our team. If you have any questions about this offer, please don't hesitate to contact us.</p>
+    <p>We look forward to welcoming you to our team. If you have any questions
+      about this offer, please don't hesitate to contact us.</p>
 
     <p>Congratulations on your new position!</p>
 
-    <div class="signature-section">
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div><strong>Employee Signature</strong></div>
-            <div>{{employee.full_name}}</div>
-            <div>Date: _______________</div>
-        </div>
-        <div class="signature-box">
-            <div class="signature-line"></div>
-            <div><strong>HR Manager</strong></div>
-            <div>{{company.name}}</div>
-            <div>Date: _______________</div>
-        </div>
+    <div class='signature-section'>
+      <div class='signature-box'>
+        <div class='signature-line'></div>
+        <div><strong>Employee Signature</strong></div>
+        <div>{{employee.full_name}}</div>
+        <div>Date: _______________</div>
+      </div>
+      <div class='signature-box'>
+        <div class='signature-line'></div>
+        <div><strong>HR Manager</strong></div>
+        <div>{{company.name}}</div>
+        <div>Date: _______________</div>
+      </div>
     </div>
-</body>
+  </body>
 </html>

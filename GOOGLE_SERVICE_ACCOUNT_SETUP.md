@@ -1,4 +1,5 @@
 # Google Service Account Setup (RECOMMENDED)
+
 ## Bypass OAuth Restricted Scope Issues
 
 ---
@@ -6,11 +7,13 @@
 ## **🎯 Why Service Account?**
 
 **Problem:** `https://www.googleapis.com/auth/documents` is a **restricted scope** that requires:
+
 - ❌ Google security assessment
 - ❌ App verification (takes weeks)
 - ❌ Not available without approval
 
 **Solution:** Use a **Service Account** instead:
+
 - ✅ No OAuth consent screen
 - ✅ No restricted scope issues
 - ✅ Works immediately
@@ -108,7 +111,8 @@ GOOGLE_SERVICE_ACCOUNT_KEY='{"type":"service_account","project_id":"your-project
 GOOGLE_DOCS_TEMPLATE_ID=1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
 ```
 
-**Important:** 
+**Important:**
+
 - Wrap the entire JSON in **single quotes** `'...'`
 - Keep it on **one line** (no line breaks)
 - Or use a `.json` file and read it in code
@@ -176,6 +180,7 @@ export async function GET() {
 Visit: `http://localhost:3000/api/test-google-sa`
 
 **Expected result:**
+
 ```json
 {
   "success": true,
@@ -190,19 +195,23 @@ Visit: `http://localhost:3000/api/test-google-sa`
 ## **🔧 Troubleshooting**
 
 ### **Error: "Invalid JWT Signature"**
+
 - Service account key is malformed
 - Check the JSON is valid
 - Make sure private_key has proper line breaks (`\n`)
 
 ### **Error: "Insufficient Permission" or "403 Forbidden"**
+
 - Service account doesn't have access to template
 - **Solution:** Share the template with service account email (Step 4)
 
 ### **Error: "The caller does not have permission"**
+
 - APIs not enabled
 - **Solution:** Enable Google Docs API and Google Drive API
 
 ### **Error: "File not found"**
+
 - Wrong template ID
 - **Solution:** Verify template ID is correct
 
@@ -210,14 +219,14 @@ Visit: `http://localhost:3000/api/test-google-sa`
 
 ## **📊 Service Account vs OAuth Comparison**
 
-| Feature | Service Account | OAuth 2.0 |
-|---------|----------------|-----------|
-| Setup Complexity | ✅ Simple | ⚠️ Complex |
-| Restricted Scopes | ✅ No issues | ❌ Blocked |
-| User Authorization | ✅ Not needed | ❌ Required |
-| Gmail Account Support | ✅ Yes | ❌ No |
-| Security Review | ✅ Not needed | ❌ Required |
-| Best For | ✅ Backend automation | User-facing apps |
+| Feature               | Service Account       | OAuth 2.0        |
+| --------------------- | --------------------- | ---------------- |
+| Setup Complexity      | ✅ Simple             | ⚠️ Complex       |
+| Restricted Scopes     | ✅ No issues          | ❌ Blocked       |
+| User Authorization    | ✅ Not needed         | ❌ Required      |
+| Gmail Account Support | ✅ Yes                | ❌ No            |
+| Security Review       | ✅ Not needed         | ❌ Required      |
+| Best For              | ✅ Backend automation | User-facing apps |
 
 **Recommendation:** Use **Service Account** for contract generation!
 
@@ -250,6 +259,7 @@ When deploying to Vercel:
 1. **Go to:** Vercel Dashboard → Your Project → Settings → Environment Variables
 
 2. **Add:**
+
    ```
    Name: GOOGLE_SERVICE_ACCOUNT_KEY
    Value: [Paste the entire JSON content]
@@ -264,6 +274,7 @@ When deploying to Vercel:
 **Total setup time:** ~10 minutes
 
 **Steps:**
+
 1. ✅ Enable APIs (2 min)
 2. ✅ Create service account (2 min)
 3. ✅ Create key (1 min)
@@ -276,4 +287,3 @@ When deploying to Vercel:
 ---
 
 **This is the BEST solution for your use case!** 🚀
-

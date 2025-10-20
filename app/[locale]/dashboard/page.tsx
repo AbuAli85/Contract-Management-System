@@ -2,18 +2,24 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AuthGuard } from '@/components/auth/auth-guard';
-import { 
-  User, 
-  FileText, 
-  Users, 
-  TrendingUp, 
+import {
+  User,
+  FileText,
+  Users,
+  TrendingUp,
   LogOut,
   Settings,
-  Bell
+  Bell,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -38,14 +44,14 @@ function DashboardContent() {
         localStorage.removeItem('demo-user-session');
         localStorage.removeItem('user-role');
         localStorage.removeItem('auth-mode');
-        
+
         // Clear other auth-related data but NOT Supabase session data
         localStorage.removeItem('auth-token');
         localStorage.removeItem('user-session');
         localStorage.removeItem('admin-session');
-        
+
         // Don't clear sessionStorage as it may contain Supabase session data
-        
+
         console.log('🧹 Limited cleanup of demo auth data completed');
       } catch (error) {
         console.warn('Could not perform limited cleanup:', error);
@@ -58,10 +64,10 @@ function DashboardContent() {
     // Check for admin session without clearing Supabase data
     const checkForAdminSession = () => {
       try {
-        const hasAdminSession = 
+        const hasAdminSession =
           localStorage.getItem('demo-user-session') ||
           sessionStorage.getItem('admin-session');
-        
+
         if (hasAdminSession) {
           console.warn('🚫 Admin session detected - forcing redirect to login');
           router.push('/en/auth/login');
@@ -112,10 +118,10 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto'></div>
+          <p className='mt-4 text-gray-600'>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -126,25 +132,25 @@ function DashboardContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className='min-h-screen bg-gray-50'>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">
+      <header className='bg-white shadow-sm border-b'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex justify-between items-center h-16'>
+            <div className='flex items-center'>
+              <h1 className='text-xl font-semibold text-gray-900'>
                 Contract Management System
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm">
-                <Bell className="h-5 w-5" />
+            <div className='flex items-center space-x-4'>
+              <Button variant='ghost' size='sm'>
+                <Bell className='h-5 w-5' />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-5 w-5" />
+              <Button variant='ghost' size='sm'>
+                <Settings className='h-5 w-5' />
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-5 w-5" />
+              <Button variant='ghost' size='sm' onClick={handleLogout}>
+                <LogOut className='h-5 w-5' />
               </Button>
             </div>
           </div>
@@ -152,73 +158,75 @@ function DashboardContent() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Welcome Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className='mb-8'>
+          <h2 className='text-2xl font-bold text-gray-900'>
             Welcome back, {user.full_name || user.email}!
           </h2>
-          <p className="text-gray-600">
+          <p className='text-gray-600'>
             Here's what's happening with your contracts today.
           </p>
-          <div className="mt-2">
-            <Badge variant="secondary" className="text-sm">
+          <div className='mt-2'>
+            <Badge variant='secondary' className='text-sm'>
               Role: {user.role}
             </Badge>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Total Contracts
+              </CardTitle>
+              <FileText className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">
+              <div className='text-2xl font-bold'>24</div>
+              <p className='text-xs text-muted-foreground'>
                 +2 from last month
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Promoters</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Active Promoters
+              </CardTitle>
+              <Users className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">
-                +1 from last week
-              </p>
+              <div className='text-2xl font-bold'>12</div>
+              <p className='text-xs text-muted-foreground'>+1 from last week</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>Revenue</CardTitle>
+              <TrendingUp className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$45,231</div>
-              <p className="text-xs text-muted-foreground">
+              <div className='text-2xl font-bold'>$45,231</div>
+              <p className='text-xs text-muted-foreground'>
                 +20.1% from last month
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-bold">
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-bold'>
                 Pending Approvals
               </CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
+              <User className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">
+              <div className='text-2xl font-bold'>3</div>
+              <p className='text-xs text-muted-foreground'>
                 Requires attention
               </p>
             </CardContent>
@@ -226,11 +234,11 @@ function DashboardContent() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <FileText className="h-5 w-5 mr-2" />
+              <CardTitle className='flex items-center'>
+                <FileText className='h-5 w-5 mr-2' />
                 Create Contract
               </CardTitle>
               <CardDescription>
@@ -238,16 +246,16 @@ function DashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/en/contracts/new">Create New</Link>
+              <Button className='w-full' asChild>
+                <Link href='/en/contracts/new'>Create New</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <Users className="h-5 w-5 mr-2" />
+              <CardTitle className='flex items-center'>
+                <Users className='h-5 w-5 mr-2' />
                 Manage Promoters
               </CardTitle>
               <CardDescription>
@@ -255,16 +263,16 @@ function DashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/en/promoters">View Promoters</Link>
+              <Button className='w-full' asChild>
+                <Link href='/en/promoters'>View Promoters</Link>
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <Card className='hover:shadow-md transition-shadow cursor-pointer'>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <TrendingUp className="h-5 w-5 mr-2" />
+              <CardTitle className='flex items-center'>
+                <TrendingUp className='h-5 w-5 mr-2' />
                 View Analytics
               </CardTitle>
               <CardDescription>
@@ -272,8 +280,8 @@ function DashboardContent() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" asChild>
-                <Link href="/en/analytics">View Reports</Link>
+              <Button className='w-full' asChild>
+                <Link href='/en/analytics'>View Reports</Link>
               </Button>
             </CardContent>
           </Card>

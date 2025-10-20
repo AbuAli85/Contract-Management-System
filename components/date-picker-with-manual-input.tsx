@@ -54,7 +54,11 @@ const safeParse = (value: string, preferredFormat: string): Date | null => {
     for (const fmt of candidates) {
       try {
         const parsed = parse(trimmed, fmt, new Date());
-        if (parsed instanceof Date && !isNaN(parsed.getTime()) && isValid(parsed)) {
+        if (
+          parsed instanceof Date &&
+          !isNaN(parsed.getTime()) &&
+          isValid(parsed)
+        ) {
           return parsed;
         }
       } catch {
@@ -174,7 +178,7 @@ export function DatePickerWithManualInput({
           /^\d{2}\/\d{2}\/\d{4}$/, // dd/MM/yyyy
           /^\d{4}-\d{2}-\d{2}$/, // yyyy-MM-dd
           /^\d{2}\.\d{2}\.\d{4}$/, // dd.MM.yyyy
-          /^\d{2}\/\d{2}\/\d{4}$/ // MM/dd/yyyy (same shape as dd/MM/yyyy)
+          /^\d{2}\/\d{2}\/\d{4}$/, // MM/dd/yyyy (same shape as dd/MM/yyyy)
         ];
         return patterns.some(p => p.test(v));
       })();
@@ -190,7 +194,11 @@ export function DatePickerWithManualInput({
       }
 
       const parsedDate = safeParse(value, dateFormat);
-      if (parsedDate && parsedDate instanceof Date && !isNaN(parsedDate.getTime())) {
+      if (
+        parsedDate &&
+        parsedDate instanceof Date &&
+        !isNaN(parsedDate.getTime())
+      ) {
         const normalized = safeFormat(parsedDate, dateFormat);
         safeSetInputValue(normalized);
         safeSetDate(parsedDate);

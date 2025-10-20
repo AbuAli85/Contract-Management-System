@@ -11,11 +11,7 @@
         "method": "POST",
         "response": "JSON"
       },
-      "outputs": [
-        "source_template_id",
-        "target_document_id",
-        "new_text"
-      ]
+      "outputs": ["source_template_id", "target_document_id", "new_text"]
     },
     {
       "id": 2,

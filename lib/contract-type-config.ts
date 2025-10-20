@@ -1078,27 +1078,27 @@ export function getEnhancedContractTypeConfig(
 ): ContractTypeConfig | null {
   // Try direct match first
   let config = enhancedContractTypes.find(type => type.id === contractTypeId);
-  
+
   // If not found, try legacy type mapping for backward compatibility
   if (!config) {
     const legacyTypeMapping: Record<string, string> = {
       // Legacy database types
-      'employment': 'full-time-permanent',
-      'service': 'service-contract',
-      'consultancy': 'consulting-agreement',
-      'partnership': 'partnership-agreement',
+      employment: 'full-time-permanent',
+      service: 'service-contract',
+      consultancy: 'consulting-agreement',
+      partnership: 'partnership-agreement',
       // Make.com automated types (map to equivalent enhanced types)
       'oman-unlimited-makecom': 'full-time-permanent',
       'oman-fixed-term-makecom': 'part-time-fixed',
       'oman-part-time-makecom': 'part-time-fixed',
     };
-    
+
     const mappedId = legacyTypeMapping[contractTypeId];
     if (mappedId) {
       config = enhancedContractTypes.find(type => type.id === mappedId);
     }
   }
-  
+
   return config || null;
 }
 
@@ -1234,8 +1234,10 @@ export function generateContractWithMakecom(
         normalizedData.contract_value = normalizedData.hourly_rate;
       }
     } else if (contractTypeId === 'vendor-service-agreement') {
-      if (typeof normalizedData.contract_value !== 'number' &&
-          typeof normalizedData['contract_value'] === 'number') {
+      if (
+        typeof normalizedData.contract_value !== 'number' &&
+        typeof normalizedData['contract_value'] === 'number'
+      ) {
         // keep as is
       }
     }

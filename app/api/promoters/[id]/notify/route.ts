@@ -18,7 +18,7 @@ export async function POST(
     // Rate limiting
     const identifier = getClientIdentifier(request);
     const { success } = await ratelimitStrict.limit(identifier);
-    
+
     if (!success) {
       return NextResponse.json(
         { error: 'Rate limit exceeded. Please try again later.' },
@@ -28,13 +28,13 @@ export async function POST(
 
     // Authentication and authorization
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Check user permissions (simplified for now)
@@ -53,7 +53,7 @@ export async function POST(
     // 4. Log the action
 
     const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Simulate notification creation
     const notification = {
       id: notificationId,
@@ -77,10 +77,9 @@ export async function POST(
       },
       message: 'Notification queued successfully',
     });
-
   } catch (error) {
     console.error('Error in notify promoter API:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },

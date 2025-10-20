@@ -75,8 +75,11 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
     // Verify user is authenticated
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError || !session) {
       return NextResponse.json(
         {

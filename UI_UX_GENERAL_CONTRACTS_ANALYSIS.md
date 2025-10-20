@@ -9,6 +9,7 @@ The UI/UX for General Contracts is **NOT ready** for all required fields. Severa
 ## 🔍 **Analysis Results**
 
 ### ✅ **Fields Currently Available in UI**
+
 1. **Basic Contract Fields**:
    - Contract Type ✅
    - Job Title ✅
@@ -38,6 +39,7 @@ The UI/UX for General Contracts is **NOT ready** for all required fields. Severa
    - Force Majeure ✅
 
 ### ❌ **Missing Critical Fields**
+
 1. **Products (Bilingual)**:
    - `products_en` - Products/Services in English ❌
    - `products_ar` - Products/Services in Arabic ❌
@@ -51,19 +53,25 @@ The UI/UX for General Contracts is **NOT ready** for all required fields. Severa
 ## 🔧 **Issues Found**
 
 ### **1. UI Form Missing Fields**
+
 The `GeneralContractGenerator.tsx` component has:
+
 - ✅ `product_name` field (single language)
 - ❌ **Missing**: `products_en` and `products_ar` fields
 - ❌ **Missing**: `location_en` and `location_ar` fields
 
 ### **2. API Not Sending Required Data**
+
 The API endpoint `/api/contracts/general/generate/route.ts`:
+
 - ✅ Receives `product_name` from UI
 - ❌ **Missing**: `products_en` and `products_ar` in request body
 - ❌ **Missing**: `location_en` and `location_ar` in request body
 
 ### **3. Service Layer Missing Fields**
+
 The `GeneralContractService`:
+
 - ✅ Has `product_name` in interface
 - ❌ **Missing**: `products_en` and `products_ar` in `GeneralContractData` interface
 - ❌ **Missing**: `location_en` and `location_ar` in `GeneralContractData` interface
@@ -75,7 +83,9 @@ The `GeneralContractService`:
 ## 🛠️ **Required Fixes**
 
 ### **1. Update UI Form (GeneralContractGenerator.tsx)**
+
 Add these fields to the form:
+
 ```typescript
 // Add to formData state
 products_en: '',
@@ -126,7 +136,9 @@ location_ar: '',
 ```
 
 ### **2. Update API Endpoint**
+
 Add these fields to the request body in `/api/contracts/general/generate/route.ts`:
+
 ```typescript
 // Add to contractData
 products_en: body.products_en,
@@ -136,9 +148,11 @@ location_ar: body.location_ar,
 ```
 
 ### **3. Update Service Layer**
+
 Update `lib/general-contract-service.ts`:
 
 **Add to interfaces:**
+
 ```typescript
 export interface GeneralContractData {
   // ... existing fields ...
@@ -158,6 +172,7 @@ export interface MakeComPayload {
 ```
 
 **Update prepareMakeComPayload method:**
+
 ```typescript
 const payload: MakeComPayload = {
   // ... existing fields ...
@@ -169,7 +184,9 @@ const payload: MakeComPayload = {
 ```
 
 ### **4. Update Database Schema**
+
 Add these columns to the `contracts` table:
+
 ```sql
 ALTER TABLE contracts ADD COLUMN products_en TEXT;
 ALTER TABLE contracts ADD COLUMN products_ar TEXT;
@@ -181,30 +198,33 @@ ALTER TABLE contracts ADD COLUMN location_ar TEXT;
 
 ## 📊 **Current vs Required Field Mapping**
 
-| Field | UI Form | API | Service | Database | Make.com | Status |
-|-------|---------|-----|---------|----------|----------|--------|
-| `products_en` | ❌ | ❌ | ❌ | ❌ | ✅ | **MISSING** |
-| `products_ar` | ❌ | ❌ | ❌ | ❌ | ✅ | **MISSING** |
-| `location_en` | ❌ | ❌ | ❌ | ❌ | ✅ | **MISSING** |
-| `location_ar` | ❌ | ❌ | ❌ | ❌ | ✅ | **MISSING** |
-| `product_name` | ✅ | ✅ | ✅ | ✅ | ❌ | **LEGACY** |
+| Field          | UI Form | API | Service | Database | Make.com | Status      |
+| -------------- | ------- | --- | ------- | -------- | -------- | ----------- |
+| `products_en`  | ❌      | ❌  | ❌      | ❌       | ✅       | **MISSING** |
+| `products_ar`  | ❌      | ❌  | ❌      | ❌       | ✅       | **MISSING** |
+| `location_en`  | ❌      | ❌  | ❌      | ❌       | ✅       | **MISSING** |
+| `location_ar`  | ❌      | ❌  | ❌      | ❌       | ✅       | **MISSING** |
+| `product_name` | ✅      | ✅  | ✅      | ✅       | ❌       | **LEGACY**  |
 
 ---
 
 ## 🎯 **Priority Actions**
 
 ### **High Priority (Required for Make.com)**
+
 1. ✅ **Update UI Form** - Add bilingual products and location fields
 2. ✅ **Update API Endpoint** - Accept and process new fields
 3. ✅ **Update Service Layer** - Include fields in payload preparation
 4. ✅ **Update Database Schema** - Add new columns
 
 ### **Medium Priority (Enhancement)**
+
 1. **Field Validation** - Add proper validation for new fields
 2. **Auto-save** - Include new fields in auto-save functionality
 3. **Form Layout** - Organize fields in logical groups
 
 ### **Low Priority (Future)**
+
 1. **Field Dependencies** - Add conditional field visibility
 2. **Field Helpers** - Add tooltips and help text
 3. **Field Templates** - Add common value suggestions

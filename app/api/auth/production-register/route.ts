@@ -5,15 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      email, 
-      password, 
-      fullName, 
-      role, 
-      phone, 
-      company, 
-      captchaToken 
-    } = body;
+    const { email, password, fullName, role, phone, company, captchaToken } =
+      body;
 
     // Validate required fields
     if (!email || !password || !fullName || !role) {
@@ -44,7 +37,9 @@ export async function POST(request: NextRequest) {
     const validRoles = ['user', 'provider', 'client', 'admin'];
     if (!validRoles.includes(role)) {
       return NextResponse.json(
-        { error: 'Invalid role. Must be one of: user, provider, client, admin' },
+        {
+          error: 'Invalid role. Must be one of: user, provider, client, admin',
+        },
         { status: 400 }
       );
     }
@@ -55,13 +50,13 @@ export async function POST(request: NextRequest) {
 
     // Check if CAPTCHA is required
     const captchaRequired = productionAuthService.isCaptchaRequired(request);
-    
+
     if (captchaRequired && !captchaToken) {
       return NextResponse.json(
-        { 
+        {
           error: 'CAPTCHA verification required',
           captchaRequired: true,
-          captchaConfig: productionAuthService.getCaptchaConfig()
+          captchaConfig: productionAuthService.getCaptchaConfig(),
         },
         { status: 400 }
       );
@@ -105,18 +100,22 @@ export async function POST(request: NextRequest) {
       if (profileError) {
         console.error('Profile creation error:', profileError);
         // Don't fail the registration if profile creation fails
-        console.warn('Profile creation failed, but auth user was created successfully');
+        console.warn(
+          'Profile creation failed, but auth user was created successfully'
+        );
       }
 
       // Create company if provider
       if (role === 'provider' && company) {
-        const { error: companyError } = await supabase.from('companies').insert({
-          name: company.trim(),
-          owner_id: authData.user.id,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        const { error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: company.trim(),
+            owner_id: authData.user.id,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
 
         if (companyError) {
           console.warn('Company creation failed:', companyError);
@@ -143,7 +142,6 @@ export async function POST(request: NextRequest) {
           status: 'pending',
         },
       });
-
     } catch (authError) {
       // Log failed registration
       await productionAuthService.logAuthAttempt(
@@ -156,24 +154,31 @@ export async function POST(request: NextRequest) {
       );
 
       // Check if it's a CAPTCHA error
-      if (authError instanceof Error && 
-          (authError.message.includes('captcha') || authError.message.includes('verification'))) {
+      if (
+        authError instanceof Error &&
+        (authError.message.includes('captcha') ||
+          authError.message.includes('verification'))
+      ) {
         return NextResponse.json(
-          { 
+          {
             error: 'CAPTCHA verification failed',
             captchaRequired: true,
-            captchaConfig: productionAuthService.getCaptchaConfig()
+            captchaConfig: productionAuthService.getCaptchaConfig(),
           },
           { status: 400 }
         );
       }
 
       return NextResponse.json(
-        { error: authError instanceof Error ? authError.message : 'Registration failed' },
+        {
+          error:
+            authError instanceof Error
+              ? authError.message
+              : 'Registration failed',
+        },
         { status: 400 }
       );
     }
-
   } catch (error) {
     console.error('Production registration error:', error);
     return NextResponse.json(
@@ -195,7 +200,6 @@ export async function GET(request: NextRequest) {
       environment: process.env.NODE_ENV,
       validRoles: ['user', 'provider', 'client', 'admin'],
     });
-
   } catch (error) {
     console.error('Production registration config error:', error);
     return NextResponse.json(

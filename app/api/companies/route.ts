@@ -153,18 +153,16 @@ export async function POST(request: NextRequest) {
     // If this is a provider registration, update the user's role
     if (role === 'provider') {
       console.log('Assigning provider role to user:', session.user.id);
-      
+
       // Update users table
-      const { error: userRoleError } = await supabase
-        .from('users')
-        .upsert({
-          id: session.user.id,
-          email: session.user.email,
-          full_name: body.contact_name || session.user.user_metadata?.full_name,
-          role: 'provider',
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        });
+      const { error: userRoleError } = await supabase.from('users').upsert({
+        id: session.user.id,
+        email: session.user.email,
+        full_name: body.contact_name || session.user.user_metadata?.full_name,
+        role: 'provider',
+        status: 'active',
+        updated_at: new Date().toISOString(),
+      });
 
       if (userRoleError) {
         console.error('Error updating user role:', userRoleError);
@@ -190,7 +188,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       company,
-      message: role === 'provider' ? 'Company registered and provider role assigned successfully' : 'Company registered successfully',
+      message:
+        role === 'provider'
+          ? 'Company registered and provider role assigned successfully'
+          : 'Company registered successfully',
     });
   } catch (error) {
     console.error('Create company error:', error);

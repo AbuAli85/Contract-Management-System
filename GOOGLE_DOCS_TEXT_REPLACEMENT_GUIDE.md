@@ -7,6 +7,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ## 🔍 **Solution: Two-Step Process**
 
 ### **Step 1: Extract Text from Template**
+
 ### **Step 2: Use Extracted Text in Replace Module**
 
 ## 🛠️ **Method 1: Simple Text Replacement**
@@ -14,18 +15,21 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **Scenario Setup:**
 
 1. **Webhook Trigger**
+
    ```
    Module: Webhooks → Custom webhook
    Method: POST
    ```
 
 2. **Get Template Text**
+
    ```
    Module: Google Docs → Get a document
    Document ID: {{1.source_template_id}}
    ```
 
 3. **Extract Text**
+
    ```
    Module: Tools → Set variable
    Variable name: old_text
@@ -45,12 +49,14 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **For Complex Text Extraction:**
 
 1. **Get Template Document**
+
    ```
    Module: Google Docs → Get a document
    Document ID: {{template_id}}
    ```
 
 2. **Extract Specific Text**
+
    ```
    Module: Tools → Text parser
    Input text: {{1.body.content}}
@@ -59,6 +65,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
    ```
 
 3. **Process Extracted Text**
+
    ```
    Module: Tools → Set variable
    Variable name: processed_text
@@ -78,6 +85,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **Case 1: Replace Entire Document Content**
 
 **Input:**
+
 ```json
 {
   "source_template_id": "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
@@ -87,6 +95,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ```
 
 **Process:**
+
 1. Get full content from source template
 2. Use that content as "old text"
 3. Replace with new content in target document
@@ -94,6 +103,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **Case 2: Replace Specific Sections**
 
 **Input:**
+
 ```json
 {
   "source_template_id": "template_id",
@@ -104,6 +114,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ```
 
 **Process:**
+
 1. Get template content
 2. Extract specific section using text parser
 3. Replace that section in target document
@@ -111,6 +122,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **Case 3: Replace Multiple Placeholders**
 
 **Input:**
+
 ```json
 {
   "source_template_id": "template_id",
@@ -123,6 +135,7 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ```
 
 **Process:**
+
 1. Get template content
 2. Extract all placeholders
 3. Replace each placeholder in target document
@@ -132,12 +145,14 @@ You want to use the "Replace text in a document" module but need to dynamically 
 ### **Text Processing Options:**
 
 #### **1. Clean Text**
+
 ```
 Module: Tools → Set variable
 Variable value: {{text | trim | replace('\n', ' ') | replace('\r', '')}}
 ```
 
 #### **2. Extract Specific Patterns**
+
 ```
 Module: Tools → Text parser
 Pattern: \{\{([^}]+)\}\}
@@ -145,12 +160,14 @@ Operation: Find all matches
 ```
 
 #### **3. Split and Process**
+
 ```
 Module: Tools → Set variable
 Variable value: {{text | split(' ') | slice(0, 10) | join(' ')}}
 ```
 
 #### **4. Conditional Processing**
+
 ```
 Module: Tools → Set variable
 Variable value: {{text_length > 100 ? text | slice(0, 100) : text}}
@@ -178,26 +195,28 @@ Variable value: {{text_length > 100 ? text | slice(0, 100) : text}}
 ## 🚀 **Quick Start Templates**
 
 ### **Template 1: Simple Replacement**
+
 ```json
 {
   "modules": [
-    {"type": "webhook", "name": "Input"},
-    {"type": "google-docs", "name": "Get Template", "action": "get_document"},
-    {"type": "tools", "name": "Extract Text", "action": "set_variable"},
-    {"type": "google-docs", "name": "Replace Text", "action": "replace_text"}
+    { "type": "webhook", "name": "Input" },
+    { "type": "google-docs", "name": "Get Template", "action": "get_document" },
+    { "type": "tools", "name": "Extract Text", "action": "set_variable" },
+    { "type": "google-docs", "name": "Replace Text", "action": "replace_text" }
   ]
 }
 ```
 
 ### **Template 2: Advanced Processing**
+
 ```json
 {
   "modules": [
-    {"type": "webhook", "name": "Input"},
-    {"type": "google-docs", "name": "Get Template", "action": "get_document"},
-    {"type": "tools", "name": "Process Text", "action": "text_parser"},
-    {"type": "tools", "name": "Clean Text", "action": "set_variable"},
-    {"type": "google-docs", "name": "Replace Text", "action": "replace_text"}
+    { "type": "webhook", "name": "Input" },
+    { "type": "google-docs", "name": "Get Template", "action": "get_document" },
+    { "type": "tools", "name": "Process Text", "action": "text_parser" },
+    { "type": "tools", "name": "Clean Text", "action": "set_variable" },
+    { "type": "google-docs", "name": "Replace Text", "action": "replace_text" }
   ]
 }
 ```
@@ -206,12 +225,12 @@ Variable value: {{text_length > 100 ? text | slice(0, 100) : text}}
 
 ### **Common Issues:**
 
-| Issue | Solution |
-|-------|----------|
-| Text not found | Check if source template has content |
-| Replacement failed | Verify target document permissions |
-| Empty old text | Ensure template is not empty |
-| Permission denied | Check Google Docs API access |
+| Issue              | Solution                             |
+| ------------------ | ------------------------------------ |
+| Text not found     | Check if source template has content |
+| Replacement failed | Verify target document permissions   |
+| Empty old text     | Ensure template is not empty         |
+| Permission denied  | Check Google Docs API access         |
 
 ### **Debug Steps:**
 
@@ -224,12 +243,14 @@ Variable value: {{text_length > 100 ? text | slice(0, 100) : text}}
 ## 📊 **Best Practices**
 
 ### **Template Design:**
+
 - Use consistent text patterns
 - Avoid very long text blocks
 - Include unique identifiers
 - Test with sample data
 
 ### **Make.com Configuration:**
+
 - Use error handling for failed operations
 - Set appropriate timeouts
 - Log replacement operations

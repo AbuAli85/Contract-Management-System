@@ -1,4 +1,5 @@
 # Make.com Google Docs - Replace Text Configuration
+
 ## Detailed Step-by-Step Guide
 
 ---
@@ -8,18 +9,21 @@
 ### **Configuration Fields:**
 
 #### **1. Connection**
+
 ```
 ✅ Already set: "My Google connection"
 Leave as is.
 ```
 
 #### **2. Choose a Drive**
+
 ```
 ✅ Already set: "My Drive"
 Leave as is.
 ```
 
 #### **3. Document ID** ⚠️ FIX THIS
+
 ```
 ❌ Current (WRONG): /1WoJfPb62lLAKaM1TjEiXH3zwifkXmq3a/1dzYQ_MDstiErG9O1yP8Z_bVXvDPQbe8V/...
 
@@ -36,6 +40,7 @@ Option C - If Module 6 created the copy:
 ```
 
 **How to fix:**
+
 1. Click in the "Document ID" field
 2. Clear everything
 3. Type: `1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V`
@@ -59,12 +64,14 @@ Option C - If Module 6 created the copy:
 ### **Text Replacement Items (Add 15 items minimum):**
 
 After clicking "Add item", you'll see TWO fields for each item:
+
 - **Find:** What text to find in the document
 - **Replace with:** What to replace it with
 
 ---
 
 #### **Item 1: Contract Number**
+
 ```
 Find: {{contract_number}}
 Replace with: [Click inside, then select] 1. contract_number
@@ -72,6 +79,7 @@ Replace with: [Click inside, then select] 1. contract_number
 ```
 
 #### **Item 2: Contract Type**
+
 ```
 Find: {{contract_type}}
 Replace with: [Click inside, then select] 1. contract_type
@@ -79,6 +87,7 @@ Replace with: [Click inside, then select] 1. contract_type
 ```
 
 #### **Item 3: Start Date**
+
 ```
 Find: {{contract_start_date}}
 Replace with: [Click inside, then select] 1. contract_start_date
@@ -86,6 +95,7 @@ Replace with: [Click inside, then select] 1. contract_start_date
 ```
 
 #### **Item 4: End Date**
+
 ```
 Find: {{contract_end_date}}
 Replace with: [Click inside, then select] 1. contract_end_date
@@ -93,6 +103,7 @@ Replace with: [Click inside, then select] 1. contract_end_date
 ```
 
 #### **Item 5: Job Title**
+
 ```
 Find: {{job_title}}
 Replace with: [Click inside, then select] 1. job_title
@@ -100,6 +111,7 @@ Replace with: [Click inside, then select] 1. job_title
 ```
 
 #### **Item 6: Department**
+
 ```
 Find: {{department}}
 Replace with: [Click inside, then select] 1. department
@@ -107,6 +119,7 @@ Replace with: [Click inside, then select] 1. department
 ```
 
 #### **Item 7: Work Location**
+
 ```
 Find: {{work_location}}
 Replace with: [Click inside, then select] 1. work_location
@@ -114,6 +127,7 @@ Replace with: [Click inside, then select] 1. work_location
 ```
 
 #### **Item 8: Working Hours**
+
 ```
 Find: {{working_hours_numeric}}
 Replace with: [Click inside, then select] 1. working_hours_numeric
@@ -121,6 +135,7 @@ Replace with: [Click inside, then select] 1. working_hours_numeric
 ```
 
 #### **Item 9: Basic Salary**
+
 ```
 Find: {{basic_salary}}
 Replace with: [Click inside, then select] 1. basic_salary
@@ -128,6 +143,7 @@ Replace with: [Click inside, then select] 1. basic_salary
 ```
 
 #### **Item 10: Currency**
+
 ```
 Find: {{currency}}
 Replace with: [Click inside, then select] 1. currency
@@ -135,6 +151,7 @@ Replace with: [Click inside, then select] 1. currency
 ```
 
 #### **Item 11: Probation Period**
+
 ```
 Find: {{probation_period_numeric}}
 Replace with: [Click inside, then select] 1. probation_period_numeric
@@ -142,6 +159,7 @@ Replace with: [Click inside, then select] 1. probation_period_numeric
 ```
 
 #### **Item 12: Notice Period**
+
 ```
 Find: {{notice_period_numeric}}
 Replace with: [Click inside, then select] 1. notice_period_numeric
@@ -149,6 +167,7 @@ Replace with: [Click inside, then select] 1. notice_period_numeric
 ```
 
 #### **Item 13: Promoter Name (English)**
+
 ```
 Find: {{promoter_name_en}}
 Replace with: [Click inside, then select] 1. promoter_name_en
@@ -156,6 +175,7 @@ Replace with: [Click inside, then select] 1. promoter_name_en
 ```
 
 #### **Item 14: Promoter ID Card Number**
+
 ```
 Find: {{promoter_id_card_number}}
 Replace with: [Click inside, then select] 1. promoter_id_card_number
@@ -163,6 +183,7 @@ Replace with: [Click inside, then select] 1. promoter_id_card_number
 ```
 
 #### **Item 15: First Party Name (English)**
+
 ```
 Find: {{first_party_name_en}}
 Replace with: [Click inside, then select] 1. first_party_name_en
@@ -170,6 +191,7 @@ Replace with: [Click inside, then select] 1. first_party_name_en
 ```
 
 #### **Item 16: First Party CRN**
+
 ```
 Find: {{first_party_crn}}
 Replace with: [Click inside, then select] 1. first_party_crn
@@ -177,6 +199,7 @@ Replace with: [Click inside, then select] 1. first_party_crn
 ```
 
 #### **Item 17: Second Party Name (English)**
+
 ```
 Find: {{second_party_name_en}}
 Replace with: [Click inside, then select] 1. second_party_name_en
@@ -184,6 +207,7 @@ Replace with: [Click inside, then select] 1. second_party_name_en
 ```
 
 #### **Item 18: Second Party CRN**
+
 ```
 Find: {{second_party_crn}}
 Replace with: [Click inside, then select] 1. second_party_crn
@@ -213,6 +237,7 @@ When you click "Add item", you'll see this:
 ```
 
 After mapping, it should look like:
+
 ```
 ┌─────────────────────────────────────────┐
 │ Item 1                                  │
@@ -282,6 +307,7 @@ Replace a Text: [18 items]
 ## **Testing:**
 
 After configuration:
+
 1. Click "Save" (bottom right)
 2. Click "Run once" (bottom of screen)
 3. Generate a contract in your app
@@ -293,14 +319,16 @@ After configuration:
 ## **Troubleshooting:**
 
 ### **If variables don't appear in dropdown:**
+
 - Module 1 hasn't run yet
 - Run scenario once first to populate data
 
 ### **If you get "Variable not found":**
+
 - The "Find" text doesn't match your template
 - Check your Google Doc template has `{{contract_number}}` etc.
 
 ### **If nothing gets replaced:**
+
 - Module is working but template doesn't have matching placeholders
 - Open template and verify placeholder names match exactly
-

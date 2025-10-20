@@ -19,7 +19,9 @@ export default function ComprehensivePromotersPage() {
   const [promoters, setPromoters] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingPromoterId, setEditingPromoterId] = useState<string | null>(null);
+  const [editingPromoterId, setEditingPromoterId] = useState<string | null>(
+    null
+  );
   const [editingPromoter, setEditingPromoter] = useState<any>(null);
 
   // Fetch promoters
@@ -203,12 +205,15 @@ export default function ComprehensivePromotersPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className='container mx-auto py-6 space-y-6'>
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Comprehensive Promoters Management</h1>
-        <p className="text-muted-foreground mt-2">
-          A complete example of promoter management with form and table components
+        <h1 className='text-3xl font-bold tracking-tight'>
+          Comprehensive Promoters Management
+        </h1>
+        <p className='text-muted-foreground mt-2'>
+          A complete example of promoter management with form and table
+          components
         </p>
       </div>
 
@@ -224,7 +229,7 @@ export default function ComprehensivePromotersPage() {
 
       {/* Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={handleCloseForm}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className='max-w-5xl max-h-[90vh] overflow-y-auto'>
           <DialogHeader>
             <DialogTitle>
               {editingPromoterId ? 'Edit Promoter' : 'Add New Promoter'}
@@ -247,4 +252,3 @@ export default function ComprehensivePromotersPage() {
     </div>
   );
 }
-

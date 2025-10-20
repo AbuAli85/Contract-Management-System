@@ -4,7 +4,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/types/supabase';
 
 // Singleton pattern to prevent multiple instances
-let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null = null;
+let supabaseInstance: ReturnType<typeof createBrowserClient<Database>> | null =
+  null;
 
 // Lazy initialization function to avoid build-time errors
 function createSupabaseClient() {
@@ -72,7 +73,7 @@ export const createClient = () => {
   if (typeof window === 'undefined') {
     return null;
   }
-  
+
   if (!supabaseInstance) {
     try {
       supabaseInstance = createSupabaseClient();

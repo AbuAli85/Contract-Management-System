@@ -15,7 +15,7 @@ async function populateSampleData() {
       .from('parties')
       .select('id, name_en, type')
       .limit(10);
-    
+
     if (partiesError) {
       console.error('Error fetching parties:', partiesError.message);
       return;
@@ -36,7 +36,7 @@ async function populateSampleData() {
         id_card_number: '1234567890',
         mobile_number: '+96891234567',
         status: 'active',
-        employer_id: parties[0].id // Link to first employer
+        employer_id: parties[0].id, // Link to first employer
       },
       {
         name_en: 'Fatima Al-Zahra',
@@ -44,7 +44,7 @@ async function populateSampleData() {
         id_card_number: '0987654321',
         mobile_number: '+96898765432',
         status: 'active',
-        employer_id: parties[1]?.id || parties[0].id // Link to second employer or first if only one
+        employer_id: parties[1]?.id || parties[0].id, // Link to second employer or first if only one
       },
       {
         name_en: 'Omar Al-Mansouri',
@@ -52,8 +52,8 @@ async function populateSampleData() {
         id_card_number: '1122334455',
         mobile_number: '+96895544332',
         status: 'active',
-        employer_id: parties[2]?.id || parties[0].id // Link to third employer or first if only one
-      }
+        employer_id: parties[2]?.id || parties[0].id, // Link to third employer or first if only one
+      },
     ];
 
     console.log('👥 Creating sample promoters...');
@@ -71,7 +71,7 @@ async function populateSampleData() {
 
     // Update some existing contracts with proper relationships
     console.log('📝 Updating existing contracts with proper relationships...');
-    
+
     const { data: existingContracts, error: contractsError } = await supabase
       .from('contracts')
       .select('id, contract_number')
@@ -85,7 +85,11 @@ async function populateSampleData() {
     console.log(`📋 Found ${existingContracts.length} existing contracts`);
 
     // Update contracts with proper relationships
-    for (let i = 0; i < Math.min(existingContracts.length, createdPromoters.length); i++) {
+    for (
+      let i = 0;
+      i < Math.min(existingContracts.length, createdPromoters.length);
+      i++
+    ) {
       const contract = existingContracts[i];
       const promoter = createdPromoters[i];
       const employer = parties[i % parties.length]; // Cycle through available parties
@@ -100,12 +104,14 @@ async function populateSampleData() {
         title: `Sales Promoter - ${promoter.name_en}`,
         job_title: `Sales Promoter - ${promoter.name_en}`,
         contract_start_date: new Date().toISOString().split('T')[0],
-        contract_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
-        contract_value: 1200 + (i * 200), // Varying salary amounts
-        basic_salary: 1200 + (i * 200),
-        value: 1200 + (i * 200),
+        contract_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0], // 1 year from now
+        contract_value: 1200 + i * 200, // Varying salary amounts
+        basic_salary: 1200 + i * 200,
+        value: 1200 + i * 200,
         status: 'active',
-        contract_type: 'employment'
+        contract_type: 'employment',
       };
 
       const { error: updateError } = await supabase
@@ -114,9 +120,14 @@ async function populateSampleData() {
         .eq('id', contract.id);
 
       if (updateError) {
-        console.error(`Error updating contract ${contract.contract_number}:`, updateError.message);
+        console.error(
+          `Error updating contract ${contract.contract_number}:`,
+          updateError.message
+        );
       } else {
-        console.log(`✅ Updated contract ${contract.contract_number} with promoter ${promoter.name_en}`);
+        console.log(
+          `✅ Updated contract ${contract.contract_number} with promoter ${promoter.name_en}`
+        );
       }
     }
 
@@ -124,8 +135,9 @@ async function populateSampleData() {
     console.log('📊 Summary:');
     console.log(`   - Parties: ${parties.length}`);
     console.log(`   - Promoters created: ${createdPromoters.length}`);
-    console.log(`   - Contracts updated: ${Math.min(existingContracts.length, createdPromoters.length)}`);
-
+    console.log(
+      `   - Contracts updated: ${Math.min(existingContracts.length, createdPromoters.length)}`
+    );
   } catch (error) {
     console.error('❌ Error populating sample data:', error.message);
   }

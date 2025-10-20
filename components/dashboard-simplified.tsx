@@ -144,13 +144,13 @@ export function SimplifiedDashboard({
   ];
 
   return (
-    <div className="space-y-8">
+    <div className='space-y-8'>
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className='text-3xl font-bold tracking-tight'>
           {locale === 'ar' ? 'لوحة التحكم' : 'Dashboard'}
         </h1>
-        <p className="text-muted-foreground mt-1">
+        <p className='text-muted-foreground mt-1'>
           {locale === 'ar'
             ? 'نظرة عامة على المروجين والعقود'
             : 'Overview of promoters and contracts'}
@@ -158,22 +158,24 @@ export function SimplifiedDashboard({
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className='grid gap-4 md:grid-cols-2'>
         {quickActions.map((action, index) => {
           const Icon = action.icon;
           return (
             <Link key={index} href={action.href}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className={`${action.color} p-3 rounded-lg text-white`}>
-                      <Icon className="h-6 w-6" />
+              <Card className='hover:shadow-lg transition-shadow cursor-pointer border-2 hover:border-primary'>
+                <CardContent className='p-6'>
+                  <div className='flex items-start space-x-4'>
+                    <div
+                      className={`${action.color} p-3 rounded-lg text-white`}
+                    >
+                      <Icon className='h-6 w-6' />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">
+                    <div className='flex-1'>
+                      <h3 className='font-semibold text-lg'>
                         {locale === 'ar' ? action.titleAr : action.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className='text-sm text-muted-foreground mt-1'>
                         {locale === 'ar'
                           ? action.descriptionAr
                           : action.description}
@@ -189,17 +191,17 @@ export function SimplifiedDashboard({
 
       {/* Promoter Statistics */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className='text-xl font-semibold mb-4'>
           {locale === 'ar' ? 'إحصائيات المروجين' : 'Promoter Statistics'}
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className='grid gap-4 md:grid-cols-3'>
           {promoterCards.map((card, index) => {
             const Icon = card.icon;
             return (
               <Link key={index} href={card.href}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">
+                <Card className='hover:shadow-md transition-shadow cursor-pointer'>
+                  <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                    <CardTitle className='text-sm font-medium'>
                       {locale === 'ar' ? card.titleAr : card.title}
                     </CardTitle>
                     <div className={`${card.bgColor} p-2 rounded-lg`}>
@@ -207,8 +209,8 @@ export function SimplifiedDashboard({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{card.value}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className='text-3xl font-bold'>{card.value}</div>
+                    <p className='text-xs text-muted-foreground mt-1'>
                       {locale === 'ar' ? 'اضغط للعرض' : 'Click to view'}
                     </p>
                   </CardContent>
@@ -221,17 +223,17 @@ export function SimplifiedDashboard({
 
       {/* Contract Statistics */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className='text-xl font-semibold mb-4'>
           {locale === 'ar' ? 'إحصائيات العقود' : 'Contract Statistics'}
         </h2>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className='grid gap-4 md:grid-cols-3'>
           {contractCards.map((card, index) => {
             const Icon = card.icon;
             return (
               <Link key={index} href={card.href}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">
+                <Card className='hover:shadow-md transition-shadow cursor-pointer'>
+                  <CardHeader className='flex flex-row items-center justify-between pb-2'>
+                    <CardTitle className='text-sm font-medium'>
                       {locale === 'ar' ? card.titleAr : card.title}
                     </CardTitle>
                     <div className={`${card.bgColor} p-2 rounded-lg`}>
@@ -239,8 +241,8 @@ export function SimplifiedDashboard({
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{card.value}</div>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <div className='text-3xl font-bold'>{card.value}</div>
+                    <p className='text-xs text-muted-foreground mt-1'>
                       {locale === 'ar' ? 'اضغط للعرض' : 'Click to view'}
                     </p>
                   </CardContent>
@@ -259,10 +261,12 @@ export function SimplifiedDashboard({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-sm text-muted-foreground">
-              {locale === 'ar' ? 'النظام يعمل بشكل طبيعي' : 'All systems operational'}
+          <div className='flex items-center space-x-2'>
+            <div className='h-2 w-2 rounded-full bg-green-500 animate-pulse'></div>
+            <span className='text-sm text-muted-foreground'>
+              {locale === 'ar'
+                ? 'النظام يعمل بشكل طبيعي'
+                : 'All systems operational'}
             </span>
           </div>
         </CardContent>
@@ -270,4 +274,3 @@ export function SimplifiedDashboard({
     </div>
   );
 }
-

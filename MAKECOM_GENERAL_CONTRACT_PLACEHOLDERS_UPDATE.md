@@ -9,11 +9,13 @@ The original blueprint was missing the **product** and **location** placeholders
 ## ✅ **New Placeholders Added**
 
 ### **1. Products (Bilingual)**
+
 - **`product_en`** - Products/Services in English
 - **`product_ar`** - Products/Services in Arabic
 
 ### **2. Location (Bilingual)**
-- **`location_en`** - Location in English  
+
+- **`location_en`** - Location in English
 - **`location_ar`** - Location in Arabic
 
 ---
@@ -21,14 +23,16 @@ The original blueprint was missing the **product** and **location** placeholders
 ## 🔄 **Updated Modules**
 
 ### **Module 55: Data Consolidation (SetVariables)**
+
 **Added 4 new variables:**
+
 ```json
 {
   "name": "stored_products_en",
   "value": "{{1.products_en}}"
 },
 {
-  "name": "stored_products_ar", 
+  "name": "stored_products_ar",
   "value": "{{1.products_ar}}"
 },
 {
@@ -42,7 +46,9 @@ The original blueprint was missing the **product** and **location** placeholders
 ```
 
 ### **Module 56: Document Generation (Google Docs)**
+
 **Added 4 new text replacements:**
+
 ```json
 "requests": {
   // ... existing placeholders ...
@@ -54,7 +60,9 @@ The original blueprint was missing the **product** and **location** placeholders
 ```
 
 ### **Module 10: Status Update (HTTP)**
+
 **Updated webhook payload to include products and location:**
+
 ```json
 "data": "{
   \"contract_id\": \"{{53.contract_id}}\",
@@ -78,7 +86,9 @@ The original blueprint was missing the **product** and **location** placeholders
 ```
 
 ### **Module 11: Webhook Response**
+
 **Updated response to include products and location:**
+
 ```json
 "body": "{
   \"contract_id\": \"{{53.contract_id}}\",
@@ -106,14 +116,17 @@ The original blueprint was missing the **product** and **location** placeholders
 ## 🔧 **Additional Improvements Made**
 
 ### **1. Fixed Logo Assignment**
+
 - **Before**: `kix.9n0jtkeyw9ii-t.0` was using `{{55.stored_first_party_logo_url}}`
 - **After**: `kix.9n0jtkeyw9ii-t.0` now uses `{{55.stored_second_party_logo_url}}` (correct for General Contracts)
 
 ### **2. Updated Webhook URL**
+
 - **Before**: `/api/webhook/contract-pdf-ready`
 - **After**: `/api/webhook/contract-pdf-ready-general` (specific to General Contracts)
 
 ### **3. Dynamic PDF URL Construction**
+
 - **Before**: Hardcoded URL construction
 - **After**: Uses `{{var.organization.SUPABASE_URL}}` for dynamic URL building
 
@@ -122,6 +135,7 @@ The original blueprint was missing the **product** and **location** placeholders
 ## 📊 **Complete Placeholder List**
 
 ### **Text Replacements (16 total)**
+
 1. `ref_number` - Contract number
 2. `id_card_number` - Promoter ID card number
 3. `first_party_crn` - First party CRN
@@ -140,6 +154,7 @@ The original blueprint was missing the **product** and **location** placeholders
 16. **`location_en`** - Location (English) ✨ **NEW**
 
 ### **Image Replacements (3 total)**
+
 1. `kix.2k5omiotmkl-t.0` - Promoter ID card image
 2. `kix.4io8vw4k1u1n-t.0` - Promoter passport image
 3. `kix.9n0jtkeyw9ii-t.0` - Second party logo (corrected)
@@ -155,7 +170,7 @@ Your application's webhook payload should now include:
   "contract_id": "uuid",
   "contract_number": "PAC-01012025-1234",
   "promoter_id": "uuid",
-  "first_party_id": "uuid", 
+  "first_party_id": "uuid",
   "second_party_id": "uuid",
   "promoter_name_en": "John Doe",
   "promoter_name_ar": "جون دو",
@@ -164,7 +179,7 @@ Your application's webhook payload should now include:
   "promoter_passport_url": "https://...",
   "first_party_name_en": "Client Company",
   "first_party_name_ar": "شركة العميل",
-  "second_party_name_en": "Provider Company", 
+  "second_party_name_en": "Provider Company",
   "second_party_name_ar": "شركة المزود",
   "first_party_logo": "https://...",
   "second_party_logo": "https://...",
@@ -184,7 +199,7 @@ Your application's webhook payload should now include:
 The Make.com blueprint now includes all required placeholders for the General Contracts system:
 
 - ✅ **Products** (English & Arabic)
-- ✅ **Location** (English & Arabic)  
+- ✅ **Location** (English & Arabic)
 - ✅ **All existing placeholders** maintained
 - ✅ **Proper logo assignment** (second party logo)
 - ✅ **Correct webhook endpoints** for General Contracts

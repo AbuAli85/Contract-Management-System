@@ -352,24 +352,32 @@ interface PromotersResponse {
   timestamp: string;
 }
 
-async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> {
-  console.log(`🔄 Fetching promoters from API (page ${page}, limit ${limit})...`);
-  
+async function fetchPromoters(
+  page = 1,
+  limit = 50
+): Promise<PromotersResponse> {
+  console.log(
+    `🔄 Fetching promoters from API (page ${page}, limit ${limit})...`
+  );
+
   // Set up abort controller for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-  
+
   try {
     // Add cache-busting timestamp
     const timestamp = Date.now();
-    const response = await fetch(`/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`, { 
-      cache: 'no-store',
-      signal: controller.signal,
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
+    const response = await fetch(
+      `/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`,
+      {
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
       }
-    });
+    );
 
     clearTimeout(timeoutId);
 
@@ -386,7 +394,7 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
         statusText: response.statusText,
         url: response.url,
       });
-      
+
       // Try to get error details from response
       let errorMessage = `API returned ${response.status}: ${response.statusText}`;
       try {
@@ -396,7 +404,7 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
       } catch (e) {
         console.error('❌ Could not parse error response:', e);
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -445,17 +453,19 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
     return payload;
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         console.error('❌ Request timeout');
-        throw new Error('Request timeout: Server took too long to respond (30s)');
+        throw new Error(
+          'Request timeout: Server took too long to respond (30s)'
+        );
       }
       console.error('❌ Fetch error:', error.message);
     } else {
       console.error('❌ Unknown error:', error);
     }
-    
+
     throw error;
   }
 }
@@ -469,7 +479,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
+    'all'
+  );
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
   >('all');
@@ -478,7 +490,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
   >('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(new Set());
+  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
+    new Set()
+  );
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards'>('table');
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
@@ -537,7 +551,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 
   const promoters = response?.promoters ?? [];
   const pagination = response?.pagination;
-  
+
   // Debug logging
   console.log('📊 Component state:', {
     isLoading,
@@ -548,7 +562,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     promotersCount: promoters.length,
     errorMessage: error?.message,
   });
-  
+
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
     return promoters.map(promoter => {
@@ -601,8 +615,12 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
       } as DashboardPromoter;
     });
   }, [promoters]);
-  
-  console.log('📈 Dashboard promoters processed:', dashboardPromoters.length, 'items');
+
+  console.log(
+    '📈 Dashboard promoters processed:',
+    dashboardPromoters.length,
+    'items'
+  );
 
   const metrics = useMemo<DashboardMetrics>(() => {
     const total = dashboardPromoters.length;
@@ -631,20 +649,19 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     // Calculate recently added (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentlyAdded = dashboardPromoters.filter(
-      promoter => {
-        const createdDate = parseDateSafe(promoter.created_at);
-        return createdDate && createdDate >= sevenDaysAgo;
-      }
-    ).length;
+    const recentlyAdded = dashboardPromoters.filter(promoter => {
+      const createdDate = parseDateSafe(promoter.created_at);
+      return createdDate && createdDate >= sevenDaysAgo;
+    }).length;
 
     // Calculate compliance rate (percentage with valid documents)
     const compliant = dashboardPromoters.filter(
-      promoter => 
-        promoter.idDocument.status === 'valid' && 
+      promoter =>
+        promoter.idDocument.status === 'valid' &&
         promoter.passportDocument.status === 'valid'
     ).length;
-    const complianceRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
+    const complianceRate =
+      total > 0 ? Math.round((compliant / total) * 100) : 0;
 
     return {
       total,
@@ -703,17 +720,23 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
 
   const sortedPromoters = useMemo(() => {
     console.log('🔀 Sorting promoters...');
-    
+
     const sorted = [...filteredPromoters].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'name':
           comparison = a.displayName.localeCompare(b.displayName);
           break;
         case 'status':
-          const statusOrder = { critical: 0, warning: 1, active: 2, inactive: 3 };
-          comparison = statusOrder[a.overallStatus] - statusOrder[b.overallStatus];
+          const statusOrder = {
+            critical: 0,
+            warning: 1,
+            active: 2,
+            inactive: 3,
+          };
+          comparison =
+            statusOrder[a.overallStatus] - statusOrder[b.overallStatus];
           break;
         case 'created':
           const dateA = parseDateSafe(a.created_at);
@@ -734,13 +757,13 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           comparison = docA - docB;
           break;
       }
-      
+
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-    
+
     return sorted;
   }, [filteredPromoters, sortField, sortOrder]);
-  
+
   console.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
 
   const atRiskPromoters = useMemo(() => {
@@ -776,121 +799,148 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     }
   }, [selectedPromoters.size, sortedPromoters]);
 
-  const handleSelectPromoter = useCallback((promoterId: string) => {
-    const newSelected = new Set(selectedPromoters);
-    if (newSelected.has(promoterId)) {
-      newSelected.delete(promoterId);
-    } else {
-      newSelected.add(promoterId);
-    }
-    setSelectedPromoters(newSelected);
-  }, [selectedPromoters]);
+  const handleSelectPromoter = useCallback(
+    (promoterId: string) => {
+      const newSelected = new Set(selectedPromoters);
+      if (newSelected.has(promoterId)) {
+        newSelected.delete(promoterId);
+      } else {
+        newSelected.add(promoterId);
+      }
+      setSelectedPromoters(newSelected);
+    },
+    [selectedPromoters]
+  );
 
   // Bulk action handlers
-  const handleBulkAction = useCallback(async (actionId: string) => {
-    if (selectedPromoters.size === 0) return;
+  const handleBulkAction = useCallback(
+    async (actionId: string) => {
+      if (selectedPromoters.size === 0) return;
 
-    setIsPerformingBulkAction(true);
-    
-    try {
-      switch (actionId) {
-        case 'export': {
-          // Export selected promoters (client-side, no API call)
-          const selectedData = sortedPromoters.filter(p => selectedPromoters.has(p.id));
-          const headers = ['Name', 'Email', 'Phone', 'Status', 'Company', 'Job Title', 'ID Expiry', 'Passport Expiry'];
-          const rows = selectedData.map(p => [
-            p.displayName,
-            p.contactEmail,
-            p.contactPhone,
-            p.overallStatus,
-            p.organisationLabel,
-            p.job_title || '—',
-            formatDisplayDate(p.id_card_expiry_date),
-            formatDisplayDate(p.passport_expiry_date),
-          ]);
-          const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-          
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
-          link.click();
-          URL.revokeObjectURL(url);
-          
-          toast({
-            title: 'Export Complete',
-            description: `${selectedPromoters.size} promoters exported successfully.`,
-          });
-          break;
-        }
-          
-        case 'archive':
-        case 'delete':
-        case 'notify': {
-          // API call for these actions
-          const response = await fetch('/api/promoters/bulk', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              action: actionId === 'delete' ? 'update_status' : actionId,
-              promoterIds: Array.from(selectedPromoters),
-              status: actionId === 'delete' ? 'terminated' : undefined,
-              notificationType: actionId === 'notify' ? 'standard' : undefined,
-            }),
-          });
+      setIsPerformingBulkAction(true);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || 'Bulk action failed');
+      try {
+        switch (actionId) {
+          case 'export': {
+            // Export selected promoters (client-side, no API call)
+            const selectedData = sortedPromoters.filter(p =>
+              selectedPromoters.has(p.id)
+            );
+            const headers = [
+              'Name',
+              'Email',
+              'Phone',
+              'Status',
+              'Company',
+              'Job Title',
+              'ID Expiry',
+              'Passport Expiry',
+            ];
+            const rows = selectedData.map(p => [
+              p.displayName,
+              p.contactEmail,
+              p.contactPhone,
+              p.overallStatus,
+              p.organisationLabel,
+              p.job_title || '—',
+              formatDisplayDate(p.id_card_expiry_date),
+              formatDisplayDate(p.passport_expiry_date),
+            ]);
+            const csv = [
+              headers.join(','),
+              ...rows.map(row => row.join(',')),
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            toast({
+              title: 'Export Complete',
+              description: `${selectedPromoters.size} promoters exported successfully.`,
+            });
+            break;
           }
 
-          const result = await response.json();
-          
-          toast({
-            title: 'Success',
-            description: result.message || `${actionId} completed successfully`,
-          });
-          
-          // Refetch data to update the UI
-          await refetch();
-          break;
+          case 'archive':
+          case 'delete':
+          case 'notify': {
+            // API call for these actions
+            const response = await fetch('/api/promoters/bulk', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: actionId === 'delete' ? 'update_status' : actionId,
+                promoterIds: Array.from(selectedPromoters),
+                status: actionId === 'delete' ? 'terminated' : undefined,
+                notificationType:
+                  actionId === 'notify' ? 'standard' : undefined,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(
+                errorData.error || errorData.message || 'Bulk action failed'
+              );
+            }
+
+            const result = await response.json();
+
+            toast({
+              title: 'Success',
+              description:
+                result.message || `${actionId} completed successfully`,
+            });
+
+            // Refetch data to update the UI
+            await refetch();
+            break;
+          }
+
+          case 'assign': {
+            // TODO: Show dialog to select company
+            // For now, show a message
+            toast({
+              title: 'Feature Coming Soon',
+              description: 'Company assignment dialog will be available soon.',
+            });
+            return; // Don't clear selection or close bulk actions
+          }
+
+          default:
+            toast({
+              variant: 'destructive',
+              title: 'Unknown Action',
+              description: `Action "${actionId}" is not recognized.`,
+            });
+            return;
         }
-        
-        case 'assign': {
-          // TODO: Show dialog to select company
-          // For now, show a message
-          toast({
-            title: 'Feature Coming Soon',
-            description: 'Company assignment dialog will be available soon.',
-          });
-          return; // Don't clear selection or close bulk actions
-        }
-          
-        default:
-          toast({
-            variant: 'destructive',
-            title: 'Unknown Action',
-            description: `Action "${actionId}" is not recognized.`,
-          });
-          return;
+
+        setSelectedPromoters(new Set());
+        setShowBulkActions(false);
+      } catch (error) {
+        console.error('Bulk action error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Action Failed',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'There was an error performing the bulk action.',
+        });
+      } finally {
+        setIsPerformingBulkAction(false);
       }
-      
-      setSelectedPromoters(new Set());
-      setShowBulkActions(false);
-    } catch (error) {
-      console.error('Bulk action error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Action Failed',
-        description: error instanceof Error ? error.message : 'There was an error performing the bulk action.',
-      });
-    } finally {
-      setIsPerformingBulkAction(false);
-    }
-  }, [selectedPromoters, sortedPromoters, toast, refetch]);
+    },
+    [selectedPromoters, sortedPromoters, toast, refetch]
+  );
 
   const handleResetFilters = useCallback(() => {
     setSearchTerm('');
@@ -907,14 +957,17 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     refetch();
   }, [refetch]);
 
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  }, [sortField]);
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortField(field);
+        setSortOrder('asc');
+      }
+    },
+    [sortField]
+  );
 
   const handleViewPromoter = useCallback(
     (promoter: DashboardPromoter) => {
@@ -963,7 +1016,10 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               </AlertDescription>
             </Alert>
             <div className='flex gap-2'>
-              <Button onClick={() => window.location.reload()} variant='default'>
+              <Button
+                onClick={() => window.location.reload()}
+                variant='default'
+              >
                 <RefreshCw className='mr-2 h-4 w-4' />
                 Reload Page
               </Button>
@@ -989,7 +1045,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               Unable to Load Promoters
             </CardTitle>
             <CardDescription>
-              {error?.message || 'An error occurred while loading promoters data.'}
+              {error?.message ||
+                'An error occurred while loading promoters data.'}
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -1010,7 +1067,10 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <RefreshCw className='mr-2 h-4 w-4' />
                 Try Again
               </Button>
-              <Button onClick={() => router.push(`/${derivedLocale}/dashboard`)} variant='outline'>
+              <Button
+                onClick={() => router.push(`/${derivedLocale}/dashboard`)}
+                variant='outline'
+              >
                 Go to Dashboard
               </Button>
             </div>
@@ -1041,7 +1101,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <strong>Possible reasons:</strong>
                 <div className='mt-2 space-y-1 text-sm'>
                   <div>• No promoters have been added yet</div>
-                  <div>• Your account may not have access to view promoters</div>
+                  <div>
+                    • Your account may not have access to view promoters
+                  </div>
                   <div>• Data filters may be too restrictive</div>
                   <div>• Database connection issue</div>
                 </div>
@@ -1060,7 +1122,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
             <div className='rounded-lg bg-blue-50 p-4 text-sm'>
               <strong className='text-blue-900'>Development Mode:</strong>
               <div className='mt-1 text-blue-700'>
-                Check browser console (F12) and server logs for detailed debugging information.
+                Check browser console (F12) and server logs for detailed
+                debugging information.
               </div>
             </div>
           </CardContent>
@@ -1088,7 +1151,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </CardTitle>
               </div>
               <CardDescription className='max-w-3xl text-base text-white/80'>
-                Monitor workforce readiness, document compliance, and partner coverage in real-time to keep every engagement on track. {metrics.total} promoters in system.
+                Monitor workforce readiness, document compliance, and partner
+                coverage in real-time to keep every engagement on track.{' '}
+                {metrics.total} promoters in system.
               </CardDescription>
               <div className='flex flex-wrap items-center gap-3 text-sm text-white/70 pt-2'>
                 <Badge className='bg-white/10 text-white border-white/20'>
@@ -1110,8 +1175,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               </div>
             </div>
             <div className='flex flex-wrap items-center gap-3'>
-              <Button 
-                onClick={handleAddPromoter} 
+              <Button
+                onClick={handleAddPromoter}
                 className='bg-white text-slate-900 hover:bg-white/90 font-semibold shadow-lg transition-all hover:shadow-xl'
                 size='lg'
               >
@@ -1128,7 +1193,10 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                       disabled={isFetching}
                     >
                       <RefreshCw
-                        className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin')}
+                        className={cn(
+                          'mr-2 h-4 w-4',
+                          isFetching && 'animate-spin'
+                        )}
                       />
                       {isFetching ? 'Refreshing...' : 'Refresh'}
                     </Button>
@@ -1151,7 +1219,11 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           helper={`${metrics.active} active right now`}
           icon={Users}
           variant='primary'
-          trend={metrics.recentlyAdded > 0 ? { value: metrics.recentlyAdded, label: 'new this week' } : undefined}
+          trend={
+            metrics.recentlyAdded > 0
+              ? { value: metrics.recentlyAdded, label: 'new this week' }
+              : undefined
+          }
         />
         <EnhancedStatCard
           title='Active workforce'
@@ -1181,7 +1253,8 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         <CardHeader className='pb-5'>
           <CardTitle className='text-lg'>Smart filters</CardTitle>
           <CardDescription>
-            Refine the promoter roster by lifecycle stage, document health, or assignment.
+            Refine the promoter roster by lifecycle stage, document health, or
+            assignment.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -1204,7 +1277,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <Label>Lifecycle</Label>
                 <Select
                   value={statusFilter}
-                  onValueChange={value => setStatusFilter(value as OverallStatus | 'all')}
+                  onValueChange={value =>
+                    setStatusFilter(value as OverallStatus | 'all')
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='All statuses' />
@@ -1223,7 +1298,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <Select
                   value={documentFilter}
                   onValueChange={value =>
-                    setDocumentFilter(value as 'all' | 'expired' | 'expiring' | 'missing')
+                    setDocumentFilter(
+                      value as 'all' | 'expired' | 'expiring' | 'missing'
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -1242,7 +1319,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <Select
                   value={assignmentFilter}
                   onValueChange={value =>
-                    setAssignmentFilter(value as 'all' | 'assigned' | 'unassigned')
+                    setAssignmentFilter(
+                      value as 'all' | 'assigned' | 'unassigned'
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -1257,15 +1336,28 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               </div>
             </div>
             <div className='flex flex-wrap items-center gap-3'>
-              <Button variant='outline' onClick={handleResetFilters} disabled={!hasFiltersApplied}>
+              <Button
+                variant='outline'
+                onClick={handleResetFilters}
+                disabled={!hasFiltersApplied}
+              >
                 Reset filters
               </Button>
               <Button variant='outline' className='flex items-center'>
                 <Download className='mr-2 h-4 w-4' />
                 Export view
               </Button>
-              <Button onClick={handleRefresh} variant='outline' disabled={isFetching}>
-                <RefreshCw className={cn('mr-2 h-4 w-4', isFetching && 'animate-spin text-muted-foreground')} />
+              <Button
+                onClick={handleRefresh}
+                variant='outline'
+                disabled={isFetching}
+              >
+                <RefreshCw
+                  className={cn(
+                    'mr-2 h-4 w-4',
+                    isFetching && 'animate-spin text-muted-foreground'
+                  )}
+                />
                 Sync
               </Button>
             </div>
@@ -1292,7 +1384,11 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 {BULK_ACTIONS.map(action => (
                   <Button
                     key={action.id}
-                    variant={action.variant === 'destructive' ? 'destructive' : 'outline'}
+                    variant={
+                      action.variant === 'destructive'
+                        ? 'destructive'
+                        : 'outline'
+                    }
                     size='sm'
                     onClick={() => handleBulkAction(action.id)}
                     disabled={isPerformingBulkAction}
@@ -1320,9 +1416,18 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         <Card className='overflow-hidden shadow-lg'>
           <CardHeader className='flex flex-col gap-3 border-b bg-gradient-to-r from-slate-50 to-slate-100 py-4 dark:from-slate-950 dark:to-slate-900 sm:flex-row sm:items-center sm:justify-between'>
             <div>
-              <CardTitle className='text-2xl font-bold'>Promoter roster</CardTitle>
+              <CardTitle className='text-2xl font-bold'>
+                Promoter roster
+              </CardTitle>
               <CardDescription className='mt-1'>
-                <span className='font-semibold text-foreground'>{sortedPromoters.length}</span> of <span className='font-semibold text-foreground'>{dashboardPromoters.length}</span> records visible
+                <span className='font-semibold text-foreground'>
+                  {sortedPromoters.length}
+                </span>{' '}
+                of{' '}
+                <span className='font-semibold text-foreground'>
+                  {dashboardPromoters.length}
+                </span>{' '}
+                records visible
               </CardDescription>
             </div>
             <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
@@ -1330,26 +1435,46 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant='outline' className='gap-2 bg-amber-50 text-amber-700 border-amber-200'>
+                      <Badge
+                        variant='outline'
+                        className='gap-2 bg-amber-50 text-amber-700 border-amber-200'
+                      >
                         <RefreshCw className='h-3 w-3 animate-spin' />
                         Refreshing data
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className='text-xs'>Syncing latest promoter information...</p>
+                      <p className='text-xs'>
+                        Syncing latest promoter information...
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               )}
-              <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'table' | 'grid' | 'cards')} className='ml-auto'>
+              <Tabs
+                value={viewMode}
+                onValueChange={value =>
+                  setViewMode(value as 'table' | 'grid' | 'cards')
+                }
+                className='ml-auto'
+              >
                 <TabsList className='grid w-full grid-cols-3 bg-white/80 dark:bg-slate-800/80'>
-                  <TabsTrigger value='table' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                  <TabsTrigger
+                    value='table'
+                    className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                  >
                     Table
                   </TabsTrigger>
-                  <TabsTrigger value='grid' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                  <TabsTrigger
+                    value='grid'
+                    className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                  >
                     Grid
                   </TabsTrigger>
-                  <TabsTrigger value='cards' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+                  <TabsTrigger
+                    value='cards'
+                    className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+                  >
                     Cards
                   </TabsTrigger>
                 </TabsList>
@@ -1364,13 +1489,14 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </div>
                 <div className='space-y-2'>
                   <h3 className='text-xl font-semibold tracking-tight'>
-                    {hasFiltersApplied ? 'No promoters match your filters' : 'No promoters yet'}
+                    {hasFiltersApplied
+                      ? 'No promoters match your filters'
+                      : 'No promoters yet'}
                   </h3>
                   <p className='max-w-sm text-sm text-muted-foreground'>
-                    {hasFiltersApplied 
-                      ? 'Try adjusting your filters or search terms to find what you\'re looking for.'
-                      : 'Get started by adding your first promoter to the system.'
-                    }
+                    {hasFiltersApplied
+                      ? "Try adjusting your filters or search terms to find what you're looking for."
+                      : 'Get started by adding your first promoter to the system.'}
                   </p>
                 </div>
                 <div className='flex gap-3'>
@@ -1396,17 +1522,22 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Checkbox
-                                checked={selectedPromoters.size === sortedPromoters.length}
+                                checked={
+                                  selectedPromoters.size ===
+                                  sortedPromoters.length
+                                }
                                 onCheckedChange={handleSelectAll}
                               />
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className='text-xs'>Select all visible promoters</p>
+                              <p className='text-xs'>
+                                Select all visible promoters
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </TableHead>
-                      <TableHead 
+                      <TableHead
                         className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('name')}
                       >
@@ -1425,7 +1556,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead 
+                      <TableHead
                         className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('documents')}
                       >
@@ -1444,9 +1575,11 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='font-semibold'>Assignment</TableHead>
+                      <TableHead className='font-semibold'>
+                        Assignment
+                      </TableHead>
                       <TableHead className='font-semibold'>Contacts</TableHead>
-                      <TableHead 
+                      <TableHead
                         className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('created')}
                       >
@@ -1465,7 +1598,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead 
+                      <TableHead
                         className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                         onClick={() => handleSort('status')}
                       >
@@ -1484,7 +1617,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           )}
                         </div>
                       </TableHead>
-                      <TableHead className='text-right font-semibold'>Actions</TableHead>
+                      <TableHead className='text-right font-semibold'>
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1503,15 +1638,17 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
               </ScrollArea>
             )}
           </CardContent>
-          
+
           {/* Pagination Controls */}
           {pagination && pagination.totalPages > 1 && (
             <CardContent className='border-t pt-4'>
               <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
                 <div className='text-sm text-muted-foreground'>
-                  Showing {((page - 1) * limit) + 1} to {Math.min(page * limit, pagination.total)} of {pagination.total} promoters
+                  Showing {(page - 1) * limit + 1} to{' '}
+                  {Math.min(page * limit, pagination.total)} of{' '}
+                  {pagination.total} promoters
                 </div>
-                
+
                 <div className='flex items-center gap-2'>
                   <Button
                     variant='outline'
@@ -1521,7 +1658,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                   >
                     First
                   </Button>
-                  
+
                   <Button
                     variant='outline'
                     size='sm'
@@ -1530,13 +1667,13 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                   >
                     Previous
                   </Button>
-                  
+
                   <div className='flex items-center gap-2 px-2'>
                     <span className='text-sm'>
                       Page {pagination.page} of {pagination.totalPages}
                     </span>
                   </div>
-                  
+
                   <Button
                     variant='outline'
                     size='sm'
@@ -1545,7 +1682,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                   >
                     Next
                   </Button>
-                  
+
                   <Button
                     variant='outline'
                     size='sm'
@@ -1606,7 +1743,9 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                       </Button>
                     </div>
                     <div className='mt-3 flex flex-wrap items-center gap-2'>
-                      {['expired', 'expiring', 'missing'].includes(promoter.idDocument.status) && (
+                      {['expired', 'expiring', 'missing'].includes(
+                        promoter.idDocument.status
+                      ) && (
                         <Badge
                           variant='outline'
                           className={cn(
@@ -1618,12 +1757,16 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                           ID: {promoter.idDocument.label}
                         </Badge>
                       )}
-                      {['expired', 'expiring', 'missing'].includes(promoter.passportDocument.status) && (
+                      {['expired', 'expiring', 'missing'].includes(
+                        promoter.passportDocument.status
+                      ) && (
                         <Badge
                           variant='outline'
                           className={cn(
                             'rounded-full border px-2 py-0.5 text-xs font-medium',
-                            DOCUMENT_STATUS_BADGES[promoter.passportDocument.status]
+                            DOCUMENT_STATUS_BADGES[
+                              promoter.passportDocument.status
+                            ]
                           )}
                         >
                           <Globe className='mr-1 h-3 w-3' />
@@ -1649,10 +1792,12 @@ interface EnhancedStatCardProps {
   helper?: string;
   icon: LucideIcon;
   variant?: keyof typeof STAT_CARD_STYLES;
-  trend?: {
-    value: number;
-    label: string;
-  } | undefined;
+  trend?:
+    | {
+        value: number;
+        label: string;
+      }
+    | undefined;
 }
 
 function EnhancedStatCard({
@@ -1666,10 +1811,12 @@ function EnhancedStatCard({
   const styles = STAT_CARD_STYLES[variant];
 
   return (
-    <Card className={cn(
-      'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
-      styles.container
-    )}>
+    <Card
+      className={cn(
+        'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
+        styles.container
+      )}
+    >
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
         <div className='space-y-1'>
           <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
@@ -1687,13 +1834,13 @@ function EnhancedStatCard({
         </div>
       </CardHeader>
       <CardContent className='space-y-2'>
-        {helper && (
-          <p className='text-sm text-muted-foreground'>{helper}</p>
-        )}
+        {helper && <p className='text-sm text-muted-foreground'>{helper}</p>}
         {trend && (
           <div className='flex items-center gap-2 rounded-lg bg-green-50/50 p-2 text-xs text-green-700'>
             <TrendingUp className='h-4 w-4' />
-            <span className='font-semibold'>+{trend.value} {trend.label}</span>
+            <span className='font-semibold'>
+              +{trend.value} {trend.label}
+            </span>
           </div>
         )}
       </CardContent>
@@ -1720,8 +1867,10 @@ function EnhancedPromoterRow({
     <TableRow
       className={cn(
         'group transition-all duration-200 hover:bg-muted/50',
-        promoter.overallStatus === 'critical' && 'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
-        promoter.overallStatus === 'warning' && 'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
+        promoter.overallStatus === 'critical' &&
+          'border-l-4 border-l-red-500 bg-red-50/20 hover:bg-red-50/40',
+        promoter.overallStatus === 'warning' &&
+          'border-l-4 border-l-amber-400 bg-amber-50/20 hover:bg-amber-50/40',
         isSelected && 'bg-primary/10 border-l-4 border-l-primary'
       )}
     >
@@ -1768,7 +1917,10 @@ function EnhancedPromoterRow({
       <TableCell>
         <div className='space-y-1'>
           <DocumentStatusPill label='ID' health={promoter.idDocument} />
-          <DocumentStatusPill label='Passport' health={promoter.passportDocument} />
+          <DocumentStatusPill
+            label='Passport'
+            health={promoter.passportDocument}
+          />
         </div>
       </TableCell>
       <TableCell>
@@ -1785,7 +1937,9 @@ function EnhancedPromoterRow({
                 : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
             )}
           >
-            {promoter.assignmentStatus === 'assigned' ? '✓ Assigned' : '○ Unassigned'}
+            {promoter.assignmentStatus === 'assigned'
+              ? '✓ Assigned'
+              : '○ Unassigned'}
           </Badge>
         </div>
       </TableCell>
@@ -1812,8 +1966,7 @@ function EnhancedPromoterRow({
           {promoter.overallStatus === 'critical' && '🔴'}
           {promoter.overallStatus === 'warning' && '🟡'}
           {promoter.overallStatus === 'active' && '🟢'}
-          {promoter.overallStatus === 'inactive' && '⚪'}
-          {' '}
+          {promoter.overallStatus === 'inactive' && '⚪'}{' '}
           {OVERALL_STATUS_LABELS[promoter.overallStatus]}
         </Badge>
       </TableCell>
@@ -1834,16 +1987,20 @@ interface EnhancedActionsMenuProps {
   onEdit: () => void;
 }
 
-function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuProps) {
+function EnhancedActionsMenu({
+  promoter,
+  onView,
+  onEdit,
+}: EnhancedActionsMenuProps) {
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   // Determine context-aware actions based on promoter status
-  const isAtRisk = 
-    promoter.idDocument.status !== 'valid' || 
+  const isAtRisk =
+    promoter.idDocument.status !== 'valid' ||
     promoter.passportDocument.status !== 'valid';
-  
+
   const isCritical = promoter.overallStatus === 'critical';
   const isUnassigned = promoter.assignmentStatus === 'unassigned';
 
@@ -1893,18 +2050,19 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
       const response = await fetch(`/api/promoters/${promoter.id}/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           type,
           promoterName: promoter.displayName,
           email: promoter.contactEmail,
         }),
       }).catch(() => ({ ok: true }));
 
-      const notificationText = type === 'urgent' 
-        ? 'Urgent notification sent' 
-        : type === 'reminder'
-        ? 'Renewal reminder sent'
-        : 'Notification sent';
+      const notificationText =
+        type === 'urgent'
+          ? 'Urgent notification sent'
+          : type === 'reminder'
+            ? 'Renewal reminder sent'
+            : 'Notification sent';
 
       toast({
         title: '✓ ' + notificationText,
@@ -1961,10 +2119,12 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             disabled={isLoading}
             title='More options'
           >
-            <MoreHorizontal className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+            <MoreHorizontal
+              className={cn('h-4 w-4', isLoading && 'animate-spin')}
+            />
           </Button>
         </DropdownMenuTrigger>
-        
+
         <DropdownMenuContent align='end' className='w-56'>
           {/* Primary Actions Section */}
           <div className='px-2 py-1.5 pointer-events-none'>
@@ -1972,8 +2132,8 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
               View & Edit
             </p>
           </div>
-          
-          <DropdownMenuItem 
+
+          <DropdownMenuItem
             onClick={onClickView}
             disabled={isLoading}
             className='cursor-pointer'
@@ -1988,7 +2148,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             </kbd>
           </DropdownMenuItem>
 
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={onClickEdit}
             disabled={isLoading}
             className='cursor-pointer'
@@ -1996,7 +2156,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             <Edit className='h-4 w-4 text-amber-500 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Edit details</div>
-              <div className='text-xs text-muted-foreground'>Update information</div>
+              <div className='text-xs text-muted-foreground'>
+                Update information
+              </div>
             </div>
             <kbd className='pointer-events-none hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 md:flex ml-auto'>
               <span className='text-xs'>⌘</span>E
@@ -2013,7 +2175,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   ⚠️ At Risk
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onClickNotify('reminder')}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -2021,7 +2183,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <AlertTriangle className='h-4 w-4 text-amber-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Remind to renew docs</div>
-                  <div className='text-xs text-muted-foreground'>Send alert</div>
+                  <div className='text-xs text-muted-foreground'>
+                    Send alert
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -2035,7 +2199,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   🚨 Critical
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => onClickNotify('urgent')}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -2043,7 +2207,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <Send className='h-4 w-4 text-red-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Urgent notification</div>
-                  <div className='text-xs text-muted-foreground'>High priority alert</div>
+                  <div className='text-xs text-muted-foreground'>
+                    High priority alert
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -2057,7 +2223,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                   Unassigned
                 </p>
               </div>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={onClickEdit}
                 disabled={isLoading}
                 className='cursor-pointer'
@@ -2065,7 +2231,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
                 <Building2 className='h-4 w-4 text-slate-500 mr-2' />
                 <div className='flex-1'>
                   <div className='font-medium'>Assign to company</div>
-                  <div className='text-xs text-muted-foreground'>Set employer</div>
+                  <div className='text-xs text-muted-foreground'>
+                    Set employer
+                  </div>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -2078,8 +2246,8 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
               Actions
             </p>
           </div>
-          
-          <DropdownMenuItem 
+
+          <DropdownMenuItem
             onClick={() => onClickNotify('standard')}
             disabled={isLoading}
             className='cursor-pointer'
@@ -2093,7 +2261,7 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
 
           {/* Destructive Actions */}
           <DropdownMenuSeparator />
-          <DropdownMenuItem 
+          <DropdownMenuItem
             onClick={() => setShowArchiveDialog(true)}
             disabled={isLoading}
             className='cursor-pointer text-destructive hover:bg-destructive/10'
@@ -2101,7 +2269,9 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
             <Archive className='h-4 w-4 mr-2' />
             <div className='flex-1'>
               <div className='font-medium'>Archive record</div>
-              <div className='text-xs text-muted-foreground'>Hide from active list</div>
+              <div className='text-xs text-muted-foreground'>
+                Hide from active list
+              </div>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -2113,12 +2283,13 @@ function EnhancedActionsMenu({ promoter, onView, onEdit }: EnhancedActionsMenuPr
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Record?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive <strong>{promoter.displayName}</strong>? This can be undone.
+              Are you sure you want to archive{' '}
+              <strong>{promoter.displayName}</strong>? This can be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={onClickArchive}
               disabled={isLoading}
               className='bg-destructive hover:bg-destructive/90'

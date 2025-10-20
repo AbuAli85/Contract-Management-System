@@ -30,11 +30,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Password strength validation
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       return NextResponse.json(
-        { 
-          error: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character' 
+        {
+          error:
+            'Password must be at least 8 characters with uppercase, lowercase, number, and special character',
         },
         { status: 400 }
       );
@@ -89,16 +91,18 @@ export async function POST(request: NextRequest) {
     console.log('✅ Auth user created:', authData.user.id);
 
     // Step 2: Create public user record with PENDING status for approval
-    const { error: publicUserError } = await supabaseAdmin.from('users').insert({
-      id: authData.user.id,
-      email,
-      full_name: fullName,
-      role,
-      status: 'pending', // 🔒 SECURITY: All new users require admin approval
-      phone: phone || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
+    const { error: publicUserError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        id: authData.user.id,
+        email,
+        full_name: fullName,
+        role,
+        status: 'pending', // 🔒 SECURITY: All new users require admin approval
+        phone: phone || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
     if (publicUserError) {
       console.error('❌ Public user creation error:', publicUserError);
@@ -121,14 +125,16 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Create organization record if provider or client
     if ((role === 'provider' || role === 'client') && company) {
-      const { error: companyError } = await supabaseAdmin.from('organizations').insert({
-        name: company,
-        type: role,
-        primary_contact_id: authData.user.id,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      const { error: companyError } = await supabaseAdmin
+        .from('organizations')
+        .insert({
+          name: company,
+          type: role,
+          primary_contact_id: authData.user.id,
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
 
       if (companyError) {
         console.error('⚠️ Organization creation error:', companyError);
@@ -145,10 +151,11 @@ export async function POST(request: NextRequest) {
         email,
         full_name: fullName,
         role,
-        status: 'pending'
+        status: 'pending',
       },
-      message: 'Registration submitted successfully. Your account is pending admin approval.',
-      requiresApproval: true
+      message:
+        'Registration submitted successfully. Your account is pending admin approval.',
+      requiresApproval: true,
     });
   } catch (error) {
     console.error('❌ Registration API error:', error);

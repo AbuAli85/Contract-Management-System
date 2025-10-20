@@ -51,6 +51,7 @@ curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=10"
 **What to test:** Debug component not visible in production
 
 **Steps:**
+
 1. Open https://portal.thesmartpro.io/en/promoters
 2. Look at the page
 3. Verify NO debug panel showing environment info
@@ -83,6 +84,7 @@ curl -X GET https://portal.thesmartpro.io/api/promoters/debug
 **What to test:** Pagination controls work in frontend
 
 **Steps:**
+
 1. Open https://portal.thesmartpro.io/en/promoters
 2. Login if required
 3. Scroll to bottom of promoters table
@@ -93,6 +95,7 @@ curl -X GET https://portal.thesmartpro.io/api/promoters/debug
 8. Verify "Previous" button becomes enabled
 
 **Expected:**
+
 - Pagination controls visible
 - "Showing X to Y of Z promoters" text
 - Buttons work correctly
@@ -107,18 +110,20 @@ curl -X GET https://portal.thesmartpro.io/api/promoters/debug
 **What to test:** Verify indexes were created
 
 **Run in Supabase SQL Editor:**
+
 ```sql
-SELECT 
+SELECT
   tablename,
   indexname,
   indexdef
-FROM pg_indexes 
-WHERE tablename = 'promoters' 
+FROM pg_indexes
+WHERE tablename = 'promoters'
   AND schemaname = 'public'
 ORDER BY indexname;
 ```
 
 **Expected:** Should see 12+ indexes including:
+
 - idx_promoters_status
 - idx_promoters_created_at
 - idx_promoters_created_by
@@ -134,6 +139,7 @@ ORDER BY indexname;
 **What to test:** API response time improved
 
 **Run in terminal:**
+
 ```bash
 # Test API response time
 time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
@@ -150,6 +156,7 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 **What to test:** Users only see their own promoters
 
 **Steps:**
+
 1. Login as **regular user** (non-admin)
 2. Go to promoters page
 3. Note the number of promoters shown
@@ -160,6 +167,7 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 7. Verify you see ALL promoters (more than before)
 
 **Expected:**
+
 - Regular users see limited promoters
 - Admins see all promoters
 
@@ -172,6 +180,7 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 **Run this complete flow to verify everything:**
 
 1. **Database Setup**
+
    ```sql
    -- In Supabase SQL Editor
    -- Run: supabase/migrations/20251015_add_pdf_url_to_contracts.sql
@@ -179,6 +188,7 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
    ```
 
 2. **Deploy Code**
+
    ```bash
    git push origin main
    # Wait for Vercel/Netlify deployment
@@ -215,11 +225,13 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 ### Issue: 401 Unauthorized Errors
 
 **Possible causes:**
+
 - User not logged in
 - Session expired
 - Permissions not configured
 
 **Solutions:**
+
 1. Clear cookies and login again
 2. Check user has correct role in database
 3. Verify RBAC permissions configured
@@ -229,11 +241,13 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 ### Issue: Pagination Not Showing
 
 **Possible causes:**
+
 - Less than 50 promoters in database
 - Frontend not updated
 - API response missing pagination
 
 **Solutions:**
+
 1. Check total promoter count
 2. Hard refresh browser (Ctrl+Shift+R)
 3. Check API response includes "pagination" field
@@ -243,11 +257,13 @@ time curl -X GET "https://portal.thesmartpro.io/api/promoters?page=1&limit=50"
 ### Issue: Slow Performance
 
 **Possible causes:**
+
 - Indexes not created
 - Database needs ANALYZE
 - Too many records without pagination
 
 **Solutions:**
+
 1. Verify indexes exist:
    ```sql
    SELECT * FROM pg_indexes WHERE tablename = 'promoters';
@@ -318,15 +334,18 @@ Signed: _______________ Date: _______
 **All tests must pass** before marking implementation complete:
 
 ✅ **Security Tests** (Tests 1, 4, 8)
+
 - RBAC protection working
 - Debug endpoint protected
 - Data scoping implemented
 
 ✅ **Performance Tests** (Tests 6, 7)
+
 - Indexes created
 - Response time < 500ms
 
 ✅ **Functionality Tests** (Tests 2, 3, 5)
+
 - Pagination works backend
 - Pagination works frontend
 - Debug component hidden
@@ -337,7 +356,6 @@ Signed: _______________ Date: _______
 
 **Testing Status:** ⏳ Pending Manual Verification  
 **Automated Tests:** Not yet implemented (future enhancement)  
-**Next Step:** Run manual tests and verify all pass  
+**Next Step:** Run manual tests and verify all pass
 
-*End of Testing Guide*
-
+_End of Testing Guide_

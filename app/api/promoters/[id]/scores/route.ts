@@ -22,12 +22,14 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export const GET = withAnyRBAC(
   ['promoter:read:own', 'promoter:manage:own'],
-  async (_req: NextRequest, _context: RouteContext) => notImplemented('retrieval')
+  async (_req: NextRequest, _context: RouteContext) =>
+    notImplemented('retrieval')
 );
 
 export const POST = withRBAC(
   'promoter:manage:own',
-  async (_req: NextRequest, _context: RouteContext) => notImplemented('creation')
+  async (_req: NextRequest, _context: RouteContext) =>
+    notImplemented('creation')
 );
 
 export const PUT = withRBAC(
@@ -38,7 +40,9 @@ export const PUT = withRBAC(
 export const DELETE = withRBAC(
   'promoter:manage:own',
   async (req: NextRequest, _context: RouteContext) => {
-    const body = await req.json().catch(() => ({ id: undefined as string | undefined }));
+    const body = await req
+      .json()
+      .catch(() => ({ id: undefined as string | undefined }));
     const { id } = body ?? {};
 
     if (!id) {
@@ -55,4 +59,3 @@ export const DELETE = withRBAC(
     return notImplemented('deletion');
   }
 );
-

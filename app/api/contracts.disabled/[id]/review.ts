@@ -4,10 +4,7 @@ import { withRBAC } from '@/lib/rbac/guard';
 
 export const POST = withRBAC(
   'contract:update:own',
-  async (
-    request: Request,
-    { params }: { params: { id: string } }
-  ) => {
+  async (request: Request, { params }: { params: { id: string } }) => {
     const supabase = await createClient();
     const {
       data: { session },
@@ -18,7 +15,10 @@ export const POST = withRBAC(
     const contractId = params.id;
     const { comment } = await request.json();
     if (!comment)
-      return NextResponse.json({ error: 'Comment is required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Comment is required' },
+        { status: 400 }
+      );
 
     const { error } = await supabase
       .from('contract_reviews')

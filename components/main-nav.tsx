@@ -140,7 +140,11 @@ export function MainNav() {
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
-            <Link href={`/${locale}/dashboard/approvals`} legacyBehavior passHref>
+            <Link
+              href={`/${locale}/dashboard/approvals`}
+              legacyBehavior
+              passHref
+            >
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 Approvals
               </NavigationMenuLink>

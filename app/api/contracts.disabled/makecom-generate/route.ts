@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id'];
     const missingFields = requiredFields.filter(field => !body[field]);
-    
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       contract_id: (contract as any)?.id,
       contract_number: (contract as any)?.contract_number,
       contract_type: body.contract_type,
-      
+
       // Promoter data
       promoter_id: body.promoter_id,
       promoter_name_en: promoterData.name_en,
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       promoter_passport_number: promoterData.passport_number,
       promoter_id_card_url: promoterData.id_card_url,
       promoter_passport_url: promoterData.passport_url,
-      
+
       // First party data (Client)
       first_party_id: body.first_party_id,
       first_party_name_en: firstPartyData.name_en,
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest) {
       first_party_crn: firstPartyData.crn,
       first_party_email: firstPartyData.email,
       first_party_phone: firstPartyData.phone,
-      
+
       // Second party data (Employer)
       second_party_id: body.second_party_id,
       second_party_name_en: secondPartyData.name_en,
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
       second_party_crn: secondPartyData.crn,
       second_party_email: secondPartyData.email,
       second_party_phone: secondPartyData.phone,
-      
+
       // Contract details
       job_title: body.job_title,
       department: body.department,
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       contract_end_date: body.contract_end_date,
       special_terms: body.special_terms || '',
       currency: 'OMR',
-      
+
       // Additional fields for templates
       contract_date: new Date().toISOString().split('T')[0],
       generated_at: new Date().toISOString(),
@@ -167,10 +167,10 @@ export async function POST(request: NextRequest) {
     if (!makecomResponse.ok) {
       console.error('❌ Make.com webhook failed:', makecomResponse.status);
       return NextResponse.json(
-        { 
+        {
           error: 'Make.com webhook failed',
           details: `HTTP ${makecomResponse.status}: ${makecomResponse.statusText}`,
-          contract_id: (contract as any)?.id || 'unknown'
+          contract_id: (contract as any)?.id || 'unknown',
         },
         { status: 500 }
       );
@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
         .from('contracts')
         .update(updateData as any)
         .eq('id', (contract as any)?.id);
-      
+
       if (updateError) {
         console.error('❌ Failed to update contract:', updateError);
       }
@@ -216,16 +216,15 @@ export async function POST(request: NextRequest) {
         contract_number: (contract as any)?.contract_number,
         status: 'processing',
         makecom_result: makecomResult,
-        estimated_completion: '2-5 minutes'
-      }
+        estimated_completion: '2-5 minutes',
+      },
     });
-
   } catch (error) {
     console.error('❌ Make.com contract generation error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Contract generation failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

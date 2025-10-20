@@ -3,7 +3,7 @@
 ## ✅ **Current Status**
 
 - **Google Docs API**: ✅ Enabled and working
-- **Google Drive API**: ✅ Enabled and working  
+- **Google Drive API**: ✅ Enabled and working
 - **Service Account**: ✅ Authenticated successfully
 - **Template Access**: ✅ Working correctly
 - **Issue**: ❌ Service account storage quota exceeded
@@ -17,18 +17,21 @@ The service account `contract-generator@nth-segment-475411-g1.iam.gserviceaccoun
 ### **Option 1: Use Your Personal Google Drive (Recommended)**
 
 #### **Step 1: Create New Google Cloud Project**
+
 1. Go to: https://console.cloud.google.com
 2. Click "New Project"
 3. Name: "contract-management-personal"
 4. Click "Create"
 
 #### **Step 2: Enable Required APIs**
+
 1. Go to "APIs & Services" → "Library"
 2. Search and enable:
    - ✅ Google Docs API
    - ✅ Google Drive API
 
 #### **Step 3: Create New Service Account**
+
 1. Go to "IAM & Admin" → "Service Accounts"
 2. Click "Create Service Account"
 3. Name: "contract-generator-personal"
@@ -38,6 +41,7 @@ The service account `contract-generator@nth-segment-475411-g1.iam.gserviceaccoun
 7. Click "Done"
 
 #### **Step 4: Create Service Account Key**
+
 1. Click on the service account you just created
 2. Go to "Keys" tab
 3. Click "Add Key" → "Create New Key"
@@ -46,6 +50,7 @@ The service account `contract-generator@nth-segment-475411-g1.iam.gserviceaccoun
 6. Download the JSON file
 
 #### **Step 5: Create Template in Your Personal Drive**
+
 1. Go to: https://docs.google.com/document/create
 2. Create your contract template with these placeholders:
 
@@ -92,12 +97,14 @@ Passport: {{promoter_passport_image}}
 3. **Get Template ID** from URL: `https://docs.google.com/document/d/TEMPLATE_ID/edit`
 
 #### **Step 6: Share Template**
+
 1. In your template, click "Share"
 2. Add: `contract-generator-personal@contract-management-personal.iam.gserviceaccount.com`
 3. Set permission to "Editor"
 4. Click "Send"
 
 #### **Step 7: Update Environment Variables**
+
 Update these in your production environment:
 
 ```env
@@ -131,11 +138,13 @@ If you have another Google account with more storage:
 ## 🧪 **Testing the Solution**
 
 ### **Step 1: Test Configuration**
+
 ```
 https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 **Expected Response:**
+
 ```json
 {
   "status": "success",
@@ -162,11 +171,13 @@ https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 ### **Step 2: Test Integration**
+
 ```
 https://portal.thesmartpro.io/api/test/google-docs-simple
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -184,11 +195,13 @@ https://portal.thesmartpro.io/api/test/google-docs-simple
 Use these placeholders in your Google Docs template:
 
 ### **Contract Information**
+
 - `{{contract_number}}` - Contract number
 - `{{contract_date}}` - Contract date
 - `{{contract_type}}` - Contract type
 
 ### **Client Information (First Party)**
+
 - `{{first_party_name_en}}` - Client name (English)
 - `{{first_party_name_ar}}` - Client name (Arabic)
 - `{{first_party_crn}}` - Client CRN
@@ -196,6 +209,7 @@ Use these placeholders in your Google Docs template:
 - `{{first_party_phone}}` - Client phone
 
 ### **Employer Information (Second Party)**
+
 - `{{second_party_name_en}}` - Employer name (English)
 - `{{second_party_name_ar}}` - Employer name (Arabic)
 - `{{second_party_crn}}` - Employer CRN
@@ -203,6 +217,7 @@ Use these placeholders in your Google Docs template:
 - `{{second_party_phone}}` - Employer phone
 
 ### **Promoter Information**
+
 - `{{promoter_name_en}}` - Promoter name (English)
 - `{{promoter_name_ar}}` - Promoter name (Arabic)
 - `{{promoter_email}}` - Promoter email
@@ -211,6 +226,7 @@ Use these placeholders in your Google Docs template:
 - `{{promoter_passport_number}}` - Passport number
 
 ### **Contract Details**
+
 - `{{job_title}}` - Job title
 - `{{department}}` - Department
 - `{{work_location}}` - Work location
@@ -221,6 +237,7 @@ Use these placeholders in your Google Docs template:
 - `{{special_terms}}` - Special terms
 
 ### **Images (Optional)**
+
 - `{{promoter_id_card_image}}` - ID card image
 - `{{promoter_passport_image}}` - Passport image
 
@@ -233,7 +250,7 @@ After implementing the solution:
 ✅ **Successful contract generation**  
 ✅ **Proper placeholder replacement**  
 ✅ **PDF generation working**  
-✅ **Documents saved to your personal Google Drive**  
+✅ **Documents saved to your personal Google Drive**
 
 ## 🚀 **Next Steps**
 

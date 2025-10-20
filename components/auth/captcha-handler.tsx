@@ -15,10 +15,10 @@ declare global {
   }
 }
 
-export default function CaptchaHandler({ 
-  onCaptchaReady, 
-  onCaptchaError, 
-  siteKey 
+export default function CaptchaHandler({
+  onCaptchaReady,
+  onCaptchaError,
+  siteKey,
 }: CaptchaHandlerProps) {
   const captchaRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -35,10 +35,11 @@ export default function CaptchaHandler({
       }
 
       const script = document.createElement('script');
-      script.src = 'https://js.hcaptcha.com/1/api.js?onload=onHCaptchaLoad&render=explicit';
+      script.src =
+        'https://js.hcaptcha.com/1/api.js?onload=onHCaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
-      
+
       window.onHCaptchaLoad = () => {
         renderHCaptcha();
       };
@@ -54,10 +55,11 @@ export default function CaptchaHandler({
       }
 
       const script = document.createElement('script');
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
+      script.src =
+        'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit';
       script.async = true;
       script.defer = true;
-      
+
       window.onTurnstileLoad = () => {
         renderTurnstile();
       };
@@ -113,7 +115,7 @@ export default function CaptchaHandler({
 
     // Try hCaptcha first, then Turnstile as fallback
     loadHCaptcha();
-    
+
     // If hCaptcha fails, try Turnstile after a delay
     setTimeout(() => {
       if (!widgetIdRef.current) {
@@ -159,8 +161,8 @@ export default function CaptchaHandler({
   }));
 
   return (
-    <div className="captcha-container">
-      <div ref={captchaRef} className="captcha-widget" />
+    <div className='captcha-container'>
+      <div ref={captchaRef} className='captcha-widget' />
     </div>
   );
 }

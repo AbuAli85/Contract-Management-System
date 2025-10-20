@@ -7,13 +7,17 @@ Your bilingual contract template looks excellent and includes all the necessary 
 ## 🔗 **Share Your Template (2 Minutes)**
 
 ### **Step 1: Open Your Template**
+
 Click this link: https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit
 
 ### **Step 2: Click Share Button**
+
 Look for the blue **"Share"** button in the top-right corner of your Google Doc.
 
 ### **Step 3: Add Service Account**
+
 1. In the "Add people and groups" field, type:
+
    ```
    contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com
    ```
@@ -25,6 +29,7 @@ Look for the blue **"Share"** button in the top-right corner of your Google Doc.
 4. **Click "Share"**
 
 ### **Step 4: Verify**
+
 You should see the service account email in the "People with access" section with "Editor" permission.
 
 ## 🧪 **Test Immediately After Sharing**
@@ -62,11 +67,12 @@ curl -X GET https://portal.thesmartpro.io/api/test/google-docs-simple
 ✅ `{{contract_end_date}}` - Contract end date  
 ✅ `{{first_party_name_en}}` - First party name (English)  
 ✅ `{{second_party_name_en}}` - Second party name (English)  
-✅ `{{promoter_name_en}}` - Promoter name (English)  
+✅ `{{promoter_name_en}}` - Promoter name (English)
 
 ## 🚀 **After Sharing Successfully**
 
 Your contract generation will work perfectly with:
+
 - ✅ **Bilingual contracts** (Arabic + English)
 - ✅ **Professional formatting**
 - ✅ **All placeholders replaced**

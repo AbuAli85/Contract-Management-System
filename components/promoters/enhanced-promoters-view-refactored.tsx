@@ -7,14 +7,14 @@ import { differenceInDays, format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import type { Promoter } from '@/lib/types';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
-import type { 
-  DocumentStatus, 
-  OverallStatus, 
-  SortField, 
-  SortOrder, 
-  DocumentHealth, 
-  DashboardPromoter, 
-  DashboardMetrics 
+import type {
+  DocumentStatus,
+  OverallStatus,
+  SortField,
+  SortOrder,
+  DocumentHealth,
+  DashboardPromoter,
+  DashboardMetrics,
 } from './types';
 
 // Import the new modular components
@@ -28,7 +28,6 @@ import { PromotersSkeleton } from './promoters-skeleton';
 import { PromotersErrorState } from './promoters-error-state';
 import { PromotersEmptyState } from './promoters-empty-state';
 import { PromotersTimeoutState } from './promoters-timeout-state';
-
 
 interface PromotersResponse {
   success: boolean;
@@ -135,24 +134,32 @@ function computeOverallStatus(
   return 'active';
 }
 
-async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> {
-  console.log(`🔄 Fetching promoters from API (page ${page}, limit ${limit})...`);
-  
+async function fetchPromoters(
+  page = 1,
+  limit = 50
+): Promise<PromotersResponse> {
+  console.log(
+    `🔄 Fetching promoters from API (page ${page}, limit ${limit})...`
+  );
+
   // Set up abort controller for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-  
+
   try {
     // Add cache-busting timestamp
     const timestamp = Date.now();
-    const response = await fetch(`/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`, { 
-      cache: 'no-store',
-      signal: controller.signal,
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
+    const response = await fetch(
+      `/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`,
+      {
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
       }
-    });
+    );
 
     clearTimeout(timeoutId);
 
@@ -169,7 +176,7 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
         statusText: response.statusText,
         url: response.url,
       });
-      
+
       // Try to get error details from response
       let errorMessage = `API returned ${response.status}: ${response.statusText}`;
       try {
@@ -179,7 +186,7 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
       } catch (e) {
         console.error('❌ Could not parse error response:', e);
       }
-      
+
       throw new Error(errorMessage);
     }
 
@@ -228,22 +235,26 @@ async function fetchPromoters(page = 1, limit = 50): Promise<PromotersResponse> 
     return payload;
   } catch (error) {
     clearTimeout(timeoutId);
-    
+
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
         console.error('❌ Request timeout');
-        throw new Error('Request timeout: Server took too long to respond (30s)');
+        throw new Error(
+          'Request timeout: Server took too long to respond (30s)'
+        );
       }
       console.error('❌ Fetch error:', error.message);
     } else {
       console.error('❌ Unknown error:', error);
     }
-    
+
     throw error;
   }
 }
 
-export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) {
+export function EnhancedPromotersViewRefactored({
+  locale,
+}: PromotersViewProps) {
   console.log('🚀 Enhanced PromotersView component mounted');
   const router = useRouter();
   const { toast } = useToast();
@@ -252,7 +263,9 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
   const [page, setPage] = useState(1);
   const [limit] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
+    'all'
+  );
   const [documentFilter, setDocumentFilter] = useState<
     'all' | 'expired' | 'expiring' | 'missing'
   >('all');
@@ -261,7 +274,9 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
   >('all');
   const [sortField, setSortField] = useState<SortField>('name');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
-  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(new Set());
+  const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
+    new Set()
+  );
   const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards'>('table');
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
@@ -316,10 +331,9 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     }
   }, [isError, error, toast]);
 
-
   const promoters = response?.promoters ?? [];
   const pagination = response?.pagination;
-  
+
   // Debug logging
   console.log('📊 Component state:', {
     isLoading,
@@ -330,7 +344,7 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     promotersCount: promoters.length,
     errorMessage: error?.message,
   });
-  
+
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
     return promoters.map(promoter => {
@@ -383,8 +397,12 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
       } as DashboardPromoter;
     });
   }, [promoters]);
-  
-  console.log('📈 Dashboard promoters processed:', dashboardPromoters.length, 'items');
+
+  console.log(
+    '📈 Dashboard promoters processed:',
+    dashboardPromoters.length,
+    'items'
+  );
 
   const metrics = useMemo<DashboardMetrics>(() => {
     const total = dashboardPromoters.length;
@@ -413,20 +431,19 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     // Calculate recently added (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentlyAdded = dashboardPromoters.filter(
-      promoter => {
-        const createdDate = parseDateSafe(promoter.created_at);
-        return createdDate && createdDate >= sevenDaysAgo;
-      }
-    ).length;
+    const recentlyAdded = dashboardPromoters.filter(promoter => {
+      const createdDate = parseDateSafe(promoter.created_at);
+      return createdDate && createdDate >= sevenDaysAgo;
+    }).length;
 
     // Calculate compliance rate (percentage with valid documents)
     const compliant = dashboardPromoters.filter(
-      promoter => 
-        promoter.idDocument.status === 'valid' && 
+      promoter =>
+        promoter.idDocument.status === 'valid' &&
         promoter.passportDocument.status === 'valid'
     ).length;
-    const complianceRate = total > 0 ? Math.round((compliant / total) * 100) : 0;
+    const complianceRate =
+      total > 0 ? Math.round((compliant / total) * 100) : 0;
 
     return {
       total,
@@ -485,17 +502,23 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
 
   const sortedPromoters = useMemo(() => {
     console.log('🔀 Sorting promoters...');
-    
+
     const sorted = [...filteredPromoters].sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortField) {
         case 'name':
           comparison = a.displayName.localeCompare(b.displayName);
           break;
         case 'status':
-          const statusOrder = { critical: 0, warning: 1, active: 2, inactive: 3 };
-          comparison = statusOrder[a.overallStatus] - statusOrder[b.overallStatus];
+          const statusOrder = {
+            critical: 0,
+            warning: 1,
+            active: 2,
+            inactive: 3,
+          };
+          comparison =
+            statusOrder[a.overallStatus] - statusOrder[b.overallStatus];
           break;
         case 'created':
           const dateA = parseDateSafe(a.created_at);
@@ -516,13 +539,13 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
           comparison = docA - docB;
           break;
       }
-      
+
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-    
+
     return sorted;
   }, [filteredPromoters, sortField, sortOrder]);
-  
+
   console.log('✅ Final sorted promoters:', sortedPromoters.length, 'items');
 
   const atRiskPromoters = useMemo(() => {
@@ -550,120 +573,147 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     }
   }, [selectedPromoters.size, sortedPromoters]);
 
-  const handleSelectPromoter = useCallback((promoterId: string) => {
-    const newSelected = new Set(selectedPromoters);
-    if (newSelected.has(promoterId)) {
-      newSelected.delete(promoterId);
-    } else {
-      newSelected.add(promoterId);
-    }
-    setSelectedPromoters(newSelected);
-  }, [selectedPromoters]);
+  const handleSelectPromoter = useCallback(
+    (promoterId: string) => {
+      const newSelected = new Set(selectedPromoters);
+      if (newSelected.has(promoterId)) {
+        newSelected.delete(promoterId);
+      } else {
+        newSelected.add(promoterId);
+      }
+      setSelectedPromoters(newSelected);
+    },
+    [selectedPromoters]
+  );
 
   // Bulk action handlers
-  const handleBulkAction = useCallback(async (actionId: string) => {
-    if (selectedPromoters.size === 0) return;
+  const handleBulkAction = useCallback(
+    async (actionId: string) => {
+      if (selectedPromoters.size === 0) return;
 
-    setIsPerformingBulkAction(true);
-    
-    try {
-      switch (actionId) {
-        case 'export': {
-          // Export selected promoters (client-side, no API call)
-          const selectedData = sortedPromoters.filter(p => selectedPromoters.has(p.id));
-          const headers = ['Name', 'Email', 'Phone', 'Status', 'Company', 'Job Title', 'ID Expiry', 'Passport Expiry'];
-          const rows = selectedData.map(p => [
-            p.displayName,
-            p.contactEmail,
-            p.contactPhone,
-            p.overallStatus,
-            p.organisationLabel,
-            p.job_title || '—',
-            formatDisplayDate(p.id_card_expiry_date),
-            formatDisplayDate(p.passport_expiry_date),
-          ]);
-          const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-          
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
-          link.click();
-          URL.revokeObjectURL(url);
-          
-          toast({
-            title: 'Export Complete',
-            description: `${selectedPromoters.size} promoters exported successfully.`,
-          });
-          break;
-        }
-          
-        case 'archive':
-        case 'delete':
-        case 'notify': {
-          // API call for these actions
-          const response = await fetch('/api/promoters/bulk', {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-              action: actionId === 'delete' ? 'update_status' : actionId,
-              promoterIds: Array.from(selectedPromoters),
-              status: actionId === 'delete' ? 'terminated' : undefined,
-              notificationType: actionId === 'notify' ? 'standard' : undefined,
-            }),
-          });
+      setIsPerformingBulkAction(true);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || 'Bulk action failed');
+      try {
+        switch (actionId) {
+          case 'export': {
+            // Export selected promoters (client-side, no API call)
+            const selectedData = sortedPromoters.filter(p =>
+              selectedPromoters.has(p.id)
+            );
+            const headers = [
+              'Name',
+              'Email',
+              'Phone',
+              'Status',
+              'Company',
+              'Job Title',
+              'ID Expiry',
+              'Passport Expiry',
+            ];
+            const rows = selectedData.map(p => [
+              p.displayName,
+              p.contactEmail,
+              p.contactPhone,
+              p.overallStatus,
+              p.organisationLabel,
+              p.job_title || '—',
+              formatDisplayDate(p.id_card_expiry_date),
+              formatDisplayDate(p.passport_expiry_date),
+            ]);
+            const csv = [
+              headers.join(','),
+              ...rows.map(row => row.join(',')),
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+
+            toast({
+              title: 'Export Complete',
+              description: `${selectedPromoters.size} promoters exported successfully.`,
+            });
+            break;
           }
 
-          const result = await response.json();
-          
-          toast({
-            title: 'Success',
-            description: result.message || `${actionId} completed successfully`,
-          });
-          
-          // Refetch data to update the UI
-          await refetch();
-          break;
+          case 'archive':
+          case 'delete':
+          case 'notify': {
+            // API call for these actions
+            const response = await fetch('/api/promoters/bulk', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: actionId === 'delete' ? 'update_status' : actionId,
+                promoterIds: Array.from(selectedPromoters),
+                status: actionId === 'delete' ? 'terminated' : undefined,
+                notificationType:
+                  actionId === 'notify' ? 'standard' : undefined,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json().catch(() => ({}));
+              throw new Error(
+                errorData.error || errorData.message || 'Bulk action failed'
+              );
+            }
+
+            const result = await response.json();
+
+            toast({
+              title: 'Success',
+              description:
+                result.message || `${actionId} completed successfully`,
+            });
+
+            // Refetch data to update the UI
+            await refetch();
+            break;
+          }
+
+          case 'assign': {
+            // TODO: Show dialog to select company
+            // For now, show a message
+            toast({
+              title: 'Feature Coming Soon',
+              description: 'Company assignment dialog will be available soon.',
+            });
+            return; // Don't clear selection or close bulk actions
+          }
+
+          default:
+            toast({
+              variant: 'destructive',
+              title: 'Unknown Action',
+              description: `Action "${actionId}" is not recognized.`,
+            });
+            return;
         }
-        
-        case 'assign': {
-          // TODO: Show dialog to select company
-          // For now, show a message
-          toast({
-            title: 'Feature Coming Soon',
-            description: 'Company assignment dialog will be available soon.',
-          });
-          return; // Don't clear selection or close bulk actions
-        }
-          
-        default:
-          toast({
-            variant: 'destructive',
-            title: 'Unknown Action',
-            description: `Action "${actionId}" is not recognized.`,
-          });
-          return;
+
+        setSelectedPromoters(new Set());
+      } catch (error) {
+        console.error('Bulk action error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Action Failed',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'There was an error performing the bulk action.',
+        });
+      } finally {
+        setIsPerformingBulkAction(false);
       }
-      
-      setSelectedPromoters(new Set());
-    } catch (error) {
-      console.error('Bulk action error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Action Failed',
-        description: error instanceof Error ? error.message : 'There was an error performing the bulk action.',
-      });
-    } finally {
-      setIsPerformingBulkAction(false);
-    }
-  }, [selectedPromoters, sortedPromoters, toast, refetch]);
+    },
+    [selectedPromoters, sortedPromoters, toast, refetch]
+  );
 
   const handleResetFilters = useCallback(() => {
     setSearchTerm('');
@@ -680,14 +730,17 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     refetch();
   }, [refetch]);
 
-  const handleSort = useCallback((field: SortField) => {
-    if (sortField === field) {
-      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortOrder('asc');
-    }
-  }, [sortField]);
+  const handleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortOrder(prev => (prev === 'asc' ? 'desc' : 'asc'));
+      } else {
+        setSortField(field);
+        setSortOrder('asc');
+      }
+    },
+    [sortField]
+  );
 
   const handleViewPromoter = useCallback(
     (promoter: DashboardPromoter) => {
@@ -732,7 +785,16 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
 
   const handleExport = useCallback(() => {
     // Export all visible promoters
-    const headers = ['Name', 'Email', 'Phone', 'Status', 'Company', 'Job Title', 'ID Expiry', 'Passport Expiry'];
+    const headers = [
+      'Name',
+      'Email',
+      'Phone',
+      'Status',
+      'Company',
+      'Job Title',
+      'ID Expiry',
+      'Passport Expiry',
+    ];
     const rows = sortedPromoters.map(p => [
       p.displayName,
       p.contactEmail,
@@ -743,8 +805,10 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
       formatDisplayDate(p.id_card_expiry_date),
       formatDisplayDate(p.passport_expiry_date),
     ]);
-    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
-    
+    const csv = [headers.join(','), ...rows.map(row => row.join(','))].join(
+      '\n'
+    );
+
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -752,7 +816,7 @@ export function EnhancedPromotersViewRefactored({ locale }: PromotersViewProps) 
     link.download = `promoters-export-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: 'Export Complete',
       description: `${sortedPromoters.length} promoters exported successfully.`,

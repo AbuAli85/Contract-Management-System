@@ -13,18 +13,18 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Eye, 
-  EyeOff, 
-  Loader2, 
-  Mail, 
-  Lock, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Mail,
+  Lock,
+  CheckCircle,
+  AlertTriangle,
   RefreshCw,
   Database,
   Wifi,
-  WifiOff 
+  WifiOff,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 // import { useToast } from '@/hooks/use-toast';
@@ -37,7 +37,9 @@ export function DatabaseErrorLoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [databaseStatus, setDatabaseStatus] = useState<'unknown' | 'healthy' | 'error' | 'testing'>('unknown');
+  const [databaseStatus, setDatabaseStatus] = useState<
+    'unknown' | 'healthy' | 'error' | 'testing'
+  >('unknown');
   const [fallbackMode, setFallbackMode] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -51,10 +53,10 @@ export function DatabaseErrorLoginForm() {
 
   const testDatabaseHealth = async () => {
     setDatabaseStatus('testing');
-    
+
     try {
       console.log('🔍 Testing database health...');
-      
+
       // Test 1: Basic connection - use a simple query instead of RPC
       const { data: healthData, error: healthError } = await supabase
         .from('users')
@@ -63,16 +65,19 @@ export function DatabaseErrorLoginForm() {
 
       if (healthError) {
         console.error('❌ Database health check failed:', healthError);
-        
+
         // Test 2: Try simple auth check as fallback
         try {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          const { data: sessionData, error: sessionError } =
+            await supabase.auth.getSession();
           if (sessionError) {
             console.error('❌ Auth service also failing:', sessionError);
             setDatabaseStatus('error');
             setFallbackMode(true);
           } else {
-            console.log('✅ Auth service is working, database may be having issues');
+            console.log(
+              '✅ Auth service is working, database may be having issues'
+            );
             setDatabaseStatus('error');
           }
         } catch (authError) {
@@ -95,26 +100,25 @@ export function DatabaseErrorLoginForm() {
   const clearAuthData = async () => {
     try {
       console.log('🧹 Clearing authentication data...');
-      
+
       // Clear localStorage
-      const keysToRemove = Object.keys(localStorage).filter(key => 
-        key.includes('supabase') || key.includes('sb-')
+      const keysToRemove = Object.keys(localStorage).filter(
+        key => key.includes('supabase') || key.includes('sb-')
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      
+
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       // Sign out from Supabase
       await supabase.auth.signOut();
-      
+
       console.log('✅ Auth data cleared');
-      
+
       // toast({
       //   title: 'Authentication Reset',
       //   description: 'Cleared all authentication data. Please try logging in again.',
       // });
-      
     } catch (error) {
       console.error('❌ Error clearing auth data:', error);
     }
@@ -123,14 +127,14 @@ export function DatabaseErrorLoginForm() {
   const handleDatabaseErrorLogin = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       console.log('🚨 Database issues detected - switching to offline mode...');
-      
+
       // Since we're in database error mode, skip all Supabase calls
       // and immediately redirect to offline mode
       setSuccess('Switching to offline mode...');
-      
+
       // toast({
       //   title: 'Switching to Demo Mode',
       //   description: 'Redirecting to offline demo access...',
@@ -141,11 +145,12 @@ export function DatabaseErrorLoginForm() {
 
       // Redirect to instant offline mode
       router.push('/instant-offline');
-      
     } catch (error: any) {
       console.error('🚨 Offline mode switch failed:', error);
-      setError('Unable to switch to offline mode. Please try refreshing the page.');
-      
+      setError(
+        'Unable to switch to offline mode. Please try refreshing the page.'
+      );
+
       // toast({
       //   title: 'Switch Failed',
       //   description: 'Please refresh the page and try again.',
@@ -163,22 +168,27 @@ export function DatabaseErrorLoginForm() {
 
     try {
       console.log('🔐 Starting normal login process...');
-      
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (authError) {
         console.error('🔐 Auth error:', authError);
-        
+
         if (authError.message.includes('Database error')) {
-          console.log('🚨 Database error detected, switching to fallback mode...');
+          console.log(
+            '🚨 Database error detected, switching to fallback mode...'
+          );
           setDatabaseStatus('error');
           setFallbackMode(true);
-          throw new Error('Database connection issue detected. Please try the emergency login below.');
+          throw new Error(
+            'Database connection issue detected. Please try the emergency login below.'
+          );
         }
-        
+
         throw new Error(authError.message);
       }
 
@@ -187,7 +197,7 @@ export function DatabaseErrorLoginForm() {
       }
 
       console.log('✅ Authentication successful');
-      
+
       // Try to fetch user profile
       try {
         const { data: userProfile, error: profileError } = await supabase
@@ -197,11 +207,13 @@ export function DatabaseErrorLoginForm() {
           .single();
 
         if (profileError) {
-          console.warn('⚠️ Profile fetch failed, proceeding without profile data');
+          console.warn(
+            '⚠️ Profile fetch failed, proceeding without profile data'
+          );
         }
 
         setSuccess('Login successful! Redirecting...');
-        
+
         // toast({
         //   title: 'Login Successful',
         //   description: 'Welcome back!',
@@ -212,19 +224,17 @@ export function DatabaseErrorLoginForm() {
           console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
         }, 3000);
-        
       } catch (profileError) {
         console.warn('⚠️ Profile operations failed, but auth succeeded');
-        
+
         setSuccess('Login successful! Redirecting...');
-        
+
         // Wait longer to ensure session is properly established
         setTimeout(() => {
           console.log('🔐 Redirecting to dashboard after successful login...');
           router.push('/dashboard-role-router');
         }, 3000);
       }
-
     } catch (error: any) {
       console.error('🔐 Login failed:', error);
       setError(error.message);
@@ -258,29 +268,29 @@ export function DatabaseErrorLoginForm() {
     switch (databaseStatus) {
       case 'healthy':
         return (
-          <Badge className="bg-green-100 text-green-800">
-            <Database className="h-3 w-3 mr-1" />
+          <Badge className='bg-green-100 text-green-800'>
+            <Database className='h-3 w-3 mr-1' />
             Database Healthy
           </Badge>
         );
       case 'error':
         return (
-          <Badge className="bg-red-100 text-red-800">
-            <WifiOff className="h-3 w-3 mr-1" />
+          <Badge className='bg-red-100 text-red-800'>
+            <WifiOff className='h-3 w-3 mr-1' />
             Database Issues
           </Badge>
         );
       case 'testing':
         return (
-          <Badge className="bg-blue-100 text-blue-800">
-            <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+          <Badge className='bg-blue-100 text-blue-800'>
+            <RefreshCw className='h-3 w-3 mr-1 animate-spin' />
             Testing Connection
           </Badge>
         );
       default:
         return (
-          <Badge className="bg-gray-100 text-gray-800">
-            <Wifi className="h-3 w-3 mr-1" />
+          <Badge className='bg-gray-100 text-gray-800'>
+            <Wifi className='h-3 w-3 mr-1' />
             Unknown Status
           </Badge>
         );
@@ -288,91 +298,92 @@ export function DatabaseErrorLoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+    <Card className='w-full max-w-md mx-auto'>
+      <CardHeader className='space-y-4'>
+        <div className='flex items-center justify-between'>
+          <CardTitle className='text-2xl font-bold'>Sign In</CardTitle>
           {getDatabaseStatusBadge()}
         </div>
         <CardDescription>
           Enter your credentials to access your account
         </CardDescription>
-        
+
         {databaseStatus === 'error' && (
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertTriangle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="text-blue-800">
-              Database connectivity issues detected. Click "Switch to Demo Mode" below to access the full-featured demo version.
+          <Alert className='border-blue-200 bg-blue-50'>
+            <AlertTriangle className='h-4 w-4 text-blue-600' />
+            <AlertDescription className='text-blue-800'>
+              Database connectivity issues detected. Click "Switch to Demo Mode"
+              below to access the full-featured demo version.
             </AlertDescription>
           </Alert>
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      <CardContent className='space-y-4'>
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='email'>Email</Label>
+            <div className='relative'>
+              <Mail className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
               <Input
-                id="email"
-                type="email"
+                id='email'
+                type='email'
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="pl-10"
+                onChange={e => setEmail(e.target.value)}
+                placeholder='Enter your email'
+                className='pl-10'
                 required
                 disabled={loading}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <div className='space-y-2'>
+            <Label htmlFor='password'>Password</Label>
+            <div className='relative'>
+              <Lock className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
               <Input
-                id="password"
+                id='password'
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="pl-10 pr-10"
+                onChange={e => setPassword(e.target.value)}
+                placeholder='Enter your password'
+                className='pl-10 pr-10'
                 required
                 disabled={loading}
               />
               <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-2 top-2 h-6 w-6 p-0"
+                type='button'
+                variant='ghost'
+                size='sm'
+                className='absolute right-2 top-2 h-6 w-6 p-0'
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff className='h-4 w-4' />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye className='h-4 w-4' />
                 )}
               </Button>
             </div>
           </div>
 
           {error && (
-            <Alert className="border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription className="text-red-800">
+            <Alert className='border-red-200 bg-red-50'>
+              <AlertTriangle className='h-4 w-4 text-red-600' />
+              <AlertDescription className='text-red-800'>
                 {error}
                 {retryCount > 1 && (
-                  <div className="mt-2">
+                  <div className='mt-2'>
                     <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
+                      type='button'
+                      variant='outline'
+                      size='sm'
                       onClick={retryConnection}
-                      className="text-red-600 border-red-200"
+                      className='text-red-600 border-red-200'
                     >
-                      <RefreshCw className="h-3 w-3 mr-1" />
+                      <RefreshCw className='h-3 w-3 mr-1' />
                       Retry Connection
                     </Button>
                   </div>
@@ -382,27 +393,25 @@ export function DatabaseErrorLoginForm() {
           )}
 
           {success && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
+            <Alert className='border-green-200 bg-green-50'>
+              <CheckCircle className='h-4 w-4 text-green-600' />
+              <AlertDescription className='text-green-800'>
                 {success}
               </AlertDescription>
             </Alert>
           )}
 
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={loading}
-          >
+          <Button type='submit' className='w-full' disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {databaseStatus === 'error' ? 'Switching to Demo Mode...' : 'Signing In...'}
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                {databaseStatus === 'error'
+                  ? 'Switching to Demo Mode...'
+                  : 'Signing In...'}
               </>
             ) : (
               <>
-                <Lock className="mr-2 h-4 w-4" />
+                <Lock className='mr-2 h-4 w-4' />
                 {databaseStatus === 'error' ? 'Switch to Demo Mode' : 'Sign In'}
               </>
             )}
@@ -410,38 +419,38 @@ export function DatabaseErrorLoginForm() {
         </form>
 
         {databaseStatus === 'error' && !loading && (
-          <div className="space-y-2 pt-4 border-t">
-            <p className="text-sm text-muted-foreground text-center">
+          <div className='space-y-2 pt-4 border-t'>
+            <p className='text-sm text-muted-foreground text-center'>
               Having trouble? Try these options:
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className='grid grid-cols-2 gap-2'>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={clearAuthData}
-                className="text-xs"
+                className='text-xs'
               >
-                <RefreshCw className="h-3 w-3 mr-1" />
+                <RefreshCw className='h-3 w-3 mr-1' />
                 Clear Cache
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={retryConnection}
-                className="text-xs"
+                className='text-xs'
               >
-                <Database className="h-3 w-3 mr-1" />
+                <Database className='h-3 w-3 mr-1' />
                 Test Connection
               </Button>
             </div>
           </div>
         )}
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className='text-center text-sm text-muted-foreground'>
           Don't have an account?{' '}
-          <Button 
-            variant="link" 
-            className="p-0 h-auto font-normal"
+          <Button
+            variant='link'
+            className='p-0 h-auto font-normal'
             onClick={() => router.push('/register/provider')}
           >
             Sign up as Provider

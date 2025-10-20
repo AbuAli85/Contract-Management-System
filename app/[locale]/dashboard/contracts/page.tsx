@@ -12,14 +12,14 @@ export default function ContractsPage() {
         <h1 className='text-2xl font-semibold'>
           Manage Contracts / إدارة العقود
         </h1>
-        <div className="flex gap-2">
+        <div className='flex gap-2'>
           <Button asChild>
             <Link href='/simple-contract'>
               <FilePlus2Icon className='mr-2 h-5 w-5' />
               Quick Contract Generator
             </Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button asChild variant='outline'>
             <Link href='/generate-contract'>
               <FilePlus2Icon className='mr-2 h-5 w-5' />
               Advanced Generator

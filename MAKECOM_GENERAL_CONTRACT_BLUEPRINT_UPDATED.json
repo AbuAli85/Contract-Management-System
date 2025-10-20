@@ -75,10 +75,7 @@
             "label": "Variable lifetime",
             "required": true,
             "validate": {
-              "enum": [
-                "roundtrip",
-                "execution"
-              ]
+              "enum": ["roundtrip", "execution"]
             }
           },
           {
@@ -131,10 +128,7 @@
             "label": "Variable lifetime",
             "required": true,
             "validate": {
-              "enum": [
-                "roundtrip",
-                "execution"
-              ]
+              "enum": ["roundtrip", "execution"]
             }
           },
           {
@@ -622,10 +616,7 @@
             "label": "Variable lifetime",
             "required": true,
             "validate": {
-              "enum": [
-                "roundtrip",
-                "execution"
-              ]
+              "enum": ["roundtrip", "execution"]
             }
           }
         ],
@@ -825,19 +816,11 @@
               "label": "By Dropdown"
             },
             "document": {
-              "path": [
-                "contracts",
-                "templates",
-                "Promoter Contract-general"
-              ]
+              "path": ["contracts", "templates", "Promoter Contract-general"]
             },
             "folderId": {
               "mode": "chose",
-              "path": [
-                "contracts",
-                "general contracts",
-                "2025"
-              ]
+              "path": ["contracts", "general contracts", "2025"]
             },
             "destination": {
               "label": "My Drive"
@@ -868,10 +851,7 @@
             "label": "Create a Document from a Template",
             "required": true,
             "validate": {
-              "enum": [
-                "map",
-                "dropdown"
-              ]
+              "enum": ["map", "dropdown"]
             }
           },
           {
@@ -886,11 +866,7 @@
             "label": "New Drive Location",
             "required": true,
             "validate": {
-              "enum": [
-                "drive",
-                "share",
-                "team"
-              ]
+              "enum": ["drive", "share", "team"]
             }
           },
           {
@@ -899,11 +875,7 @@
             "label": "Choose a Drive",
             "required": true,
             "validate": {
-              "enum": [
-                "drive",
-                "share",
-                "team"
-              ]
+              "enum": ["drive", "share", "team"]
             }
           },
           {
@@ -1079,11 +1051,7 @@
             "label": "Choose a Drive",
             "required": true,
             "validate": {
-              "enum": [
-                "drive",
-                "share",
-                "team"
-              ]
+              "enum": ["drive", "share", "team"]
             }
           },
           {
@@ -1243,11 +1211,7 @@
             },
             "headers": {
               "mode": "chose",
-              "items": [
-                null,
-                null,
-                null
-              ]
+              "items": [null, null, null]
             },
             "bodyType": {
               "label": "Raw"
@@ -1340,11 +1304,7 @@
             "type": "select",
             "label": "Body type",
             "validate": {
-              "enum": [
-                "raw",
-                "x_www_form_urlencoded",
-                "multipart_form_data"
-              ]
+              "enum": ["raw", "x_www_form_urlencoded", "multipart_form_data"]
             }
           },
           {
@@ -1466,9 +1426,7 @@
           "expect": {
             "headers": {
               "mode": "chose",
-              "items": [
-                null
-              ]
+              "items": [null]
             }
           }
         },

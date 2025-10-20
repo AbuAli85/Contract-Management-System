@@ -26,6 +26,7 @@ node -e "require('dotenv').config({path:'.env.local'}); console.log(Buffer.from(
 ```
 
 **Copy the output** - it will be a long Base64 string like:
+
 ```
 eyJ0eXBlIjoic2VydmljZV9hY2NvdW50IiwicHJvamVjdF9pZCI6Im50aC1zZWdtZW50LTQ3NTQxMS1nMSIsInByaXZh...
 ```
@@ -42,10 +43,10 @@ Depending on where you're hosting:
 
 2. **Add these environment variables:**
 
-| Name | Value | Environment |
-|------|-------|-------------|
-| `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | `<paste the Base64 string>` | Production |
-| `GOOGLE_DOCS_TEMPLATE_ID` | `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0` | Production |
+| Name                                | Value                                          | Environment |
+| ----------------------------------- | ---------------------------------------------- | ----------- |
+| `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | `<paste the Base64 string>`                    | Production  |
+| `GOOGLE_DOCS_TEMPLATE_ID`           | `1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0` | Production  |
 
 3. **Click "Save"**
 
@@ -122,6 +123,7 @@ https://portal.thesmartpro.io/api/test-google-sa
 ```
 
 **Expected result:**
+
 ```json
 {
   "success": true,
@@ -139,4 +141,3 @@ https://portal.thesmartpro.io/api/test-google-sa
 ## 🔧 **Quick Helper Script**
 
 Let me create a script to generate the Base64 string for you:
-

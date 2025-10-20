@@ -73,8 +73,8 @@ export function verifyWebhookSignature(
       .digest('hex');
 
     // Ensure consistent comparison
-    const providedSignature = signature.startsWith('sha256=') 
-      ? signature.slice(7) 
+    const providedSignature = signature.startsWith('sha256=')
+      ? signature.slice(7)
       : signature;
 
     const expectedBuffer = Buffer.from(expectedSignature, 'hex');
@@ -105,7 +105,7 @@ export function generateWebhookSignature(
     .createHmac('sha256', secret)
     .update(signedPayload, 'utf8')
     .digest('hex');
-  
+
   return `t=${ts},v1=${signature}`;
 }
 
@@ -114,16 +114,19 @@ export function generateWebhookSignature(
  */
 const webhookTimestamps = new Set<string>();
 
-export function isWebhookReplay(signature: string, windowMs: number = 300000): boolean {
+export function isWebhookReplay(
+  signature: string,
+  windowMs: number = 300000
+): boolean {
   const elements = signature.split(',');
   const timestampElement = elements.find(el => el.startsWith('t='));
-  
+
   if (!timestampElement) {
     return true; // No timestamp = potential replay
   }
 
   const timestamp = timestampElement.split('=')[1];
-  
+
   if (!timestamp) {
     return true; // Invalid timestamp format
   }

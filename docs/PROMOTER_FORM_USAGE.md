@@ -5,12 +5,14 @@ This guide provides comprehensive documentation for the promoter form and manage
 ## 📁 Files Created
 
 ### 1. Schema & Types
+
 - **`lib/schemas/promoter-form-schema.ts`** - Comprehensive Zod validation schema
   - Full field validation with business rules
   - Type-safe form data types
   - Form sections configuration for progressive disclosure
 
 ### 2. Components
+
 - **`components/promoter-form-comprehensive.tsx`** - Multi-section form component
   - 10 organized sections (basic, contact, personal, documents, etc.)
   - Step-by-step navigation with progress tracking
@@ -26,6 +28,7 @@ This guide provides comprehensive documentation for the promoter form and manage
   - Responsive layout
 
 ### 3. Example Page
+
 - **`app/[locale]/manage-promoters/comprehensive/page.tsx`** - Complete working example
   - Form in a dialog/modal
   - Integrated table view
@@ -112,12 +115,7 @@ function MyComponent() {
     });
   };
 
-  return (
-    <PromoterFormComprehensive
-      onSubmit={handleSubmit}
-      mode="create"
-    />
-  );
+  return <PromoterFormComprehensive onSubmit={handleSubmit} mode='create' />;
 }
 ```
 
@@ -137,10 +135,10 @@ const initialData = {
 return (
   <PromoterFormComprehensive
     initialData={initialData}
-    promoterId="some-uuid"
+    promoterId='some-uuid'
     onSubmit={handleUpdate}
     onCancel={handleCancel}
-    mode="edit"
+    mode='edit'
   />
 );
 ```
@@ -167,7 +165,7 @@ function PromotersPage() {
       promoters={promoters}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      onView={(id) => router.push(`/promoters/${id}`)}
+      onView={id => router.push(`/promoters/${id}`)}
       onRefresh={fetchPromoters}
     />
   );
@@ -177,6 +175,7 @@ function PromotersPage() {
 ### Complete Example with Dialog
 
 See `app/[locale]/manage-promoters/comprehensive/page.tsx` for a complete working example that includes:
+
 - Form in a dialog
 - Table view
 - Create/Edit switching
@@ -292,6 +291,7 @@ CREATE TABLE public.promoters (
 ### Styling
 
 The components use shadcn/ui components and Tailwind CSS. You can customize:
+
 - Colors via Tailwind config
 - Component variants via shadcn/ui theme
 - Layout spacing and sizing
@@ -299,6 +299,7 @@ The components use shadcn/ui components and Tailwind CSS. You can customize:
 ### Validation
 
 Modify `lib/schemas/promoter-form-schema.ts` to:
+
 - Add/remove required fields
 - Change validation rules
 - Add custom refinements
@@ -307,6 +308,7 @@ Modify `lib/schemas/promoter-form-schema.ts` to:
 ### Form Sections
 
 Adjust the `FORM_SECTIONS` constant in the schema file to:
+
 - Reorder sections
 - Add/remove sections
 - Change section titles and descriptions
@@ -315,6 +317,7 @@ Adjust the `FORM_SECTIONS` constant in the schema file to:
 ### Table Columns
 
 Edit `components/promoters-table.tsx` to:
+
 - Add/remove columns
 - Change column order
 - Customize cell rendering
@@ -331,6 +334,7 @@ Edit `components/promoters-table.tsx` to:
 ## 📱 Responsive Design
 
 Both components are fully responsive:
+
 - Mobile-first approach
 - Breakpoints for tablet and desktop
 - Touch-friendly interfaces
@@ -387,9 +391,9 @@ await handleSubmit(testData);
 Access the demo page at: `/[locale]/manage-promoters/comprehensive`
 
 This page demonstrates:
+
 - Complete CRUD operations
 - Form in modal
 - Table with all features
 - Data refresh
 - Error handling
-

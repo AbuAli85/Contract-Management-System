@@ -31,16 +31,16 @@ const PUBLIC_PAGES = [
   '/auth/reset-password',
   '/auth/unauthorized',
   '/auth/logout',
-  
+
   // Registration pages
   '/register/client',
   '/register/provider',
   '/register-new',
-  
+
   // Promoters pages (for testing without auth)
   '/promoters',
   '/manage-promoters',
-  
+
   // Essential system pages
   '/unauthorized',
   '/logout',
@@ -81,7 +81,7 @@ export function AuthenticatedLayout({
         client: '/en/client-dashboard',
         user: '/en/dashboard',
       };
-      
+
       // Access role from user_metadata or default to 'user'
       const userRole = user?.user_metadata?.role || 'user';
       router.push(dashboardMap[userRole as keyof typeof dashboardMap] || '/en');
@@ -272,10 +272,9 @@ export function AuthenticatedLayout({
           <p className='mb-4 text-muted-foreground'>
             Please log in to access the application.
           </p>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              Not signed in?{' '}
-              <Link href='/en/auth/login'>Sign In</Link>
+          <div className='flex items-center space-x-4'>
+            <span className='text-sm text-gray-600'>
+              Not signed in? <Link href='/en/auth/login'>Sign In</Link>
             </span>
           </div>
         </div>

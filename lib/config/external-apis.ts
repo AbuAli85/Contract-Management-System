@@ -44,13 +44,17 @@ export const externalAPIs = {
  */
 export function validateExternalAPI(apiName: keyof typeof externalAPIs): void {
   const config = externalAPIs[apiName];
-  
+
   if (!config.enabled) {
-    throw new Error(`${apiName} is not enabled. Set ${apiName.toUpperCase()}_ENABLED=true in environment.`);
+    throw new Error(
+      `${apiName} is not enabled. Set ${apiName.toUpperCase()}_ENABLED=true in environment.`
+    );
   }
-  
+
   if (!config.url) {
-    throw new Error(`${apiName} URL not configured. Set ${apiName.toUpperCase()}_URL in environment.`);
+    throw new Error(
+      `${apiName} URL not configured. Set ${apiName.toUpperCase()}_URL in environment.`
+    );
   }
 }
 
@@ -61,4 +65,3 @@ export function isAPIAvailable(apiName: keyof typeof externalAPIs): boolean {
   const config = externalAPIs[apiName];
   return config.enabled && !!config.url;
 }
-

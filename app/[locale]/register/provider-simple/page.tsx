@@ -114,12 +114,11 @@ export default function SimpleProviderRegistrationPage() {
       }
 
       setSuccess(true);
-      
+
       // Redirect after 3 seconds
       setTimeout(() => {
         router.push('/en/auth/login?message=registration-success');
       }, 3000);
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
@@ -150,7 +149,8 @@ export default function SimpleProviderRegistrationPage() {
             <Alert className='border-green-200 bg-green-50'>
               <CheckCircle className='h-4 w-4 text-green-600' />
               <AlertDescription className='text-green-700'>
-                Your provider account has been created successfully! You will be redirected to the login page.
+                Your provider account has been created successfully! You will be
+                redirected to the login page.
               </AlertDescription>
             </Alert>
             <div className='mt-4 text-center'>
@@ -198,7 +198,7 @@ export default function SimpleProviderRegistrationPage() {
               {/* Personal Information */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-semibold'>Personal Information</h3>
-                
+
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='fullName'>Full Name *</Label>
@@ -206,7 +206,12 @@ export default function SimpleProviderRegistrationPage() {
                       id='fullName'
                       required
                       value={formData.fullName}
-                      onChange={e => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          fullName: e.target.value,
+                        }))
+                      }
                       placeholder='John Doe'
                     />
                   </div>
@@ -218,7 +223,12 @@ export default function SimpleProviderRegistrationPage() {
                       type='email'
                       required
                       value={formData.email}
-                      onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          email: e.target.value,
+                        }))
+                      }
                       placeholder='john@example.com'
                     />
                   </div>
@@ -232,7 +242,12 @@ export default function SimpleProviderRegistrationPage() {
                       type='password'
                       required
                       value={formData.password}
-                      onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          password: e.target.value,
+                        }))
+                      }
                       placeholder='Minimum 8 characters'
                     />
                   </div>
@@ -244,7 +259,12 @@ export default function SimpleProviderRegistrationPage() {
                       type='password'
                       required
                       value={formData.confirmPassword}
-                      onChange={e => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          confirmPassword: e.target.value,
+                        }))
+                      }
                       placeholder='Confirm your password'
                     />
                   </div>
@@ -256,7 +276,9 @@ export default function SimpleProviderRegistrationPage() {
                     id='phone'
                     type='tel'
                     value={formData.phone}
-                    onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, phone: e.target.value }))
+                    }
                     placeholder='+968 XXXX XXXX'
                   />
                 </div>
@@ -265,14 +287,19 @@ export default function SimpleProviderRegistrationPage() {
               {/* Company Information */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-semibold'>Company Information</h3>
-                
+
                 <div className='space-y-2'>
                   <Label htmlFor='company'>Company Name *</Label>
                   <Input
                     id='company'
                     required
                     value={formData.company}
-                    onChange={e => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        company: e.target.value,
+                      }))
+                    }
                     placeholder='Your Company Name'
                   />
                 </div>
@@ -282,7 +309,12 @@ export default function SimpleProviderRegistrationPage() {
                   <Textarea
                     id='description'
                     value={formData.description}
-                    onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     placeholder='Describe your company and what services you provide...'
                     rows={3}
                   />
@@ -295,7 +327,7 @@ export default function SimpleProviderRegistrationPage() {
                 <p className='text-sm text-gray-600'>
                   Select the services your company can provide:
                 </p>
-                
+
                 <div className='grid grid-cols-2 md:grid-cols-3 gap-2'>
                   {AVAILABLE_SERVICES.map(service => (
                     <button

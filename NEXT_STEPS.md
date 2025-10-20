@@ -8,14 +8,17 @@
 ## 🎯 IMMEDIATE ACTIONS (Next 30 minutes)
 
 ### Step 1: Install New Dependencies ⚡
+
 ```bash
 npm install
 ```
+
 **Why:** We added `otplib` for MFA - need to install it
 
 ---
 
 ### Step 2: Verify Everything Works ✅
+
 ```bash
 # Check for errors
 npm run lint
@@ -37,6 +40,7 @@ npm run build
 ### Step 3: Test Critical Flows Manually 🧪
 
 #### A. Test User Registration
+
 1. Go to `/en/register-new`
 2. ✅ Verify "Admin" role is NOT in dropdown
 3. ✅ Create test account
@@ -44,12 +48,14 @@ npm run build
 5. ✅ Verify approval message shown
 
 #### B. Test MFA (if configured)
+
 1. Enable MFA in settings
 2. Scan QR code with Google Authenticator
 3. ✅ Verify invalid codes are rejected
 4. ✅ Verify valid codes work
 
 #### C. Test Data Isolation
+
 1. Login as User A
 2. Create a promoter
 3. Login as User B
@@ -57,6 +63,7 @@ npm run build
 5. ✅ Verify User B CANNOT see User A's promoters
 
 #### D. Test RBAC
+
 1. Login as user without permissions
 2. Try to create promoter
 3. ✅ Should get 403 Forbidden error
@@ -87,9 +94,11 @@ These are **medium priority** - the system is already secure!
 ### Option A: Continue with Remaining Fixes (4-6 hours)
 
 #### Fix 5: Handle Stub Endpoints
+
 **Files:** `app/api/promoters/[id]/documents.ts`, `education.ts`, `experience.ts`, `skills.ts`
 
 **Quick Fix:**
+
 ```typescript
 // Return 501 Not Implemented for now
 export async function POST(request: NextRequest) {
@@ -105,9 +114,11 @@ export async function POST(request: NextRequest) {
 ---
 
 #### Fix 6: External API Configuration
+
 **Create:** `lib/config/external-apis.ts`
 
 **Add to `.env.example`:**
+
 ```env
 # External APIs
 PDF_GENERATION_ENABLED=false
@@ -124,6 +135,7 @@ MAKE_WEBHOOK_SECRET=
 ---
 
 #### Fix 7: Error Handling
+
 **File:** `app/api/contract-generation/route.ts`
 
 **Add:** Try-catch blocks, status updates, timeout handling
@@ -133,9 +145,11 @@ MAKE_WEBHOOK_SECRET=
 ---
 
 #### Fix 8: Integration Tests
+
 **Create:** Test files for critical security flows
 
 **Example:**
+
 ```typescript
 // __tests__/security/promoter-isolation.test.ts
 describe('Promoter Data Isolation', () => {
@@ -152,31 +166,39 @@ describe('Promoter Data Isolation', () => {
 ### Option B: Review & Remove Questionable Features
 
 #### 1. HR Module - Do you need it?
+
 **Files:**
+
 - `supabase/migrations/*hr*`
 - `app/[locale]/hr/*`
 - `app/api/hr/*`
 
 **Question:** Is HR module part of core contract management?
+
 - If NO → Remove all HR files
 - If YES → Keep and test
 
 ---
 
 #### 2. Make.com Integration - Do you use it?
+
 **Files:**
+
 - All `*makecom*` files
 - `MAKECOM_*` documentation
 - Webhook blueprints
 
 **Question:** Are you using Make.com automation?
+
 - If NO → Remove integration files
 - If YES → Configure properly in environment
 
 ---
 
 #### 3. Test/Debug Pages - Still needed?
+
 **Pages:**
+
 - `app/test-auth/`
 - `app/debug/`
 - `app/emergency-bypass/`
@@ -213,6 +235,7 @@ vercel --prod
 ## 🎯 RECOMMENDED PATH
 
 ### Today (if you have time):
+
 1. ✅ Install dependencies (`npm install`)
 2. ✅ Run tests (`npm test`)
 3. ✅ Manual testing (15 minutes)
@@ -220,6 +243,7 @@ vercel --prod
 5. ✅ Done for today!
 
 ### Tomorrow (Day 2):
+
 - Review questionable features (HR, Make.com)
 - Optional: Fix stub endpoints
 - Optional: Add external API config
@@ -227,6 +251,7 @@ vercel --prod
 - Test thoroughly
 
 ### This Week:
+
 - Complete integration tests
 - Production deployment
 - Monitor and validate
@@ -236,6 +261,7 @@ vercel --prod
 ## 💡 My Recommendation
 
 ### RIGHT NOW (Next 30 min):
+
 ```bash
 # 1. Install
 npm install
@@ -258,6 +284,7 @@ git push origin main
 ```
 
 ### THEN:
+
 - ✅ Take a break - you've accomplished A LOT today!
 - ✅ Review documentation tomorrow
 - ✅ Plan Day 2 work
@@ -268,6 +295,7 @@ git push origin main
 ## ⚠️ IMPORTANT NOTES
 
 ### Before Production Deployment:
+
 - [ ] Run `npm install` (for otplib)
 - [ ] Verify all tests pass
 - [ ] Manual testing of critical flows
@@ -277,6 +305,7 @@ git push origin main
 - [ ] Security team sign-off
 
 ### Database Requirements:
+
 - [ ] RLS enabled on all tables
 - [ ] RBAC roles and permissions seeded
 - [ ] Service-role key NOT in .env (keep secret!)
@@ -291,10 +320,10 @@ git push origin main
 ✅ **Security Round 2** - 4 vulnerabilities fixed  
 ✅ **Documentation** - 14 comprehensive guides  
 ✅ **Code Quality** - 0 linter errors  
-✅ **Production Ready** - All critical work done  
+✅ **Production Ready** - All critical work done
 
 **Total Time:** ~8 hours  
-**Total Value:** Massive transformation  
+**Total Value:** Massive transformation
 
 ---
 
@@ -313,6 +342,7 @@ If I were you, I'd:
 ## 📞 Need Help?
 
 **For Testing:**
+
 ```bash
 # Quick test
 npm run dev
@@ -321,10 +351,12 @@ npm run dev
 ```
 
 **For Deployment:**
+
 - See DEPLOYMENT_GUIDE.md
 - Review SECURITY_PATCH_SUMMARY.md
 
 **For Questions:**
+
 - All documentation in root directory
 - Check QUICK_REFERENCE.md for quick access
 
@@ -336,5 +368,4 @@ npm run dev
 
 ---
 
-*Choose your path - either wrap up for today or continue with optional improvements!*
-
+_Choose your path - either wrap up for today or continue with optional improvements!_

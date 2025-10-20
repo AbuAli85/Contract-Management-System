@@ -27,7 +27,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Missing required fields: contract_type, promoter_id, first_party_id, second_party_id',
+          error:
+            'Missing required fields: contract_type, promoter_id, first_party_id, second_party_id',
         },
         { status: 400 }
       );
@@ -43,14 +44,23 @@ export async function POST(request: NextRequest) {
       department: department || '',
       work_location: work_location || '',
       basic_salary: parseFloat(basic_salary) || 0,
-      contract_start_date: contract_start_date || new Date().toISOString().split('T')[0],
-      contract_end_date: contract_end_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      contract_start_date:
+        contract_start_date || new Date().toISOString().split('T')[0],
+      contract_end_date:
+        contract_end_date ||
+        new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0],
       special_terms: body.special_terms,
       probation_period: body.probation_period,
       notice_period: body.notice_period,
       working_hours: body.working_hours,
-      housing_allowance: body.housing_allowance ? parseFloat(body.housing_allowance) : 0,
-      transport_allowance: body.transport_allowance ? parseFloat(body.transport_allowance) : 0,
+      housing_allowance: body.housing_allowance
+        ? parseFloat(body.housing_allowance)
+        : 0,
+      transport_allowance: body.transport_allowance
+        ? parseFloat(body.transport_allowance)
+        : 0,
       product_name: body.product_name,
       service_description: body.service_description,
       project_duration: body.project_duration,
@@ -77,16 +87,21 @@ export async function POST(request: NextRequest) {
     // Trigger Make.com webhook for general contracts
     let makecomResponse = null;
     try {
-      console.log('🔄 About to trigger Make.com webhook for contract:', contract.id);
-      const makecomTriggered = await generalContractService.triggerMakeComWebhook(contract.id);
+      console.log(
+        '🔄 About to trigger Make.com webhook for contract:',
+        contract.id
+      );
+      const makecomTriggered =
+        await generalContractService.triggerMakeComWebhook(contract.id);
       console.log('📊 Make.com webhook result:', makecomTriggered);
-      
+
       makecomResponse = {
         triggered: makecomTriggered,
-        webhook_url: 'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz',
+        webhook_url:
+          'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz',
         timestamp: new Date().toISOString(),
       };
-      
+
       if (makecomTriggered) {
         console.log('✅ Make.com webhook triggered successfully');
       } else {
@@ -96,7 +111,10 @@ export async function POST(request: NextRequest) {
       console.error('❌ Make.com webhook error:', makecomError);
       makecomResponse = {
         triggered: false,
-        error: makecomError instanceof Error ? makecomError.message : 'Unknown error',
+        error:
+          makecomError instanceof Error
+            ? makecomError.message
+            : 'Unknown error',
         timestamp: new Date().toISOString(),
       };
     }
@@ -116,7 +134,6 @@ export async function POST(request: NextRequest) {
         makecom: makecomResponse,
       },
     });
-
   } catch (error) {
     console.error('❌ General contract generation failed:', error);
     return NextResponse.json(
@@ -145,7 +162,7 @@ export async function GET() {
       work_location: 'string (optional)',
       basic_salary: 'number (optional)',
       contract_start_date: 'string (optional)',
-      contract_end_date: 'string (optional)'
+      contract_end_date: 'string (optional)',
     },
     optional_fields: {
       special_terms: 'string',
@@ -170,7 +187,7 @@ export async function GET() {
       location_en: 'string',
       location_ar: 'string',
       product_id: 'string (UUID)',
-      location_id: 'string (UUID)'
+      location_id: 'string (UUID)',
     },
     contract_types: [
       'general-service',
@@ -182,7 +199,7 @@ export async function GET() {
       'supply-agreement',
       'distribution-agreement',
       'franchise-agreement',
-      'licensing-agreement'
-    ]
+      'licensing-agreement',
+    ],
   });
 }

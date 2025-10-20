@@ -38,30 +38,31 @@ export class MFAService {
   async enableMFA(): Promise<MFASetupResult> {
     try {
       // Get current user
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { success: false, error: 'User not authenticated' };
       }
 
       // Generate TOTP secret
       const secret = this.generateTOTPSecret();
-      
+
       // Generate backup codes
       const backupCodes = this.generateBackupCodes();
-      
+
       // Store MFA setup in database
-      const { error: dbError } = await this.supabase
-        .from('user_mfa')
-        .upsert({
-          user_id: user.id,
-          totp_secret: secret,
-          backup_codes: backupCodes,
-          enabled: false,
-          verified: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      const { error: dbError } = await this.supabase.from('user_mfa').upsert({
+        user_id: user.id,
+        totp_secret: secret,
+        backup_codes: backupCodes,
+        enabled: false,
+        verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
 
       if (dbError) {
         console.error('Failed to store MFA setup:', dbError);
@@ -74,21 +75,20 @@ export class MFAService {
       // Log security event
       await this.logSecurityEvent('mfa_setup_initiated', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       return {
         success: true,
         qrCode,
         secret,
-        backupCodes
+        backupCodes,
       };
-
     } catch (error) {
       console.error('MFA setup error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'MFA setup failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'MFA setup failed',
       };
     }
   }
@@ -98,8 +98,11 @@ export class MFAService {
    */
   async verifyMFASetup(token: string): Promise<MFAVerificationResult> {
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { success: false, error: 'User not authenticated' };
       }
@@ -117,7 +120,7 @@ export class MFAService {
 
       // Verify TOTP token
       const isValid = this.verifyTOTPToken(token, mfaData.totp_secret);
-      
+
       if (!isValid) {
         return { success: false, error: 'Invalid verification code' };
       }
@@ -129,7 +132,7 @@ export class MFAService {
           enabled: true,
           verified: true,
           verified_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
@@ -141,18 +144,18 @@ export class MFAService {
       // Log security event
       await this.logSecurityEvent('mfa_enabled', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       toast.success('Two-factor authentication enabled successfully');
 
       return { success: true };
-
     } catch (error) {
       console.error('MFA verification error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'MFA verification failed' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'MFA verification failed',
       };
     }
   }
@@ -160,10 +163,16 @@ export class MFAService {
   /**
    * Verify MFA during login
    */
-  async verifyMFALogin(token: string, backupCode?: string): Promise<MFAVerificationResult> {
+  async verifyMFALogin(
+    token: string,
+    backupCode?: string
+  ): Promise<MFAVerificationResult> {
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { success: false, error: 'User not authenticated' };
       }
@@ -182,23 +191,25 @@ export class MFAService {
       // Check backup code first if provided
       if (backupCode) {
         const isValidBackup = mfaData.backup_codes.includes(backupCode);
-        
+
         if (isValidBackup) {
           // Remove used backup code
-          const updatedBackupCodes = mfaData.backup_codes.filter(code => code !== backupCode);
-          
+          const updatedBackupCodes = mfaData.backup_codes.filter(
+            code => code !== backupCode
+          );
+
           await this.supabase
             .from('user_mfa')
             .update({
               backup_codes: updatedBackupCodes,
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
             })
             .eq('user_id', user.id);
 
           // Log security event
           await this.logSecurityEvent('mfa_backup_code_used', {
             userId: user.id,
-            email: user.email
+            email: user.email,
           });
 
           return { success: true };
@@ -209,35 +220,35 @@ export class MFAService {
 
       // Verify TOTP token
       const isValid = this.verifyTOTPToken(token, mfaData.totp_secret);
-      
+
       if (!isValid) {
         // Log failed attempt
         await this.logSecurityEvent('mfa_verification_failed', {
           userId: user.id,
           email: user.email,
-          reason: 'invalid_totp'
+          reason: 'invalid_totp',
         });
 
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: 'Invalid verification code',
-          requiresBackupCode: true
+          requiresBackupCode: true,
         };
       }
 
       // Log successful verification
       await this.logSecurityEvent('mfa_verification_success', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       return { success: true };
-
     } catch (error) {
       console.error('MFA login verification error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'MFA verification failed' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'MFA verification failed',
       };
     }
   }
@@ -247,17 +258,21 @@ export class MFAService {
    */
   async disableMFA(password: string): Promise<MFAVerificationResult> {
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { success: false, error: 'User not authenticated' };
       }
 
       // Verify password before disabling MFA
-      const { error: signInError } = await this.supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: password
-      });
+      const { error: signInError } =
+        await this.supabase.auth.signInWithPassword({
+          email: user.email!,
+          password: password,
+        });
 
       if (signInError) {
         return { success: false, error: 'Invalid password' };
@@ -270,7 +285,7 @@ export class MFAService {
           enabled: false,
           verified: false,
           disabled_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
@@ -282,18 +297,17 @@ export class MFAService {
       // Log security event
       await this.logSecurityEvent('mfa_disabled', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       toast.success('Two-factor authentication disabled');
 
       return { success: true };
-
     } catch (error) {
       console.error('MFA disable error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to disable MFA' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to disable MFA',
       };
     }
   }
@@ -307,8 +321,11 @@ export class MFAService {
     backupCodesRemaining: number;
   }> {
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { enabled: false, verified: false, backupCodesRemaining: 0 };
       }
@@ -326,9 +343,8 @@ export class MFAService {
       return {
         enabled: mfaData.enabled,
         verified: mfaData.verified,
-        backupCodesRemaining: mfaData.backup_codes?.length || 0
+        backupCodesRemaining: mfaData.backup_codes?.length || 0,
       };
-
     } catch (error) {
       console.error('Get MFA status error:', error);
       return { enabled: false, verified: false, backupCodesRemaining: 0 };
@@ -344,8 +360,11 @@ export class MFAService {
     error?: string;
   }> {
     try {
-      const { data: { user }, error: userError } = await this.supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: userError,
+      } = await this.supabase.auth.getUser();
+
       if (userError || !user) {
         return { success: false, error: 'User not authenticated' };
       }
@@ -356,7 +375,7 @@ export class MFAService {
         .from('user_mfa')
         .update({
           backup_codes: newBackupCodes,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', user.id);
 
@@ -368,16 +387,18 @@ export class MFAService {
       // Log security event
       await this.logSecurityEvent('mfa_backup_codes_regenerated', {
         userId: user.id,
-        email: user.email
+        email: user.email,
       });
 
       return { success: true, backupCodes: newBackupCodes };
-
     } catch (error) {
       console.error('Generate backup codes error:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to generate backup codes' 
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate backup codes',
       };
     }
   }
@@ -392,10 +413,9 @@ export class MFAService {
   private generateBackupCodes(): string[] {
     const codes: string[] = [];
     // Use crypto.randomBytes for secure random generation
-    const crypto = typeof window === 'undefined' 
-      ? require('crypto') 
-      : window.crypto;
-    
+    const crypto =
+      typeof window === 'undefined' ? require('crypto') : window.crypto;
+
     for (let i = 0; i < 10; i++) {
       if (typeof window === 'undefined') {
         // Node.js environment (server-side)
@@ -421,7 +441,7 @@ export class MFAService {
     const issuer = 'Contract Management System';
     const account = email;
     const url = `otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(account)}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
-    
+
     // In a real implementation, you would use a QR code library
     // For now, return the URL that can be used with external QR generators
     return url;
@@ -442,18 +462,19 @@ export class MFAService {
     }
   }
 
-  private async logSecurityEvent(eventType: string, metadata: any): Promise<void> {
+  private async logSecurityEvent(
+    eventType: string,
+    metadata: any
+  ): Promise<void> {
     try {
-      await this.supabase
-        .from('security_audit_log')
-        .insert({
-          event_type: eventType,
-          user_id: metadata.userId,
-          metadata: {
-            ...metadata,
-            timestamp: new Date().toISOString()
-          }
-        });
+      await this.supabase.from('security_audit_log').insert({
+        event_type: eventType,
+        user_id: metadata.userId,
+        metadata: {
+          ...metadata,
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (error) {
       console.warn('Failed to log security event:', error);
     }

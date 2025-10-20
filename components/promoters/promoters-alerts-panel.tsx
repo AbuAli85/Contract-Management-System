@@ -10,17 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  ShieldCheck,
-  Contact,
-  Globe,
-} from 'lucide-react';
-import type { 
-  DocumentStatus, 
-  DocumentHealth, 
-  DashboardPromoter 
+import { ShieldCheck, Contact, Globe } from 'lucide-react';
+import type {
+  DocumentStatus,
+  DocumentHealth,
+  DashboardPromoter,
 } from './types';
-
 
 interface PromotersAlertsPanelProps {
   atRiskPromoters: DashboardPromoter[];
@@ -84,7 +79,9 @@ export function PromotersAlertsPanel({
                   </Button>
                 </div>
                 <div className='mt-3 flex flex-wrap items-center gap-2'>
-                  {['expired', 'expiring', 'missing'].includes(promoter.idDocument.status) && (
+                  {['expired', 'expiring', 'missing'].includes(
+                    promoter.idDocument.status
+                  ) && (
                     <Badge
                       variant='outline'
                       className={cn(
@@ -96,7 +93,9 @@ export function PromotersAlertsPanel({
                       ID: {promoter.idDocument.label}
                     </Badge>
                   )}
-                  {['expired', 'expiring', 'missing'].includes(promoter.passportDocument.status) && (
+                  {['expired', 'expiring', 'missing'].includes(
+                    promoter.passportDocument.status
+                  ) && (
                     <Badge
                       variant='outline'
                       className={cn(

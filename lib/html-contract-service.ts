@@ -32,13 +32,17 @@ export class HtmlContractService {
       console.log('✅ PDF generated');
 
       // Step 3: Save files
-      const documentUrl = await this.saveContract(htmlContent, pdfBuffer, contractData);
+      const documentUrl = await this.saveContract(
+        htmlContent,
+        pdfBuffer,
+        contractData
+      );
       console.log('✅ Contract saved');
 
       return {
         htmlContent,
         pdfBuffer,
-        documentUrl
+        documentUrl,
       };
     } catch (error) {
       console.error('❌ HTML contract generation failed:', error);
@@ -194,12 +198,16 @@ export class HtmlContractService {
             <div>Basic Salary: ${data.basic_salary} ${data.currency}</div>
         </div>
 
-        ${data.special_terms ? `
+        ${
+          data.special_terms
+            ? `
         <div class="contract-details">
             <h4>Special Terms</h4>
             <div>${data.special_terms}</div>
         </div>
-        ` : ''}
+        `
+            : ''
+        }
     </div>
 
     <div class="section">
@@ -242,12 +250,12 @@ export class HtmlContractService {
       // This would use Puppeteer in a real implementation
       // For now, we'll return a placeholder
       console.log('📄 Generating PDF from HTML...');
-      
+
       // In a real implementation, you would:
       // 1. Use Puppeteer to render HTML
       // 2. Generate PDF
       // 3. Return PDF buffer
-      
+
       // For now, return a simple text-based PDF placeholder
       const pdfContent = `%PDF-1.4
 1 0 obj
@@ -313,18 +321,22 @@ startxref
   /**
    * Save contract files
    */
-  private async saveContract(htmlContent: string, pdfBuffer: Buffer, data: ContractData): Promise<string> {
+  private async saveContract(
+    htmlContent: string,
+    pdfBuffer: Buffer,
+    data: ContractData
+  ): Promise<string> {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `Contract-${data.contract_number}-${timestamp}`;
-      
+
       // In a real implementation, you would save to:
       // 1. Local file system
       // 2. Cloud storage (AWS S3, Google Cloud Storage, etc.)
       // 3. Database
-      
+
       console.log(`💾 Saving contract: ${fileName}`);
-      
+
       // For now, return a placeholder URL
       return `https://your-domain.com/contracts/${fileName}.pdf`;
     } catch (error) {

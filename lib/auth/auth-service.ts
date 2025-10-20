@@ -25,16 +25,16 @@ export class AuthService {
       if (this.supabase?.auth) {
         await this.supabase.auth.signOut();
       }
-      
+
       // Clear localStorage
-      const keysToRemove = Object.keys(localStorage).filter(key => 
-        key.includes('supabase') || key.includes('sb-')
+      const keysToRemove = Object.keys(localStorage).filter(
+        key => key.includes('supabase') || key.includes('sb-')
       );
       keysToRemove.forEach(key => localStorage.removeItem(key));
-      
+
       // Clear sessionStorage
       sessionStorage.clear();
-      
+
       console.log('Auth cleared successfully');
     } catch (error) {
       console.error('Error clearing auth:', error);
@@ -52,20 +52,23 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.getSession();
-      
+
       if (error) {
         console.error('Session error:', error);
-        
+
         // If it's a refresh token error, clear auth and return null
-        if (error.message.includes('refresh') || error.message.includes('Invalid')) {
+        if (
+          error.message.includes('refresh') ||
+          error.message.includes('Invalid')
+        ) {
           console.log('Clearing invalid session...');
           await this.clearAuth();
           return { session: null, user: null };
         }
-        
+
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get session:', error);
@@ -83,7 +86,7 @@ export class AuthService {
 
       // Clear any existing bad tokens first
       await this.clearAuth();
-      
+
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email,
         password,
@@ -136,7 +139,7 @@ export class AuthService {
       }
 
       const { error } = await this.supabase.auth.signOut();
-      
+
       if (error) {
         console.error('Sign out error:', error);
         throw error;
@@ -144,7 +147,7 @@ export class AuthService {
 
       // Clear local storage and session storage
       await this.clearAuth();
-      
+
       return { success: true };
     } catch (error) {
       console.error('Failed to sign out:', error);
@@ -162,12 +165,12 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.getUser();
-      
+
       if (error) {
         console.error('Get user error:', error);
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to get user:', error);
@@ -206,12 +209,12 @@ export class AuthService {
       }
 
       const { data, error } = await this.supabase.auth.refreshSession();
-      
+
       if (error) {
         console.error('Refresh session error:', error);
         throw error;
       }
-      
+
       return data;
     } catch (error) {
       console.error('Failed to refresh session:', error);
@@ -242,7 +245,7 @@ export class AuthService {
         .select('role')
         .eq('id', user.id)
         .single();
-      
+
       if (!profileErr && profileData?.role) {
         return profileData.role;
       }
@@ -253,7 +256,7 @@ export class AuthService {
         .select('role')
         .eq('id', user.id)
         .single();
-      
+
       if (!userErr && userData?.role) {
         return userData.role;
       }
@@ -276,15 +279,22 @@ export class AuthService {
 
       // Manager has most permissions except admin-only ones
       if (role === 'manager') {
-        const adminOnlyPermissions = ['users.delete', 'system.settings', 'system.backup'];
+        const adminOnlyPermissions = [
+          'users.delete',
+          'system.settings',
+          'system.backup',
+        ];
         return !adminOnlyPermissions.includes(permission);
       }
 
       // User has basic permissions
       if (role === 'user') {
         const userPermissions = [
-          'contracts.view', 'contracts.create', 'contracts.edit',
-          'dashboard.view', 'profile.edit'
+          'contracts.view',
+          'contracts.create',
+          'contracts.edit',
+          'dashboard.view',
+          'profile.edit',
         ];
         return userPermissions.includes(permission);
       }

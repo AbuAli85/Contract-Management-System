@@ -40,7 +40,8 @@ export default function CheckRegistrationPage() {
   const params = useParams();
   const locale = params.locale as string;
   const { user } = useAuth();
-  const [registrationStatus, setRegistrationStatus] = useState<RegistrationStatus | null>(null);
+  const [registrationStatus, setRegistrationStatus] =
+    useState<RegistrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,11 +55,11 @@ export default function CheckRegistrationPage() {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch user profile from API
       const response = await fetch('/api/users/profile');
       const data = await response.json();
-      
+
       if (response.ok && data.success) {
         setRegistrationStatus(data.user);
       } else {
@@ -83,7 +84,8 @@ export default function CheckRegistrationPage() {
           icon: <Clock className='h-6 w-6 text-yellow-500' />,
           label: 'Pending Approval',
           color: 'yellow',
-          description: 'Your registration is being reviewed by our administrators',
+          description:
+            'Your registration is being reviewed by our administrators',
           bgClass: 'bg-yellow-50 border-yellow-200',
           textClass: 'text-yellow-800',
         };
@@ -92,7 +94,8 @@ export default function CheckRegistrationPage() {
           icon: <CheckCircle className='h-6 w-6 text-green-500' />,
           label: 'Approved & Active',
           color: 'green',
-          description: 'Your registration has been approved and you have full access',
+          description:
+            'Your registration has been approved and you have full access',
           bgClass: 'bg-green-50 border-green-200',
           textClass: 'text-green-800',
         };
@@ -101,7 +104,8 @@ export default function CheckRegistrationPage() {
           icon: <XCircle className='h-6 w-6 text-red-500' />,
           label: 'Inactive',
           color: 'red',
-          description: 'Your registration requires attention. Please contact support.',
+          description:
+            'Your registration requires attention. Please contact support.',
           bgClass: 'bg-red-50 border-red-200',
           textClass: 'text-red-800',
         };
@@ -134,7 +138,9 @@ export default function CheckRegistrationPage() {
           <CardContent className='flex items-center justify-center py-12'>
             <div className='text-center'>
               <RefreshCw className='h-8 w-8 animate-spin text-blue-500 mx-auto mb-4' />
-              <p className='text-gray-600'>Checking your registration status...</p>
+              <p className='text-gray-600'>
+                Checking your registration status...
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -153,7 +159,7 @@ export default function CheckRegistrationPage() {
                 {error}
               </AlertDescription>
             </Alert>
-            <Button 
+            <Button
               onClick={fetchRegistrationStatus}
               className='w-full mt-4'
               variant='outline'
@@ -201,12 +207,13 @@ export default function CheckRegistrationPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className='space-y-6 p-8'>
-              
               {/* Status Banner */}
               <div className={`rounded-lg border-2 p-6 ${statusInfo.bgClass}`}>
                 <div className='flex items-center justify-center gap-3 mb-3'>
                   {statusInfo.icon}
-                  <h3 className={`text-xl font-semibold ${statusInfo.textClass}`}>
+                  <h3
+                    className={`text-xl font-semibold ${statusInfo.textClass}`}
+                  >
                     {statusInfo.label}
                   </h3>
                 </div>
@@ -217,32 +224,40 @@ export default function CheckRegistrationPage() {
 
               {/* User Details */}
               <div className='bg-gray-50 rounded-lg p-4 space-y-3'>
-                <h4 className='font-semibold text-gray-800 mb-3'>Your Registration Details</h4>
-                
+                <h4 className='font-semibold text-gray-800 mb-3'>
+                  Your Registration Details
+                </h4>
+
                 <div className='flex items-center gap-3'>
                   <Mail className='h-4 w-4 text-gray-500' />
                   <span className='text-sm text-gray-600'>Email:</span>
-                  <span className='font-medium'>{registrationStatus.email}</span>
+                  <span className='font-medium'>
+                    {registrationStatus.email}
+                  </span>
                 </div>
-                
+
                 {registrationStatus.full_name && (
                   <div className='flex items-center gap-3'>
                     <User className='h-4 w-4 text-gray-500' />
                     <span className='text-sm text-gray-600'>Name:</span>
-                    <span className='font-medium'>{registrationStatus.full_name}</span>
+                    <span className='font-medium'>
+                      {registrationStatus.full_name}
+                    </span>
                   </div>
                 )}
-                
+
                 <div className='flex items-center gap-3'>
                   <Badge variant='outline' className='font-normal'>
                     Role: {registrationStatus.role}
                   </Badge>
                 </div>
-                
+
                 <div className='flex items-center gap-3'>
                   <Calendar className='h-4 w-4 text-gray-500' />
                   <span className='text-sm text-gray-600'>Registered:</span>
-                  <span className='font-medium'>{formatDate(registrationStatus.created_at)}</span>
+                  <span className='font-medium'>
+                    {formatDate(registrationStatus.created_at)}
+                  </span>
                 </div>
               </div>
 
@@ -253,11 +268,13 @@ export default function CheckRegistrationPage() {
                   <AlertDescription className='text-blue-700'>
                     <strong>What happens next?</strong>
                     <br />
-                    • Our administrators will review your registration within 24-48 hours
+                    • Our administrators will review your registration within
+                    24-48 hours
                     <br />
-                    • You'll receive an email notification once your account is approved
-                    <br />
-                    • Check back here or contact support if you have questions
+                    • You'll receive an email notification once your account is
+                    approved
+                    <br />• Check back here or contact support if you have
+                    questions
                   </AlertDescription>
                 </Alert>
               )}
@@ -266,8 +283,9 @@ export default function CheckRegistrationPage() {
                 <Alert className='border-green-200 bg-green-50'>
                   <CheckCircle className='h-4 w-4 text-green-500' />
                   <AlertDescription className='text-green-700'>
-                    <strong>Congratulations!</strong> Your registration has been approved. 
-                    You now have full access to the Contract Management System.
+                    <strong>Congratulations!</strong> Your registration has been
+                    approved. You now have full access to the Contract
+                    Management System.
                   </AlertDescription>
                 </Alert>
               )}
@@ -276,15 +294,16 @@ export default function CheckRegistrationPage() {
                 <Alert className='border-red-200 bg-red-50'>
                   <XCircle className='h-4 w-4 text-red-500' />
                   <AlertDescription className='text-red-700'>
-                    <strong>Account Inactive:</strong> Your registration requires attention. 
-                    Please contact our support team for assistance.
+                    <strong>Account Inactive:</strong> Your registration
+                    requires attention. Please contact our support team for
+                    assistance.
                   </AlertDescription>
                 </Alert>
               )}
 
               {/* Action Buttons */}
               <div className='flex gap-3 pt-4'>
-                <Button 
+                <Button
                   onClick={fetchRegistrationStatus}
                   variant='outline'
                   className='flex-1'
@@ -292,10 +311,12 @@ export default function CheckRegistrationPage() {
                   <RefreshCw className='h-4 w-4 mr-2' />
                   Refresh Status
                 </Button>
-                
+
                 {registrationStatus.status === 'active' && (
-                  <Button 
-                    onClick={() => window.location.href = `/${locale}/dashboard`}
+                  <Button
+                    onClick={() =>
+                      (window.location.href = `/${locale}/dashboard`)
+                    }
                     className='flex-1'
                   >
                     Go to Dashboard

@@ -1,4 +1,5 @@
 # Production Deployment Guide
+
 ## Google Service Account Setup for Production
 
 ---
@@ -8,6 +9,7 @@
 For production, you need to securely store your Service Account JSON key without committing it to Git.
 
 **Two methods:**
+
 1. ✅ **Direct JSON** in environment variables (Vercel, Netlify)
 2. ✅ **Base64 Encoded** (Docker, self-hosted, AWS, etc.)
 
@@ -24,14 +26,17 @@ For production, you need to securely store your Service Account JSON key without
 2. **Add these variables:**
 
    **Variable 1:**
+
    ```
    Name: GOOGLE_SERVICE_ACCOUNT_KEY
    Value: {"type":"service_account","project_id":"nth-segment-475411-g1",...}
    Environment: Production, Preview
    ```
+
    (Paste the ENTIRE JSON content from your downloaded file)
 
    **Variable 2:**
+
    ```
    Name: GOOGLE_DOCS_TEMPLATE_ID
    Value: 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
@@ -67,11 +72,13 @@ node scripts/encode-service-account.js path/to/your-service-account.json
 ```
 
 **Example:**
+
 ```bash
 node scripts/encode-service-account.js ~/Downloads/nth-segment-475411-g1-abc123.json
 ```
 
 **Output:**
+
 ```
 ✅ Service Account JSON encoded successfully!
 
@@ -160,7 +167,7 @@ async function getServiceAccountKey() {
   const [version] = await client.accessSecretVersion({
     name: 'projects/nth-segment-475411-g1/secrets/google-service-account-key/versions/latest',
   });
-  
+
   const payload = version.payload?.data?.toString();
   return JSON.parse(payload!);
 }
@@ -171,6 +178,7 @@ async function getServiceAccountKey() {
 ## 🔒 **Security Best Practices**
 
 ### **DO:**
+
 - ✅ Use environment variables in production
 - ✅ Use Base64 encoding for complex JSON
 - ✅ Rotate keys every 90 days
@@ -179,6 +187,7 @@ async function getServiceAccountKey() {
 - ✅ Monitor API usage
 
 ### **DON'T:**
+
 - ❌ Never commit JSON key to Git
 - ❌ Never expose in client-side code
 - ❌ Never log the key in production
@@ -190,6 +199,7 @@ async function getServiceAccountKey() {
 ## 📋 **Checklist for Production**
 
 ### **Pre-Deployment:**
+
 - ☐ Service account created
 - ☐ JSON key downloaded
 - ☐ Key encoded (if using Base64)
@@ -197,12 +207,14 @@ async function getServiceAccountKey() {
 - ☐ APIs enabled (Docs + Drive)
 
 ### **Deployment:**
+
 - ☐ Environment variables set
 - ☐ `.gitignore` includes `*.json` and `.env*`
 - ☐ App deployed
 - ☐ Test endpoint works
 
 ### **Post-Deployment:**
+
 - ☐ Test contract generation in production
 - ☐ Verify documents are created
 - ☐ Check error logs
@@ -234,6 +246,7 @@ curl https://your-domain.com/api/test-google-sa
 ```
 
 **Expected result:**
+
 ```json
 {
   "success": true,
@@ -251,20 +264,24 @@ curl https://your-domain.com/api/test-google-sa
 ## 🔧 **Troubleshooting Production Issues**
 
 ### **Error: "Missing Google Service Account credentials"**
+
 - Check environment variables are set
 - Verify variable names match exactly
 - Redeploy after setting variables
 
 ### **Error: "Invalid JWT Signature"**
+
 - JSON is malformed
 - Check Base64 encoding is correct
 - Verify no extra spaces or line breaks
 
 ### **Error: "The caller does not have permission"**
+
 - APIs not enabled in Google Cloud project
 - Enable Google Docs API and Google Drive API
 
 ### **Error: "File not found" or "Insufficient Permission"**
+
 - Template not shared with service account
 - Share template with service account email
 - Give Editor permission
@@ -273,19 +290,20 @@ curl https://your-domain.com/api/test-google-sa
 
 ## 📊 **Environment Variable Summary**
 
-| Environment | Variable Name | Value Format | Where to Set |
-|-------------|--------------|--------------|--------------|
-| Development | `GOOGLE_SERVICE_ACCOUNT_KEY` | Direct JSON | `.env.local` |
-| Production (Vercel) | `GOOGLE_SERVICE_ACCOUNT_KEY` | Direct JSON | Vercel Dashboard |
-| Production (Docker) | `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | Base64 | docker-compose.yml |
-| Production (AWS) | `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | Base64 | EB Console |
-| All | `GOOGLE_DOCS_TEMPLATE_ID` | Template ID | All environments |
+| Environment         | Variable Name                       | Value Format | Where to Set       |
+| ------------------- | ----------------------------------- | ------------ | ------------------ |
+| Development         | `GOOGLE_SERVICE_ACCOUNT_KEY`        | Direct JSON  | `.env.local`       |
+| Production (Vercel) | `GOOGLE_SERVICE_ACCOUNT_KEY`        | Direct JSON  | Vercel Dashboard   |
+| Production (Docker) | `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | Base64       | docker-compose.yml |
+| Production (AWS)    | `GOOGLE_SERVICE_ACCOUNT_KEY_BASE64` | Base64       | EB Console         |
+| All                 | `GOOGLE_DOCS_TEMPLATE_ID`           | Template ID  | All environments   |
 
 ---
 
 ## 🚀 **Quick Deployment Commands**
 
 ### **Vercel:**
+
 ```bash
 # Push to Git
 git push
@@ -296,6 +314,7 @@ vercel --prod
 ```
 
 ### **Docker:**
+
 ```bash
 # Build image
 docker build -t contract-system .
@@ -305,6 +324,7 @@ docker run -e GOOGLE_SERVICE_ACCOUNT_KEY_BASE64="..." contract-system
 ```
 
 ### **AWS:**
+
 ```bash
 eb deploy --staged
 ```
@@ -324,4 +344,3 @@ If you encounter issues in production:
 ---
 
 **Your production setup is secure and follows best practices!** 🎉
-

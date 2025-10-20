@@ -3,7 +3,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -61,48 +67,49 @@ export class AuthErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-          <Card className="w-full max-w-md">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+        <div className='min-h-screen flex items-center justify-center bg-gray-50 p-4'>
+          <Card className='w-full max-w-md'>
+            <CardHeader className='text-center'>
+              <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100'>
+                <AlertTriangle className='h-6 w-6 text-red-600' />
               </div>
-              <CardTitle className="text-xl text-gray-900">
+              <CardTitle className='text-xl text-gray-900'>
                 Authentication Error
               </CardTitle>
-              <CardDescription className="text-gray-600">
-                Something went wrong with the authentication system. Please try again.
+              <CardDescription className='text-gray-600'>
+                Something went wrong with the authentication system. Please try
+                again.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className='space-y-4'>
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <details className="text-sm text-gray-600">
-                  <summary className="cursor-pointer font-medium">
+                <details className='text-sm text-gray-600'>
+                  <summary className='cursor-pointer font-medium'>
                     Error Details (Development)
                   </summary>
-                  <pre className="mt-2 whitespace-pre-wrap rounded bg-gray-100 p-2 text-xs">
+                  <pre className='mt-2 whitespace-pre-wrap rounded bg-gray-100 p-2 text-xs'>
                     {this.state.error.toString()}
                     {this.state.errorInfo?.componentStack}
                   </pre>
                 </details>
               )}
-              
-              <div className="flex flex-col space-y-2">
-                <Button onClick={this.handleRetry} className="w-full">
-                  <RefreshCw className="mr-2 h-4 w-4" />
+
+              <div className='flex flex-col space-y-2'>
+                <Button onClick={this.handleRetry} className='w-full'>
+                  <RefreshCw className='mr-2 h-4 w-4' />
                   Try Again
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant='outline'
                   onClick={this.handleGoHome}
-                  className="w-full"
+                  className='w-full'
                 >
-                  <Home className="mr-2 h-4 w-4" />
+                  <Home className='mr-2 h-4 w-4' />
                   Go to Home
                 </Button>
               </div>
-              
-              <p className="text-xs text-gray-500 text-center">
+
+              <p className='text-xs text-gray-500 text-center'>
                 If the problem persists, please contact support.
               </p>
             </CardContent>
@@ -121,23 +128,26 @@ export function useAuthErrorHandler() {
 
   const handleAuthError = (error: Error, context?: string) => {
     console.error(`Auth error in ${context || 'unknown context'}:`, error);
-    
+
     // Handle specific auth errors
-    if (error.message.includes('unauthorized') || error.message.includes('401')) {
+    if (
+      error.message.includes('unauthorized') ||
+      error.message.includes('401')
+    ) {
       router.push('/auth/login');
       return;
     }
-    
+
     if (error.message.includes('forbidden') || error.message.includes('403')) {
       router.push('/auth/unauthorized');
       return;
     }
-    
+
     if (error.message.includes('not found') || error.message.includes('404')) {
       router.push('/404');
       return;
     }
-    
+
     // Default error handling
     router.push('/auth/error');
   };

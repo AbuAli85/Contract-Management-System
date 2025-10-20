@@ -14,7 +14,7 @@
       },
       "outputs": [
         "contract_id",
-        "contract_number", 
+        "contract_number",
         "contract_type",
         "promoter_id",
         "first_party_id",

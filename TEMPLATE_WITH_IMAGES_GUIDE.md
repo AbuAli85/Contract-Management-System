@@ -30,7 +30,7 @@ Promoter Assignment Contract
 📷 Passport Image:
 {{promoter_passport_image}}
 
-يتحمل المسؤولية الطرف الثاني الأمور المالية والإدارية عن الموظف.  
+يتحمل المسؤولية الطرف الثاني الأمور المالية والإدارية عن الموظف.
 
 ولكم التحية والتقدير،
 
@@ -75,12 +75,14 @@ The system supports these image placeholders:
 ## 📋 **Complete Placeholder List**
 
 ### **Contract Information**
+
 - `{{ref_number}}` - Reference number
 - `{{contract_number}}` - Contract number (alternative)
 - `{{contract_date}}` - Contract date
 - `{{contract_type}}` - Contract type
 
 ### **Client Information (First Party)**
+
 - `{{first_party_name_en}}` - Client name (English)
 - `{{first_party_name_ar}}` - Client name (Arabic)
 - `{{first_party_crn}}` - Client CRN
@@ -88,6 +90,7 @@ The system supports these image placeholders:
 - `{{first_party_phone}}` - Client phone
 
 ### **Employer Information (Second Party)**
+
 - `{{second_party_name_en}}` - Employer name (English)
 - `{{second_party_name_ar}}` - Employer name (Arabic)
 - `{{second_party_crn}}` - Employer CRN
@@ -95,6 +98,7 @@ The system supports these image placeholders:
 - `{{second_party_phone}}` - Employer phone
 
 ### **Promoter Information**
+
 - `{{promoter_name_en}}` - Promoter name (English)
 - `{{promoter_name_ar}}` - Promoter name (Arabic)
 - `{{promoter_email}}` - Promoter email
@@ -104,6 +108,7 @@ The system supports these image placeholders:
 - `{{promoter_passport_number}}` - Passport number
 
 ### **Contract Details**
+
 - `{{job_title}}` - Job title
 - `{{department}}` - Department
 - `{{work_location}}` - Work location
@@ -114,6 +119,7 @@ The system supports these image placeholders:
 - `{{special_terms}}` - Special terms
 
 ### **Images**
+
 - `{{promoter_id_card_image}}` - ID card image
 - `{{promoter_passport_image}}` - Passport image
 
@@ -155,6 +161,7 @@ When you use the Simple Contract Generator:
 4. **Generate contract**
 
 The system will automatically:
+
 - ✅ Replace all text placeholders
 - ✅ Insert ID card image
 - ✅ Insert passport image

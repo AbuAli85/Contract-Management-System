@@ -26,8 +26,10 @@ export class ProductionAuthService {
   }
 
   private initializeCaptchaConfig() {
-    const provider = process.env.NEXT_PUBLIC_CAPTCHA_PROVIDER as 'hcaptcha' | 'turnstile';
-    
+    const provider = process.env.NEXT_PUBLIC_CAPTCHA_PROVIDER as
+      | 'hcaptcha'
+      | 'turnstile';
+
     if (provider === 'hcaptcha') {
       this.captchaConfig = {
         provider: 'hcaptcha',
@@ -70,7 +72,7 @@ export class ProductionAuthService {
       });
 
       const data = await response.json();
-      
+
       if (this.captchaConfig.provider === 'hcaptcha') {
         return data.success === true;
       } else {
@@ -108,7 +110,10 @@ export class ProductionAuthService {
   ) {
     // Verify CAPTCHA if configured
     if (this.captchaConfig && authOptions.captchaToken) {
-      const isValid = await this.verifyCaptcha(authOptions.captchaToken, authOptions.ipAddress);
+      const isValid = await this.verifyCaptcha(
+        authOptions.captchaToken,
+        authOptions.ipAddress
+      );
       if (!isValid) {
         throw new Error('CAPTCHA verification failed');
       }
@@ -140,14 +145,13 @@ export class ProductionAuthService {
   /**
    * Sign in with CAPTCHA verification
    */
-  async signIn(
-    email: string,
-    password: string,
-    authOptions: AuthOptions = {}
-  ) {
+  async signIn(email: string, password: string, authOptions: AuthOptions = {}) {
     // Verify CAPTCHA if configured
     if (this.captchaConfig && authOptions.captchaToken) {
-      const isValid = await this.verifyCaptcha(authOptions.captchaToken, authOptions.ipAddress);
+      const isValid = await this.verifyCaptcha(
+        authOptions.captchaToken,
+        authOptions.ipAddress
+      );
       if (!isValid) {
         throw new Error('CAPTCHA verification failed');
       }
@@ -171,13 +175,13 @@ export class ProductionAuthService {
   /**
    * Reset password with CAPTCHA verification
    */
-  async resetPassword(
-    email: string,
-    authOptions: AuthOptions = {}
-  ) {
+  async resetPassword(email: string, authOptions: AuthOptions = {}) {
     // Verify CAPTCHA if configured
     if (this.captchaConfig && authOptions.captchaToken) {
-      const isValid = await this.verifyCaptcha(authOptions.captchaToken, authOptions.ipAddress);
+      const isValid = await this.verifyCaptcha(
+        authOptions.captchaToken,
+        authOptions.ipAddress
+      );
       if (!isValid) {
         throw new Error('CAPTCHA verification failed');
       }
@@ -282,11 +286,11 @@ export class ProductionAuthService {
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
     const cfConnectingIP = request.headers.get('cf-connecting-ip');
-    
+
     if (cfConnectingIP) return cfConnectingIP;
     if (realIP) return realIP;
     if (forwarded) return forwarded.split(',')[0].trim();
-    
+
     return 'unknown';
   }
 

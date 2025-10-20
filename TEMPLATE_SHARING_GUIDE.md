@@ -1,16 +1,19 @@
 # 🔗 Template Sharing Guide - Critical Step
 
 ## 🚨 **Current Issue**
+
 The Google Docs integration is failing because the template needs to be shared with the service account. The error message indicates that the service account cannot access your template.
 
 ## 🎯 **Solution: Share Your Template**
 
 ### **Step 1: Open Your Template**
+
 Go to your template: https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0/edit
 
 ### **Step 2: Share with Service Account**
 
 #### **Method 1: Using Share Button**
+
 1. **Click the blue "Share" button** in the top-right corner
 2. **In the "Add people and groups" field**, enter:
    ```
@@ -21,12 +24,14 @@ Go to your template: https://docs.google.com/document/d/1dG719K4jYFrEh8O9VChyMYW
 5. **Click "Share"**
 
 #### **Method 2: Using Three Dots Menu**
+
 1. **Click the three dots menu** (⋮) in the top-right
 2. **Select "Share & export"**
 3. **Click "Share"**
 4. **Follow the same steps as Method 1**
 
 ### **Step 3: Verify Sharing**
+
 After sharing, you should see the service account email in the "People with access" section with "Editor" permission.
 
 ## 🧪 **Test After Sharing**
@@ -96,6 +101,7 @@ SPECIAL TERMS:
 ## 🔧 **Why This is Critical**
 
 The service account needs **Editor** access to:
+
 - ✅ Copy the template
 - ✅ Replace placeholders with actual data
 - ✅ Insert images (ID cards, passports)
@@ -105,6 +111,7 @@ The service account needs **Editor** access to:
 ## 🚀 **Benefits After Sharing**
 
 Once shared successfully:
+
 - ✅ **No premium plan required**
 - ✅ **Uses your 200GB personal storage**
 - ✅ **Full contract generation functionality**
@@ -114,16 +121,19 @@ Once shared successfully:
 ## 🆘 **Troubleshooting**
 
 ### **If Share Button is Not Visible:**
+
 1. Make sure you're the owner of the document
 2. Try refreshing the page
 3. Use the three dots menu (⋮) → "Share & export" → "Share"
 
 ### **If Permission is Denied:**
+
 1. Ensure you're using the correct email: `contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com`
 2. Set permission to "Editor" (not Viewer)
 3. Make sure the document is not restricted by your organization
 
 ### **If Still Getting Quota Error:**
+
 1. Verify the template is in your personal Google Drive (not a shared drive)
 2. Check that you have 200GB of storage available
 3. Ensure the service account has Editor access

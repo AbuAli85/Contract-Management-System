@@ -8,8 +8,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, User, Building, Shield, RefreshCw } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  AlertCircle,
+  User,
+  Building,
+  Shield,
+  RefreshCw,
+} from 'lucide-react';
 import CaptchaHandler from './captcha-handler';
 
 interface SignupFormData {
@@ -23,9 +39,24 @@ interface SignupFormData {
 }
 
 const ROLE_OPTIONS = [
-  { value: 'provider', label: 'Service Provider', icon: Building, description: 'Offer services to clients' },
-  { value: 'client', label: 'Client', icon: User, description: 'Book and manage services' },
-  { value: 'admin', label: 'Administrator', icon: Shield, description: 'Manage the platform' },
+  {
+    value: 'provider',
+    label: 'Service Provider',
+    icon: Building,
+    description: 'Offer services to clients',
+  },
+  {
+    value: 'client',
+    label: 'Client',
+    icon: User,
+    description: 'Book and manage services',
+  },
+  {
+    value: 'admin',
+    label: 'Administrator',
+    icon: Shield,
+    description: 'Manage the platform',
+  },
 ];
 
 export default function UnifiedSignupForm() {
@@ -55,16 +86,19 @@ export default function UnifiedSignupForm() {
   // Check if Supabase client is available
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+        <Card className='w-full max-w-md'>
           <CardHeader>
-            <CardTitle className="text-center text-red-600">Configuration Error</CardTitle>
+            <CardTitle className='text-center text-red-600'>
+              Configuration Error
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>
-                Supabase client is not properly configured. Please check your environment variables.
+                Supabase client is not properly configured. Please check your
+                environment variables.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -138,7 +172,7 @@ export default function UnifiedSignupForm() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateStep2();
     if (validationError) {
       setError(validationError);
@@ -174,18 +208,22 @@ export default function UnifiedSignupForm() {
         signupOptions.options.captchaToken = captchaToken;
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signUp(signupOptions);
+      const { data: authData, error: authError } =
+        await supabase.auth.signUp(signupOptions);
 
       if (authError) {
         console.error('🔐 Unified Signup - Auth error:', authError);
-        
+
         // Check if it's a CAPTCHA error
-        if (authError.message.includes('captcha') || authError.message.includes('verification')) {
+        if (
+          authError.message.includes('captcha') ||
+          authError.message.includes('verification')
+        ) {
           setShowCaptcha(true);
           setError('Please complete the CAPTCHA verification');
           return;
         }
-        
+
         setError(`Signup failed: ${authError.message}`);
         return;
       }
@@ -212,20 +250,24 @@ export default function UnifiedSignupForm() {
       if (profileError) {
         console.error('🔐 Unified Signup - Profile error:', profileError);
         // Don't fail the signup if profile creation fails
-        console.warn('Profile creation failed, but auth user was created successfully');
+        console.warn(
+          'Profile creation failed, but auth user was created successfully'
+        );
       } else {
         console.log('🔐 Unified Signup - Profile created successfully');
       }
 
       // Step 3: Create company if provider
       if (formData.role === 'provider' && formData.company) {
-        const { error: companyError } = await supabase.from('companies').insert({
-          name: formData.company.trim(),
-          owner_id: authData.user.id,
-          is_active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        const { error: companyError } = await supabase
+          .from('companies')
+          .insert({
+            name: formData.company.trim(),
+            owner_id: authData.user.id,
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
 
         if (companyError) {
           console.warn('Company creation failed:', companyError);
@@ -238,12 +280,15 @@ export default function UnifiedSignupForm() {
 
       // Redirect to login after a delay
       setTimeout(() => {
-        router.push('/en/auth/login?message=Account created successfully. You can now sign in.');
+        router.push(
+          '/en/auth/login?message=Account created successfully. You can now sign in.'
+        );
       }, 2000);
-
     } catch (error) {
       console.error('🔐 Unified Signup - Exception:', error);
-      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(
+        `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -269,51 +314,53 @@ export default function UnifiedSignupForm() {
   };
 
   const renderStep1 = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email Address</Label>
+    <div className='space-y-4'>
+      <div className='space-y-2'>
+        <Label htmlFor='email'>Email Address</Label>
         <Input
-          id="email"
-          name="email"
-          type="email"
+          id='email'
+          name='email'
+          type='email'
           value={formData.email}
           onChange={handleInputChange}
-          placeholder="Enter your email"
+          placeholder='Enter your email'
           required
           disabled={loading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='fullName'>Full Name</Label>
         <Input
-          id="fullName"
-          name="fullName"
-          type="text"
+          id='fullName'
+          name='fullName'
+          type='text'
           value={formData.fullName}
           onChange={handleInputChange}
-          placeholder="Enter your full name"
+          placeholder='Enter your full name'
           required
           disabled={loading}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="role">Account Type</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='role'>Account Type</Label>
         <Select value={formData.role} onValueChange={handleRoleChange}>
           <SelectTrigger>
-            <SelectValue placeholder="Select account type" />
+            <SelectValue placeholder='Select account type' />
           </SelectTrigger>
           <SelectContent>
-            {ROLE_OPTIONS.map((option) => {
+            {ROLE_OPTIONS.map(option => {
               const Icon = option.icon;
               return (
                 <SelectItem key={option.value} value={option.value}>
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4" />
+                  <div className='flex items-center gap-2'>
+                    <Icon className='h-4 w-4' />
                     <div>
-                      <div className="font-medium">{option.label}</div>
-                      <div className="text-xs text-gray-500">{option.description}</div>
+                      <div className='font-medium'>{option.label}</div>
+                      <div className='text-xs text-gray-500'>
+                        {option.description}
+                      </div>
                     </div>
                   </div>
                 </SelectItem>
@@ -324,29 +371,29 @@ export default function UnifiedSignupForm() {
       </div>
 
       {formData.role === 'provider' && (
-        <div className="space-y-2">
-          <Label htmlFor="company">Company Name (Optional)</Label>
+        <div className='space-y-2'>
+          <Label htmlFor='company'>Company Name (Optional)</Label>
           <Input
-            id="company"
-            name="company"
-            type="text"
+            id='company'
+            name='company'
+            type='text'
             value={formData.company}
             onChange={handleInputChange}
-            placeholder="Enter your company name"
+            placeholder='Enter your company name'
             disabled={loading}
           />
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="phone">Phone Number (Optional)</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='phone'>Phone Number (Optional)</Label>
         <Input
-          id="phone"
-          name="phone"
-          type="tel"
+          id='phone'
+          name='phone'
+          type='tel'
           value={formData.phone}
           onChange={handleInputChange}
-          placeholder="Enter your phone number"
+          placeholder='Enter your phone number'
           disabled={loading}
         />
       </div>
@@ -354,65 +401,65 @@ export default function UnifiedSignupForm() {
   );
 
   const renderStep2 = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
+    <div className='space-y-4'>
+      <div className='space-y-2'>
+        <Label htmlFor='password'>Password</Label>
+        <div className='relative'>
           <Input
-            id="password"
-            name="password"
+            id='password'
+            name='password'
             type={showPassword ? 'text' : 'password'}
             value={formData.password}
             onChange={handleInputChange}
-            placeholder="Create a password"
+            placeholder='Create a password'
             required
             disabled={loading}
           />
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            type='button'
+            variant='ghost'
+            size='sm'
+            className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
             onClick={() => setShowPassword(!showPassword)}
             disabled={loading}
           >
             {showPassword ? (
-              <EyeOff className="h-4 w-4" />
+              <EyeOff className='h-4 w-4' />
             ) : (
-              <Eye className="h-4 w-4" />
+              <Eye className='h-4 w-4' />
             )}
           </Button>
         </div>
-        <p className="text-xs text-gray-500">
+        <p className='text-xs text-gray-500'>
           Must be at least 8 characters with uppercase, lowercase, and number
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
-        <div className="relative">
+      <div className='space-y-2'>
+        <Label htmlFor='confirmPassword'>Confirm Password</Label>
+        <div className='relative'>
           <Input
-            id="confirmPassword"
-            name="confirmPassword"
+            id='confirmPassword'
+            name='confirmPassword'
             type={showConfirmPassword ? 'text' : 'password'}
             value={formData.confirmPassword}
             onChange={handleInputChange}
-            placeholder="Confirm your password"
+            placeholder='Confirm your password'
             required
             disabled={loading}
           />
           <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            type='button'
+            variant='ghost'
+            size='sm'
+            className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             disabled={loading}
           >
             {showConfirmPassword ? (
-              <EyeOff className="h-4 w-4" />
+              <EyeOff className='h-4 w-4' />
             ) : (
-              <Eye className="h-4 w-4" />
+              <Eye className='h-4 w-4' />
             )}
           </Button>
         </div>
@@ -421,100 +468,118 @@ export default function UnifiedSignupForm() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
+    <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+      <Card className='w-full max-w-md'>
+        <CardHeader className='text-center'>
+          <CardTitle className='text-2xl font-bold text-gray-900'>
             Create Account
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className='text-sm text-gray-600'>
             {step === 1 ? 'Tell us about yourself' : 'Set up your password'}
           </p>
-          <div className="flex justify-center mt-2">
-            <div className="flex space-x-2">
-              <div className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300'}`} />
-              <div className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`} />
+          <div className='flex justify-center mt-2'>
+            <div className='flex space-x-2'>
+              <div
+                className={`w-2 h-2 rounded-full ${step >= 1 ? 'bg-blue-600' : 'bg-gray-300'}`}
+              />
+              <div
+                className={`w-2 h-2 rounded-full ${step >= 2 ? 'bg-blue-600' : 'bg-gray-300'}`}
+              />
             </div>
           </div>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={step === 1 ? (e) => { e.preventDefault(); handleNext(); } : handleSignup} className="space-y-4">
+          <form
+            onSubmit={
+              step === 1
+                ? e => {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                : handleSignup
+            }
+            className='space-y-4'
+          >
             {step === 1 ? renderStep1() : renderStep2()}
 
             {/* CAPTCHA Section */}
             {showCaptcha && (
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <Label>Security Verification</Label>
-                <div className="flex items-center gap-2">
+                <div className='flex items-center gap-2'>
                   <CaptchaHandler
                     ref={captchaRef}
                     onCaptchaReady={handleCaptchaReady}
                     onCaptchaError={handleCaptchaError}
                   />
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
+                    type='button'
+                    variant='outline'
+                    size='sm'
                     onClick={resetCaptcha}
                     disabled={loading}
                   >
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className='h-4 w-4' />
                   </Button>
                 </div>
                 {captchaError && (
-                  <p className="text-sm text-red-600">{captchaError}</p>
+                  <p className='text-sm text-red-600'>{captchaError}</p>
                 )}
               </div>
             )}
 
             {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">{success}</AlertDescription>
+              <Alert className='border-green-200 bg-green-50'>
+                <CheckCircle className='h-4 w-4 text-green-600' />
+                <AlertDescription className='text-green-800'>
+                  {success}
+                </AlertDescription>
               </Alert>
             )}
 
-            <div className="flex space-x-2">
+            <div className='flex space-x-2'>
               {step === 2 && (
                 <Button
-                  type="button"
-                  variant="outline"
+                  type='button'
+                  variant='outline'
                   onClick={handleBack}
                   disabled={loading}
-                  className="flex-1"
+                  className='flex-1'
                 >
                   Back
                 </Button>
               )}
               <Button
-                type="submit"
-                className={step === 1 ? "w-full" : "flex-1"}
+                type='submit'
+                className={step === 1 ? 'w-full' : 'flex-1'}
                 disabled={loading}
               >
                 {loading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     {step === 1 ? 'Next...' : 'Creating Account...'}
                   </>
+                ) : step === 1 ? (
+                  'Next'
                 ) : (
-                  step === 1 ? 'Next' : 'Create Account'
+                  'Create Account'
                 )}
               </Button>
             </div>
           </form>
 
           {/* Navigation */}
-          <div className="mt-6 pt-4 border-t text-center">
+          <div className='mt-6 pt-4 border-t text-center'>
             <Button
-              variant="ghost"
+              variant='ghost'
               onClick={() => router.push('/en/auth/login')}
             >
               Already have an account? Sign in

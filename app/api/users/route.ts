@@ -122,7 +122,10 @@ export async function GET(request: NextRequest) {
       if (!profilesError && profilesData) {
         users = profilesData;
       } else {
-        console.error('❌ API Users: Error fetching from profiles:', profilesError);
+        console.error(
+          '❌ API Users: Error fetching from profiles:',
+          profilesError
+        );
       }
     } catch (error) {
       console.log('⚠️ API Users: Profiles fetch failed, trying users table');
@@ -151,7 +154,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: users,
-      pagination: { total: users.length, page: 1, limit: users.length, totalPages: 1 },
+      pagination: {
+        total: users.length,
+        page: 1,
+        limit: users.length,
+        totalPages: 1,
+      },
     });
   } catch (error) {
     console.error('Error in GET /api/users:', error);
@@ -166,7 +174,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, full_name, role, status, department, position, phone, isSignup } = body;
+    const {
+      email,
+      password,
+      full_name,
+      role,
+      status,
+      department,
+      position,
+      phone,
+      isSignup,
+    } = body;
 
     // Validate required fields
     if (!email || !full_name) {

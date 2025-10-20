@@ -200,7 +200,12 @@ function ContractsContent() {
       setError(null);
 
       console.log('🔍 Contracts Page: Fetching contracts...');
-      console.log('🔍 Contracts Page: User:', user?.id, 'Auth loading:', authLoading);
+      console.log(
+        '🔍 Contracts Page: User:',
+        user?.id,
+        'Auth loading:',
+        authLoading
+      );
       const response = await apiFetch('/api/contracts');
 
       if (!response.ok) {
@@ -279,7 +284,8 @@ function ContractsContent() {
   const [pageSize, setPageSize] = useState(20);
   const [totalPages, setTotalPages] = useState(1);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const [contractToEmail, setContractToEmail] = useState<ContractWithRelations | null>(null);
+  const [contractToEmail, setContractToEmail] =
+    useState<ContractWithRelations | null>(null);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
@@ -303,28 +309,30 @@ function ContractsContent() {
 
     try {
       const enhanced = contracts.map(enhanceContract);
-    const now = new Date();
+      const now = new Date();
 
-    return {
-      total: enhanced.length,
-      active: enhanced.filter(c => c.status_type === 'active').length,
-      expired: enhanced.filter(c => c.status_type === 'expired').length,
-      upcoming: enhanced.filter(c => c.status_type === 'upcoming').length,
-      unknown: enhanced.filter(c => c.status_type === 'unknown').length,
-      expiring_soon: enhanced.filter(
-        c =>
-          c.days_until_expiry !== undefined &&
-          c.days_until_expiry > 0 &&
-          c.days_until_expiry <= 30
-      ).length,
-      total_value: enhanced.reduce(
-        (sum, c) => sum + (c.contract_value || 0),
-        0
-      ),
-      avg_duration:
-        enhanced.reduce((sum, c) => sum + (c.contract_duration_days || 0), 0) / 
-          enhanced.length || 0,
-    };
+      return {
+        total: enhanced.length,
+        active: enhanced.filter(c => c.status_type === 'active').length,
+        expired: enhanced.filter(c => c.status_type === 'expired').length,
+        upcoming: enhanced.filter(c => c.status_type === 'upcoming').length,
+        unknown: enhanced.filter(c => c.status_type === 'unknown').length,
+        expiring_soon: enhanced.filter(
+          c =>
+            c.days_until_expiry !== undefined &&
+            c.days_until_expiry > 0 &&
+            c.days_until_expiry <= 30
+        ).length,
+        total_value: enhanced.reduce(
+          (sum, c) => sum + (c.contract_value || 0),
+          0
+        ),
+        avg_duration:
+          enhanced.reduce(
+            (sum, c) => sum + (c.contract_duration_days || 0),
+            0
+          ) / enhanced.length || 0,
+      };
     } catch (error) {
       console.error('Error calculating contract stats:', error);
       return {
@@ -347,91 +355,100 @@ function ContractsContent() {
     try {
       const enhanced = contracts.map(enhanceContract);
 
-    const filtered = enhanced.filter(contract => {
-      const contractStatus = getContractStatus(contract);
-      const matchesStatus =
-        statusFilter === 'all' || contractStatus === statusFilter;
+      const filtered = enhanced.filter(contract => {
+        const contractStatus = getContractStatus(contract);
+        const matchesStatus =
+          statusFilter === 'all' || contractStatus === statusFilter;
 
-      const firstParty =
-        (contract.first_party &&
-        typeof contract.first_party === 'object' &&
-        'name_en' in contract.first_party
+        const firstParty =
+          (contract.first_party &&
+          typeof contract.first_party === 'object' &&
+          'name_en' in contract.first_party
+            ? locale === 'ar'
+              ? contract.first_party.name_ar || contract.first_party.name_en
+              : contract.first_party.name_en || contract.first_party.name_ar
+            : '') || '';
+        const secondParty =
+          (contract.second_party &&
+          typeof contract.second_party === 'object' &&
+          'name_en' in contract.second_party
+            ? locale === 'ar'
+              ? contract.second_party.name_ar || contract.second_party.name_en
+              : contract.second_party.name_en || contract.second_party.name_ar
+            : '') || '';
+        const promoterName = contract.promoters
           ? locale === 'ar'
-            ? contract.first_party.name_ar || contract.first_party.name_en
-            : contract.first_party.name_en || contract.first_party.name_ar
-          : '') || '';
-      const secondParty =
-        (contract.second_party &&
-        typeof contract.second_party === 'object' &&
-        'name_en' in contract.second_party
-          ? locale === 'ar'
-            ? contract.second_party.name_ar || contract.second_party.name_en
-            : contract.second_party.name_en || contract.second_party.name_ar
-          : '') || '';
-      const promoterName = contract.promoters
-        ? locale === 'ar'
-          ? contract.promoters.name_ar || contract.promoters.name_en
-          : contract.promoters.name_en || contract.promoters.name_ar
-        : '';
+            ? contract.promoters.name_ar || contract.promoters.name_en
+            : contract.promoters.name_en || contract.promoters.name_ar
+          : '';
 
-      const matchesSearch =
-        !searchTerm ||
-        contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        firstParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        secondParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (contract.job_title &&
-          contract.job_title
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase())) ||
-        (contract.contract_number &&
-          contract.contract_number
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()));
+        const matchesSearch =
+          !searchTerm ||
+          contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          firstParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          secondParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (contract.job_title &&
+            contract.job_title
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase())) ||
+          (contract.contract_number &&
+            contract.contract_number
+              .toLowerCase()
+              .includes(searchTerm.toLowerCase()));
 
-      return matchesStatus && matchesSearch;
-    });
+        return matchesStatus && matchesSearch;
+      });
 
-    const sorted = filtered.sort((a, b) => {
-      let valA, valB;
-      if (sortColumn === 'status') {
-        valA = getContractStatus(a);
-        valB = getContractStatus(b);
-      } else {
-        valA = a[sortColumn as keyof ContractWithRelations];
-        valB = b[sortColumn as keyof ContractWithRelations];
-      }
+      const sorted = filtered.sort((a, b) => {
+        let valA, valB;
+        if (sortColumn === 'status') {
+          valA = getContractStatus(a);
+          valB = getContractStatus(b);
+        } else {
+          valA = a[sortColumn as keyof ContractWithRelations];
+          valB = b[sortColumn as keyof ContractWithRelations];
+        }
 
-      if (valA === null || valA === undefined) valA = '';
-      if (valB === null || valB === undefined) valB = '';
+        if (valA === null || valA === undefined) valA = '';
+        if (valB === null || valB === undefined) valB = '';
 
-      if (typeof valA === 'string' && typeof valB === 'string') {
-        return sortDirection === 'asc'
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA);
-      }
-      if (typeof valA === 'number' && typeof valB === 'number') {
-        return sortDirection === 'asc' ? valA - valB : valB - valA;
-      }
-      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          return sortDirection === 'asc'
+            ? valA.localeCompare(valB)
+            : valB.localeCompare(valA);
+        }
+        if (typeof valA === 'number' && typeof valB === 'number') {
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
 
-    // Calculate pagination
-    const totalItems = sorted.length;
-    const totalPages = Math.ceil(totalItems / pageSize);
-    setTotalPages(totalPages);
+      // Calculate pagination
+      const totalItems = sorted.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+      setTotalPages(totalPages);
 
-    // Apply pagination
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return sorted.slice(startIndex, endIndex);
+      // Apply pagination
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      return sorted.slice(startIndex, endIndex);
     } catch (error) {
       console.error('Error filtering and sorting contracts:', error);
       return [];
     }
-  }, [contracts, searchTerm, statusFilter, sortColumn, sortDirection, locale, currentPage, pageSize]);
+  }, [
+    contracts,
+    searchTerm,
+    statusFilter,
+    sortColumn,
+    sortDirection,
+    locale,
+    currentPage,
+    pageSize,
+  ]);
 
   // Handler functions - moved BEFORE permission check
   const handleRefresh = useCallback(async () => {
@@ -556,7 +573,11 @@ function ContractsContent() {
     setShowEmailDialog(true);
   };
 
-  const handleSendEmail = async (emailData: { to: string; subject: string; message: string }) => {
+  const handleSendEmail = async (emailData: {
+    to: string;
+    subject: string;
+    message: string;
+  }) => {
     if (!contractToEmail) return;
 
     setIsSendingEmail(true);
@@ -615,18 +636,27 @@ function ContractsContent() {
           'name_en' in contract.second_party
             ? contract.second_party.name_en || 'N/A'
             : 'N/A',
-        Promoter: contract.promoters && Array.isArray(contract.promoters) && contract.promoters.length > 0
-          ? contract.promoters[0].name_en || 'N/A'
-          : 'N/A',
+        Promoter:
+          contract.promoters &&
+          Array.isArray(contract.promoters) &&
+          contract.promoters.length > 0
+            ? contract.promoters[0].name_en || 'N/A'
+            : 'N/A',
         'Job Title': contract.job_title || 'N/A',
-        'Start Date': contract.contract_start_date ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy') : 'N/A',
-        'End Date': contract.contract_end_date ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy') : 'N/A',
+        'Start Date': contract.contract_start_date
+          ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy')
+          : 'N/A',
+        'End Date': contract.contract_end_date
+          ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy')
+          : 'N/A',
         Status: getContractStatus(contract),
         'Contract Value': contract.contract_value || 0,
         'Work Location': contract.work_location || 'N/A',
         Email: contract.email || 'N/A',
         'PDF URL': contract.pdf_url || 'N/A',
-        'Created At': contract.created_at ? format(parseISO(contract.created_at), 'dd-MM-yyyy') : 'N/A',
+        'Created At': contract.created_at
+          ? format(parseISO(contract.created_at), 'dd-MM-yyyy')
+          : 'N/A',
         'Days Until Expiry': contract.days_until_expiry || 'N/A',
         'Contract Duration (Days)': contract.contract_duration_days || 'N/A',
       }));
@@ -636,17 +666,22 @@ function ContractsContent() {
         if (val === null || val === undefined) return '';
         const str = String(val);
         // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        if (
+          str.includes(',') ||
+          str.includes('"') ||
+          str.includes('\n') ||
+          str.includes('\r')
+        ) {
           return `"${str.replace(/"/g, '""')}"`;
         }
         return str;
       };
 
       const csv = [
-        Object.keys(csvData[0] || {}).map(escapeCSVValue).join(','),
-        ...csvData.map(row =>
-          Object.values(row).map(escapeCSVValue).join(',')
-        ),
+        Object.keys(csvData[0] || {})
+          .map(escapeCSVValue)
+          .join(','),
+        ...csvData.map(row => Object.values(row).map(escapeCSVValue).join(',')),
       ].join('\n');
 
       // Add BOM for proper UTF-8 encoding in Excel
@@ -757,7 +792,9 @@ function ContractsContent() {
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-blue-100 font-medium'>Total Contracts</p>
+              <p className='text-sm text-blue-100 font-medium'>
+                Total Contracts
+              </p>
               <p className='text-2xl font-bold'>{contractStats.total}</p>
               <p className='text-xs text-blue-200 mt-1'>All contracts</p>
             </div>
@@ -787,8 +824,12 @@ function ContractsContent() {
         <CardContent className='p-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-amber-100 font-medium'>Expiring Soon</p>
-              <p className='text-2xl font-bold'>{contractStats.expiring_soon}</p>
+              <p className='text-sm text-amber-100 font-medium'>
+                Expiring Soon
+              </p>
+              <p className='text-2xl font-bold'>
+                {contractStats.expiring_soon}
+              </p>
               <p className='text-xs text-amber-200 mt-1'>Within 30 days</p>
             </div>
             <div className='p-2 bg-amber-400/20 rounded-lg'>
@@ -886,7 +927,9 @@ function ContractsContent() {
         <div className='text-center'>
           <div className='mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary'></div>
           <p className='text-muted-foreground'>Loading permissions...</p>
-          <p className='text-xs text-muted-foreground mt-2'>This should only take a moment</p>
+          <p className='text-xs text-muted-foreground mt-2'>
+            This should only take a moment
+          </p>
         </div>
       </div>
     );
@@ -947,11 +990,14 @@ function ContractsContent() {
                 <div className='h-10 w-full bg-gray-200 rounded animate-pulse'></div>
                 <div className='h-10 w-48 bg-gray-200 rounded animate-pulse'></div>
               </div>
-              
+
               {/* Loading Table Rows */}
               <div className='space-y-3'>
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className='flex items-center space-x-4 p-4 border rounded-lg'>
+                  <div
+                    key={i}
+                    className='flex items-center space-x-4 p-4 border rounded-lg'
+                  >
                     <div className='h-4 w-4 bg-gray-200 rounded animate-pulse'></div>
                     <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
                     <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
@@ -1110,7 +1156,9 @@ function ContractsContent() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Refresh data</p>
-                      <p className='text-xs text-gray-400'>Auto-refreshes every 30s</p>
+                      <p className='text-xs text-gray-400'>
+                        Auto-refreshes every 30s
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1232,12 +1280,15 @@ function ContractsContent() {
                 </h3>
                 <p className='text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
                   {searchTerm || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filters to find what you\'re looking for.'
+                    ? "Try adjusting your search or filters to find what you're looking for."
                     : 'Get started by creating your first contract to manage your business relationships.'}
                 </p>
                 {!(searchTerm || statusFilter !== 'all') &&
                   canCreateContract && (
-                    <Button asChild className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'>
+                    <Button
+                      asChild
+                      className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
+                    >
                       <Link href={`/${locale}/dashboard/generate-contract`}>
                         <Plus className='mr-2 h-4 w-4' />
                         Create New Contract
@@ -1247,211 +1298,439 @@ function ContractsContent() {
               </div>
             ) : currentView === 'table' ? (
               <>
-              <div className='overflow-x-auto'>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className='w-12'>
-                        {canDeleteContract && (
-                          <Checkbox
-                            checked={
-                              selectedContracts.length ===
-                              filteredAndSortedContracts.length
-                            }
-                            onCheckedChange={handleSelectAll}
-                          />
-                        )}
-                      </TableHead>
-                      <TableHead
-                        className='cursor-pointer'
-                        onClick={() => handleSort('id')}
-                      >
-                        Contract ID {renderSortIcon('id')}
-                      </TableHead>
-                      <TableHead>First Party</TableHead>
-                      <TableHead>Second Party</TableHead>
-                      <TableHead>Promoter</TableHead>
-                      <TableHead
-                        className='cursor-pointer'
-                        onClick={() => handleSort('contract_start_date')}
-                      >
-                        Start Date {renderSortIcon('contract_start_date')}
-                      </TableHead>
-                      <TableHead
-                        className='cursor-pointer'
-                        onClick={() => handleSort('contract_end_date')}
-                      >
-                        End Date {renderSortIcon('contract_end_date')}
-                      </TableHead>
-                      <TableHead
-                        className='cursor-pointer'
-                        onClick={() => handleSort('status')}
-                      >
-                        Status {renderSortIcon('status')}
-                      </TableHead>
-                      <TableHead>PDF</TableHead>
-                      <TableHead className='text-right'>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAndSortedContracts.map(contract => {
-                      const contractStatus = getContractStatus(contract);
-                      const enhanced = enhanceContract(contract);
-                      const promoterName = contract.promoters
-                        ? locale === 'ar'
-                          ? contract.promoters.name_ar ||
-                            contract.promoters.name_en
-                          : contract.promoters.name_en ||
-                            contract.promoters.name_ar
-                        : '';
-                      return (
-                        <TableRow key={contract.id} className='group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200'>
-                          <TableCell className='py-4'>
-                            {canDeleteContract && (
-                              <Checkbox
-                                checked={selectedContracts.includes(
-                                  contract.id
-                                )}
-                                onCheckedChange={checked =>
-                                  handleSelectContract(
-                                    contract.id,
-                                    checked as boolean
-                                  )
-                                }
-                                className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
-                              />
-                            )}
-                          </TableCell>
-                          <TableCell className='py-4'>
-                            <div className='flex items-center gap-2'>
-                              <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger className='font-mono text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors'>
-                                    {contract.id.substring(0, 8)}...
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className='font-mono text-xs'>Full ID: {contract.id}</p>
-                                    <p className='text-xs text-gray-400 mt-1'>Click to copy</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className='flex items-center gap-2'>
-                              <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900'>
-                                <Building2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
-                              </div>
-                              <span>
-                                {contract.first_party &&
-                                typeof contract.first_party === 'object' &&
-                                'name_en' in contract.first_party
-                                  ? locale === 'ar'
-                                    ? contract.first_party.name_ar ||
-                                      contract.first_party.name_en ||
-                                      'N/A'
-                                    : contract.first_party.name_en ||
-                                      contract.first_party.name_ar ||
-                                      'N/A'
-                                  : 'N/A'}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className='flex items-center gap-2'>
-                              <div className='flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900'>
-                                <Building2 className='h-4 w-4 text-green-600 dark:text-green-400' />
-                              </div>
-                              <span>
-                                {contract.second_party &&
-                                typeof contract.second_party === 'object' &&
-                                'name_en' in contract.second_party
-                                  ? locale === 'ar'
-                                    ? contract.second_party.name_ar ||
-                                      contract.second_party.name_en ||
-                                      'N/A'
-                                    : contract.second_party.name_en ||
-                                      contract.second_party.name_ar ||
-                                      'N/A'
-                                  : 'N/A'}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className='flex items-center gap-2'>
-                              <div className='flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900'>
-                                <User className='h-4 w-4 text-purple-600 dark:text-purple-400' />
-                              </div>
-                              <span>{promoterName || 'N/A'}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {contract.contract_start_date
-                              ? format(
-                                  parseISO(contract.contract_start_date),
-                                  'dd-MM-yyyy'
-                                )
-                              : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            <div className='flex flex-col'>
-                              <span>
-                                {contract.contract_end_date
-                                  ? format(
-                                      parseISO(contract.contract_end_date),
-                                      'dd-MM-yyyy'
+                <div className='overflow-x-auto'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className='w-12'>
+                          {canDeleteContract && (
+                            <Checkbox
+                              checked={
+                                selectedContracts.length ===
+                                filteredAndSortedContracts.length
+                              }
+                              onCheckedChange={handleSelectAll}
+                            />
+                          )}
+                        </TableHead>
+                        <TableHead
+                          className='cursor-pointer'
+                          onClick={() => handleSort('id')}
+                        >
+                          Contract ID {renderSortIcon('id')}
+                        </TableHead>
+                        <TableHead>First Party</TableHead>
+                        <TableHead>Second Party</TableHead>
+                        <TableHead>Promoter</TableHead>
+                        <TableHead
+                          className='cursor-pointer'
+                          onClick={() => handleSort('contract_start_date')}
+                        >
+                          Start Date {renderSortIcon('contract_start_date')}
+                        </TableHead>
+                        <TableHead
+                          className='cursor-pointer'
+                          onClick={() => handleSort('contract_end_date')}
+                        >
+                          End Date {renderSortIcon('contract_end_date')}
+                        </TableHead>
+                        <TableHead
+                          className='cursor-pointer'
+                          onClick={() => handleSort('status')}
+                        >
+                          Status {renderSortIcon('status')}
+                        </TableHead>
+                        <TableHead>PDF</TableHead>
+                        <TableHead className='text-right'>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredAndSortedContracts.map(contract => {
+                        const contractStatus = getContractStatus(contract);
+                        const enhanced = enhanceContract(contract);
+                        const promoterName = contract.promoters
+                          ? locale === 'ar'
+                            ? contract.promoters.name_ar ||
+                              contract.promoters.name_en
+                            : contract.promoters.name_en ||
+                              contract.promoters.name_ar
+                          : '';
+                        return (
+                          <TableRow
+                            key={contract.id}
+                            className='group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors duration-200'
+                          >
+                            <TableCell className='py-4'>
+                              {canDeleteContract && (
+                                <Checkbox
+                                  checked={selectedContracts.includes(
+                                    contract.id
+                                  )}
+                                  onCheckedChange={checked =>
+                                    handleSelectContract(
+                                      contract.id,
+                                      checked as boolean
                                     )
-                                  : 'N/A'}
-                              </span>
-                              {enhanced.days_until_expiry !== undefined &&
-                                enhanced.days_until_expiry <= 30 &&
-                                enhanced.days_until_expiry > 0 && (
-                                  <span className='text-xs font-medium text-amber-600'>
-                                    {enhanced.days_until_expiry} days left
-                                  </span>
-                                )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(contractStatus)}
-                          </TableCell>
-                          <TableCell className='py-4'>
-                            {contract.pdf_url ? (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <button
-                                      onClick={() => handleDownloadContract(contract)}
-                                      disabled={isDownloading === contract.id}
-                                      className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
-                                      title='Download contract PDF'
-                                    >
-                                      {isDownloading === contract.id ? (
-                                        <Loader2 className='h-4 w-4 animate-spin' />
-                                      ) : (
-                                        <Download className='h-4 w-4' />
-                                      )}
-                                    </button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Download PDF</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            ) : (
-                              <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400'>
-                                <FileText className='h-4 w-4' />
+                                  }
+                                  className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
+                                />
+                              )}
+                            </TableCell>
+                            <TableCell className='py-4'>
+                              <div className='flex items-center gap-2'>
+                                <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger className='font-mono text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors'>
+                                      {contract.id.substring(0, 8)}...
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className='font-mono text-xs'>
+                                        Full ID: {contract.id}
+                                      </p>
+                                      <p className='text-xs text-gray-400 mt-1'>
+                                        Click to copy
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               </div>
-                            )}
-                          </TableCell>
-                          <TableCell className='text-right py-4'>
+                            </TableCell>
+                            <TableCell>
+                              <div className='flex items-center gap-2'>
+                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900'>
+                                  <Building2 className='h-4 w-4 text-blue-600 dark:text-blue-400' />
+                                </div>
+                                <span>
+                                  {contract.first_party &&
+                                  typeof contract.first_party === 'object' &&
+                                  'name_en' in contract.first_party
+                                    ? locale === 'ar'
+                                      ? contract.first_party.name_ar ||
+                                        contract.first_party.name_en ||
+                                        'N/A'
+                                      : contract.first_party.name_en ||
+                                        contract.first_party.name_ar ||
+                                        'N/A'
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className='flex items-center gap-2'>
+                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900'>
+                                  <Building2 className='h-4 w-4 text-green-600 dark:text-green-400' />
+                                </div>
+                                <span>
+                                  {contract.second_party &&
+                                  typeof contract.second_party === 'object' &&
+                                  'name_en' in contract.second_party
+                                    ? locale === 'ar'
+                                      ? contract.second_party.name_ar ||
+                                        contract.second_party.name_en ||
+                                        'N/A'
+                                      : contract.second_party.name_en ||
+                                        contract.second_party.name_ar ||
+                                        'N/A'
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className='flex items-center gap-2'>
+                                <div className='flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900'>
+                                  <User className='h-4 w-4 text-purple-600 dark:text-purple-400' />
+                                </div>
+                                <span>{promoterName || 'N/A'}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {contract.contract_start_date
+                                ? format(
+                                    parseISO(contract.contract_start_date),
+                                    'dd-MM-yyyy'
+                                  )
+                                : 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <div className='flex flex-col'>
+                                <span>
+                                  {contract.contract_end_date
+                                    ? format(
+                                        parseISO(contract.contract_end_date),
+                                        'dd-MM-yyyy'
+                                      )
+                                    : 'N/A'}
+                                </span>
+                                {enhanced.days_until_expiry !== undefined &&
+                                  enhanced.days_until_expiry <= 30 &&
+                                  enhanced.days_until_expiry > 0 && (
+                                    <span className='text-xs font-medium text-amber-600'>
+                                      {enhanced.days_until_expiry} days left
+                                    </span>
+                                  )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(contractStatus)}
+                            </TableCell>
+                            <TableCell className='py-4'>
+                              {contract.pdf_url ? (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        onClick={() =>
+                                          handleDownloadContract(contract)
+                                        }
+                                        disabled={isDownloading === contract.id}
+                                        className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:hover:bg-green-800 text-green-600 dark:text-green-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed'
+                                        title='Download contract PDF'
+                                      >
+                                        {isDownloading === contract.id ? (
+                                          <Loader2 className='h-4 w-4 animate-spin' />
+                                        ) : (
+                                          <Download className='h-4 w-4' />
+                                        )}
+                                      </button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Download PDF</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ) : (
+                                <div className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400'>
+                                  <FileText className='h-4 w-4' />
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className='text-right py-4'>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant='ghost'
+                                    size='icon'
+                                    className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                  >
+                                    <MoreHorizontal className='h-4 w-4' />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align='end'>
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <Link
+                                    href={`/${locale}/contracts/${contract.id}`}
+                                  >
+                                    <DropdownMenuItem>
+                                      <Eye className='mr-2 h-4 w-4' /> View
+                                      Details
+                                    </DropdownMenuItem>
+                                  </Link>
+                                  {contract.pdf_url && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleDownloadContract(contract)
+                                      }
+                                    >
+                                      <FileDown className='mr-2 h-4 w-4' />{' '}
+                                      Download PDF
+                                    </DropdownMenuItem>
+                                  )}
+                                  {contract.pdf_url && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleEmailContract(contract)
+                                      }
+                                    >
+                                      <Mail className='mr-2 h-4 w-4' /> Send via
+                                      Email
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canEditContract && (
+                                    <DropdownMenuItem>
+                                      <Edit className='mr-2 h-4 w-4' /> Edit
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canCreateContract && (
+                                    <DropdownMenuItem>
+                                      <Copy className='mr-2 h-4 w-4' />{' '}
+                                      Duplicate
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canEditContract && (
+                                    <DropdownMenuItem>
+                                      <Archive className='mr-2 h-4 w-4' />{' '}
+                                      Archive
+                                    </DropdownMenuItem>
+                                  )}
+                                  {canDeleteContract && (
+                                    <>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() =>
+                                          handleDeleteClick(contract)
+                                        }
+                                        className='text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20'
+                                      >
+                                        <Trash2 className='mr-2 h-4 w-4' />{' '}
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className='flex items-center justify-between px-2 py-4 border-t'>
+                    <div className='flex items-center gap-2 text-sm text-gray-500'>
+                      <span>Showing</span>
+                      <Select
+                        value={pageSize.toString()}
+                        onValueChange={value => {
+                          setPageSize(parseInt(value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <SelectTrigger className='w-20 h-8'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='10'>10</SelectItem>
+                          <SelectItem value='20'>20</SelectItem>
+                          <SelectItem value='50'>50</SelectItem>
+                          <SelectItem value='100'>100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>per page</span>
+                    </div>
+
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className='h-4 w-4' />
+                      </Button>
+
+                      <div className='flex items-center gap-1'>
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            const pageNum =
+                              Math.max(
+                                1,
+                                Math.min(totalPages - 4, currentPage - 2)
+                              ) + i;
+                            if (pageNum > totalPages) return null;
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={
+                                  currentPage === pageNum
+                                    ? 'default'
+                                    : 'outline'
+                                }
+                                size='sm'
+                                onClick={() => setCurrentPage(pageNum)}
+                                className='w-8 h-8 p-0'
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          }
+                        )}
+                      </div>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Last
+                      </Button>
+                    </div>
+
+                    <div className='text-sm text-gray-500'>
+                      Page {currentPage} of {totalPages}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Grid View */}
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
+                  {filteredAndSortedContracts.map(contract => {
+                    const contractStatus = getContractStatus(contract);
+                    const enhanced = enhanceContract(contract);
+                    const promoterName = contract.promoters
+                      ? locale === 'ar'
+                        ? contract.promoters.name_ar ||
+                          contract.promoters.name_en
+                        : contract.promoters.name_en ||
+                          contract.promoters.name_ar
+                      : '';
+
+                    return (
+                      <Card
+                        key={contract.id}
+                        className='group transition-shadow hover:shadow-md'
+                      >
+                        <CardContent className='p-4'>
+                          <div className='mb-3 flex items-start justify-between'>
+                            <div className='flex items-center gap-2'>
+                              {canDeleteContract && (
+                                <Checkbox
+                                  checked={selectedContracts.includes(
+                                    contract.id
+                                  )}
+                                  onCheckedChange={checked =>
+                                    handleSelectContract(
+                                      contract.id,
+                                      checked as boolean
+                                    )
+                                  }
+                                />
+                              )}
+                              <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600'>
+                                <FileText className='h-5 w-5 text-white' />
+                              </div>
+                            </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant='ghost' 
+                                <Button
+                                  variant='ghost'
                                   size='icon'
-                                  className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                  className='opacity-0 group-hover:opacity-100'
                                 >
                                   <MoreHorizontal className='h-4 w-4' />
                                 </Button>
@@ -1468,13 +1747,23 @@ function ContractsContent() {
                                   </DropdownMenuItem>
                                 </Link>
                                 {contract.pdf_url && (
-                                  <DropdownMenuItem onClick={() => handleDownloadContract(contract)}>
-                                    <FileDown className='mr-2 h-4 w-4' /> Download PDF
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDownloadContract(contract)
+                                    }
+                                  >
+                                    <FileDown className='mr-2 h-4 w-4' />{' '}
+                                    Download PDF
                                   </DropdownMenuItem>
                                 )}
                                 {contract.pdf_url && (
-                                  <DropdownMenuItem onClick={() => handleEmailContract(contract)}>
-                                    <Mail className='mr-2 h-4 w-4' /> Send via Email
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleEmailContract(contract)
+                                    }
+                                  >
+                                    <Mail className='mr-2 h-4 w-4' /> Send via
+                                    Email
                                   </DropdownMenuItem>
                                 )}
                                 {canEditContract && (
@@ -1482,402 +1771,239 @@ function ContractsContent() {
                                     <Edit className='mr-2 h-4 w-4' /> Edit
                                   </DropdownMenuItem>
                                 )}
-                                {canCreateContract && (
-                                  <DropdownMenuItem>
-                                    <Copy className='mr-2 h-4 w-4' /> Duplicate
-                                  </DropdownMenuItem>
-                                )}
-                                {canEditContract && (
-                                  <DropdownMenuItem>
-                                    <Archive className='mr-2 h-4 w-4' /> Archive
-                                  </DropdownMenuItem>
-                                )}
                                 {canDeleteContract && (
-                                  <>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        handleDeleteClick(contract)
-                                      }
-                                      className='text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-700/20'
-                                    >
-                                      <Trash2 className='mr-2 h-4 w-4' /> Delete
-                                    </DropdownMenuItem>
-                                  </>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteClick(contract)}
+                                    className='text-red-600'
+                                  >
+                                    <Trash2 className='mr-2 h-4 w-4' /> Delete
+                                  </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
                             </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className='flex items-center justify-between px-2 py-4 border-t'>
-                  <div className='flex items-center gap-2 text-sm text-gray-500'>
-                    <span>Showing</span>
-                    <Select value={pageSize.toString()} onValueChange={(value) => {
-                      setPageSize(parseInt(value));
-                      setCurrentPage(1);
-                    }}>
-                      <SelectTrigger className='w-20 h-8'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
-                        <SelectItem value='50'>50</SelectItem>
-                        <SelectItem value='100'>100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span>per page</span>
-                  </div>
-                  
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                    >
-                      First
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className='h-4 w-4' />
-                    </Button>
-                    
-                    <div className='flex items-center gap-1'>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                        if (pageNum > totalPages) return null;
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? 'default' : 'outline'}
-                            size='sm'
-                            onClick={() => setCurrentPage(pageNum)}
-                            className='w-8 h-8 p-0'
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                    >
-                      Last
-                    </Button>
-                  </div>
-                  
-                  <div className='text-sm text-gray-500'>
-                    Page {currentPage} of {totalPages}
-                  </div>
-                </div>
-              )}
-              </>
-            ) : (
-              <>
-              {/* Grid View */}
-              <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-                {filteredAndSortedContracts.map(contract => {
-                  const contractStatus = getContractStatus(contract);
-                  const enhanced = enhanceContract(contract);
-                  const promoterName = contract.promoters
-                    ? locale === 'ar'
-                      ? contract.promoters.name_ar || contract.promoters.name_en
-                      : contract.promoters.name_en || contract.promoters.name_ar
-                    : '';
-
-                  return (
-                    <Card
-                      key={contract.id}
-                      className='group transition-shadow hover:shadow-md'
-                    >
-                      <CardContent className='p-4'>
-                        <div className='mb-3 flex items-start justify-between'>
-                          <div className='flex items-center gap-2'>
-                            {canDeleteContract && (
-                              <Checkbox
-                                checked={selectedContracts.includes(
-                                  contract.id
-                                )}
-                                onCheckedChange={checked =>
-                                  handleSelectContract(
-                                    contract.id,
-                                    checked as boolean
-                                  )
-                                }
-                              />
-                            )}
-                            <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600'>
-                              <FileText className='h-5 w-5 text-white' />
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                className='opacity-0 group-hover:opacity-100'
-                              >
-                                <MoreHorizontal className='h-4 w-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='end'>
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <Link
-                                href={`/${locale}/contracts/${contract.id}`}
-                              >
-                                <DropdownMenuItem>
-                                  <Eye className='mr-2 h-4 w-4' /> View Details
-                                </DropdownMenuItem>
-                              </Link>
-                              {contract.pdf_url && (
-                                <DropdownMenuItem onClick={() => handleDownloadContract(contract)}>
-                                  <FileDown className='mr-2 h-4 w-4' /> Download PDF
-                                </DropdownMenuItem>
-                              )}
-                              {contract.pdf_url && (
-                                <DropdownMenuItem onClick={() => handleEmailContract(contract)}>
-                                  <Mail className='mr-2 h-4 w-4' /> Send via Email
-                                </DropdownMenuItem>
-                              )}
-                              {canEditContract && (
-                                <DropdownMenuItem>
-                                  <Edit className='mr-2 h-4 w-4' /> Edit
-                                </DropdownMenuItem>
-                              )}
-                              {canDeleteContract && (
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteClick(contract)}
-                                  className='text-red-600'
-                                >
-                                  <Trash2 className='mr-2 h-4 w-4' /> Delete
-                                </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        <div className='space-y-2'>
-                          <div className='flex items-center justify-between'>
-                            <h3 className='text-sm font-medium'>
-                              Contract #{contract.id.substring(0, 8)}...
-                            </h3>
-                            {getStatusBadge(contractStatus)}
                           </div>
 
-                          <div className='space-y-1 text-sm text-muted-foreground'>
-                            <div className='flex items-center gap-1'>
-                              <Building2 className='h-3 w-3' />
-                              <span className='font-medium'>First Party:</span>
-                              <span>
-                                {contract.first_party &&
-                                typeof contract.first_party === 'object' &&
-                                'name_en' in contract.first_party
-                                  ? contract.first_party.name_en || 'N/A'
-                                  : 'N/A'}
-                              </span>
+                          <div className='space-y-2'>
+                            <div className='flex items-center justify-between'>
+                              <h3 className='text-sm font-medium'>
+                                Contract #{contract.id.substring(0, 8)}...
+                              </h3>
+                              {getStatusBadge(contractStatus)}
                             </div>
-                            <div className='flex items-center gap-1'>
-                              <Building2 className='h-3 w-3' />
-                              <span className='font-medium'>Second Party:</span>
-                              <span>
-                                {contract.second_party &&
-                                typeof contract.second_party === 'object' &&
-                                'name_en' in contract.second_party
-                                  ? contract.second_party.name_en || 'N/A'
-                                  : 'N/A'}
-                              </span>
-                            </div>
-                            <div className='flex items-center gap-1'>
-                              <User className='h-3 w-3' />
-                              <span className='font-medium'>Promoter:</span>
-                              <span>{promoterName || 'N/A'}</span>
-                            </div>
-                          </div>
 
-                          <div className='flex items-center justify-between border-t pt-2'>
-                            <div className='text-xs text-muted-foreground'>
-                              {contract.contract_start_date &&
-                                contract.contract_end_date && (
-                                  <>
-                                    {format(
-                                      parseISO(contract.contract_start_date),
-                                      'dd-MM-yyyy'
-                                    )}{' '}
-                                    -{' '}
-                                    {format(
-                                      parseISO(contract.contract_end_date),
-                                      'dd-MM-yyyy'
-                                    )}
-                                    {enhanced.days_until_expiry !== undefined &&
-                                      enhanced.days_until_expiry <= 30 &&
-                                      enhanced.days_until_expiry > 0 && (
-                                        <div className='font-medium text-amber-600'>
-                                          {enhanced.days_until_expiry} days left
-                                        </div>
+                            <div className='space-y-1 text-sm text-muted-foreground'>
+                              <div className='flex items-center gap-1'>
+                                <Building2 className='h-3 w-3' />
+                                <span className='font-medium'>
+                                  First Party:
+                                </span>
+                                <span>
+                                  {contract.first_party &&
+                                  typeof contract.first_party === 'object' &&
+                                  'name_en' in contract.first_party
+                                    ? contract.first_party.name_en || 'N/A'
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className='flex items-center gap-1'>
+                                <Building2 className='h-3 w-3' />
+                                <span className='font-medium'>
+                                  Second Party:
+                                </span>
+                                <span>
+                                  {contract.second_party &&
+                                  typeof contract.second_party === 'object' &&
+                                  'name_en' in contract.second_party
+                                    ? contract.second_party.name_en || 'N/A'
+                                    : 'N/A'}
+                                </span>
+                              </div>
+                              <div className='flex items-center gap-1'>
+                                <User className='h-3 w-3' />
+                                <span className='font-medium'>Promoter:</span>
+                                <span>{promoterName || 'N/A'}</span>
+                              </div>
+                            </div>
+
+                            <div className='flex items-center justify-between border-t pt-2'>
+                              <div className='text-xs text-muted-foreground'>
+                                {contract.contract_start_date &&
+                                  contract.contract_end_date && (
+                                    <>
+                                      {format(
+                                        parseISO(contract.contract_start_date),
+                                        'dd-MM-yyyy'
+                                      )}{' '}
+                                      -{' '}
+                                      {format(
+                                        parseISO(contract.contract_end_date),
+                                        'dd-MM-yyyy'
                                       )}
-                                  </>
-                                )}
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              {contract.pdf_url && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() => handleDownloadContract(contract)}
-                                        disabled={isDownloading === contract.id}
-                                        className='text-primary hover:text-primary/80 transition-colors disabled:opacity-50'
-                                        title='Download contract PDF'
-                                      >
-                                        {isDownloading === contract.id ? (
-                                          <Loader2 className='h-4 w-4 animate-spin' />
-                                        ) : (
-                                          <Download className='h-4 w-4' />
+                                      {enhanced.days_until_expiry !==
+                                        undefined &&
+                                        enhanced.days_until_expiry <= 30 &&
+                                        enhanced.days_until_expiry > 0 && (
+                                          <div className='font-medium text-amber-600'>
+                                            {enhanced.days_until_expiry} days
+                                            left
+                                          </div>
                                         )}
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Download PDF</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                              {contract.pdf_url && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        onClick={() => handleEmailContract(contract)}
-                                        className='text-primary hover:text-primary/80 transition-colors'
-                                        title='Send via email'
-                                      >
-                                        <Mail className='h-4 w-4' />
-                                      </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Send via Email</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
+                                    </>
+                                  )}
+                              </div>
+                              <div className='flex items-center gap-2'>
+                                {contract.pdf_url && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            handleDownloadContract(contract)
+                                          }
+                                          disabled={
+                                            isDownloading === contract.id
+                                          }
+                                          className='text-primary hover:text-primary/80 transition-colors disabled:opacity-50'
+                                          title='Download contract PDF'
+                                        >
+                                          {isDownloading === contract.id ? (
+                                            <Loader2 className='h-4 w-4 animate-spin' />
+                                          ) : (
+                                            <Download className='h-4 w-4' />
+                                          )}
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Download PDF</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                                {contract.pdf_url && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() =>
+                                            handleEmailContract(contract)
+                                          }
+                                          className='text-primary hover:text-primary/80 transition-colors'
+                                          title='Send via email'
+                                        >
+                                          <Mail className='h-4 w-4' />
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p>Send via Email</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-              
-              {/* Pagination Controls for Grid View */}
-              {totalPages > 1 && (
-                <div className='flex items-center justify-between px-2 py-4 border-t'>
-                  <div className='flex items-center gap-2 text-sm text-gray-500'>
-                    <span>Showing</span>
-                    <Select value={pageSize.toString()} onValueChange={(value) => {
-                      setPageSize(parseInt(value));
-                      setCurrentPage(1);
-                    }}>
-                      <SelectTrigger className='w-20 h-8'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value='10'>10</SelectItem>
-                        <SelectItem value='20'>20</SelectItem>
-                        <SelectItem value='50'>50</SelectItem>
-                        <SelectItem value='100'>100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <span>per page</span>
-                  </div>
-                  
-                  <div className='flex items-center gap-2'>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage === 1}
-                    >
-                      First
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className='h-4 w-4' />
-                    </Button>
-                    
-                    <div className='flex items-center gap-1'>
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                        if (pageNum > totalPages) return null;
-                        
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? 'default' : 'outline'}
-                            size='sm'
-                            onClick={() => setCurrentPage(pageNum)}
-                            className='w-8 h-8 p-0'
-                          >
-                            {pageNum}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                    
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className='h-4 w-4' />
-                    </Button>
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage === totalPages}
-                    >
-                      Last
-                    </Button>
-                  </div>
-                  
-                  <div className='text-sm text-gray-500'>
-                    Page {currentPage} of {totalPages}
-                  </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              )}
+
+                {/* Pagination Controls for Grid View */}
+                {totalPages > 1 && (
+                  <div className='flex items-center justify-between px-2 py-4 border-t'>
+                    <div className='flex items-center gap-2 text-sm text-gray-500'>
+                      <span>Showing</span>
+                      <Select
+                        value={pageSize.toString()}
+                        onValueChange={value => {
+                          setPageSize(parseInt(value));
+                          setCurrentPage(1);
+                        }}
+                      >
+                        <SelectTrigger className='w-20 h-8'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value='10'>10</SelectItem>
+                          <SelectItem value='20'>20</SelectItem>
+                          <SelectItem value='50'>50</SelectItem>
+                          <SelectItem value='100'>100</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <span>per page</span>
+                    </div>
+
+                    <div className='flex items-center gap-2'>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                      >
+                        First
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className='h-4 w-4' />
+                      </Button>
+
+                      <div className='flex items-center gap-1'>
+                        {Array.from(
+                          { length: Math.min(5, totalPages) },
+                          (_, i) => {
+                            const pageNum =
+                              Math.max(
+                                1,
+                                Math.min(totalPages - 4, currentPage - 2)
+                              ) + i;
+                            if (pageNum > totalPages) return null;
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={
+                                  currentPage === pageNum
+                                    ? 'default'
+                                    : 'outline'
+                                }
+                                size='sm'
+                                onClick={() => setCurrentPage(pageNum)}
+                                className='w-8 h-8 p-0'
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          }
+                        )}
+                      </div>
+
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className='h-4 w-4' />
+                      </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Last
+                      </Button>
+                    </div>
+
+                    <div className='text-sm text-gray-500'>
+                      Page {currentPage} of {totalPages}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </CardContent>
@@ -1932,7 +2058,13 @@ interface EmailDialogProps {
   isSending: boolean;
 }
 
-function EmailDialog({ open, onOpenChange, contract, onSend, isSending }: EmailDialogProps) {
+function EmailDialog({
+  open,
+  onOpenChange,
+  contract,
+  onSend,
+  isSending,
+}: EmailDialogProps) {
   const [to, setTo] = useState<string>('');
   const [subject, setSubject] = useState<string>('');
   const [message, setMessage] = useState<string>('');
@@ -1940,15 +2072,23 @@ function EmailDialog({ open, onOpenChange, contract, onSend, isSending }: EmailD
   useEffect(() => {
     if (contract && open) {
       // Auto-populate email fields
-      const firstPartyEmail = contract.first_party && typeof contract.first_party === 'object' && 'email' in contract.first_party 
-        ? (contract.first_party.email as string) || ''
-        : '';
-      const secondPartyEmail = contract.second_party && typeof contract.second_party === 'object' && 'email' in contract.second_party 
-        ? (contract.second_party.email as string) || ''
-        : '';
-      
+      const firstPartyEmail =
+        contract.first_party &&
+        typeof contract.first_party === 'object' &&
+        'email' in contract.first_party
+          ? (contract.first_party.email as string) || ''
+          : '';
+      const secondPartyEmail =
+        contract.second_party &&
+        typeof contract.second_party === 'object' &&
+        'email' in contract.second_party
+          ? (contract.second_party.email as string) || ''
+          : '';
+
       setTo(firstPartyEmail || secondPartyEmail || '');
-      setSubject(`Contract ${contract.contract_number || contract.id.substring(0, 8)} - Employment Agreement`);
+      setSubject(
+        `Contract ${contract.contract_number || contract.id.substring(0, 8)} - Employment Agreement`
+      );
       setMessage(`Dear Sir/Madam,
 
 Please find attached the employment contract for your review and signature.
@@ -1985,49 +2125,58 @@ Contract Management Team`);
             Send the contract PDF to the recipient via email.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
+
         <form onSubmit={handleSubmit} className='space-y-4'>
           <div>
-            <label htmlFor='email-to' className='block text-sm font-medium mb-1'>
+            <label
+              htmlFor='email-to'
+              className='block text-sm font-medium mb-1'
+            >
               To Email Address
             </label>
             <Input
               id='email-to'
               type='email'
               value={to}
-              onChange={(e) => setTo(e.target.value)}
+              onChange={e => setTo(e.target.value)}
               placeholder='recipient@example.com'
               required
             />
           </div>
-          
+
           <div>
-            <label htmlFor='email-subject' className='block text-sm font-medium mb-1'>
+            <label
+              htmlFor='email-subject'
+              className='block text-sm font-medium mb-1'
+            >
               Subject
             </label>
             <Input
               id='email-subject'
               value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              onChange={e => setSubject(e.target.value)}
               placeholder='Email subject'
               required
             />
           </div>
-          
+
           <div>
-            <label htmlFor='email-message' className='block text-sm font-medium mb-1'>
+            <label
+              htmlFor='email-message'
+              className='block text-sm font-medium mb-1'
+            >
               Message
             </label>
             <textarea
               id='email-message'
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={e => setMessage(e.target.value)}
               placeholder='Email message'
               className='w-full min-h-[120px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               required
             />
           </div>
-          
+
           <AlertDialogFooter>
             <AlertDialogCancel type='button' disabled={isSending}>
               Cancel

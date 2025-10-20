@@ -18,52 +18,54 @@ Replace your entire `"data"` field with this **exact text**:
 
 ```json
 [
-    {
-        "ca": null,
-        "qs": [],
-        "url": "https://portal.thesmartpro.io/api/webhook/makecom-simple",
-        "data": "{\\n  \\\"contract_id\\\": \\\"{{1.contract_id}}\\\",\\n  \\\"contract_number\\\": \\\"{{1.contract_number}}\\\",\\n  \\\"contract_type\\\": \\\"{{1.contract_type}}\\\",\\n  \\\"promoter_id\\\": \\\"{{1.promoter_id}}\\\",\\n  \\\"first_party_id\\\": \\\"{{1.first_party_id}}\\\",\\n  \\\"second_party_id\\\": \\\"{{1.second_party_id}}\\\"\\n}",
-        "gzip": true,
-        "method": "post",
-        "headers": [
-            {
-                "name": "Content-Type",
-                "value": "application/json"
-            },
-            {
-                "name": "X-Webhook-Secret",
-                "value": "make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806"
-            },
-            {
-                "name": "X-Request-ID",
-                "value": "{{execution.id}}"
-            }
-        ],
-        "timeout": 300,
-        "useMtls": false,
-        "authPass": null,
-        "authUser": null,
-        "bodyType": "raw",
-        "contentType": "application/json",
-        "serializeUrl": false,
-        "shareCookies": false,
-        "parseResponse": true,
-        "followRedirect": true,
-        "useQuerystring": false,
-        "followAllRedirects": false,
-        "rejectUnauthorized": true
-    }
+  {
+    "ca": null,
+    "qs": [],
+    "url": "https://portal.thesmartpro.io/api/webhook/makecom-simple",
+    "data": "{\\n  \\\"contract_id\\\": \\\"{{1.contract_id}}\\\",\\n  \\\"contract_number\\\": \\\"{{1.contract_number}}\\\",\\n  \\\"contract_type\\\": \\\"{{1.contract_type}}\\\",\\n  \\\"promoter_id\\\": \\\"{{1.promoter_id}}\\\",\\n  \\\"first_party_id\\\": \\\"{{1.first_party_id}}\\\",\\n  \\\"second_party_id\\\": \\\"{{1.second_party_id}}\\\"\\n}",
+    "gzip": true,
+    "method": "post",
+    "headers": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "name": "X-Webhook-Secret",
+        "value": "make_webhook_0b37f95424ac249e6bbdad4e39de6028d09f8ec8b84bd671b36c8905ec93f806"
+      },
+      {
+        "name": "X-Request-ID",
+        "value": "{{execution.id}}"
+      }
+    ],
+    "timeout": 300,
+    "useMtls": false,
+    "authPass": null,
+    "authUser": null,
+    "bodyType": "raw",
+    "contentType": "application/json",
+    "serializeUrl": false,
+    "shareCookies": false,
+    "parseResponse": true,
+    "followRedirect": true,
+    "useQuerystring": false,
+    "followAllRedirects": false,
+    "rejectUnauthorized": true
+  }
 ]
 ```
 
 ## 🔍 **What's Different**
 
 ### **Your Current (Broken):**
+
 ```
 "data": "{\\\\n  \\\\\\\"contract_id\\\\\\\": \\\\\\\"\\\\\\\",\\\\n  \\\\\\\"contract_number\\\\\\\": \\\\\\\"\\\\\\\",\\\\n  \\\\\\\"contract_type\\\\\\\": \\\\\\\"\\\\\\\",\\\\n  \\\\\\\"promoter_id\\\\\\\": \\\\\\\"\\\\\\\",\\\\n  \\\\\\\"first_party_id\\\\\\\": \\\\\\\"\\\\\\\",\\\\n  \\\\\\\"second_party_id\\\\\\\": \\\\\\\"\\\\\\\"\\\\n}"
 ```
 
 ### **Fixed Version:**
+
 ```
 "data": "{\\n  \\\"contract_id\\\": \\\"{{1.contract_id}}\\\",\\n  \\\"contract_number\\\": \\\"{{1.contract_number}}\\\",\\n  \\\"contract_type\\\": \\\"{{1.contract_type}}\\\",\\n  \\\"promoter_id\\\": \\\"{{1.promoter_id}}\\\",\\n  \\\"first_party_id\\\": \\\"{{1.first_party_id}}\\\",\\n  \\\"second_party_id\\\": \\\"{{1.second_party_id}}\\\"\\n}"
 ```

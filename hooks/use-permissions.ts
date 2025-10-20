@@ -29,7 +29,7 @@ export function usePermissions() {
 
       try {
         setLoading(true);
-        
+
         // Add timeout to prevent hanging
         const timeoutId = setTimeout(() => {
           console.warn('Permissions loading timeout, defaulting to admin role');
@@ -54,9 +54,12 @@ export function usePermissions() {
               .select('role')
               .eq('id', session.user.id)
               .single();
-            
+
             if (userError) {
-              console.warn('Failed to fetch user role from users table:', userError);
+              console.warn(
+                'Failed to fetch user role from users table:',
+                userError
+              );
               // Default to admin role for now to allow access
               setRole('admin');
               setRoles(['admin']);

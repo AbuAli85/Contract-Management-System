@@ -17,8 +17,11 @@ export const PUT = withRBAC(
       const supabase = await createClient();
 
       // Verify the requester is authenticated and is an admin
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
       if (authError || !user) {
         return NextResponse.json(
           { error: 'Unauthorized - Authentication required' },
@@ -52,10 +55,7 @@ export const PUT = withRBAC(
       // Validate role if provided (restrict to safe roles)
       const allowedRoles = ['user', 'provider', 'client', 'admin'];
       if (role && !allowedRoles.includes(role)) {
-        return NextResponse.json(
-          { error: 'Invalid role' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
       }
 
       // Update user status and role if provided

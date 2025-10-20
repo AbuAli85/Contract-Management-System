@@ -11,17 +11,20 @@ Google Drive requires a **premium plan** for service accounts to have sufficient
 Since you have 200GB in your personal Google Drive, we can use that instead of the service account's drive.
 
 #### **Step 1: Create Template in Your Personal Drive**
+
 1. Go to: https://docs.google.com/document/create
 2. Create your contract template with placeholders
 3. **Keep it in your personal Google Drive** (not service account drive)
 
 #### **Step 2: Share Template with Service Account**
+
 1. In your template, click "Share"
 2. Add: `contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com`
 3. Set permission to "Editor"
 4. **Important**: Don't transfer ownership to service account
 
 #### **Step 3: Modify Google Docs Service**
+
 The service will create documents in your personal drive instead of service account drive.
 
 ### **Option 2: Use Different Storage Solution**
@@ -29,16 +32,19 @@ The service will create documents in your personal drive instead of service acco
 Instead of Google Drive, we can use other storage options:
 
 #### **A. Supabase Storage**
+
 - Store generated documents in Supabase
 - No Google Drive storage limitations
 - Direct integration with your existing system
 
 #### **B. Local File System**
+
 - Generate documents locally
 - Upload to your preferred storage
 - No Google Drive dependency
 
 #### **C. Other Cloud Storage**
+
 - AWS S3
 - Azure Blob Storage
 - Dropbox API
@@ -46,6 +52,7 @@ Instead of Google Drive, we can use other storage options:
 ### **Option 3: Upgrade Google Workspace (If Budget Allows)**
 
 If you want to keep using Google Drive:
+
 1. **Google Workspace Business Standard**: $12/user/month
 2. **Google Workspace Business Plus**: $18/user/month
 3. Includes unlimited storage for service accounts
@@ -55,11 +62,14 @@ If you want to keep using Google Drive:
 ### **Implementation Steps:**
 
 #### **Step 1: Update Google Docs Service**
+
 Modify the service to use your personal drive instead of service account drive.
 
 #### **Step 2: Create Template in Your Personal Drive**
+
 1. Go to: https://docs.google.com/document/create
 2. Create template with placeholders:
+
    ```
    EMPLOYMENT CONTRACT
 
@@ -91,6 +101,7 @@ Modify the service to use your personal drive instead of service account drive.
 4. **Share with service account** (Editor permission)
 
 #### **Step 3: Update Environment Variables**
+
 ```env
 GOOGLE_DOCS_TEMPLATE_ID=your-template-id-from-personal-drive
 # Keep existing service account key
@@ -98,16 +109,19 @@ GOOGLE_SERVICE_ACCOUNT_KEY=existing-key
 ```
 
 #### **Step 4: Modify Service to Use Your Drive**
+
 The service will create documents in your personal drive where you have 200GB.
 
 ## 🧪 **Testing the Solution**
 
 ### **Step 1: Test Configuration**
+
 ```
 https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 ### **Step 2: Test Integration**
+
 ```
 https://portal.thesmartpro.io/api/test/google-docs-simple
 ```
@@ -120,15 +134,17 @@ After implementation:
 ✅ **Uses your 200GB personal storage**  
 ✅ **No premium plan required**  
 ✅ **Successful contract generation**  
-✅ **Documents saved to your personal drive**  
+✅ **Documents saved to your personal drive**
 
 ## 💰 **Cost Comparison**
 
 ### **Current Issue:**
+
 - Google Drive Premium: $12-18/month
 - Service account storage limitations
 
 ### **Recommended Solution:**
+
 - Use personal drive: **$0/month**
 - 200GB storage available
 - No additional costs
@@ -138,12 +154,14 @@ After implementation:
 If you prefer not to use Google Drive at all:
 
 ### **Benefits:**
+
 - ✅ No Google Drive storage limitations
 - ✅ Direct integration with your existing system
 - ✅ Cost-effective
 - ✅ Full control over storage
 
 ### **Implementation:**
+
 1. Generate documents in memory
 2. Upload to Supabase Storage
 3. Return download links

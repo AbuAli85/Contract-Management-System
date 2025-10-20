@@ -118,7 +118,10 @@ function isRetryableError(error: any): boolean {
   if (!error) return false;
 
   // Network errors are retryable
-  if (error.message?.includes('network') || error.message?.includes('timeout')) {
+  if (
+    error.message?.includes('network') ||
+    error.message?.includes('timeout')
+  ) {
     return true;
   }
 
@@ -156,9 +159,7 @@ export async function fetchPromotersWithPagination(
     const offset = (page - 1) * limit;
 
     // Build query
-    let query = supabase
-      .from('promoters')
-      .select('*', { count: 'exact' });
+    let query = supabase.from('promoters').select('*', { count: 'exact' });
 
     // Apply filters
     if (filters?.status) {
@@ -212,7 +213,7 @@ export async function fetchPromotersWithPagination(
 export async function fetchPromoterById(id: string): Promise<Promoter | null> {
   try {
     const supabase = createSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('promoters')
       .select('*')
@@ -231,10 +232,12 @@ export async function fetchPromoterById(id: string): Promise<Promoter | null> {
 }
 
 // Create new promoter
-export async function createPromoter(promoterData: Partial<Promoter>): Promise<Promoter | null> {
+export async function createPromoter(
+  promoterData: Partial<Promoter>
+): Promise<Promoter | null> {
   try {
     const supabase = createSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('promoters')
       .insert(promoterData)
@@ -253,10 +256,13 @@ export async function createPromoter(promoterData: Partial<Promoter>): Promise<P
 }
 
 // Update promoter
-export async function updatePromoter(id: string, updates: Partial<Promoter>): Promise<Promoter | null> {
+export async function updatePromoter(
+  id: string,
+  updates: Partial<Promoter>
+): Promise<Promoter | null> {
   try {
     const supabase = createSupabaseClient();
-    
+
     const { data, error } = await supabase
       .from('promoters')
       .update(updates)
@@ -279,11 +285,8 @@ export async function updatePromoter(id: string, updates: Partial<Promoter>): Pr
 export async function deletePromoter(id: string): Promise<boolean> {
   try {
     const supabase = createSupabaseClient();
-    
-    const { error } = await supabase
-      .from('promoters')
-      .delete()
-      .eq('id', id);
+
+    const { error } = await supabase.from('promoters').delete().eq('id', id);
 
     if (error) {
       throw error;
@@ -307,11 +310,13 @@ export async function searchPromoters(
     }
 
     const supabase = createSupabaseClient();
-    
+
     let query = supabase
       .from('promoters')
       .select('*')
-      .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      .or(
+        `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+      );
 
     // Apply filters
     if (filters?.status) {
@@ -340,10 +345,10 @@ export async function getPromoterPerformanceStats(
 ): Promise<{ data: PromoterPerformanceStats | null; error: string | null }> {
   try {
     const supabase = createSupabaseClient();
-    
+
     // Build base query
     let query = supabase.from('promoters').select('*');
-    
+
     // Apply filters
     if (filters?.status) {
       query = query.eq('status', filters.status);
@@ -367,8 +372,12 @@ export async function getPromoterPerformanceStats(
       total_promoters: promoters.length,
       active_promoters: promoters.filter(p => p.status === 'active').length,
       inactive_promoters: promoters.filter(p => p.status === 'inactive').length,
-      critical_status_count: promoters.filter(p => p.overall_status === 'critical').length,
-      warning_status_count: promoters.filter(p => p.overall_status === 'warning').length,
+      critical_status_count: promoters.filter(
+        p => p.overall_status === 'critical'
+      ).length,
+      warning_status_count: promoters.filter(
+        p => p.overall_status === 'warning'
+      ).length,
       total_contracts: 0, // This would need to be calculated from contracts table
       total_contract_value: 0, // This would need to be calculated from contracts table
       avg_contract_duration: 0, // This would need to be calculated from contracts table
@@ -380,18 +389,20 @@ export async function getPromoterPerformanceStats(
     return { data: stats, error: null };
   } catch (error) {
     console.error('Error getting promoter performance stats:', error);
-    return { 
-      data: null, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
 
 // Export promoters to CSV
-export async function exportPromotersToCSV(filters?: PromoterFilters): Promise<string> {
+export async function exportPromotersToCSV(
+  filters?: PromoterFilters
+): Promise<string> {
   try {
     const supabase = createSupabaseClient();
-    
+
     let query = supabase.from('promoters').select('*');
 
     // Apply filters
@@ -414,21 +425,29 @@ export async function exportPromotersToCSV(filters?: PromoterFilters): Promise<s
 
     // Convert to CSV
     const headers = Object.keys(data[0]).join(',');
-    const rows = data.map(promoter => 
-      Object.values(promoter).map(value => 
-        typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-      ).join(',')
+    const rows = data.map(promoter =>
+      Object.values(promoter)
+        .map(value =>
+          typeof value === 'string' && value.includes(',')
+            ? `"${value}"`
+            : value
+        )
+        .join(',')
     );
 
     return [headers, ...rows].join('\n');
   } catch (error) {
     console.error('Error exporting promoters to CSV:', error);
-    throw new Error(`Failed to export promoters to CSV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to export promoters to CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
 // Import promoters from CSV
-export async function importPromotersFromCSV(csvData: string): Promise<ImportResult> {
+export async function importPromotersFromCSV(
+  csvData: string
+): Promise<ImportResult> {
   try {
     const lines = csvData.trim().split('\n');
     if (lines.length < 2) {
@@ -454,7 +473,9 @@ export async function importPromotersFromCSV(csvData: string): Promise<ImportRes
 
         // Basic validation
         if (!promoter.email || !promoter.first_name || !promoter.last_name) {
-          errors.push(`Row ${index + 2}: Missing required fields (email, first_name, last_name)`);
+          errors.push(
+            `Row ${index + 2}: Missing required fields (email, first_name, last_name)`
+          );
           return;
         }
 
@@ -467,7 +488,9 @@ export async function importPromotersFromCSV(csvData: string): Promise<ImportRes
 
         promoters.push(promoter);
       } catch (rowError) {
-        errors.push(`Row ${index + 2}: ${rowError instanceof Error ? rowError.message : 'Unknown error'}`);
+        errors.push(
+          `Row ${index + 2}: ${rowError instanceof Error ? rowError.message : 'Unknown error'}`
+        );
       }
     });
 
@@ -494,7 +517,9 @@ export async function importPromotersFromCSV(csvData: string): Promise<ImportRes
     };
   } catch (error) {
     console.error('Error importing promoters from CSV:', error);
-    throw new Error(`Failed to import promoters from CSV: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Failed to import promoters from CSV: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 }
 
@@ -502,24 +527,26 @@ export async function importPromotersFromCSV(csvData: string): Promise<ImportRes
 export async function getPromoterCVData(promoterId: string) {
   try {
     const supabase = createSupabaseClient();
-    
+
     // Fetch all CV-related data in parallel
-    const [skillsResult, experienceResult, educationResult] = await Promise.all([
-      supabase
-        .from('promoter_skills')
-        .select('*')
-        .eq('promoter_id', promoterId),
-      supabase
-        .from('promoter_experience')
-        .select('*')
-        .eq('promoter_id', promoterId)
-        .order('start_date', { ascending: false }),
-      supabase
-        .from('promoter_education')
-        .select('*')
-        .eq('promoter_id', promoterId)
-        .order('start_date', { ascending: false }),
-    ]);
+    const [skillsResult, experienceResult, educationResult] = await Promise.all(
+      [
+        supabase
+          .from('promoter_skills')
+          .select('*')
+          .eq('promoter_id', promoterId),
+        supabase
+          .from('promoter_experience')
+          .select('*')
+          .eq('promoter_id', promoterId)
+          .order('start_date', { ascending: false }),
+        supabase
+          .from('promoter_education')
+          .select('*')
+          .eq('promoter_id', promoterId)
+          .order('start_date', { ascending: false }),
+      ]
+    );
 
     // Check for errors
     if (skillsResult.error) throw skillsResult.error;
@@ -543,10 +570,10 @@ export async function fetchPromotersAnalytics(
 ): Promise<{ data: PromoterPerformanceStats; error: ServiceError | null }> {
   try {
     const supabase = createSupabaseClient();
-    
+
     // Build query based on filters
     let query = supabase.from('promoters').select('*');
-    
+
     if (filters.status) {
       query = query.eq('status', filters.status);
     }
@@ -585,10 +612,14 @@ export async function fetchPromotersAnalytics(
 
     // Calculate analytics
     const totalPromoters = promoters?.length || 0;
-    const activePromoters = promoters?.filter(p => p.status === 'active').length || 0;
-    const inactivePromoters = promoters?.filter(p => p.status === 'inactive').length || 0;
-    const criticalStatusCount = promoters?.filter(p => p.overall_status === 'critical').length || 0;
-    const warningStatusCount = promoters?.filter(p => p.overall_status === 'warning').length || 0;
+    const activePromoters =
+      promoters?.filter(p => p.status === 'active').length || 0;
+    const inactivePromoters =
+      promoters?.filter(p => p.status === 'inactive').length || 0;
+    const criticalStatusCount =
+      promoters?.filter(p => p.overall_status === 'critical').length || 0;
+    const warningStatusCount =
+      promoters?.filter(p => p.overall_status === 'warning').length || 0;
 
     // Mock contract data for now (in real implementation, this would come from contracts table)
     const totalContracts = 150;
@@ -646,7 +677,7 @@ export async function getPromoterIndividualPerformanceStats(
 ): Promise<{ data: any; error: ServiceError | null }> {
   try {
     const supabase = createSupabaseClient();
-    
+
     // Fetch performance data
     const { data: performance, error } = await supabase
       .from('promoter_performance')
@@ -683,7 +714,10 @@ export async function getPromoterIndividualPerformanceStats(
       error: null,
     };
   } catch (error) {
-    console.error(`Error fetching performance stats for promoter ${promoterId}:`, error);
+    console.error(
+      `Error fetching performance stats for promoter ${promoterId}:`,
+      error
+    );
     return {
       data: null,
       error: {

@@ -1,4 +1,5 @@
 # Make.com Configuration - For Your Actual Template
+
 ## Template ID: 1dG719K4jYFrEh8O9VChyMYWblflxW2tdFp2n4gpVhs0
 
 ---
@@ -30,18 +31,21 @@ Click "Add item" for each entry below:
 ---
 
 ### **Item 1: Reference Number**
+
 ```
 Find: {{ref_number}}
 Replace with: {{1.ref_number}}
 ```
 
 **How to do it:**
+
 - In "Find" field: Type `{{ref_number}}`
 - In "Replace with" field: Click inside, select from dropdown `1. ref_number`
 
 ---
 
 ### **Item 2: First Party Name (Arabic)**
+
 ```
 Find: {{first_party_name_ar}}
 Replace with: {{1.first_party_name_ar}}
@@ -50,6 +54,7 @@ Replace with: {{1.first_party_name_ar}}
 ---
 
 ### **Item 3: First Party CRN**
+
 ```
 Find: {{first_party_crn}}
 Replace with: {{1.first_party_crn}}
@@ -58,6 +63,7 @@ Replace with: {{1.first_party_crn}}
 ---
 
 ### **Item 4: Second Party Name (Arabic)**
+
 ```
 Find: {{second_party_name_ar}}
 Replace with: {{1.second_party_name_ar}}
@@ -66,6 +72,7 @@ Replace with: {{1.second_party_name_ar}}
 ---
 
 ### **Item 5: Second Party CRN**
+
 ```
 Find: {{second_party_crn}}
 Replace with: {{1.second_party_crn}}
@@ -74,6 +81,7 @@ Replace with: {{1.second_party_crn}}
 ---
 
 ### **Item 6: Promoter Name (Arabic)**
+
 ```
 Find: {{promoter_name_ar}}
 Replace with: {{1.promoter_name_ar}}
@@ -82,6 +90,7 @@ Replace with: {{1.promoter_name_ar}}
 ---
 
 ### **Item 7: ID Card Number**
+
 ```
 Find: {{id_card_number}}
 Replace with: {{1.id_card_number}}
@@ -90,6 +99,7 @@ Replace with: {{1.id_card_number}}
 ---
 
 ### **Item 8: Contract Start Date**
+
 ```
 Find: {{contract_start_date}}
 Replace with: {{1.contract_start_date}}
@@ -98,6 +108,7 @@ Replace with: {{1.contract_start_date}}
 ---
 
 ### **Item 9: Contract End Date**
+
 ```
 Find: {{contract_end_date}}
 Replace with: {{1.contract_end_date}}
@@ -106,6 +117,7 @@ Replace with: {{1.contract_end_date}}
 ---
 
 ### **Item 10: First Party Name (English)**
+
 ```
 Find: {{first_party_name_en}}
 Replace with: {{1.first_party_name_en}}
@@ -114,6 +126,7 @@ Replace with: {{1.first_party_name_en}}
 ---
 
 ### **Item 11: Second Party Name (English)**
+
 ```
 Find: {{second_party_name_en}}
 Replace with: {{1.second_party_name_en}}
@@ -122,6 +135,7 @@ Replace with: {{1.second_party_name_en}}
 ---
 
 ### **Item 12: Promoter Name (English)**
+
 ```
 Find: {{promoter_name_en}}
 Replace with: {{1.promoter_name_en}}
@@ -170,6 +184,7 @@ For the "Find" fields, copy these exactly (with curly braces):
 ```
 
 For the "Replace with" fields, use the variable picker to select:
+
 ```
 1. ref_number
 1. first_party_name_ar
@@ -192,6 +207,7 @@ For the "Replace with" fields, use the variable picker to select:
 ### **Step 1: Open Your Module**
 
 You should see:
+
 ```
 ┌─────────────────────────────────────────┐
 │ Google Docs                             │
@@ -210,6 +226,7 @@ The toggle should be GRAY (OFF), not blue.
 ### **Step 3: Click "Add item" 12 Times**
 
 For each item:
+
 1. Type the "Find" text with curly braces
 2. Click in "Replace with" and select from dropdown
 
@@ -275,18 +292,22 @@ After configuration:
 ## **🚨 Common Issues**
 
 ### **Issue: "Variable not found"**
+
 - Module 1 hasn't run yet
 - Run scenario once to populate variables
 
 ### **Issue: Text not replaced**
+
 - Spelling mismatch between template and Find field
 - Double-check: `{{first_party_name_ar}}` vs `{{firstPartyNameAr}}`
 
 ### **Issue: [object Object] error**
+
 - "Map" toggle is still ON
 - Turn it OFF and use "Add item" instead
 
 ### **Issue: Empty values in document**
+
 - Data not sent from webhook
 - Check Module 1 output to verify field exists
 
@@ -323,4 +344,3 @@ But for now, focus on getting these 12 text replacements working perfectly!
 ---
 
 **This is the EXACT configuration for YOUR template. No extra fields, no guessing!** 🎯
-

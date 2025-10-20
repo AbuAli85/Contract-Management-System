@@ -1,4 +1,5 @@
 # Make.com - Image Replacement Module Configuration
+
 ## For ID Card and Passport Photos
 
 ---
@@ -6,6 +7,7 @@
 ## **🎯 Overview**
 
 After text replacement works, add a separate module to replace the 2 images:
+
 1. **image_1** → Promoter ID Card
 2. **image_2** → Promoter Passport
 
@@ -48,7 +50,7 @@ Images to Replace:
 Item 1:
   Image to Replace: image_1
   New Image URL: {{1.promoter_id_card_url}}
-  
+
 Item 2:
   Image to Replace: image_2
   New Image URL: {{1.promoter_passport_url}}
@@ -158,6 +160,7 @@ In the **Body** field, switch to **"Raw"** mode and paste:
 **⚠️ CRITICAL:** Replace `kix.r7j8k9m0n1p2` and `kix.s8t9u0v1w2x3` with YOUR actual object IDs from Step 1!
 
 **imageReplaceMethod options:**
+
 - `CENTER_CROP` - Centers and crops to fit
 - `CENTER_INSIDE` - Centers without cropping (maintains aspect ratio)
 
@@ -195,11 +198,13 @@ The easiest approach: Let your backend handle image insertion before sending to 
 For now, I recommend:
 
 ### **Phase 1: Get Text Working (DO THIS FIRST)**
+
 - Configure the 12 text replacements
 - Test and verify text replacement works perfectly
 - Contracts are usable even without images
 
 ### **Phase 2: Add Images (AFTER TEXT WORKS)**
+
 - Try Option 1 (simple Replace Image module) if available
 - If not available, try Option 2 (API Call)
 - Or consider Option 4 (backend handles images)
@@ -270,21 +275,25 @@ Images are working when:
 ## **🚨 Troubleshooting**
 
 ### **Issue: "Image not found" or "Invalid object ID"**
+
 - Object IDs are template-specific and change if template is re-created
 - Re-run "Get a Document" module to find new IDs
 - Verify Alt text is set correctly
 
 ### **Issue: "URL is not accessible"**
+
 - Image URLs must be publicly accessible
 - Test by pasting URL in browser - should show image
 - Check Supabase storage bucket is public
 
 ### **Issue: Images are broken/don't load**
+
 - URLs might have expired or be incorrect
 - Check that URLs in Module 1 output are valid HTTPS URLs
 - Verify storage bucket RLS policies allow public read
 
 ### **Issue: Images replaced but wrong size**
+
 - Use `CENTER_INSIDE` instead of `CENTER_CROP`
 - Or adjust placeholder image size in template
 
@@ -317,4 +326,3 @@ I can provide exact configuration based on what you have!
 ---
 
 **For now, focus on getting the 12 text replacements working. Images can be added later!** 🎯
-

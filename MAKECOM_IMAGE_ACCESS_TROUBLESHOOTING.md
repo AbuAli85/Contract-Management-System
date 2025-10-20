@@ -7,11 +7,13 @@
 ## 🧪 Step 1: Run Comprehensive Diagnostics
 
 Run this SQL script in Supabase SQL Editor:
+
 ```sql
 scripts/diagnose-image-access.sql
 ```
 
 This will check:
+
 - ✅ Bucket public status
 - ✅ RLS policies
 - ✅ File existence and formats
@@ -31,6 +33,7 @@ This will check:
 3. **Paste and visit the URL**
 
 **Expected:**
+
 - ✅ **SUCCESS:** Image displays without login prompt
 - ❌ **FAILURE:** "403 Forbidden" or login prompt
 
@@ -46,6 +49,7 @@ This will check:
 **Module:** Google Docs - Replace Image
 
 **Configuration:**
+
 ```
 Document ID: [from previous module]
 
@@ -78,6 +82,7 @@ Replace Image 2:
 ### Check What URL is Actually Being Sent:
 
 1. **Add a "Set Variable" module** before Module 6:
+
    ```
    Variable Name: debug_id_card_url
    Variable Value: {{1.promoter_id_card_url}}
@@ -92,11 +97,13 @@ Replace Image 2:
 ### Example Debug Output:
 
 **❌ BAD (Partial URL):**
+
 ```
 debug_id_card_url = "abdul_basit_121924781.jpeg"
 ```
 
 **✅ GOOD (Full URL):**
+
 ```
 debug_id_card_url = "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/public/promoter-documents/abdul_basit_121924781.jpeg"
 ```
@@ -108,6 +115,7 @@ debug_id_card_url = "https://reootcngcptfogfozlmz.supabase.co/storage/v1/object/
 ### Fix 1: Ensure Database URLs are Full
 
 If diagnostic shows partial URLs in database, run:
+
 ```sql
 scripts/convert-to-full-urls-READY.sql
 ```
@@ -115,6 +123,7 @@ scripts/convert-to-full-urls-READY.sql
 ### Fix 2: Use ifempty() for Missing Images
 
 In Make.com Module 6, wrap your URL variables:
+
 ```
 ifempty({{1.promoter_id_card_url}}, "https://via.placeholder.com/400x300?text=No+ID+Card")
 ```
@@ -124,10 +133,12 @@ This provides a fallback if the promoter doesn't have a photo.
 ### Fix 3: Verify Image File Format and Size
 
 Run diagnostic script and check Step 3 output:
+
 - ✅ Format must be: `image/jpeg`, `image/png`, or `image/jpg`
 - ✅ Size must be: < 5MB (5,242,880 bytes)
 
 If issues found:
+
 - Re-upload the image in correct format
 - Compress large images
 - Update the promoter's URL in database
@@ -135,6 +146,7 @@ If issues found:
 ### Fix 4: Check for CORS or Network Issues
 
 Google Docs API requires:
+
 - ✅ URL must be publicly accessible (no authentication)
 - ✅ URL must return proper `Content-Type` header
 - ✅ URL must not redirect (use final URL)
@@ -180,6 +192,7 @@ Before re-running Make.com scenario, verify:
 ### If You're Getting Error:
 
 One of these is failing:
+
 - ❌ URL is not full HTTPS format
 - ❌ URL points to non-existent file
 - ❌ File format is not supported
@@ -203,15 +216,18 @@ One of these is failing:
 ### Alternative Solutions:
 
 **Option 1: Use Base64 Encoding**
+
 - Fetch image in Make.com
 - Convert to Base64
 - Embed Base64 directly in Google Doc
 
 **Option 2: Use Google Drive**
+
 - Upload images to Google Drive first
 - Use Drive image URLs (always accessible)
 
 **Option 3: Temporary Signed URLs**
+
 - Generate Supabase signed URLs (1-hour expiry)
 - Use those in Make.com
 - More secure but requires code changes
@@ -220,7 +236,3 @@ One of these is failing:
 
 **Last Updated:** October 16, 2025  
 **Related:** `SUPABASE_RLS_PUBLIC_READ_FIX.md`, `MAKECOM_IMAGE_URL_FIX.md`
-
-
-
-

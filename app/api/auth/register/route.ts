@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     const body = await request.json();
-    
+
     const { email, password, fullName, role, phone, company } = body;
 
     // Validate required fields
@@ -37,7 +37,9 @@ export async function POST(request: NextRequest) {
     const validRoles = ['user', 'provider', 'client', 'admin'];
     if (!validRoles.includes(role)) {
       return NextResponse.json(
-        { error: 'Invalid role. Must be one of: user, provider, client, admin' },
+        {
+          error: 'Invalid role. Must be one of: user, provider, client, admin',
+        },
         { status: 400 }
       );
     }
@@ -90,7 +92,9 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('🔐 Register API - Profile error:', profileError);
       // Don't fail the registration if profile creation fails
-      console.warn('Profile creation failed, but auth user was created successfully');
+      console.warn(
+        'Profile creation failed, but auth user was created successfully'
+      );
     } else {
       console.log('🔐 Register API - Profile created successfully');
     }
@@ -122,7 +126,6 @@ export async function POST(request: NextRequest) {
         status: 'active',
       },
     });
-
   } catch (error) {
     console.error('🔐 Register API - Exception:', error);
     return NextResponse.json(

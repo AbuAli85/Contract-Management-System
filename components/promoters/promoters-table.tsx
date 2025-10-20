@@ -28,24 +28,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Users,
-  Plus,
-  RefreshCw,
-  SortAsc,
-  SortDesc,
-} from 'lucide-react';
+import { Users, Plus, RefreshCw, SortAsc, SortDesc } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
-import type { 
-  DocumentStatus, 
-  OverallStatus, 
-  SortField, 
-  SortOrder, 
-  DocumentHealth, 
-  DashboardPromoter, 
-  PaginationInfo 
+import type {
+  DocumentStatus,
+  OverallStatus,
+  SortField,
+  SortOrder,
+  DocumentHealth,
+  DashboardPromoter,
+  PaginationInfo,
 } from './types';
-
 
 interface PromotersTableProps {
   promoters: DashboardPromoter[];
@@ -94,7 +87,10 @@ export function PromotersTable({
         <div>
           <CardTitle className='text-2xl font-bold'>Promoter roster</CardTitle>
           <CardDescription className='mt-1'>
-            <span className='font-semibold text-foreground'>{promoters.length}</span> records visible
+            <span className='font-semibold text-foreground'>
+              {promoters.length}
+            </span>{' '}
+            records visible
           </CardDescription>
         </div>
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
@@ -102,26 +98,46 @@ export function PromotersTable({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Badge variant='outline' className='gap-2 bg-amber-50 text-amber-700 border-amber-200'>
+                  <Badge
+                    variant='outline'
+                    className='gap-2 bg-amber-50 text-amber-700 border-amber-200'
+                  >
                     <RefreshCw className='h-3 w-3 animate-spin' />
                     Refreshing data
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className='text-xs'>Syncing latest promoter information...</p>
+                  <p className='text-xs'>
+                    Syncing latest promoter information...
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
-          <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as 'table' | 'grid' | 'cards')} className='ml-auto'>
+          <Tabs
+            value={viewMode}
+            onValueChange={value =>
+              onViewModeChange(value as 'table' | 'grid' | 'cards')
+            }
+            className='ml-auto'
+          >
             <TabsList className='grid w-full grid-cols-3 bg-white/80 dark:bg-slate-800/80'>
-              <TabsTrigger value='table' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+              <TabsTrigger
+                value='table'
+                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+              >
                 Table
               </TabsTrigger>
-              <TabsTrigger value='grid' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+              <TabsTrigger
+                value='grid'
+                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+              >
                 Grid
               </TabsTrigger>
-              <TabsTrigger value='cards' className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'>
+              <TabsTrigger
+                value='cards'
+                className='data-[state=active]:bg-blue-500 data-[state=active]:text-white'
+              >
                 Cards
               </TabsTrigger>
             </TabsList>
@@ -136,13 +152,14 @@ export function PromotersTable({
             </div>
             <div className='space-y-2'>
               <h3 className='text-xl font-semibold tracking-tight'>
-                {hasFiltersApplied ? 'No promoters match your filters' : 'No promoters yet'}
+                {hasFiltersApplied
+                  ? 'No promoters match your filters'
+                  : 'No promoters yet'}
               </h3>
               <p className='max-w-sm text-sm text-muted-foreground'>
-                {hasFiltersApplied 
-                  ? 'Try adjusting your filters or search terms to find what you\'re looking for.'
-                  : 'Get started by adding your first promoter to the system.'
-                }
+                {hasFiltersApplied
+                  ? "Try adjusting your filters or search terms to find what you're looking for."
+                  : 'Get started by adding your first promoter to the system.'}
               </p>
             </div>
             <div className='flex gap-3'>
@@ -168,17 +185,21 @@ export function PromotersTable({
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Checkbox
-                            checked={selectedPromoters.size === promoters.length}
+                            checked={
+                              selectedPromoters.size === promoters.length
+                            }
                             onCheckedChange={onSelectAll}
                           />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p className='text-xs'>Select all visible promoters</p>
+                          <p className='text-xs'>
+                            Select all visible promoters
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                     onClick={() => onSort('name')}
                   >
@@ -197,7 +218,7 @@ export function PromotersTable({
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                     onClick={() => onSort('documents')}
                   >
@@ -218,7 +239,7 @@ export function PromotersTable({
                   </TableHead>
                   <TableHead className='font-semibold'>Assignment</TableHead>
                   <TableHead className='font-semibold'>Contacts</TableHead>
-                  <TableHead 
+                  <TableHead
                     className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                     onClick={() => onSort('created')}
                   >
@@ -237,7 +258,7 @@ export function PromotersTable({
                       )}
                     </div>
                   </TableHead>
-                  <TableHead 
+                  <TableHead
                     className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
                     onClick={() => onSort('status')}
                   >
@@ -256,7 +277,9 @@ export function PromotersTable({
                       )}
                     </div>
                   </TableHead>
-                  <TableHead className='text-right font-semibold'>Actions</TableHead>
+                  <TableHead className='text-right font-semibold'>
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -272,9 +295,9 @@ export function PromotersTable({
                 ))}
                 {isFetching && promoters.length > 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                        <RefreshCw className="h-4 w-4 animate-spin" />
+                    <TableCell colSpan={8} className='text-center py-8'>
+                      <div className='flex items-center justify-center gap-2 text-muted-foreground'>
+                        <RefreshCw className='h-4 w-4 animate-spin' />
                         <span>Updating data...</span>
                       </div>
                     </TableCell>
@@ -285,15 +308,17 @@ export function PromotersTable({
           </ScrollArea>
         )}
       </CardContent>
-      
+
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
         <CardContent className='border-t pt-4'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <div className='text-sm text-muted-foreground'>
-              Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} promoters
+              Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
+              {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
+              of {pagination.total} promoters
             </div>
-            
+
             <div className='flex items-center gap-2'>
               <Button
                 variant='outline'
@@ -303,7 +328,7 @@ export function PromotersTable({
               >
                 First
               </Button>
-              
+
               <Button
                 variant='outline'
                 size='sm'
@@ -312,13 +337,13 @@ export function PromotersTable({
               >
                 Previous
               </Button>
-              
+
               <div className='flex items-center gap-2 px-2'>
                 <span className='text-sm'>
                   Page {pagination.page} of {pagination.totalPages}
                 </span>
               </div>
-              
+
               <Button
                 variant='outline'
                 size='sm'
@@ -327,7 +352,7 @@ export function PromotersTable({
               >
                 Next
               </Button>
-              
+
               <Button
                 variant='outline'
                 size='sm'

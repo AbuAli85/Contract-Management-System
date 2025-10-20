@@ -7,11 +7,13 @@ If you're getting a 500 Internal Server Error from `/api/contracts/google-docs-g
 ## 🔍 **Step 1: Check Configuration**
 
 Visit this URL to check your configuration:
+
 ```
 https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 This will show you:
+
 - ✅ Which environment variables are set
 - ✅ If the service account key is valid
 - ✅ If the Google Docs service can be initialized
@@ -20,6 +22,7 @@ This will show you:
 ## 🔧 **Step 2: Set Environment Variables in Production**
 
 ### **Vercel (Recommended)**
+
 1. Go to your Vercel dashboard
 2. Select your project
 3. Go to **Settings** → **Environment Variables**
@@ -34,6 +37,7 @@ GOOGLE_DRIVE_OUTPUT_FOLDER_ID=your-output-folder-id-here
 ```
 
 ### **Other Hosting Platforms**
+
 - **Netlify**: Site settings → Environment variables
 - **Railway**: Project → Variables
 - **DigitalOcean**: App Platform → Settings → Environment
@@ -41,6 +45,7 @@ GOOGLE_DRIVE_OUTPUT_FOLDER_ID=your-output-folder-id-here
 ## 📝 **Step 3: Create Google Docs Template**
 
 ### **3.1 Create Template**
+
 1. Go to [Google Docs](https://docs.google.com/document/create)
 2. Create a template with placeholders:
 
@@ -76,11 +81,13 @@ Passport: {{promoter_passport_image}}
 ```
 
 ### **3.2 Share Template**
+
 1. Click **Share** in Google Docs
 2. Add: `contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com`
 3. Set permission to **Editor**
 
 ### **3.3 Get Template ID**
+
 1. Copy document ID from URL: `https://docs.google.com/document/d/DOCUMENT_ID/edit`
 2. Update `GOOGLE_DOCS_TEMPLATE_ID` in your production environment
 
@@ -96,11 +103,13 @@ Passport: {{promoter_passport_image}}
 ## 🧪 **Step 5: Test Configuration**
 
 ### **Test Endpoint:**
+
 ```
 https://portal.thesmartpro.io/api/debug/google-docs-config
 ```
 
 ### **Expected Response:**
+
 ```json
 {
   "status": "success",
@@ -129,26 +138,35 @@ https://portal.thesmartpro.io/api/debug/google-docs-config
 ## 🚨 **Common Issues & Solutions**
 
 ### **Issue 1: "Google Docs configuration missing"**
+
 **Solution:** Environment variables not set in production
+
 - Add `GOOGLE_SERVICE_ACCOUNT_KEY` and `GOOGLE_DOCS_TEMPLATE_ID` to your hosting platform
 
 ### **Issue 2: "Template not found"**
+
 **Solution:** Template not shared with service account
+
 - Share template with: `contract-generator@nth-segment-475411-g1.iam.gserviceaccount.com`
 - Set permission to **Editor**
 
 ### **Issue 3: "Permission denied"**
+
 **Solution:** Google APIs not enabled
+
 - Enable Google Docs API and Google Drive API in Google Cloud Console
 
 ### **Issue 4: "Invalid credentials"**
+
 **Solution:** Service account key format issue
+
 - Ensure the JSON is properly formatted with escaped quotes
 - Check that all required fields are present
 
 ## 🔄 **Step 6: Redeploy**
 
 After setting environment variables:
+
 1. **Vercel**: Automatic redeploy
 2. **Netlify**: Trigger new deploy
 3. **Other platforms**: Redeploy your application

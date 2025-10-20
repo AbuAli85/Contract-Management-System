@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const isDevelopment = process.env.NODE_ENV === 'development';
     const bypassAuth = request.headers.get('x-bypass-auth') === 'true';
     const forceBypass = request.nextUrl.searchParams.get('bypass') === 'true';
-    
+
     if (isDevelopment && (bypassAuth || forceBypass)) {
       console.log('🔓 Development: Bypassing authentication check');
       return NextResponse.json({
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
           refresh_token: 'dev-refresh',
           expires_at: Math.floor(Date.now() / 1000) + 3600,
         },
-        warning: 'Development mode - authentication bypassed'
+        warning: 'Development mode - authentication bypassed',
       });
     }
 
@@ -43,8 +43,7 @@ export async function GET(request: NextRequest) {
         {
           authenticated: false,
           error: 'Authentication service unavailable',
-          hint:
-            'Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment and restart the dev server.',
+          hint: 'Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment and restart the dev server.',
         },
         { status: 503 }
       );
@@ -68,7 +67,10 @@ export async function GET(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (error) {
-      console.warn('🔐 Auth Check: getUser error treated as unauthenticated:', error?.message || error);
+      console.warn(
+        '🔐 Auth Check: getUser error treated as unauthenticated:',
+        error?.message || error
+      );
       // Treat recoverable auth errors as unauthenticated rather than 500
       return NextResponse.json(
         {
@@ -131,33 +133,43 @@ export async function GET(request: NextRequest) {
         .single();
 
       if (profileError) {
-        console.warn('🔐 Auth Check: User profile not found:', profileError.message);
-        
+        console.warn(
+          '🔐 Auth Check: User profile not found:',
+          profileError.message
+        );
+
         // If profile not found, try to create a basic one or return limited access
         if (profileError.code === 'PGRST116') {
-          console.log('🔐 Auth Check: Creating basic user profile for:', user.id);
-          
+          console.log(
+            '🔐 Auth Check: Creating basic user profile for:',
+            user.id
+          );
+
           // Return basic user info without database profile
           return NextResponse.json({
             authenticated: true,
             user: {
               id: user.id,
-              email: user.email || `user-${user.id.substring(0, 8)}@example.com`,
+              email:
+                user.email || `user-${user.id.substring(0, 8)}@example.com`,
               created_at: user.created_at,
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
               role: 'user', // Default role
-              full_name: user.user_metadata?.full_name || `User ${user.id.substring(0, 8)}`,
+              full_name:
+                user.user_metadata?.full_name ||
+                `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
               refresh_token: null, // Not available with getUser()
               expires_at: null, // Not available with getUser()
             },
-            warning: 'User profile not found in database, using default settings'
+            warning:
+              'User profile not found in database, using default settings',
           });
         }
-        
+
         // For other profile errors, still allow access in development
         if (process.env.NODE_ENV === 'development') {
           console.log('🔓 Development: Allowing access despite profile error');
@@ -165,22 +177,25 @@ export async function GET(request: NextRequest) {
             authenticated: true,
             user: {
               id: user.id,
-              email: user.email || `user-${user.id.substring(0, 8)}@example.com`,
+              email:
+                user.email || `user-${user.id.substring(0, 8)}@example.com`,
               created_at: user.created_at,
               updated_at: user.updated_at,
               user_metadata: user.user_metadata,
               role: 'user', // Default role
-              full_name: user.user_metadata?.full_name || `User ${user.id.substring(0, 8)}`,
+              full_name:
+                user.user_metadata?.full_name ||
+                `User ${user.id.substring(0, 8)}`,
             },
             session: {
               access_token: null, // Not available with getUser()
               refresh_token: null, // Not available with getUser()
               expires_at: null, // Not available with getUser()
             },
-            warning: 'Profile validation failed, using fallback settings'
+            warning: 'Profile validation failed, using fallback settings',
           });
         }
-        
+
         return NextResponse.json(
           {
             authenticated: false,
@@ -191,7 +206,10 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      console.log('✅ Auth Check: User authenticated successfully:', user.email);
+      console.log(
+        '✅ Auth Check: User authenticated successfully:',
+        user.email
+      );
 
       // Return user info without sensitive data
       return NextResponse.json({
@@ -212,7 +230,9 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (profileError) {
-      console.warn('🔐 Auth Check: Profile validation error treated as unauthenticated');
+      console.warn(
+        '🔐 Auth Check: Profile validation error treated as unauthenticated'
+      );
       return NextResponse.json(
         {
           authenticated: false,

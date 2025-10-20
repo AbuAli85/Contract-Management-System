@@ -8,7 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
 import CaptchaHandler from './captcha-handler';
 import CaptchaErrorHandler from './captcha-error-handler';
 
@@ -46,16 +53,19 @@ export default function UnifiedLoginForm() {
   // Check if Supabase client is available
   if (!supabase) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+        <Card className='w-full max-w-md'>
           <CardHeader>
-            <CardTitle className="text-center text-red-600">Configuration Error</CardTitle>
+            <CardTitle className='text-center text-red-600'>
+              Configuration Error
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Alert>
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className='h-4 w-4' />
               <AlertDescription>
-                Supabase client is not properly configured. Please check your environment variables.
+                Supabase client is not properly configured. Please check your
+                environment variables.
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -92,7 +102,7 @@ export default function UnifiedLoginForm() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -121,18 +131,22 @@ export default function UnifiedLoginForm() {
         };
       }
 
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword(authOptions);
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword(authOptions);
 
       if (authError) {
         console.error('🔐 Unified Login - Auth error:', authError);
-        
+
         // Check if it's a CAPTCHA error
-        if (authError.message.includes('captcha') || authError.message.includes('verification')) {
+        if (
+          authError.message.includes('captcha') ||
+          authError.message.includes('verification')
+        ) {
           setShowCaptcha(true);
           setError('Please complete the CAPTCHA verification');
           return;
         }
-        
+
         setError(`Login failed: ${authError.message}`);
         return;
       }
@@ -168,13 +182,17 @@ export default function UnifiedLoginForm() {
       // Step 3: Check user status
       const userStatus = profile?.status || 'active';
       if (userStatus === 'pending') {
-        setError('Your account is pending approval. Please contact an administrator.');
+        setError(
+          'Your account is pending approval. Please contact an administrator.'
+        );
         await supabase.auth.signOut();
         return;
       }
 
       if (userStatus === 'inactive') {
-        setError('Your account has been deactivated. Please contact an administrator.');
+        setError(
+          'Your account has been deactivated. Please contact an administrator.'
+        );
         await supabase.auth.signOut();
         return;
       }
@@ -182,7 +200,8 @@ export default function UnifiedLoginForm() {
       setSuccess('Login successful! Redirecting...');
 
       // Step 4: Determine redirect path based on role
-      const userRole = profile?.role || authData.user.user_metadata?.role || 'user';
+      const userRole =
+        profile?.role || authData.user.user_metadata?.role || 'user';
       let redirectPath = '/en/dashboard';
 
       switch (userRole) {
@@ -210,10 +229,11 @@ export default function UnifiedLoginForm() {
       setTimeout(() => {
         router.push(redirectPath);
       }, 1500);
-
     } catch (error) {
       console.error('🔐 Unified Login - Exception:', error);
-      setError(`Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setError(
+        `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     } finally {
       setLoading(false);
     }
@@ -257,9 +277,14 @@ export default function UnifiedLoginForm() {
   };
 
   // Show CAPTCHA error handler if it's a CAPTCHA-related error
-  if (error && (error.toLowerCase().includes('captcha') || error.toLowerCase().includes('verification') || error.toLowerCase().includes('unexpected_failure'))) {
+  if (
+    error &&
+    (error.toLowerCase().includes('captcha') ||
+      error.toLowerCase().includes('verification') ||
+      error.toLowerCase().includes('unexpected_failure'))
+  ) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
         <CaptchaErrorHandler
           error={error}
           onRetry={handleRetry}
@@ -270,111 +295,109 @@ export default function UnifiedLoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900">
+    <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
+      <Card className='w-full max-w-md'>
+        <CardHeader className='text-center'>
+          <CardTitle className='text-2xl font-bold text-gray-900'>
             Welcome Back
           </CardTitle>
-          <p className="text-sm text-gray-600">
+          <p className='text-sm text-gray-600'>
             Sign in to your account to continue
           </p>
         </CardHeader>
 
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+          <form onSubmit={handleLogin} className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='email'>Email Address</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
+                id='email'
+                name='email'
+                type='email'
                 value={formData.email}
                 onChange={handleInputChange}
-                placeholder="Enter your email"
+                placeholder='Enter your email'
                 required
                 disabled={loading}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+            <div className='space-y-2'>
+              <Label htmlFor='password'>Password</Label>
+              <div className='relative'>
                 <Input
-                  id="password"
-                  name="password"
+                  id='password'
+                  name='password'
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Enter your password"
+                  placeholder='Enter your password'
                   required
                   disabled={loading}
                 />
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  type='button'
+                  variant='ghost'
+                  size='sm'
+                  className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
+                    <EyeOff className='h-4 w-4' />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className='h-4 w-4' />
                   )}
                 </Button>
-            </div>
-          </div>
-
-          {/* CAPTCHA Section */}
-          {showCaptcha && (
-            <div className="space-y-2">
-              <Label>Security Verification</Label>
-              <div className="flex items-center gap-2">
-                <CaptchaHandler
-                  ref={captchaRef}
-                  onCaptchaReady={handleCaptchaReady}
-                  onCaptchaError={handleCaptchaError}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={resetCaptcha}
-                  disabled={loading}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
               </div>
-              {captchaError && (
-                <p className="text-sm text-red-600">{captchaError}</p>
-              )}
             </div>
-          )}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {/* CAPTCHA Section */}
+            {showCaptcha && (
+              <div className='space-y-2'>
+                <Label>Security Verification</Label>
+                <div className='flex items-center gap-2'>
+                  <CaptchaHandler
+                    ref={captchaRef}
+                    onCaptchaReady={handleCaptchaReady}
+                    onCaptchaError={handleCaptchaError}
+                  />
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={resetCaptcha}
+                    disabled={loading}
+                  >
+                    <RefreshCw className='h-4 w-4' />
+                  </Button>
+                </div>
+                {captchaError && (
+                  <p className='text-sm text-red-600'>{captchaError}</p>
+                )}
+              </div>
+            )}
 
-            {success && (
-              <Alert className="border-green-200 bg-green-50">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">{success}</AlertDescription>
+            {error && (
+              <Alert variant='destructive'>
+                <AlertCircle className='h-4 w-4' />
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
+            {success && (
+              <Alert className='border-green-200 bg-green-50'>
+                <CheckCircle className='h-4 w-4 text-green-600' />
+                <AlertDescription className='text-green-800'>
+                  {success}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button type='submit' className='w-full' disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Signing in...
                 </>
               ) : (
@@ -384,28 +407,28 @@ export default function UnifiedLoginForm() {
           </form>
 
           {/* Quick Test Buttons */}
-          <div className="mt-6 pt-4 border-t">
-            <p className="text-sm text-gray-600 mb-3">Quick test accounts:</p>
-            <div className="grid grid-cols-1 gap-2">
+          <div className='mt-6 pt-4 border-t'>
+            <p className='text-sm text-gray-600 mb-3'>Quick test accounts:</p>
+            <div className='grid grid-cols-1 gap-2'>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
                 disabled={loading}
               >
                 Test Provider Account
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={() => quickLogin('client@test.com', 'TestPass123!')}
                 disabled={loading}
               >
                 Test Client Account
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant='outline'
+                size='sm'
                 onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
                 disabled={loading}
               >
@@ -415,17 +438,17 @@ export default function UnifiedLoginForm() {
           </div>
 
           {/* Navigation */}
-          <div className="mt-6 pt-4 border-t space-y-2">
+          <div className='mt-6 pt-4 border-t space-y-2'>
             <Button
-              variant="ghost"
-              className="w-full"
+              variant='ghost'
+              className='w-full'
               onClick={() => router.push('/en/auth/register')}
             >
               Don't have an account? Sign up
             </Button>
             <Button
-              variant="ghost"
-              className="w-full"
+              variant='ghost'
+              className='w-full'
               onClick={() => router.push('/en/auth/forgot-password')}
             >
               Forgot your password?
@@ -434,11 +457,13 @@ export default function UnifiedLoginForm() {
 
           {/* User Profile Display */}
           {userProfile && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-              <p className="text-sm text-blue-800">
-                <strong>Welcome, {userProfile.full_name || userProfile.email}!</strong>
+            <div className='mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md'>
+              <p className='text-sm text-blue-800'>
+                <strong>
+                  Welcome, {userProfile.full_name || userProfile.email}!
+                </strong>
               </p>
-              <p className="text-xs text-blue-600">
+              <p className='text-xs text-blue-600'>
                 Role: {userProfile.role} | Status: {userProfile.status}
               </p>
             </div>

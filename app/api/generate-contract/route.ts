@@ -14,21 +14,30 @@ export const POST = withAnyRBAC(
       } catch (jsonError) {
         console.error('JSON parse error:', jsonError);
         return NextResponse.json(
-          { 
+          {
             error: 'Invalid JSON in request body',
-            details: jsonError instanceof Error ? jsonError.message : 'Unknown JSON error'
+            details:
+              jsonError instanceof Error
+                ? jsonError.message
+                : 'Unknown JSON error',
           },
           { status: 400 }
         );
       }
-      
+
       const supabase = await createClient();
 
       // Check authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
       if (authError || !user) {
-        console.log('🔐 Authentication check failed:', authError?.message || 'No user found');
+        console.log(
+          '🔐 Authentication check failed:',
+          authError?.message || 'No user found'
+        );
         // For testing purposes, we'll continue without authentication
         // In production, you should return an error here
         console.log('⚠️ Continuing without authentication for testing');
@@ -37,15 +46,19 @@ export const POST = withAnyRBAC(
       }
 
       // Validate required fields
-      const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id'];
+      const requiredFields = [
+        'promoter_id',
+        'first_party_id',
+        'second_party_id',
+      ];
       const missingFields = requiredFields.filter(field => !body[field]);
-      
+
       if (missingFields.length > 0) {
         return NextResponse.json(
-          { 
+          {
             error: 'Missing required fields',
             missing_fields: missingFields,
-            received_fields: Object.keys(body)
+            received_fields: Object.keys(body),
           },
           { status: 400 }
         );
@@ -64,40 +77,40 @@ export const POST = withAnyRBAC(
         if (!type) return 'employment';
         const typeLower = String(type).toLowerCase();
         const typeMap: Record<string, string> = {
-          'employment': 'employment',
+          employment: 'employment',
           'full-time-permanent': 'employment',
           'full-time-fixed': 'employment',
           'part-time-permanent': 'employment',
           'part-time-fixed': 'employment',
-          'probationary': 'employment',
+          probationary: 'employment',
           'training-contract': 'employment',
-          'internship': 'employment',
+          internship: 'employment',
           'graduate-trainee': 'employment',
-          'service': 'service',
-          'freelance': 'service',
-          'contractor': 'service',
-          'consultant': 'consultancy',
-          'consulting': 'consultancy',
+          service: 'service',
+          freelance: 'service',
+          contractor: 'service',
+          consultant: 'consultancy',
+          consulting: 'consultancy',
           'consulting-agreement': 'consultancy',
           'project-based': 'consultancy',
-          'partnership': 'partnership',
-          'temporary': 'service',
-          'seasonal': 'service',
-          'executive': 'employment',
-          'management': 'employment',
-          'director': 'employment',
+          partnership: 'partnership',
+          temporary: 'service',
+          seasonal: 'service',
+          executive: 'employment',
+          management: 'employment',
+          director: 'employment',
           'remote-work': 'employment',
           'hybrid-work': 'employment',
-          'secondment': 'service',
-          'apprenticeship': 'employment',
+          secondment: 'service',
+          apprenticeship: 'employment',
           'service-agreement': 'service',
-          'retainer': 'service',
+          retainer: 'service',
         };
         return typeMap[typeLower] || 'employment';
       };
 
       const contractType = mapContractType(body.contract_type);
-      
+
       // Ensure start_date is provided (required by database)
       const toDateOnly = (value: any): string | null => {
         if (!value) return null;
@@ -105,7 +118,9 @@ export const POST = withAnyRBAC(
         if (isNaN(d.getTime())) return null;
         return d.toISOString().slice(0, 10);
       };
-      const startDate = toDateOnly(body.contract_start_date || body.start_date) || new Date().toISOString().slice(0, 10);
+      const startDate =
+        toDateOnly(body.contract_start_date || body.start_date) ||
+        new Date().toISOString().slice(0, 10);
       const endDate = toDateOnly(body.contract_end_date || body.end_date);
 
       // Insert contract into database
@@ -114,7 +129,11 @@ export const POST = withAnyRBAC(
         promoter_id: body.promoter_id,
         employer_id: body.second_party_id || body.employer_id,
         client_id: body.first_party_id || body.client_id,
-        title: body.contract_name || body.title || body.job_title || 'Employment Contract',
+        title:
+          body.contract_name ||
+          body.title ||
+          body.job_title ||
+          'Employment Contract',
         description: body.description || body.special_terms,
         contract_type: contractType,
         start_date: startDate,
@@ -133,12 +152,12 @@ export const POST = withAnyRBAC(
       if (error) {
         console.error('Database error:', error);
         return NextResponse.json(
-          { 
+          {
             error: 'Failed to create contract record',
-            domain: "protal.thesmartpro.io",
+            domain: 'protal.thesmartpro.io',
             details: error.message,
             code: error.code,
-            hint: error.hint
+            hint: error.hint,
           },
           { status: 500 }
         );
@@ -167,19 +186,19 @@ export const POST = withAnyRBAC(
         }
       }
 
-      return NextResponse.json({ 
-        success: true, 
+      return NextResponse.json({
+        success: true,
         contract,
-        domain: "protal.thesmartpro.io",
-        message: "Contract created successfully"
+        domain: 'protal.thesmartpro.io',
+        message: 'Contract created successfully',
       });
     } catch (error) {
       console.error('API error:', error);
       return NextResponse.json(
-        { 
+        {
           error: 'Internal server error',
-          domain: "protal.thesmartpro.io",
-          details: error instanceof Error ? error.message : 'Unknown error'
+          domain: 'protal.thesmartpro.io',
+          details: error instanceof Error ? error.message : 'Unknown error',
         },
         { status: 500 }
       );
