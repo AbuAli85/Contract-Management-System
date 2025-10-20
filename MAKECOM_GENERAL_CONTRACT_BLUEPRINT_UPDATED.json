@@ -1,0 +1,1543 @@
+{
+  "name": "Contract Generation - general",
+  "flow": [
+    {
+      "id": 1,
+      "module": "gateway:CustomWebHook",
+      "version": 1,
+      "parameters": {
+        "hook": 3425916,
+        "maxResults": 1
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0
+        },
+        "restore": {
+          "parameters": {
+            "hook": {
+              "data": {
+                "editable": "true"
+              },
+              "label": "Contract Generation - general"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hook",
+            "type": "hook:gateway-webhook",
+            "label": "Webhook",
+            "required": true
+          },
+          {
+            "name": "maxResults",
+            "type": "number",
+            "label": "Maximum number of results"
+          }
+        ]
+      }
+    },
+    {
+      "id": 53,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contract_id",
+        "scope": "roundtrip",
+        "value": "{{1.contract_id}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true,
+            "validate": {
+              "enum": [
+                "roundtrip",
+                "execution"
+              ]
+            }
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ],
+        "interface": [
+          {
+            "name": "contract_id",
+            "type": "any",
+            "label": "contract_id"
+          }
+        ]
+      }
+    },
+    {
+      "id": 54,
+      "module": "util:SetVariable2",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "name": "contract_number",
+        "scope": "roundtrip",
+        "value": "{{1.contract_number}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 600,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Variable name",
+            "required": true
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true,
+            "validate": {
+              "enum": [
+                "roundtrip",
+                "execution"
+              ]
+            }
+          },
+          {
+            "name": "value",
+            "type": "any",
+            "label": "Variable value"
+          }
+        ],
+        "interface": [
+          {
+            "name": "contract_number",
+            "type": "any",
+            "label": "contract_number"
+          }
+        ]
+      }
+    },
+    {
+      "id": 57,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "promoters",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.promoter_id}}",
+              "o": "text:eq."
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "table": {
+              "mode": "chose",
+              "label": "promoters"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "supabase"
+              },
+              "label": "extra contracts"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:supabase",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "table",
+            "type": "select",
+            "label": "Table",
+            "required": true
+          },
+          {
+            "name": "limit",
+            "type": "uinteger",
+            "label": "Limit"
+          },
+          {
+            "name": "search",
+            "type": "filter",
+            "label": "Search criteria"
+          }
+        ],
+        "interface": [
+          {
+            "name": "id",
+            "type": "text",
+            "label": "id"
+          },
+          {
+            "name": "name_en",
+            "type": "text",
+            "label": "name_en"
+          },
+          {
+            "name": "name_ar",
+            "type": "text",
+            "label": "name_ar"
+          },
+          {
+            "name": "email",
+            "type": "text",
+            "label": "email"
+          },
+          {
+            "name": "mobile_number",
+            "type": "text",
+            "label": "mobile_number"
+          },
+          {
+            "name": "id_card_number",
+            "type": "text",
+            "label": "id_card_number"
+          },
+          {
+            "name": "passport_number",
+            "type": "text",
+            "label": "passport_number"
+          },
+          {
+            "name": "id_card_url",
+            "type": "text",
+            "label": "id_card_url"
+          },
+          {
+            "name": "passport_url",
+            "type": "text",
+            "label": "passport_url"
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "parties",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.first_party_id}}",
+              "o": "text:eq."
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1200,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "table": {
+              "mode": "chose",
+              "label": "parties"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "supabase"
+              },
+              "label": "extra contracts"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:supabase",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "table",
+            "type": "select",
+            "label": "Table",
+            "required": true
+          },
+          {
+            "name": "limit",
+            "type": "uinteger",
+            "label": "Limit"
+          },
+          {
+            "name": "search",
+            "type": "filter",
+            "label": "Search criteria"
+          }
+        ],
+        "interface": [
+          {
+            "name": "id",
+            "type": "text",
+            "label": "id"
+          },
+          {
+            "name": "name_en",
+            "type": "text",
+            "label": "name_en"
+          },
+          {
+            "name": "name_ar",
+            "type": "text",
+            "label": "name_ar"
+          },
+          {
+            "name": "crn",
+            "type": "text",
+            "label": "crn"
+          },
+          {
+            "name": "logo_url",
+            "type": "text",
+            "label": "logo_url"
+          }
+        ]
+      }
+    },
+    {
+      "id": 59,
+      "module": "supabase:searchRows",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "limit": "1",
+        "table": "parties",
+        "search": [
+          [
+            {
+              "a": "id",
+              "b": "{{1.second_party_id}}",
+              "o": "text:eq."
+            }
+          ]
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1500,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "table": {
+              "mode": "chose",
+              "label": "parties"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "supabase"
+              },
+              "label": "extra contracts"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:supabase",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "table",
+            "type": "select",
+            "label": "Table",
+            "required": true
+          },
+          {
+            "name": "limit",
+            "type": "uinteger",
+            "label": "Limit"
+          },
+          {
+            "name": "search",
+            "type": "filter",
+            "label": "Search criteria"
+          }
+        ],
+        "interface": [
+          {
+            "name": "id",
+            "type": "text",
+            "label": "id"
+          },
+          {
+            "name": "name_en",
+            "type": "text",
+            "label": "name_en"
+          },
+          {
+            "name": "name_ar",
+            "type": "text",
+            "label": "name_ar"
+          },
+          {
+            "name": "crn",
+            "type": "text",
+            "label": "crn"
+          },
+          {
+            "name": "logo_url",
+            "type": "text",
+            "label": "logo_url"
+          }
+        ]
+      }
+    },
+    {
+      "id": 55,
+      "module": "util:SetVariables",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "scope": "roundtrip",
+        "variables": [
+          {
+            "name": "stored_contract_type",
+            "value": "{{1.contract_type}}"
+          },
+          {
+            "name": "stored_promoter_id",
+            "value": "{{1.promoter_id}}"
+          },
+          {
+            "name": "stored_first_party_id",
+            "value": "{{1.first_party_id}}"
+          },
+          {
+            "name": "stored_second_party_id",
+            "value": "{{1.second_party_id}}"
+          },
+          {
+            "name": "stored_job_title",
+            "value": "{{1.job_title}}"
+          },
+          {
+            "name": "stored_department",
+            "value": "{{1.department}}"
+          },
+          {
+            "name": "stored_work_location",
+            "value": "{{1.work_location}}"
+          },
+          {
+            "name": "stored_basic_salary",
+            "value": "{{1.basic_salary}}"
+          },
+          {
+            "name": "stored_contract_start_date",
+            "value": "{{1.contract_start_date}}"
+          },
+          {
+            "name": "stored_contract_end_date",
+            "value": "{{1.contract_end_date}}"
+          },
+          {
+            "name": "stored_special_terms",
+            "value": "{{1.special_terms}}"
+          },
+          {
+            "name": "stored_products_en",
+            "value": "{{1.products_en}}"
+          },
+          {
+            "name": "stored_products_ar",
+            "value": "{{1.products_ar}}"
+          },
+          {
+            "name": "stored_location_en",
+            "value": "{{1.location_en}}"
+          },
+          {
+            "name": "stored_location_ar",
+            "value": "{{1.location_ar}}"
+          },
+          {
+            "name": "stored_promoter_id_card_image_url",
+            "value": "{{1.promoter_id_card_url}}"
+          },
+          {
+            "name": "stored_promoter_passport_image_url",
+            "value": "{{1.promoter_passport_url}}"
+          },
+          {
+            "name": "stored_promoter_name_en",
+            "value": "{{1.promoter_name_en}}"
+          },
+          {
+            "name": "stored_promoter_name_ar",
+            "value": "{{1.promoter_name_ar}}"
+          },
+          {
+            "name": "stored_promoter_mobile_number",
+            "value": "{{1.promoter_mobile_number}}"
+          },
+          {
+            "name": "stored_promoter_email",
+            "value": "{{1.promoter_email}}"
+          },
+          {
+            "name": "stored_promoter_id_card_number",
+            "value": "{{1.promoter_id_card_number}}"
+          },
+          {
+            "name": "stored_first_party_name_ar",
+            "value": "{{1.first_party_name_ar}}"
+          },
+          {
+            "name": "stored_first_party_name_en",
+            "value": "{{1.first_party_name_en}}"
+          },
+          {
+            "name": "stored_second_party_name_ar",
+            "value": "{{1.second_party_name_ar}}"
+          },
+          {
+            "name": "stored_second_party_name_en",
+            "value": "{{1.second_party_name_en}}"
+          },
+          {
+            "name": "stored_first_party_logo_url",
+            "value": "{{1.first_party_logo}}"
+          },
+          {
+            "name": "stored_second_party_logo_url",
+            "value": "{{1.second_party_logo}}"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 1800,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "scope": {
+              "label": "One cycle"
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "variables",
+            "spec": [
+              {
+                "name": "name",
+                "type": "text",
+                "label": "Variable name",
+                "required": true
+              },
+              {
+                "name": "value",
+                "type": "any",
+                "label": "Variable value"
+              }
+            ],
+            "type": "array",
+            "label": "Variables"
+          },
+          {
+            "name": "scope",
+            "type": "select",
+            "label": "Variable lifetime",
+            "required": true,
+            "validate": {
+              "enum": [
+                "roundtrip",
+                "execution"
+              ]
+            }
+          }
+        ],
+        "interface": [
+          {
+            "name": "stored_contract_type",
+            "type": "any",
+            "label": "stored_contract_type"
+          },
+          {
+            "name": "stored_promoter_id",
+            "type": "any",
+            "label": "stored_promoter_id"
+          },
+          {
+            "name": "stored_first_party_id",
+            "type": "any",
+            "label": "stored_first_party_id"
+          },
+          {
+            "name": "stored_second_party_id",
+            "type": "any",
+            "label": "stored_second_party_id"
+          },
+          {
+            "name": "stored_job_title",
+            "type": "any",
+            "label": "stored_job_title"
+          },
+          {
+            "name": "stored_department",
+            "type": "any",
+            "label": "stored_department"
+          },
+          {
+            "name": "stored_work_location",
+            "type": "any",
+            "label": "stored_work_location"
+          },
+          {
+            "name": "stored_basic_salary",
+            "type": "any",
+            "label": "stored_basic_salary"
+          },
+          {
+            "name": "stored_contract_start_date",
+            "type": "any",
+            "label": "stored_contract_start_date"
+          },
+          {
+            "name": "stored_contract_end_date",
+            "type": "any",
+            "label": "stored_contract_end_date"
+          },
+          {
+            "name": "stored_special_terms",
+            "type": "any",
+            "label": "stored_special_terms"
+          },
+          {
+            "name": "stored_products_en",
+            "type": "any",
+            "label": "stored_products_en"
+          },
+          {
+            "name": "stored_products_ar",
+            "type": "any",
+            "label": "stored_products_ar"
+          },
+          {
+            "name": "stored_location_en",
+            "type": "any",
+            "label": "stored_location_en"
+          },
+          {
+            "name": "stored_location_ar",
+            "type": "any",
+            "label": "stored_location_ar"
+          },
+          {
+            "name": "stored_promoter_id_card_image_url",
+            "type": "any",
+            "label": "stored_promoter_id_card_image_url"
+          },
+          {
+            "name": "stored_promoter_passport_image_url",
+            "type": "any",
+            "label": "stored_promoter_passport_image_url"
+          },
+          {
+            "name": "stored_promoter_name_en",
+            "type": "any",
+            "label": "stored_promoter_name_en"
+          },
+          {
+            "name": "stored_promoter_name_ar",
+            "type": "any",
+            "label": "stored_promoter_name_ar"
+          },
+          {
+            "name": "stored_promoter_mobile_number",
+            "type": "any",
+            "label": "stored_promoter_mobile_number"
+          },
+          {
+            "name": "stored_promoter_email",
+            "type": "any",
+            "label": "stored_promoter_email"
+          },
+          {
+            "name": "stored_promoter_id_card_number",
+            "type": "any",
+            "label": "stored_promoter_id_card_number"
+          },
+          {
+            "name": "stored_first_party_name_ar",
+            "type": "any",
+            "label": "stored_first_party_name_ar"
+          },
+          {
+            "name": "stored_first_party_name_en",
+            "type": "any",
+            "label": "stored_first_party_name_en"
+          },
+          {
+            "name": "stored_second_party_name_ar",
+            "type": "any",
+            "label": "stored_second_party_name_ar"
+          },
+          {
+            "name": "stored_second_party_name_en",
+            "type": "any",
+            "label": "stored_second_party_name_en"
+          },
+          {
+            "name": "stored_first_party_logo_url",
+            "type": "any",
+            "label": "stored_first_party_logo_url"
+          },
+          {
+            "name": "stored_second_party_logo_url",
+            "type": "any",
+            "label": "stored_second_party_logo_url"
+          }
+        ]
+      }
+    },
+    {
+      "id": 56,
+      "module": "google-docs:createADocumentFromTemplate",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "from": "drive",
+        "name": "{{1.contract_number}}-{{1.promoter_name_en}}.pdf",
+        "image": {
+          "kix.2k5omiotmkl-t.0": "{{55.stored_promoter_id_card_image_url}}",
+          "kix.4io8vw4k1u1n-t.0": "{{55.stored_promoter_passport_image_url}}",
+          "kix.9n0jtkeyw9ii-t.0": "{{55.stored_second_party_logo_url}}"
+        },
+        "select": "dropdown",
+        "document": "/1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a/1dzYQ_MDstiErG9O1yP87_bVXvDPQbe8V/1b1YNKbaP6JID7s8vDDZLok3nY87W_H_DNWX__N7XwOA",
+        "folderId": "/1WoJfPb62ILAKaMT1jEjXH3zwjfkXmg3a/1v8x-WIRVpYdIoO72LVTKpePB5z-bjOep/1qjY2Jjn9BkzlckqolWCTS64k-y6zIeBw",
+        "requests": {
+          "ref_number": "{{1.contract_number}}",
+          "id_card_number": "{{1.promoter_id_card_number}}",
+          "first_party_crn": "{{58.crn}}",
+          "promoter_name_ar": "{{57.name_ar}}",
+          "promoter_name_en": "{{57.name_en}}",
+          "second_party_crn": "{{59.crn}}",
+          "contract_end_date": "{{formatDate(1.contract_end_date; \"DD-MM-YYYY\")}}",
+          "contract_start_date": "{{formatDate(1.contract_start_date; \"DD-MM-YYYY\")}}",
+          "first_party_name_ar": "{{58.name_ar}}",
+          "first_party_name_en": "{{58.name_en}}",
+          "second_party_name_ar": "{{59.name_ar}}",
+          "second_party_name_en": "{{59.name_en}}",
+          "product_ar": "{{55.stored_products_ar}}",
+          "product_en": "{{55.stored_products_en}}",
+          "location_ar": "{{55.stored_location_ar}}",
+          "location_en": "{{55.stored_location_en}}"
+        },
+        "destination": "drive"
+      },
+      "metadata": {
+        "designer": {
+          "x": 2700,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "from": {
+              "label": "My Drive"
+            },
+            "select": {
+              "label": "By Dropdown"
+            },
+            "document": {
+              "path": [
+                "contracts",
+                "templates",
+                "Promoter Contract-general"
+              ]
+            },
+            "folderId": {
+              "mode": "chose",
+              "path": [
+                "contracts",
+                "general contracts",
+                "2025"
+              ]
+            },
+            "destination": {
+              "label": "My Drive"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "google"
+              },
+              "label": "My Google connection (luxsess2001@gmail.com)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "select",
+            "type": "select",
+            "label": "Create a Document from a Template",
+            "required": true,
+            "validate": {
+              "enum": [
+                "map",
+                "dropdown"
+              ]
+            }
+          },
+          {
+            "name": "name",
+            "type": "text",
+            "label": "Title",
+            "required": true
+          },
+          {
+            "name": "destination",
+            "type": "select",
+            "label": "New Drive Location",
+            "required": true,
+            "validate": {
+              "enum": [
+                "drive",
+                "share",
+                "team"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "type": "select",
+            "label": "Choose a Drive",
+            "required": true,
+            "validate": {
+              "enum": [
+                "drive",
+                "share",
+                "team"
+              ]
+            }
+          },
+          {
+            "name": "document",
+            "type": "file",
+            "label": "Document ID",
+            "required": true
+          },
+          {
+            "name": "requests",
+            "spec": [
+              {
+                "name": "ref_number",
+                "type": "any"
+              },
+              {
+                "name": "first_party_name_ar",
+                "type": "any"
+              },
+              {
+                "name": "first_party_crn",
+                "type": "any"
+              },
+              {
+                "name": "second_party_name_ar",
+                "type": "any"
+              },
+              {
+                "name": "second_party_crn",
+                "type": "any"
+              },
+              {
+                "name": "product_ar",
+                "type": "any"
+              },
+              {
+                "name": "location_ar",
+                "type": "any"
+              },
+              {
+                "name": "promoter_name_ar",
+                "type": "any"
+              },
+              {
+                "name": "id_card_number",
+                "type": "any"
+              },
+              {
+                "name": "contract_start_date",
+                "type": "any"
+              },
+              {
+                "name": "contract_end_date",
+                "type": "any"
+              },
+              {
+                "name": "first_party_name_en",
+                "type": "any"
+              },
+              {
+                "name": "second_party_name_en",
+                "type": "any"
+              },
+              {
+                "name": "product_en",
+                "type": "any"
+              },
+              {
+                "name": "location_en",
+                "type": "any"
+              },
+              {
+                "name": "promoter_name_en",
+                "type": "any"
+              }
+            ],
+            "type": "collection",
+            "label": "Values"
+          },
+          {
+            "name": "image",
+            "spec": [
+              {
+                "name": "kix.9n0jtkeyw9ii-t.0",
+                "type": "url",
+                "label": "Tab (Tab 1) - Header: Image No. 1 (extra_logo)",
+                "metadata": {
+                  "tabId": "t.0"
+                }
+              },
+              {
+                "name": "kix.2k5omiotmkl-t.0",
+                "type": "url",
+                "label": "Tab (Tab 1) - Body: Image No. 1 (ID_CARD_IMAGE)",
+                "metadata": {
+                  "tabId": "t.0"
+                }
+              },
+              {
+                "name": "kix.4io8vw4k1u1n-t.0",
+                "type": "url",
+                "label": "Tab (Tab 1) - Body: Image No. 2 (PASSPORT_IMAGE)",
+                "metadata": {
+                  "tabId": "t.0"
+                }
+              }
+            ],
+            "type": "collection",
+            "label": "Image URLs"
+          },
+          {
+            "name": "folderId",
+            "type": "folder",
+            "label": "New Document's Location",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "module": "google-docs:exportADocument",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 8511693
+      },
+      "mapper": {
+        "document": "{{56.id}}",
+        "mimeType": "application/pdf",
+        "destination": "drive"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3000,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "document": {
+              "mode": "edit",
+              "path": []
+            },
+            "mimeType": {
+              "mode": "chose",
+              "label": "PDF Document (.pdf)"
+            },
+            "destination": {
+              "label": "My Drive"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "google"
+              },
+              "label": "My Google connection (luxsess2001@gmail.com)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:google",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "destination",
+            "type": "select",
+            "label": "Choose a Drive",
+            "required": true,
+            "validate": {
+              "enum": [
+                "drive",
+                "share",
+                "team"
+              ]
+            }
+          },
+          {
+            "name": "mimeType",
+            "type": "select",
+            "label": "Type",
+            "required": true,
+            "validate": {
+              "enum": [
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.oasis.opendocument.text",
+                "application/rtf",
+                "application/pdf",
+                "text/plain",
+                "text/html",
+                "application/epub+zip"
+              ]
+            }
+          },
+          {
+            "name": "document",
+            "type": "file",
+            "label": "Document ID",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "module": "supabase:uploadAFile",
+      "version": 1,
+      "parameters": {
+        "__IMTCONN__": 10479309
+      },
+      "mapper": {
+        "upsert": true,
+        "bucketID": "{{var.organization.CONTRACTS_STORAGE_BUCKET}}",
+        "file_data": "{{8.data}}",
+        "file_name": "{{54.contract_number}}-{{55.stored_promoter_name_en}}.pdf"
+      },
+      "metadata": {
+        "designer": {
+          "x": 3300,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "upsert": {
+              "mode": "chose"
+            },
+            "bucketID": {
+              "mode": "edit"
+            }
+          },
+          "parameters": {
+            "__IMTCONN__": {
+              "data": {
+                "scoped": "true",
+                "connection": "supabase"
+              },
+              "label": "extra contracts"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "__IMTCONN__",
+            "type": "account:supabase",
+            "label": "Connection",
+            "required": true
+          }
+        ],
+        "expect": [
+          {
+            "name": "bucketID",
+            "type": "select",
+            "label": "Bucket ID",
+            "required": true
+          },
+          {
+            "name": "file_name",
+            "type": "text",
+            "label": "Name",
+            "required": true
+          },
+          {
+            "name": "file_data",
+            "type": "buffer",
+            "label": "Data",
+            "required": true
+          },
+          {
+            "name": "upsert",
+            "type": "boolean",
+            "label": "Upsert"
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "module": "http:ActionSendData",
+      "version": 3,
+      "parameters": {
+        "handleErrors": true,
+        "useNewZLibDeCompress": true
+      },
+      "mapper": {
+        "ca": "",
+        "qs": [],
+        "url": "{{var.organization.CONTRACTS_API_URL}}/api/webhook/contract-pdf-ready-general",
+        "data": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"{{var.organization.SUPABASE_URL}}/storage/v1/object/public/{{var.organization.CONTRACTS_STORAGE_BUCKET}}/{{54.contract_number}}-{{55.stored_promoter_name_en}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  },\n  \"products\": {\n    \"en\": \"{{55.stored_products_en}}\",\n    \"ar\": \"{{55.stored_products_ar}}\"\n  },\n  \"location\": {\n    \"en\": \"{{55.stored_location_en}}\",\n    \"ar\": \"{{55.stored_location_ar}}\"\n  }\n}",
+        "gzip": true,
+        "method": "patch",
+        "headers": [
+          {
+            "name": "X-Webhook-Secret",
+            "value": "{{var.organization.PDF_WEBHOOK_SECRET}}"
+          },
+          {
+            "name": "X-Make-Request-ID",
+            "value": "{{var.scenario.executionId}}"
+          },
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "timeout": "",
+        "useMtls": false,
+        "authPass": "",
+        "authUser": "",
+        "bodyType": "raw",
+        "contentType": "application/json",
+        "serializeUrl": false,
+        "shareCookies": false,
+        "parseResponse": false,
+        "followRedirect": true,
+        "useQuerystring": false,
+        "followAllRedirects": false,
+        "rejectUnauthorized": true
+      },
+      "metadata": {
+        "designer": {
+          "x": 3600,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "qs": {
+              "mode": "chose"
+            },
+            "method": {
+              "mode": "chose",
+              "label": "PATCH"
+            },
+            "headers": {
+              "mode": "chose",
+              "items": [
+                null,
+                null,
+                null
+              ]
+            },
+            "bodyType": {
+              "label": "Raw"
+            },
+            "contentType": {
+              "label": "JSON (application/json)"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "handleErrors",
+            "type": "boolean",
+            "label": "Evaluate all states as errors (except for 2xx and 3xx )",
+            "required": true
+          },
+          {
+            "name": "useNewZLibDeCompress",
+            "type": "hidden"
+          }
+        ],
+        "expect": [
+          {
+            "name": "url",
+            "type": "url",
+            "label": "URL",
+            "required": true
+          },
+          {
+            "name": "serializeUrl",
+            "type": "boolean",
+            "label": "Serialize URL",
+            "required": true
+          },
+          {
+            "name": "method",
+            "type": "select",
+            "label": "Method",
+            "required": true,
+            "validate": {
+              "enum": [
+                "get",
+                "head",
+                "post",
+                "put",
+                "patch",
+                "delete",
+                "options"
+              ]
+            }
+          },
+          {
+            "name": "headers",
+            "spec": [
+              {
+                "name": "name",
+                "type": "text",
+                "label": "Name",
+                "required": true
+              },
+              {
+                "name": "value",
+                "type": "text",
+                "label": "Value"
+              }
+            ],
+            "type": "array",
+            "label": "Headers"
+          },
+          {
+            "name": "qs",
+            "spec": [
+              {
+                "name": "name",
+                "type": "text",
+                "label": "Name",
+                "required": true
+              },
+              {
+                "name": "value",
+                "type": "text",
+                "label": "Value"
+              }
+            ],
+            "type": "array",
+            "label": "Query String"
+          },
+          {
+            "name": "bodyType",
+            "type": "select",
+            "label": "Body type",
+            "validate": {
+              "enum": [
+                "raw",
+                "x_www_form_urlencoded",
+                "multipart_form_data"
+              ]
+            }
+          },
+          {
+            "name": "parseResponse",
+            "type": "boolean",
+            "label": "Parse response",
+            "required": true
+          },
+          {
+            "name": "authUser",
+            "type": "text",
+            "label": "User name"
+          },
+          {
+            "name": "authPass",
+            "type": "password",
+            "label": "Password"
+          },
+          {
+            "name": "timeout",
+            "type": "uinteger",
+            "label": "Timeout",
+            "validate": {
+              "max": 300,
+              "min": 1
+            }
+          },
+          {
+            "name": "shareCookies",
+            "type": "boolean",
+            "label": "Share cookies with other HTTP modules",
+            "required": true
+          },
+          {
+            "name": "ca",
+            "type": "cert",
+            "label": "Self-signed certificate"
+          },
+          {
+            "name": "rejectUnauthorized",
+            "type": "boolean",
+            "label": "Reject connections that are using unverified (self-signed) certificates",
+            "required": true
+          },
+          {
+            "name": "followRedirect",
+            "type": "boolean",
+            "label": "Follow redirect",
+            "required": true
+          },
+          {
+            "name": "useQuerystring",
+            "type": "boolean",
+            "label": "Disable serialization of multiple same query string keys as arrays",
+            "required": true
+          },
+          {
+            "name": "gzip",
+            "type": "boolean",
+            "label": "Request compressed content",
+            "required": true
+          },
+          {
+            "name": "useMtls",
+            "type": "boolean",
+            "label": "Use Mutual TLS",
+            "required": true
+          },
+          {
+            "name": "contentType",
+            "type": "select",
+            "label": "Content type",
+            "validate": {
+              "enum": [
+                "text/plain",
+                "application/json",
+                "application/xml",
+                "text/xml",
+                "text/html",
+                "custom"
+              ]
+            }
+          },
+          {
+            "name": "data",
+            "type": "buffer",
+            "label": "Request content"
+          },
+          {
+            "name": "followAllRedirects",
+            "type": "boolean",
+            "label": "Follow all redirect",
+            "required": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 11,
+      "module": "gateway:WebhookRespond",
+      "version": 1,
+      "parameters": {},
+      "mapper": {
+        "body": "{\n  \"contract_id\": \"{{53.contract_id}}\",\n  \"contract_number\": \"{{54.contract_number}}\",\n  \"pdf_url\": \"{{var.organization.SUPABASE_URL}}/storage/v1/object/public/{{var.organization.CONTRACTS_STORAGE_BUCKET}}/{{54.contract_number}}-{{55.stored_promoter_name_en}}.pdf\",\n  \"google_drive_url\": \"https://docs.google.com/document/d/{{56.id}}/edit\",\n  \"status\": \"generated\",\n  \"images_processed\": {\n    \"id_card\": false,\n    \"passport\": false\n  },\n  \"products\": {\n    \"en\": \"{{55.stored_products_en}}\",\n    \"ar\": \"{{55.stored_products_ar}}\"\n  },\n  \"location\": {\n    \"en\": \"{{55.stored_location_en}}\",\n    \"ar\": \"{{55.stored_location_ar}}\"\n  }\n}",
+        "status": "200",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ]
+      },
+      "metadata": {
+        "designer": {
+          "x": 3900,
+          "y": 0
+        },
+        "restore": {
+          "expect": {
+            "headers": {
+              "mode": "chose",
+              "items": [
+                null
+              ]
+            }
+          }
+        },
+        "expect": [
+          {
+            "name": "status",
+            "type": "uinteger",
+            "label": "Status",
+            "required": true,
+            "validate": {
+              "min": 100
+            }
+          },
+          {
+            "name": "body",
+            "type": "any",
+            "label": "Body"
+          },
+          {
+            "name": "headers",
+            "spec": [
+              {
+                "name": "key",
+                "type": "text",
+                "label": "Key",
+                "required": true,
+                "validate": {
+                  "max": 256
+                }
+              },
+              {
+                "name": "value",
+                "type": "text",
+                "label": "Value",
+                "required": true,
+                "validate": {
+                  "max": 4096
+                }
+              }
+            ],
+            "type": "array",
+            "label": "Custom headers",
+            "validate": {
+              "maxItems": 16
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "instant": true,
+    "version": 1,
+    "scenario": {
+      "roundtrips": 1,
+      "maxErrors": 3,
+      "autoCommit": true,
+      "autoCommitTriggerLast": true,
+      "sequential": false,
+      "slots": null,
+      "confidential": false,
+      "dataloss": false,
+      "dlq": true,
+      "freshVariables": false
+    },
+    "designer": {
+      "orphans": []
+    },
+    "zone": "eu2.make.com",
+    "notes": []
+  }
+}

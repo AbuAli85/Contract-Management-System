@@ -61,6 +61,13 @@ export async function POST(request: NextRequest) {
       intellectual_property: body.intellectual_property,
       liability_insurance: body.liability_insurance,
       force_majeure: body.force_majeure,
+      // New bilingual fields for Make.com
+      products_en: body.products_en,
+      products_ar: body.products_ar,
+      location_en: body.location_en,
+      location_ar: body.location_ar,
+      product_id: body.product_id,
+      location_id: body.location_id,
     };
 
     // Create contract in database
@@ -153,7 +160,14 @@ export async function GET() {
       confidentiality_clause: 'string',
       intellectual_property: 'string',
       liability_insurance: 'string',
-      force_majeure: 'string'
+      force_majeure: 'string',
+      // New bilingual fields for Make.com
+      products_en: 'string',
+      products_ar: 'string',
+      location_en: 'string',
+      location_ar: 'string',
+      product_id: 'string (UUID)',
+      location_id: 'string (UUID)'
     },
     contract_types: [
       'general-service',

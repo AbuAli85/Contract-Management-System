@@ -60,6 +60,28 @@ interface Party {
   status?: string;
 }
 
+interface Product {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  description_en?: string;
+  description_ar?: string;
+  category_en?: string;
+  category_ar?: string;
+  status?: string;
+}
+
+interface Location {
+  id: string;
+  name_en: string;
+  name_ar: string;
+  country_en?: string;
+  country_ar?: string;
+  city_en?: string;
+  city_ar?: string;
+  status?: string;
+}
+
 interface GeneralContractFormData {
   promoter_id: string;
   first_party_id: string;
@@ -88,6 +110,13 @@ interface GeneralContractFormData {
   intellectual_property?: string;
   liability_insurance?: string;
   force_majeure?: string;
+  // New bilingual fields for Make.com
+  products_en?: string;
+  products_ar?: string;
+  location_en?: string;
+  location_ar?: string;
+  product_id?: string;
+  location_id?: string;
 }
 
 export default function GeneralContractGenerator() {
@@ -95,6 +124,8 @@ export default function GeneralContractGenerator() {
   const [allParties, setAllParties] = useState<Party[]>([]);
   const [clients, setClients] = useState<Party[]>([]);
   const [employers, setEmployers] = useState<Party[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [allPromoters, setAllPromoters] = useState<Promoter[]>([]);
@@ -127,6 +158,13 @@ export default function GeneralContractGenerator() {
     intellectual_property: '',
     liability_insurance: '',
     force_majeure: '',
+    // New bilingual fields
+    products_en: '',
+    products_ar: '',
+    location_en: '',
+    location_ar: '',
+    product_id: '',
+    location_id: '',
   });
   const { toast } = useToast();
 
@@ -209,8 +247,36 @@ export default function GeneralContractGenerator() {
 
       setPromoters(promotersData || []);
       setAllPromoters(promotersData || []);
+
+      // Load products
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('id, name_en, name_ar, description_en, description_ar, category_en, category_ar, status')
+        .eq('status', 'active')
+        .order('name_en');
+
+      if (productsError) {
+        console.error('Error loading products:', productsError);
+        throw new Error(`Failed to load products: ${productsError.message}`);
+      }
+
+      setProducts(productsData || []);
+
+      // Load locations
+      const { data: locationsData, error: locationsError } = await supabase
+        .from('locations')
+        .select('id, name_en, name_ar, country_en, country_ar, city_en, city_ar, status')
+        .eq('status', 'active')
+        .order('name_en');
+
+      if (locationsError) {
+        console.error('Error loading locations:', locationsError);
+        throw new Error(`Failed to load locations: ${locationsError.message}`);
+      }
+
+      setLocations(locationsData || []);
       
-      console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers`);
+      console.log(`✅ Loaded ${promotersData?.length || 0} promoters, ${clientsList.length} clients, ${employersList.length} employers, ${productsData?.length || 0} products, ${locationsData?.length || 0} locations`);
     } catch (error) {
       console.error('Failed to load data:', error);
       toast({
@@ -241,6 +307,42 @@ export default function GeneralContractGenerator() {
 
       return newData;
     });
+  };
+
+  // Handle product selection
+  const handleProductChange = (productId: string) => {
+    const selectedProduct = products.find(p => p.id === productId);
+    if (selectedProduct) {
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          product_id: productId,
+          products_en: selectedProduct.name_en,
+          products_ar: selectedProduct.name_ar,
+        };
+        localStorage.setItem('general-contract-form-draft', JSON.stringify(newData));
+        setLastSaved(new Date());
+        return newData;
+      });
+    }
+  };
+
+  // Handle location selection
+  const handleLocationChange = (locationId: string) => {
+    const selectedLocation = locations.find(l => l.id === locationId);
+    if (selectedLocation) {
+      setFormData(prev => {
+        const newData = {
+          ...prev,
+          location_id: locationId,
+          location_en: selectedLocation.name_en,
+          location_ar: selectedLocation.name_ar,
+        };
+        localStorage.setItem('general-contract-form-draft', JSON.stringify(newData));
+        setLastSaved(new Date());
+        return newData;
+      });
+    }
   };
 
   // Get promoters filtered by selected employer and search term
@@ -335,6 +437,13 @@ export default function GeneralContractGenerator() {
           intellectual_property: formData.intellectual_property,
           liability_insurance: formData.liability_insurance,
           force_majeure: formData.force_majeure,
+          // New bilingual fields for Make.com
+          products_en: formData.products_en,
+          products_ar: formData.products_ar,
+          location_en: formData.location_en,
+          location_ar: formData.location_ar,
+          product_id: formData.product_id,
+          location_id: formData.location_id,
         }),
       });
 
@@ -393,6 +502,13 @@ export default function GeneralContractGenerator() {
           intellectual_property: '',
           liability_insurance: '',
           force_majeure: '',
+          // New bilingual fields
+          products_en: '',
+          products_ar: '',
+          location_en: '',
+          location_ar: '',
+          product_id: '',
+          location_id: '',
         });
       } else {
         throw new Error(result.error || 'Contract generation failed');
@@ -823,9 +939,71 @@ export default function GeneralContractGenerator() {
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Product Name */}
+              {/* Product Selection */}
               <div className="space-y-2">
-                <Label htmlFor="product_name">Product/Service Name</Label>
+                <Label htmlFor="product_id">Products/Services *</Label>
+                <Select
+                  value={formData.product_id || ''}
+                  onValueChange={handleProductChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select product/service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        <div className="flex flex-col">
+                          <div className="font-medium">{product.name_en}</div>
+                          <div className="text-sm text-muted-foreground">{product.name_ar}</div>
+                          {product.category_en && (
+                            <div className="text-xs text-blue-600">{product.category_en}</div>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {products.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No products available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Location Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="location_id">Location *</Label>
+                <Select
+                  value={formData.location_id || ''}
+                  onValueChange={handleLocationChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        <div className="flex flex-col">
+                          <div className="font-medium">{location.name_en}</div>
+                          <div className="text-sm text-muted-foreground">{location.name_ar}</div>
+                          {location.country_en && (
+                            <div className="text-xs text-blue-600">{location.country_en}</div>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {locations.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No locations available
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Product Name (Legacy field - keep for backward compatibility) */}
+              <div className="space-y-2">
+                <Label htmlFor="product_name">Product/Service Name (Legacy)</Label>
                 <Input
                   id="product_name"
                   value={formData.product_name || ''}

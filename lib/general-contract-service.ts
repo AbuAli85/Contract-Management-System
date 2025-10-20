@@ -27,6 +27,13 @@ export interface GeneralContractData {
   intellectual_property?: string;
   liability_insurance?: string;
   force_majeure?: string;
+  // New bilingual fields for Make.com
+  products_en?: string;
+  products_ar?: string;
+  location_en?: string;
+  location_ar?: string;
+  product_id?: string;
+  location_id?: string;
 }
 
 export interface MakeComPayload {
@@ -58,6 +65,13 @@ export interface MakeComPayload {
   intellectual_property?: string;
   liability_insurance?: string;
   force_majeure?: string;
+  // New bilingual fields for Make.com
+  products_en?: string;
+  products_ar?: string;
+  location_en?: string;
+  location_ar?: string;
+  product_id?: string;
+  location_id?: string;
   // Additional fields for Make.com template
   promoter_name_en?: string;
   promoter_name_ar?: string;
@@ -192,6 +206,13 @@ export class GeneralContractService {
       end_date: this.formatDate(data.contract_end_date),
       terms: data.special_terms || '',
       description: this.buildDescription(data),
+      // New bilingual fields for Make.com
+      products_en: data.products_en || '',
+      products_ar: data.products_ar || '',
+      location_en: data.location_en || '',
+      location_ar: data.location_ar || '',
+      product_id: data.product_id || null,
+      location_id: data.location_id || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -253,6 +274,13 @@ export class GeneralContractService {
       contract_start_date: contract.start_date,
       contract_end_date: contract.end_date,
       special_terms: contract.terms,
+      // New bilingual fields for Make.com
+      products_en: contract.products_en || '',
+      products_ar: contract.products_ar || '',
+      location_en: contract.location_en || '',
+      location_ar: contract.location_ar || '',
+      product_id: contract.product_id || '',
+      location_id: contract.location_id || '',
       // Promoter data
       promoter_name_en: contract.promoter?.name_en || '',
       promoter_name_ar: contract.promoter?.name_ar || '',
