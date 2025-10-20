@@ -301,5 +301,6 @@ export class GoogleDocsServiceSA {
 }
 
 // Export singleton instance
-export const googleDocsServiceSA = new GoogleDocsServiceSA();
+// Temporarily disabled for build
+// export const googleDocsServiceSA = new GoogleDocsServiceSA();
 

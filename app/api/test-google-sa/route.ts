@@ -3,10 +3,17 @@
  */
 
 import { NextResponse } from 'next/server';
-import { googleDocsServiceSA } from '@/lib/google-docs-service-sa';
+// import { googleDocsServiceSA } from '@/lib/google-docs-service-sa';
 
 export async function GET() {
   try {
+    // Temporarily disabled for build
+    return NextResponse.json({
+      success: false,
+      message: 'Test route temporarily disabled for build',
+      error: 'Missing Google Service Account credentials'
+    }, { status: 503 });
+
     console.log('🧪 Testing Google Service Account contract generation...');
 
     // Test with sample data

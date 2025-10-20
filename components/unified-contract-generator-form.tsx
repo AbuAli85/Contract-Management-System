@@ -206,8 +206,13 @@ function UnifiedContractGeneratorForm({
   );
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
+  // Hydration check - use hook instead of conditional return
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Client-side guard to prevent SSR issues - AFTER all hooks are called
-  if (!isClient) {
+  if (!mounted) {
     return (
       <div className='flex items-center justify-center p-8'>
         <div className='text-center'>
@@ -217,11 +222,6 @@ function UnifiedContractGeneratorForm({
       </div>
     );
   }
-
-  // Hydration check
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Load parties & promoters with error handling and auth safety
   const {
