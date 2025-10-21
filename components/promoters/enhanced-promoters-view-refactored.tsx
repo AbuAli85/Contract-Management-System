@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Promoter } from '@/lib/types';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
@@ -66,13 +67,24 @@ function computeDocumentHealth(
   value: string | null | undefined,
   threshold: number
 ): DocumentHealth {
-  const parsed = parseDateSafe(value);
-  if (!parsed) {
+  // Handle empty, null, or invalid values
+  if (!value || value.trim() === '' || value === 'null' || value === 'undefined') {
     return {
       status: 'missing',
       daysRemaining: null,
       expiresOn: null,
-      label: 'No document',
+      label: 'Not provided',
+    };
+  }
+
+  const parsed = parseDateSafe(value);
+  if (!parsed) {
+    console.warn('⚠️ Invalid date format:', value);
+    return {
+      status: 'missing',
+      daysRemaining: null,
+      expiresOn: value,
+      label: 'Invalid date',
     };
   }
 
@@ -82,7 +94,7 @@ function computeDocumentHealth(
     return {
       status: 'expired',
       daysRemaining: Math.abs(days),
-      expiresOn: value ?? null,
+      expiresOn: value,
       label: `Expired ${Math.abs(days)} days ago`,
     };
   }
@@ -91,7 +103,7 @@ function computeDocumentHealth(
     return {
       status: 'expiring',
       daysRemaining: days,
-      expiresOn: value ?? null,
+      expiresOn: value,
       label: `Expires in ${days} days`,
     };
   }
@@ -99,7 +111,7 @@ function computeDocumentHealth(
   return {
     status: 'valid',
     daysRemaining: days,
-    expiresOn: value ?? null,
+    expiresOn: value,
     label: `Valid until ${formatDisplayDate(value)}`,
   };
 }
@@ -109,6 +121,7 @@ function computeOverallStatus(
   idDoc: DocumentHealth,
   passportDoc: DocumentHealth
 ): OverallStatus {
+  // Check if promoter is inactive based on status
   if (
     !status ||
     ['inactive', 'terminated', 'resigned', 'on_leave', 'suspended'].includes(
@@ -118,19 +131,27 @@ function computeOverallStatus(
     return 'inactive';
   }
 
+  // Critical: Any document is expired
   if (idDoc.status === 'expired' || passportDoc.status === 'expired') {
     return 'critical';
   }
 
-  if (
-    idDoc.status === 'expiring' ||
-    passportDoc.status === 'expiring' ||
-    idDoc.status === 'missing' ||
-    passportDoc.status === 'missing'
-  ) {
+  // Warning: Any document is expiring soon
+  if (idDoc.status === 'expiring' || passportDoc.status === 'expiring') {
     return 'warning';
   }
 
+  // If both documents are missing, show as warning (needs attention)
+  if (idDoc.status === 'missing' && passportDoc.status === 'missing') {
+    return 'warning';
+  }
+
+  // If only one document is missing, still show as active (common scenario)
+  if (idDoc.status === 'missing' || passportDoc.status === 'missing') {
+    return 'active';
+  }
+
+  // All documents are valid
   return 'active';
 }
 
@@ -348,7 +369,25 @@ export function EnhancedPromotersViewRefactored({
 
   const dashboardPromoters = useMemo<DashboardPromoter[]>(() => {
     console.log('🔄 Processing promoters for dashboard...');
+    console.log('📊 Raw promoter data sample:', promoters.slice(0, 2));
+    
     return promoters.map(promoter => {
+      // Debug logging for each promoter
+      console.log('🔍 Processing promoter:', {
+        id: promoter.id,
+        name_en: promoter.name_en,
+        name_ar: promoter.name_ar,
+        email: promoter.email,
+        mobile_number: promoter.mobile_number,
+        phone: promoter.phone,
+        employer_id: promoter.employer_id,
+        id_card_expiry_date: promoter.id_card_expiry_date,
+        passport_expiry_date: promoter.passport_expiry_date,
+        status: promoter.status,
+        job_title: promoter.job_title,
+        work_location: promoter.work_location,
+      });
+
       const idDocument = computeDocumentHealth(
         promoter.id_card_expiry_date ?? null,
         PROMOTER_NOTIFICATION_DAYS.ID_EXPIRY
@@ -358,25 +397,60 @@ export function EnhancedPromotersViewRefactored({
         PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY
       );
 
-      const fallbackName =
-        (promoter as any)?.first_name || (promoter as any)?.last_name
-          ? `${(promoter as any)?.first_name || ''} ${(promoter as any)?.last_name || ''}`.trim()
-          : promoter.email || 'Unnamed promoter';
-
-      const displayName =
-        promoter.name_en?.trim() ||
-        promoter.name_ar?.trim() ||
-        fallbackName ||
-        'Unnamed Promoter';
+      // Improved name resolution with better fallbacks
+      const displayName = (() => {
+        // Try English name first
+        if (promoter.name_en?.trim()) {
+          return promoter.name_en.trim();
+        }
+        // Try Arabic name
+        if (promoter.name_ar?.trim()) {
+          return promoter.name_ar.trim();
+        }
+        // Try legacy name field
+        if ((promoter as any)?.name?.trim()) {
+          return (promoter as any).name.trim();
+        }
+        // Try first_name + last_name combination
+        if ((promoter as any)?.first_name || (promoter as any)?.last_name) {
+          const firstName = (promoter as any)?.first_name || '';
+          const lastName = (promoter as any)?.last_name || '';
+          const fullName = `${firstName} ${lastName}`.trim();
+          if (fullName) return fullName;
+        }
+        // Try email as last resort
+        if (promoter.email?.trim()) {
+          return promoter.email.split('@')[0]?.replace(/[._]/g, ' ').trim() || 'Unknown';
+        }
+        // Final fallback
+        return `Promoter ${promoter.id.slice(-4)}`;
+      })();
 
       const assignmentStatus = promoter.employer_id ? 'assigned' : 'unassigned';
 
-      const organisationLabel =
-        (promoter.parties as any)?.name_en ||
-        (promoter.parties as any)?.name_ar ||
-        promoter.work_location ||
-        promoter.job_title ||
-        'Unassigned';
+      // Improved organization label resolution
+      const organisationLabel = (() => {
+        // Try parties relationship first
+        if ((promoter as any)?.parties?.name_en?.trim()) {
+          return (promoter as any).parties.name_en.trim();
+        }
+        if ((promoter as any)?.parties?.name_ar?.trim()) {
+          return (promoter as any).parties.name_ar.trim();
+        }
+        // Try work location
+        if (promoter.work_location?.trim()) {
+          return promoter.work_location.trim();
+        }
+        // Try job title
+        if (promoter.job_title?.trim()) {
+          return promoter.job_title.trim();
+        }
+        // Try company field
+        if ((promoter as any)?.company?.trim()) {
+          return (promoter as any).company.trim();
+        }
+        return 'Unassigned';
+      })();
 
       const overallStatus = computeOverallStatus(
         promoter.status,
@@ -384,7 +458,15 @@ export function EnhancedPromotersViewRefactored({
         passportDocument
       );
 
-      return {
+      // Improved contact information resolution
+      const contactEmail = promoter.email?.trim() || '—';
+      const contactPhone = (() => {
+        if (promoter.mobile_number?.trim()) return promoter.mobile_number.trim();
+        if (promoter.phone?.trim()) return promoter.phone.trim();
+        return '—';
+      })();
+
+      const result = {
         ...promoter,
         displayName,
         assignmentStatus,
@@ -392,10 +474,24 @@ export function EnhancedPromotersViewRefactored({
         idDocument,
         passportDocument,
         overallStatus,
-        contactEmail: promoter.email ?? '—',
-        contactPhone: promoter.mobile_number ?? promoter.phone ?? '—',
+        contactEmail,
+        contactPhone,
         createdLabel: formatDisplayDate(promoter.created_at),
       } as DashboardPromoter;
+
+      console.log('✅ Processed promoter result:', {
+        id: result.id,
+        displayName: result.displayName,
+        contactEmail: result.contactEmail,
+        contactPhone: result.contactPhone,
+        assignmentStatus: result.assignmentStatus,
+        organisationLabel: result.organisationLabel,
+        overallStatus: result.overallStatus,
+        idDocumentStatus: result.idDocument.status,
+        passportDocumentStatus: result.passportDocument.status,
+      });
+
+      return result;
     });
   }, [promoters]);
 
@@ -887,8 +983,20 @@ export function EnhancedPromotersViewRefactored({
     );
   }
 
+  // Show loading overlay if data is being refreshed
+  const showLoadingOverlay = isFetching && response;
+
   return (
-    <div className='space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+    <div className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+      {/* Loading overlay */}
+      {showLoadingOverlay && (
+        <div className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center'>
+          <div className='flex items-center gap-3 bg-card p-4 rounded-lg shadow-lg border'>
+            <RefreshCw className='h-5 w-5 animate-spin text-primary' />
+            <span className='text-sm font-medium'>Updating promoters data...</span>
+          </div>
+        </div>
+      )}
       {/* Enhanced Header */}
       <PromotersHeader
         metrics={metrics}

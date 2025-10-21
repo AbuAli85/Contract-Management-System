@@ -197,21 +197,23 @@ export function AuthenticatedLayout({
                     />
                   </div>
 
-                  {/* Quick Actions */}
-                  <div className='hidden md:flex items-center space-x-2'>
-                    <Button size='sm' variant='outline' asChild>
-                      <Link href='/en/generate-contract'>
-                        <FilePlus className='mr-2 h-4 w-4' />
-                        New Contract
-                      </Link>
-                    </Button>
-                    <Button size='sm' variant='outline' asChild>
-                      <Link href='/manage-promoters/new'>
-                        <UserPlus className='mr-2 h-4 w-4' />
-                        Add Promoter
-                      </Link>
-                    </Button>
-                  </div>
+                  {/* Quick Actions - Only show on non-promoter pages */}
+                  {!pathname?.includes('/promoters') && (
+                    <div className='hidden md:flex items-center space-x-2'>
+                      <Button size='sm' variant='outline' asChild>
+                        <Link href='/en/generate-contract'>
+                          <FilePlus className='mr-2 h-4 w-4' />
+                          New Contract
+                        </Link>
+                      </Button>
+                      <Button size='sm' variant='outline' asChild>
+                        <Link href='/manage-promoters/new'>
+                          <UserPlus className='mr-2 h-4 w-4' />
+                          Add Promoter
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Right side - Theme, Notifications, User */}
