@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
+import { extractIdFromSlug, isUUID } from '@/lib/utils/slug';
 
 // Validation schema for promoter updates
 const promoterUpdateSchema = z.object({
@@ -97,12 +98,22 @@ export const GET = withAnyRBAC(
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
 
+      // Handle both UUID and slug-based lookups
+      const isFullUUID = isUUID(id);
+      const searchId = isFullUUID ? id : extractIdFromSlug(id);
+      
       // Fetch promoter data (simplified to avoid relationship issues)
-      const { data: promoter, error } = await supabase
-        .from('promoters')
-        .select('*')
-        .eq('id', id)
-        .single();
+      let promoterQuery = supabase.from('promoters').select('*');
+      
+      if (isFullUUID) {
+        // Exact match for full UUID
+        promoterQuery = promoterQuery.eq('id', searchId);
+      } else {
+        // Partial match for slug (search by first 8 characters of UUID)
+        promoterQuery = promoterQuery.like('id', `${searchId}%`);
+      }
+      
+      const { data: promoter, error } = await promoterQuery.single();
 
       if (error) {
         if (error.code === 'PGRST116') {

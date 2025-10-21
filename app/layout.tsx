@@ -49,7 +49,6 @@ export default async function RootLayout({
       <head>
         {/* Performance and SEO optimizations */}
         <link rel='manifest' href='/manifest.json' />
-        <link rel='apple-touch-icon' href='/placeholder-logo.png' />
         <meta name='theme-color' content='#3b82f6' />
         <meta
           name='viewport'
