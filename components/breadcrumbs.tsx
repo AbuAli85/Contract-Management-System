@@ -86,9 +86,16 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
       return;
     }
     
+    // Mark as fetched IMMEDIATELY to prevent duplicate fetches
+    fetchedPathsRef.current.add(pathname);
+    
+    // Only fetch on client-side
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     const fetchDynamicTitles = async () => {
       const newTitles: Record<string, string> = {};
-      let hasNewTitles = false;
       
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
@@ -106,7 +113,6 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
                 const data = await response.json();
                 const promoterName = data.promoter?.name_en || data.promoter?.name_ar || segment;
                 newTitles[segment] = toTitleCase(promoterName);
-                hasNewTitles = true;
               }
             } catch (error) {
               console.error('Failed to fetch promoter name for breadcrumb:', error);
@@ -116,18 +122,12 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
       }
       
       // Only update state if we have new titles
-      if (hasNewTitles) {
+      if (Object.keys(newTitles).length > 0) {
         setDynamicTitles(prev => ({ ...prev, ...newTitles }));
       }
-      
-      // Mark this pathname as fetched
-      fetchedPathsRef.current.add(pathname);
     };
     
-    // Only fetch on client-side
-    if (typeof window !== 'undefined') {
-      fetchDynamicTitles();
-    }
+    fetchDynamicTitles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
