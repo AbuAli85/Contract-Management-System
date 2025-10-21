@@ -53,7 +53,7 @@ export async function createPromoter(
     throw new Error('Failed to create promoter');
   }
 
-  revalidatePath('/manage-promoters');
+  // revalidatePath('/manage-promoters'); // Disabled to prevent auto-refresh
   return data;
 }
 
@@ -75,8 +75,8 @@ export async function updatePromoter(
     throw new Error('Failed to update promoter');
   }
 
-  revalidatePath('/manage-promoters');
-  revalidatePath(`/manage-promoters/${id}`);
+  // revalidatePath('/manage-promoters'); // Disabled to prevent auto-refresh
+  // revalidatePath(`/manage-promoters/${id}`); // Disabled to prevent auto-refresh
   return data;
 }
 
@@ -92,6 +92,6 @@ export async function deletePromoter(
     return { success: false, message: 'Failed to delete promoter' };
   }
 
-  revalidatePath('/manage-promoters');
+  // revalidatePath('/manage-promoters'); // Disabled to prevent auto-refresh
   return { success: true, message: 'Promoter deleted successfully' };
 }

@@ -155,8 +155,9 @@ async function fetchPromoters(
         cache: 'no-store',
         signal: controller.signal,
         headers: {
-          'Cache-Control': 'no-cache',
-          Pragma: 'no-cache',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       }
     );
@@ -300,12 +301,12 @@ export function EnhancedPromotersViewRefactored({
   } = useQuery<PromotersResponse, Error>({
     queryKey: ['promoters', page, limit], // Standard query key
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: 60_000, // 60 seconds - prevent frequent refetches
+    staleTime: 300_000, // 5 minutes - prevent frequent refetches
     gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
+    refetchOnWindowFocus: false, // Disable auto-refetch on window focus
+    refetchInterval: false, // Disable auto-refetch interval
     refetchOnMount: false, // Disable auto-refetch on mount
     refetchOnReconnect: false, // Disable auto-refetch on reconnect
   });

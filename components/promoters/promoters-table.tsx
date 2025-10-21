@@ -316,7 +316,7 @@ export function PromotersTable({
             <div className='text-sm text-muted-foreground'>
               Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
               {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
-              of {pagination.total} promoters
+              of {pagination.total} total promoters
             </div>
 
             <div className='flex items-center gap-2'>
