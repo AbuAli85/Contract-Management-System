@@ -151,7 +151,7 @@ function PromoterCard({
           <Checkbox
             checked={isSelected}
             onCheckedChange={onSelect}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent<HTMLInputElement>) => e.stopPropagation()}
             className="mt-1"
           />
           
@@ -180,27 +180,22 @@ function PromoterCard({
               </div>
               
               <DropdownMenu>
-                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground flex-shrink-0"
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => e.stopPropagation()}
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onView();
-                  }}>
+                  <DropdownMenuItem onClick={onView}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit();
-                  }}>
+                  <DropdownMenuItem onClick={onEdit}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Details
                   </DropdownMenuItem>
