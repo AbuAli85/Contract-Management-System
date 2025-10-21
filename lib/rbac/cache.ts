@@ -286,51 +286,59 @@ class PermissionCache {
     try {
       const supabase = getSupabaseAdmin();
 
-      // Prefer new RBAC tables; fall back to legacy if needed
+      // Try rbac_user_role_assignments view/table (works with both rbac_roles and roles)
       let roleAssignments: any[] | null = null;
       let rolesFetchError: any = null;
+      
+      // First attempt: rbac_user_role_assignments with roles table (standard)
       try {
         const r = await supabase
           .from('rbac_user_role_assignments')
           .select(
             `
             role_id,
-            rbac_roles!inner(
+            roles!rbac_user_role_assignments_role_id_fkey(
               name,
               category
             )
           `
           )
           .eq('user_id', userId)
-          .eq('is_active', true)
-          .is('valid_until', null);
+          .eq('is_active', true);
         roleAssignments = r.data as any[] | null;
         rolesFetchError = r.error;
       } catch (e) {
         rolesFetchError = e;
       }
 
-      // Legacy fallback
-      if (
-        (!roleAssignments || roleAssignments.length === 0) &&
-        rolesFetchError
-      ) {
-        const { data, error } = await supabase
-          .from('user_role_assignments')
-          .select(
-            `
-            role_id,
-            roles!inner(
-              name,
-              category
-            )
-          `
-          )
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .is('valid_until', null);
-        roleAssignments = data as any[] | null;
-        rolesFetchError = error;
+      // Fallback: Try direct user_roles table query
+      if ((!roleAssignments || roleAssignments.length === 0) && rolesFetchError) {
+        try {
+          const { data: userRoleData, error: urError } = await supabase
+            .from('user_roles')
+            .select('user_id, role')
+            .eq('user_id', userId)
+            .single();
+          
+          if (!urError && userRoleData) {
+            // Get role details by name
+            const { data: roleData, error: roleError } = await supabase
+              .from('roles')
+              .select('id, name, category')
+              .eq('name', userRoleData.role)
+              .single();
+            
+            if (!roleError && roleData) {
+              roleAssignments = [{
+                role_id: roleData.id,
+                roles: roleData
+              }];
+              rolesFetchError = null;
+            }
+          }
+        } catch (e) {
+          console.warn('🔐 RBAC: Fallback to user_roles also failed:', e);
+        }
       }
 
       if (rolesFetchError) {
@@ -345,19 +353,23 @@ class PermissionCache {
       const roleIds = roleAssignments.map(ra => ra.role_id);
       const roles = roleAssignments.map(
         ra =>
-          // Handle both rbac_roles and legacy roles linkage
-          (ra.rbac_roles?.name as string) || (ra.roles?.name as string)
+          // Handle both table naming conventions
+          (ra.roles?.name as string) || (ra.rbac_roles?.name as string) || 'unknown'
       );
 
-      // Get permissions for these roles (new RBAC first)
+      // Get permissions for these roles (standard tables)
       let permissionsRows: any[] | null = null;
       let permError: any = null;
       try {
         const pr = await supabase
-          .from('rbac_role_permissions')
+          .from('role_permissions')
           .select(
             `
-            rbac_permissions!inner(
+            permission_id,
+            permissions!inner(
+              resource,
+              action,
+              scope,
               name
             )
           `
@@ -367,22 +379,6 @@ class PermissionCache {
         permError = pr.error;
       } catch (e) {
         permError = e;
-      }
-
-      // Legacy fallback
-      if ((!permissionsRows || permissionsRows.length === 0) && permError) {
-        const { data, error } = await supabase
-          .from('role_permissions')
-          .select(
-            `
-            permissions!inner(
-              name
-            )
-          `
-          )
-          .in('role_id', roleIds);
-        permissionsRows = data as any[] | null;
-        permError = error;
       }
 
       if (permError) {
