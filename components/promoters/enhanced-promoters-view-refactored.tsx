@@ -301,7 +301,16 @@ export function EnhancedPromotersViewRefactored({
   const [selectedPromoters, setSelectedPromoters] = useState<Set<string>>(
     new Set()
   );
-  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid' | 'cards'>(() => {
+    // Load view preference from localStorage on mount
+    if (typeof window !== 'undefined') {
+      const savedView = localStorage.getItem('promoters-view-mode');
+      if (savedView === 'table' || savedView === 'grid' || savedView === 'cards') {
+        return savedView;
+      }
+    }
+    return 'table';
+  });
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
 
@@ -890,6 +899,14 @@ export function EnhancedPromotersViewRefactored({
     router.push(`/${derivedLocale}/dashboard`);
   }, [router, derivedLocale]);
 
+  const handleViewModeChange = useCallback((mode: 'table' | 'grid' | 'cards') => {
+    setViewMode(mode);
+    // Persist view preference to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('promoters-view-mode', mode);
+    }
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -1088,7 +1105,7 @@ export function EnhancedPromotersViewRefactored({
           onSelectAll={handleSelectAll}
           onSelectPromoter={handleSelectPromoter}
           onSort={handleSort}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onViewPromoter={handleViewPromoter}
           onEditPromoter={handleEditPromoter}
           onAddPromoter={handleAddPromoter}

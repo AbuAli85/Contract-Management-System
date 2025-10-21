@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/tooltip';
 import { Users, Plus, RefreshCw, SortAsc, SortDesc } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
+import { PromotersGridView } from './promoters-grid-view';
+import { PromotersCardsView } from './promoters-cards-view';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import type {
@@ -176,136 +178,179 @@ export function PromotersTable({
             />
           )
         ) : (
-          <ScrollArea className='h-[520px]' ref={parentRef}>
-            <Table>
-              <TableHeader className='sticky top-0 z-10 bg-background/95 backdrop-blur'>
-                <TableRow className='border-b-2 hover:bg-transparent'>
-                  <TableHead className='w-[50px] text-center'>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Checkbox
-                            checked={
-                              selectedPromoters.size === promoters.length
-                            }
-                            onCheckedChange={onSelectAll}
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className='text-xs'>
-                            Select all visible promoters
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableHead>
-                  <TableHead
-                    className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
-                    onClick={() => onSort('name')}
-                  >
-                    <div className='flex items-center gap-2 group/header'>
-                      <span>Promoter</span>
-                      {sortField === 'name' ? (
-                        sortOrder === 'asc' ? (
-                          <SortAsc className='h-4 w-4 text-blue-500' />
-                        ) : (
-                          <SortDesc className='h-4 w-4 text-blue-500' />
-                        )
-                      ) : (
-                        <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                          <SortAsc className='h-4 w-4' />
+          <div className='relative'>
+            {/* Table View */}
+            {viewMode === 'table' && (
+              <ScrollArea className='h-[520px] animate-in fade-in duration-300' ref={parentRef}>
+                <Table>
+                  <TableHeader className='sticky top-0 z-10 bg-background/95 backdrop-blur'>
+                    <TableRow className='border-b-2 hover:bg-transparent'>
+                      <TableHead className='w-[50px] text-center'>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Checkbox
+                                checked={
+                                  selectedPromoters.size === promoters.length
+                                }
+                                onCheckedChange={onSelectAll}
+                              />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className='text-xs'>
+                                Select all visible promoters
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableHead>
+                      <TableHead
+                        className='w-[220px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        onClick={() => onSort('name')}
+                      >
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Promoter</span>
+                          {sortField === 'name' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
-                    onClick={() => onSort('documents')}
-                  >
-                    <div className='flex items-center gap-2 group/header'>
-                      <span>Documents</span>
-                      {sortField === 'documents' ? (
-                        sortOrder === 'asc' ? (
-                          <SortAsc className='h-4 w-4 text-blue-500' />
-                        ) : (
-                          <SortDesc className='h-4 w-4 text-blue-500' />
-                        )
-                      ) : (
-                        <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                          <SortAsc className='h-4 w-4' />
+                      </TableHead>
+                      <TableHead
+                        className='w-[200px] cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        onClick={() => onSort('documents')}
+                      >
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Documents</span>
+                          {sortField === 'documents' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className='font-semibold'>Assignment</TableHead>
-                  <TableHead className='font-semibold'>Contacts</TableHead>
-                  <TableHead
-                    className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
-                    onClick={() => onSort('created')}
-                  >
-                    <div className='flex items-center gap-2 group/header'>
-                      <span>Created</span>
-                      {sortField === 'created' ? (
-                        sortOrder === 'asc' ? (
-                          <SortAsc className='h-4 w-4 text-blue-500' />
-                        ) : (
-                          <SortDesc className='h-4 w-4 text-blue-500' />
-                        )
-                      ) : (
-                        <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                          <SortAsc className='h-4 w-4' />
+                      </TableHead>
+                      <TableHead className='font-semibold'>Assignment</TableHead>
+                      <TableHead className='font-semibold'>Contacts</TableHead>
+                      <TableHead
+                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        onClick={() => onSort('created')}
+                      >
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Created</span>
+                          {sortField === 'created' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead
-                    className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
-                    onClick={() => onSort('status')}
-                  >
-                    <div className='flex items-center gap-2 group/header'>
-                      <span>Status</span>
-                      {sortField === 'status' ? (
-                        sortOrder === 'asc' ? (
-                          <SortAsc className='h-4 w-4 text-blue-500' />
-                        ) : (
-                          <SortDesc className='h-4 w-4 text-blue-500' />
-                        )
-                      ) : (
-                        <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
-                          <SortAsc className='h-4 w-4' />
+                      </TableHead>
+                      <TableHead
+                        className='cursor-pointer hover:bg-muted/80 transition-colors font-semibold'
+                        onClick={() => onSort('status')}
+                      >
+                        <div className='flex items-center gap-2 group/header'>
+                          <span>Status</span>
+                          {sortField === 'status' ? (
+                            sortOrder === 'asc' ? (
+                              <SortAsc className='h-4 w-4 text-blue-500' />
+                            ) : (
+                              <SortDesc className='h-4 w-4 text-blue-500' />
+                            )
+                          ) : (
+                            <div className='h-4 w-4 opacity-0 group-hover/header:opacity-30'>
+                              <SortAsc className='h-4 w-4' />
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className='text-right font-semibold'>
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {promoters.map(promoter => (
-                  <PromotersTableRow
-                    key={promoter.id}
-                    promoter={promoter}
-                    isSelected={selectedPromoters.has(promoter.id)}
-                    onSelect={() => onSelectPromoter(promoter.id)}
-                    onView={() => onViewPromoter(promoter)}
-                    onEdit={() => onEditPromoter(promoter)}
-                  />
-                ))}
+                      </TableHead>
+                      <TableHead className='text-right font-semibold'>
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {promoters.map(promoter => (
+                      <PromotersTableRow
+                        key={promoter.id}
+                        promoter={promoter}
+                        isSelected={selectedPromoters.has(promoter.id)}
+                        onSelect={() => onSelectPromoter(promoter.id)}
+                        onView={() => onViewPromoter(promoter)}
+                        onEdit={() => onEditPromoter(promoter)}
+                      />
+                    ))}
+                    {isFetching && promoters.length > 0 && (
+                      <TableRow>
+                        <TableCell colSpan={8} className='text-center py-8'>
+                          <div className='flex items-center justify-center gap-2 text-muted-foreground'>
+                            <RefreshCw className='h-4 w-4 animate-spin' />
+                            <span>Updating data...</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </ScrollArea>
+            )}
+
+            {/* Grid View */}
+            {viewMode === 'grid' && (
+              <ScrollArea className='h-[520px] animate-in fade-in duration-300'>
+                <PromotersGridView
+                  promoters={promoters}
+                  selectedPromoters={selectedPromoters}
+                  onSelectPromoter={onSelectPromoter}
+                  onViewPromoter={onViewPromoter}
+                  onEditPromoter={onEditPromoter}
+                />
                 {isFetching && promoters.length > 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className='text-center py-8'>
-                      <div className='flex items-center justify-center gap-2 text-muted-foreground'>
-                        <RefreshCw className='h-4 w-4 animate-spin' />
-                        <span>Updating data...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
+                    <RefreshCw className='h-4 w-4 animate-spin' />
+                    <span>Updating data...</span>
+                  </div>
                 )}
-              </TableBody>
-            </Table>
-          </ScrollArea>
+              </ScrollArea>
+            )}
+
+            {/* Cards View */}
+            {viewMode === 'cards' && (
+              <ScrollArea className='h-[520px] animate-in fade-in duration-300'>
+                <PromotersCardsView
+                  promoters={promoters}
+                  selectedPromoters={selectedPromoters}
+                  onSelectPromoter={onSelectPromoter}
+                  onViewPromoter={onViewPromoter}
+                  onEditPromoter={onEditPromoter}
+                />
+                {isFetching && promoters.length > 0 && (
+                  <div className='flex items-center justify-center gap-2 text-muted-foreground py-4 border-t'>
+                    <RefreshCw className='h-4 w-4 animate-spin' />
+                    <span>Updating data...</span>
+                  </div>
+                )}
+              </ScrollArea>
+            )}
+          </div>
         )}
       </CardContent>
 
