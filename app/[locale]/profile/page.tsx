@@ -1,8 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useAuth } from '@/lib/auth-service';
 import { useToast } from '@/hooks/use-toast';
+import { profileFormSchema, passwordChangeSchema, type ProfileFormData, type PasswordChangeData } from '@/lib/schemas/profile-form-schema';
+import { FormFieldWithValidation } from '@/components/ui/form-field-with-validation';
+import { SelectFieldWithValidation } from '@/components/ui/select-field-with-validation';
 import {
   Card,
   CardContent,
@@ -97,15 +102,37 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-  const [passwordError, setPasswordError] = useState('');
 
-  // Editable fields
-  const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({});
+  // React Hook Form for profile
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileFormSchema),
+    mode: 'onChange',
+    defaultValues: {
+      full_name: '',
+      email: '',
+      phone: '',
+      department: '',
+      position: '',
+      avatar_url: '',
+      preferences: {
+        language: 'en',
+        timezone: 'UTC',
+        email_notifications: true,
+        sms_notifications: false,
+      },
+    },
+  });
+
+  // React Hook Form for password change
+  const passwordForm = useForm<PasswordChangeData>({
+    resolver: zodResolver(passwordChangeSchema),
+    mode: 'onChange',
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -122,7 +149,21 @@ export default function ProfilePage() {
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfile(profileData);
-        setEditedProfile(profileData);
+        // Reset form with fetched data
+        profileForm.reset({
+          full_name: profileData.full_name || '',
+          email: profileData.email || '',
+          phone: profileData.phone || '',
+          department: profileData.department || '',
+          position: profileData.position || '',
+          avatar_url: profileData.avatar_url || '',
+          preferences: {
+            language: profileData.preferences?.language || 'en',
+            timezone: profileData.preferences?.timezone || 'UTC',
+            email_notifications: profileData.preferences?.email_notifications !== false,
+            sms_notifications: profileData.preferences?.sms_notifications === true,
+          },
+        });
       }
 
       // Fetch activity log
@@ -153,14 +194,14 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSaveProfile = async () => {
+  const handleSaveProfile = async (data: ProfileFormData) => {
     try {
       setSaving(true);
       
       const response = await fetch('/api/users/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editedProfile),
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
@@ -222,7 +263,7 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const { url } = await response.json();
-        setEditedProfile({ ...editedProfile, avatar_url: url });
+        profileForm.setValue('avatar_url', url);
         toast({
           title: 'Success',
           description: 'Avatar uploaded successfully',
@@ -242,33 +283,16 @@ export default function ProfilePage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    // Validation
-    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
-      setPasswordError('All fields are required');
-      return;
-    }
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-
-    if (passwordData.newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
-      return;
-    }
-
+  const handleChangePassword = async (data: PasswordChangeData) => {
     try {
       setSaving(true);
-      setPasswordError('');
 
       const response = await fetch('/api/users/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword,
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
         }),
       });
 
@@ -278,27 +302,25 @@ export default function ProfilePage() {
           description: 'Password changed successfully',
         });
         setShowPasswordDialog(false);
-        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        passwordForm.reset();
       } else {
         const error = await response.json();
-        setPasswordError(error.message || 'Failed to change password');
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to change password',
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      setPasswordError('An unexpected error occurred');
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
-  };
-
-  const handlePreferenceChange = (key: string, value: any) => {
-    setEditedProfile({
-      ...editedProfile,
-      preferences: {
-        ...editedProfile.preferences,
-        [key]: value,
-      } as any,
-    });
   };
 
   const getInitials = (name: string) => {
@@ -344,7 +366,10 @@ export default function ProfilePage() {
           Manage your account settings and preferences
         </p>
         </div>
-        <Button onClick={handleSaveProfile} disabled={saving}>
+        <Button 
+          onClick={profileForm.handleSubmit(handleSaveProfile)} 
+          disabled={saving || !profileForm.formState.isValid}
+        >
           {saving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -378,7 +403,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-4">
                 <Avatar className="h-24 w-24">
                   <AvatarImage 
-                    src={editedProfile.avatar_url} 
+                    src={profileForm.watch('avatar_url') || profile.avatar_url} 
                     alt={profile.full_name} 
                   />
                   <AvatarFallback className="text-2xl">
@@ -431,25 +456,39 @@ export default function ProfilePage() {
 
               {/* Form Fields */}
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="full_name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="full_name"
-                      value={editedProfile.full_name || ''}
-                      onChange={(e) =>
-                        setEditedProfile({ ...editedProfile, full_name: e.target.value })
-                      }
-                      className="pl-9"
-                    />
-                  </div>
-                </div>
+                {/* Full Name - with validation */}
+                <Controller
+                  name="full_name"
+                  control={profileForm.control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Full Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <Input
+                          id="full_name"
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className={`pl-9 ${profileForm.formState.errors.full_name ? 'border-red-500' : profileForm.formState.dirtyFields.full_name ? 'border-green-500' : ''}`}
+                          disabled={saving}
+                        />
+                      </div>
+                      {profileForm.formState.errors.full_name && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {profileForm.formState.errors.full_name.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
 
+                {/* Email - Read only */}
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                     <Input
                       id="email"
                       type="email"
@@ -473,53 +512,94 @@ export default function ProfilePage() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={editedProfile.phone || ''}
-                      onChange={(e) =>
-                        setEditedProfile({ ...editedProfile, phone: e.target.value })
-                      }
-                      className="pl-9"
-                      placeholder="+1 (555) 000-0000"
-                    />
-                  </div>
-                </div>
+                {/* Phone - with validation */}
+                <Controller
+                  name="phone"
+                  control={profileForm.control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className={`pl-9 ${profileForm.formState.errors.phone ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.phone ? 'border-green-500' : ''}`}
+                          placeholder="+1 (555) 000-0000"
+                          disabled={saving}
+                        />
+                      </div>
+                      {profileForm.formState.errors.phone && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {profileForm.formState.errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
 
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="department"
-                      value={editedProfile.department || ''}
-                      onChange={(e) =>
-                        setEditedProfile({ ...editedProfile, department: e.target.value })
-                      }
-                      className="pl-9"
-                      placeholder="e.g., Human Resources"
-                    />
-                  </div>
-                </div>
+                {/* Department - with validation */}
+                <Controller
+                  name="department"
+                  control={profileForm.control}
+                  render={({ field }) => (
+                    <div className="space-y-2">
+                      <Label htmlFor="department">Department</Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                        <Input
+                          id="department"
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className={`pl-9 ${profileForm.formState.errors.department ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.department ? 'border-green-500' : ''}`}
+                          placeholder="e.g., Human Resources"
+                          disabled={saving}
+                        />
+                      </div>
+                      {profileForm.formState.errors.department && (
+                        <p className="text-sm text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {profileForm.formState.errors.department.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                />
 
+                {/* Position - with validation */}
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="position">Position</Label>
-                  <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      id="position"
-                      value={editedProfile.position || ''}
-                      onChange={(e) =>
-                        setEditedProfile({ ...editedProfile, position: e.target.value })
-                      }
-                      className="pl-9"
-                      placeholder="e.g., HR Manager"
-                    />
-                  </div>
+                  <Controller
+                    name="position"
+                    control={profileForm.control}
+                    render={({ field }) => (
+                      <>
+                        <Label htmlFor="position">Position</Label>
+                        <div className="relative">
+                          <Briefcase className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                          <Input
+                            id="position"
+                            value={field.value || ''}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            className={`pl-9 ${profileForm.formState.errors.position ? 'border-red-500' : field.value && profileForm.formState.dirtyFields.position ? 'border-green-500' : ''}`}
+                            placeholder="e.g., HR Manager"
+                            disabled={saving}
+                          />
+                        </div>
+                        {profileForm.formState.errors.position && (
+                          <p className="text-sm text-red-500 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            {profileForm.formState.errors.position.message}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -559,51 +639,102 @@ export default function ProfilePage() {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="current-password">Current Password</Label>
-                        <Input
-                          id="current-password"
-                          type="password"
-                          value={passwordData.currentPassword}
-                          onChange={(e) =>
-                            setPasswordData({ ...passwordData, currentPassword: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="new-password">New Password</Label>
-                        <Input
-                          id="new-password"
-                          type="password"
-                          value={passwordData.newPassword}
-                          onChange={(e) =>
-                            setPasswordData({ ...passwordData, newPassword: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
-                        <Input
-                          id="confirm-password"
-                          type="password"
-                          value={passwordData.confirmPassword}
-                          onChange={(e) =>
-                            setPasswordData({ ...passwordData, confirmPassword: e.target.value })
-                          }
-                        />
-                      </div>
-                      {passwordError && (
-                        <p className="text-sm text-red-500">{passwordError}</p>
-                      )}
+                      {/* Current Password */}
+                      <Controller
+                        name="currentPassword"
+                        control={passwordForm.control}
+                        render={({ field }) => (
+                          <div className="space-y-2">
+                            <Label htmlFor="current-password">Current Password</Label>
+                            <Input
+                              id="current-password"
+                              type="password"
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              className={passwordForm.formState.errors.currentPassword ? 'border-red-500' : ''}
+                              disabled={saving}
+                            />
+                            {passwordForm.formState.errors.currentPassword && (
+                              <p className="text-sm text-red-500 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {passwordForm.formState.errors.currentPassword.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
+                      
+                      {/* New Password */}
+                      <Controller
+                        name="newPassword"
+                        control={passwordForm.control}
+                        render={({ field }) => (
+                          <div className="space-y-2">
+                            <Label htmlFor="new-password">New Password</Label>
+                            <Input
+                              id="new-password"
+                              type="password"
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              className={passwordForm.formState.errors.newPassword ? 'border-red-500' : field.value && !passwordForm.formState.errors.newPassword ? 'border-green-500' : ''}
+                              disabled={saving}
+                            />
+                            {passwordForm.formState.errors.newPassword && (
+                              <p className="text-sm text-red-500 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {passwordForm.formState.errors.newPassword.message}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              Must be at least 8 characters with uppercase, lowercase, and numbers
+                            </p>
+                          </div>
+                        )}
+                      />
+                      
+                      {/* Confirm Password */}
+                      <Controller
+                        name="confirmPassword"
+                        control={passwordForm.control}
+                        render={({ field }) => (
+                          <div className="space-y-2">
+                            <Label htmlFor="confirm-password">Confirm New Password</Label>
+                            <Input
+                              id="confirm-password"
+                              type="password"
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              className={passwordForm.formState.errors.confirmPassword ? 'border-red-500' : field.value && !passwordForm.formState.errors.confirmPassword ? 'border-green-500' : ''}
+                              disabled={saving}
+                            />
+                            {passwordForm.formState.errors.confirmPassword && (
+                              <p className="text-sm text-red-500 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {passwordForm.formState.errors.confirmPassword.message}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      />
                     </div>
                     <DialogFooter>
                       <Button
                         variant="outline"
-                        onClick={() => setShowPasswordDialog(false)}
+                        onClick={() => {
+                          setShowPasswordDialog(false);
+                          passwordForm.reset();
+                        }}
+                        disabled={saving}
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleChangePassword} disabled={saving}>
+                      <Button 
+                        onClick={passwordForm.handleSubmit(handleChangePassword)} 
+                        disabled={saving || !passwordForm.formState.isValid}
+                      >
                         {saving ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -658,46 +789,63 @@ export default function ProfilePage() {
         </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4">
+                {/* Language */}
                 <div className="space-y-2">
                   <Label htmlFor="language">Language</Label>
-                  <Select
-                    value={editedProfile.preferences?.language || 'en'}
-                    onValueChange={(value) => handlePreferenceChange('language', value)}
-                  >
-                    <SelectTrigger id="language">
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">Arabic (العربية)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="preferences.language"
+                    control={profileForm.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={saving}
+                      >
+                        <SelectTrigger id="language">
+                          <SelectValue placeholder="Select language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="ar">Arabic (العربية)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
+                {/* Timezone */}
                 <div className="space-y-2">
                   <Label htmlFor="timezone">Timezone</Label>
-                  <Select
-                    value={editedProfile.preferences?.timezone || 'UTC'}
-                    onValueChange={(value) => handlePreferenceChange('timezone', value)}
-                  >
-                    <SelectTrigger id="timezone">
-                      <SelectValue placeholder="Select timezone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
-                      <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
-                      <SelectItem value="Europe/London">London (GMT)</SelectItem>
-                      <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
-                      <SelectItem value="Asia/Riyadh">Riyadh (AST)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    name="preferences.timezone"
+                    control={profileForm.control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={saving}
+                      >
+                        <SelectTrigger id="timezone">
+                          <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="UTC">UTC</SelectItem>
+                          <SelectItem value="America/New_York">Eastern Time (ET)</SelectItem>
+                          <SelectItem value="America/Chicago">Central Time (CT)</SelectItem>
+                          <SelectItem value="America/Denver">Mountain Time (MT)</SelectItem>
+                          <SelectItem value="America/Los_Angeles">Pacific Time (PT)</SelectItem>
+                          <SelectItem value="Europe/London">London (GMT)</SelectItem>
+                          <SelectItem value="Asia/Dubai">Dubai (GST)</SelectItem>
+                          <SelectItem value="Asia/Riyadh">Riyadh (AST)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
 
                 <Separator />
 
+                {/* Email Notifications */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
@@ -708,14 +856,20 @@ export default function ProfilePage() {
                       Receive email updates and alerts
                     </p>
                   </div>
-                  <Switch
-                    checked={editedProfile.preferences?.email_notifications !== false}
-                    onCheckedChange={(checked) =>
-                      handlePreferenceChange('email_notifications', checked)
-                    }
+                  <Controller
+                    name="preferences.email_notifications"
+                    control={profileForm.control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={saving}
+                      />
+                    )}
                   />
                 </div>
 
+                {/* SMS Notifications */}
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label className="flex items-center gap-2">
@@ -726,11 +880,16 @@ export default function ProfilePage() {
                       Receive SMS alerts for important updates
                     </p>
                   </div>
-                  <Switch
-                    checked={editedProfile.preferences?.sms_notifications === true}
-                    onCheckedChange={(checked) =>
-                      handlePreferenceChange('sms_notifications', checked)
-                    }
+                  <Controller
+                    name="preferences.sms_notifications"
+                    control={profileForm.control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={saving}
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -775,7 +934,7 @@ export default function ProfilePage() {
               </CardTitle>
               <CardDescription>Your last 10 actions</CardDescription>
             </CardHeader>
-        <CardContent>
+            <CardContent>
               {activity.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No recent activity
@@ -795,8 +954,8 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
