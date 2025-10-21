@@ -298,16 +298,16 @@ export function EnhancedPromotersViewRefactored({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit],
+    queryKey: ['promoters', page, limit], // Standard query key
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: 30_000, // 30 seconds
+    staleTime: 60_000, // 60 seconds - prevent frequent refetches
     gcTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false,
     refetchInterval: false,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    refetchOnMount: false, // Disable auto-refetch on mount
+    refetchOnReconnect: false, // Disable auto-refetch on reconnect
   });
 
   useEffect(() => {
@@ -316,7 +316,7 @@ export function EnhancedPromotersViewRefactored({
         console.warn('⚠️ Load timeout: Data took too long to load');
         setLoadTimeout(true);
       }
-    }, 15000); // 15 second timeout
+    }, 30000); // Increased to 30 second timeout to prevent premature timeouts
 
     return () => clearTimeout(timer);
   }, [isLoading, response]);
