@@ -283,6 +283,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(null);
         setUser(null);
         setLoading(false);
+        return () => {}; // Return empty cleanup function
       }
     };
 
@@ -461,8 +462,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 5 * 60 * 1000, // 5 minutes
-            gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+            staleTime: 10 * 60 * 1000, // 10 minutes - prevent frequent refetches
+            gcTime: 15 * 60 * 1000, // 15 minutes (formerly cacheTime)
             retry: (failureCount, error: any) => {
               // Don't retry on 4xx errors
               if (error?.status >= 400 && error?.status < 500) {
@@ -471,7 +472,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
               return failureCount < 3;
             },
             refetchOnWindowFocus: false,
-            refetchOnReconnect: true,
+            refetchOnReconnect: false, // Disable auto-refetch on reconnect
           },
           mutations: {
             retry: 1,

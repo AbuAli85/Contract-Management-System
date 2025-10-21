@@ -147,17 +147,15 @@ async function fetchPromoters(
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
   try {
-    // Add cache-busting timestamp
-    const timestamp = Date.now();
+    // Remove cache-busting timestamp to allow proper caching
     const response = await fetch(
-      `/api/promoters?page=${page}&limit=${limit}&_t=${timestamp}`,
+      `/api/promoters?page=${page}&limit=${limit}`,
       {
-        cache: 'no-store',
+        cache: 'force-cache', // Force caching to prevent refetches
         signal: controller.signal,
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
+          'Cache-Control': 'max-age=300', // Cache for 5 minutes
+          'X-Requested-With': 'XMLHttpRequest',
         },
       }
     );
@@ -299,16 +297,18 @@ export function EnhancedPromotersViewRefactored({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit], // Standard query key
+    queryKey: ['promoters', page, limit, 'v2'], // Add version to force cache refresh
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: 300_000, // 5 minutes - prevent frequent refetches
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    staleTime: Infinity, // NEVER consider data stale - prevent ALL refetches
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1, // Reduce retries
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: false, // Disable auto-refetch on window focus
     refetchInterval: false, // Disable auto-refetch interval
     refetchOnMount: false, // Disable auto-refetch on mount
     refetchOnReconnect: false, // Disable auto-refetch on reconnect
+    refetchIntervalInBackground: false, // Disable background refetch
+    networkMode: 'offlineFirst', // Use cached data when possible
   });
 
   useEffect(() => {
