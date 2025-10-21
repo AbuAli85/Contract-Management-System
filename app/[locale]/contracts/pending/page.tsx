@@ -40,7 +40,7 @@ export default function PendingContractsPage() {
   
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = permissions.hasPermission('contract:read:own') || permissions.isAdmin;
+  const hasPermission = permissions.can('contract:read:own') || permissions.isAdmin || false;
 
   useEffect(() => {
     // Log permission check for debugging
@@ -313,7 +313,7 @@ export default function PendingContractsPage() {
                         <span>
                           Employee:{' '}
                           {contract.promoters && contract.promoters.length > 0
-                            ? contract.promoters[0].name_en
+                            ? contract.promoters[0]?.name_en || 'N/A'
                             : 'N/A'}
                         </span>
                         <span>
