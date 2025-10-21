@@ -170,11 +170,10 @@ function SidebarContent({
           description: 'Handle contract parties',
         },
         {
-          title: 'Manage Promoters',
-          href: '/manage-promoters',
-          icon: FolderPlus,
-          description: 'Promoter management',
-          badge: 'New',
+          title: 'Promoters',
+          href: '/promoters',
+          icon: Users,
+          description: 'View and manage all promoters',
         },
         {
           title: 'Promoter Analysis',

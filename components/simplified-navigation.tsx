@@ -22,6 +22,7 @@ import {
   Settings,
   HelpCircle,
   UserCog,
+  UserPlus,
   ChevronRight,
 } from 'lucide-react';
 
@@ -61,17 +62,17 @@ export function SimplifiedNavigation({
       items: [
         {
           href: `/${locale}/promoters`,
-          label: 'Promoters Intelligence Hub',
-          labelAr: 'مركز معلومات المروجين',
+          label: 'Promoters',
+          labelAr: 'المروجين',
           icon: Users,
-          description: 'Analytics and insights dashboard',
+          description: 'View, manage, and analyze all promoters',
         },
         {
-          href: `/${locale}/manage-promoters`,
-          label: 'Promoters List',
-          labelAr: 'قائمة المروجين',
-          icon: UserCog,
-          description: 'View and manage all promoters',
+          href: `/${locale}/manage-promoters/new`,
+          label: 'Add Promoter',
+          labelAr: 'إضافة مروج',
+          icon: UserPlus,
+          description: 'Add a new promoter',
         },
       ],
     },

@@ -53,7 +53,7 @@ interface EnhancedStatCardProps {
         label: string;
       }
     | undefined;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
   ariaLabel?: string;
   isActive?: boolean;
 }
@@ -147,7 +147,7 @@ export function PromotersMetricsCards({
             ? { value: metrics.recentlyAdded, label: 'new this week' }
             : undefined
         }
-        onClick={onCardClick ? () => onCardClick('all') : undefined}
+        {...(onCardClick && { onClick: () => onCardClick('all') })}
         ariaLabel={`Total promoters: ${metrics.total}. Click to view all promoters.`}
         isActive={activeFilter === 'all'}
       />
@@ -157,7 +157,7 @@ export function PromotersMetricsCards({
         helper={`${metrics.unassigned} awaiting assignment`}
         icon={UserCheck}
         variant='neutral'
-        onClick={onCardClick ? () => onCardClick('active') : undefined}
+        {...(onCardClick && { onClick: () => onCardClick('active') })}
         ariaLabel={`Active workforce: ${metrics.active}. Click to filter by assigned promoters.`}
         isActive={activeFilter === 'active'}
       />
@@ -167,7 +167,7 @@ export function PromotersMetricsCards({
         helper={`${metrics.expiring} expiring soon`}
         icon={ShieldAlert}
         variant={metrics.critical > 0 ? 'danger' : 'warning'}
-        onClick={onCardClick ? () => onCardClick('alerts') : undefined}
+        {...(onCardClick && { onClick: () => onCardClick('alerts') })}
         ariaLabel={`Document alerts: ${metrics.critical} critical, ${metrics.expiring} expiring soon. Click to filter by document issues.`}
         isActive={activeFilter === 'alerts'}
       />
@@ -177,7 +177,7 @@ export function PromotersMetricsCards({
         helper={`${metrics.total - metrics.unassigned} assigned staff`}
         icon={CheckCircle}
         variant={metrics.complianceRate >= 90 ? 'success' : 'warning'}
-        onClick={onCardClick ? () => onCardClick('compliance') : undefined}
+        {...(onCardClick && { onClick: () => onCardClick('compliance') })}
         ariaLabel={`Compliance rate: ${metrics.complianceRate}%. Click to view compliant promoters.`}
         isActive={activeFilter === 'compliance'}
       />

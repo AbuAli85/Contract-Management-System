@@ -233,9 +233,9 @@ export function PermissionAwareSidebar({
       titleAr: 'إدارة المروجين',
       items: [
         {
-          href: `/${locale}/manage-promoters`,
-          label: 'Manage Promoters',
-          labelAr: 'إدارة المروجين',
+          href: `/${locale}/promoters`,
+          label: 'Promoters',
+          labelAr: 'المروجين',
           icon: Users,
           permission: 'promoter:read',
         },

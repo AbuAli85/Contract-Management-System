@@ -153,7 +153,7 @@ function PromoterGridCard({
             {promoter.displayName}
           </h3>
           <p className="text-xs text-muted-foreground line-clamp-1">
-            {promoter.job_title || promoter.work_location || '—'}
+            {promoter.job_title || promoter.organisationLabel || '—'}
           </p>
         </div>
 

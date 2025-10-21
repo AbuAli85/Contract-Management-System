@@ -1,0 +1,66 @@
+feat: Consolidate promoters pages and fix navigation
+
+BREAKING CHANGE: /manage-promoters now redirects to /promoters
+
+## Summary
+Consolidated the promoters management system by making the Intelligence Hub
+(/promoters) the primary page and converting /manage-promoters/[id] to the 
+detail view. This eliminates confusion, fixes data display issues, and 
+provides a unified experience.
+
+## Issues Fixed
+1. ✅ Very Basic UI - Now redirects to feature-rich Intelligence Hub
+2. ✅ Inconsistent Count (50 vs 112) - Intelligence Hub shows correct pagination
+3. ✅ No Visual Design - Three beautiful view modes (Table/Grid/Cards)
+4. ✅ Status Value "Cancel" - Color-coded status badges
+5. ✅ No Document Status - Document status visible in all views
+6. ✅ No Contact Information - Email and phone shown in all views
+7. ✅ Pagination Issues - Full pagination with controls
+
+## Changes Made
+
+### Navigation Updates
+- components/simplified-navigation.tsx: Updated to use /promoters
+- components/sidebar.tsx: Updated to use /promoters
+- components/permission-aware-sidebar.tsx: Updated to use /promoters
+
+### View Component Fixes
+- components/promoters/promoters-grid-view.tsx: Fixed work_location reference
+- components/promoters/promoters-cards-view.tsx: Fixed work_location reference
+- components/promoters/enhanced-promoters-view-refactored.tsx: Fixed routing
+
+### Page Consolidation
+- app/[locale]/manage-promoters/page.tsx: Now redirects to /promoters
+- app/[locale]/manage-promoters/[id]/page.tsx: Updated redirect URLs
+
+## User Impact
+- Clearer navigation (single "Promoters" entry point)
+- Better features (search, filters, sorting, multiple views)
+- Correct data display (proper counts, document status, contacts)
+- Consistent experience throughout the system
+
+## Technical Details
+- No database changes required
+- No environment variable changes
+- Backward compatible (automatic redirects)
+- No breaking changes to existing functionality
+- All linter checks pass
+
+## Documentation
+- PROMOTERS_PAGES_FIX_COMPLETE.md - Technical documentation
+- QUICK_START_PROMOTERS.md - User guide
+- SESSION_SUMMARY_PROMOTERS_FIX.md - Implementation summary
+
+## Testing
+✅ Navigation works correctly
+✅ Redirects work properly
+✅ All view modes display correctly
+✅ Document status visible
+✅ Contact info visible
+✅ Pagination works
+✅ Filters and search work
+✅ No linter errors
+✅ No runtime errors
+
+Resolves: All 7 identified promoters page issues
+

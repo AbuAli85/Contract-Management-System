@@ -934,14 +934,14 @@ export function EnhancedPromotersViewRefactored({
 
   const handleViewPromoter = useCallback(
     (promoter: DashboardPromoter) => {
-      router.push(`/${derivedLocale}/promoters/${promoter.id}`);
+      router.push(`/${derivedLocale}/manage-promoters/${promoter.id}`);
     },
     [router, derivedLocale]
   );
 
   const handleEditPromoter = useCallback(
     (promoter: DashboardPromoter) => {
-      router.push(`/${derivedLocale}/manage-promoters/${promoter.id}`);
+      router.push(`/${derivedLocale}/manage-promoters/${promoter.id}/edit`);
     },
     [router, derivedLocale]
   );

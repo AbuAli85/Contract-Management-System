@@ -177,7 +177,10 @@ export default function PromoterDetailPage() {
   const fetchAllPromoters = useCallback(async () => {
     try {
       const supabase = createClient();
-      if (!supabase) return;
+      if (!supabase) {
+        console.error('Failed to initialize Supabase client');
+        return;
+      }
 
       const { data, error } = await supabase
         .from('promoters')
@@ -205,7 +208,11 @@ export default function PromoterDetailPage() {
   const fetchEmployers = useCallback(async () => {
     try {
       const supabase = createClient();
-      if (!supabase) return;
+      if (!supabase) {
+        console.error('Failed to initialize Supabase client');
+        setEmployersLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('parties')
@@ -252,6 +259,9 @@ export default function PromoterDetailPage() {
     setIsDeleting(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
 
       // Delete related records first (if they exist)
       await supabase
@@ -282,7 +292,7 @@ export default function PromoterDetailPage() {
       }
 
       // Redirect to promoters list
-      router.push(`/${locale}/manage-promoters`);
+      router.push(`/${locale}/promoters`);
     } catch (error) {
       console.error('Error deleting promoter:', error);
       alert('Failed to delete promoter. Please try again.');
@@ -297,6 +307,10 @@ export default function PromoterDetailPage() {
     setIsUpdatingStatus(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
+
       const newStatus =
         promoterDetails.status === 'active' ? 'inactive' : 'active';
 
@@ -332,6 +346,12 @@ export default function PromoterDetailPage() {
       setError(null);
 
       const supabase = createClient();
+      if (!supabase) {
+        setError('Failed to initialize database connection');
+        setIsLoading(false);
+        return;
+      }
+
       const { data: promoterData, error: promoterError } = await supabase
         .from('promoters')
         .select('*')
@@ -391,6 +411,7 @@ export default function PromoterDetailPage() {
     async function fetchAuditLogs() {
       if (role !== 'admin') return;
       const supabase = createClient();
+      if (!supabase) return;
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
@@ -560,7 +581,7 @@ export default function PromoterDetailPage() {
       <div className='flex min-h-screen items-center justify-center'>
         <div className='text-center'>
           <p className='mb-4 text-red-600'>{error || 'Promoter not found'}</p>
-          <Button onClick={() => router.push(`/${locale}/manage-promoters`)}>
+          <Button onClick={() => router.push(`/${locale}/promoters`)}>
             Back to Promoters
           </Button>
         </div>
@@ -1042,7 +1063,7 @@ export default function PromoterDetailPage() {
                     <DocumentUpload
                       promoterId={promoterId}
                       documentType='id_card'
-                      currentUrl={promoterDetails?.id_card_url}
+                      currentUrl={promoterDetails?.id_card_url ?? null}
                       onUploadComplete={url => {
                         setPromoterDetails(prev =>
                           prev ? { ...prev, id_card_url: url } : null
@@ -1058,7 +1079,7 @@ export default function PromoterDetailPage() {
                     <DocumentUpload
                       promoterId={promoterId}
                       documentType='passport'
-                      currentUrl={promoterDetails?.passport_url}
+                      currentUrl={promoterDetails?.passport_url ?? null}
                       onUploadComplete={url => {
                         setPromoterDetails(prev =>
                           prev ? { ...prev, passport_url: url } : null
