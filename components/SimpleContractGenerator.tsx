@@ -556,12 +556,14 @@ export default function SimpleContractGenerator() {
                     value={promoterSearchTerm}
                     onChange={e => setPromoterSearchTerm(e.target.value)}
                     className='text-sm'
+                    disabled={generating}
                   />
                   <Select
                     value={formData.promoter_id}
                     onValueChange={value =>
                       handleInputChange('promoter_id', value)
                     }
+                    disabled={generating}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder='Select promoter' />
@@ -627,6 +629,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('first_party_id', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select client' />
@@ -662,6 +665,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('second_party_id', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select employer' />
@@ -707,6 +711,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('contract_type', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select contract type' />
@@ -729,6 +734,7 @@ export default function SimpleContractGenerator() {
                   value={formData.job_title}
                   onChange={e => handleInputChange('job_title', e.target.value)}
                   placeholder='e.g., Software Engineer'
+                  disabled={generating}
                 />
               </div>
 
@@ -742,6 +748,7 @@ export default function SimpleContractGenerator() {
                     handleInputChange('department', e.target.value)
                   }
                   placeholder='e.g., IT Department'
+                  disabled={generating}
                 />
               </div>
 
@@ -755,6 +762,7 @@ export default function SimpleContractGenerator() {
                     handleInputChange('work_location', e.target.value)
                   }
                   placeholder='e.g., Muscat, Oman'
+                  disabled={generating}
                 />
               </div>
 
@@ -772,6 +780,7 @@ export default function SimpleContractGenerator() {
                     )
                   }
                   placeholder='0'
+                  disabled={generating}
                 />
               </div>
 
@@ -785,6 +794,7 @@ export default function SimpleContractGenerator() {
                   onChange={e =>
                     handleInputChange('contract_start_date', e.target.value)
                   }
+                  disabled={generating}
                 />
               </div>
 
@@ -797,6 +807,7 @@ export default function SimpleContractGenerator() {
                   onChange={e =>
                     handleInputChange('contract_end_date', e.target.value)
                   }
+                  disabled={generating}
                 />
               </div>
 
@@ -808,6 +819,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('probation_period', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select probation period' />
@@ -828,6 +840,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('notice_period', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select notice period' />
@@ -848,6 +861,7 @@ export default function SimpleContractGenerator() {
                   onValueChange={value =>
                     handleInputChange('working_hours', value)
                   }
+                  disabled={generating}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select working hours' />
@@ -876,6 +890,7 @@ export default function SimpleContractGenerator() {
                     )
                   }
                   placeholder='0'
+                  disabled={generating}
                 />
               </div>
 
@@ -895,6 +910,7 @@ export default function SimpleContractGenerator() {
                     )
                   }
                   placeholder='0'
+                  disabled={generating}
                 />
               </div>
             </div>
@@ -910,6 +926,7 @@ export default function SimpleContractGenerator() {
                 }
                 placeholder='Any special terms or conditions...'
                 rows={3}
+                disabled={generating}
               />
             </div>
           </div>
@@ -966,6 +983,23 @@ export default function SimpleContractGenerator() {
                     </span>
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Generating Status Message */}
+          {generating && (
+            <div className='bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+              <div className='flex items-center justify-center gap-3'>
+                <Loader2 className='h-5 w-5 animate-spin text-blue-600' />
+                <div>
+                  <p className='font-medium text-blue-900 dark:text-blue-100'>
+                    Generating contract...
+                  </p>
+                  <p className='text-sm text-blue-700 dark:text-blue-300'>
+                    Please wait while we process your request. This may take a few moments.
+                  </p>
+                </div>
               </div>
             </div>
           )}
