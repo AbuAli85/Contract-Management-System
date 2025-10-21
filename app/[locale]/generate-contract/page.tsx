@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/app/providers';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
-import SimpleContractGenerator from '@/components/SimpleContractGenerator';
+import SimpleContractGeneratorWithValidation from '@/components/SimpleContractGeneratorWithValidation';
 import LoadingPage from '@/components/LoadingPage';
 
 export default function GenerateContractPage() {
@@ -34,7 +34,7 @@ export default function GenerateContractPage() {
 
   return (
     <div className='container mx-auto py-6'>
-      <SimpleContractGenerator />
+      <SimpleContractGeneratorWithValidation />
     </div>
   );
 }
