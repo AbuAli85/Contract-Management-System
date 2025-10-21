@@ -38,7 +38,7 @@ export default function ApprovedContractsPage() {
   
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = permissions.hasPermission('contract:read:own') || permissions.isAdmin;
+  const hasPermission = permissions.can('contract:read:own') || permissions.isAdmin;
 
   useEffect(() => {
     // Log permission check for debugging
