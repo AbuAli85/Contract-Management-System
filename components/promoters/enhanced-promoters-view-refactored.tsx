@@ -407,33 +407,39 @@ export function EnhancedPromotersViewRefactored({
         PROMOTER_NOTIFICATION_DAYS.PASSPORT_EXPIRY
       );
 
-      // Improved name resolution with better fallbacks
+      // Improved name resolution with better fallbacks and Title Case formatting
       const displayName = (() => {
+        let rawName = '';
+        
         // Try English name first
         if (promoter.name_en?.trim()) {
-          return promoter.name_en.trim();
+          rawName = promoter.name_en.trim();
         }
         // Try Arabic name
-        if (promoter.name_ar?.trim()) {
-          return promoter.name_ar.trim();
+        else if (promoter.name_ar?.trim()) {
+          rawName = promoter.name_ar.trim();
         }
         // Try legacy name field
-        if ((promoter as any)?.name?.trim()) {
-          return (promoter as any).name.trim();
+        else if ((promoter as any)?.name?.trim()) {
+          rawName = (promoter as any).name.trim();
         }
         // Try first_name + last_name combination
-        if ((promoter as any)?.first_name || (promoter as any)?.last_name) {
+        else if ((promoter as any)?.first_name || (promoter as any)?.last_name) {
           const firstName = (promoter as any)?.first_name || '';
           const lastName = (promoter as any)?.last_name || '';
-          const fullName = `${firstName} ${lastName}`.trim();
-          if (fullName) return fullName;
+          rawName = `${firstName} ${lastName}`.trim();
         }
         // Try email as last resort
-        if (promoter.email?.trim()) {
-          return promoter.email.split('@')[0]?.replace(/[._]/g, ' ').trim() || 'Unknown';
+        else if (promoter.email?.trim()) {
+          rawName = promoter.email.split('@')[0]?.replace(/[._]/g, ' ').trim() || 'Unknown';
         }
         // Final fallback
-        return `Promoter ${promoter.id.slice(-4)}`;
+        else {
+          rawName = `Promoter ${promoter.id.slice(-4)}`;
+        }
+        
+        // Apply Title Case formatting to all names
+        return toTitleCase(rawName) || rawName;
       })();
 
       const assignmentStatus = promoter.employer_id ? 'assigned' : 'unassigned';

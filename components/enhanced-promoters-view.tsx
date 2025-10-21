@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toTitleCase, formatJobTitle } from '@/lib/utils/text-formatting';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import { useToast } from '@/hooks/use-toast';
 // import { useVirtualizer } from '@tanstack/react-virtual'; // Removed for compatibility
@@ -580,11 +581,14 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           ? `${(promoter as any)?.first_name || ''} ${(promoter as any)?.last_name || ''}`.trim()
           : promoter.email || 'Unnamed promoter';
 
-      const displayName =
+      // Apply proper Title Case formatting to names
+      const rawName =
         promoter.name_en?.trim() ||
         promoter.name_ar?.trim() ||
         fallbackName ||
         'Unnamed Promoter';
+      
+      const displayName = toTitleCase(rawName);
 
       const assignmentStatus = promoter.employer_id ? 'assigned' : 'unassigned';
 
@@ -1278,9 +1282,11 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
-          <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:grid-cols-[minmax(0,2fr)_minmax(0,2fr)_minmax(0,2fr)]'>
+          <div className='grid gap-4'>
             <div className='space-y-2'>
-              <Label htmlFor='promoter-search'>Search promoters</Label>
+              <Label htmlFor='promoter-search' className='text-sm font-medium'>
+                Search promoters
+              </Label>
               <div className='relative'>
                 <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
                 <Input
@@ -1294,7 +1300,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
             </div>
             <div className='grid gap-4 sm:grid-cols-3'>
               <div className='space-y-2'>
-                <Label>Lifecycle</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>Lifecycle</Label>
                 <Select
                   value={statusFilter}
                   onValueChange={value =>
@@ -1314,7 +1320,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label>Document health</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>Document health</Label>
                 <Select
                   value={documentFilter}
                   onValueChange={value =>
@@ -1335,7 +1341,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 </Select>
               </div>
               <div className='space-y-2'>
-                <Label>Assignment</Label>
+                <Label className='text-sm font-medium whitespace-nowrap'>Assignment</Label>
                 <Select
                   value={assignmentFilter}
                   onValueChange={value =>
