@@ -1296,19 +1296,25 @@ function ContractsContent() {
                     setStatusFilter('all');
                   }}
                 />
+              ) : canCreateContract ? (
+                <EmptyState
+                  icon={FileText}
+                  title={t('dashboard.noContractsFound')}
+                  description={t('dashboard.noContractsDescription')}
+                  action={{
+                    label: t('dashboard.createNewContract'),
+                    href: `/${locale}/dashboard/generate-contract`,
+                  }}
+                  secondaryAction={{
+                    label: 'Learn More',
+                    href: `/${locale}/help`,
+                  }}
+                />
               ) : (
                 <EmptyState
                   icon={FileText}
                   title={t('dashboard.noContractsFound')}
                   description={t('dashboard.noContractsDescription')}
-                  action={
-                    canCreateContract
-                      ? {
-                          label: t('dashboard.createNewContract'),
-                          href: `/${locale}/dashboard/generate-contract`,
-                        }
-                      : undefined
-                  }
                   secondaryAction={{
                     label: 'Learn More',
                     href: `/${locale}/help`,

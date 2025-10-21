@@ -83,8 +83,8 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
 
   // For mobile: Show ellipsis if more than 3 items
   const shouldCollapse = breadcrumbItems.length > 3;
-  const visibleItems = shouldCollapse
-    ? [breadcrumbItems[0], breadcrumbItems[breadcrumbItems.length - 1]]
+  const visibleItems = shouldCollapse && breadcrumbItems.length >= 2
+    ? [breadcrumbItems[0]!, breadcrumbItems[breadcrumbItems.length - 1]!]
     : breadcrumbItems;
   const hiddenItems = shouldCollapse
     ? breadcrumbItems.slice(1, -1)
@@ -122,12 +122,20 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
           // Show collapsed view on mobile
           <>
             {/* First item */}
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link href={visibleItems[0].href}>{visibleItems[0].title}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+            {(() => {
+              const firstItem = visibleItems[0];
+              if (!firstItem) return null;
+              return (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link href={firstItem.href}>{firstItem.title}</Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              );
+            })()}
 
             {/* Ellipsis with dropdown for hidden items */}
             {hiddenItems.length > 0 && (
@@ -141,7 +149,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
                       {hiddenItems.map((item) => (
-                        <DropdownMenuItem key={item.href} asChild>
+                        <DropdownMenuItem key={item.href}>
                           <Link href={item.href}>{item.title}</Link>
                         </DropdownMenuItem>
                       ))}
@@ -152,10 +160,18 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
             )}
 
             {/* Last item */}
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{visibleItems[1].title}</BreadcrumbPage>
-            </BreadcrumbItem>
+            {(() => {
+              const lastItem = visibleItems[1];
+              if (!lastItem) return null;
+              return (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{lastItem.title}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              );
+            })()}
           </>
         )}
       </BreadcrumbList>
