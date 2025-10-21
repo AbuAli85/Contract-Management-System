@@ -11,8 +11,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { CheckCircle, Search, Filter, Download, Eye } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { CheckCircle, Search, Filter, Download, Eye, ShieldAlert, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { usePermissions } from '@/hooks/use-permissions';
 
 interface Contract {
   id: string;
@@ -31,26 +33,63 @@ export default function ApprovedContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Check permissions
+  const permissions = usePermissions();
+  const hasPermission = permissions.hasPermission('contract:read:own') || permissions.isAdmin;
 
   useEffect(() => {
-    fetchApprovedContracts();
-  }, []);
+    // Log permission check for debugging
+    console.log('📋 Approved Contracts - Permission Check:', {
+      hasPermission,
+      isAdmin: permissions.isAdmin,
+      isLoading: permissions.isLoading,
+      timestamp: new Date().toISOString()
+    });
+
+    if (!permissions.isLoading && hasPermission) {
+      fetchApprovedContracts();
+    } else if (!permissions.isLoading && !hasPermission) {
+      setLoading(false);
+      setPermissionError(true);
+      console.warn('⚠️ Insufficient permissions for approved contracts:', {
+        required: 'contract:read:own or admin role',
+        hasPermission,
+        isAdmin: permissions.isAdmin
+      });
+    }
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
 
   const fetchApprovedContracts = async () => {
     try {
       setLoading(true);
+      setError(null);
+      setPermissionError(false);
+      
       const response = await fetch('/api/contracts?status=active');
       const data = await response.json();
 
-      if (data.success) {
+      if (response.status === 403) {
+        // Permission denied
+        setPermissionError(true);
+        setError('Insufficient permissions to view approved contracts');
+        console.error('❌ Permission denied for approved contracts:', data);
+      } else if (response.status === 401) {
+        // Not authenticated
+        setError('Please log in to view approved contracts');
+        console.error('❌ Authentication required for approved contracts');
+      } else if (data.success) {
         setContracts(data.contracts || []);
+        console.log('✅ Loaded approved contracts:', data.contracts?.length || 0);
       } else {
         setError(data.error || 'Failed to fetch approved contracts');
+        console.error('❌ Error fetching approved contracts:', data);
       }
     } catch (err) {
       setError('Failed to fetch approved contracts');
-      console.error('Error fetching approved contracts:', err);
+      console.error('❌ Exception fetching approved contracts:', err);
     } finally {
       setLoading(false);
     }
@@ -77,6 +116,66 @@ export default function ApprovedContractsPage() {
       day: 'numeric',
     });
   };
+
+  // Show permission error with helpful message
+  if (permissionError && !loading) {
+    return (
+      <div className='container mx-auto space-y-6 py-6'>
+        <div className='flex items-center gap-3'>
+          <CheckCircle className='h-8 w-8 text-green-600' />
+          <div>
+            <h1 className='text-3xl font-bold'>Approved Contracts</h1>
+            <p className='text-muted-foreground'>
+              View all approved and active contracts
+            </p>
+          </div>
+        </div>
+
+        <Alert variant='destructive'>
+          <ShieldAlert className='h-4 w-4' />
+          <AlertTitle>Insufficient Permissions</AlertTitle>
+          <AlertDescription className='space-y-3'>
+            <p>
+              You don't have permission to view approved contracts. This page requires one of the following:
+            </p>
+            <ul className='list-disc list-inside space-y-1 ml-2'>
+              <li><strong>Permission:</strong> <code className='bg-muted px-1.5 py-0.5 rounded'>contract:read:own</code></li>
+              <li><strong>OR Admin Role:</strong> System administrator access</li>
+            </ul>
+            <div className='flex gap-2 mt-4'>
+              <Button variant='outline' asChild>
+                <Link href='/en/dashboard'>
+                  <CheckCircle className='mr-2 h-4 w-4' />
+                  Go to Dashboard
+                </Link>
+              </Button>
+              <Button variant='outline' asChild>
+                <Link href='/en/auth/unauthorized'>
+                  <Mail className='mr-2 h-4 w-4' />
+                  Request Access
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        <Card>
+          <CardContent className='py-12'>
+            <div className='text-center text-muted-foreground'>
+              <ShieldAlert className='mx-auto mb-4 h-12 w-12 text-red-500' />
+              <h3 className='text-lg font-semibold mb-2'>Access Restricted</h3>
+              <p className='text-sm mb-4'>
+                Contact your system administrator to request the necessary permissions.
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                Required Permission: <code className='bg-muted px-2 py-1 rounded'>contract:read:own</code>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
