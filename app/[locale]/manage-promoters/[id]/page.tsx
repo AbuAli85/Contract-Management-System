@@ -430,7 +430,7 @@ export default function PromoterDetailPage() {
         );
         if (skillsResponse.ok) {
           const skillsData = await skillsResponse.json();
-          setSkills(skillsData);
+          setSkills(skillsData.skills || []);
         }
 
         // Fetch experience
@@ -439,7 +439,7 @@ export default function PromoterDetailPage() {
         );
         if (experienceResponse.ok) {
           const experienceData = await experienceResponse.json();
-          setExperience(experienceData);
+          setExperience(experienceData.experience || []);
         }
 
         // Fetch education
@@ -448,7 +448,7 @@ export default function PromoterDetailPage() {
         );
         if (educationResponse.ok) {
           const educationData = await educationResponse.json();
-          setEducation(educationData);
+          setEducation(educationData.education || []);
         }
 
         // Fetch documents
@@ -457,7 +457,7 @@ export default function PromoterDetailPage() {
         );
         if (documentsResponse.ok) {
           const documentsData = await documentsResponse.json();
-          setDocuments(documentsData);
+          setDocuments(documentsData.documents || []);
         }
       } catch (error) {
         console.error('Error fetching CV data:', error);
