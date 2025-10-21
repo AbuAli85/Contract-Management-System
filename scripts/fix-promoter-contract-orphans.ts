@@ -70,13 +70,34 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
     const orphaned: OrphanedPromoter[] = [];
     
     for (const promoter of promotersData || []) {
-      const { data: contracts, error: contractsError } = await supabase
-        .from('contracts')
-        .select('id')
-        .eq('promoter_id', promoter.id)
-        .limit(1);
+      // Use raw SQL to handle type casting
+      const { data: contracts, error: contractsError } = await supabase.rpc(
+        'check_promoter_contracts',
+        { promoter_uuid: promoter.id }
+      );
 
-      if (!contractsError && contracts && contracts.length === 0) {
+      // Fallback to direct query if RPC doesn't exist
+      if (contractsError) {
+        const { data: directContracts } = await supabase
+          .from('contracts')
+          .select('id')
+          .eq('promoter_id', promoter.id)
+          .limit(1);
+        
+        if (directContracts && directContracts.length === 0) {
+          orphaned.push({
+            id: promoter.id,
+            name_en: promoter.name_en,
+            name_ar: promoter.name_ar,
+            status: promoter.status,
+            employer_id: promoter.employer_id!,
+            employer_name: (promoter.parties as any)?.name_en || 'Unknown',
+            job_title: promoter.job_title,
+            work_location: promoter.work_location,
+            created_at: promoter.created_at,
+          });
+        }
+      } else if (!contracts || contracts === 0) {
         orphaned.push({
           id: promoter.id,
           name_en: promoter.name_en,
