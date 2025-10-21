@@ -94,12 +94,17 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
       return;
     }
     
+    // Parse segments inside effect to avoid closure issues
+    const pathSegments = pathname
+      .split('/')
+      .filter((segment) => segment && segment !== locale);
+    
     const fetchDynamicTitles = async () => {
       const newTitles: Record<string, string> = {};
       
-      for (let i = 0; i < segments.length; i++) {
-        const segment = segments[i];
-        const previousSegment = i > 0 ? segments[i - 1] : null;
+      for (let i = 0; i < pathSegments.length; i++) {
+        const segment = pathSegments[i];
+        const previousSegment = i > 0 ? pathSegments[i - 1] : null;
         
         // Skip if segment is undefined
         if (!segment) continue;
@@ -128,8 +133,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
     
     fetchDynamicTitles();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [pathname, locale, isUUID]);
 
   // Build breadcrumb items
   const breadcrumbItems = segments
