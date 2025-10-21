@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { toTitleCase } from '@/lib/utils/text-formatting';
 import type { Promoter } from '@/lib/types';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import type {
