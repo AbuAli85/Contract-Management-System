@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home } from 'lucide-react';
@@ -64,20 +64,18 @@ const SEGMENT_TITLES: Record<string, string> = {
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
 
-  // Memoize segments to prevent re-creating array on every render
-  const segments = useMemo(() => {
-    return pathname
-      ?.split('/')
-      .filter((segment) => segment && segment !== locale) || [];
-  }, [pathname, locale]);
+  // Parse segments directly without memoization to avoid nested memo issues
+  const segments = pathname
+    ?.split('/')
+    .filter((segment) => segment && segment !== locale) || [];
 
   // If we're on the home page or dashboard, don't show breadcrumbs
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'dashboard')) {
     return null;
   }
 
-  // Build breadcrumb items
-  const breadcrumbItems = useMemo(() => segments
+  // Build breadcrumb items (no memoization needed - simple computation)
+  const breadcrumbItems = segments
     .filter((segment): segment is string => !!segment)
     .map((segment, index) => {
       const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
@@ -109,7 +107,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
         title,
         isLast,
       };
-    }), [segments, locale]);
+    });
 
   // For mobile: Show ellipsis if more than 3 items
   const shouldCollapse = breadcrumbItems.length > 3;
