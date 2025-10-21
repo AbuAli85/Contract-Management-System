@@ -56,7 +56,7 @@ export interface NotificationItem {
   context?: string;
   is_read?: boolean; // Changed from isRead to match DB
   isRead?: boolean; // Add isRead for compatibility
-  user_email?: string;
+  user_id?: string;
   related_contract_id?: string;
   related_entity_id?: string;
   related_entity_type?: string;

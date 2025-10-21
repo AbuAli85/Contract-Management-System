@@ -7,12 +7,10 @@ import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
-// 🔧 TEMPORARY FIX: Bypass RBAC for debugging
-export async function GET(request: NextRequest) {
-  // TODO: Re-enable RBAC after fixing permission issues
-  // export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
+// ✅ SECURITY: RBAC enabled with rate limiting
+export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
   try {
-    console.log('🔍 Contracts API: Starting request (RBAC BYPASSED)...');
+    console.log('🔍 Contracts API: Starting request (RBAC ENABLED)...');
 
     const supabase = await createClient();
     const { searchParams } = new URL(request.url);

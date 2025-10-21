@@ -301,29 +301,31 @@ export default function WorkingLoginPage() {
                 )}
               </Button>
 
-              <div className='space-y-2'>
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  onClick={() => {
-                    setEmail('provider@test.com');
-                    setPassword('password');
-                  }}
-                >
-                  📝 Provider Test Account
-                </Button>
+              {process.env.NODE_ENV === 'development' && (
+                <div className='space-y-2'>
+                  <Button
+                    variant='outline'
+                    className='w-full'
+                    onClick={() => {
+                      setEmail('provider@test.com');
+                      setPassword('password');
+                    }}
+                  >
+                    📝 Provider Test Account
+                  </Button>
 
-                <Button
-                  variant='outline'
-                  className='w-full'
-                  onClick={() => {
-                    setEmail('test@test.com');
-                    setPassword('TestPass123!');
-                  }}
-                >
-                  🧪 Alternative Test Account
-                </Button>
-              </div>
+                  <Button
+                    variant='outline'
+                    className='w-full'
+                    onClick={() => {
+                      setEmail('test@test.com');
+                      setPassword('TestPass123!');
+                    }}
+                  >
+                    🧪 Alternative Test Account
+                  </Button>
+                </div>
+              )}
             </div>
           ) : (
             <div className='space-y-3'>

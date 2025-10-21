@@ -10,7 +10,6 @@ import { NotificationPanel } from '@/components/notifications/notification-panel
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
-  Search,
   FilePlus,
   UserPlus,
   Sun,
@@ -18,6 +17,7 @@ import {
   User,
   LogOut,
 } from 'lucide-react';
+import GlobalSearch from '@/components/global-search';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
@@ -189,15 +189,8 @@ export function AuthenticatedLayout({
               <div className='flex items-center justify-between px-4 py-3'>
                 {/* Left side - Search and Quick Actions */}
                 <div className='flex items-center space-x-4 flex-1'>
-                  {/* Search Box */}
-                  <div className='relative flex-1 max-w-md'>
-                    <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                    <input
-                      type='text'
-                      placeholder='Search contracts, promoters, parties...'
-                      className='w-full pl-10 pr-3 py-2 text-sm bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent'
-                    />
-                  </div>
+                  {/* Global Search */}
+                  <GlobalSearch />
 
                   {/* Quick Actions - Only show on non-promoter pages */}
                   {!pathname?.includes('/promoters') && (

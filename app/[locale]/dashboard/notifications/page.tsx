@@ -46,7 +46,7 @@ import {
 import clsx from 'clsx';
 import { toast } from '@/hooks/use-toast';
 
-import { NotificationItem } from '@/lib/dashboard-types';
+import type { NotificationItem } from '@/lib/dashboard-types';
 
 const iconMap = {
   success: CheckCircle,
@@ -99,10 +99,13 @@ export default function NotificationsPage() {
       setError(null);
       try {
         const supabase = createClient();
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
         const { data, error } = await supabase
           .from('notifications')
           .select(
-            'id, type, message, created_at, user_email, related_contract_id, is_read'
+            'id, type, message, created_at, user_id, related_contract_id, is_read'
           )
           .order('created_at', { ascending: false });
         if (error) throw error;
@@ -120,7 +123,7 @@ export default function NotificationsPage() {
                   | 'default') || 'default', // Ensure valid type
               message: notification.message || '', // Ensure message is not null
               created_at: notification.created_at || new Date().toISOString(), // Ensure created_at is not null
-              user_email: notification.user_email || undefined,
+              user_id: notification.user_id || undefined,
               related_contract_id:
                 notification.related_contract_id?.toString() || undefined,
               is_read: notification.is_read || false,
@@ -143,6 +146,10 @@ export default function NotificationsPage() {
     fetchNotifications();
     // Real-time subscription
     const supabase = createClient();
+    if (!supabase) {
+      console.error('Failed to initialize Supabase client for real-time subscription');
+      return;
+    }
     const channel = supabase
       .channel('public:notifications:feed')
       .on(
@@ -158,14 +165,16 @@ export default function NotificationsPage() {
 
     return () => {
       ignore = true;
-      supabase.removeChannel(channel);
+      if (supabase) {
+        supabase.removeChannel(channel);
+      }
     };
   }, []);
 
   // Get unique user emails for filter
   const userOptions = useMemo(() => {
     const emails = notifications
-      .map(n => n.user_email)
+      .map(n => n.user_id)
       .filter(Boolean)
       .filter((email, index, arr) => arr.indexOf(email) === index);
     return emails as string[];
@@ -178,8 +187,8 @@ export default function NotificationsPage() {
           const matchesSearch =
             !search ||
             notif.message.toLowerCase().includes(search.toLowerCase()) ||
-            (notif.user_email &&
-              notif.user_email.toLowerCase().includes(search.toLowerCase()));
+            (notif.user_id &&
+              notif.user_id.toLowerCase().includes(search.toLowerCase()));
 
           const matchesType = !typeFilter || notif.type === typeFilter;
 
@@ -188,7 +197,7 @@ export default function NotificationsPage() {
             (readFilter === 'read' && notif.is_read) ||
             (readFilter === 'unread' && !notif.is_read);
 
-          const matchesUser = !userFilter || notif.user_email === userFilter;
+          const matchesUser = !userFilter || notif.user_id === userFilter;
 
           const matchesDate =
             (!startDate && !endDate) ||
@@ -229,7 +238,10 @@ export default function NotificationsPage() {
   const toggleRead = async (notif: NotificationItem) => {
     setIsUpdating(true);
     try {
-      const supabase = getSupabaseClient();
+      const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: !notif.is_read })
@@ -261,6 +273,9 @@ export default function NotificationsPage() {
     setIsUpdating(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -289,6 +304,9 @@ export default function NotificationsPage() {
     setIsUpdating(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
       const { error } = await supabase
         .from('notifications')
         .delete()
@@ -318,7 +336,7 @@ export default function NotificationsPage() {
       'type',
       'message',
       'created_at',
-      'user_email',
+      'user_id',
       'related_contract_id',
       'related_entity_id',
       'related_entity_type',
@@ -603,7 +621,7 @@ export default function NotificationsPage() {
                           </td>
                           <td className='whitespace-nowrap px-4 py-3'>
                             <span className='font-mono text-sm text-gray-600'>
-                              {notif.user_email || '-'}
+                              {notif.user_id || '-'}
                             </span>
                           </td>
                           <td className='whitespace-nowrap px-4 py-3 text-sm text-muted-foreground'>
@@ -692,7 +710,7 @@ export default function NotificationsPage() {
                 <b>Message:</b> {selectedNotif.message}
               </div>
               <div>
-                <b>User Email:</b> {selectedNotif.user_email || '-'}
+                <b>User ID:</b> {selectedNotif.user_id || '-'}
               </div>
               <div>
                 <b>Created At:</b>{' '}
