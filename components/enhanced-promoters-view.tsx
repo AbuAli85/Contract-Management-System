@@ -1248,21 +1248,21 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
         <EnhancedStatCard
           title='Active workforce'
           value={metrics.active}
-          helper={`${metrics.unassigned} awaiting assignment`}
+          helper={`${metrics.unassigned} unassigned, ${metrics.active - metrics.unassigned} with employer`}
           icon={UserCheck}
           variant='neutral'
         />
         <EnhancedStatCard
           title='Document alerts'
           value={metrics.critical}
-          helper={`${metrics.expiring} expiring soon`}
+          helper={`${metrics.expiring} expiring soon, ${metrics.critical} expired`}
           icon={ShieldAlert}
           variant={metrics.critical > 0 ? 'danger' : 'warning'}
         />
         <EnhancedStatCard
           title='Compliance rate'
           value={`${metrics.complianceRate}%`}
-          helper={`${metrics.total - metrics.unassigned} assigned staff`}
+          helper={`${metrics.total} total promoters (system-wide)`}
           icon={CheckCircle}
           variant={metrics.complianceRate >= 90 ? 'success' : 'warning'}
         />
