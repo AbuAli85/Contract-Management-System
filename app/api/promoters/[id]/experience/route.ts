@@ -1,89 +1,29 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/admin';
-import { z } from 'zod';
-import { PromoterExperience } from '@/lib/types';
-import { NextRequest } from 'next/server';
+import { withRBAC } from '@/lib/rbac/guard';
 
-const experienceSchema = z.object({
-  company: z.string(),
-  role: z.string(),
-  start_date: z.string().optional(),
-  end_date: z.string().optional(),
-  description: z.string().optional(),
+export const dynamic = 'force-dynamic';
+
+/**
+ * GET /api/promoters/[id]/experience
+ * Fetch promoter experience (placeholder for future implementation)
+ */
+export const GET = withRBAC('promoter:read:own', async (request: Request, { params }: { params: { id: string } }) => {
+  try {
+    const promoterId = params.id;
+    
+    // TODO: Implement experience fetching from database
+    // For now, return empty array to prevent 404 errors
+    
+    return NextResponse.json({
+      success: true,
+      experience: [],
+      message: 'Experience feature coming soon'
+    });
+  } catch (error) {
+    console.error('Error fetching experience:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch experience' },
+      { status: 500 }
+    );
+  }
 });
-
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from('promoter_experience')
-    .select('*')
-    .eq('promoter_id', promoter_id)
-    .order('start_date', { ascending: false });
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data);
-}
-
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const parsed = experienceSchema.safeParse(body);
-
-  if (!parsed.success)
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
-
-  // Placeholder response since promoter_experience table doesn't exist yet
-  return NextResponse.json({
-    id: 'placeholder',
-    promoter_id,
-    ...parsed.data,
-    created_at: new Date().toISOString(),
-  });
-}
-
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const body = await req.json();
-  const { id, ...updateData } = body;
-
-  if (!id)
-    return NextResponse.json(
-      { error: 'Experience ID required' },
-      { status: 400 }
-    );
-
-  // Placeholder response since promoter_experience table doesn't exist yet
-  return NextResponse.json({
-    id,
-    promoter_id,
-    ...updateData,
-    updated_at: new Date().toISOString(),
-  });
-}
-
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id: promoter_id } = await params;
-  const { id } = await req.json();
-
-  if (!id)
-    return NextResponse.json(
-      { error: 'Experience ID required' },
-      { status: 400 }
-    );
-
-  // Placeholder response since promoter_experience table doesn't exist yet
-  return NextResponse.json({ success: true });
-}
