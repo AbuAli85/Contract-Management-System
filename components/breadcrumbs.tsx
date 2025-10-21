@@ -128,7 +128,8 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
     
     fetchDynamicTitles();
-  }, [pathname, segments, isMounted]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, isMounted]);
 
   // Build breadcrumb items
   const breadcrumbItems = segments

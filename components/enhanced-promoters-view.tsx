@@ -1180,10 +1180,21 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                 {metrics.total} promoters in system.
               </CardDescription>
               <div className='flex flex-wrap items-center gap-3 text-sm text-white/70 pt-2'>
-                <Badge className='bg-white/10 text-white border-white/20'>
-                  <Activity className='mr-1.5 h-3 w-3' />
-                  Live data
-                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge className='bg-white/10 text-white border-white/20 cursor-help'>
+                        <Activity className='mr-1.5 h-3 w-3' />
+                        Auto-refresh enabled
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className='max-w-xs'>
+                      <p className='text-xs'>
+                        Data automatically refreshes when you return to this tab or reconnect to the internet. Use the Refresh button for immediate updates.
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <Badge className='bg-emerald-500/20 text-emerald-100 border-emerald-400/30'>
                   <CheckCircle className='mr-1.5 h-3 w-3' />
                   {metrics.complianceRate}% compliant
@@ -1226,7 +1237,7 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className='text-xs'>Refresh promoter data (Cmd+R)</p>
+                    <p className='text-xs'>Get the latest data immediately (Cmd+R)</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
