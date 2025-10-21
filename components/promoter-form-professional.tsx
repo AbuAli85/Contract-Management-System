@@ -349,8 +349,10 @@ export default function PromoterFormProfessional(
       errors.id_number = 'ID number is required';
     }
 
-    // Email validation
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email validation - REQUIRED
+    if (!formData.email || !formData.email.trim()) {
+      errors.email = 'Email address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
 
@@ -1060,14 +1062,17 @@ export default function PromoterFormProfessional(
               <CardContent className='space-y-4'>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <Label htmlFor='email'>Email Address</Label>
+                    <Label htmlFor='email'>
+                      Email Address <span className='text-red-500'>*</span>
+                    </Label>
                     <Input
                       id='email'
                       type='email'
                       value={formData.email}
                       onChange={e => handleInputChange('email', e.target.value)}
-                      placeholder='Enter email address'
+                      placeholder='Enter email address (required)'
                       className={validationErrors.email ? 'border-red-500' : ''}
+                      required
                     />
                     {validationErrors.email && (
                       <p className='text-sm text-red-500'>
