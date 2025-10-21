@@ -12,7 +12,7 @@ interface FormFieldWithValidationProps {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
-  error?: FieldError;
+  error?: FieldError | undefined;
   value: string | number;
   onChange: (value: any) => void;
   onBlur?: () => void;

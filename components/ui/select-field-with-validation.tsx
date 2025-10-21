@@ -22,7 +22,7 @@ interface SelectFieldWithValidationProps {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
-  error?: FieldError;
+  error?: FieldError | undefined;
   value: string;
   onChange: (value: string) => void;
   options: SelectOption[];
