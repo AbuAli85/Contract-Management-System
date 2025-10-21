@@ -313,7 +313,7 @@ export function ExpiryTracker({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) {
-      return `Expired ${Math.abs(diffDays)} days ago`;
+      return `Expired on ${expiry.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} (${Math.abs(diffDays)} days ago)`;
     } else if (diffDays === 0) {
       return 'Expires today';
     } else {

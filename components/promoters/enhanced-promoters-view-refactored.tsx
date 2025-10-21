@@ -95,7 +95,7 @@ function computeDocumentHealth(
       status: 'expired',
       daysRemaining: Math.abs(days),
       expiresOn: value,
-      label: `Expired ${Math.abs(days)} days ago`,
+      label: `Expired on ${formatDisplayDate(value)} (${Math.abs(days)} days ago)`,
     };
   }
 
