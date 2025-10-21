@@ -3,8 +3,22 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, Home } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Home } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  BreadcrumbEllipsis,
+} from '@/components/ui/breadcrumb';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface BreadcrumbsProps {
   className?: string;
@@ -48,10 +62,14 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     crm: 'CRM',
     new: 'New',
     edit: 'Edit',
+    parties: 'Parties',
+    approvals: 'Approvals',
+    communications: 'Communications',
+    contacts: 'Contacts',
   };
 
   // Build breadcrumb items
-  const breadcrumbs = segments.map((segment, index) => {
+  const breadcrumbItems = segments.map((segment, index) => {
     const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
     const title = segmentTitles[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
     const isLast = index === segments.length - 1;
@@ -63,38 +81,85 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
   });
 
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className={cn('flex items-center space-x-1 text-sm text-muted-foreground', className)}
-    >
-      {/* Home link */}
-      <Link
-        href={`/${locale}/dashboard`}
-        className="flex items-center hover:text-foreground transition-colors"
-        aria-label="Home"
-      >
-        <Home className="h-4 w-4" />
-      </Link>
+  // For mobile: Show ellipsis if more than 3 items
+  const shouldCollapse = breadcrumbItems.length > 3;
+  const visibleItems = shouldCollapse
+    ? [breadcrumbItems[0], breadcrumbItems[breadcrumbItems.length - 1]]
+    : breadcrumbItems;
+  const hiddenItems = shouldCollapse
+    ? breadcrumbItems.slice(1, -1)
+    : [];
 
-      {breadcrumbs.map((breadcrumb, index) => (
-        <React.Fragment key={breadcrumb.href}>
-          <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {breadcrumb.isLast ? (
-            <span className="font-medium text-foreground truncate" aria-current="page">
-              {breadcrumb.title}
-            </span>
-          ) : (
-            <Link
-              href={breadcrumb.href}
-              className="hover:text-foreground transition-colors truncate"
-            >
-              {breadcrumb.title}
+  return (
+    <Breadcrumb className={className}>
+      <BreadcrumbList>
+        {/* Home link */}
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild>
+            <Link href={`/${locale}/dashboard`} aria-label="Dashboard">
+              <Home className="h-4 w-4" />
             </Link>
-          )}
-        </React.Fragment>
-      ))}
-    </nav>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+
+        {!shouldCollapse ? (
+          // Show all items on desktop or when few items
+          breadcrumbItems.map((item, index) => (
+            <React.Fragment key={item.href}>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                {item.isLast ? (
+                  <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={item.href}>{item.title}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          ))
+        ) : (
+          // Show collapsed view on mobile
+          <>
+            {/* First item */}
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link href={visibleItems[0].href}>{visibleItems[0].title}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
+            {/* Ellipsis with dropdown for hidden items */}
+            {hiddenItems.length > 0 && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex items-center gap-1">
+                      <BreadcrumbEllipsis className="h-4 w-4" />
+                      <span className="sr-only">Toggle menu</span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {hiddenItems.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}>{item.title}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </BreadcrumbItem>
+              </>
+            )}
+
+            {/* Last item */}
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{visibleItems[1].title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 
