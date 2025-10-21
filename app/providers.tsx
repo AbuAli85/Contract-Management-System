@@ -462,20 +462,24 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 10 * 60 * 1000, // 10 minutes - prevent frequent refetches
-            gcTime: 15 * 60 * 1000, // 15 minutes (formerly cacheTime)
+            staleTime: 5 * 60 * 1000, // 5 minutes default - data considered fresh
+            gcTime: 10 * 60 * 1000, // 10 minutes - keep unused data in cache
             retry: (failureCount, error: any) => {
               // Don't retry on 4xx errors
               if (error?.status >= 400 && error?.status < 500) {
                 return false;
               }
-              return failureCount < 3;
+              return failureCount < 2;
             },
-            refetchOnWindowFocus: false,
-            refetchOnReconnect: false, // Disable auto-refetch on reconnect
+            refetchOnWindowFocus: true, // Refetch on window focus for fresh data
+            refetchOnReconnect: true, // Refetch on reconnect
+            refetchOnMount: true, // Refetch on mount if stale
           },
           mutations: {
             retry: 1,
+            onError: (error) => {
+              console.error('Mutation error:', error);
+            },
           },
         },
       })

@@ -7,8 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { Party } from '@/lib/types';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
+import {
+  usePartiesQuery,
+  useDeletePartyMutation,
+} from '@/hooks/use-parties-query';
 import {
   Card,
   CardContent,
@@ -115,10 +122,28 @@ interface PartyStats {
 }
 
 export default function ManagePartiesPage() {
-  const [parties, setParties] = useState<PartyWithContractCount[]>([]);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Get pagination params from URL
+  const currentPage = parseInt(searchParams?.get('page') || '1', 10);
+  const pageSize = parseInt(searchParams?.get('limit') || '20', 10);
+  
+  // Use React Query for data fetching with automatic caching
+  const {
+    data: partiesData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = usePartiesQuery(currentPage, pageSize);
+
+  // Extract parties and total count from React Query response
+  const parties = partiesData?.parties || [];
+  const totalCount = partiesData?.total || 0;
+  
   const [filteredParties, setFilteredParties] = useState<EnhancedParty[]>([]);
   const [selectedParties, setSelectedParties] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedParty, setSelectedParty] = useState<Party | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [currentView, setCurrentView] = useState<'table' | 'grid'>('table');
@@ -130,120 +155,19 @@ export default function ManagePartiesPage() {
     'name' | 'cr_expiry_date' | 'license_expiry_date' | 'contracts'
   >('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [showStats, setShowStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   const { toast } = useToast();
   const isMountedRef = useRef(true);
 
-  const fetchPartiesWithContractCount = useCallback(async () => {
-    if (isMountedRef.current) setIsLoading(true);
-
-    try {
-      // Get supabase client
-      const supabase = createClient();
-
-      // Fetch parties
-      const { data: partiesData, error: partiesError } = await supabase
-        .from('parties')
-        .select('*')
-        .order('name_en');
-
-      if (partiesError) {
-        console.error('Error fetching parties:', partiesError);
-        toast({
-          title: 'Error',
-          description: 'Failed to load parties',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Fetch contract counts for each party
-      const enhancedData = await Promise.all(
-        (partiesData || []).map(async party => {
-          try {
-            const supabase = createClient();
-
-            // Use the correct column names based on actual schema
-            let contractCount = 0;
-            try {
-              const { count, error: contractError } = await supabase
-                .from('contracts')
-                .select('id', { count: 'exact', head: true })
-                .or(`employer_id.eq.${party.id},client_id.eq.${party.id}`);
-
-              if (contractError) {
-                console.warn(
-                  `Error fetching contracts for party ${party.id}:`,
-                  contractError.message
-                );
-                contractCount = 0;
-              } else {
-                contractCount = count || 0;
-              }
-            } catch (error) {
-              console.warn(
-                `Exception fetching contracts for party ${party.id}:`,
-                error
-              );
-              contractCount = 0;
-            }
-
-            return {
-              ...party,
-              contract_count: contractCount,
-            };
-          } catch (error) {
-            console.warn(`Error processing party ${party.id}:`, error);
-            return {
-              ...party,
-              contract_count: 0,
-            };
-          }
-        })
-      );
-
-      if (isMountedRef.current) {
-        setParties(enhancedData);
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive',
-      });
-    } finally {
-      if (isMountedRef.current) setIsLoading(false);
-    }
-  }, [toast]);
-
-  // Combine fetching and auto-refresh logic
+  // Clean up on unmount
   useEffect(() => {
     isMountedRef.current = true;
-    fetchPartiesWithContractCount();
-
-    const refreshInterval = setInterval(
-      () => {
-        if (isMountedRef.current && !isLoading) {
-          setIsRefreshing(true);
-          fetchPartiesWithContractCount().finally(() => {
-            if (isMountedRef.current) {
-              setIsRefreshing(false);
-            }
-          });
-        }
-      },
-      5 * 60 * 1000
-    ); // Refresh every 5 minutes
-
     return () => {
       isMountedRef.current = false;
-      clearInterval(refreshInterval);
     };
-  }, [fetchPartiesWithContractCount]); // Re-run if fetch function instance changes
+  }, []);
 
   // Apply filters whenever parties or filter settings change
   useEffect(() => {
@@ -1623,6 +1547,18 @@ export default function ManagePartiesPage() {
                 </Card>
               );
             })}
+          </div>
+        )}
+        
+        {/* Pagination Controls */}
+        {totalCount > 0 && (
+          <div className='mt-6'>
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalCount / pageSize)}
+              pageSize={pageSize}
+              totalItems={totalCount}
+            />
           </div>
         )}
       </div>

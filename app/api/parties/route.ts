@@ -27,7 +27,7 @@ const partySchema = z.object({
   notes: z.string().optional(),
 });
 
-export const GET = withRBAC('party:read:own', async () => {
+export const GET = withRBAC('party:read:own', async (request: Request) => {
   try {
     const cookieStore = await cookies();
 
@@ -71,20 +71,39 @@ export const GET = withRBAC('party:read:own', async () => {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch parties from the database with related data
-    // Use a simpler query first to avoid foreign key issues
-    const { data: parties, error } = await supabase
+    // Parse pagination from query params
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = Math.min(
+      parseInt(url.searchParams.get('limit') || '20'),
+      100
+    );
+    const offset = (page - 1) * limit;
+
+    console.log('📊 Parties Query params:', { page, limit, offset });
+
+    // Fetch parties from the database with pagination
+    const { data: parties, error, count } = await supabase
       .from('parties')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Error fetching parties:', error);
       return NextResponse.json(
-        { error: 'Failed to fetch parties' },
+        { 
+          success: false,
+          error: 'Failed to fetch parties',
+          details: error.message
+        },
         { status: 500 }
       );
     }
+
+    console.log(
+      `✅ Fetched ${parties?.length || 0} parties (total: ${count})`
+    );
 
     // Transform data to include basic information
     // Contract counts will be calculated separately to avoid foreign key issues
@@ -97,11 +116,28 @@ export const GET = withRBAC('party:read:own', async () => {
     return NextResponse.json({
       success: true,
       parties: partiesWithCounts || [],
+      count: parties?.length || 0,
+      total: count || 0,
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        totalPages: Math.ceil((count || 0) / limit),
+        hasNext: offset + limit < (count || 0),
+        hasPrev: page > 1,
+      },
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        success: false,
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development'
+          ? (error as Error).message
+          : undefined,
+      },
       { status: 500 }
     );
   }

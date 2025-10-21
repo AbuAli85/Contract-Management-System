@@ -31,6 +31,7 @@ import {
 import { Users, Plus, RefreshCw, SortAsc, SortDesc } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -305,57 +306,13 @@ export function PromotersTable({
       {/* Pagination Controls */}
       {pagination && pagination.totalPages > 1 && (
         <CardContent className='border-t pt-4'>
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-            <div className='text-sm text-muted-foreground'>
-              Showing {(pagination.page - 1) * pagination.limit + 1} to{' '}
-              {Math.min(pagination.page * pagination.limit, pagination.total)}{' '}
-              of {pagination.total} total promoters
-            </div>
-
-            <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onPageChange(1)}
-                disabled={!pagination.hasPrev || isFetching}
-              >
-                First
-              </Button>
-
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onPageChange(pagination.page - 1)}
-                disabled={!pagination.hasPrev || isFetching}
-              >
-                Previous
-              </Button>
-
-              <div className='flex items-center gap-2 px-2'>
-                <span className='text-sm'>
-                  Page {pagination.page} of {pagination.totalPages}
-                </span>
-              </div>
-
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onPageChange(pagination.page + 1)}
-                disabled={!pagination.hasNext || isFetching}
-              >
-                Next
-              </Button>
-
-              <Button
-                variant='outline'
-                size='sm'
-                onClick={() => onPageChange(pagination.totalPages)}
-                disabled={!pagination.hasNext || isFetching}
-              >
-                Last
-              </Button>
-            </div>
-          </div>
+          <PaginationControls
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            pageSize={pagination.limit}
+            totalItems={pagination.total}
+            onPageChange={onPageChange}
+          />
         </CardContent>
       )}
     </Card>

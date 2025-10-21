@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { apiFetch } from '@/lib/http/api';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import type { ContractWithRelations } from '@/hooks/use-contracts';
 import {
-  useDeleteContractMutation,
-  type ContractWithRelations,
-} from '@/hooks/use-contracts';
+  useContractsQuery,
+  useDeleteContractMutation as useDeleteContractMutationQuery,
+} from '@/hooks/use-contracts-query';
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/lib/auth-service';
 import { Button } from '@/components/ui/button';
@@ -98,6 +98,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { PaginationControls } from '@/components/ui/pagination-controls';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
 import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 
 import { FileTextIcon } from '@radix-ui/react-icons';
@@ -187,82 +189,31 @@ function ContractsContent() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('contracts');
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Add authentication check
   const { user, loading: authLoading } = useAuth();
 
-  const [contracts, setContracts] = useState<ContractWithRelations[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  // Get pagination params from URL
+  const currentPage = parseInt(searchParams?.get('page') || '1', 10);
+  const pageSize = parseInt(searchParams?.get('limit') || '20', 10);
 
-  // Fetch contracts data
-  const fetchContracts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  // Use React Query for data fetching with automatic caching and refetching
+  const {
+    data: contractsData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useContractsQuery(currentPage, pageSize);
 
-      console.log('🔍 Contracts Page: Fetching contracts...');
-      console.log(
-        '🔍 Contracts Page: User:',
-        user?.id,
-        'Auth loading:',
-        authLoading
-      );
-      const response = await apiFetch('/api/contracts');
-
-      if (!response.ok) {
-        console.error(
-          `❌ Contracts Page: HTTP ${response.status} - ${response.statusText}`
-        );
-        const errorText = await response.text();
-        console.error('❌ Contracts Page: Error response:', errorText);
-
-        setError(`HTTP ${response.status}: ${response.statusText}`);
-        return;
-      }
-
-      const data = await response.json();
-      console.log('🔍 Contracts Page: API response:', data);
-
-      if (data.success) {
-        setContracts(data.contracts || []);
-        console.log(
-          `✅ Contracts Page: Successfully loaded ${data.contracts?.length || 0} contracts`
-        );
-      } else {
-        console.error(
-          '❌ Contracts Page: API returned error:',
-          data.error,
-          data.details
-        );
-        setError(data.error || 'Failed to fetch contracts');
-      }
-    } catch (err) {
-      console.error('❌ Contracts Page: Network error:', err);
-      setError('Failed to fetch contracts - network error');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchContracts();
-  }, [fetchContracts]);
-
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isRefreshing && !isLoading) {
-        fetchContracts();
-      }
-    }, 30000); // 30 seconds
-
-    return () => clearInterval(interval);
-  }, [fetchContracts, isRefreshing, isLoading]);
+  // Extract contracts and total count from React Query response
+  const contracts = contractsData?.contracts || [];
+  const totalCount = contractsData?.total || 0;
 
   // All hooks must be called at the top level, before any conditional returns
-  const deleteContractMutation = useDeleteContractMutation();
+  const deleteContractMutation = useDeleteContractMutationQuery();
   const { toast } = useToast();
   const permissions = usePermissions();
 
@@ -283,9 +234,6 @@ function ContractsContent() {
   const [showStats, setShowStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [totalPages, setTotalPages] = useState(1);
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [contractToEmail, setContractToEmail] =
     useState<ContractWithRelations | null>(null);
@@ -351,7 +299,7 @@ function ContractsContent() {
     }
   }, [contracts]);
 
-  // Enhanced filtering and sorting with pagination
+  // Enhanced filtering and sorting (no client-side pagination, data is already paginated from API)
   const filteredAndSortedContracts = useMemo(() => {
     if (!contracts || !Array.isArray(contracts)) return [];
 
@@ -429,15 +377,7 @@ function ContractsContent() {
         return 0;
       });
 
-      // Calculate pagination
-      const totalItems = sorted.length;
-      const totalPages = Math.ceil(totalItems / pageSize);
-      setTotalPages(totalPages);
-
-      // Apply pagination
-      const startIndex = (currentPage - 1) * pageSize;
-      const endIndex = startIndex + pageSize;
-      return sorted.slice(startIndex, endIndex);
+      return sorted;
     } catch (error) {
       console.error('Error filtering and sorting contracts:', error);
       return [];
@@ -449,15 +389,12 @@ function ContractsContent() {
     sortColumn,
     sortDirection,
     locale,
-    currentPage,
-    pageSize,
   ]);
 
   // Handler functions - moved BEFORE permission check
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
     try {
-      await fetchContracts();
+      await refetch();
       toast({
         title: '✅ Data Refreshed',
         description: `Updated ${contracts.length} contracts successfully`,
@@ -469,10 +406,8 @@ function ContractsContent() {
         description: 'Failed to update contract data',
         variant: 'destructive',
       });
-    } finally {
-      setIsRefreshing(false);
     }
-  }, [fetchContracts, toast, contracts.length]);
+  }, [refetch, toast, contracts.length]);
 
   const handleSort = (column: keyof ContractWithRelations | 'status') => {
     if (sortColumn === column) {
@@ -481,13 +416,20 @@ function ContractsContent() {
       setSortColumn(column);
       setSortDirection('desc');
     }
-    setCurrentPage(1); // Reset to first page when sorting changes
+    // Reset to first page when sorting changes
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('page', '1');
+    router.push(`${window.location.pathname}?${params.toString()}`);
   };
 
   // Reset pagination when search or filter changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, statusFilter]);
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    if (params.get('page') !== '1') {
+      params.set('page', '1');
+      router.push(`${window.location.pathname}?${params.toString()}`);
+    }
+  }, [searchTerm, statusFilter, searchParams, router]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -948,75 +890,10 @@ function ContractsContent() {
   if (isLoading) {
     return (
       <div className='space-y-6 p-4 md:p-6'>
-        {/* Loading Statistics Cards */}
-        <div className='mb-6'>
-          <div className='mb-4 flex items-center justify-between'>
-            <h2 className='text-lg font-semibold'>Contract Statistics</h2>
-          </div>
-          <div className='grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8'>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Card key={i} className='animate-pulse'>
-                <CardContent className='p-4'>
-                  <div className='flex items-center justify-between'>
-                    <div className='space-y-2'>
-                      <div className='h-3 w-16 bg-gray-200 rounded'></div>
-                      <div className='h-6 w-8 bg-gray-200 rounded'></div>
-                    </div>
-                    <div className='h-8 w-8 bg-gray-200 rounded'></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <div className='flex items-center justify-center h-64'>
+          <Loader2 className='h-8 w-8 animate-spin' />
         </div>
-
-        {/* Loading Table */}
-        <Card>
-          <CardHeader>
-            <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-              <div className='space-y-2'>
-                <div className='h-6 w-48 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-4 w-64 bg-gray-200 rounded animate-pulse'></div>
-              </div>
-              <div className='flex items-center gap-2'>
-                <div className='h-9 w-9 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-9 w-9 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-9 w-32 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-9 w-40 bg-gray-200 rounded animate-pulse'></div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-4'>
-              {/* Loading Search and Filters */}
-              <div className='flex flex-col items-center gap-4 md:flex-row'>
-                <div className='h-10 w-full bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-10 w-48 bg-gray-200 rounded animate-pulse'></div>
-              </div>
-
-              {/* Loading Table Rows */}
-              <div className='space-y-3'>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className='flex items-center space-x-4 p-4 border rounded-lg'
-                  >
-                    <div className='h-4 w-4 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-24 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-20 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-6 w-16 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-4 w-4 bg-gray-200 rounded animate-pulse'></div>
-                    <div className='h-8 w-8 bg-gray-200 rounded animate-pulse'></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TableSkeleton rows={pageSize} columns={10} showCard={true} />
       </div>
     );
   }
@@ -1040,14 +917,14 @@ function ContractsContent() {
               <AlertTriangle className='h-4 w-4' />
               <AlertDescription>
                 <div className='space-y-2'>
-                  <p className='font-medium'>{error}</p>
+                  <p className='font-medium'>{error?.message || error?.toString() || 'Unknown error'}</p>
                   {process.env.NODE_ENV === 'development' && (
                     <details className='mt-2'>
                       <summary className='cursor-pointer text-sm font-medium text-muted-foreground'>
                         Debug Information
                       </summary>
                       <div className='mt-2 rounded bg-muted p-3 text-xs font-mono'>
-                        <p>Error: {error}</p>
+                        <p>Error: {error?.message || error?.toString()}</p>
                         <p>Timestamp: {new Date().toISOString()}</p>
                         <p>
                           User Agent:{' '}
@@ -1070,7 +947,7 @@ function ContractsContent() {
 
             <div className='flex gap-2'>
               <Button
-                onClick={fetchContracts}
+                onClick={() => refetch()}
                 className='flex items-center gap-2'
               >
                 <RefreshCw className='h-4 w-4' />
@@ -1160,22 +1037,24 @@ function ContractsContent() {
                         variant='outline'
                         size='icon'
                         onClick={handleRefresh}
-                        disabled={isRefreshing}
+                        disabled={isFetching}
                         className='hover:bg-blue-50 hover:border-blue-200 dark:hover:bg-blue-900/20 dark:hover:border-blue-800 transition-colors duration-200'
                       >
                         <RefreshCw
                           className={cn(
                             'h-4 w-4',
-                            isRefreshing && 'animate-spin text-blue-600'
+                            isFetching && 'animate-spin text-blue-600'
                           )}
                         />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>Refresh data</p>
-                      <p className='text-xs text-gray-400'>
-                        Auto-refreshes every 30s
-                      </p>
+                      {isFetching && !isLoading && (
+                        <p className='text-xs text-gray-400'>
+                          Updating in background...
+                        </p>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -1624,101 +1503,14 @@ function ContractsContent() {
                 </div>
 
                 {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className='flex items-center justify-between px-2 py-4 border-t'>
-                    <div className='flex items-center gap-2 text-sm text-gray-500'>
-                      <span>Showing</span>
-                      <Select
-                        value={pageSize.toString()}
-                        onValueChange={value => {
-                          setPageSize(parseInt(value));
-                          setCurrentPage(1);
-                        }}
-                      >
-                        <SelectTrigger className='w-20 h-8'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='10'>10</SelectItem>
-                          <SelectItem value='20'>20</SelectItem>
-                          <SelectItem value='50'>50</SelectItem>
-                          <SelectItem value='100'>100</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <span>per page</span>
-                    </div>
-
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
-                      >
-                        First
-                      </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        <ChevronLeft className='h-4 w-4' />
-                      </Button>
-
-                      <div className='flex items-center gap-1'>
-                        {Array.from(
-                          { length: Math.min(5, totalPages) },
-                          (_, i) => {
-                            const pageNum =
-                              Math.max(
-                                1,
-                                Math.min(totalPages - 4, currentPage - 2)
-                              ) + i;
-                            if (pageNum > totalPages) return null;
-
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={
-                                  currentPage === pageNum
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                size='sm'
-                                onClick={() => setCurrentPage(pageNum)}
-                                className='w-8 h-8 p-0'
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          }
-                        )}
-                      </div>
-
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        <ChevronRight className='h-4 w-4' />
-                      </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
-                      >
-                        Last
-                      </Button>
-                    </div>
-
-                    <div className='text-sm text-gray-500'>
-                      Page {currentPage} of {totalPages}
-                    </div>
-                  </div>
-                )}
+                <div className='px-2 py-4 border-t'>
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalCount / pageSize)}
+                    pageSize={pageSize}
+                    totalItems={totalCount}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -1944,101 +1736,14 @@ function ContractsContent() {
                 </div>
 
                 {/* Pagination Controls for Grid View */}
-                {totalPages > 1 && (
-                  <div className='flex items-center justify-between px-2 py-4 border-t'>
-                    <div className='flex items-center gap-2 text-sm text-gray-500'>
-                      <span>Showing</span>
-                      <Select
-                        value={pageSize.toString()}
-                        onValueChange={value => {
-                          setPageSize(parseInt(value));
-                          setCurrentPage(1);
-                        }}
-                      >
-                        <SelectTrigger className='w-20 h-8'>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value='10'>10</SelectItem>
-                          <SelectItem value='20'>20</SelectItem>
-                          <SelectItem value='50'>50</SelectItem>
-                          <SelectItem value='100'>100</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <span>per page</span>
-                    </div>
-
-                    <div className='flex items-center gap-2'>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(1)}
-                        disabled={currentPage === 1}
-                      >
-                        First
-                      </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        <ChevronLeft className='h-4 w-4' />
-                      </Button>
-
-                      <div className='flex items-center gap-1'>
-                        {Array.from(
-                          { length: Math.min(5, totalPages) },
-                          (_, i) => {
-                            const pageNum =
-                              Math.max(
-                                1,
-                                Math.min(totalPages - 4, currentPage - 2)
-                              ) + i;
-                            if (pageNum > totalPages) return null;
-
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={
-                                  currentPage === pageNum
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                size='sm'
-                                onClick={() => setCurrentPage(pageNum)}
-                                className='w-8 h-8 p-0'
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          }
-                        )}
-                      </div>
-
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        <ChevronRight className='h-4 w-4' />
-                      </Button>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => setCurrentPage(totalPages)}
-                        disabled={currentPage === totalPages}
-                      >
-                        Last
-                      </Button>
-                    </div>
-
-                    <div className='text-sm text-gray-500'>
-                      Page {currentPage} of {totalPages}
-                    </div>
-                  </div>
-                )}
+                <div className='px-2 py-4 border-t'>
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(totalCount / pageSize)}
+                    pageSize={pageSize}
+                    totalItems={totalCount}
+                  />
+                </div>
               </>
             )}
           </CardContent>

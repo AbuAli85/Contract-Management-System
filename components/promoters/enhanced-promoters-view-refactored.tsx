@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { differenceInDays, format, parseISO } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -278,11 +278,14 @@ export function EnhancedPromotersViewRefactored({
 }: PromotersViewProps) {
   console.log('🚀 Enhanced PromotersView component mounted');
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
 
+  // Get pagination params from URL
+  const page = parseInt(searchParams?.get('page') || '1', 10);
+  const limit = parseInt(searchParams?.get('limit') || '20', 10);
+
   // State management
-  const [page, setPage] = useState(1);
-  const [limit] = useState(50);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<OverallStatus | 'all'>(
     'all'
@@ -319,17 +322,14 @@ export function EnhancedPromotersViewRefactored({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit, 'v3'],
+    queryKey: ['promoters', page, limit, 'v4'],
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: Infinity,
-    gcTime: Infinity,
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-    refetchIntervalInBackground: false,
-    networkMode: 'offlineFirst',
+    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep unused data in cache
+    retry: 2, // Retry failed requests twice
+    refetchOnWindowFocus: true, // Refetch on window focus for fresh data
+    refetchOnMount: true, // Refetch on mount if stale
+    refetchOnReconnect: true, // Refetch on reconnect
   });
 
   useEffect(() => {
@@ -904,6 +904,20 @@ export function EnhancedPromotersViewRefactored({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleRefresh, handleAddPromoter, selectedPromoters.size]);
 
+  const handlePageChange = useCallback((newPage: number) => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('page', newPage.toString());
+    params.set('limit', limit.toString());
+    router.push(`${window.location.pathname}?${params.toString()}`);
+  }, [searchParams, limit, router]);
+
+  const handlePageSizeChange = useCallback((newLimit: number) => {
+    const params = new URLSearchParams(searchParams?.toString() || '');
+    params.set('page', '1'); // Reset to page 1 when changing page size
+    params.set('limit', newLimit.toString());
+    router.push(`${window.location.pathname}?${params.toString()}`);
+  }, [searchParams, router]);
+
   const handleExport = useCallback(() => {
     // Export all visible promoters
     const headers = [
@@ -1070,7 +1084,7 @@ export function EnhancedPromotersViewRefactored({
           onEditPromoter={handleEditPromoter}
           onAddPromoter={handleAddPromoter}
           onResetFilters={handleResetFilters}
-          onPageChange={setPage}
+          onPageChange={handlePageChange}
         />
 
         {/* Enhanced Alerts Panel */}
