@@ -4,6 +4,17 @@ import { withRBAC } from '@/lib/rbac/guard';
 
 export const POST = withRBAC('data:seed:all', async (request: NextRequest) => {
   try {
+    // 🔒 SECURITY: Disable seed data endpoint in production
+    if (process.env.NODE_ENV === 'production') {
+      return NextResponse.json(
+        { 
+          error: 'Seed data endpoint is disabled in production',
+          message: 'This endpoint is only available in development environments'
+        },
+        { status: 403 }
+      );
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
