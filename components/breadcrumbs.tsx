@@ -31,6 +31,36 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
+// Map segment names to human-readable titles (defined outside to prevent recreating)
+const SEGMENT_TITLES: Record<string, string> = {
+  dashboard: 'Dashboard',
+  promoters: 'Promoters Intelligence Hub',
+  'manage-promoters': 'Promoters',
+  contracts: 'Contracts',
+  'generate-contract': 'Generate Contract',
+  general: 'General Contracts',
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  'manage-parties': 'Manage Parties',
+  profile: 'Profile',
+  settings: 'Settings',
+  help: 'Help',
+  users: 'Users',
+  roles: 'Roles',
+  analytics: 'Analytics',
+  reports: 'Reports',
+  audit: 'Audit Logs',
+  notifications: 'Notifications',
+  crm: 'CRM',
+  new: 'New',
+  edit: 'Edit',
+  parties: 'Parties',
+  approvals: 'Approvals',
+  communications: 'Communications',
+  contacts: 'Contacts',
+};
+
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
 
@@ -46,36 +76,6 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     return null;
   }
 
-  // Map segment names to human-readable titles
-  const segmentTitles: Record<string, string> = {
-    dashboard: 'Dashboard',
-    promoters: 'Promoters Intelligence Hub',
-    'manage-promoters': 'Promoters',
-    contracts: 'Contracts',
-    'generate-contract': 'Generate Contract',
-    general: 'General Contracts',
-    pending: 'Pending',
-    approved: 'Approved',
-    rejected: 'Rejected',
-    'manage-parties': 'Manage Parties',
-    profile: 'Profile',
-    settings: 'Settings',
-    help: 'Help',
-    users: 'Users',
-    roles: 'Roles',
-    analytics: 'Analytics',
-    reports: 'Reports',
-    audit: 'Audit Logs',
-    notifications: 'Notifications',
-    crm: 'CRM',
-    new: 'New',
-    edit: 'Edit',
-    parties: 'Parties',
-    approvals: 'Approvals',
-    communications: 'Communications',
-    contacts: 'Contacts',
-  };
-
   // Build breadcrumb items
   const breadcrumbItems = useMemo(() => segments
     .filter((segment): segment is string => !!segment)
@@ -84,8 +84,8 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
       
       // Get title from static map or format the segment
       let title: string;
-      if (segmentTitles[segment]) {
-        title = segmentTitles[segment];
+      if (SEGMENT_TITLES[segment]) {
+        title = SEGMENT_TITLES[segment];
       } else if (isUUID(segment)) {
         // Use a consistent shortened format for UUIDs
         const previousSegment = index > 0 ? segments[index - 1] : null;
@@ -109,7 +109,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
         title,
         isLast,
       };
-    }), [segments, locale, segmentTitles]);
+    }), [segments, locale]);
 
   // For mobile: Show ellipsis if more than 3 items
   const shouldCollapse = breadcrumbItems.length > 3;
