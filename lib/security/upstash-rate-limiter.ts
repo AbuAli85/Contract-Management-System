@@ -2,14 +2,18 @@ import { Redis } from '@upstash/redis';
 import { Ratelimit } from '@upstash/ratelimit';
 import { NextRequest } from 'next/server';
 
-// Initialize Redis client
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+// Initialize Redis client only if credentials are available
+// Falls back to allowing requests if Redis is not configured
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : null;
 
 // Rate limiter configurations for different endpoint types
-export const rateLimiters = {
+// Only create rate limiters if Redis is configured
+export const rateLimiters = redis ? {
   // Login endpoint: 5 requests per minute per IP
   login: new Ratelimit({
     redis,
@@ -73,7 +77,7 @@ export const rateLimiters = {
     analytics: true,
     prefix: 'ratelimit:dashboard',
   }),
-};
+} : {} as any; // Empty object when Redis is not configured
 
 export interface RateLimitResult {
   success: boolean;
@@ -99,6 +103,20 @@ export async function applyRateLimit(
   request: NextRequest,
   config: RateLimitConfig
 ): Promise<RateLimitResult> {
+  // If Redis is not configured, allow all requests (development mode)
+  if (!redis) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⚠️  Rate limiting disabled: Upstash Redis not configured (development mode)');
+    }
+    return {
+      success: true,
+      limit: 1000,
+      remaining: 999,
+      reset: Date.now() + 60000,
+      retryAfter: undefined,
+    };
+  }
+
   try {
     // Get identifier (IP address or custom identifier)
     const identifier = config.identifier || getClientIdentifier(request);
