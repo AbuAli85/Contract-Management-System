@@ -63,7 +63,8 @@
     "auth:seed-permissions": "tsx scripts/seed-permissions.ts",
     "auth:fix-admin": "tsx scripts/fix-admin-permissions.ts",
     "auth:health-check": "curl http://localhost:3000/api/health-check | jq .",
-    "auth:fix-all": "npm run auth:seed-permissions && npm run auth:fix-admin && echo '\n✅ Permissions fixed! Please restart your dev server and clear browser cache.'"
+    "auth:fix-all": "npm run auth:seed-permissions && npm run auth:fix-admin && echo '\n✅ Permissions fixed! Please restart your dev server and clear browser cache.'",
+    "fix-promoter-orphans": "tsx scripts/fix-promoter-contract-orphans.ts"
   },
   "dependencies": {
     "@google-cloud/local-auth": "^3.0.1",
