@@ -10,7 +10,7 @@ SELECT
     p.employer_id,
     employer.name_en as employer_name,
     p.job_title,
-    p.work_location,
+    p.mobile_number,
     COUNT(c.id) as contract_count,
     p.created_at as promoter_created_at
 FROM promoters p
@@ -18,7 +18,7 @@ LEFT JOIN parties employer ON employer.id = p.employer_id
 LEFT JOIN contracts c ON c.promoter_id::uuid = p.id
 WHERE p.status = 'active'
   AND p.employer_id IS NOT NULL
-GROUP BY p.id, p.name_en, p.name_ar, p.status, p.employer_id, employer.name_en, p.job_title, p.work_location, p.created_at
+GROUP BY p.id, p.name_en, p.name_ar, p.status, p.employer_id, employer.name_en, p.job_title, p.mobile_number, p.created_at
 HAVING COUNT(c.id) = 0
 ORDER BY p.created_at DESC;
 
