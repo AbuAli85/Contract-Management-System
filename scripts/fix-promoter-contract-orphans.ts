@@ -31,7 +31,7 @@ interface OrphanedPromoter {
   employer_id: string;
   employer_name: string;
   job_title?: string;
-  work_location?: string;
+  mobile_number?: string;
   created_at: string;
 }
 
@@ -51,7 +51,7 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
         status,
         employer_id,
         job_title,
-        work_location,
+        mobile_number,
         created_at,
         parties:employer_id (
           name_en,
@@ -93,7 +93,7 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
             employer_id: promoter.employer_id!,
             employer_name: (promoter.parties as any)?.name_en || 'Unknown',
             job_title: promoter.job_title,
-            work_location: promoter.work_location,
+            mobile_number: promoter.mobile_number,
             created_at: promoter.created_at,
           });
         }
@@ -106,7 +106,7 @@ async function findOrphanedPromoters(): Promise<OrphanedPromoter[]> {
           employer_id: promoter.employer_id!,
           employer_name: (promoter.parties as any)?.name_en || 'Unknown',
           job_title: promoter.job_title,
-          work_location: promoter.work_location,
+          mobile_number: promoter.mobile_number,
           created_at: promoter.created_at,
         });
       }
@@ -195,7 +195,7 @@ async function main() {
     console.log(`${index + 1}. ${promoter.name_en} (${promoter.name_ar})`);
     console.log(`   Employer: ${promoter.employer_name}`);
     console.log(`   Job Title: ${promoter.job_title || 'N/A'}`);
-    console.log(`   Location: ${promoter.work_location || 'N/A'}`);
+    console.log(`   Mobile: ${promoter.mobile_number || 'N/A'}`);
     console.log(`   Created: ${new Date(promoter.created_at).toLocaleDateString()}`);
     console.log('');
   });
