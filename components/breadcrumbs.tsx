@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home } from 'lucide-react';
+import { toTitleCase } from '@/lib/utils/text-formatting';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -27,6 +28,7 @@ interface BreadcrumbsProps {
 
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
+  const [dynamicTitles, setDynamicTitles] = useState<Record<string, string>>({});
 
   // Parse the pathname to get breadcrumb segments
   const segments = pathname
@@ -42,7 +44,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const segmentTitles: Record<string, string> = {
     dashboard: 'Dashboard',
     promoters: 'Promoters Intelligence Hub',
-    'manage-promoters': 'Promoters List',
+    'manage-promoters': 'Promoters',
     contracts: 'Contracts',
     'generate-contract': 'Generate Contract',
     general: 'General Contracts',
@@ -68,10 +70,63 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     contacts: 'Contacts',
   };
 
+  // Helper function to check if a string is a UUID
+  const isUUID = (str: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
+  // Fetch dynamic titles for UUIDs (promoter names, etc.)
+  useEffect(() => {
+    const fetchDynamicTitles = async () => {
+      const newTitles: Record<string, string> = {};
+      
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        const previousSegment = i > 0 ? segments[i - 1] : null;
+        
+        // Check if this segment is a UUID and the previous segment indicates what type
+        if (isUUID(segment)) {
+          if (previousSegment === 'manage-promoters' || previousSegment === 'promoters') {
+            try {
+              const response = await fetch(`/api/promoters/${segment}`);
+              if (response.ok) {
+                const data = await response.json();
+                const promoterName = data.promoter?.name_en || data.promoter?.name_ar || segment;
+                newTitles[segment] = toTitleCase(promoterName);
+              }
+            } catch (error) {
+              console.error('Failed to fetch promoter name for breadcrumb:', error);
+              // Fallback to shortened UUID
+              newTitles[segment] = `Promoter ${segment.slice(0, 8)}`;
+            }
+          } else if (previousSegment === 'contracts') {
+            // Could fetch contract title similarly
+            newTitles[segment] = `Contract ${segment.slice(0, 8)}`;
+          } else if (previousSegment === 'manage-parties' || previousSegment === 'parties') {
+            // Could fetch party name similarly
+            newTitles[segment] = `Party ${segment.slice(0, 8)}`;
+          }
+        }
+      }
+      
+      if (Object.keys(newTitles).length > 0) {
+        setDynamicTitles(newTitles);
+      }
+    };
+    
+    fetchDynamicTitles();
+  }, [pathname]);
+
   // Build breadcrumb items
   const breadcrumbItems = segments.map((segment, index) => {
     const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
-    const title = segmentTitles[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+    
+    // Get title: first check dynamic titles, then static map, then capitalize
+    const title = dynamicTitles[segment] 
+      || segmentTitles[segment] 
+      || (isUUID(segment) ? 'Loading...' : segment.charAt(0).toUpperCase() + segment.slice(1));
+    
     const isLast = index === segments.length - 1;
 
     return {
