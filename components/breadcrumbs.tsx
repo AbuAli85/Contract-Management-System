@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home } from 'lucide-react';
-import { toTitleCase } from '@/lib/utils/text-formatting';
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -34,8 +33,6 @@ function isUUID(str: string): boolean {
 
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
-  const [dynamicTitles, setDynamicTitles] = useState<Record<string, string>>({});
-  const fetchedPathsRef = useRef<Set<string>>(new Set());
 
   // Memoize segments to prevent re-creating array on every render
   const segments = useMemo(() => {
@@ -79,84 +76,25 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     contacts: 'Contacts',
   };
 
-  // Fetch dynamic titles for UUIDs (promoter names, etc.)
-  useEffect(() => {
-    // Skip if we've already fetched titles for this pathname
-    if (!pathname || fetchedPathsRef.current.has(pathname)) {
-      return;
-    }
-    
-    // Mark as fetched IMMEDIATELY to prevent duplicate fetches
-    fetchedPathsRef.current.add(pathname);
-    
-    // Only fetch on client-side
-    if (typeof window === 'undefined') {
-      return;
-    }
-    
-    // Parse segments inside effect to avoid closure issues
-    const pathSegments = pathname
-      .split('/')
-      .filter((segment) => segment && segment !== locale);
-    
-    const fetchDynamicTitles = async () => {
-      const newTitles: Record<string, string> = {};
-      
-      for (let i = 0; i < pathSegments.length; i++) {
-        const segment = pathSegments[i];
-        const previousSegment = i > 0 ? pathSegments[i - 1] : null;
-        
-        // Skip if segment is undefined
-        if (!segment) continue;
-        
-        // Check if this segment is a UUID and the previous segment indicates what type
-        if (isUUID(segment)) {
-          if (previousSegment === 'manage-promoters' || previousSegment === 'promoters') {
-            try {
-              const response = await fetch(`/api/promoters/${segment}`);
-              if (response.ok) {
-                const data = await response.json();
-                const promoterName = data.promoter?.name_en || data.promoter?.name_ar || segment;
-                newTitles[segment] = toTitleCase(promoterName);
-              }
-            } catch (error) {
-              console.error('Failed to fetch promoter name for breadcrumb:', error);
-            }
-          }
-        }
-      }
-      
-      // Only update state if we have new titles
-      if (Object.keys(newTitles).length > 0) {
-        setDynamicTitles(prev => ({ ...prev, ...newTitles }));
-      }
-    };
-    
-    fetchDynamicTitles();
-  }, [pathname, locale]);
-
   // Build breadcrumb items
-  const breadcrumbItems = segments
+  const breadcrumbItems = useMemo(() => segments
     .filter((segment): segment is string => !!segment)
     .map((segment, index) => {
       const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
       
-      // Get title: first check dynamic titles, then static map, then format
-      // For UUIDs, use a consistent format on both server and client until dynamic title loads
+      // Get title from static map or format the segment
       let title: string;
-      if (dynamicTitles[segment]) {
-        title = dynamicTitles[segment];
-      } else if (segmentTitles[segment]) {
+      if (segmentTitles[segment]) {
         title = segmentTitles[segment];
       } else if (isUUID(segment)) {
-        // Use a consistent shortened format instead of "Loading..."
+        // Use a consistent shortened format for UUIDs
         const previousSegment = index > 0 ? segments[index - 1] : null;
         if (previousSegment === 'manage-promoters' || previousSegment === 'promoters') {
-          title = `Promoter ${segment.slice(0, 8)}`;
+          title = `Promoter Details`;
         } else if (previousSegment === 'contracts') {
-          title = `Contract ${segment.slice(0, 8)}`;
+          title = `Contract Details`;
         } else if (previousSegment === 'manage-parties' || previousSegment === 'parties') {
-          title = `Party ${segment.slice(0, 8)}`;
+          title = `Party Details`;
         } else {
           title = segment.slice(0, 8);
         }
@@ -171,7 +109,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
         title,
         isLast,
       };
-    });
+    }), [segments, locale, segmentTitles]);
 
   // For mobile: Show ellipsis if more than 3 items
   const shouldCollapse = breadcrumbItems.length > 3;
