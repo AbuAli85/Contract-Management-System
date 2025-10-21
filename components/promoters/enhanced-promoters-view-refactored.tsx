@@ -502,7 +502,14 @@ export function EnhancedPromotersViewRefactored({
   );
 
   const metrics = useMemo<DashboardMetrics>(() => {
-    const total = dashboardPromoters.length;
+    // 🔧 DATA CONSISTENCY FIX:
+    // Use pagination.total for the actual total count from the database (e.g., 112)
+    // NOT dashboardPromoters.length which is only the current page data (e.g., 50)
+    const total = pagination?.total || dashboardPromoters.length;
+    
+    // ⚠️ NOTE: The following metrics are calculated from CURRENT PAGE data only.
+    // This means they represent statistics for the visible promoters, not all promoters.
+    // For accurate system-wide metrics, these should be fetched from a dedicated API endpoint.
     const active = dashboardPromoters.filter(
       promoter => promoter.overallStatus === 'active'
     ).length;
@@ -525,7 +532,7 @@ export function EnhancedPromotersViewRefactored({
         .filter(Boolean) as string[]
     ).size;
 
-    // Calculate recently added (last 7 days)
+    // Calculate recently added (last 7 days) - based on current page data
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentlyAdded = dashboardPromoters.filter(promoter => {
@@ -533,14 +540,16 @@ export function EnhancedPromotersViewRefactored({
       return createdDate && createdDate >= sevenDaysAgo;
     }).length;
 
-    // Calculate compliance rate (percentage with valid documents)
+    // Calculate compliance rate (percentage with valid documents) - based on current page data
     const compliant = dashboardPromoters.filter(
       promoter =>
         promoter.idDocument.status === 'valid' &&
         promoter.passportDocument.status === 'valid'
     ).length;
     const complianceRate =
-      total > 0 ? Math.round((compliant / total) * 100) : 0;
+      dashboardPromoters.length > 0 
+        ? Math.round((compliant / dashboardPromoters.length) * 100) 
+        : 0;
 
     return {
       total,
@@ -552,7 +561,7 @@ export function EnhancedPromotersViewRefactored({
       recentlyAdded,
       complianceRate,
     };
-  }, [dashboardPromoters]);
+  }, [dashboardPromoters, pagination]);
 
   const filteredPromoters = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();

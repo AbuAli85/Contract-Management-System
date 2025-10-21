@@ -92,7 +92,13 @@ export function PromotersTable({
             <span className='font-semibold text-foreground'>
               {promoters.length}
             </span>{' '}
-            records visible
+            {/* Shows current page records, not total system count */}
+            records on this page
+            {pagination && (
+              <span className='text-xs ml-2'>
+                (of {pagination.total} total)
+              </span>
+            )}
           </CardDescription>
         </div>
         <div className='flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3'>
