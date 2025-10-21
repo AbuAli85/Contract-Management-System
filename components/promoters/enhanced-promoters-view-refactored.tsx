@@ -385,7 +385,7 @@ export function EnhancedPromotersViewRefactored({
         passport_expiry_date: promoter.passport_expiry_date,
         status: promoter.status,
         job_title: promoter.job_title,
-        work_location: promoter.work_location,
+        work_location: null, // Column doesn't exist in database
       });
 
       const idDocument = computeDocumentHealth(
@@ -437,10 +437,10 @@ export function EnhancedPromotersViewRefactored({
         if ((promoter as any)?.parties?.name_ar?.trim()) {
           return (promoter as any).parties.name_ar.trim();
         }
-        // Try work location
-        if (promoter.work_location?.trim()) {
-          return promoter.work_location.trim();
-        }
+        // Try work location (column doesn't exist in database)
+        // if (promoter.work_location?.trim()) {
+        //   return promoter.work_location.trim();
+        // }
         // Try job title
         if (promoter.job_title?.trim()) {
           return promoter.job_title.trim();
