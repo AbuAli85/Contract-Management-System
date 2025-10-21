@@ -78,6 +78,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { EmptyState } from '@/components/ui/empty-state';
 import {
   Tooltip,
   TooltipContent,
@@ -1079,19 +1080,42 @@ export default function ManagePartiesPage() {
         </Card>
 
         {filteredParties.length === 0 ? (
-          <Card className='bg-card py-12 text-center shadow-md'>
-            <CardHeader>
-              <BuildingIcon className='mx-auto mb-4 h-16 w-16 text-muted-foreground' />
-              <CardTitle className='text-2xl'>No Parties Found</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CardDescription className='text-lg'>
-                {parties.length === 0
-                  ? "Get started by adding your first party. Click the 'Add New Party' button above."
-                  : 'No parties match your current filters. Try adjusting your search criteria.'}
-              </CardDescription>
-            </CardContent>
-          </Card>
+          parties.length === 0 ? (
+            <EmptyState
+              icon={Building2}
+              title="No parties yet"
+              description="Start managing your business relationships by adding your first party. Track employers, clients, and their contracts all in one place."
+              action={{
+                label: 'Add Your First Party',
+                onClick: handleAddNew,
+              }}
+              secondaryAction={{
+                label: 'Learn More',
+                href: '/help',
+              }}
+              iconClassName="text-indigo-500"
+            />
+          ) : (
+            <Card className='bg-card py-12 text-center shadow-md'>
+              <CardContent>
+                <EmptyState
+                  icon={Filter}
+                  title="No parties match your filters"
+                  description="Try adjusting your search criteria or clear the filters to see all parties."
+                  action={{
+                    label: 'Clear Filters',
+                    onClick: () => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setTypeFilter('all');
+                      setDocumentFilter('all');
+                    },
+                  }}
+                  iconClassName="text-amber-500"
+                />
+              </CardContent>
+            </Card>
+          )
         ) : currentView === 'table' ? (
           <Card className='bg-card shadow-lg'>
             <CardHeader className='border-b'>

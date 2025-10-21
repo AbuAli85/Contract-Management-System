@@ -98,6 +98,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
+import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 
 import { FileTextIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
@@ -1287,31 +1288,33 @@ function ContractsContent() {
 
             {/* Content */}
             {filteredAndSortedContracts.length === 0 ? (
-              <article className='py-16 text-center'>
-                <div className='mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-6'>
-                  <FileTextIcon className='h-12 w-12 text-blue-600' aria-hidden='true' />
-                </div>
-                <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-                  {t('dashboard.noContractsFound')}
-                </h3>
-                <p className='text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
-                  {searchTerm || statusFilter !== 'all'
-                    ? t('dashboard.noContractsFiltered')
-                    : t('dashboard.noContractsDescription')}
-                </p>
-                {!(searchTerm || statusFilter !== 'all') &&
-                  canCreateContract && (
-                    <Button
-                      asChild
-                      className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
-                    >
-                      <Link href={`/${locale}/dashboard/generate-contract`}>
-                        <Plus className='mr-2 h-4 w-4' aria-hidden='true' />
-                        {t('dashboard.createNewContract')}
-                      </Link>
-                    </Button>
-                  )}
-              </article>
+              searchTerm || statusFilter !== 'all' ? (
+                <EmptySearchState
+                  searchTerm={searchTerm || `status: ${statusFilter}`}
+                  onClearSearch={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                  }}
+                />
+              ) : (
+                <EmptyState
+                  icon={FileText}
+                  title={t('dashboard.noContractsFound')}
+                  description={t('dashboard.noContractsDescription')}
+                  action={
+                    canCreateContract
+                      ? {
+                          label: t('dashboard.createNewContract'),
+                          href: `/${locale}/dashboard/generate-contract`,
+                        }
+                      : undefined
+                  }
+                  secondaryAction={{
+                    label: 'Learn More',
+                    href: `/${locale}/help`,
+                  }}
+                />
+              )
             ) : currentView === 'table' ? (
               <>
                 <div className='overflow-x-auto'>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createClient } from '@/lib/supabase/client';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -392,14 +393,13 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Bell className="h-12 w-12 text-muted-foreground mb-3 opacity-50" />
-              <p className="text-lg font-medium text-muted-foreground">
-                No notifications
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                You're all caught up!
-              </p>
+            <div className="py-4">
+              <EmptyState
+                icon={Bell}
+                title="You're all caught up!"
+                description="No new notifications right now. We'll let you know when something important happens."
+                iconClassName="text-green-500"
+              />
             </div>
           ) : (
             <div className="space-y-2">

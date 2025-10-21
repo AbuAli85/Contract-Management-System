@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Users, Plus, RefreshCw, SortAsc, SortDesc } from 'lucide-react';
 import { PromotersTableRow } from './promoters-table-row';
+import { EmptyState, EmptySearchState } from '@/components/ui/empty-state';
 import type {
   DocumentStatus,
   OverallStatus,
@@ -146,35 +147,27 @@ export function PromotersTable({
       </CardHeader>
       <CardContent className='p-0'>
         {promoters.length === 0 ? (
-          <div className='flex flex-col items-center justify-center space-y-4 py-16 text-center'>
-            <div className='rounded-full bg-muted p-6'>
-              <Users className='h-12 w-12 text-muted-foreground' />
-            </div>
-            <div className='space-y-2'>
-              <h3 className='text-xl font-semibold tracking-tight'>
-                {hasFiltersApplied
-                  ? 'No promoters match your filters'
-                  : 'No promoters yet'}
-              </h3>
-              <p className='max-w-sm text-sm text-muted-foreground'>
-                {hasFiltersApplied
-                  ? "Try adjusting your filters or search terms to find what you're looking for."
-                  : 'Get started by adding your first promoter to the system.'}
-              </p>
-            </div>
-            <div className='flex gap-3'>
-              {hasFiltersApplied && (
-                <Button onClick={onResetFilters} variant='outline'>
-                  <RefreshCw className='mr-2 h-4 w-4' />
-                  Clear Filters
-                </Button>
-              )}
-              <Button onClick={onAddPromoter} size='lg'>
-                <Plus className='mr-2 h-5 w-5' />
-                Add Your First Promoter
-              </Button>
-            </div>
-          </div>
+          hasFiltersApplied ? (
+            <EmptySearchState
+              searchTerm="your filters"
+              onClearSearch={onResetFilters}
+            />
+          ) : (
+            <EmptyState
+              icon={Users}
+              title="No promoters yet"
+              description="Start building your team by adding your first promoter. Track their documents, performance, and assignments all in one place."
+              action={{
+                label: 'Add Your First Promoter',
+                onClick: onAddPromoter,
+              }}
+              secondaryAction={{
+                label: 'Learn More',
+                href: '/help',
+              }}
+              iconClassName="text-blue-500"
+            />
+          )
         ) : (
           <ScrollArea className='h-[520px]' ref={parentRef}>
             <Table>
