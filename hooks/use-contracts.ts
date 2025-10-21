@@ -13,33 +13,48 @@ import { useEffect } from 'react';
 
 // --- Schema definition ---
 // Detailed contract type including joined relational data
-// This mirrors what the `fetchContracts` query selects
-export type ContractWithRelations =
-  Database['public']['Tables']['contracts']['Row'] & {
-    first_party: {
-      id: string;
-      name_en: string;
-      name_ar: string;
-      crn: string;
-      type: 'Employer' | 'Client' | 'Generic' | null;
-    };
-    second_party: {
-      id: string;
-      name_en: string;
-      name_ar: string;
-      crn: string;
-      type: 'Employer' | 'Client' | 'Generic' | null;
-    };
-    promoters: {
-      id: string;
-      name_en: string;
-      name_ar: string;
-      id_card_number: string;
-      id_card_url: string | null;
-      passport_url: string | null;
-      status: string | null;
-    };
-  };
+// This mirrors what the API route selects
+export type ContractWithRelations = {
+  id: string;
+  contract_number: string | null;
+  status: string | null;
+  contract_start_date: string | null;
+  contract_end_date: string | null;
+  job_title: string | null;
+  work_location: string | null;
+  contract_value: number | null;
+  email: string | null;
+  pdf_url: string | null;
+  first_party_id: string | null;
+  second_party_id: string | null;
+  promoter_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  first_party: {
+    id: string;
+    name_en: string | null;
+    name_ar: string | null;
+    type: 'Employer' | 'Client' | 'Generic' | null;
+    status: string | null;
+    email: string | null;
+  } | null;
+  second_party: {
+    id: string;
+    name_en: string | null;
+    name_ar: string | null;
+    type: 'Employer' | 'Client' | 'Generic' | null;
+    status: string | null;
+    email: string | null;
+  } | null;
+  promoters: {
+    id: string;
+    name_en: string | null;
+    name_ar: string | null;
+    email: string | null;
+    mobile_number: string | null;
+    job_title: string | null;
+  } | null;
+};
 // Minimal fields required when creating a new contract
 export type ContractInsert =
   Database['public']['Tables']['contracts']['Insert'];
@@ -47,68 +62,30 @@ export type ContractInsert =
 // --- Queries ---
 // Fetch all contracts with their related party and promoter info
 const fetchContracts = async (): Promise<ContractWithRelations[]> => {
-  const supabaseClient = createClient();
-  if (!supabaseClient) {
-    throw new Error('Failed to initialize Supabase client');
-  }
-  // Use the correct schema (employer_id, client_id)
-  let { data, error } = await supabaseClient
-    .from('contracts')
-    .select(
-      `
-      *,
-      first_party:parties!contracts_employer_id_fkey(id,name_en,name_ar,crn,type),
-      second_party:parties!contracts_client_id_fkey(id,name_en,name_ar,crn,type),
-      promoter_id
-    `
-    )
-    .order('created_at', { ascending: false });
-
-  if (error) {
+  try {
+    const response = await fetch('/api/contracts?page=1&limit=100');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch contracts');
+    }
+    
+    // Debug: Log the fetched data to see what we're getting
+    devLog('📊 Fetched contracts data:', result.contracts);
+    if (result.contracts && result.contracts.length > 0) {
+      devLog('📊 Sample contract structure:', result.contracts[0]);
+    }
+    
+    return result.contracts || [];
+  } catch (error) {
     devLog('Error fetching contracts:', error);
-    throw new Error(error.message);
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch contracts');
   }
-
-  // Debug: Log the fetched data to see what we're getting
-  devLog('📊 Fetched contracts data:', data);
-  if (data && data.length > 0) {
-    devLog('📊 Sample contract structure:', data[0]);
-  }
-
-  // In fetchContracts, after fetching data, map to provide fallbacks for required fields
-  if (data) {
-    const mappedData = (data as any[]).map((contract: any) => ({
-      ...contract,
-      first_party: contract.first_party ?? {
-        id: '',
-        name_en: '',
-        name_ar: '',
-        crn: '',
-        type: null as 'Employer' | 'Client' | 'Generic' | null,
-      },
-      second_party: contract.second_party ?? {
-        id: '',
-        name_en: '',
-        name_ar: '',
-        crn: '',
-        type: null as 'Employer' | 'Client' | 'Generic' | null,
-      },
-      promoters: contract.promoters ?? {
-        id: '',
-        name_en: '',
-        name_ar: '',
-        id_card_number: '',
-        id_card_url: null,
-        passport_url: null,
-        status: null,
-      },
-    }));
-    return mappedData as ContractWithRelations[];
-  }
-
-  return data
-    ? (data as ContractWithRelations[])
-    : ([] as ContractWithRelations[]);
 };
 
 export const useContracts = () => {

@@ -97,6 +97,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 import { FileTextIcon } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
@@ -184,6 +185,7 @@ export default function ContractsDashboardPage() {
 function ContractsContent() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
+  const t = useTranslations('contracts');
 
   // Add authentication check
   const { user, loading: authLoading } = useAuth();
@@ -376,10 +378,10 @@ function ContractsContent() {
               ? contract.second_party.name_ar || contract.second_party.name_en
               : contract.second_party.name_en || contract.second_party.name_ar
             : '') || '';
-        const promoterName = contract.promoters
+        const promoterName: string = contract.promoters
           ? locale === 'ar'
-            ? contract.promoters.name_ar || contract.promoters.name_en
-            : contract.promoters.name_en || contract.promoters.name_ar
+            ? contract.promoters.name_ar || contract.promoters.name_en || ''
+            : contract.promoters.name_en || contract.promoters.name_ar || ''
           : '';
 
         const matchesSearch =
@@ -387,7 +389,7 @@ function ContractsContent() {
           contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
           firstParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
           secondParty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          promoterName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (promoterName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
           (contract.job_title &&
             contract.job_title
               .toLowerCase()
@@ -1104,36 +1106,50 @@ function ContractsContent() {
 
   return (
     <>
-      <div className='space-y-6 p-4 md:p-6'>
-        {/* Statistics Cards */}
-        {showStats && (
-          <div className='mb-6'>
-            <div className='mb-4 flex items-center justify-between'>
-              <h2 className='text-lg font-semibold'>Contract Statistics</h2>
-              <Button
-                variant='ghost'
-                size='sm'
-                onClick={() => setShowStats(!showStats)}
-              >
-                {showStats ? 'Hide Stats' : 'Show Stats'}
-              </Button>
-            </div>
-            <StatisticsCards />
-          </div>
-        )}
+      <main className='space-y-6 p-4 md:p-6'>
+      {/* Page Header */}
+      <header className='mb-6'>
+        <h1 className='text-3xl font-bold text-gray-900 dark:text-gray-100'>
+          {t('dashboard.title')}
+        </h1>
+        <p className='text-gray-600 dark:text-gray-400 mt-2'>
+          {t('dashboard.description')}
+        </p>
+      </header>
 
-        <Card>
-          <CardHeader>
-            <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
-              <div>
-                <CardTitle className='flex items-center gap-2'>
-                  <FileText className='h-5 w-5' />
-                  Contracts Dashboard
-                </CardTitle>
-                <CardDescription>
-                  View, manage, and track all your contracts in real-time.
-                </CardDescription>
-              </div>
+      {/* Statistics Cards */}
+      {showStats && (
+        <section className='mb-6' aria-labelledby='stats-heading'>
+          <div className='mb-4 flex items-center justify-between'>
+            <h2 id='stats-heading' className='text-lg font-semibold'>
+              {t('dashboard.statistics')}
+            </h2>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => setShowStats(!showStats)}
+              aria-label={showStats ? 'Hide statistics' : 'Show statistics'}
+            >
+              {showStats ? t('common.close') : t('common.view')}
+            </Button>
+          </div>
+          <StatisticsCards />
+        </section>
+      )}
+
+      <section aria-labelledby='contracts-heading'>
+          <Card>
+            <CardHeader>
+              <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+                <div>
+                  <CardTitle id='contracts-heading' className='flex items-center gap-2'>
+                    <FileText className='h-5 w-5' aria-hidden='true' />
+                    {t('dashboard.allContracts')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('dashboard.description')}
+                  </CardDescription>
+                </div>
 
               <div className='flex items-center gap-2'>
                 <TooltipProvider>
@@ -1271,17 +1287,17 @@ function ContractsContent() {
 
             {/* Content */}
             {filteredAndSortedContracts.length === 0 ? (
-              <div className='py-16 text-center'>
+              <article className='py-16 text-center'>
                 <div className='mx-auto w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mb-6'>
-                  <FileTextIcon className='h-12 w-12 text-blue-600' />
+                  <FileTextIcon className='h-12 w-12 text-blue-600' aria-hidden='true' />
                 </div>
                 <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2'>
-                  No contracts found
+                  {t('dashboard.noContractsFound')}
                 </h3>
                 <p className='text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto'>
                   {searchTerm || statusFilter !== 'all'
-                    ? "Try adjusting your search or filters to find what you're looking for."
-                    : 'Get started by creating your first contract to manage your business relationships.'}
+                    ? t('dashboard.noContractsFiltered')
+                    : t('dashboard.noContractsDescription')}
                 </p>
                 {!(searchTerm || statusFilter !== 'all') &&
                   canCreateContract && (
@@ -1290,19 +1306,19 @@ function ContractsContent() {
                       className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'
                     >
                       <Link href={`/${locale}/dashboard/generate-contract`}>
-                        <Plus className='mr-2 h-4 w-4' />
-                        Create New Contract
+                        <Plus className='mr-2 h-4 w-4' aria-hidden='true' />
+                        {t('dashboard.createNewContract')}
                       </Link>
                     </Button>
                   )}
-              </div>
+              </article>
             ) : currentView === 'table' ? (
               <>
                 <div className='overflow-x-auto'>
-                  <Table>
+                  <Table role='table' aria-label='Contracts table'>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className='w-12'>
+                        <TableHead className='w-12' scope='col'>
                           {canDeleteContract && (
                             <Checkbox
                               checked={
@@ -1310,50 +1326,59 @@ function ContractsContent() {
                                 filteredAndSortedContracts.length
                               }
                               onCheckedChange={handleSelectAll}
+                              aria-label='Select all contracts'
                             />
                           )}
                         </TableHead>
                         <TableHead
                           className='cursor-pointer'
                           onClick={() => handleSort('id')}
+                          scope='col'
+                          aria-sort={sortColumn === 'id' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
                           Contract ID {renderSortIcon('id')}
                         </TableHead>
-                        <TableHead>First Party</TableHead>
-                        <TableHead>Second Party</TableHead>
-                        <TableHead>Promoter</TableHead>
+                        <TableHead scope='col'>First Party</TableHead>
+                        <TableHead scope='col'>Second Party</TableHead>
+                        <TableHead scope='col'>Promoter</TableHead>
                         <TableHead
                           className='cursor-pointer'
                           onClick={() => handleSort('contract_start_date')}
+                          scope='col'
+                          aria-sort={sortColumn === 'contract_start_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
                           Start Date {renderSortIcon('contract_start_date')}
                         </TableHead>
                         <TableHead
                           className='cursor-pointer'
                           onClick={() => handleSort('contract_end_date')}
+                          scope='col'
+                          aria-sort={sortColumn === 'contract_end_date' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
                           End Date {renderSortIcon('contract_end_date')}
                         </TableHead>
                         <TableHead
                           className='cursor-pointer'
                           onClick={() => handleSort('status')}
+                          scope='col'
+                          aria-sort={sortColumn === 'status' ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
                         >
                           Status {renderSortIcon('status')}
                         </TableHead>
-                        <TableHead>PDF</TableHead>
-                        <TableHead className='text-right'>Actions</TableHead>
+                        <TableHead scope='col'>PDF</TableHead>
+                        <TableHead className='text-right' scope='col'>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredAndSortedContracts.map(contract => {
                         const contractStatus = getContractStatus(contract);
                         const enhanced = enhanceContract(contract);
-                        const promoterName = contract.promoters
+                        const promoterName: string = contract.promoters
                           ? locale === 'ar'
                             ? contract.promoters.name_ar ||
-                              contract.promoters.name_en
+                              contract.promoters.name_en || ''
                             : contract.promoters.name_en ||
-                              contract.promoters.name_ar
+                              contract.promoters.name_ar || ''
                           : '';
                         return (
                           <TableRow
@@ -1373,6 +1398,7 @@ function ContractsContent() {
                                     )
                                   }
                                   className='data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600'
+                                  aria-label={`Select contract ${contract.id.substring(0, 8)}`}
                                 />
                               )}
                             </TableCell>
@@ -1692,12 +1718,12 @@ function ContractsContent() {
                   {filteredAndSortedContracts.map(contract => {
                     const contractStatus = getContractStatus(contract);
                     const enhanced = enhanceContract(contract);
-                    const promoterName = contract.promoters
+                    const promoterName: string = contract.promoters
                       ? locale === 'ar'
                         ? contract.promoters.name_ar ||
-                          contract.promoters.name_en
+                          contract.promoters.name_en || ''
                         : contract.promoters.name_en ||
-                          contract.promoters.name_ar
+                          contract.promoters.name_ar || ''
                       : '';
 
                     return (
@@ -2008,7 +2034,8 @@ function ContractsContent() {
             )}
           </CardContent>
         </Card>
-      </div>
+        </section>
+      </main>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

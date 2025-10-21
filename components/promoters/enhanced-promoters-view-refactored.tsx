@@ -987,58 +987,71 @@ export function EnhancedPromotersViewRefactored({
   const showLoadingOverlay = isFetching && response;
 
   return (
-    <div className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
+    <main className='relative space-y-6 px-4 pb-10 sm:px-6 lg:px-8'>
       {/* Loading overlay */}
       {showLoadingOverlay && (
-        <div className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center'>
+        <div className='absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center' role='status' aria-live='polite'>
           <div className='flex items-center gap-3 bg-card p-4 rounded-lg shadow-lg border'>
-            <RefreshCw className='h-5 w-5 animate-spin text-primary' />
+            <RefreshCw className='h-5 w-5 animate-spin text-primary' aria-hidden='true' />
             <span className='text-sm font-medium'>Updating promoters data...</span>
           </div>
         </div>
       )}
       {/* Enhanced Header */}
-      <PromotersHeader
-        metrics={metrics}
-        promoters={dashboardPromoters}
-        isFetching={isFetching}
-        onRefresh={handleRefresh}
-        onAddPromoter={handleAddPromoter}
-        locale={derivedLocale}
-      />
+      <header>
+        <PromotersHeader
+          metrics={metrics}
+          promoters={dashboardPromoters}
+          isFetching={isFetching}
+          onRefresh={handleRefresh}
+          onAddPromoter={handleAddPromoter}
+          locale={derivedLocale}
+        />
+      </header>
 
       {/* Enhanced Metrics */}
-      <PromotersMetricsCards metrics={metrics} />
+      <section aria-labelledby='metrics-heading'>
+        <h2 id='metrics-heading' className='sr-only'>Promoter Statistics</h2>
+        <PromotersMetricsCards metrics={metrics} />
+      </section>
 
       {/* Enhanced Filters */}
-      <PromotersFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        documentFilter={documentFilter}
-        onDocumentFilterChange={setDocumentFilter}
-        assignmentFilter={assignmentFilter}
-        onAssignmentFilterChange={setAssignmentFilter}
-        hasFiltersApplied={hasFiltersApplied}
-        onResetFilters={handleResetFilters}
-        onExport={handleExport}
-        onRefresh={handleRefresh}
-        isFetching={isFetching}
+      <section aria-labelledby='filters-heading'>
+        <h2 id='filters-heading' className='sr-only'>Search and Filter Options</h2>
+        <PromotersFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          documentFilter={documentFilter}
+          onDocumentFilterChange={setDocumentFilter}
+          assignmentFilter={assignmentFilter}
+          onAssignmentFilterChange={setAssignmentFilter}
+          hasFiltersApplied={hasFiltersApplied}
+          onResetFilters={handleResetFilters}
+          onExport={handleExport}
+          onRefresh={handleRefresh}
+          isFetching={isFetching}
       />
+      </section>
 
       {/* Bulk Actions Bar */}
-      <PromotersBulkActions
-        selectedCount={selectedPromoters.size}
-        totalCount={sortedPromoters.length}
-        isPerformingAction={isPerformingBulkAction}
-        onSelectAll={handleSelectAll}
-        onBulkAction={handleBulkAction}
-        onClearSelection={() => setSelectedPromoters(new Set())}
-      />
+      <section aria-labelledby='bulk-actions-heading'>
+        <h2 id='bulk-actions-heading' className='sr-only'>Bulk Actions</h2>
+        <PromotersBulkActions
+          selectedCount={selectedPromoters.size}
+          totalCount={sortedPromoters.length}
+          isPerformingAction={isPerformingBulkAction}
+          onSelectAll={handleSelectAll}
+          onBulkAction={handleBulkAction}
+          onClearSelection={() => setSelectedPromoters(new Set())}
+        />
+      </section>
 
       {/* Main Content */}
-      <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'>
+      <section aria-labelledby='promoters-content-heading'>
+        <h2 id='promoters-content-heading' className='sr-only'>Promoters List</h2>
+        <div className='grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]'>
         {/* Enhanced Table */}
         <PromotersTable
           promoters={sortedPromoters}
@@ -1067,7 +1080,8 @@ export function EnhancedPromotersViewRefactored({
           onSendReminder={handleSendReminder}
           onRequestDocument={handleRequestDocument}
         />
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   );
 }

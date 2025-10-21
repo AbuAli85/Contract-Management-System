@@ -430,47 +430,49 @@ export default function EnhancedLoginFormV2() {
               </Button>
             </form>
 
-            {/* Quick Test Accounts */}
-            <div className='mt-6 pt-6 border-t border-gray-200'>
-              <p className='text-xs text-gray-500 text-center mb-3'>
-                Quick test accounts for development:
-              </p>
-              <div className='grid grid-cols-1 gap-2'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
-                  disabled={loading}
-                  className='text-xs'
-                >
-                  <User className='mr-1 h-3 w-3' />
-                  Test Provider
-                </Button>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('client@test.com', 'TestPass123!')}
-                  disabled={loading}
-                  className='text-xs'
-                >
-                  <User className='mr-1 h-3 w-3' />
-                  Test Client
-                </Button>
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
-                  disabled={loading}
-                  className='text-xs'
-                >
-                  <User className='mr-1 h-3 w-3' />
-                  Test Admin
-                </Button>
+            {/* Quick Test Accounts - Only in Development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className='mt-6 pt-6 border-t border-gray-200'>
+                <p className='text-xs text-gray-500 text-center mb-3'>
+                  Quick test accounts for development:
+                </p>
+                <div className='grid grid-cols-1 gap-2'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => quickLogin('provider@test.com', 'TestPass123!')}
+                    disabled={loading}
+                    className='text-xs'
+                  >
+                    <User className='mr-1 h-3 w-3' />
+                    Test Provider
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => quickLogin('client@test.com', 'TestPass123!')}
+                    disabled={loading}
+                    className='text-xs'
+                  >
+                    <User className='mr-1 h-3 w-3' />
+                    Test Client
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => quickLogin('admin@test.com', 'TestPass123!')}
+                    disabled={loading}
+                    className='text-xs'
+                  >
+                    <User className='mr-1 h-3 w-3' />
+                    Test Admin
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
