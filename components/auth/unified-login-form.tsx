@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,6 @@ export default function UnifiedLoginForm() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [captchaError, setCaptchaError] = useState('');
-  const captchaRef = useRef<any>(null);
   const router = useRouter();
 
   const supabase = createClient();
@@ -251,11 +250,11 @@ export default function UnifiedLoginForm() {
   };
 
   const resetCaptcha = () => {
-    if (captchaRef.current) {
-      captchaRef.current.reset();
-    }
     setCaptchaToken(null);
     setCaptchaError('');
+    setShowCaptcha(false);
+    // Re-show captcha to trigger re-render
+    setTimeout(() => setShowCaptcha(true), 0);
   };
 
   const quickLogin = (email: string, password: string) => {
@@ -358,7 +357,6 @@ export default function UnifiedLoginForm() {
                 <Label>Security Verification</Label>
                 <div className='flex items-center gap-2'>
                   <CaptchaHandler
-                    ref={captchaRef}
                     onCaptchaReady={handleCaptchaReady}
                     onCaptchaError={handleCaptchaError}
                   />
@@ -406,8 +404,10 @@ export default function UnifiedLoginForm() {
             </Button>
           </form>
 
-          {/* Quick Test Buttons - Development Only */}
-          {process.env.NODE_ENV === 'development' && (
+          {/* Test accounts are only available in development for testing purposes */}
+          {/* They are hidden in production for security reasons */}
+          {process.env.NODE_ENV === 'development' && 
+           process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
             <div className='mt-6 pt-4 border-t'>
               <p className='text-sm text-gray-600 mb-3'>Quick test accounts:</p>
               <div className='grid grid-cols-1 gap-2'>

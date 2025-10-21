@@ -430,8 +430,10 @@ export default function EnhancedLoginFormV2() {
               </Button>
             </form>
 
-            {/* Quick Test Accounts - Only in Development */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* Test accounts are only available in development for testing purposes */}
+            {/* They are hidden in production for security reasons */}
+            {process.env.NODE_ENV === 'development' && 
+             process.env.NEXT_PUBLIC_ENABLE_TEST_ACCOUNTS === 'true' && (
               <div className='mt-6 pt-6 border-t border-gray-200'>
                 <p className='text-xs text-gray-500 text-center mb-3'>
                   Quick test accounts for development:

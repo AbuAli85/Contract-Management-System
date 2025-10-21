@@ -47,6 +47,7 @@
     "security:audit": "npm audit --audit-level=moderate",
     "security:fix": "npm audit fix",
     "security:update": "npm update",
+    "security:verify-production": "node verify-production-security.js",
     "clean": "rm -rf .next out dist build",
     "clean:all": "npm run clean && rm -rf node_modules package-lock.json",
     "reinstall": "npm run clean:all && npm install",
