@@ -100,12 +100,8 @@ function SidebarContent({
   const { unreadCount: notificationCount } = useNotifications();
   const { count: pendingUsersCount = 0 } = usePendingUsersCount();
 
-  // Debug logging for params issue
-  useEffect(() => {
-    console.log('🔍 Sidebar - useSafeParams result:', params);
-    console.log('🔍 Sidebar - pathname:', pathname);
-    console.log('🔍 Sidebar - locale:', locale);
-  }, [params, pathname, locale]);
+  // Debug logging for params issue (removed to prevent infinite loops)
+  // The params object changes on every render, causing infinite re-renders
 
   useEffect(() => {
     setMounted(true);
