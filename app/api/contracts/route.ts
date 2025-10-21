@@ -411,10 +411,14 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       { status: 500 }
     );
   }
-}
+});
 
 export const POST = withAnyRBAC(
-  ['contract:create:own', 'contract:generate:own', 'contract:message:own'],
+  [
+    'contract:create:own',
+    'contract:generate:own',
+    'contract:message:own',
+  ],
   async (request: NextRequest) => {
     try {
       const supabase = await createClient();
