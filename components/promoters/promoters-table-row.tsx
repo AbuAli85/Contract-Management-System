@@ -528,7 +528,9 @@ export function PromotersTableRow({
       <TableCell>
         <div className='space-y-1'>
           <div className='text-sm font-medium text-foreground'>
-            {promoter.organisationLabel}
+            {promoter.assignmentStatus === 'assigned' 
+              ? promoter.organisationLabel 
+              : 'No Assignment'}
           </div>
           <Badge
             variant='outline'

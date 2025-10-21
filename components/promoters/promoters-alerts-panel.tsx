@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ShieldCheck, Contact, Globe } from 'lucide-react';
+import { ShieldCheck, Contact, Globe, Mail, Phone, AlertTriangle, Clock } from 'lucide-react';
 import type {
   DocumentStatus,
   DocumentHealth,
@@ -20,6 +20,8 @@ import type {
 interface PromotersAlertsPanelProps {
   atRiskPromoters: DashboardPromoter[];
   onViewPromoter: (promoter: DashboardPromoter) => void;
+  onSendReminder?: (promoter: DashboardPromoter) => void;
+  onRequestDocument?: (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => void;
 }
 
 const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
@@ -32,6 +34,8 @@ const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
 export function PromotersAlertsPanel({
   atRiskPromoters,
   onViewPromoter,
+  onSendReminder,
+  onRequestDocument,
 }: PromotersAlertsPanelProps) {
   return (
     <Card className='border-dashed'>
@@ -62,50 +66,106 @@ export function PromotersAlertsPanel({
                 className='group rounded-lg border bg-card/60 p-3 shadow-sm transition hover:border-primary/60'
               >
                 <div className='flex items-start justify-between gap-3'>
-                  <div className='space-y-1'>
+                  <div className='space-y-1 flex-1'>
                     <div className='text-sm font-medium text-foreground'>
                       {promoter.displayName}
                     </div>
                     <div className='text-xs text-muted-foreground'>
                       {promoter.job_title || promoter.work_location || '—'}
                     </div>
+                    <div className='flex items-center gap-2 mt-1'>
+                      {promoter.contactEmail && (
+                        <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                          <Mail className='h-3 w-3' />
+                          <span className='truncate max-w-[120px]'>{promoter.contactEmail}</span>
+                        </div>
+                      )}
+                      {promoter.contactPhone && (
+                        <div className='flex items-center gap-1 text-xs text-muted-foreground'>
+                          <Phone className='h-3 w-3' />
+                          <span>{promoter.contactPhone}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    onClick={() => onViewPromoter(promoter)}
-                  >
-                    View
-                  </Button>
+                  <div className='flex flex-col gap-1'>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => onViewPromoter(promoter)}
+                      className='h-7 px-2 text-xs'
+                    >
+                      View
+                    </Button>
+                    {onSendReminder && (
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() => onSendReminder(promoter)}
+                        className='h-7 px-2 text-xs'
+                      >
+                        <Mail className='h-3 w-3 mr-1' />
+                        Remind
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className='mt-3 flex flex-wrap items-center gap-2'>
-                  {['expired', 'expiring', 'missing'].includes(
-                    promoter.idDocument.status
-                  ) && (
-                    <Badge
-                      variant='outline'
-                      className={cn(
-                        'rounded-full border px-2 py-0.5 text-xs font-medium',
-                        DOCUMENT_STATUS_BADGES[promoter.idDocument.status]
+                <div className='mt-3 space-y-2'>
+                  <div className='flex flex-wrap items-center gap-2'>
+                    {['expired', 'expiring', 'missing'].includes(
+                      promoter.idDocument.status
+                    ) && (
+                      <Badge
+                        variant='outline'
+                        className={cn(
+                          'rounded-full border px-2 py-0.5 text-xs font-medium',
+                          DOCUMENT_STATUS_BADGES[promoter.idDocument.status]
+                        )}
+                      >
+                        <Contact className='mr-1 h-3 w-3' />
+                        ID: {promoter.idDocument.label}
+                      </Badge>
+                    )}
+                    {['expired', 'expiring', 'missing'].includes(
+                      promoter.passportDocument.status
+                    ) && (
+                      <Badge
+                        variant='outline'
+                        className={cn(
+                          'rounded-full border px-2 py-0.5 text-xs font-medium',
+                          DOCUMENT_STATUS_BADGES[promoter.passportDocument.status]
+                        )}
+                      >
+                        <Globe className='mr-1 h-3 w-3' />
+                        Passport: {promoter.passportDocument.label}
+                      </Badge>
+                    )}
+                  </div>
+                  {onRequestDocument && (
+                    <div className='flex gap-1'>
+                      {['expired', 'expiring', 'missing'].includes(promoter.idDocument.status) && (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => onRequestDocument(promoter, 'ID')}
+                          className='h-6 px-2 text-xs'
+                        >
+                          <AlertTriangle className='h-3 w-3 mr-1' />
+                          Request ID
+                        </Button>
                       )}
-                    >
-                      <Contact className='mr-1 h-3 w-3' />
-                      ID: {promoter.idDocument.label}
-                    </Badge>
-                  )}
-                  {['expired', 'expiring', 'missing'].includes(
-                    promoter.passportDocument.status
-                  ) && (
-                    <Badge
-                      variant='outline'
-                      className={cn(
-                        'rounded-full border px-2 py-0.5 text-xs font-medium',
-                        DOCUMENT_STATUS_BADGES[promoter.passportDocument.status]
+                      {['expired', 'expiring', 'missing'].includes(promoter.passportDocument.status) && (
+                        <Button
+                          variant='outline'
+                          size='sm'
+                          onClick={() => onRequestDocument(promoter, 'Passport')}
+                          className='h-6 px-2 text-xs'
+                        >
+                          <AlertTriangle className='h-3 w-3 mr-1' />
+                          Request Passport
+                        </Button>
                       )}
-                    >
-                      <Globe className='mr-1 h-3 w-3' />
-                      Passport: {promoter.passportDocument.label}
-                    </Badge>
+                    </div>
                   )}
                 </div>
               </div>

@@ -756,6 +756,30 @@ export function EnhancedPromotersViewRefactored({
     [router, derivedLocale]
   );
 
+  const handleSendReminder = useCallback(
+    (promoter: DashboardPromoter) => {
+      console.log('[ACTION] Send reminder to:', promoter.displayName);
+      toast({
+        title: '📧 Reminder Sent',
+        description: `Document reminder sent to ${promoter.displayName}`,
+      });
+      // TODO: Implement actual reminder sending logic
+    },
+    [toast]
+  );
+
+  const handleRequestDocument = useCallback(
+    (promoter: DashboardPromoter, documentType: 'ID' | 'Passport') => {
+      console.log('[ACTION] Request document:', documentType, 'from', promoter.displayName);
+      toast({
+        title: '📋 Document Request Sent',
+        description: `${documentType} request sent to ${promoter.displayName}`,
+      });
+      // TODO: Implement actual document request logic
+    },
+    [toast]
+  );
+
   const handleGoToDashboard = useCallback(() => {
     router.push(`/${derivedLocale}/dashboard`);
   }, [router, derivedLocale]);
@@ -867,6 +891,7 @@ export function EnhancedPromotersViewRefactored({
       {/* Enhanced Header */}
       <PromotersHeader
         metrics={metrics}
+        promoters={dashboardPromoters}
         isFetching={isFetching}
         onRefresh={handleRefresh}
         onAddPromoter={handleAddPromoter}
@@ -930,6 +955,8 @@ export function EnhancedPromotersViewRefactored({
         <PromotersAlertsPanel
           atRiskPromoters={atRiskPromoters}
           onViewPromoter={handleViewPromoter}
+          onSendReminder={handleSendReminder}
+          onRequestDocument={handleRequestDocument}
         />
       </div>
     </div>

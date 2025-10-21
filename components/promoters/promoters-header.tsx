@@ -28,11 +28,13 @@ import {
   AlertTriangle,
   Building2,
 } from 'lucide-react';
-import type { DashboardMetrics } from './types';
+import type { DashboardMetrics, DashboardPromoter } from './types';
 import { PromotersKeyboardShortcuts } from './promoters-keyboard-shortcuts';
+import { NotificationBadge } from './notification-badge';
 
 interface PromotersHeaderProps {
   metrics: DashboardMetrics;
+  promoters: DashboardPromoter[];
   isFetching: boolean;
   onRefresh: () => void;
   onAddPromoter: () => void;
@@ -41,6 +43,7 @@ interface PromotersHeaderProps {
 
 export function PromotersHeader({
   metrics,
+  promoters,
   isFetching,
   onRefresh,
   onAddPromoter,
@@ -151,6 +154,7 @@ export function PromotersHeader({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <NotificationBadge promoters={promoters} />
             <div className='hidden sm:block'>
               <PromotersKeyboardShortcuts />
             </div>
