@@ -231,15 +231,66 @@ export function withRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // Check permission first
+    // 1. Apply rate limiting first
+    const {
+      applyRateLimit,
+      getRateLimitConfigForEndpoint,
+      getRateLimitHeaders,
+    } = await import('@/lib/security/upstash-rate-limiter');
+    
+    const pathname = request.nextUrl.pathname;
+    const method = request.method;
+    const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
+    
+    const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+    
+    if (!rateLimitResult.success) {
+      // Log rate limit violation
+      console.warn('⚠️ Rate limit exceeded:', {
+        endpoint: pathname,
+        method,
+        limitType: rateLimitConfig.type,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      const headers = getRateLimitHeaders(rateLimitResult);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rate limit exceeded',
+          message: 'Too many requests. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter,
+          resetAt: new Date(rateLimitResult.reset).toISOString(),
+        },
+        {
+          status: 429,
+          headers,
+        }
+      );
+    }
+
+    // 2. Check permission
     const guardResult = await guardPermission(requiredPermission, request);
 
     if (guardResult) {
-      return guardResult;
+      // Add rate limit headers even to failed permission checks
+      const headers = getRateLimitHeaders(rateLimitResult);
+      const response = guardResult;
+      Object.entries(headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
-    // Permission check passed, execute handler
-    return handler(request, ...args);
+    // 3. Execute handler with rate limit headers
+    const response = await handler(request, ...args);
+    const headers = getRateLimitHeaders(rateLimitResult);
+    Object.entries(headers).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    return response;
   };
 }
 
@@ -252,15 +303,66 @@ export function withAnyRBAC<T extends any[]>(
   handler: (request: NextRequest, ...args: T) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, ...args: T): Promise<NextResponse> => {
-    // Check if user has any of the required permissions
+    // 1. Apply rate limiting first
+    const {
+      applyRateLimit,
+      getRateLimitConfigForEndpoint,
+      getRateLimitHeaders,
+    } = await import('@/lib/security/upstash-rate-limiter');
+    
+    const pathname = request.nextUrl.pathname;
+    const method = request.method;
+    const rateLimitConfig = getRateLimitConfigForEndpoint(pathname, method);
+    
+    const rateLimitResult = await applyRateLimit(request, rateLimitConfig);
+    
+    if (!rateLimitResult.success) {
+      // Log rate limit violation
+      console.warn('⚠️ Rate limit exceeded:', {
+        endpoint: pathname,
+        method,
+        limitType: rateLimitConfig.type,
+        retryAfter: rateLimitResult.retryAfter,
+      });
+      
+      const headers = getRateLimitHeaders(rateLimitResult);
+      
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rate limit exceeded',
+          message: 'Too many requests. Please try again later.',
+          retryAfter: rateLimitResult.retryAfter,
+          resetAt: new Date(rateLimitResult.reset).toISOString(),
+        },
+        {
+          status: 429,
+          headers,
+        }
+      );
+    }
+
+    // 2. Check if user has any of the required permissions
     const guardResult = await guardAnyPermission(requiredPermissions, request);
 
     if (guardResult) {
-      return guardResult;
+      // Add rate limit headers even to failed permission checks
+      const headers = getRateLimitHeaders(rateLimitResult);
+      const response = guardResult;
+      Object.entries(headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
-    // Permission check passed, execute handler
-    return handler(request, ...args);
+    // 3. Execute handler with rate limit headers
+    const response = await handler(request, ...args);
+    const headers = getRateLimitHeaders(rateLimitResult);
+    Object.entries(headers).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    return response;
   };
 }
 

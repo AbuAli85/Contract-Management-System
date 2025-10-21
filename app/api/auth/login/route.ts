@@ -3,11 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { AuthErrorHandler } from '@/lib/auth-error-handler';
 import { ApiErrorHandler } from '@/lib/api-error-handler';
 import {
-  ratelimitAuth,
-  getClientIdentifier,
+  rateLimiters,
   getRateLimitHeaders,
-  createRateLimitResponse,
-} from '@/lib/rate-limit';
+  getClientIdentifier,
+} from '@/lib/security/upstash-rate-limiter';
 import { createAuditLog, logAuditEvent } from '@/lib/security';
 
 // Force dynamic rendering for this API route
@@ -15,25 +14,50 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // ✅ SECURITY: Apply strict rate limiting for auth (5 requests per minute)
+    // ✅ SECURITY: Apply strict rate limiting for login (5 requests per minute per IP)
     const identifier = getClientIdentifier(request);
-    const rateLimitResult = await ratelimitAuth.limit(identifier);
+    const rateLimitResult = await rateLimiters.login.limit(identifier);
 
     if (!rateLimitResult.success) {
-      const headers = getRateLimitHeaders(rateLimitResult);
-      const body = createRateLimitResponse(rateLimitResult);
+      const headers = getRateLimitHeaders({
+        success: rateLimitResult.success,
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+        reset: rateLimitResult.reset,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      });
 
-      // Log rate limit hit
+      // Log rate limit violation
+      const violation = {
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/auth/login',
+        method: 'POST',
+        ip: identifier.split(':')[0],
+        limit: rateLimitResult.limit,
+        remaining: rateLimitResult.remaining,
+      };
+      console.warn('⚠️ Login rate limit exceeded:', JSON.stringify(violation));
+
+      // Log audit event
       const auditEntry = createAuditLog(request, 'LOGIN_RATE_LIMITED', false, {
         identifier,
         attemptsRemaining: rateLimitResult.remaining,
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
       });
       logAuditEvent(auditEntry);
 
-      return NextResponse.json(body, {
-        status: 429,
-        headers,
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Rate limit exceeded',
+          message: `Too many login attempts. Please wait ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds before trying again.`,
+          retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+        },
+        {
+          status: 429,
+          headers,
+        }
+      );
     }
 
     console.log('🔐 Server login API called');
@@ -125,7 +149,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Add rate limit headers to response
-    const responseHeaders = getRateLimitHeaders(rateLimitResult);
+    const responseHeaders = getRateLimitHeaders({
+      success: rateLimitResult.success,
+      limit: rateLimitResult.limit,
+      remaining: rateLimitResult.remaining,
+      reset: rateLimitResult.reset,
+      retryAfter: undefined,
+    });
 
     // Create response with success
     const response = NextResponse.json(

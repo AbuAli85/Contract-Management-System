@@ -10,31 +10,55 @@ const redis = new Redis({
 
 // Rate limiter configurations for different endpoint types
 export const rateLimiters = {
-  // Very strict for auth endpoints (5 requests per 15 minutes)
+  // Login endpoint: 5 requests per minute per IP
+  login: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:login',
+  }),
+
+  // Registration endpoint: 3 requests per hour per IP
+  registration: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, '1 h'),
+    analytics: true,
+    prefix: 'ratelimit:registration',
+  }),
+
+  // API read operations: 100 requests per minute per user
+  apiRead: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(100, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:api:read',
+  }),
+
+  // API write operations: 30 requests per minute per user
+  apiWrite: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:api:write',
+  }),
+
+  // Legacy auth endpoint (for backward compatibility)
   auth: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(5, '15 m'),
+    limiter: Ratelimit.slidingWindow(5, '1 m'),
     analytics: true,
     prefix: 'ratelimit:auth',
   }),
 
-  // Moderate for API endpoints (100 requests per 15 minutes)
-  api: new Ratelimit({
+  // Password reset: 3 requests per hour
+  passwordReset: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(100, '15 m'),
+    limiter: Ratelimit.slidingWindow(3, '1 h'),
     analytics: true,
-    prefix: 'ratelimit:api',
+    prefix: 'ratelimit:password-reset',
   }),
 
-  // Lenient for dashboard/UI (60 requests per minute)
-  dashboard: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(60, '1 m'),
-    analytics: true,
-    prefix: 'ratelimit:dashboard',
-  }),
-
-  // Strict for file uploads (10 requests per 10 minutes)
+  // File uploads: 10 requests per 10 minutes
   upload: new Ratelimit({
     redis,
     limiter: Ratelimit.slidingWindow(10, '10 m'),
@@ -42,28 +66,12 @@ export const rateLimiters = {
     prefix: 'ratelimit:upload',
   }),
 
-  // Very strict for login attempts (3 requests per 15 minutes)
-  login: new Ratelimit({
+  // Dashboard/UI: 60 requests per minute
+  dashboard: new Ratelimit({
     redis,
-    limiter: Ratelimit.slidingWindow(3, '15 m'),
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
     analytics: true,
-    prefix: 'ratelimit:login',
-  }),
-
-  // Strict for registration (2 requests per hour)
-  registration: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(2, '1 h'),
-    analytics: true,
-    prefix: 'ratelimit:registration',
-  }),
-
-  // Strict for password reset (3 requests per hour)
-  passwordReset: new Ratelimit({
-    redis,
-    limiter: Ratelimit.slidingWindow(3, '1 h'),
-    analytics: true,
-    prefix: 'ratelimit:password-reset',
+    prefix: 'ratelimit:dashboard',
   }),
 };
 
@@ -72,7 +80,7 @@ export interface RateLimitResult {
   limit: number;
   remaining: number;
   reset: number;
-  retryAfter?: number;
+  retryAfter: number | undefined;
 }
 
 export interface RateLimitConfig {
@@ -80,7 +88,7 @@ export interface RateLimitConfig {
   identifier?: string;
   customLimit?: {
     requests: number;
-    window: string;
+    window: '1 s' | '10 s' | '30 s' | '1 m' | '5 m' | '10 m' | '15 m' | '1 h' | '1 d';
   };
 }
 
@@ -130,14 +138,16 @@ export async function applyRateLimit(
       limit: 1000,
       remaining: 999,
       reset: Date.now() + 60000,
+      retryAfter: undefined,
     };
   }
 }
 
 /**
  * Get client identifier for rate limiting
+ * Exported for use in auth endpoints
  */
-function getClientIdentifier(request: NextRequest): string {
+export function getClientIdentifier(request: NextRequest): string {
   // Get IP address
   const ip =
     request.ip ||
@@ -182,16 +192,49 @@ export function withRateLimit(
   config: RateLimitConfig
 ) {
   return async (request: NextRequest): Promise<Response> => {
+    const startTime = Date.now();
+    const identifier = config.identifier || getClientIdentifier(request);
+    
     // Apply rate limiting
     const rateLimitResult = await applyRateLimit(request, config);
 
     if (!rateLimitResult.success) {
-      // Return rate limit exceeded response
+      // Log rate limit violation for monitoring
+      const violation = {
+        timestamp: new Date().toISOString(),
+        endpoint: request.nextUrl.pathname,
+        method: request.method,
+        identifier: identifier.split(':')[0], // IP only for logging
+        limitType: config.type,
+        limit: rateLimitResult.limit,
+        retryAfter: rateLimitResult.retryAfter,
+        userAgent: request.headers.get('user-agent')?.substring(0, 100),
+      };
+      
+      console.warn('⚠️ Rate limit violation:', JSON.stringify(violation));
+      
+      // Create user-friendly error message based on limit type
+      let userMessage = 'Too many requests. Please try again later.';
+      if (config.type === 'login') {
+        userMessage = `Too many login attempts. Please wait ${rateLimitResult.retryAfter} seconds before trying again.`;
+      } else if (config.type === 'registration') {
+        userMessage = `Too many registration attempts. Please try again in ${Math.ceil((rateLimitResult.retryAfter || 0) / 60)} minutes.`;
+      } else if (config.type === 'apiWrite') {
+        userMessage = 'You are making too many changes. Please slow down and try again in a moment.';
+      } else if (config.type === 'apiRead') {
+        userMessage = 'You are requesting data too quickly. Please wait a moment before continuing.';
+      }
+
+      // Return rate limit exceeded response with helpful message
       return new Response(
         JSON.stringify({
+          success: false,
           error: 'Rate limit exceeded',
-          message: 'Too many requests. Please try again later.',
+          message: userMessage,
           retryAfter: rateLimitResult.retryAfter,
+          limit: rateLimitResult.limit,
+          remaining: 0,
+          resetAt: new Date(rateLimitResult.reset).toISOString(),
         }),
         {
           status: 429,
@@ -215,6 +258,12 @@ export function withRateLimit(
         }
       );
 
+      // Log successful request (only for monitoring, can be disabled in production)
+      if (process.env.NODE_ENV === 'development') {
+        const duration = Date.now() - startTime;
+        console.log(`✅ ${request.method} ${request.nextUrl.pathname} - ${duration}ms - Remaining: ${rateLimitResult.remaining}/${rateLimitResult.limit}`);
+      }
+
       // Return response with rate limit headers
       return new Response(response.body, {
         status: response.status,
@@ -227,6 +276,7 @@ export function withRateLimit(
       // Return error response with rate limit headers
       return new Response(
         JSON.stringify({
+          success: false,
           error: 'Internal server error',
           message: 'An unexpected error occurred.',
         }),
@@ -249,38 +299,62 @@ export const RATE_LIMIT_CONFIGS = {
   // Auth endpoints
   '/api/auth/login': { type: 'login' as const },
   '/api/auth/register': { type: 'registration' as const },
+  '/api/auth/signup': { type: 'registration' as const },
   '/api/auth/forgot-password': { type: 'passwordReset' as const },
   '/api/auth/reset-password': { type: 'passwordReset' as const },
   '/api/auth/verify-email': { type: 'auth' as const },
 
-  // API endpoints
-  '/api/contracts': { type: 'api' as const },
-  '/api/users': { type: 'api' as const },
+  // Dashboard (higher limit)
   '/api/dashboard': { type: 'dashboard' as const },
 
-  // File uploads
+  // File uploads (strict)
   '/api/upload': { type: 'upload' as const },
   '/api/documents': { type: 'upload' as const },
 };
 
 /**
- * Get rate limit configuration for a specific endpoint
+ * Determine if an API request is a read or write operation
+ */
+export function isReadOperation(method: string): boolean {
+  return method === 'GET' || method === 'HEAD' || method === 'OPTIONS';
+}
+
+export function isWriteOperation(method: string): boolean {
+  return method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+}
+
+/**
+ * Get rate limit configuration for a specific endpoint and method
  */
 export function getRateLimitConfigForEndpoint(
-  pathname: string
+  pathname: string,
+  method?: string
 ): RateLimitConfig {
-  // Find exact match first
+  // Find exact match first (auth endpoints)
   if (RATE_LIMIT_CONFIGS[pathname as keyof typeof RATE_LIMIT_CONFIGS]) {
     return RATE_LIMIT_CONFIGS[pathname as keyof typeof RATE_LIMIT_CONFIGS];
   }
 
-  // Find pattern match
+  // Find pattern match (auth endpoints)
   for (const [pattern, config] of Object.entries(RATE_LIMIT_CONFIGS)) {
     if (pathname.startsWith(pattern)) {
       return config;
     }
   }
 
-  // Default to API rate limiting
-  return { type: 'api' };
+  // For API endpoints, determine read vs write based on HTTP method
+  if (pathname.startsWith('/api/')) {
+    if (method) {
+      if (isReadOperation(method)) {
+        return { type: 'apiRead' };
+      } else if (isWriteOperation(method)) {
+        return { type: 'apiWrite' };
+      }
+    }
+    // Default to read limit if method not specified
+    return { type: 'apiRead' };
+  }
+
+  // Default to read rate limiting for unknown endpoints
+  return { type: 'apiRead' };
 }
