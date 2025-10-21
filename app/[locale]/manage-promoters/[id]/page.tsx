@@ -769,11 +769,11 @@ export default function PromoterDetailPage() {
                 variant='outline'
                 size='sm'
                 onClick={() =>
-                  router.push(`/${locale}/promoter-analysis/${promoterId}`)
+                  router.push(`/${locale}/promoter-analysis`)
                 }
               >
                 <FileTextIcon className='mr-2 h-4 w-4' />
-                View Analytics
+                View Analytics Dashboard
               </Button>
               <Button
                 variant='outline'
@@ -1414,12 +1414,12 @@ export default function PromoterDetailPage() {
                       size='sm'
                       onClick={() =>
                         router.push(
-                          `/${locale}/promoter-analysis/${promoterId}`
+                          `/${locale}/promoter-analysis`
                         )
                       }
                     >
                       <ExternalLinkIcon className='mr-2 h-4 w-4' />
-                      View Analytics
+                      View Analytics Dashboard
                     </Button>
                     <Button
                       variant='outline'
