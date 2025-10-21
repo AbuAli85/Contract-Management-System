@@ -190,9 +190,14 @@ export default function PartyForm({
                   name='name_en'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name (English)</FormLabel>
+                      <FormLabel>Name (English) <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder='Party Name (EN)' {...field} />
+                        <Input 
+                          placeholder='Party Name (EN)' 
+                          {...field} 
+                          disabled={isSubmitting}
+                          className={form.formState.errors.name_en ? 'border-red-500' : field.value && !form.formState.errors.name_en ? 'border-green-500' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -209,7 +214,8 @@ export default function PartyForm({
                           placeholder='اسم الطرف (AR)'
                           {...field}
                           dir='rtl'
-                          className='text-right'
+                          className={`text-right ${form.formState.errors.name_ar ? 'border-red-500' : field.value && !form.formState.errors.name_ar ? 'border-green-500' : ''}`}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -224,13 +230,14 @@ export default function PartyForm({
                   name='type'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Type</FormLabel>
+                      <FormLabel>Type <span className="text-red-500">*</span></FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={isSubmitting}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className={form.formState.errors.type ? 'border-red-500' : field.value ? 'border-green-500' : ''}>
                             <SelectValue placeholder='Select type' />
                           </SelectTrigger>
                         </FormControl>
@@ -253,6 +260,8 @@ export default function PartyForm({
                         <Input
                           placeholder='e.g., CEO, Manager, Director'
                           {...field}
+                          disabled={isSubmitting}
+                          className={form.formState.errors.role ? 'border-red-500' : field.value && !form.formState.errors.role ? 'border-green-500' : ''}
                         />
                       </FormControl>
                       <FormMessage />
@@ -264,13 +273,14 @@ export default function PartyForm({
                   name='status'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>Status <span className="text-red-500">*</span></FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        disabled={isSubmitting}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className={form.formState.errors.status ? 'border-red-500' : field.value ? 'border-green-500' : ''}>
                             <SelectValue placeholder='Select status' />
                           </SelectTrigger>
                         </FormControl>
@@ -307,7 +317,12 @@ export default function PartyForm({
                         Commercial Registration Number (CRN)
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder='1010XXXXXX' {...field} />
+                        <Input 
+                          placeholder='1010XXXXXX' 
+                          {...field} 
+                          disabled={isSubmitting}
+                          className={form.formState.errors.crn ? 'border-red-500' : field.value && !form.formState.errors.crn ? 'border-green-500' : ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -324,6 +339,7 @@ export default function PartyForm({
                           date={field.value}
                           setDate={field.onChange}
                           placeholder='Select expiry date'
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -508,9 +524,19 @@ export default function PartyForm({
             </CardContent>
           </Card>
 
-          <Button type='submit' className='w-full' disabled={isSubmitting}>
-            {isSubmitting && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
-            {partyToEdit ? 'Update Party' : 'Add Party'}
+          <Button 
+            type='submit' 
+            className='w-full' 
+            disabled={isSubmitting || !form.formState.isValid}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                {partyToEdit ? 'Updating...' : 'Adding...'}
+              </>
+            ) : (
+              partyToEdit ? 'Update Party' : 'Add Party'
+            )}
           </Button>
         </form>
       </Form>
