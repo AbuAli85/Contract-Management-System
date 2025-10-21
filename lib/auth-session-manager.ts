@@ -82,22 +82,58 @@ export class AuthSessionManager {
     }
   }
 
-  public async signIn(email: string, password: string): Promise<{ success: boolean; error?: string; session?: UserSession }> {
+  public async signIn(email: string, password: string): Promise<{ success: boolean; error?: string; session?: UserSession; debug?: any }> {
     try {
-      if (!this.supabase) return { success: false, error: 'Supabase client not initialized' };
+      if (!this.supabase) {
+        console.error('🔐 Supabase client not initialized');
+        return { 
+          success: false, 
+          error: 'Supabase client not initialized',
+          debug: { step: 'client_check', hasSupabase: false }
+        };
+      }
+
+      console.log('🔐 Attempting sign in for:', email);
+      
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
       if (error) {
-        console.error('🔐 Sign in error:', error);
-        return { success: false, error: error.message };
+        console.error('🔐 Sign in error:', {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          timestamp: new Date().toISOString()
+        });
+        return { 
+          success: false, 
+          error: error.message,
+          debug: {
+            step: 'sign_in',
+            errorCode: error.code,
+            errorStatus: error.status,
+            timestamp: new Date().toISOString()
+          }
+        };
       }
 
       if (!data.session) {
-        return { success: false, error: 'No session created' };
+        console.error('🔐 No session created after successful sign in');
+        return { 
+          success: false, 
+          error: 'No session created',
+          debug: {
+            step: 'session_check',
+            hasData: !!data,
+            hasUser: !!data?.user,
+            hasSession: !!data?.session
+          }
+        };
       }
+
+      console.log('✅ Sign in successful, storing session');
 
       // Store session and update activity
       this.storeSession(data.session);
@@ -113,12 +149,22 @@ export class AuthSessionManager {
         lastActivity: Date.now(),
       };
 
+      console.log('✅ User session created successfully');
       return { success: true, session: userSession };
     } catch (error) {
-      console.error('🔐 Sign in exception:', error);
+      console.error('🔐 Sign in exception:', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
       return { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        debug: {
+          step: 'exception',
+          errorType: typeof error,
+          timestamp: new Date().toISOString()
+        }
       };
     }
   }

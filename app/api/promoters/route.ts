@@ -84,9 +84,22 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('❌ Missing Supabase credentials');
+      console.error('❌ Missing Supabase credentials:', {
+        hasUrl: !!supabaseUrl,
+        hasAnonKey: !!supabaseAnonKey,
+        timestamp: new Date().toISOString()
+      });
       return NextResponse.json(
-        { success: false, error: 'Server configuration error' },
+        { 
+          success: false, 
+          error: 'Server configuration error',
+          details: 'Missing Supabase environment variables',
+          debug: {
+            hasUrl: !!supabaseUrl,
+            hasAnonKey: !!supabaseAnonKey,
+            timestamp: new Date().toISOString()
+          }
+        },
         { status: 500 }
       );
     }
@@ -114,11 +127,22 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
     } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error('❌ Authentication failed:', {
+        authError: authError?.message,
+        hasUser: !!user,
+        userId: user?.id,
+        timestamp: new Date().toISOString()
+      });
       return NextResponse.json(
         {
           success: false,
           error: 'Authentication required',
-          details: 'Please log in to access promoters data',
+          details: authError?.message || 'Please log in to access promoters data',
+          debug: {
+            hasUser: !!user,
+            authError: authError?.message,
+            timestamp: new Date().toISOString()
+          }
         },
         { status: 401 }
       );
@@ -162,13 +186,24 @@ export const GET = withRBAC('promoter:read:own', async (request: Request) => {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Database error:', error);
+      console.error('❌ Database error:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        timestamp: new Date().toISOString()
+      });
       return NextResponse.json(
         {
           success: false,
           error: 'Failed to fetch promoters',
-          details:
-            process.env.NODE_ENV === 'development' ? error.message : undefined,
+          details: error.message,
+          debug: {
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            timestamp: new Date().toISOString()
+          }
         },
         { status: 500 }
       );
