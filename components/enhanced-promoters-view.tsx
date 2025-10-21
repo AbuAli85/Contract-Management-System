@@ -622,67 +622,78 @@ export function EnhancedPromotersView({ locale }: PromotersViewProps) {
     'items'
   );
 
-  const metrics = useMemo<DashboardMetrics>(() => {
-    // 🔧 DATA CONSISTENCY FIX:
-    // Use pagination.total for the actual total count from the database (e.g., 112)
-    // NOT dashboardPromoters.length which is only the current page data (e.g., 50)
-    const total = pagination?.total || dashboardPromoters.length;
-    
-    // ⚠️ NOTE: The following metrics are calculated from CURRENT PAGE data only.
-    // This means they represent statistics for the visible promoters, not all promoters.
-    // For accurate system-wide metrics, these should be fetched from a dedicated API endpoint.
-    const active = dashboardPromoters.filter(
-      promoter => promoter.overallStatus === 'active'
-    ).length;
-    const critical = dashboardPromoters.filter(
-      promoter =>
-        promoter.idDocument.status === 'expired' ||
-        promoter.passportDocument.status === 'expired'
-    ).length;
-    const expiring = dashboardPromoters.filter(
-      promoter =>
-        promoter.idDocument.status === 'expiring' ||
-        promoter.passportDocument.status === 'expiring'
-    ).length;
-    const unassigned = dashboardPromoters.filter(
-      promoter => promoter.assignmentStatus === 'unassigned'
-    ).length;
-    const companies = new Set(
-      dashboardPromoters
-        .map(promoter => promoter.employer_id)
-        .filter(Boolean) as string[]
-    ).size;
+  // 🎯 FIX for Issue #3: Fetch system-wide metrics from dedicated API
+  // This ensures all metrics are calculated from the entire database, not just current page
+  const { data: apiMetricsData, isLoading: metricsLoading } = useQuery({
+    queryKey: ['promoter-metrics'],
+    queryFn: async () => {
+      const res = await fetch('/api/dashboard/promoter-metrics');
+      if (!res.ok) throw new Error('Failed to fetch metrics');
+      return res.json();
+    },
+    refetchInterval: 60000, // Refresh every minute
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  });
 
-    // Calculate recently added (last 7 days) - based on current page data
+  const metrics = useMemo<DashboardMetrics>(() => {
+    // Use API metrics if available, otherwise calculate from current page as fallback
+    if (apiMetricsData?.metrics) {
+      const apiMetrics = apiMetricsData.metrics;
+      
+      // Calculate page-specific metrics for companies and recently added
+      const companies = new Set(
+        dashboardPromoters
+          .map(promoter => promoter.employer_id)
+          .filter(Boolean) as string[]
+      ).size;
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const recentlyAdded = dashboardPromoters.filter(promoter => {
+        const createdDate = parseDateSafe(promoter.created_at);
+        return createdDate && createdDate >= sevenDaysAgo;
+      }).length;
+
+      return {
+        total: apiMetrics.total,
+        active: apiMetrics.active,
+        critical: apiMetrics.critical,
+        expiring: apiMetrics.expiring,
+        unassigned: apiMetrics.unassigned,
+        companies, // Still page-specific (okay for this metric)
+        recentlyAdded, // Still page-specific (okay for this metric)
+        complianceRate: apiMetrics.complianceRate,
+      };
+    }
+
+    // Fallback: Calculate from current page (old behavior)
+    const total = pagination?.total || dashboardPromoters.length;
+    const active = dashboardPromoters.filter(p => p.overallStatus === 'active').length;
+    const critical = dashboardPromoters.filter(p =>
+      p.idDocument.status === 'expired' || p.passportDocument.status === 'expired'
+    ).length;
+    const expiring = dashboardPromoters.filter(p =>
+      p.idDocument.status === 'expiring' || p.passportDocument.status === 'expiring'
+    ).length;
+    const unassigned = dashboardPromoters.filter(p => p.assignmentStatus === 'unassigned').length;
+    const companies = new Set(
+      dashboardPromoters.map(p => p.employer_id).filter(Boolean) as string[]
+    ).size;
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const recentlyAdded = dashboardPromoters.filter(promoter => {
-      const createdDate = parseDateSafe(promoter.created_at);
+    const recentlyAdded = dashboardPromoters.filter(p => {
+      const createdDate = parseDateSafe(p.created_at);
       return createdDate && createdDate >= sevenDaysAgo;
     }).length;
-
-    // Calculate compliance rate (percentage with valid documents) - based on current page data
-    const compliant = dashboardPromoters.filter(
-      promoter =>
-        promoter.idDocument.status === 'valid' &&
-        promoter.passportDocument.status === 'valid'
+    const compliant = dashboardPromoters.filter(p =>
+      p.idDocument.status === 'valid' && p.passportDocument.status === 'valid'
     ).length;
-    const complianceRate =
-      dashboardPromoters.length > 0 
-        ? Math.round((compliant / dashboardPromoters.length) * 100) 
-        : 0;
+    const complianceRate = dashboardPromoters.length > 0 
+      ? Math.round((compliant / dashboardPromoters.length) * 100) 
+      : 0;
 
-    return {
-      total,
-      active,
-      critical,
-      expiring,
-      unassigned,
-      companies,
-      recentlyAdded,
-      complianceRate,
-    };
-  }, [dashboardPromoters, pagination]);
+    return { total, active, critical, expiring, unassigned, companies, recentlyAdded, complianceRate };
+  }, [dashboardPromoters, pagination, apiMetricsData]);
 
   const filteredPromoters = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
