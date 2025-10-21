@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-service';
 // RBACProvider is now handled in app/providers.tsx
 import { ThemeProvider } from '@/components/theme-provider';
 import { Sidebar } from '@/components/sidebar-simplified';
+import { Breadcrumbs } from '@/components/breadcrumbs';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -255,6 +256,11 @@ export function AuthenticatedLayout({
                 </div>
               </div>
             </header>
+
+            {/* Breadcrumbs */}
+            <div className='border-b bg-background px-6 py-2'>
+              <Breadcrumbs locale={locale} />
+            </div>
 
             {/* Page Content */}
             <main className='flex-1 overflow-auto p-6'>{children}</main>

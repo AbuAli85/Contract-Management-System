@@ -8,7 +8,6 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from '@/navigation';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   Home,
@@ -62,15 +61,17 @@ export function SimplifiedNavigation({
       items: [
         {
           href: `/${locale}/promoters`,
-          label: 'All Promoters',
-          labelAr: 'جميع المروجين',
+          label: 'Promoters Intelligence Hub',
+          labelAr: 'مركز معلومات المروجين',
           icon: Users,
+          description: 'Analytics and insights dashboard',
         },
         {
           href: `/${locale}/manage-promoters`,
-          label: 'Manage Promoters',
-          labelAr: 'إدارة المروجين',
+          label: 'Promoters List',
+          labelAr: 'قائمة المروجين',
           icon: UserCog,
+          description: 'View and manage all promoters',
         },
       ],
     },
@@ -139,10 +140,11 @@ export function SimplifiedNavigation({
           icon: Settings,
         },
         {
-          href: `/${locale}/dashboard/settings`,
+          href: `/${locale}/help`,
           label: 'Help',
           labelAr: 'المساعدة',
           icon: HelpCircle,
+          description: 'Documentation and support',
         },
       ],
     },
@@ -171,24 +173,26 @@ export function SimplifiedNavigation({
               const active = isActive(item.href);
 
               return (
-                <Link key={itemIdx} href={item.href}>
-                  <Button
-                    variant={active ? 'secondary' : 'ghost'}
-                    className={cn(
-                      'w-full justify-start',
-                      isCollapsed && 'justify-center px-2',
-                      active && 'bg-accent font-semibold'
-                    )}
-                    size={isCollapsed ? 'icon' : 'default'}
-                  >
-                    <Icon className={cn('h-4 w-4', !isCollapsed && 'mr-2')} />
-                    {!isCollapsed && (
-                      <span>{locale === 'ar' ? item.labelAr : item.label}</span>
-                    )}
-                    {!isCollapsed && active && (
-                      <ChevronRight className='ml-auto h-4 w-4' />
-                    )}
-                  </Button>
+                <Link
+                  key={itemIdx}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    isCollapsed && 'justify-center px-2',
+                    active && 'bg-accent font-semibold text-accent-foreground',
+                    !active && 'text-muted-foreground'
+                  )}
+                  title={isCollapsed ? (locale === 'ar' ? item.labelAr : item.label) : (item as any).description}
+                >
+                  <Icon className='h-4 w-4 shrink-0' aria-hidden='true' />
+                  {!isCollapsed && (
+                    <>
+                      <span className='flex-1'>{locale === 'ar' ? item.labelAr : item.label}</span>
+                      {active && <ChevronRight className='h-4 w-4 shrink-0' aria-hidden='true' />}
+                    </>
+                  )}
                 </Link>
               );
             })}
