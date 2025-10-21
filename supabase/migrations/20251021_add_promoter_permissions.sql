@@ -2,12 +2,12 @@
 -- This migration ensures admin users can access the /api/promoters endpoint
 
 -- Step 1: Insert promoter permissions if they don't exist
-INSERT INTO permissions (name, description, resource, action, scope, category)
+INSERT INTO permissions (name, description, resource, action, scope)
 VALUES 
-  ('promoter:read:own', 'View own promoters', 'promoter', 'read', 'own', 'promoter'),
-  ('promoter:manage:own', 'Manage own promoters', 'promoter', 'manage', 'own', 'promoter'),
-  ('promoter:read:all', 'View all promoters', 'promoter', 'read', 'all', 'promoter'),
-  ('promoter:manage:all', 'Manage all promoters', 'promoter', 'manage', 'all', 'promoter')
+  ('promoter:read:own', 'View own promoters', 'promoter', 'read', 'own'),
+  ('promoter:manage:own', 'Manage own promoters', 'promoter', 'manage', 'own'),
+  ('promoter:read:all', 'View all promoters', 'promoter', 'read', 'all'),
+  ('promoter:manage:all', 'Manage all promoters', 'promoter', 'manage', 'all')
 ON CONFLICT (name) DO NOTHING;
 
 -- Step 2: Get the admin role ID
