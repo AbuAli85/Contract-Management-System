@@ -77,50 +77,66 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
   useEffect(() => {
     const supabase = createClient();
     
-    // Subscribe to contracts table changes
-    const contractsChannel = supabase
-      .channel('contracts-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contracts',
-        },
-        (payload) => {
-          console.log('📬 Contract change detected:', payload);
-          // Refresh notifications when contracts change
-          if (open) {
-            fetchNotifications();
-          }
-        }
-      )
-      .subscribe();
+    if (!supabase) {
+      console.warn('Supabase client not available for real-time notifications');
+      return;
+    }
 
-    // Subscribe to promoters table changes
-    const promotersChannel = supabase
-      .channel('promoters-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'promoters',
-        },
-        (payload) => {
-          console.log('📬 Promoter change detected:', payload);
-          // Refresh notifications when promoters change
-          if (open) {
-            fetchNotifications();
+    let contractsChannel: ReturnType<typeof supabase.channel> | null = null;
+    let promotersChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    try {
+      // Subscribe to contracts table changes
+      contractsChannel = supabase
+        .channel('contracts-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'contracts',
+          },
+          (payload) => {
+            console.log('📬 Contract change detected:', payload);
+            // Refresh notifications when contracts change
+            if (open) {
+              fetchNotifications();
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+
+      // Subscribe to promoters table changes
+      promotersChannel = supabase
+        .channel('promoters-notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'promoters',
+          },
+          (payload) => {
+            console.log('📬 Promoter change detected:', payload);
+            // Refresh notifications when promoters change
+            if (open) {
+              fetchNotifications();
+            }
+          }
+        )
+        .subscribe();
+    } catch (error) {
+      console.error('Error setting up realtime subscriptions:', error);
+    }
 
     // Cleanup subscriptions
     return () => {
-      supabase.removeChannel(contractsChannel);
-      supabase.removeChannel(promotersChannel);
+      if (contractsChannel) {
+        supabase.removeChannel(contractsChannel);
+      }
+      if (promotersChannel) {
+        supabase.removeChannel(promotersChannel);
+      }
     };
   }, [open]);
 
