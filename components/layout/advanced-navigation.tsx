@@ -129,7 +129,7 @@ const navigationItems: NavigationItem[] = [
     href: '/notifications',
     icon: Bell,
     description: 'Notification center',
-    badge: '3',
+    // Badge removed - should be dynamically populated with real notification count if needed
     isNew: true,
     subItems: [
       { name: 'All Notifications', href: '/notifications', icon: Bell },

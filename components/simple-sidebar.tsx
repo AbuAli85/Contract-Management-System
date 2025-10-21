@@ -80,14 +80,14 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       href: '/en/promoters',
       icon: Users,
       description: 'Manage promoters',
-      badge: '160',
+      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       label: 'Companies',
       href: '/en/companies',
       icon: Building2,
       description: 'Manage companies',
-      badge: '16',
+      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       label: 'Analytics',
@@ -112,7 +112,7 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       href: '/en/notifications',
       icon: Bell,
       description: 'View notifications',
-      badge: '12',
+      // Badge removed - should be dynamically populated with real notification count if needed
     },
     {
       label: 'Profile',

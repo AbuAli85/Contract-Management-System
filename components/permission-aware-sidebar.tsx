@@ -177,8 +177,7 @@ export function PermissionAwareSidebar({
           labelAr: 'العقود المعلقة',
           icon: Bell,
           permission: 'contract:read',
-          badge: '3',
-          badgeVariant: 'secondary',
+          // Badge removed - should be dynamically populated with real data if needed
         },
         {
           href: `/${locale}/contracts/approved`,

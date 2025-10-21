@@ -35,21 +35,21 @@ export function HRNavigation({ className }: HRNavigationProps) {
       href: '/hr/employees',
       icon: Users,
       description: 'Manage employee records',
-      badge: '156',
+      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       title: 'Attendance',
       href: '/hr/attendance',
       icon: Clock,
       description: 'Track working hours',
-      badge: '89',
+      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       title: 'Leave Requests',
       href: '/hr/leave-requests',
       icon: Calendar,
       description: 'Manage leave applications',
-      badge: '8',
+      // Badge removed - should be dynamically populated with real data if needed
     },
     {
       title: 'Documents',
@@ -169,7 +169,8 @@ export function HRNavigation({ className }: HRNavigationProps) {
         </div>
       </div>
 
-      {/* HR Stats Summary */}
+      {/* HR Stats Summary - Hidden until real data is available */}
+      {/* TODO: Connect to real HR data API before enabling this section
       <div className='bg-gray-50 rounded-lg p-4'>
         <h3 className='text-sm font-semibold text-gray-700 mb-3'>
           HR Overview
@@ -177,22 +178,23 @@ export function HRNavigation({ className }: HRNavigationProps) {
         <div className='space-y-2'>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Total Employees</span>
-            <span className='font-medium'>156</span>
+            <span className='font-medium'>{realEmployeeCount}</span>
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Active Today</span>
-            <span className='font-medium text-green-600'>89</span>
+            <span className='font-medium text-green-600'>{realActiveCount}</span>
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Pending Leave</span>
-            <span className='font-medium text-orange-600'>8</span>
+            <span className='font-medium text-orange-600'>{realPendingLeave}</span>
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Expiring Docs</span>
-            <span className='font-medium text-red-600'>12</span>
+            <span className='font-medium text-red-600'>{realExpiringDocs}</span>
           </div>
         </div>
       </div>
+      */}
     </div>
   );
 }
