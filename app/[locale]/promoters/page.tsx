@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     'Manage promoters and staff members with advanced analytics and notifications',
 };
 
-import { EnhancedPromotersViewRefactored } from '@/components/promoters/enhanced-promoters-view-refactored';
+import { PromotersStaticView } from '@/components/promoters/promoters-static-view';
 import { PromotersDebugInfo } from '@/components/promoters-debug-info';
 import { ErrorBoundary } from '@/components/error-boundary';
 
@@ -22,7 +22,7 @@ export default function PromotersPage({
     <ErrorBoundary componentName='Promoters Page'>
       <div className='space-y-6'>
         {isDevelopment && <PromotersDebugInfo />}
-        <EnhancedPromotersViewRefactored locale={params.locale} />
+        <PromotersStaticView locale={params.locale} />
       </div>
     </ErrorBoundary>
   );

@@ -147,15 +147,16 @@ async function fetchPromoters(
   const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
   try {
-    // Remove cache-busting timestamp to allow proper caching
+    // Ultra-aggressive caching to prevent ANY refetches
     const response = await fetch(
       `/api/promoters?page=${page}&limit=${limit}`,
       {
         cache: 'force-cache', // Force caching to prevent refetches
         signal: controller.signal,
         headers: {
-          'Cache-Control': 'max-age=300', // Cache for 5 minutes
+          'Cache-Control': 'max-age=86400', // Cache for 24 hours
           'X-Requested-With': 'XMLHttpRequest',
+          'X-Cache-Control': 'no-refresh', // Custom header to prevent refresh
         },
       }
     );
@@ -297,18 +298,17 @@ export function EnhancedPromotersViewRefactored({
     error,
     refetch,
   } = useQuery<PromotersResponse, Error>({
-    queryKey: ['promoters', page, limit, 'v2'], // Add version to force cache refresh
+    queryKey: ['promoters', page, limit, 'v3'],
     queryFn: () => fetchPromoters(page, limit),
-    staleTime: Infinity, // NEVER consider data stale - prevent ALL refetches
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    retry: 1, // Reduce retries
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    refetchOnWindowFocus: false, // Disable auto-refetch on window focus
-    refetchInterval: false, // Disable auto-refetch interval
-    refetchOnMount: false, // Disable auto-refetch on mount
-    refetchOnReconnect: false, // Disable auto-refetch on reconnect
-    refetchIntervalInBackground: false, // Disable background refetch
-    networkMode: 'offlineFirst', // Use cached data when possible
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchIntervalInBackground: false,
+    networkMode: 'offlineFirst',
   });
 
   useEffect(() => {
@@ -332,8 +332,8 @@ export function EnhancedPromotersViewRefactored({
     }
   }, [isError, error, toast]);
 
-  const promoters = response?.promoters ?? [];
-  const pagination = response?.pagination;
+  const promoters = (response as PromotersResponse)?.promoters ?? [];
+  const pagination = (response as PromotersResponse)?.pagination;
 
   // Debug logging
   console.log('📊 Component state:', {
@@ -552,7 +552,7 @@ export function EnhancedPromotersViewRefactored({
   const atRiskPromoters = useMemo(() => {
     return sortedPromoters
       .filter(
-        promoter =>
+        (promoter: DashboardPromoter) =>
           promoter.idDocument.status !== 'valid' ||
           promoter.passportDocument.status !== 'valid'
       )
