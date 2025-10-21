@@ -313,6 +313,7 @@ export function EnhancedPromotersViewRefactored({
   });
   const [isPerformingBulkAction, setIsPerformingBulkAction] = useState(false);
   const [loadTimeout, setLoadTimeout] = useState(false);
+  const [activeMetricFilter, setActiveMetricFilter] = useState<'all' | 'active' | 'alerts' | 'compliance' | null>(null);
 
   const derivedLocale = useMemo(() => {
     if (locale && typeof locale === 'string') return locale;
@@ -835,7 +836,81 @@ export function EnhancedPromotersViewRefactored({
     setStatusFilter('all');
     setDocumentFilter('all');
     setAssignmentFilter('all');
+    setActiveMetricFilter(null);
   }, []);
+
+  const handleMetricCardClick = useCallback(
+    (filterType: 'all' | 'active' | 'alerts' | 'compliance') => {
+      // If clicking the same card again, reset all filters
+      if (activeMetricFilter === filterType) {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setDocumentFilter('all');
+        setAssignmentFilter('all');
+        setActiveMetricFilter(null);
+        
+        toast({
+          title: 'Filters Cleared',
+          description: 'Showing all promoters',
+        });
+        return;
+      }
+
+      // Reset all filters first
+      setSearchTerm('');
+      setStatusFilter('all');
+      setDocumentFilter('all');
+      setAssignmentFilter('all');
+
+      // Apply specific filter based on card clicked
+      switch (filterType) {
+        case 'all':
+          // Show all promoters (filters already reset)
+          setActiveMetricFilter('all');
+          break;
+        case 'active':
+          // Show assigned promoters
+          setAssignmentFilter('assigned');
+          setStatusFilter('active');
+          setActiveMetricFilter('active');
+          break;
+        case 'alerts':
+          // Show promoters with expired or expiring documents
+          setDocumentFilter('expired');
+          setActiveMetricFilter('alerts');
+          break;
+        case 'compliance':
+          // Show promoters with valid documents
+          setDocumentFilter('all');
+          setStatusFilter('active');
+          setAssignmentFilter('assigned');
+          setActiveMetricFilter('compliance');
+          break;
+      }
+
+      // Scroll to the table section after a short delay
+      setTimeout(() => {
+        const tableSection = document.querySelector('[aria-labelledby="promoters-content-heading"]');
+        if (tableSection) {
+          tableSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+
+      // Show toast notification
+      const filterMessages = {
+        all: 'Showing all promoters',
+        active: 'Filtered by assigned active promoters',
+        alerts: 'Filtered by promoters with document issues',
+        compliance: 'Filtered by compliant assigned promoters',
+      };
+
+      toast({
+        title: 'Filter Applied',
+        description: filterMessages[filterType],
+      });
+    },
+    [toast, activeMetricFilter]
+  );
 
   const handleAddPromoter = useCallback(() => {
     router.push(`/${derivedLocale}/manage-promoters/new`);
@@ -1052,7 +1127,11 @@ export function EnhancedPromotersViewRefactored({
       {/* Enhanced Metrics */}
       <section aria-labelledby='metrics-heading'>
         <h2 id='metrics-heading' className='sr-only'>Promoter Statistics</h2>
-        <PromotersMetricsCards metrics={metrics} />
+        <PromotersMetricsCards 
+          metrics={metrics} 
+          onCardClick={handleMetricCardClick}
+          activeFilter={activeMetricFilter}
+        />
       </section>
 
       {/* Enhanced Filters */}

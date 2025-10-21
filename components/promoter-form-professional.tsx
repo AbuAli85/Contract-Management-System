@@ -45,6 +45,12 @@ import { createClient } from '@/lib/supabase/client';
 import { formatDateForDatabase } from '@/lib/date-utils';
 import { PROMOTER_NOTIFICATION_DAYS } from '@/constants/notification-days';
 import DocumentUpload from '@/components/document-upload';
+import {
+  validatePhoneNumber,
+  validateMobileNumber,
+  formatPhoneNumber,
+  getPhoneNumberExample,
+} from '@/lib/validation/phone-validator';
 
 // Simple Label component to avoid the import issue
 const Label = ({ children, className, ...props }: any) => (
@@ -356,17 +362,19 @@ export default function PromoterFormProfessional(
       errors.email = 'Please enter a valid email address';
     }
 
-    // Phone validation
-    if (formData.phone && !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.phone)) {
-      errors.phone = 'Please enter a valid phone number';
+    // Phone validation - using comprehensive validator
+    const phoneValidation = validatePhoneNumber(formData.phone, {
+      required: false, // Phone is optional
+      minDigits: 10,
+    });
+    if (!phoneValidation.isValid && formData.phone) {
+      errors.phone = phoneValidation.error || 'Please enter a valid phone number';
     }
 
-    // Mobile validation
-    if (
-      formData.mobile_number &&
-      !/^[\+]?[0-9\s\-\(\)]{8,}$/.test(formData.mobile_number)
-    ) {
-      errors.mobile_number = 'Please enter a valid mobile number';
+    // Mobile validation - using comprehensive validator
+    const mobileValidation = validateMobileNumber(formData.mobile_number, false);
+    if (!mobileValidation.isValid && formData.mobile_number) {
+      errors.mobile_number = mobileValidation.error || 'Please enter a valid mobile number';
     }
 
     // Date validation
@@ -1085,11 +1093,22 @@ export default function PromoterFormProfessional(
                     <Label htmlFor='phone'>Phone Number</Label>
                     <Input
                       id='phone'
+                      type='tel'
                       value={formData.phone}
                       onChange={e => handleInputChange('phone', e.target.value)}
-                      placeholder='Enter phone number'
+                      onBlur={e => {
+                        // Auto-format on blur
+                        const formatted = formatPhoneNumber(e.target.value);
+                        if (formatted !== e.target.value) {
+                          handleInputChange('phone', formatted);
+                        }
+                      }}
+                      placeholder={getPhoneNumberExample('968')}
                       className={validationErrors.phone ? 'border-red-500' : ''}
                     />
+                    <p className='text-xs text-muted-foreground'>
+                      Include country code (e.g., +968 9123 4567)
+                    </p>
                     {validationErrors.phone && (
                       <p className='text-sm text-red-500'>
                         {validationErrors.phone}
@@ -1101,15 +1120,26 @@ export default function PromoterFormProfessional(
                     <Label htmlFor='mobile_number'>Mobile Number</Label>
                     <Input
                       id='mobile_number'
+                      type='tel'
                       value={formData.mobile_number}
                       onChange={e =>
                         handleInputChange('mobile_number', e.target.value)
                       }
-                      placeholder='Enter mobile number'
+                      onBlur={e => {
+                        // Auto-format on blur
+                        const formatted = formatPhoneNumber(e.target.value);
+                        if (formatted !== e.target.value) {
+                          handleInputChange('mobile_number', formatted);
+                        }
+                      }}
+                      placeholder={getPhoneNumberExample('968')}
                       className={
                         validationErrors.mobile_number ? 'border-red-500' : ''
                       }
                     />
+                    <p className='text-xs text-muted-foreground'>
+                      Include country code (e.g., +968 9123 4567)
+                    </p>
                     {validationErrors.mobile_number && (
                       <p className='text-sm text-red-500'>
                         {validationErrors.mobile_number}

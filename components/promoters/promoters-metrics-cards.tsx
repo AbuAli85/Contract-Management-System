@@ -14,6 +14,8 @@ import type { DashboardMetrics } from './types';
 
 interface PromotersMetricsCardsProps {
   metrics: DashboardMetrics;
+  onCardClick?: (filterType: 'all' | 'active' | 'alerts' | 'compliance') => void;
+  activeFilter?: 'all' | 'active' | 'alerts' | 'compliance' | null;
 }
 
 const STAT_CARD_STYLES = {
@@ -51,6 +53,9 @@ interface EnhancedStatCardProps {
         label: string;
       }
     | undefined;
+  onClick?: () => void;
+  ariaLabel?: string;
+  isActive?: boolean;
 }
 
 function EnhancedStatCard({
@@ -60,16 +65,39 @@ function EnhancedStatCard({
   icon: Icon,
   variant = 'neutral',
   trend,
+  onClick,
+  ariaLabel,
+  isActive = false,
 }: EnhancedStatCardProps) {
   const styles = STAT_CARD_STYLES[variant];
+  const isClickable = !!onClick;
 
   return (
     <Card
       className={cn(
-        'shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg hover:scale-105',
+        'shadow-sm overflow-hidden transition-all duration-300 relative',
+        isClickable && 'cursor-pointer hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 active:scale-[0.98]',
+        !isClickable && 'hover:shadow-lg hover:scale-105',
+        isActive && 'ring-2 ring-primary ring-offset-2 shadow-xl',
         styles.container
       )}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      tabIndex={isClickable ? 0 : undefined}
+      role={isClickable ? 'button' : undefined}
+      aria-label={ariaLabel || `${title}: ${value}`}
+      aria-pressed={isClickable && isActive ? true : undefined}
     >
+      {isActive && (
+        <div className="absolute top-2 right-2">
+          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+        </div>
+      )}
       <CardHeader className='flex flex-row items-start justify-between space-y-0 pb-3'>
         <div className='space-y-1'>
           <CardTitle className='text-sm font-semibold text-muted-foreground uppercase tracking-wide'>
@@ -101,7 +129,11 @@ function EnhancedStatCard({
   );
 }
 
-export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
+export function PromotersMetricsCards({ 
+  metrics,
+  onCardClick,
+  activeFilter,
+}: PromotersMetricsCardsProps) {
   return (
     <div className='grid gap-4 md:grid-cols-2 xl:grid-cols-4'>
       <EnhancedStatCard
@@ -115,6 +147,9 @@ export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
             ? { value: metrics.recentlyAdded, label: 'new this week' }
             : undefined
         }
+        onClick={onCardClick ? () => onCardClick('all') : undefined}
+        ariaLabel={`Total promoters: ${metrics.total}. Click to view all promoters.`}
+        isActive={activeFilter === 'all'}
       />
       <EnhancedStatCard
         title='Active workforce'
@@ -122,6 +157,9 @@ export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
         helper={`${metrics.unassigned} awaiting assignment`}
         icon={UserCheck}
         variant='neutral'
+        onClick={onCardClick ? () => onCardClick('active') : undefined}
+        ariaLabel={`Active workforce: ${metrics.active}. Click to filter by assigned promoters.`}
+        isActive={activeFilter === 'active'}
       />
       <EnhancedStatCard
         title='Document alerts'
@@ -129,6 +167,9 @@ export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
         helper={`${metrics.expiring} expiring soon`}
         icon={ShieldAlert}
         variant={metrics.critical > 0 ? 'danger' : 'warning'}
+        onClick={onCardClick ? () => onCardClick('alerts') : undefined}
+        ariaLabel={`Document alerts: ${metrics.critical} critical, ${metrics.expiring} expiring soon. Click to filter by document issues.`}
+        isActive={activeFilter === 'alerts'}
       />
       <EnhancedStatCard
         title='Compliance rate'
@@ -136,6 +177,9 @@ export function PromotersMetricsCards({ metrics }: PromotersMetricsCardsProps) {
         helper={`${metrics.total - metrics.unassigned} assigned staff`}
         icon={CheckCircle}
         variant={metrics.complianceRate >= 90 ? 'success' : 'warning'}
+        onClick={onCardClick ? () => onCardClick('compliance') : undefined}
+        ariaLabel={`Compliance rate: ${metrics.complianceRate}%. Click to view compliant promoters.`}
+        isActive={activeFilter === 'compliance'}
       />
     </div>
   );

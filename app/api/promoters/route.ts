@@ -21,7 +21,21 @@ const promoterSchema = z.object({
   id_card_url: z.string().optional(),
   passport_url: z.string().optional(),
   passport_number: z.string().optional(),
-  mobile_number: z.string().optional(),
+  mobile_number: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === '') return true; // Optional field
+        const digitsOnly = val.replace(/\D/g, '');
+        // Must have at least 10 digits and not be incomplete (> 4 digits)
+        return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+      },
+      {
+        message:
+          'Mobile number must be complete (10-15 digits including country code). Example: +968 9123 4567',
+      }
+    ),
   profile_picture_url: z.string().optional(),
   status: z
     .enum([
@@ -41,7 +55,21 @@ const promoterSchema = z.object({
       'other',
     ])
     .default('active'),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val || val.trim() === '') return true; // Optional field
+        const digitsOnly = val.replace(/\D/g, '');
+        // Must have at least 10 digits and not be incomplete (> 4 digits)
+        return digitsOnly.length >= 10 && digitsOnly.length <= 15;
+      },
+      {
+        message:
+          'Phone number must be complete (10-15 digits including country code). Example: +968 9123 4567',
+      }
+    ),
   email: z.string().email().optional(),
   nationality: z.string().optional(),
   date_of_birth: z.string().optional(),
