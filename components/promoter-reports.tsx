@@ -94,7 +94,7 @@ export function PromoterReports({ promoterId, isAdmin }: PromoterReportsProps) {
       const response = await fetch(`/api/promoters/${promoterId}/reports`);
       if (response.ok) {
         const data = await response.json();
-        setReports(data);
+        setReports(data.reports || []);
       }
     } catch (error) {
       console.error('Error fetching reports:', error);

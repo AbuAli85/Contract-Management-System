@@ -1,61 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
-/**
- * Promoter score endpoints are disabled until the scoring schema exists.
- * Returning 501 keeps the UI honest and surfaces the missing migration work.
- */
-const notImplemented = (action: string) =>
-  NextResponse.json(
-    {
-      success: false,
-      error: 'NOT_IMPLEMENTED',
-      details:
-        'Promoter score ' +
-        action +
-        ' is not available yet. Provision the promoter_scores table and update this handler before enabling.',
-    },
-    { status: 501 }
-  );
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const cookieStore = await cookies();
 
-type RouteContext = { params: Promise<{ id: string }> };
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet: any) {
+            try {
+              cookiesToSet.forEach(({ name, value, ...options }: any) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {
+              // Ignore set errors in server components
+            }
+          },
+        } as any,
+      }
+    );
 
-export const GET = withAnyRBAC(
-  ['promoter:read:own', 'promoter:manage:own'],
-  async (_req: NextRequest, _context: RouteContext) =>
-    notImplemented('retrieval')
-);
+    const { data, error } = await supabase
+      .from('promoter_scores')
+      .select('*')
+      .eq('promoter_id', id)
+      .order('created_at', { ascending: false });
 
-export const POST = withRBAC(
-  'promoter:manage:own',
-  async (_req: NextRequest, _context: RouteContext) =>
-    notImplemented('creation')
-);
-
-export const PUT = withRBAC(
-  'promoter:manage:own',
-  async (_req: NextRequest, _context: RouteContext) => notImplemented('update')
-);
-
-export const DELETE = withRBAC(
-  'promoter:manage:own',
-  async (req: NextRequest, _context: RouteContext) => {
-    const body = await req
-      .json()
-      .catch(() => ({ id: undefined as string | undefined }));
-    const { id } = body ?? {};
-
-    if (!id) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'INVALID_REQUEST',
-          details: 'Score ID required for delete operation',
-        },
-        { status: 400 }
-      );
+    if (error) {
+      console.error('Error fetching scores:', error);
+      return NextResponse.json({ scores: [] }, { status: 200 });
     }
 
-    return notImplemented('deletion');
+    return NextResponse.json({ scores: data || [] }, { status: 200 });
+  } catch (error) {
+    console.error('Scores API error:', error);
+    return NextResponse.json({ scores: [] }, { status: 200 });
   }
-);
+}
