@@ -28,8 +28,8 @@ export default async function SafeLocaleLayout({
   // Set the request locale FIRST to enable static rendering
   setRequestLocale(locale);
 
-  // Use empty messages to avoid dynamic rendering issues
-  const messages = {};
+  // Load translation messages
+  const messages = (await import(`@/i18n/messages/${locale}.json`)).default;
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
