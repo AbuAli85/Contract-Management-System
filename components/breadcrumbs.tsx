@@ -26,6 +26,12 @@ interface BreadcrumbsProps {
   locale?: string;
 }
 
+// Helper function to check if a string is a UUID (defined outside component to prevent recreating)
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
   const [dynamicTitles, setDynamicTitles] = useState<Record<string, string>>({});
@@ -71,12 +77,6 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     approvals: 'Approvals',
     communications: 'Communications',
     contacts: 'Contacts',
-  };
-
-  // Helper function to check if a string is a UUID
-  const isUUID = (str: string) => {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
   };
 
   // Fetch dynamic titles for UUIDs (promoter names, etc.)
@@ -133,7 +133,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
     
     fetchDynamicTitles();
-  }, [pathname, locale, isUUID]);
+  }, [pathname, locale]);
 
   // Build breadcrumb items
   const breadcrumbItems = segments
