@@ -27,7 +27,7 @@ export default function Error({
   }, [error]);
 
   // Redirect to the default locale version if accessed directly without locale
-  redirect('/en/manage-promoters');
+  // Note: This redirect is handled by the layout, so we don't need to redirect here
 
   return (
     <div className='flex min-h-[calc(100vh-64px)] items-center justify-center p-4'>

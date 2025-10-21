@@ -19,30 +19,32 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const t = useTranslations('ErrorPage');
-
   useEffect(() => {
     // Log the error to an error reporting service
-    console.error(error);
+    console.error('Manage Promoters Error:', error);
   }, [error]);
-
-  // Redirect to the default locale version if accessed directly without locale
-  redirect('/en/manage-promoters');
 
   return (
     <div className='flex min-h-[calc(100vh-64px)] items-center justify-center p-4'>
       <Card className='w-full max-w-md text-center'>
         <CardHeader>
           <CardTitle className='text-3xl font-bold text-red-600'>
-            {t('title')}
+            Something went wrong
           </CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
+          <CardDescription>
+            We encountered an error while loading the promoters management page.
+          </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <p className='text-muted-foreground'>
-            {t('errorMessage')}: {error.message}
+            Error: {error.message}
           </p>
-          <Button onClick={() => reset()}>{t('tryAgain')}</Button>
+          <div className='flex gap-2 justify-center'>
+            <Button onClick={() => reset()}>Try Again</Button>
+            <Button variant='outline' onClick={() => window.location.href = '/en/promoters'}>
+              Go to Promoters
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

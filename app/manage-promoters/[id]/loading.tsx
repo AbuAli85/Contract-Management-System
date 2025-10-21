@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 
 export default function PromoterIdLoading() {
   // Redirect to the default locale version if accessed directly without locale
-  redirect('/en/manage-promoters');
+  // Note: This redirect is handled by the layout, so we don't need to redirect here
   return (
     <div className='container mx-auto px-4 py-8 md:px-6'>
       <h1 className='mb-6 text-3xl font-bold'>

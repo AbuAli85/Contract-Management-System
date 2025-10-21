@@ -74,12 +74,12 @@ export default function AddNewPromoterPage() {
     setIsSubmitting(true);
     // Redirect back to promoters list after successful submission
     setTimeout(() => {
-      router.push(`/${locale}/manage-promoters`);
+      router.push(`/${locale}/promoters`);
     }, 1000);
   };
 
   const handleCancel = () => {
-    router.push(`/${locale}/manage-promoters`);
+    router.push(`/${locale}/promoters`);
   };
 
   // Handle case where locale is undefined during build
