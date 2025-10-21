@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home } from 'lucide-react';
@@ -29,17 +29,14 @@ interface BreadcrumbsProps {
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
   const [dynamicTitles, setDynamicTitles] = useState<Record<string, string>>({});
-  const [isMounted, setIsMounted] = useState(false);
+  const fetchedPathsRef = useRef<Set<string>>(new Set());
 
-  // Parse the pathname to get breadcrumb segments
-  const segments = pathname
-    ?.split('/')
-    .filter((segment) => segment && segment !== locale) || [];
-
-  // Track when component is mounted (client-side only)
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  // Memoize segments to prevent re-creating array on every render
+  const segments = useMemo(() => {
+    return pathname
+      ?.split('/')
+      .filter((segment) => segment && segment !== locale) || [];
+  }, [pathname, locale]);
 
   // If we're on the home page or dashboard, don't show breadcrumbs
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'dashboard')) {
@@ -84,11 +81,14 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
 
   // Fetch dynamic titles for UUIDs (promoter names, etc.)
   useEffect(() => {
-    // Only fetch dynamic titles on the client after mount
-    if (!isMounted) return;
+    // Skip if we've already fetched titles for this pathname
+    if (!pathname || fetchedPathsRef.current.has(pathname)) {
+      return;
+    }
     
     const fetchDynamicTitles = async () => {
       const newTitles: Record<string, string> = {};
+      let hasNewTitles = false;
       
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
@@ -106,30 +106,30 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
                 const data = await response.json();
                 const promoterName = data.promoter?.name_en || data.promoter?.name_ar || segment;
                 newTitles[segment] = toTitleCase(promoterName);
+                hasNewTitles = true;
               }
             } catch (error) {
               console.error('Failed to fetch promoter name for breadcrumb:', error);
-              // Fallback to shortened UUID
-              newTitles[segment] = `Promoter ${segment.slice(0, 8)}`;
             }
-          } else if (previousSegment === 'contracts') {
-            // Could fetch contract title similarly
-            newTitles[segment] = `Contract ${segment.slice(0, 8)}`;
-          } else if (previousSegment === 'manage-parties' || previousSegment === 'parties') {
-            // Could fetch party name similarly
-            newTitles[segment] = `Party ${segment.slice(0, 8)}`;
           }
         }
       }
       
-      if (Object.keys(newTitles).length > 0) {
-        setDynamicTitles(newTitles);
+      // Only update state if we have new titles
+      if (hasNewTitles) {
+        setDynamicTitles(prev => ({ ...prev, ...newTitles }));
       }
+      
+      // Mark this pathname as fetched
+      fetchedPathsRef.current.add(pathname);
     };
     
-    fetchDynamicTitles();
+    // Only fetch on client-side
+    if (typeof window !== 'undefined') {
+      fetchDynamicTitles();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, isMounted]);
+  }, [pathname]);
 
   // Build breadcrumb items
   const breadcrumbItems = segments
