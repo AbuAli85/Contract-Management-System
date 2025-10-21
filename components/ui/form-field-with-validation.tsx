@@ -1,5 +1,5 @@
 import React from 'react';
-import { UseFormReturn, FieldError } from 'react-hook-form';
+import type { FieldError } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CheckCircle2, AlertCircle } from 'lucide-react';

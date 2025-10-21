@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-service';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Sidebar } from '@/components/sidebar-simplified';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { NotificationPanel } from '@/components/notifications/notification-panel';
 import { usePathname } from '@/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -225,22 +226,7 @@ export function AuthenticatedLayout({
                   </Button>
 
                   {/* Notifications */}
-                  <Button
-                    variant='ghost'
-                    size='sm'
-                    className='relative'
-                    asChild
-                  >
-                    <Link href='/dashboard/notifications'>
-                      <Bell className='h-4 w-4' />
-                      <Badge
-                        variant='destructive'
-                        className='absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs'
-                      >
-                        3
-                      </Badge>
-                    </Link>
-                  </Button>
+                  <NotificationPanel />
 
                   {/* User Menu */}
                   <div className='flex items-center space-x-2'>
