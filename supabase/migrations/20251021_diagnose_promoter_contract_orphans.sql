@@ -15,7 +15,7 @@ SELECT
     p.created_at as promoter_created_at
 FROM promoters p
 LEFT JOIN parties employer ON employer.id = p.employer_id
-LEFT JOIN contracts c ON c.promoter_id = p.id
+LEFT JOIN contracts c ON c.promoter_id::uuid = p.id
 WHERE p.status = 'active'
   AND p.employer_id IS NOT NULL
 GROUP BY p.id, p.name_en, p.name_ar, p.status, p.employer_id, employer.name_en, p.job_title, p.work_location, p.created_at
@@ -39,7 +39,7 @@ SELECT
     'Active with Employer but NO Contracts' as metric,
     COUNT(DISTINCT p.id) as count
 FROM promoters p
-LEFT JOIN contracts c ON c.promoter_id = p.id
+LEFT JOIN contracts c ON c.promoter_id::uuid = p.id
 WHERE p.status = 'active' 
   AND p.employer_id IS NOT NULL
   AND c.id IS NULL;
@@ -55,7 +55,7 @@ SELECT
         ELSE 'OK'
     END as integrity_status
 FROM contracts c
-LEFT JOIN promoters p ON p.id = c.promoter_id
+LEFT JOIN promoters p ON p.id = c.promoter_id::uuid
 WHERE c.promoter_id IS NOT NULL
   AND p.id IS NULL;
 
@@ -71,7 +71,7 @@ SELECT
     c_employer.name_en as contract_employer_name,
     c.status as contract_status
 FROM promoters p
-INNER JOIN contracts c ON c.promoter_id = p.id
+INNER JOIN contracts c ON c.promoter_id::uuid = p.id
 LEFT JOIN parties p_employer ON p_employer.id = p.employer_id
 LEFT JOIN parties c_employer ON c_employer.id = c.employer_id
 WHERE p.employer_id IS NOT NULL
