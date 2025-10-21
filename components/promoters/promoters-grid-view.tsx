@@ -48,17 +48,17 @@ interface PromotersGridViewProps {
 }
 
 const DOCUMENT_STATUS_BADGES: Record<DocumentStatus, string> = {
-  valid: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-  expiring: 'bg-amber-50 text-amber-600 border-amber-100',
-  expired: 'bg-red-50 text-red-600 border-red-100',
-  missing: 'bg-slate-100 text-slate-500 border-slate-200',
+  valid: 'bg-green-50 text-green-700 border-green-200',
+  expiring: 'bg-amber-50 text-amber-700 border-amber-200',
+  expired: 'bg-red-50 text-red-700 border-red-200',
+  missing: 'bg-gray-50 text-gray-700 border-gray-200',
 };
 
 const OVERALL_STATUS_BADGES: Record<OverallStatus, string> = {
-  active: 'bg-emerald-50 text-emerald-600 border-emerald-100',
-  warning: 'bg-amber-50 text-amber-600 border-amber-100',
-  critical: 'bg-red-50 text-red-600 border-red-100',
-  inactive: 'bg-slate-100 text-slate-500 border-slate-200',
+  active: 'bg-green-50 text-green-700 border-green-200',
+  warning: 'bg-amber-50 text-amber-700 border-amber-200',
+  critical: 'bg-red-50 text-red-700 border-red-200',
+  inactive: 'bg-gray-50 text-gray-700 border-gray-200',
 };
 
 const DOCUMENT_STATUS_ICONS: Record<DocumentStatus, typeof ShieldCheck> = {

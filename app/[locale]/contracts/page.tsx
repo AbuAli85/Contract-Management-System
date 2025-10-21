@@ -806,10 +806,10 @@ function ContractsContent() {
             <div>
               <p className='text-sm text-purple-100 font-medium'>Pending</p>
               <p className='text-2xl font-bold'>{contractStats.upcoming}</p>
-              <p className='text-xs text-purple-200 mt-1'>Awaiting approval</p>
+              <p className='text-xs text-blue-200 mt-1'>Awaiting approval</p>
             </div>
-            <div className='p-2 bg-purple-400/20 rounded-lg'>
-              <Clock className='h-6 w-6 text-purple-200' />
+            <div className='p-2 bg-blue-400/20 rounded-lg'>
+              <Clock className='h-6 w-6 text-blue-200' />
             </div>
           </div>
         </CardContent>
@@ -825,7 +825,7 @@ function ContractsContent() {
               </p>
               <p className='text-xs text-indigo-200 mt-1'>OMR</p>
             </div>
-            <div className='p-2 bg-indigo-400/20 rounded-lg'>
+            <div className='p-2 bg-blue-400/20 rounded-lg'>
               <TrendingUp className='h-6 w-6 text-indigo-200' />
             </div>
           </div>

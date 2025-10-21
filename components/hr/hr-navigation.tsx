@@ -88,7 +88,7 @@ export function HRNavigation({ className }: HRNavigationProps) {
       title: 'Company Settings',
       href: '/hr/settings',
       icon: Building,
-      color: 'text-purple-600 bg-purple-50',
+      color: 'text-blue-600 bg-blue-50',
     },
   ];
 
@@ -186,7 +186,7 @@ export function HRNavigation({ className }: HRNavigationProps) {
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Pending Leave</span>
-            <span className='font-medium text-orange-600'>{realPendingLeave}</span>
+            <span className='font-medium text-amber-600'>{realPendingLeave}</span>
           </div>
           <div className='flex justify-between text-sm'>
             <span className='text-gray-600'>Expiring Docs</span>

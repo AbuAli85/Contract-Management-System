@@ -100,7 +100,7 @@ const STATUS_CONFIG = {
     label: 'Expiring Soon',
     color: 'destructive',
     icon: AlertTriangle,
-    bgColor: 'bg-orange-50 border-orange-200',
+    bgColor: 'bg-amber-50 border-amber-200',
   },
   expiring: {
     label: 'Expiring',
@@ -371,12 +371,12 @@ export function ExpiryTracker({
           </CardContent>
         </Card>
 
-        <Card className='border-orange-200 bg-orange-50'>
+        <Card className='border-amber-200 bg-amber-50'>
           <CardContent className='p-4'>
-            <div className='text-2xl font-bold text-orange-700'>
+            <div className='text-2xl font-bold text-amber-700'>
               {statistics.expiringSoon}
             </div>
-            <p className='text-xs text-orange-600'>Expiring Soon</p>
+            <p className='text-xs text-amber-600'>Expiring Soon</p>
           </CardContent>
         </Card>
 
@@ -619,7 +619,7 @@ export function ExpiryTracker({
                                   expiryStatus === 'expired'
                                     ? 'text-red-600'
                                     : expiryStatus === 'expiring_soon'
-                                      ? 'text-orange-600'
+                                      ? 'text-amber-600'
                                       : expiryStatus === 'expiring'
                                         ? 'text-yellow-600'
                                         : 'text-muted-foreground'

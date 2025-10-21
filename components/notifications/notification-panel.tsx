@@ -308,22 +308,19 @@ export function NotificationPanel({ unreadCount: initialUnreadCount = 0 }: Notif
   const getNotificationColor = (type: NotificationType) => {
     switch (type) {
       case 'contract_expiring':
-      case 'contract_created':
-        return 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800';
-      case 'pending_approval':
-        return 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800';
-      case 'promoter_added':
-        return 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800';
       case 'document_expiring':
         return 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800';
-      case 'system_update':
-        return 'bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800';
+      case 'pending_approval':
+        return 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800';
+      case 'contract_created':
+      case 'promoter_added':
       case 'party_added':
-        return 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800';
-      case 'error':
-        return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800';
       case 'success':
         return 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800';
+      case 'system_update':
+        return 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800';
+      case 'error':
+        return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800';
       default:
         return 'bg-gray-50 dark:bg-gray-950/20 border-gray-200 dark:border-gray-800';
     }
