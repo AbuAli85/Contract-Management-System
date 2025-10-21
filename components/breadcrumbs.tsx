@@ -85,6 +85,9 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
         const segment = segments[i];
         const previousSegment = i > 0 ? segments[i - 1] : null;
         
+        // Skip if segment is undefined
+        if (!segment) continue;
+        
         // Check if this segment is a UUID and the previous segment indicates what type
         if (isUUID(segment)) {
           if (previousSegment === 'manage-promoters' || previousSegment === 'promoters') {
@@ -116,25 +119,27 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
     
     fetchDynamicTitles();
-  }, [pathname]);
+  }, [pathname, segments]);
 
   // Build breadcrumb items
-  const breadcrumbItems = segments.map((segment, index) => {
-    const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
-    
-    // Get title: first check dynamic titles, then static map, then capitalize
-    const title = dynamicTitles[segment] 
-      || segmentTitles[segment] 
-      || (isUUID(segment) ? 'Loading...' : segment.charAt(0).toUpperCase() + segment.slice(1));
-    
-    const isLast = index === segments.length - 1;
+  const breadcrumbItems = segments
+    .filter((segment): segment is string => !!segment)
+    .map((segment, index) => {
+      const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
+      
+      // Get title: first check dynamic titles, then static map, then capitalize
+      const title = dynamicTitles[segment] 
+        || segmentTitles[segment] 
+        || (isUUID(segment) ? 'Loading...' : segment.charAt(0).toUpperCase() + segment.slice(1));
+      
+      const isLast = index === segments.length - 1;
 
-    return {
-      href,
-      title,
-      isLast,
-    };
-  });
+      return {
+        href,
+        title,
+        isLast,
+      };
+    });
 
   // For mobile: Show ellipsis if more than 3 items
   const shouldCollapse = breadcrumbItems.length > 3;
