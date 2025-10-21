@@ -29,11 +29,17 @@ interface BreadcrumbsProps {
 export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
   const pathname = usePathname();
   const [dynamicTitles, setDynamicTitles] = useState<Record<string, string>>({});
+  const [isMounted, setIsMounted] = useState(false);
 
   // Parse the pathname to get breadcrumb segments
   const segments = pathname
     ?.split('/')
     .filter((segment) => segment && segment !== locale) || [];
+
+  // Track when component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // If we're on the home page or dashboard, don't show breadcrumbs
   if (segments.length === 0 || (segments.length === 1 && segments[0] === 'dashboard')) {
@@ -78,6 +84,9 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
 
   // Fetch dynamic titles for UUIDs (promoter names, etc.)
   useEffect(() => {
+    // Only fetch dynamic titles on the client after mount
+    if (!isMounted) return;
+    
     const fetchDynamicTitles = async () => {
       const newTitles: Record<string, string> = {};
       
@@ -119,7 +128,7 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     };
     
     fetchDynamicTitles();
-  }, [pathname, segments]);
+  }, [pathname, segments, isMounted]);
 
   // Build breadcrumb items
   const breadcrumbItems = segments
@@ -127,10 +136,28 @@ export function Breadcrumbs({ className, locale = 'en' }: BreadcrumbsProps) {
     .map((segment, index) => {
       const href = `/${locale}/${segments.slice(0, index + 1).join('/')}`;
       
-      // Get title: first check dynamic titles, then static map, then capitalize
-      const title = dynamicTitles[segment] 
-        || segmentTitles[segment] 
-        || (isUUID(segment) ? 'Loading...' : segment.charAt(0).toUpperCase() + segment.slice(1));
+      // Get title: first check dynamic titles, then static map, then format
+      // For UUIDs, use a consistent format on both server and client until dynamic title loads
+      let title: string;
+      if (dynamicTitles[segment]) {
+        title = dynamicTitles[segment];
+      } else if (segmentTitles[segment]) {
+        title = segmentTitles[segment];
+      } else if (isUUID(segment)) {
+        // Use a consistent shortened format instead of "Loading..."
+        const previousSegment = index > 0 ? segments[index - 1] : null;
+        if (previousSegment === 'manage-promoters' || previousSegment === 'promoters') {
+          title = `Promoter ${segment.slice(0, 8)}`;
+        } else if (previousSegment === 'contracts') {
+          title = `Contract ${segment.slice(0, 8)}`;
+        } else if (previousSegment === 'manage-parties' || previousSegment === 'parties') {
+          title = `Party ${segment.slice(0, 8)}`;
+        } else {
+          title = segment.slice(0, 8);
+        }
+      } else {
+        title = segment.charAt(0).toUpperCase() + segment.slice(1);
+      }
       
       const isLast = index === segments.length - 1;
 
