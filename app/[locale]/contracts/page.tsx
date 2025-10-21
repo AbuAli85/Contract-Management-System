@@ -189,6 +189,7 @@ function ContractsContent() {
   const params = useParams();
   const locale = (params?.locale as string) || 'en';
   const t = useTranslations('contracts');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -1002,14 +1003,14 @@ function ContractsContent() {
             <h2 id='stats-heading' className='text-lg font-semibold'>
               {t('dashboard.statistics')}
             </h2>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => setShowStats(!showStats)}
-              aria-label={showStats ? 'Hide statistics' : 'Show statistics'}
-            >
-              {showStats ? t('common.close') : t('common.view')}
-            </Button>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => setShowStats(!showStats)}
+                    aria-label={showStats ? 'Hide statistics' : 'Show statistics'}
+                  >
+                    {showStats ? tCommon('close') : tCommon('view')}
+                  </Button>
           </div>
           <StatisticsCards />
         </section>
