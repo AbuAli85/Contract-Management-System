@@ -797,7 +797,7 @@ export default function ProfilePage() {
                     control={profileForm.control}
                     render={({ field }) => (
                       <Select
-                        value={field.value}
+                        value={field.value || 'en'}
                         onValueChange={field.onChange}
                         disabled={saving}
                       >
@@ -821,7 +821,7 @@ export default function ProfilePage() {
                     control={profileForm.control}
                     render={({ field }) => (
                       <Select
-                        value={field.value}
+                        value={field.value || 'UTC'}
                         onValueChange={field.onChange}
                         disabled={saving}
                       >
@@ -861,7 +861,7 @@ export default function ProfilePage() {
                     control={profileForm.control}
                     render={({ field }) => (
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? true}
                         onCheckedChange={field.onChange}
                         disabled={saving}
                       />
@@ -885,7 +885,7 @@ export default function ProfilePage() {
                     control={profileForm.control}
                     render={({ field }) => (
                       <Switch
-                        checked={field.value}
+                        checked={field.value ?? false}
                         onCheckedChange={field.onChange}
                         disabled={saving}
                       />
@@ -933,8 +933,8 @@ export default function ProfilePage() {
                 Recent Activity
               </CardTitle>
               <CardDescription>Your last 10 actions</CardDescription>
-            </CardHeader>
-            <CardContent>
+        </CardHeader>
+        <CardContent>
               {activity.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No recent activity
@@ -954,8 +954,8 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
-            </CardContent>
-          </Card>
+        </CardContent>
+      </Card>
         </div>
       </div>
     </div>
