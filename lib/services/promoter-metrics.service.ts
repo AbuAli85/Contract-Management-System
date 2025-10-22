@@ -144,9 +144,11 @@ export async function getEnhancedPromoterMetrics(
     };
 
     statusCountsResult.data?.forEach((promoter: any) => {
-      const status = (promoter.status_enum || promoter.status || 'available').toLowerCase();
+      // Use status_enum if available, fallback to status text column
+      const statusValue = promoter.status_enum || promoter.status;
+      const status = statusValue ? String(statusValue).toLowerCase() : 'available';
       
-      // Map status to enum
+      // Map status to enum with comprehensive fallback logic
       switch (status) {
         case 'active':
           statusCounts[PromoterStatus.ACTIVE]++;
@@ -156,6 +158,7 @@ export async function getEnhancedPromoterMetrics(
           statusCounts[PromoterStatus.AVAILABLE]++;
           break;
         case 'on_leave':
+        case 'leave':
           statusCounts[PromoterStatus.ON_LEAVE]++;
           break;
         case 'inactive':
@@ -163,10 +166,13 @@ export async function getEnhancedPromoterMetrics(
           statusCounts[PromoterStatus.INACTIVE]++;
           break;
         case 'terminated':
+        case 'resigned':
           statusCounts[PromoterStatus.TERMINATED]++;
           break;
         default:
+          // Any unknown status defaults to available
           statusCounts[PromoterStatus.AVAILABLE]++;
+          console.warn(`Unknown promoter status: "${statusValue}", defaulting to AVAILABLE`);
       }
     });
 
