@@ -272,7 +272,8 @@ export default function ApprovedContractsPage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, fetchApprovedContracts]); // ✅ FIX: Only depend on isLoading and fetch function
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissions.isLoading]); // ✅ FIX: Only depend on isLoading. fetchApprovedContracts is intentionally excluded to prevent infinite loop
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {

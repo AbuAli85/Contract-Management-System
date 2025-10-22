@@ -303,7 +303,8 @@ function PendingContractsPageContent() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, fetchPendingContracts]); // ✅ FIX: Only depend on isLoading and fetch function
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permissions.isLoading]); // ✅ FIX: Only depend on isLoading. fetchPendingContracts is intentionally excluded to prevent infinite loop
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
