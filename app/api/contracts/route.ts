@@ -4,152 +4,229 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
 import { getContractMetrics } from '@/lib/metrics';
+import { withTimeout, logApiCall } from '@/lib/performance-monitor';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
+// API timeout configuration
+const API_TIMEOUT_MS = 8000; // 8 second timeout (before client's 10 second timeout)
+
 // ✅ SECURITY: RBAC enabled with rate limiting
 export const GET = withRBAC('contract:read:own', async (request: NextRequest) => {
+  const startTime = Date.now();
+  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
   try {
-    console.log('🔍 Contracts API: Starting request (RBAC ENABLED)...');
-
-    const supabase = await createClient();
     const { searchParams } = new URL(request.url);
     const partyId = searchParams.get('party_id');
     const status = searchParams.get('status') || 'active';
+    
+    console.log('🔍 Contracts API: Starting request', {
+      requestId,
+      status,
+      partyId,
+      timestamp: new Date().toISOString(),
+    });
 
-    // Check if we're using a mock client
-    if (!supabase || typeof supabase.from !== 'function') {
-      console.error(
-        '❌ Contracts API: Using mock client - environment variables may be missing'
-      );
+    const supabase = await createClient();
+    
+    // Wrap the entire operation with timeout
+    const result = await withTimeout(
+      handleContractsRequest(supabase, partyId, status, requestId),
+      API_TIMEOUT_MS,
+      'Contracts API GET'
+    );
+    
+    const duration = Date.now() - startTime;
+    logApiCall('/api/contracts', 'GET', duration, 200, true, {
+      requestId,
+      status,
+      contractCount: result.contracts?.length || 0,
+    });
+    
+    return NextResponse.json(result);
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error('❌ Contracts API: Unexpected error:', {
+      requestId,
+      error,
+      message: (error as Error).message,
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+    });
+    
+    logApiCall('/api/contracts', 'GET', duration, 500, false, {
+      requestId,
+      error: (error as Error).message,
+    });
+    
+    // Check if it's a timeout error
+    if ((error as Error).message?.includes('timeout')) {
       return NextResponse.json(
         {
-          success: true, // Return success to avoid errors
-          contracts: [],
-          totalContracts: 0,
-          activeContracts: 0,
-          pendingContracts: 0,
-          error: 'Database connection not available',
+          success: false,
+          error: 'Request timeout',
+          message: 'The server took too long to respond. Please try again.',
+          details: (error as Error).message,
+          requestId,
         },
-        { status: 200 }
+        { status: 504 } // Gateway Timeout
       );
     }
+    
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Internal server error',
+        message: 'An unexpected error occurred while fetching contracts.',
+        details: (error as Error).message,
+        requestId,
+      },
+      { status: 500 }
+    );
+  }
+});
 
-    console.log('🔍 Contracts API: Fetching contracts from database...');
+async function handleContractsRequest(
+  supabase: any,
+  partyId: string | null,
+  status: string,
+  requestId: string
+) {
 
-    // ✅ SECURITY FIX: Get user info for query scoping
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+  // Check if we're using a mock client
+  if (!supabase || typeof supabase.from !== 'function') {
+    console.error('❌ Contracts API: Using mock client - environment variables may be missing', {
+      requestId,
+    });
+    return {
+      success: true, // Return success to avoid errors
+      contracts: [],
+      totalContracts: 0,
+      activeContracts: 0,
+      pendingContracts: 0,
+      error: 'Database connection not available',
+      requestId,
+    };
+  }
 
-    // Get user role for scoping
-    const { data: userProfile } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+  console.log('🔍 Contracts API: Fetching contracts from database...', { requestId });
 
-    const isAdmin = (userProfile as any)?.role === 'admin';
+  // ✅ SECURITY FIX: Get user info for query scoping
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  
+  if (userError || !user) {
+    throw new Error('Unauthorized: ' + (userError?.message || 'No user found'));
+  }
 
-    // If party_id is provided, try to fetch contracts for that party
-    if (partyId) {
-      try {
-        let query = supabase
-          .from('contracts')
-          .select(
-            `
-              *,
-              first_party:parties!contracts_employer_id_fkey(id, name_en, name_ar, crn, type),
-              second_party:parties!contracts_client_id_fkey(id, name_en, name_ar, crn, type),
-              promoter_id
-            `
-          )
-          .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`)
-          .eq('status', status);
+  // Get user role for scoping
+  const { data: userProfile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
 
-        // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in
-        if (!isAdmin) {
-          query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id}`);
-        }
+  const isAdmin = (userProfile as any)?.role === 'admin';
 
-        const { data: contracts, error: contractsError } =
-          await query.limit(10);
+  // If party_id is provided, try to fetch contracts for that party
+  if (partyId) {
+    try {
+      let query = supabase
+        .from('contracts')
+        .select(
+          `
+            *,
+            first_party:parties!contracts_employer_id_fkey(id, name_en, name_ar, crn, type),
+            second_party:parties!contracts_client_id_fkey(id, name_en, name_ar, crn, type),
+            promoter_id
+          `
+        )
+        .or(`employer_id.eq.${partyId},client_id.eq.${partyId}`)
+        .eq('status', status);
 
-        if (contractsError) {
-          console.warn(
-            '⚠️ Contracts API: Error fetching party contracts, returning empty:',
-            contractsError.message
-          );
-          return NextResponse.json({
-            success: true,
-            contracts: [],
-            count: 0,
-            message: 'No contracts found for this party',
-          });
-        }
+      // ✅ SECURITY FIX: Non-admin users can only see contracts they're involved in
+      if (!isAdmin) {
+        query = query.or(`employer_id.eq.${user.id},client_id.eq.${user.id}`);
+      }
 
-        return NextResponse.json({
-          success: true,
-          contracts: contracts || [],
-          count: contracts?.length || 0,
+      const { data: contracts, error: contractsError } = await query.limit(10);
+
+      if (contractsError) {
+        console.warn('⚠️ Contracts API: Error fetching party contracts, returning empty:', {
+          requestId,
+          error: contractsError.message,
         });
-      } catch (error) {
-        console.warn('⚠️ Contracts API: Party query failed, returning empty');
-        return NextResponse.json({
+        return {
           success: true,
           contracts: [],
           count: 0,
-        });
+          message: 'No contracts found for this party',
+          requestId,
+        };
       }
+
+      return {
+        success: true,
+        contracts: contracts || [],
+        count: contracts?.length || 0,
+        requestId,
+      };
+    } catch (error) {
+      console.warn('⚠️ Contracts API: Party query failed, returning empty', { requestId });
+      return {
+        success: true,
+        contracts: [],
+        count: 0,
+        requestId,
+      };
+    }
+  }
+
+  // Enhanced query to fetch all contracts with proper relationships
+  let contracts: any[] = [];
+  try {
+    // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
+    // Use simple select first, then fetch related data separately
+    let query = supabase.from('contracts').select('*');
+
+    // ✅ FIX: Apply status filter if provided
+    if (status && status !== 'all' && status !== 'active') {
+      console.log(`🔍 Filtering contracts by status: ${status}`, { requestId });
+      // Handle different status values
+      if (status === 'pending') {
+        // Include all pending-related statuses
+        query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
+      } else {
+        query = query.eq('status', status);
+      }
+    } else if (status === 'active') {
+      // Default behavior for active status
+      query = query.eq('status', 'active');
     }
 
-    // Enhanced query to fetch all contracts with proper relationships
-    let contracts: any[] = [];
-    try {
-      // ✅ ENHANCED QUERY: Get all contracts with comprehensive data
-      // Use simple select first, then fetch related data separately
-      let query = supabase.from('contracts').select('*');
+    // Non-admin users only see contracts they're involved in
+    if (!isAdmin) {
+      query = query.or(`first_party_id.eq.${user.id},second_party_id.eq.${user.id}`);
+    }
 
-      // ✅ FIX: Apply status filter if provided
-      if (status && status !== 'all' && status !== 'active') {
-        console.log(`🔍 Filtering contracts by status: ${status}`);
-        // Handle different status values
-        if (status === 'pending') {
-          // Include all pending-related statuses
-          query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
-        } else {
-          query = query.eq('status', status);
-        }
-      } else if (status === 'active') {
-        // Default behavior for active status
-        query = query.eq('status', 'active');
-      }
-
-      // Non-admin users only see contracts they're involved in
-      if (!isAdmin) {
-        query = query.or(
-          `first_party_id.eq.${user.id},second_party_id.eq.${user.id}`
-        );
-      }
-
-      const queryStartTime = Date.now();
-      const { data: contractsData, error: contractsError } = await query
-        .order('created_at', { ascending: false })
-        .limit(100); // Increased limit to show more contracts
-      
-      const queryTime = Date.now() - queryStartTime;
-      console.log('📊 Query execution:', {
-        status: status || 'all',
-        queryTime: `${queryTime}ms`,
-        resultCount: contractsData?.length || 0,
-        isAdmin,
-        timestamp: new Date().toISOString()
-      });
+    const queryStartTime = Date.now();
+    const { data: contractsData, error: contractsError } = await query
+      .order('created_at', { ascending: false })
+      .limit(100); // Increased limit to show more contracts
+    
+    const queryTime = Date.now() - queryStartTime;
+    console.log('📊 Query execution:', {
+      requestId,
+      status: status || 'all',
+      queryTime: `${queryTime}ms`,
+      resultCount: contractsData?.length || 0,
+      isAdmin,
+      timestamp: new Date().toISOString(),
+    });
 
       if (contractsError) {
         console.warn(
@@ -350,52 +427,38 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       cancelled: metrics.cancelled,
     };
 
-    console.log(
-      `✅ Contracts API: Successfully fetched ${contracts?.length || 0} contracts`,
-      {
-        status: status || 'all',
-        total: contracts.length,
-        pending: stats.pending,
-        active: stats.active,
-        sampleIds: contracts.slice(0, 3).map(c => c.id),
-        timestamp: new Date().toISOString()
-      }
-    );
+  console.log('✅ Contracts API: Successfully fetched contracts', {
+    requestId,
+    status: status || 'all',
+    total: contracts.length,
+    pending: stats.pending,
+    active: stats.active,
+    sampleIds: contracts.slice(0, 3).map((c) => c.id),
+    timestamp: new Date().toISOString(),
+  });
 
-    console.log('✅ Contracts API: Request completed successfully');
-
-    return NextResponse.json({
-      success: true,
-      contracts: contracts || [],
-      stats,
-      total: contracts.length, // Current page count
-      totalContracts: metrics.total, // Total count from centralized metrics
-      activeContracts: metrics.active,
-      pendingContracts: metrics.pending,
-      completedContracts: metrics.completed,
-      cancelledContracts: metrics.cancelled,
-      generatedContracts: stats.generated,
-      expiringSoon: metrics.expiringSoon,
-      totalValue: metrics.totalValue,
-      averageDuration: metrics.averageDuration,
-      scope: isAdmin ? 'system-wide' : 'user-specific',
-      scopeLabel: isAdmin ? 'All contracts in system' : 'Your contracts only',
-      lastUpdated: new Date().toISOString(),
-      // Include full metrics for advanced use
-      metrics: metrics,
-    });
-  } catch (error) {
-    console.error('❌ Contracts API: Unexpected error:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Internal server error',
-        details: (error as Error).message,
-      },
-      { status: 500 }
-    );
-  }
-});
+  return {
+    success: true,
+    contracts: contracts || [],
+    stats,
+    total: contracts.length, // Current page count
+    totalContracts: metrics.total, // Total count from centralized metrics
+    activeContracts: metrics.active,
+    pendingContracts: metrics.pending,
+    completedContracts: metrics.completed,
+    cancelledContracts: metrics.cancelled,
+    generatedContracts: stats.generated,
+    expiringSoon: metrics.expiringSoon,
+    totalValue: metrics.totalValue,
+    averageDuration: metrics.averageDuration,
+    scope: isAdmin ? 'system-wide' : 'user-specific',
+    scopeLabel: isAdmin ? 'All contracts in system' : 'Your contracts only',
+    lastUpdated: new Date().toISOString(),
+    requestId,
+    // Include full metrics for advanced use
+    metrics: metrics,
+  };
+}
 
 export const POST = withAnyRBAC(
   [

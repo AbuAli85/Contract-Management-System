@@ -15,6 +15,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
+import { ContractsCardSkeleton, ContractsTableSkeleton } from '@/components/contracts/ContractsSkeleton';
+import { ContractsErrorBoundary } from '@/components/error-boundary/ContractsErrorBoundary';
+import { performanceMonitor } from '@/lib/performance-monitor';
 
 interface Contract {
   id: string;
@@ -31,7 +34,7 @@ interface Contract {
   promoters: { name_en: string } | null;
 }
 
-export default function PendingContractsPage() {
+function PendingContractsPageContent() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,8 +42,10 @@ export default function PendingContractsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showPartialResults, setShowPartialResults] = useState(false);
   const fetchAttemptedRef = useRef(false);
   const mountedRef = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Check permissions
   const permissions = usePermissions();
@@ -56,8 +61,15 @@ export default function PendingContractsPage() {
 
     fetchAttemptedRef.current = true;
     
-    // ✅ FIX: Add AbortController for timeout handling
+    // ✅ FIX: Cancel previous request if still pending
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new AbortController for this request
     const controller = new AbortController();
+    abortControllerRef.current = controller;
+    
     const timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
       controller.abort();
@@ -70,6 +82,12 @@ export default function PendingContractsPage() {
       }
     }, 3000);
 
+    // Start performance tracking
+    const operationId = performanceMonitor.startOperation('fetch-pending-contracts', {
+      retryCount,
+      endpoint: '/api/contracts?status=pending',
+    });
+
     const startTime = Date.now();
     
     try {
@@ -77,6 +95,7 @@ export default function PendingContractsPage() {
       setError(null);
       setPermissionError(false);
       setShowSlowLoadingMessage(false);
+      setShowPartialResults(false);
       
       console.log('🔍 Pending Contracts Debug:', {
         timestamp: new Date().toISOString(),
@@ -105,24 +124,43 @@ export default function PendingContractsPage() {
 
       if (response.status === 403) {
         // Permission denied
+        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Permission denied');
         setPermissionError(true);
         setError('Insufficient permissions to view pending contracts');
         console.error('❌ Permission denied for pending contracts:', data);
       } else if (response.status === 401) {
         // Not authenticated
+        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Not authenticated');
         setError('Please log in to view pending contracts');
         console.error('❌ Authentication required for pending contracts');
+      } else if (response.status === 504) {
+        // Gateway timeout
+        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Server timeout');
+        setError('Server timeout - the request took too long. Please try again.');
+        console.error('❌ Server timeout for pending contracts:', {
+          status: response.status,
+          data,
+          queryTime: `${queryTime}ms`
+        });
       } else if (response.ok && data.success !== false) {
         // ✅ FIX: Handle both success=true and undefined success (backward compatibility)
         const contractsList = data.contracts || [];
         setContracts(contractsList);
         setError(null); // Clear any previous errors
+        
+        performanceMonitor.endOperation('fetch-pending-contracts', true, undefined, {
+          count: contractsList.length,
+          queryTime: `${queryTime}ms`,
+          requestId: data.requestId,
+        });
+        
         console.log('✅ Loaded pending contracts:', {
           count: contractsList.length,
           queryTime: `${queryTime}ms`,
           sampleIds: contractsList.slice(0, 3).map((c: any) => c.id),
           totalPending: data.pendingContracts,
           stats: data.stats,
+          requestId: data.requestId,
           timestamp: new Date().toISOString()
         });
         
@@ -131,7 +169,8 @@ export default function PendingContractsPage() {
           console.log('ℹ️ No pending contracts found - this is normal, not an error');
         }
       } else {
-        setError(data.error || 'Failed to fetch pending contracts');
+        performanceMonitor.endOperation('fetch-pending-contracts', false, data.error || 'Unknown error');
+        setError(data.error || data.message || 'Failed to fetch pending contracts');
         console.error('❌ Error fetching pending contracts:', {
           status: response.status,
           data,
@@ -146,12 +185,14 @@ export default function PendingContractsPage() {
       if (!mountedRef.current) return;
       
       if (err.name === 'AbortError') {
+        performanceMonitor.endOperation('fetch-pending-contracts', false, 'Request aborted/timeout');
         setError('Request timeout - the server took too long to respond. Please try again.');
         console.error('❌ Request timeout after 10 seconds:', {
           queryTime: `${queryTime}ms`,
           timestamp: new Date().toISOString()
         });
       } else {
+        performanceMonitor.endOperation('fetch-pending-contracts', false, err.message || 'Network error');
         setError(`Network error: ${err.message || 'Please check your connection and try again.'}`);
         console.error('❌ Exception fetching pending contracts:', {
           error: err,
@@ -169,6 +210,7 @@ export default function PendingContractsPage() {
         setShowSlowLoadingMessage(false);
       }
       fetchAttemptedRef.current = false;
+      abortControllerRef.current = null;
     }
   }, [retryCount]);
 
@@ -219,6 +261,17 @@ export default function PendingContractsPage() {
     setRetryCount(prev => prev + 1);
     fetchPendingContracts();
   }, [fetchPendingContracts]);
+
+  // ✅ FIX: Add cancel function for slow loading
+  const handleCancel = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setLoading(false);
+      setShowSlowLoadingMessage(false);
+      setError('Request cancelled by user');
+      console.log('🚫 Request cancelled by user');
+    }
+  }, []);
 
   const filteredContracts = contracts.filter(
     contract =>
@@ -332,8 +385,8 @@ export default function PendingContractsPage() {
     );
   }
 
-  // ✅ FIX: Improved loading state with retry option
-  if (loading) {
+  // ✅ FIX: Improved loading state with skeleton and cancel option
+  if (loading && !showPartialResults) {
     return (
       <div className='container mx-auto py-6 space-y-4'>
         <div className='flex items-center gap-3 mb-6'>
@@ -346,37 +399,46 @@ export default function PendingContractsPage() {
           </div>
         </div>
         
-        <Card>
-          <CardContent className='py-12'>
-            <div className='flex flex-col items-center justify-center space-y-4'>
-              <Loader2 className='h-12 w-12 animate-spin text-orange-600' />
-              <div className='text-center space-y-2'>
-                <p className='text-base font-medium'>Loading pending contracts...</p>
-                {showSlowLoadingMessage && (
-                  <>
-                    <p className='text-sm text-muted-foreground'>
-                      This is taking longer than expected. The server might be busy.
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      Request will timeout after 10 seconds
-                    </p>
-                  </>
-                )}
+        {showSlowLoadingMessage ? (
+          <Card>
+            <CardContent className='py-12'>
+              <div className='flex flex-col items-center justify-center space-y-4'>
+                <Loader2 className='h-12 w-12 animate-spin text-orange-600' />
+                <div className='text-center space-y-2'>
+                  <p className='text-base font-medium'>Loading pending contracts...</p>
+                  <p className='text-sm text-muted-foreground'>
+                    This is taking longer than expected. The server might be busy.
+                  </p>
+                  <p className='text-xs text-muted-foreground'>
+                    Request will timeout after 10 seconds
+                  </p>
+                </div>
+                <div className='flex gap-2'>
+                  <Button 
+                    variant='outline' 
+                    size='sm'
+                    onClick={handleCancel}
+                    className='mt-4'
+                  >
+                    <AlertTriangle className='mr-2 h-4 w-4' />
+                    Cancel Request
+                  </Button>
+                  <Button 
+                    variant='default' 
+                    size='sm'
+                    onClick={handleRetry}
+                    className='mt-4 bg-orange-600 hover:bg-orange-700'
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    Retry
+                  </Button>
+                </div>
               </div>
-              {showSlowLoadingMessage && (
-                <Button 
-                  variant='outline' 
-                  size='sm'
-                  onClick={handleRetry}
-                  className='mt-4'
-                >
-                  <RefreshCw className='mr-2 h-4 w-4' />
-                  Cancel and Retry
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <ContractsCardSkeleton />
+        )}
       </div>
     );
   }
@@ -604,5 +666,14 @@ export default function PendingContractsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Wrap the entire page with error boundary
+export default function PendingContractsPage() {
+  return (
+    <ContractsErrorBoundary>
+      <PendingContractsPageContent />
+    </ContractsErrorBoundary>
   );
 }
