@@ -129,13 +129,42 @@ export const POST = withAnyRBAC(
       console.log('🔄 Make.com contract generation request:', {
         contractType,
         triggerMakecom,
+        contractDataKeys: Object.keys(contractData),
+        contractDataSample: {
+          promoter_id: contractData.promoter_id,
+          first_party_id: contractData.first_party_id,
+          second_party_id: contractData.second_party_id,
+          contract_type: contractData.contract_type,
+          job_title: contractData.job_title,
+          basic_salary: contractData.basic_salary,
+        }
       });
 
       if (!contractType || !contractData) {
+        console.error('❌ Missing required data:', { contractType, hasContractData: !!contractData });
         return NextResponse.json(
           {
             success: false,
             error: 'Contract type and data are required',
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate required contract data fields
+      const requiredFields = ['promoter_id', 'first_party_id', 'second_party_id', 'job_title', 'basic_salary'];
+      const missingFields = requiredFields.filter(field => !contractData[field]);
+      
+      if (missingFields.length > 0) {
+        console.error('❌ Missing required contract data fields:', missingFields);
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Missing required fields: ${missingFields.join(', ')}`,
+            details: {
+              missingFields,
+              receivedFields: Object.keys(contractData),
+            }
           },
           { status: 400 }
         );
@@ -360,11 +389,53 @@ export const POST = withAnyRBAC(
         image_12: enrichedContractData.image_12,
       });
 
+      // Log enriched data before webhook generation
+      console.log('📊 Enriched contract data before webhook generation:', {
+        promoterData: {
+          name_en: enrichedContractData.promoter_name_en,
+          name_ar: enrichedContractData.promoter_name_ar,
+          id_card_url: enrichedContractData.promoter_id_card_url,
+          passport_url: enrichedContractData.promoter_passport_url,
+        },
+        firstPartyData: {
+          name_en: enrichedContractData.first_party_name_en,
+          name_ar: enrichedContractData.first_party_name_ar,
+          logo_url: enrichedContractData.first_party_logo_url,
+        },
+        secondPartyData: {
+          name_en: enrichedContractData.second_party_name_en,
+          name_ar: enrichedContractData.second_party_name_ar,
+          logo_url: enrichedContractData.second_party_logo_url,
+        },
+        contractData: {
+          job_title: enrichedContractData.job_title,
+          basic_salary: enrichedContractData.basic_salary,
+          contract_start_date: enrichedContractData.contract_start_date,
+          contract_end_date: enrichedContractData.contract_end_date,
+        }
+      });
+
       // Generate contract with Make.com integration
       const { webhookPayload, templateConfig, validation } =
         generateContractWithMakecom(contractType, enrichedContractData);
 
+      console.log('🔧 Generated webhook payload:', {
+        hasWebhookPayload: !!webhookPayload,
+        webhookPayloadKeys: webhookPayload ? Object.keys(webhookPayload) : [],
+        templateConfig: templateConfig ? {
+          id: templateConfig.id,
+          name: templateConfig.name,
+          googleDocsTemplateId: templateConfig.googleDocsTemplateId,
+        } : null,
+        validation: {
+          isValid: validation.isValid,
+          errors: validation.errors,
+          warnings: validation.warnings,
+        }
+      });
+
       if (!validation.isValid) {
+        console.error('❌ Contract validation failed:', validation.errors);
         return NextResponse.json(
           {
             success: false,
@@ -476,6 +547,47 @@ export const POST = withAnyRBAC(
               stored_promoter_id_card_image_url: enhancedPayload.stored_promoter_id_card_image_url,
               stored_promoter_passport_image_url: enhancedPayload.stored_promoter_passport_image_url,
               stored_first_party_logo_url: enhancedPayload.stored_first_party_logo_url,
+            });
+            
+            // Log comprehensive payload data for debugging
+            console.log('🔍 Make.com webhook payload details:', {
+              contractInfo: {
+                id: enhancedPayload.contract_id,
+                number: enhancedPayload.contract_number,
+                type: enhancedPayload.contract_type,
+              },
+              promoterInfo: {
+                name_en: enhancedPayload.promoter_name_en,
+                name_ar: enhancedPayload.promoter_name_ar,
+                id_card_url: enhancedPayload.promoter_id_card_url,
+                passport_url: enhancedPayload.promoter_passport_url,
+                stored_id_card: enhancedPayload.stored_promoter_id_card_image_url,
+                stored_passport: enhancedPayload.stored_promoter_passport_image_url,
+              },
+              firstPartyInfo: {
+                name_en: enhancedPayload.first_party_name_en,
+                name_ar: enhancedPayload.first_party_name_ar,
+                logo_url: enhancedPayload.first_party_logo_url,
+                stored_logo: enhancedPayload.stored_first_party_logo_url,
+              },
+              secondPartyInfo: {
+                name_en: enhancedPayload.second_party_name_en,
+                name_ar: enhancedPayload.second_party_name_ar,
+                logo_url: enhancedPayload.second_party_logo_url,
+                stored_logo: enhancedPayload.stored_second_party_logo_url,
+              },
+              contractDetails: {
+                job_title: enhancedPayload.job_title,
+                basic_salary: enhancedPayload.basic_salary,
+                start_date: enhancedPayload.contract_start_date,
+                end_date: enhancedPayload.contract_end_date,
+              },
+              imageFields: {
+                image_1: enhancedPayload.image_1,
+                image_2: enhancedPayload.image_2,
+                image_12: enhancedPayload.image_12,
+                totalImageFields: Object.keys(enhancedPayload).filter(key => key.startsWith('image_')).length,
+              }
             });
             
             // Log full payload in development for debugging
