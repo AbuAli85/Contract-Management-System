@@ -376,9 +376,32 @@ export default function SimpleContractGenerator() {
       }
 
       if (result.success) {
+        // Enhanced success message with Make.com status
+        let successMessage = `Contract generated successfully using ${generationMethod} method`;
+        
+        if (generationMethod === 'makecom' && result.data?.makecom) {
+          const makecom = result.data.makecom;
+          if (makecom.success) {
+            successMessage += ' - Make.com webhook triggered successfully!';
+            if (result.data.google_drive_url) {
+              successMessage += ` Check your Google Drive: ${result.data.google_drive_url}`;
+            }
+          } else {
+            successMessage += ` - Make.com webhook failed: ${makecom.error || 'Unknown error'}`;
+          }
+        }
+
         toast({
           title: 'Success!',
-          description: `Contract generated successfully using ${generationMethod} method`,
+          description: successMessage,
+        });
+
+        // Log detailed response for debugging
+        console.log('📊 Contract generation response:', {
+          method: generationMethod,
+          contract: result.data?.contract,
+          makecom: result.data?.makecom,
+          google_drive_url: result.data?.google_drive_url,
         });
 
         // Show success message with links

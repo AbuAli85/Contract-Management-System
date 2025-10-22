@@ -516,22 +516,42 @@ export const POST = withAnyRBAC(
                   body: responseText.substring(0, 200),
                 });
 
+                // Parse response body for better handling
+                let parsedResponse = null;
+                try {
+                  parsedResponse = JSON.parse(responseText);
+                } catch (e) {
+                  console.log('ℹ️ Response is not JSON, using as plain text');
+                  parsedResponse = responseText;
+                }
+
                 makecomResponse = {
                   status: response.status,
                   success: response.ok,
                   body: responseText,
+                  parsedResponse,
                   attempt,
                   timestamp: new Date().toISOString(),
                 };
 
                 if (response.ok) {
                   console.log(`✅ Make.com webhook triggered successfully on attempt ${attempt}`);
+                  console.log('📊 Make.com response data:', parsedResponse);
 
-                  // Update contract status
-                  await supabase
+                  // Update contract status to processing
+                  const { error: updateError } = await supabase
                     .from('contracts')
-                    .update({ status: 'processing' })
+                    .update({ 
+                      status: 'processing',
+                      updated_at: new Date().toISOString()
+                    })
                     .eq('id', contract.id);
+
+                  if (updateError) {
+                    console.error('❌ Failed to update contract status:', updateError);
+                  } else {
+                    console.log('✅ Contract status updated to processing');
+                  }
 
                   retrySucceeded = true;
                   break; // Success, exit retry loop
@@ -606,10 +626,35 @@ export const POST = withAnyRBAC(
         }
       }
 
+      // Enhanced response with better Make.com status
+      const makecomStatus = makecomResponse ? {
+        triggered: triggerMakecom,
+        success: makecomResponse.success,
+        status: makecomResponse.status,
+        response: makecomResponse.parsedResponse || makecomResponse.body,
+        error: makecomResponse.error || null,
+        attempt: makecomResponse.attempt,
+        timestamp: makecomResponse.timestamp,
+        webhook_url: process.env.MAKECOM_WEBHOOK_URL,
+      } : {
+        triggered: false,
+        success: false,
+        error: 'Make.com webhook not configured',
+        timestamp: new Date().toISOString(),
+      };
+
       return NextResponse.json({
         success: true,
+        message: 'Contract generated successfully',
         data: {
-          contract,
+          contract: {
+            id: contract.id,
+            contract_number: contract.contract_number,
+            title: contract.title,
+            status: contract.status,
+            contract_type: contract.contract_type,
+            created_at: contract.created_at,
+          },
           validation,
           templateConfig: templateConfig
             ? {
@@ -618,11 +663,7 @@ export const POST = withAnyRBAC(
                 googleDocsTemplateId: templateConfig.googleDocsTemplateId,
               }
             : null,
-          makecom: {
-            triggered: triggerMakecom,
-            webhookPayload: triggerMakecom ? webhookPayload : null,
-            response: makecomResponse,
-          },
+          makecom: makecomStatus,
           // Helpful link to the target Drive folder if configured
           google_drive_url: ((): string | null => {
             try {
