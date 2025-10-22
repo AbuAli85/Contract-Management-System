@@ -66,10 +66,10 @@ import { ErrorCard } from '@/components/ErrorCard';
 import { useAuth } from '@/lib/auth-service';
 import { OverviewTab } from '@/components/contract-tabs/OverviewTab';
 import {
-  formatDate,
-  calculateDuration,
+  formatDateLegacy as formatDate,
+  calculateDurationLegacy as calculateDuration,
   copyToClipboard,
-  formatDateTime,
+  formatDateTimeLegacy as formatDateTime,
 } from '@/utils/format';
 
 interface PDFStatus {
@@ -403,7 +403,7 @@ export default function ContractDetailPage() {
                   <div>
                     <label className='font-medium text-gray-500'>Created</label>
                     <p className='mt-1 text-gray-900'>
-                      {String(formatDate(contract?.created_at))}
+                      {formatDate(contract?.created_at)}
                     </p>
                   </div>
                   <div>
@@ -411,7 +411,7 @@ export default function ContractDetailPage() {
                       Last Updated
                     </label>
                     <p className='mt-1 text-gray-900'>
-                      {String(formatDate(contract?.updated_at))}
+                      {formatDate(contract?.updated_at)}
                     </p>
                   </div>
                   <div>
@@ -419,11 +419,9 @@ export default function ContractDetailPage() {
                       Duration
                     </label>
                     <p className='mt-1 text-gray-900'>
-                      {String(
-                        calculateDuration(
-                          contract?.contract_start_date,
-                          contract?.contract_end_date
-                        )
+                      {calculateDuration(
+                        contract?.contract_start_date,
+                        contract?.contract_end_date
                       )}
                     </p>
                   </div>
@@ -940,7 +938,7 @@ export default function ContractDetailPage() {
                             Contract was initially created in the system
                           </p>
                           <p className='mt-2 text-xs font-medium text-blue-600'>
-                            {String(formatDateTime(contract?.created_at))}
+                            {formatDateTime(contract?.created_at)}
                           </p>
                         </div>
                       </div>
@@ -961,7 +959,7 @@ export default function ContractDetailPage() {
                               Employment period begins
                             </p>
                             <p className='mt-2 text-xs font-medium text-green-600'>
-                              {String(formatDate(contract.contract_start_date))}
+                              {formatDate(contract.contract_start_date)}
                             </p>
                           </div>
                         </div>
@@ -984,7 +982,7 @@ export default function ContractDetailPage() {
                                 Contract information was modified
                               </p>
                               <p className='mt-2 text-xs font-medium text-yellow-600'>
-                                {String(formatDateTime(contract.updated_at))}
+                                {formatDateTime(contract.updated_at)}
                               </p>
                             </div>
                           </div>
@@ -1006,7 +1004,7 @@ export default function ContractDetailPage() {
                               Employment period ends
                             </p>
                             <p className='mt-2 text-xs font-medium text-red-600'>
-                              {String(formatDate(contract.contract_end_date))}
+                              {formatDate(contract.contract_end_date)}
                             </p>
                             {new Date(contract.contract_end_date) >
                               new Date() && (
@@ -1036,11 +1034,9 @@ export default function ContractDetailPage() {
                         Contract Duration
                       </h5>
                       <p className='mt-1 text-sm text-gray-600'>
-                        {String(
-                          calculateDuration(
-                            contract?.contract_start_date,
-                            contract?.contract_end_date
-                          )
+                        {calculateDuration(
+                          contract?.contract_start_date,
+                          contract?.contract_end_date
                         )}
                       </p>
                     </div>
@@ -1059,7 +1055,7 @@ export default function ContractDetailPage() {
                         Last Activity
                       </h5>
                       <p className='mt-1 text-sm text-gray-600'>
-                        {String(formatDate(contract?.updated_at))}
+                        {formatDate(contract?.updated_at)}
                       </p>
                     </div>
                   </div>
@@ -1180,7 +1176,7 @@ export default function ContractDetailPage() {
                               </p>
                             </div>
                             <span className='text-xs text-gray-500'>
-                              {String(formatDateTime(notification.created_at))}
+                              {formatDateTime(notification.created_at)}
                             </span>
                           </div>
                         </div>
