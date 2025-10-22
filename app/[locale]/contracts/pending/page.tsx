@@ -252,6 +252,7 @@ function PendingContractsPageContent() {
       
       if (hasPermission || forceLoad) {
         console.log('✅ Permission granted (or forced), fetching pending contracts...');
+        // Call fetchPendingContracts directly to avoid dependency loop
         fetchPendingContracts();
       } else {
         console.warn('⚠️ Insufficient permissions for pending contracts:', {
@@ -276,7 +277,7 @@ function PendingContractsPageContent() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin, fetchPendingContracts, forceLoad]);
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin, forceLoad]);
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {

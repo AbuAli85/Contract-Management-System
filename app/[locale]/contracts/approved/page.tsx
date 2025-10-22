@@ -221,6 +221,7 @@ export default function ApprovedContractsPage() {
       
       if (hasPermission || forceLoad) {
         console.log('✅ Permission granted (or forced), fetching approved contracts...');
+        // Call fetchApprovedContracts directly to avoid dependency loop
         fetchApprovedContracts();
       } else {
         console.warn('⚠️ Insufficient permissions for approved contracts:', {
@@ -245,7 +246,7 @@ export default function ApprovedContractsPage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin, fetchApprovedContracts, forceLoad]);
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin, forceLoad]);
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
