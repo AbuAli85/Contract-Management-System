@@ -338,12 +338,23 @@ function PendingContractsPageContent() {
         .includes(searchTerm.toLowerCase())
   );
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return 'Invalid Date';
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch (error) {
+      console.warn('Error formatting date:', dateString, error);
+      return 'Invalid Date';
+    }
   };
 
   const getStatusColor = (status: string) => {
