@@ -48,10 +48,13 @@ interface DashboardStats {
 }
 
 interface PromoterStats {
-  total: number;
-  active: number;
-  onAssignments: number;
-  available: number;
+  totalWorkforce: number;
+  activeOnContracts: number;
+  availableForWork: number;
+  onLeave: number;
+  inactive: number;
+  utilizationRate: number;
+  complianceRate: number;
 }
 
 function DashboardContent() {
@@ -83,16 +86,19 @@ function DashboardContent() {
         }
       }
 
-      // Fetch promoter metrics
-      const promotersResponse = await fetch(`/api/dashboard/promoter-metrics${refreshParam}`);
+      // Fetch enhanced promoter metrics
+      const promotersResponse = await fetch(`/api/promoters/enhanced-metrics${refreshParam}`);
       if (promotersResponse.ok) {
         const data = await promotersResponse.json();
         if (data.success && data.metrics) {
           setPromoterStats({
-            total: data.metrics.total,
-            active: data.metrics.active,
-            onAssignments: data.metrics.onAssignments || 0,
-            available: data.metrics.available || data.metrics.active,
+            totalWorkforce: data.metrics.totalWorkforce,
+            activeOnContracts: data.metrics.activeOnContracts,
+            availableForWork: data.metrics.availableForWork,
+            onLeave: data.metrics.onLeave,
+            inactive: data.metrics.inactive,
+            utilizationRate: data.metrics.utilizationRate,
+            complianceRate: data.metrics.complianceRate,
           });
         }
       }
@@ -349,7 +355,7 @@ function DashboardContent() {
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <div className='flex items-center gap-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Total Promoters
+                    Active Promoters
                   </CardTitle>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -357,7 +363,7 @@ function DashboardContent() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className='max-w-xs'>
-                        All promoters/employees registered in the system
+                        Promoters currently working on active contract assignments
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -373,10 +379,10 @@ function DashboardContent() {
                 ) : (
                   <>
                     <div className='text-2xl font-bold'>
-                      {promoterStats?.total ?? 0}
+                      {promoterStats?.activeOnContracts ?? 0}
                     </div>
                     <p className='text-xs text-muted-foreground'>
-                      {promoterStats?.active ?? 0} active in system
+                      On assignments
                     </p>
                   </>
                 )}
@@ -389,7 +395,7 @@ function DashboardContent() {
               <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                 <div className='flex items-center gap-2'>
                   <CardTitle className='text-sm font-medium'>
-                    Promoters Working
+                    Available
                   </CardTitle>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -397,7 +403,7 @@ function DashboardContent() {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className='max-w-xs'>
-                        Number of promoters currently assigned to active contracts
+                        Promoters registered and ready to be assigned to contracts but not currently working
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -413,10 +419,50 @@ function DashboardContent() {
                 ) : (
                   <>
                     <div className='text-2xl font-bold'>
-                      {promoterStats?.onAssignments ?? 0}
+                      {promoterStats?.availableForWork ?? 0}
                     </div>
                     <p className='text-xs text-muted-foreground'>
-                      On active assignments
+                      Ready for work
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Card>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <div className='flex items-center gap-2'>
+                  <CardTitle className='text-sm font-medium'>
+                    Total Workforce
+                  </CardTitle>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className='h-3 w-3 text-muted-foreground cursor-help' />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className='max-w-xs'>
+                        Total number of promoters registered in the system (all registered staff)
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Users className='h-4 w-4 text-muted-foreground' />
+              </CardHeader>
+              <CardContent>
+                {statsLoading ? (
+                  <div className='flex items-center space-x-2'>
+                    <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                    <span className='text-sm text-muted-foreground'>Loading...</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className='text-2xl font-bold'>
+                      {promoterStats?.totalWorkforce ?? 0}
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      All registered
                     </p>
                   </>
                 )}
