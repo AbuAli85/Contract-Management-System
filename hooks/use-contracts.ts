@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth-service';
 import { useFormContext } from '@/hooks/use-form-context';
 import { devLog } from '@/lib/dev-log';
-import type { Database } from '@/types/supabase';
+import type { Database } from '@/types';
 import { useEffect } from 'react';
 
 // --- Schema definition ---

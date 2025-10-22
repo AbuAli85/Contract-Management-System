@@ -20,6 +20,7 @@ interface ContractsResponse {
   contracts: ContractWithRelations[];
   count: number;
   total: number;
+  totalContracts: number; // Actual total count from database
   pagination: {
     page: number;
     limit: number;
@@ -58,6 +59,18 @@ async function fetchContracts(
   if (!data.success) {
     throw new Error(data.error || 'Failed to fetch contracts');
   }
+
+  // Debug: Log the response data
+  console.log('🔍 useContractsQuery - API Response:', {
+    success: data.success,
+    totalContracts: data.totalContracts,
+    contractsCount: data.contracts?.length || 0,
+    sampleContract: data.contracts?.[0] ? {
+      id: data.contracts[0].id,
+      promoter_id: data.contracts[0].promoter_id,
+      promoters: data.contracts[0].promoters
+    } : null
+  });
 
   return data;
 }

@@ -281,9 +281,32 @@ export default function SimpleContractGeneratorWithValidation() {
       }
 
       if (result.success) {
+        // Enhanced success message with Make.com status
+        let successMessage = `Contract generated successfully using ${generationMethod} method`;
+        
+        if (generationMethod === 'makecom' && result.data?.makecom) {
+          const makecom = result.data.makecom;
+          if (makecom.success) {
+            successMessage += ' - Make.com webhook triggered successfully!';
+            if (result.data.google_drive_url) {
+              successMessage += ` Check your Google Drive: ${result.data.google_drive_url}`;
+            }
+          } else {
+            successMessage += ` - Make.com webhook failed: ${makecom.error || 'Unknown error'}`;
+          }
+        }
+
         toast({
           title: 'Success!',
-          description: `Contract generated successfully using ${generationMethod} method`,
+          description: successMessage,
+        });
+
+        // Log detailed response for debugging
+        console.log('📊 Contract generation response:', {
+          method: generationMethod,
+          contract: result.data?.contract,
+          makecom: result.data?.makecom,
+          google_drive_url: result.data?.google_drive_url,
         });
 
         // Clear saved draft
@@ -578,17 +601,22 @@ export default function SimpleContractGeneratorWithValidation() {
                   name='work_location'
                   control={control}
                   render={({ field }) => (
-                    <FormFieldWithValidation
+                    <SelectFieldWithValidation
                       label='Work Location'
                       name='work_location'
                       value={field.value}
                       onChange={field.onChange}
-                      onBlur={field.onBlur}
                       error={errors.work_location}
                       disabled={generating}
                       required
                       isValid={!!dirtyFields.work_location && !errors.work_location}
-                      placeholder='e.g., Muscat, Oman'
+                      placeholder='Select work location'
+                      options={[
+                        { value: 'Extra Os1', label: 'Extra Os1' },
+                        { value: 'Extra Os2', label: 'Extra Os2' },
+                        { value: 'Extra Os3', label: 'Extra Os3' },
+                        { value: 'Extra Os4', label: 'Extra Os4' },
+                      ]}
                     />
                   )}
                 />

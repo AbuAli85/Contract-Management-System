@@ -1,0 +1,108 @@
+// REFERENCE ONLY - This project uses Supabase/PostgreSQL directly
+// This file shows what the parties table would look like in Prisma schema format
+// for educational/reference purposes
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Party {
+  id                UUID      @id @default(dbgenerated("gen_random_uuid()"))
+  name_en           String    @db.Text
+  name_ar           String?   @db.Text
+  crn               String?   @db.Text
+  type              String?   @db.Text // Check constraint: 'Employer', 'Client', 'Generic', or NULL
+  role              String?   @db.Text
+  status            String?   @db.Text
+  cr_status         String?   @db.Text
+  cr_expiry         String?   @db.Text
+  license_status    String?   @db.Text
+  license_expiry    String?   @db.Text
+  contact_person    String?   @db.Text
+  contact_email     String?   @db.Text
+  contact_phone     String?   @db.Text
+  address_en        String?   @db.Text
+  tax_number        String?   @db.Text
+  license_number    String?   @db.Text
+  active_contracts  Int       @default(0)
+  overall_status    String    @default("Active") @db.Text
+  created_at        DateTime  @default(now()) @db.Timestamptz
+  updated_at        DateTime  @default(now()) @updatedAt @db.Timestamptz
+  notes             String?   @db.Text
+
+  // ============================================================================
+  // INDEXES - For optimization of queries
+  // ============================================================================
+  
+  // Search indexes
+  @@index([name_en(ops: raw("gin_trgm_ops"))], type: Gin, name: "idx_parties_name_en_trgm")
+  @@index([name_en(ops: raw("LOWER(name_en) text_pattern_ops"))], name: "idx_parties_name_en_lower")
+  @@index([name_ar(ops: raw("LOWER(name_ar) text_pattern_ops"))], name: "idx_parties_name_ar_lower")
+  @@index([name_en, name_ar], name: "idx_parties_name_combined")
+  @@index([crn(ops: raw("LOWER(crn)"))], name: "idx_parties_crn_lower")
+  
+  // Filtering indexes
+  @@index([type], name: "idx_parties_type")
+  @@index([status], name: "idx_parties_status")
+  @@index([overall_status], name: "idx_parties_overall_status")
+  @@index([type, overall_status], name: "idx_parties_type_status")
+  
+  // Sorting indexes
+  @@index([created_at(sort: Desc)], name: "idx_parties_created_at_desc")
+  @@index([created_at(sort: Asc)], name: "idx_parties_created_at_asc")
+  @@index([updated_at(sort: Desc)], name: "idx_parties_updated_at_desc")
+  
+  // Composite indexes for common query patterns
+  @@index([type, created_at(sort: Desc)], name: "idx_parties_type_created")
+  @@index([overall_status, name_en], name: "idx_parties_status_name")
+  @@index([type, overall_status, created_at(sort: Desc)], name: "idx_parties_type_status_date")
+  
+  // Performance optimization indexes
+  @@index([active_contracts], name: "idx_parties_active_contracts")
+  @@index([contact_email(ops: raw("LOWER(contact_email)"))], name: "idx_parties_contact_email")
+  
+  // Partial indexes (Prisma doesn't support WHERE clauses directly, 
+  // but here's what they would look like in raw SQL)
+  // CREATE INDEX idx_parties_active ON parties (overall_status) WHERE overall_status = 'Active'
+  // CREATE INDEX idx_parties_employers ON parties (name_en, created_at DESC) WHERE type = 'Employer'
+  // CREATE INDEX idx_parties_clients ON parties (name_en, created_at DESC) WHERE type = 'Client'
+
+  @@map("parties")
+}
+
+// ============================================================================
+// NOTES ON PRISMA VS SUPABASE
+// ============================================================================
+
+// 1. Prisma doesn't support all PostgreSQL index types directly in schema
+//    - GIN indexes for full-text search (trigram)
+//    - Partial indexes with WHERE clauses
+//    - Expression indexes (like LOWER(column_name))
+//
+// 2. For these advanced features, you would still need raw SQL migrations
+//    even with Prisma
+//
+// 3. The migration we created (20251022_add_parties_indexes.sql) uses
+//    advanced PostgreSQL features that provide better performance than
+//    standard Prisma indexes
+
+// ============================================================================
+// EQUIVALENT PRISMA INDEX DIRECTIVES (SIMPLIFIED)
+// ============================================================================
+
+// If this were a real Prisma project, you would use:
+//
+// @@index([name_en])           // Basic B-tree index
+// @@index([type])              // Filter by type
+// @@index([status])            // Filter by status
+// @@index([created_at(sort: Desc)])  // Sort by date descending
+// @@index([type, overall_status])    // Composite filter
+// @@index([overall_status, name_en]) // Filter + sort
+//
+// But these wouldn't be as performant as our custom PostgreSQL indexes
+

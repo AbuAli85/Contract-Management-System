@@ -84,25 +84,27 @@ export async function POST(request: NextRequest) {
     const contract = await generalContractService.createContract(contractData);
     console.log('✅ Contract created:', contract.id);
 
-    // Trigger Make.com webhook for general contracts
+    // Trigger Make.com webhook for general contracts with retry
     let makecomResponse = null;
     try {
       console.log(
         '🔄 About to trigger Make.com webhook for contract:',
         contract.id
       );
-      const makecomTriggered =
-        await generalContractService.triggerMakeComWebhook(contract.id);
-      console.log('📊 Make.com webhook result:', makecomTriggered);
+      const webhookResult =
+        await generalContractService.triggerMakeComWebhook(contract.id, 3);
+      console.log('📊 Make.com webhook result:', webhookResult);
 
       makecomResponse = {
-        triggered: makecomTriggered,
+        triggered: webhookResult.success,
+        response: webhookResult.response || null,
+        error: webhookResult.error || null,
         webhook_url:
           'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz',
         timestamp: new Date().toISOString(),
       };
 
-      if (makecomTriggered) {
+      if (webhookResult.success) {
         console.log('✅ Make.com webhook triggered successfully');
       } else {
         console.warn('⚠️ Make.com webhook not triggered');

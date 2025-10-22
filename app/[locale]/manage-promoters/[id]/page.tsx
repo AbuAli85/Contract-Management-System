@@ -41,7 +41,7 @@ import {
   Eye,
   Download,
 } from 'lucide-react';
-import { format, parseISO, isPast } from 'date-fns';
+import { format, parseISO, isPast, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -63,6 +63,47 @@ import { PromoterRanking } from '@/components/promoter-ranking';
 import { PromoterCRM } from '@/components/promoter-crm';
 import DocumentUpload from '@/components/document-upload';
 import PromoterFilterSection from '@/components/promoter-filter-section';
+
+// Safe date parsing functions to prevent "Invalid time value" errors
+const safeParseISO = (dateString: string | null | undefined): Date | null => {
+  if (!dateString || typeof dateString !== 'string') return null;
+  
+  try {
+    const parsed = parseISO(dateString);
+    if (isValid(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('Invalid ISO date string:', dateString, error);
+  }
+  
+  // Try alternative parsing for common formats
+  try {
+    const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
+    for (const formatStr of formats) {
+      const parsed = parse(dateString, formatStr, new Date());
+      if (isValid(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse date with alternative formats:', dateString, error);
+  }
+  
+  return null;
+};
+
+const safeFormatDate = (dateString: string | null | undefined, formatStr: string = 'MMM dd, yyyy'): string => {
+  const date = safeParseISO(dateString);
+  if (!date) return 'Invalid date';
+  
+  try {
+    return format(date, formatStr);
+  } catch (error) {
+    console.warn('Failed to format date:', date, error);
+    return 'Invalid date';
+  }
+};
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[];
@@ -132,7 +173,7 @@ function DocumentStatusDisplay({
         </span>
         <span className='text-xs text-gray-600'>
           {expiryDate
-            ? `Expires: ${format(parseISO(expiryDate), 'MMM dd, yyyy')}`
+            ? `Expires: ${safeFormatDate(expiryDate, 'MMM dd, yyyy')}`
             : 'No expiry date'}
         </span>
       </div>
@@ -962,10 +1003,7 @@ export default function PromoterDetailPage() {
                   {promoterDetails?.id_card_expiry_date && (
                     <p className='text-xs text-muted-foreground'>
                       Expires:{' '}
-                      {format(
-                        parseISO(promoterDetails.id_card_expiry_date),
-                        'MMM dd, yyyy'
-                      )}
+                      {safeFormatDate(promoterDetails.id_card_expiry_date, 'MMM dd, yyyy')}
                     </p>
                   )}
                   {promoterDetails?.id_card_url && (
@@ -1013,10 +1051,7 @@ export default function PromoterDetailPage() {
                   {promoterDetails?.passport_expiry_date && (
                     <p className='text-xs text-muted-foreground'>
                       Expires:{' '}
-                      {format(
-                        parseISO(promoterDetails.passport_expiry_date),
-                        'MMM dd, yyyy'
-                      )}
+                      {safeFormatDate(promoterDetails.passport_expiry_date, 'MMM dd, yyyy')}
                     </p>
                   )}
                   {!promoterDetails?.passport_url &&
@@ -1120,14 +1155,7 @@ export default function PromoterDetailPage() {
                 <DetailItem label='Notes' value={promoterDetails?.notes} />
                 <DetailItem
                   label='Created Date'
-                  value={
-                    promoterDetails?.created_at
-                      ? format(
-                          parseISO(promoterDetails.created_at),
-                          'MMM dd, yyyy'
-                        )
-                      : 'N/A'
-                  }
+                  value={safeFormatDate(promoterDetails?.created_at, 'MMM dd, yyyy')}
                 />
               </div>
             </CardContent>
@@ -1228,16 +1256,10 @@ export default function PromoterDetailPage() {
                             </p>
                             <p className='text-sm text-muted-foreground'>
                               {contract.start_date &&
-                                format(
-                                  parseISO(contract.start_date),
-                                  'MMM dd, yyyy'
-                                )}{' '}
+                                safeFormatDate(contract.start_date, 'MMM dd, yyyy')}{' '}
                               -
                               {contract.end_date &&
-                                format(
-                                  parseISO(contract.end_date),
-                                  'MMM dd, yyyy'
-                                )}
+                                safeFormatDate(contract.end_date, 'MMM dd, yyyy')}
                             </p>
                           </div>
                           <Badge

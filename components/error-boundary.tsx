@@ -1,205 +1,266 @@
 'use client';
 
-import React, { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, RefreshCw, Home, Bug, Wifi, WifiOff } from 'lucide-react';
+import Link from 'next/link';
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  componentName?: string;
-}
-
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
+  retryCount: number;
 }
 
-/**
- * Error Boundary Component
- *
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI instead of crashing.
- *
- * @example
- * ```tsx
- * <ErrorBoundary componentName="Promoters Page">
- *   <PromotersView />
- * </ErrorBoundary>
- * ```
- */
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  maxRetries?: number;
+}
+
+export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private retryTimeoutId: NodeJS.Timeout | null = null;
+
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
+    this.state = { 
+      hasError: false, 
+      retryCount: 0 
     };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    // Update state so the next render will show the fallback UI
-    return {
-      hasError: true,
-      error,
-      errorInfo: null,
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { 
+      hasError: true, 
+      error 
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error Boundary caught an error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Parties Error Boundary caught an error:', error, errorInfo);
+    
+    this.setState({ error, errorInfo });
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
     }
 
-    // Log to error reporting service in production
+    // Log to external service in production
     if (process.env.NODE_ENV === 'production') {
-      console.error('Production error:', error, errorInfo);
-      // TODO: Send to error tracking service (e.g., Sentry, LogRocket)
-      // logErrorToService(error, errorInfo);
+      // Example: Sentry.captureException(error, { extra: errorInfo });
+      console.error('Production error - consider logging to external service:', {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+      });
     }
-
-    // Call custom error handler if provided (only works from client components)
-    if (typeof this.props.onError === 'function') {
-      try {
-        this.props.onError(error, errorInfo);
-      } catch (e) {
-        console.error('Error in onError handler:', e);
-      }
-    }
-
-    // Update state with error info
-    this.setState({
-      error,
-      errorInfo,
-    });
   }
 
-  handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
+  componentWillUnmount() {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
+  }
+
+  handleRetry = () => {
+    const { maxRetries = 3 } = this.props;
+    const { retryCount } = this.state;
+
+    if (retryCount < maxRetries) {
+      this.setState(prevState => ({ 
+        hasError: false, 
+        retryCount: prevState.retryCount + 1 
+      }));
+    } else {
+      // Reset retry count after max retries reached
+      this.setState({ retryCount: 0 });
+    }
   };
 
   handleReload = () => {
     window.location.reload();
   };
 
-  handleGoHome = () => {
-    window.location.href = '/';
+  getErrorMessage = (error: Error): { title: string; message: string; canRetry: boolean } => {
+    const errorMessage = error.message.toLowerCase();
+    
+    // Network/connection errors
+    if (errorMessage.includes('timeout') || errorMessage.includes('abort')) {
+      return {
+        title: 'Request Timeout',
+        message: 'The server took too long to respond. This might be due to network issues or server load.',
+        canRetry: true,
+      };
+    }
+    
+    if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+      return {
+        title: 'Network Error',
+        message: 'Unable to connect to the server. Please check your internet connection.',
+        canRetry: true,
+      };
+    }
+    
+    // Authentication errors
+    if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
+      return {
+        title: 'Authentication Required',
+        message: 'Your session has expired. Please log in again to continue.',
+        canRetry: false,
+      };
+    }
+    
+    // Server errors
+    if (errorMessage.includes('500') || errorMessage.includes('internal server error')) {
+      return {
+        title: 'Server Error',
+        message: 'The server encountered an error while processing your request. Please try again later.',
+        canRetry: true,
+      };
+    }
+    
+    // Database errors
+    if (errorMessage.includes('database') || errorMessage.includes('failed to fetch parties')) {
+      return {
+        title: 'Database Error',
+        message: 'Unable to retrieve parties data from the database. Please try again.',
+        canRetry: true,
+      };
+    }
+    
+    // React/Component errors
+    if (errorMessage.includes('component') || errorMessage.includes('render')) {
+      return {
+        title: 'Component Error',
+        message: 'There was an error rendering the parties page. Please refresh the page.',
+        canRetry: true,
+      };
+    }
+    
+    // Default error
+    return {
+      title: 'Application Error',
+      message: error.message || 'Something went wrong with the parties page',
+      canRetry: true,
+    };
   };
 
   render() {
-    if (this.state.hasError) {
-      // Custom fallback UI if provided
-      if (this.props.fallback) {
-        return this.props.fallback;
+    if (this.state.hasError && this.state.error) {
+      const { fallback: Fallback } = this.props;
+      const { error, retryCount } = this.state;
+      const errorInfo = this.getErrorMessage(error);
+      const { maxRetries = 3 } = this.props;
+
+      // Use custom fallback if provided
+      if (Fallback) {
+        return <Fallback error={error} retry={this.handleRetry} />;
       }
 
-      // Default error UI
       return (
-        <div className='min-h-screen bg-gray-50 flex items-center justify-center p-4'>
-          <Card className='max-w-2xl w-full'>
+        <div className='flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950'>
+          <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
             <CardHeader>
               <div className='flex items-center gap-3'>
-                <div className='rounded-full bg-red-100 p-3'>
-                  <AlertTriangle className='h-6 w-6 text-red-600' />
+                <div className='rounded-full bg-red-100 p-3 dark:bg-red-900'>
+                  <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-300' />
                 </div>
                 <div>
-                  <CardTitle className='text-2xl text-red-600'>
-                    Something went wrong
+                  <CardTitle className='text-red-900 dark:text-red-100'>
+                    {errorInfo.title}
                   </CardTitle>
-                  <CardDescription>
-                    {this.props.componentName || 'This page'} encountered an
-                    unexpected error
+                  <CardDescription className='text-red-700 dark:text-red-300'>
+                    {errorInfo.message}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
-
             <CardContent className='space-y-4'>
-              {/* Error Message */}
-              <Alert variant='destructive'>
-                <AlertDescription>
-                  <strong>Error:</strong>{' '}
-                  {this.state.error?.message || 'Unknown error occurred'}
-                </AlertDescription>
-              </Alert>
+              {/* Retry information */}
+              {retryCount > 0 && (
+                <div className='rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20'>
+                  <p className='text-sm text-yellow-800 dark:text-yellow-200'>
+                    <RefreshCw className='mr-2 inline h-4 w-4' />
+                    Retry attempt {retryCount} of {maxRetries}
+                  </p>
+                </div>
+              )}
 
-              {/* Error Details (Development Only) */}
-              {process.env.NODE_ENV === 'development' &&
-                this.state.errorInfo && (
+              {/* Technical details in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-900'>
                   <details className='text-sm'>
-                    <summary className='cursor-pointer font-semibold text-gray-700 hover:text-gray-900'>
-                      Technical Details (Development)
+                    <summary className='cursor-pointer font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2'>
+                      <Bug className='h-4 w-4' />
+                      Technical Details
                     </summary>
-                    <pre className='mt-2 overflow-auto rounded-lg bg-gray-100 p-4 text-xs'>
-                      {this.state.error?.stack}
-                      {'\n\n'}
-                      Component Stack:
-                      {this.state.errorInfo.componentStack}
-                    </pre>
+                    <div className='mt-2 space-y-2'>
+                      <div>
+                        <strong>Error:</strong> {error.message}
+                      </div>
+                      <div>
+                        <strong>Component Stack:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {this.state.errorInfo?.componentStack}
+                        </pre>
+                      </div>
+                      <div>
+                        <strong>Stack Trace:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {error.stack}
+                        </pre>
+                      </div>
+                    </div>
                   </details>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className='flex flex-wrap gap-2'>
+                {errorInfo.canRetry && retryCount < maxRetries && (
+                  <Button
+                    onClick={this.handleRetry}
+                    className='flex-1 min-w-[120px]'
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    Try Again ({maxRetries - retryCount} left)
+                  </Button>
                 )}
-
-              {/* Troubleshooting Tips */}
-              <div className='rounded-lg bg-blue-50 p-4'>
-                <h3 className='font-semibold text-blue-900 mb-2'>
-                  What you can try:
-                </h3>
-                <ul className='space-y-1 text-sm text-blue-800'>
-                  <li>• Refresh the page to try again</li>
-                  <li>• Clear your browser cache and cookies</li>
-                  <li>• Try logging out and back in</li>
-                  <li>• Contact support if the problem persists</li>
-                </ul>
-              </div>
-
-              {/* Action Buttons */}
-              <div className='flex flex-wrap gap-3'>
-                <Button onClick={this.handleReset} variant='default'>
-                  <RefreshCw className='mr-2 h-4 w-4' />
-                  Try Again
-                </Button>
-
-                <Button onClick={this.handleReload} variant='outline'>
+                
+                <Button variant='outline' onClick={this.handleReload}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Reload Page
                 </Button>
-
-                <Button onClick={this.handleGoHome} variant='outline'>
-                  <Home className='mr-2 h-4 w-4' />
-                  Go to Home
+                
+                <Button variant='outline' asChild>
+                  <Link href='/en/dashboard'>
+                    <Home className='mr-2 h-4 w-4' />
+                    Back to Dashboard
+                  </Link>
                 </Button>
               </div>
 
-              {/* Support Info */}
-              <div className='text-xs text-gray-500 pt-4 border-t'>
-                <p>
-                  <strong>Error ID:</strong> {Date.now().toString(36)}
-                </p>
-                <p>
-                  <strong>Time:</strong> {new Date().toISOString()}
-                </p>
-                {process.env.NODE_ENV === 'development' && (
-                  <p className='mt-2 text-amber-600'>
-                    ⚠️ Development mode: Full error details shown above
-                  </p>
+              {/* Network status indicator */}
+              <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                {typeof navigator !== 'undefined' && navigator.onLine ? (
+                  <>
+                    <Wifi className='h-4 w-4 text-green-500' />
+                    Online
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className='h-4 w-4 text-red-500' />
+                    Offline - Check your internet connection
+                  </>
                 )}
+              </div>
+
+              {/* Help text */}
+              <div className='text-xs text-gray-500 dark:text-gray-400'>
+                If this problem persists, please contact support with the error details above.
               </div>
             </CardContent>
           </Card>
@@ -211,41 +272,210 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-/**
- * Simple Error Fallback Component
- * Can be used as a custom fallback prop
- */
-export function SimpleErrorFallback({
-  error,
-  resetErrorAction,
-}: {
-  error?: Error;
-  resetErrorAction?: () => void;
-}) {
-  return (
-    <div className='flex flex-col items-center justify-center p-8 space-y-4'>
-      <AlertTriangle className='h-12 w-12 text-red-500' />
-      <h2 className='text-xl font-semibold text-gray-900'>
-        Oops! Something went wrong
-      </h2>
-      <p className='text-gray-600 text-center max-w-md'>
-        {error?.message || 'An unexpected error occurred. Please try again.'}
-      </p>
-      {resetErrorAction && (
-        <Button onClick={resetErrorAction} variant='default'>
-          <RefreshCw className='mr-2 h-4 w-4' />
-          Try Again
-        </Button>
-      )}
-    </div>
-  );
+// Generic ErrorBoundary component (alias for PartiesErrorBoundary)
+interface GenericErrorBoundaryProps extends ErrorBoundaryProps {
+  componentName?: string;
 }
 
-/**
- * Hook to use error boundary imperatively
- */
+export class ErrorBoundary extends React.Component<GenericErrorBoundaryProps, ErrorBoundaryState> {
+  private retryTimeoutId: NodeJS.Timeout | null = null;
+
+  constructor(props: GenericErrorBoundaryProps) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      retryCount: 0 
+    };
+  }
+
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { 
+      hasError: true, 
+      error 
+    };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    const { componentName } = this.props;
+    console.error(`${componentName || 'Component'} Error Boundary caught an error:`, error, errorInfo);
+    
+    this.setState({ error, errorInfo });
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+
+    // Log to external service in production
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Production error - consider logging to external service:', {
+        component: componentName || 'Unknown',
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+      });
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
+  }
+
+  handleRetry = () => {
+    const { maxRetries = 3 } = this.props;
+    const { retryCount } = this.state;
+
+    if (retryCount < maxRetries) {
+      this.setState(prevState => ({ 
+        hasError: false, 
+        retryCount: prevState.retryCount + 1 
+      }));
+    } else {
+      // Reset retry count after max retries reached
+      this.setState({ retryCount: 0 });
+    }
+  };
+
+  handleReload = () => {
+    window.location.reload();
+  };
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      const { fallback: Fallback, componentName } = this.props;
+      const { error, retryCount } = this.state;
+      const { maxRetries = 3 } = this.props;
+
+      // Use custom fallback if provided
+      if (Fallback) {
+        return <Fallback error={error} retry={this.handleRetry} />;
+      }
+
+      return (
+        <div className='flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950'>
+          <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
+            <CardHeader>
+              <div className='flex items-center gap-3'>
+                <div className='rounded-full bg-red-100 p-3 dark:bg-red-900'>
+                  <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-300' />
+                </div>
+                <div>
+                  <CardTitle className='text-red-900 dark:text-red-100'>
+                    {componentName || 'Application'} Error
+                  </CardTitle>
+                  <CardDescription className='text-red-700 dark:text-red-300'>
+                    Something went wrong in this component
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
+                <p className='text-sm text-red-800 dark:text-red-200'>
+                  {error.message || 'An unexpected error occurred'}
+                </p>
+              </div>
+
+              {/* Retry information */}
+              {retryCount > 0 && (
+                <div className='rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20'>
+                  <p className='text-sm text-yellow-800 dark:text-yellow-200'>
+                    <RefreshCw className='mr-2 inline h-4 w-4' />
+                    Retry attempt {retryCount} of {maxRetries}
+                  </p>
+                </div>
+              )}
+
+              {/* Technical details in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-900'>
+                  <details className='text-sm'>
+                    <summary className='cursor-pointer font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2'>
+                      <Bug className='h-4 w-4' />
+                      Technical Details
+                    </summary>
+                    <div className='mt-2 space-y-2'>
+                      <div>
+                        <strong>Error:</strong> {error.message}
+                      </div>
+                      <div>
+                        <strong>Component Stack:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {this.state.errorInfo?.componentStack}
+                        </pre>
+                      </div>
+                      <div>
+                        <strong>Stack Trace:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {error.stack}
+                        </pre>
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className='flex flex-wrap gap-2'>
+                {retryCount < maxRetries && (
+                  <Button
+                    onClick={this.handleRetry}
+                    className='flex-1 min-w-[120px]'
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    Try Again ({maxRetries - retryCount} left)
+                  </Button>
+                )}
+                
+                <Button variant='outline' onClick={this.handleReload}>
+                  <RefreshCw className='mr-2 h-4 w-4' />
+                  Reload Page
+                </Button>
+                
+                <Button variant='outline' asChild>
+                  <Link href='/en/dashboard'>
+                    <Home className='mr-2 h-4 w-4' />
+                    Back to Dashboard
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+// Higher-order component for easier usage
+export function withPartiesErrorBoundary<P extends object>(
+  Component: React.ComponentType<P>,
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+) {
+  return function WrappedComponent(props: P) {
+    return (
+      <PartiesErrorBoundary {...errorBoundaryProps}>
+        <Component {...props} />
+      </PartiesErrorBoundary>
+    );
+  };
+}
+
+// Hook for error boundary state
 export function useErrorBoundary() {
   const [error, setError] = React.useState<Error | null>(null);
+
+  const resetError = React.useCallback(() => {
+    setError(null);
+  }, []);
+
+  const captureError = React.useCallback((error: Error) => {
+    setError(error);
+  }, []);
 
   React.useEffect(() => {
     if (error) {
@@ -253,13 +483,5 @@ export function useErrorBoundary() {
     }
   }, [error]);
 
-  const showError = React.useCallback((error: Error) => {
-    setError(error);
-  }, []);
-
-  const resetError = React.useCallback(() => {
-    setError(null);
-  }, []);
-
-  return { showError, resetError };
+  return { captureError, resetError };
 }

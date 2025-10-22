@@ -80,14 +80,21 @@ export interface MakeComPayload {
   promoter_id_card_number?: string;
   promoter_id_card_url?: string;
   promoter_passport_url?: string;
+  // Make.com compatible field names (stored_*)
+  stored_promoter_id_card_image_url?: string;
+  stored_promoter_passport_image_url?: string;
   first_party_name_en?: string;
   first_party_name_ar?: string;
   first_party_crn?: string;
   first_party_logo?: string;
+  first_party_logo_url?: string;
+  stored_first_party_logo_url?: string;
   second_party_name_en?: string;
   second_party_name_ar?: string;
   second_party_crn?: string;
   second_party_logo?: string;
+  second_party_logo_url?: string;
+  stored_second_party_logo_url?: string;
   // Additional image fields for Make.com template compatibility
   header_logo?: string;
   footer_logo?: string;
@@ -355,16 +362,25 @@ export class GeneralContractService {
       promoter_passport_url: ensureValidImageUrl(
         contract.promoter?.passport_url
       ),
+      // Make.com compatible field names (stored_*)
+      stored_promoter_id_card_image_url: ensureValidImageUrl(contract.promoter?.id_card_url),
+      stored_promoter_passport_image_url: ensureValidImageUrl(
+        contract.promoter?.passport_url
+      ),
       // First party (client) data with validated image URLs
       first_party_name_en: contract.client?.name_en || '',
       first_party_name_ar: contract.client?.name_ar || '',
       first_party_crn: contract.client?.crn || '',
       first_party_logo: ensureValidImageUrl(contract.client?.logo_url),
+      first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
+      stored_first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
       // Second party (employer) data with validated image URLs
       second_party_name_en: contract.employer?.name_en || '',
       second_party_name_ar: contract.employer?.name_ar || '',
       second_party_crn: contract.employer?.crn || '',
       second_party_logo: ensureValidImageUrl(contract.employer?.logo_url),
+      second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
+      stored_second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
       // Additional image fields for Make.com template compatibility
       header_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as header
       footer_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as footer
@@ -385,133 +401,223 @@ export class GeneralContractService {
   }
 
   /**
-   * Trigger Make.com webhook for general contract generation
+   * Trigger Make.com webhook for general contract generation with retry logic
    */
-  async triggerMakeComWebhook(contractId: string): Promise<boolean> {
-    try {
-      console.log(
-        '🔄 Starting Make.com webhook trigger for contract:',
-        contractId
-      );
+  async triggerMakeComWebhook(
+    contractId: string,
+    maxRetries = 3
+  ): Promise<{ success: boolean; response?: any; error?: string }> {
+    let lastError: any = null;
 
-      const payload = await this.prepareMakeComPayload(contractId);
-      console.log('✅ Payload prepared successfully');
-
-      // Use the specific general contract webhook URL
-      const makecomWebhookUrl =
-        process.env.MAKECOM_WEBHOOK_URL_GENERAL ||
-        'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
-      console.log('🔗 Webhook URL:', makecomWebhookUrl);
-
-      if (!makecomWebhookUrl) {
-        console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
-        return false;
-      }
-
-      const webhookSecret = process.env.MAKE_WEBHOOK_SECRET || '';
-      console.log(
-        '🔐 Webhook secret configured:',
-        webhookSecret ? 'Yes' : 'No'
-      );
-
-      console.log('📤 Sending webhook request...');
-
-      // Use Node.js built-in modules for HTTP request
-      const https = require('https');
-      const http = require('http');
-      const { URL } = require('url');
-
-      const postData = JSON.stringify(payload);
-      const url = new URL(makecomWebhookUrl);
-
-      const options = {
-        hostname: url.hostname,
-        port: url.port || (url.protocol === 'https:' ? 443 : 80),
-        path: url.pathname,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(postData),
-          'X-Webhook-Secret': webhookSecret,
-        },
-      };
-
-      const response = await new Promise<{
-        status: number | undefined;
-        statusText: string | undefined;
-        ok: boolean;
-        data: string;
-      }>((resolve, reject) => {
-        const client = url.protocol === 'https:' ? https : http;
-        const req = client.request(options, (res: any) => {
-          let data = '';
-          res.on('data', (chunk: any) => {
-            data += chunk;
-          });
-          res.on('end', () => {
-            resolve({
-              status: res.statusCode,
-              statusText: res.statusMessage,
-              ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
-              data: data,
-            });
-          });
-        });
-
-        req.on('error', (err: any) => {
-          reject(err);
-        });
-
-        req.write(postData);
-        req.end();
-      });
-
-      console.log('📥 Webhook response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        data: response.data,
-      });
-
-      if (response.ok) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
         console.log(
-          '✅ Make.com webhook triggered successfully for general contract'
+          `🔄 Make.com webhook attempt ${attempt}/${maxRetries} for contract:`,
+          contractId
         );
 
-        // Update contract status
-        console.log('🔄 Updating contract status to pending...');
-        const supabase = await this.getSupabaseClient();
-        const { error: updateError } = await supabase
-          .from('contracts')
-          .update({
-            status: 'pending',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', contractId);
+        const payload = await this.prepareMakeComPayload(contractId);
+        console.log('✅ Payload prepared successfully:', {
+          contract_number: payload.contract_number,
+          contract_type: payload.contract_type,
+          payloadSize: JSON.stringify(payload).length,
+        });
 
-        if (updateError) {
-          console.error('❌ Failed to update contract status:', updateError);
-        } else {
-          console.log('✅ Contract status updated to processing');
+        // Use the specific general contract webhook URL
+        const makecomWebhookUrl =
+          process.env.MAKECOM_WEBHOOK_URL_GENERAL ||
+          'https://hook.eu2.make.com/j07svcht90xh6w0eblon81hrmu9opykz';
+        console.log('🔗 Webhook URL:', makecomWebhookUrl);
+
+        if (!makecomWebhookUrl) {
+          console.warn('⚠️ MAKECOM_WEBHOOK_URL_GENERAL not configured');
+          return { success: false, error: 'Webhook URL not configured' };
         }
 
-        return true;
-      } else {
-        console.error('❌ Make.com webhook failed:', {
+        const webhookSecret = process.env.MAKE_WEBHOOK_SECRET || '';
+        console.log(
+          '🔐 Webhook secret configured:',
+          webhookSecret ? 'Yes' : 'No'
+        );
+
+        console.log('📤 Sending webhook request...');
+
+        // Use Node.js built-in modules for HTTP request with timeout
+        const https = require('https');
+        const http = require('http');
+        const { URL } = require('url');
+
+        const postData = JSON.stringify(payload);
+        const url = new URL(makecomWebhookUrl);
+
+        const options = {
+          hostname: url.hostname,
+          port: url.port || (url.protocol === 'https:' ? 443 : 80),
+          path: url.pathname + url.search,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(postData),
+            'X-Webhook-Secret': webhookSecret,
+            'User-Agent': 'Contract-Management-System/1.0',
+          },
+          timeout: 30000, // 30 second timeout
+        };
+
+        const response = await new Promise<{
+          status: number | undefined;
+          statusText: string | undefined;
+          ok: boolean;
+          data: string;
+        }>((resolve, reject) => {
+          const client = url.protocol === 'https:' ? https : http;
+          const startTime = Date.now();
+
+          const req = client.request(options, (res: any) => {
+            let data = '';
+            res.on('data', (chunk: any) => {
+              data += chunk;
+            });
+            res.on('end', () => {
+              const duration = Date.now() - startTime;
+              console.log(`📥 Response received in ${duration}ms:`, {
+                status: res.statusCode,
+                statusText: res.statusMessage,
+                responseLength: data.length,
+              });
+
+              resolve({
+                status: res.statusCode,
+                statusText: res.statusMessage,
+                ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
+                data: data,
+              });
+            });
+          });
+
+          // Set timeout
+          req.setTimeout(30000, () => {
+            req.destroy();
+            reject(new Error('Request timeout after 30 seconds'));
+          });
+
+          req.on('error', (err: any) => {
+            const duration = Date.now() - startTime;
+            console.error(`❌ Request error after ${duration}ms:`, err);
+            reject(err);
+          });
+
+          req.write(postData);
+          req.end();
+        });
+
+        console.log('📥 Webhook response received:', {
           status: response.status,
           statusText: response.statusText,
-          error: response.data,
+          ok: response.ok,
+          dataLength: response.data.length,
+          data: response.data.substring(0, 500), // Log first 500 chars
         });
-        return false;
+
+        if (response.ok) {
+          console.log(
+            `✅ Make.com webhook triggered successfully on attempt ${attempt}/${maxRetries}`
+          );
+
+          // Parse response if JSON
+          let parsedResponse = response.data;
+          try {
+            parsedResponse = JSON.parse(response.data);
+          } catch (e) {
+            console.log('ℹ️ Response is not JSON, using as plain text');
+          }
+
+          // Update contract status
+          console.log('🔄 Updating contract status to processing...');
+          const supabase = await this.getSupabaseClient();
+          const { error: updateError } = await supabase
+            .from('contracts')
+            .update({
+              status: 'processing',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', contractId);
+
+          if (updateError) {
+            console.error('❌ Failed to update contract status:', updateError);
+          } else {
+            console.log('✅ Contract status updated to processing');
+          }
+
+          return {
+            success: true,
+            response: {
+              status: response.status,
+              statusText: response.statusText,
+              data: parsedResponse,
+              attempt,
+              timestamp: new Date().toISOString(),
+            },
+          };
+        } else {
+          console.error(`❌ Make.com webhook failed (attempt ${attempt}):`, {
+            status: response.status,
+            statusText: response.statusText,
+            error: response.data,
+          });
+
+          lastError = {
+            status: response.status,
+            statusText: response.statusText,
+            error: response.data,
+            attempt,
+          };
+
+          // If not successful and not last attempt, wait before retry
+          if (attempt < maxRetries) {
+            const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+            await new Promise((resolve) => setTimeout(resolve, waitTime));
+          }
+        }
+      } catch (error) {
+        console.error(
+          `❌ Make.com webhook error (attempt ${attempt}/${maxRetries}):`,
+          error
+        );
+        console.error(
+          '❌ Error details:',
+          error instanceof Error ? error.message : 'Unknown error'
+        );
+        console.error(
+          '❌ Error stack:',
+          error instanceof Error ? error.stack : 'No stack trace'
+        );
+
+        lastError = {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          attempt,
+        };
+
+        // If not last attempt, wait before retry
+        if (attempt < maxRetries) {
+          const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
+          console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+        }
       }
-    } catch (error) {
-      console.error('❌ Make.com webhook error:', error);
-      console.error(
-        '❌ Error stack:',
-        error instanceof Error ? error.stack : 'No stack trace'
-      );
-      return false;
     }
+
+    // All attempts failed
+    console.error(
+      `❌ All ${maxRetries} webhook attempts failed for contract ${contractId}`
+    );
+    return {
+      success: false,
+      error: lastError
+        ? JSON.stringify(lastError)
+        : 'All webhook attempts failed',
+    };
   }
 
   /**

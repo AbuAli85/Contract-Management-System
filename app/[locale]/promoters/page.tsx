@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PromotersPageClient } from './promoters-client';
 
 export const metadata: Metadata = {
   title: 'Promoters | Contract Management System',
@@ -6,24 +7,18 @@ export const metadata: Metadata = {
     'Manage promoters and staff members with advanced analytics and notifications',
 };
 
-import { EnhancedPromotersViewRefactored } from '@/components/promoters/enhanced-promoters-view-refactored';
-import { PromotersDebugInfo } from '@/components/promoters-debug-info';
-import { ErrorBoundary } from '@/components/error-boundary';
-
 export default function PromotersPage({
   params,
 }: {
   params: { locale: string };
 }) {
-  // ✅ SECURITY FIX: Only show debug component in development
+  // Pass only serializable data to client component
   const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
-    <ErrorBoundary componentName='Promoters Page'>
-      <div className='space-y-6'>
-        {isDevelopment && <PromotersDebugInfo />}
-        <EnhancedPromotersViewRefactored locale={params.locale} />
-      </div>
-    </ErrorBoundary>
+    <PromotersPageClient 
+      locale={params.locale} 
+      isDevelopment={isDevelopment} 
+    />
   );
 }
