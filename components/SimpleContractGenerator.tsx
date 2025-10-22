@@ -778,15 +778,23 @@ export default function SimpleContractGenerator() {
               {/* Work Location */}
               <div className='space-y-2'>
                 <Label htmlFor='work_location'>Work Location *</Label>
-                <Input
-                  id='work_location'
+                <Select
                   value={formData.work_location}
-                  onChange={e =>
-                    handleInputChange('work_location', e.target.value)
+                  onValueChange={value =>
+                    handleInputChange('work_location', value)
                   }
-                  placeholder='e.g., Muscat, Oman'
                   disabled={generating}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select work location' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='Extra Os1'>Extra Os1</SelectItem>
+                    <SelectItem value='Extra Os2'>Extra Os2</SelectItem>
+                    <SelectItem value='Extra Os3'>Extra Os3</SelectItem>
+                    <SelectItem value='Extra Os4'>Extra Os4</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Basic Salary */}

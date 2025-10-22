@@ -601,17 +601,22 @@ export default function SimpleContractGeneratorWithValidation() {
                   name='work_location'
                   control={control}
                   render={({ field }) => (
-                    <FormFieldWithValidation
+                    <SelectFieldWithValidation
                       label='Work Location'
                       name='work_location'
                       value={field.value}
                       onChange={field.onChange}
-                      onBlur={field.onBlur}
                       error={errors.work_location}
                       disabled={generating}
                       required
                       isValid={!!dirtyFields.work_location && !errors.work_location}
-                      placeholder='e.g., Muscat, Oman'
+                      placeholder='Select work location'
+                      options={[
+                        { value: 'Extra Os1', label: 'Extra Os1' },
+                        { value: 'Extra Os2', label: 'Extra Os2' },
+                        { value: 'Extra Os3', label: 'Extra Os3' },
+                        { value: 'Extra Os4', label: 'Extra Os4' },
+                      ]}
                     />
                   )}
                 />
