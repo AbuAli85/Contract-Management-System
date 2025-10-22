@@ -44,6 +44,25 @@ import {
 import { format, parseISO, isPast, isValid, parse } from 'date-fns';
 import { getDocumentStatus } from '@/lib/document-status';
 import { Separator } from '@/components/ui/separator';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { DocumentStatusBadge } from '@/components/unified-status-badge';
+import { useUserRole } from '@/hooks/useUserRole';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { PromoterCVResume } from '@/components/promoter-cv-resume';
+import { PromoterAttendance } from '@/components/promoter-attendance';
+import { PromoterReports } from '@/components/promoter-reports';
+import { PromoterRanking } from '@/components/promoter-ranking';
+import { PromoterCRM } from '@/components/promoter-crm';
+import DocumentUpload from '@/components/document-upload';
+import PromoterFilterSection from '@/components/promoter-filter-section';
 
 // Safe date parsing functions to prevent "Invalid time value" errors
 const safeParseISO = (dateString: string | null | undefined): Date | null => {
@@ -85,25 +104,6 @@ const safeFormatDate = (dateString: string | null | undefined, formatStr: string
     return 'Invalid date';
   }
 };
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { DocumentStatusBadge } from '@/components/unified-status-badge';
-import { useUserRole } from '@/hooks/useUserRole';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { PromoterCVResume } from '@/components/promoter-cv-resume';
-import { PromoterAttendance } from '@/components/promoter-attendance';
-import { PromoterReports } from '@/components/promoter-reports';
-import { PromoterRanking } from '@/components/promoter-ranking';
-import { PromoterCRM } from '@/components/promoter-crm';
-import DocumentUpload from '@/components/document-upload';
-import PromoterFilterSection from '@/components/promoter-filter-section';
 
 interface PromoterDetails extends Promoter {
   contracts: Contract[];
@@ -1155,10 +1155,7 @@ export default function PromoterDetailPage() {
                 <DetailItem label='Notes' value={promoterDetails?.notes} />
                 <DetailItem
                   label='Created Date'
-                  value={
-                    safeFormatDate(promoterDetails?.created_at, 'MMM dd, yyyy')
-                      : 'N/A'
-                  }
+                  value={safeFormatDate(promoterDetails?.created_at, 'MMM dd, yyyy')}
                 />
               </div>
             </CardContent>
