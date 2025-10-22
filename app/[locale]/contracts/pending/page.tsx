@@ -37,6 +37,7 @@ export default function PendingContractsPage() {
   const [error, setError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [timedOut, setTimedOut] = useState(false);
   
   // Check permissions
   const permissions = usePermissions();
@@ -69,8 +70,21 @@ export default function PendingContractsPage() {
       setLoading(true);
       setError(null);
       setPermissionError(false);
+      setTimedOut(false);
+      
+      // Set up a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        if (loading) {
+          setTimedOut(true);
+          setLoading(false);
+          setError('Request timed out. Please try again.');
+          console.error('⏱️ Request timed out after 5 seconds');
+        }
+      }, 5000);
       
       const response = await fetch('/api/contracts?status=pending');
+      clearTimeout(timeoutId);
+      
       const data = await response.json();
 
       if (response.status === 403) {
@@ -90,7 +104,7 @@ export default function PendingContractsPage() {
         console.error('❌ Error fetching pending contracts:', data);
       }
     } catch (err) {
-      setError('Failed to fetch pending contracts');
+      setError('Failed to fetch pending contracts. Please check your connection.');
       console.error('❌ Exception fetching pending contracts:', err);
     } finally {
       setLoading(false);
@@ -209,17 +223,6 @@ export default function PendingContractsPage() {
     );
   }
 
-  if (loading) {
-    return (
-      <div className='container mx-auto py-6'>
-        <div className='flex h-64 items-center justify-center'>
-          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
-          <span className='ml-2'>Loading pending contracts...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className='container mx-auto space-y-6 py-6'>
       <div className='flex items-center gap-3'>
@@ -233,14 +236,16 @@ export default function PendingContractsPage() {
       </div>
 
       {error && (
-        <Card>
-          <CardContent className='flex h-32 flex-col items-center justify-center'>
-            <div className='mb-2 text-red-600'>{error}</div>
-            <Button onClick={fetchPendingContracts} variant='outline'>
-              Try Again
+        <Alert variant='destructive'>
+          <AlertTriangle className='h-4 w-4' />
+          <AlertTitle>Error Loading Contracts</AlertTitle>
+          <AlertDescription className='flex items-center justify-between'>
+            <span>{error}</span>
+            <Button onClick={fetchPendingContracts} variant='outline' size='sm' className='ml-4'>
+              Retry
             </Button>
-          </CardContent>
-        </Card>
+          </AlertDescription>
+        </Alert>
       )}
 
       <Card>
@@ -270,12 +275,30 @@ export default function PendingContractsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredContracts.length === 0 ? (
-            <div className='flex h-32 flex-col items-center justify-center'>
-              <Clock className='mb-2 h-8 w-8 text-gray-400' />
-              <p className='text-muted-foreground'>
-                No pending contracts found
-              </p>
+          {loading ? (
+            <div className='flex h-64 flex-col items-center justify-center space-y-4'>
+              <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
+              <p className='text-sm text-muted-foreground'>Loading pending contracts...</p>
+            </div>
+          ) : filteredContracts.length === 0 ? (
+            <div className='flex h-64 flex-col items-center justify-center space-y-4'>
+              <Clock className='h-16 w-16 text-gray-300' />
+              <div className='text-center space-y-2'>
+                <h3 className='text-lg font-semibold text-gray-700'>No Pending Contracts</h3>
+                <p className='text-sm text-muted-foreground max-w-md'>
+                  {searchTerm 
+                    ? `No contracts match your search "${searchTerm}"`
+                    : contracts.length === 0 
+                      ? 'There are currently no contracts awaiting approval.'
+                      : 'All contracts have been filtered out.'
+                  }
+                </p>
+              </div>
+              {searchTerm && (
+                <Button onClick={() => setSearchTerm('')} variant='outline' size='sm'>
+                  Clear Search
+                </Button>
+              )}
             </div>
           ) : (
             <div className='space-y-4'>

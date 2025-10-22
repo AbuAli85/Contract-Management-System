@@ -121,6 +121,18 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
         );
       }
 
+      // ✅ FIX: Filter by status if provided
+      if (status && status !== 'active') {
+        // Support multiple pending statuses
+        if (status === 'pending') {
+          query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature', 'Pending Review']);
+        } else {
+          query = query.eq('status', status);
+        }
+      } else if (status === 'active') {
+        query = query.eq('status', 'active');
+      }
+
       const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false })
         .limit(100); // Increased limit to show more contracts
