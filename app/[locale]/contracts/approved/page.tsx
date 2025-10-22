@@ -67,7 +67,8 @@ export default function ApprovedContractsPage() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
     
-    const timeoutId = setTimeout(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
       controller.abort();
     }, 10000); // 10 second timeout
@@ -102,7 +103,7 @@ export default function ApprovedContractsPage() {
         cache: 'no-store',
       });
       
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       console.log(`⏱️ API Response time: ${queryTime}ms`);
@@ -151,7 +152,7 @@ export default function ApprovedContractsPage() {
         });
       }
     } catch (err: any) {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       
@@ -174,7 +175,7 @@ export default function ApprovedContractsPage() {
         });
       }
     } finally {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       if (mountedRef.current) {
         setLoading(false);
@@ -183,7 +184,7 @@ export default function ApprovedContractsPage() {
       fetchAttemptedRef.current = false;
       abortControllerRef.current = null;
     }
-  }, [retryCount]);
+  }, []);
 
   // ✅ FIX: Simplified useEffect with proper dependencies
   useEffect(() => {

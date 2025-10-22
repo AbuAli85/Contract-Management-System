@@ -71,7 +71,8 @@ function PendingContractsPageContent() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
     
-    const timeoutId = setTimeout(() => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    timeoutId = setTimeout(() => {
       console.warn('⏱️ Request timeout - aborting after 10 seconds');
       controller.abort();
     }, 10000); // 10 second timeout
@@ -114,7 +115,7 @@ function PendingContractsPageContent() {
         cache: 'no-store',
       });
       
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       console.log(`⏱️ API Response time: ${queryTime}ms`);
@@ -179,7 +180,7 @@ function PendingContractsPageContent() {
         });
       }
     } catch (err: any) {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       
@@ -204,7 +205,7 @@ function PendingContractsPageContent() {
         });
       }
     } finally {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
       if (mountedRef.current) {
         setLoading(false);
@@ -213,7 +214,7 @@ function PendingContractsPageContent() {
       fetchAttemptedRef.current = false;
       abortControllerRef.current = null;
     }
-  }, [retryCount]);
+  }, []);
 
   // ✅ FIX: Simplified useEffect with proper dependencies
   useEffect(() => {
