@@ -117,13 +117,25 @@ export default function ApprovedContractsPage() {
       if (!mountedRef.current) return;
 
       if (response.status === 403) {
+        // ✅ FIX: Clear timeouts on permission error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         setPermissionError(true);
         setError('Insufficient permissions to view approved contracts');
         console.error('❌ Permission denied for approved contracts:', data);
       } else if (response.status === 401) {
+        // ✅ FIX: Clear timeouts on auth error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         setError('Please log in to view approved contracts');
         console.error('❌ Authentication required for approved contracts');
       } else if (response.status === 504) {
+        // ✅ FIX: Clear timeouts on server timeout
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         setError('Server timeout - the request took too long. Please try again.');
         console.error('❌ Server timeout for approved contracts:', {
           status: response.status,
@@ -131,6 +143,10 @@ export default function ApprovedContractsPage() {
           queryTime: `${queryTime}ms`
         });
       } else if (response.ok && data.success !== false) {
+        // ✅ FIX: Clear timeouts on success
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         const contractsList = data.contracts || [];
         setContracts(contractsList);
         setError(null);
@@ -148,6 +164,10 @@ export default function ApprovedContractsPage() {
           console.log('ℹ️ No approved contracts found - this is normal, not an error');
         }
       } else {
+        // ✅ FIX: Clear timeouts on error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         setError(data.error || data.message || 'Failed to fetch approved contracts');
         console.error('❌ Error fetching approved contracts:', {
           status: response.status,

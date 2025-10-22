@@ -129,17 +129,29 @@ function PendingContractsPageContent() {
       if (!mountedRef.current) return;
 
       if (response.status === 403) {
+        // ✅ FIX: Clear timeouts on permission error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         // Permission denied
         performanceMonitor.endOperation('fetch-pending-contracts', false, 'Permission denied');
         setPermissionError(true);
         setError('Insufficient permissions to view pending contracts');
         console.error('❌ Permission denied for pending contracts:', data);
       } else if (response.status === 401) {
+        // ✅ FIX: Clear timeouts on auth error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         // Not authenticated
         performanceMonitor.endOperation('fetch-pending-contracts', false, 'Not authenticated');
         setError('Please log in to view pending contracts');
         console.error('❌ Authentication required for pending contracts');
       } else if (response.status === 504) {
+        // ✅ FIX: Clear timeouts on server timeout
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         // Gateway timeout
         performanceMonitor.endOperation('fetch-pending-contracts', false, 'Server timeout');
         setError('Server timeout - the request took too long. Please try again.');
@@ -149,6 +161,10 @@ function PendingContractsPageContent() {
           queryTime: `${queryTime}ms`
         });
       } else if (response.ok && data.success !== false) {
+        // ✅ FIX: Clear timeouts on success
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         // ✅ FIX: Handle both success=true and undefined success (backward compatibility)
         const contractsList = data.contracts || [];
         setContracts(contractsList);
@@ -175,6 +191,10 @@ function PendingContractsPageContent() {
           console.log('ℹ️ No pending contracts found - this is normal, not an error');
         }
       } else {
+        // ✅ FIX: Clear timeouts on error
+        if (timeoutId) clearTimeout(timeoutId);
+        clearTimeout(slowLoadingTimeoutId);
+        
         performanceMonitor.endOperation('fetch-pending-contracts', false, data.error || 'Unknown error');
         setError(data.error || data.message || 'Failed to fetch pending contracts');
         console.error('❌ Error fetching pending contracts:', {
