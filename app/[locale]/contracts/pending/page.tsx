@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -51,7 +51,10 @@ function PendingContractsPageContent() {
   
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = permissions.can('contract:read:own') || permissions.isAdmin || false;
+  const hasPermission = useMemo(() => 
+    permissions.can('contract:read:own') || permissions.isAdmin || false, 
+    [permissions.can, permissions.isAdmin]
+  );
 
   // ✅ FIX: Use useCallback to memoize the fetch function
   const fetchPendingContracts = useCallback(async () => {
@@ -286,7 +289,7 @@ function PendingContractsPageContent() {
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
     fetchPendingContracts();
-  }, [fetchPendingContracts]);
+  }, []);
 
   // ✅ FIX: Add cancel function for slow loading
   const handleCancel = useCallback(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -47,7 +47,10 @@ export default function ApprovedContractsPage() {
   
   // Check permissions
   const permissions = usePermissions();
-  const hasPermission = permissions.can('contract:read:own') || permissions.isAdmin;
+  const hasPermission = useMemo(() => 
+    permissions.can('contract:read:own') || permissions.isAdmin, 
+    [permissions.can, permissions.isAdmin]
+  );
 
   // ✅ FIX: Use useCallback to memoize the fetch function
   const fetchApprovedContracts = useCallback(async () => {
@@ -255,7 +258,7 @@ export default function ApprovedContractsPage() {
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
     fetchApprovedContracts();
-  }, [fetchApprovedContracts]);
+  }, []);
 
   // ✅ FIX: Add cancel function for slow loading
   const handleCancel = useCallback(() => {
