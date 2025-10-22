@@ -60,7 +60,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, isValid, parse } from 'date-fns';
 import {
   Loader2,
   Eye,
@@ -127,14 +127,70 @@ interface ContractStats {
   avg_duration: number;
 }
 
+// Safe date parsing functions to prevent "Invalid time value" errors
+const safeParseISO = (dateString: string | null | undefined): Date | null => {
+  if (!dateString || typeof dateString !== 'string') return null;
+  
+  try {
+    const parsed = parseISO(dateString);
+    if (isValid(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('Invalid ISO date string:', dateString, error);
+  }
+  
+  // Try alternative parsing for common formats
+  try {
+    const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
+    for (const formatStr of formats) {
+      const parsed = parse(dateString, formatStr, new Date());
+      if (isValid(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse date with alternative formats:', dateString, error);
+  }
+  
+  return null;
+};
+
+const safeFormatDate = (dateString: string | null | undefined, formatStr: string = 'dd-MM-yyyy'): string => {
+  const date = safeParseISO(dateString);
+  if (!date) return 'Invalid date';
+  
+  try {
+    return format(date, formatStr);
+  } catch (error) {
+    console.warn('Failed to format date:', date, error);
+    return 'Invalid date';
+  }
+};
+
+const safeDifferenceInDays = (dateString: string | null | undefined, compareDate: Date = new Date()): number | null => {
+  const date = safeParseISO(dateString);
+  if (!date) return null;
+  
+  try {
+    return differenceInDays(date, compareDate);
+  } catch (error) {
+    console.warn('Failed to calculate date difference:', date, error);
+    return null;
+  }
+};
+
 type ContractStatus = 'Active' | 'Expired' | 'Upcoming' | 'Unknown';
 
 function getContractStatus(contract: ContractWithRelations): ContractStatus {
   if (!contract.contract_start_date || !contract.contract_end_date)
     return 'Unknown';
   const now = new Date();
-  const startDate = parseISO(contract.contract_start_date);
-  const endDate = parseISO(contract.contract_end_date);
+  const startDate = safeParseISO(contract.contract_start_date);
+  const endDate = safeParseISO(contract.contract_end_date);
+  
+  if (!startDate || !endDate) return 'Unknown';
+  
   if (now >= startDate && now <= endDate) return 'Active';
   if (now > endDate) return 'Expired';
   if (now < startDate) return 'Upcoming';
@@ -150,19 +206,19 @@ function enhanceContract(contract: ContractWithRelations): EnhancedContract {
   let age_days: number | undefined;
 
   if (contract.contract_end_date) {
-    const endDate = parseISO(contract.contract_end_date);
-    days_until_expiry = differenceInDays(endDate, now);
+    days_until_expiry = safeDifferenceInDays(contract.contract_end_date, now) ?? undefined;
   }
 
   if (contract.contract_start_date && contract.contract_end_date) {
-    const startDate = parseISO(contract.contract_start_date);
-    const endDate = parseISO(contract.contract_end_date);
-    contract_duration_days = differenceInDays(endDate, startDate);
+    const startDate = safeParseISO(contract.contract_start_date);
+    const endDate = safeParseISO(contract.contract_end_date);
+    if (startDate && endDate) {
+      contract_duration_days = differenceInDays(endDate, startDate);
+    }
   }
 
   if (contract.created_at) {
-    const createdDate = parseISO(contract.created_at);
-    age_days = differenceInDays(now, createdDate);
+    age_days = safeDifferenceInDays(contract.created_at, now) ?? undefined;
   }
 
   return {
@@ -591,20 +647,14 @@ function ContractsContent() {
             ? contract.promoters[0].name_en || 'N/A'
             : 'N/A',
         'Job Title': contract.job_title || 'N/A',
-        'Start Date': contract.contract_start_date
-          ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy')
-          : 'N/A',
-        'End Date': contract.contract_end_date
-          ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy')
-          : 'N/A',
+        'Start Date': safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy'),
+        'End Date': safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy'),
         Status: getContractStatus(contract),
         'Contract Value': contract.contract_value || 0,
         'Work Location': contract.work_location || 'N/A',
         Email: contract.email || 'N/A',
         'PDF URL': contract.pdf_url || 'N/A',
-        'Created At': contract.created_at
-          ? format(parseISO(contract.created_at), 'dd-MM-yyyy')
-          : 'N/A',
+        'Created At': safeFormatDate(contract.created_at, 'dd-MM-yyyy'),
         'Days Until Expiry': contract.days_until_expiry || 'N/A',
         'Contract Duration (Days)': contract.contract_duration_days || 'N/A',
       }));
@@ -1366,22 +1416,12 @@ function ContractsContent() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {contract.contract_start_date
-                                ? format(
-                                    parseISO(contract.contract_start_date),
-                                    'dd-MM-yyyy'
-                                  )
-                                : 'N/A'}
+                              {safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}
                             </TableCell>
                             <TableCell>
                               <div className='flex flex-col'>
                                 <span>
-                                  {contract.contract_end_date
-                                    ? format(
-                                        parseISO(contract.contract_end_date),
-                                        'dd-MM-yyyy'
-                                      )
-                                    : 'N/A'}
+                                  {safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
                                 </span>
                                 {enhanced.days_until_expiry !== undefined &&
                                   enhanced.days_until_expiry <= 30 &&
@@ -1664,15 +1704,9 @@ function ContractsContent() {
                                 {contract.contract_start_date &&
                                   contract.contract_end_date && (
                                     <>
-                                      {format(
-                                        parseISO(contract.contract_start_date),
-                                        'dd-MM-yyyy'
-                                      )}{' '}
+                                      {safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}{' '}
                                       -{' '}
-                                      {format(
-                                        parseISO(contract.contract_end_date),
-                                        'dd-MM-yyyy'
-                                      )}
+                                      {safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
                                       {enhanced.days_until_expiry !==
                                         undefined &&
                                         enhanced.days_until_expiry <= 30 &&
@@ -1844,8 +1878,8 @@ Please find attached the employment contract for your review and signature.
 Contract Details:
 - Contract Number: ${contract.contract_number || 'N/A'}
 - Job Title: ${contract.job_title || 'N/A'}
-- Start Date: ${contract.contract_start_date ? format(parseISO(contract.contract_start_date), 'dd-MM-yyyy') : 'N/A'}
-- End Date: ${contract.contract_end_date ? format(parseISO(contract.contract_end_date), 'dd-MM-yyyy') : 'N/A'}
+- Start Date: ${safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy')}
+- End Date: ${safeFormatDate(contract.contract_end_date, 'dd-MM-yyyy')}
 
 Please review the attached contract and let us know if you have any questions.
 

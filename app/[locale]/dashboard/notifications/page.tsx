@@ -42,8 +42,39 @@ import {
   isAfter,
   isBefore,
   parseISO,
+  isValid,
+  parse,
 } from 'date-fns';
 import clsx from 'clsx';
+
+// Safe date parsing functions to prevent "Invalid time value" errors
+const safeParseISO = (dateString: string | null | undefined): Date | null => {
+  if (!dateString || typeof dateString !== 'string') return null;
+  
+  try {
+    const parsed = parseISO(dateString);
+    if (isValid(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('Invalid ISO date string:', dateString, error);
+  }
+  
+  // Try alternative parsing for common formats
+  try {
+    const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
+    for (const formatStr of formats) {
+      const parsed = parse(dateString, formatStr, new Date());
+      if (isValid(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse date with alternative formats:', dateString, error);
+  }
+  
+  return null;
+};
 import { toast } from '@/hooks/use-toast';
 
 import type { NotificationItem } from '@/lib/dashboard-types';
@@ -199,10 +230,11 @@ export default function NotificationsPage() {
 
           const matchesUser = !userFilter || notif.user_id === userFilter;
 
+          const createdDate = safeParseISO(notif.created_at);
           const matchesDate =
             (!startDate && !endDate) ||
-            ((!startDate || isAfter(parseISO(notif.created_at), startDate)) &&
-              (!endDate || isBefore(parseISO(notif.created_at), endDate)));
+            ((!startDate || (createdDate && isAfter(createdDate, startDate))) &&
+              (!endDate || (createdDate && isBefore(createdDate, endDate))));
 
           return (
             matchesSearch &&
