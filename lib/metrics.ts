@@ -201,7 +201,7 @@ export async function getContractMetrics(
     // Build base query based on user role
     let query = supabase
       .from('contracts')
-      .select('status, contract_value, start_date, end_date, created_at, contract_start_date, contract_end_date');
+      .select('status, contract_value, start_date, end_date, created_at');
 
     // RBAC: Non-admins see only their contracts
     if (userRole !== 'admin' && userId) {
@@ -289,9 +289,9 @@ export async function getContractMetrics(
         metrics.totalValue += Number(contract.contract_value);
       }
 
-      // Calculate duration - try both field names
-      const startDate = contract.start_date || contract.contract_start_date;
-      const endDate = contract.end_date || contract.contract_end_date;
+      // Calculate duration using start_date and end_date columns
+      const startDate = contract.start_date;
+      const endDate = contract.end_date;
 
       if (startDate && endDate) {
         const start = new Date(startDate);
