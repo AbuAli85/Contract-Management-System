@@ -7,6 +7,9 @@ import { withRBAC } from '@/lib/rbac/guard';
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
 
+// Check if RBAC bypass is enabled for debugging
+const RBAC_BYPASS = process.env.RBAC_BYPASS === 'true' || process.env.RBAC_ENFORCEMENT === 'disabled';
+
 // Validation schema for party data
 const partySchema = z.object({
   name_en: z.string().min(1, 'English name is required'),
@@ -27,7 +30,8 @@ const partySchema = z.object({
   notes: z.string().optional(),
 });
 
-export const GET = withRBAC('party:read:own', async (request: Request) => {
+// Main GET handler
+async function handleGET(request: Request) {
   const startTime = Date.now();
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
@@ -395,7 +399,15 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       { status: 500 }
     );
   }
-});
+}
+
+// Export GET with optional RBAC protection
+export const GET = RBAC_BYPASS 
+  ? (async (request: Request) => {
+      console.log('⚠️ RBAC BYPASS ENABLED - Running without permission checks');
+      return handleGET(request);
+    })
+  : withRBAC('party:read:own', handleGET);
 
 export async function POST(request: Request) {
   try {

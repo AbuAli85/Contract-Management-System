@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 
 import PartyForm from '@/components/party-form';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,12 @@ import {
   usePartiesQuery,
   useDeletePartyMutation,
 } from '@/hooks/use-parties-query';
+
+// Dynamically import ApiErrorDisplay to avoid SSR issues
+const ApiErrorDisplay = dynamic(
+  () => import('@/components/error-boundary/api-error-display').then(mod => ({ default: mod.ApiErrorDisplay })),
+  { ssr: false }
+);
 import {
   Card,
   CardContent,
@@ -636,109 +643,17 @@ function ManagePartiesContent() {
     );
   }
 
-  // Enhanced error state with retry functionality
+  // Enhanced error state with retry functionality using new error display component
   if (isError && error) {
-    const errorInfo = getErrorMessage(error);
-    
     return (
       <div className='flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950'>
-        <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
-          <CardHeader>
-            <div className='flex items-center gap-3'>
-              <div className='rounded-full bg-red-100 p-3 dark:bg-red-900'>
-                <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-300' />
-              </div>
-              <div>
-                <CardTitle className='text-red-900 dark:text-red-100'>
-                  {errorInfo.title}
-                </CardTitle>
-                <CardDescription className='text-red-700 dark:text-red-300'>
-                  {errorInfo.message}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className='space-y-4'>
-            {/* Retry information */}
-            {retryCount > 0 && (
-              <div className='rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20'>
-                <p className='text-sm text-yellow-800 dark:text-yellow-200'>
-                  <Clock className='mr-2 inline h-4 w-4' />
-                  Attempted {retryCount} retries automatically
-              </p>
-            </div>
-            )}
-
-            {/* Technical details in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-900'>
-                <details className='text-sm'>
-                  <summary className='cursor-pointer font-medium text-gray-700 dark:text-gray-300'>
-                    Technical Details
-                  </summary>
-                  <pre className='mt-2 text-xs text-gray-600 dark:text-gray-400'>
-                    {JSON.stringify({
-                      error: error.message,
-                      failureCount,
-                      failureReason: failureReason?.message,
-                      timestamp: new Date().toISOString(),
-                    }, null, 2)}
-                  </pre>
-                </details>
-            </div>
-            )}
-
-            {/* Action buttons */}
-            <div className='flex flex-wrap gap-2'>
-              {errorInfo.canRetry && (
-              <Button
-                  onClick={handleRetry}
-                  disabled={isRefreshing}
-                  className='flex-1 min-w-[120px]'
-                >
-                  {isRefreshing ? (
-                    <>
-                      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                      Retrying...
-                    </>
-                  ) : (
-                    <>
-                <RefreshCw className='mr-2 h-4 w-4' />
-                Try Again
-                    </>
-                  )}
-              </Button>
-              )}
-              
-              <Button variant='outline' asChild>
-                <Link href='/en/dashboard'>
-                  <Home className='mr-2 h-4 w-4' />
-                  Back to Dashboard
-                </Link>
-              </Button>
-              
-              <Button variant='outline' onClick={() => window.location.reload()}>
-                <RefreshCw className='mr-2 h-4 w-4' />
-                Reload Page
-              </Button>
-            </div>
-
-            {/* Network status indicator */}
-            <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400'>
-              {navigator.onLine ? (
-                <>
-                  <Wifi className='h-4 w-4 text-green-500' />
-                  Online
-                </>
-              ) : (
-                <>
-                  <WifiOff className='h-4 w-4 text-red-500' />
-                  Offline - Check your internet connection
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ApiErrorDisplay
+          error={error}
+          onRetry={handleRetry}
+          isRetrying={isRefreshing}
+          retryCount={retryCount}
+          showTechnicalDetails={process.env.NODE_ENV === 'development'}
+        />
       </div>
     );
   }
