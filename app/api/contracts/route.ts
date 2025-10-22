@@ -226,8 +226,13 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
           )
           .in('id', Array.from(promoterIds));
 
+        if (promotersError) {
+          console.warn('⚠️ Contracts API: Error fetching promoters:', promotersError.message);
+        }
+        
         if (!promotersError && promoters) {
           promotersData = promoters;
+          console.log(`✅ Contracts API: Fetched ${promoters.length} promoters`);
         }
       }
 
@@ -252,11 +257,16 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
           ? promotersMap.get(contract.promoter_id)
           : null;
 
+        // Log warning if promoter_id exists but promoter data is missing
+        if (contract.promoter_id && !promoter) {
+          console.warn(`⚠️ Promoter data not found for contract ${contract.id} with promoter_id ${contract.promoter_id}`);
+        }
+
         return {
           ...contract,
           first_party: firstParty,
           second_party: secondParty,
-          promoters: promoter ? [promoter] : null,
+          promoters: promoter,  // ✅ FIX: Return as object, not array (matches TypeScript type definition)
           // Ensure we have the right field names for the frontend
           contract_start_date:
             contract.start_date || contract.contract_start_date,

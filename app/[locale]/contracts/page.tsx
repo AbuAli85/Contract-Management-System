@@ -641,10 +641,8 @@ function ContractsContent() {
             ? contract.second_party.name_en || 'N/A'
             : 'N/A',
         Promoter:
-          contract.promoters &&
-          Array.isArray(contract.promoters) &&
-          contract.promoters.length > 0
-            ? contract.promoters[0].name_en || 'N/A'
+          contract.promoters && typeof contract.promoters === 'object'
+            ? contract.promoters.name_en || 'N/A'
             : 'N/A',
         'Job Title': contract.job_title || 'N/A',
         'Start Date': safeFormatDate(contract.contract_start_date, 'dd-MM-yyyy'),
