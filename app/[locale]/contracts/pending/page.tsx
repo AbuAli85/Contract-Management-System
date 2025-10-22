@@ -37,6 +37,7 @@ export default function PendingContractsPage() {
   const [error, setError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
   
   // Check permissions
   const permissions = usePermissions();
@@ -65,12 +66,44 @@ export default function PendingContractsPage() {
   }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
 
   const fetchPendingContracts = async () => {
+    // ✅ FIX: Add AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.warn('⏱️ Request timeout - aborting after 10 seconds');
+      controller.abort();
+    }, 10000); // 10 second timeout
+
+    // Show "taking longer than expected" message after 3 seconds
+    const slowLoadingTimeoutId = setTimeout(() => {
+      setShowSlowLoadingMessage(true);
+    }, 3000);
+
+    const startTime = Date.now();
+    
     try {
       setLoading(true);
       setError(null);
       setPermissionError(false);
+      setShowSlowLoadingMessage(false);
       
-      const response = await fetch('/api/contracts?status=pending');
+      console.log('🔍 Pending Contracts Debug:', {
+        timestamp: new Date().toISOString(),
+        endpoint: '/api/contracts?status=pending',
+        timeout: '10 seconds'
+      });
+      
+      const response = await fetch('/api/contracts?status=pending', {
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      clearTimeout(timeoutId);
+      clearTimeout(slowLoadingTimeoutId);
+      const queryTime = Date.now() - startTime;
+      console.log(`⏱️ API Response time: ${queryTime}ms`);
+      
       const data = await response.json();
 
       if (response.status === 403) {
@@ -82,18 +115,48 @@ export default function PendingContractsPage() {
         // Not authenticated
         setError('Please log in to view pending contracts');
         console.error('❌ Authentication required for pending contracts');
-      } else if (data.success) {
+      } else if (response.ok && data.success) {
         setContracts(data.contracts || []);
-        console.log('✅ Loaded pending contracts:', data.contracts?.length || 0);
+        console.log('✅ Loaded pending contracts:', {
+          count: data.contracts?.length || 0,
+          queryTime: `${queryTime}ms`,
+          sampleIds: (data.contracts || []).slice(0, 3).map((c: any) => c.id),
+          totalPending: data.pendingContracts,
+          timestamp: new Date().toISOString()
+        });
       } else {
         setError(data.error || 'Failed to fetch pending contracts');
-        console.error('❌ Error fetching pending contracts:', data);
+        console.error('❌ Error fetching pending contracts:', {
+          status: response.status,
+          data,
+          queryTime: `${queryTime}ms`
+        });
       }
-    } catch (err) {
-      setError('Failed to fetch pending contracts');
-      console.error('❌ Exception fetching pending contracts:', err);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      clearTimeout(slowLoadingTimeoutId);
+      const queryTime = Date.now() - startTime;
+      
+      if (err.name === 'AbortError') {
+        setError('Request timeout - the server took too long to respond. Please try again.');
+        console.error('❌ Request timeout after 10 seconds:', {
+          queryTime: `${queryTime}ms`,
+          timestamp: new Date().toISOString()
+        });
+      } else {
+        setError('Failed to fetch pending contracts. Please check your connection and try again.');
+        console.error('❌ Exception fetching pending contracts:', {
+          error: err,
+          message: err.message,
+          queryTime: `${queryTime}ms`,
+          timestamp: new Date().toISOString()
+        });
+      }
     } finally {
+      clearTimeout(timeoutId);
+      clearTimeout(slowLoadingTimeoutId);
       setLoading(false);
+      setShowSlowLoadingMessage(false);
     }
   };
 
@@ -212,9 +275,14 @@ export default function PendingContractsPage() {
   if (loading) {
     return (
       <div className='container mx-auto py-6'>
-        <div className='flex h-64 items-center justify-center'>
+        <div className='flex h-64 flex-col items-center justify-center'>
           <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
-          <span className='ml-2'>Loading pending contracts...</span>
+          <span className='ml-2 mt-3 text-base font-medium'>Loading pending contracts...</span>
+          {showSlowLoadingMessage && (
+            <p className='mt-2 text-sm text-muted-foreground'>
+              This is taking longer than expected. Please wait...
+            </p>
+          )}
         </div>
       </div>
     );
@@ -233,14 +301,25 @@ export default function PendingContractsPage() {
       </div>
 
       {error && (
-        <Card>
-          <CardContent className='flex h-32 flex-col items-center justify-center'>
-            <div className='mb-2 text-red-600'>{error}</div>
-            <Button onClick={fetchPendingContracts} variant='outline'>
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <Alert variant='destructive'>
+          <AlertTriangle className='h-4 w-4' />
+          <AlertTitle>Failed to Load Pending Contracts</AlertTitle>
+          <AlertDescription className='space-y-3'>
+            <p>{error}</p>
+            <div className='flex gap-2 mt-3'>
+              <Button onClick={fetchPendingContracts} variant='outline' size='sm'>
+                <Clock className='mr-2 h-4 w-4' />
+                Retry
+              </Button>
+              <Button variant='outline' size='sm' asChild>
+                <Link href='/en/contracts'>
+                  <Eye className='mr-2 h-4 w-4' />
+                  View All Contracts
+                </Link>
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       )}
 
       <Card>
@@ -271,11 +350,25 @@ export default function PendingContractsPage() {
         </CardHeader>
         <CardContent>
           {filteredContracts.length === 0 ? (
-            <div className='flex h-32 flex-col items-center justify-center'>
-              <Clock className='mb-2 h-8 w-8 text-gray-400' />
-              <p className='text-muted-foreground'>
-                No pending contracts found
+            <div className='flex h-48 flex-col items-center justify-center'>
+              <div className='rounded-full bg-green-100 p-4 mb-4'>
+                <Clock className='h-8 w-8 text-green-600' />
+              </div>
+              <h3 className='text-lg font-semibold mb-2'>No Pending Contracts</h3>
+              <p className='text-muted-foreground mb-4 text-center max-w-md'>
+                {searchTerm ? 
+                  'No contracts match your search criteria. Try adjusting your search.' :
+                  'All contracts have been reviewed and approved. Great work!'
+                }
               </p>
+              {!searchTerm && (
+                <Button variant='outline' size='sm' asChild>
+                  <Link href='/en/contracts'>
+                    <Eye className='mr-2 h-4 w-4' />
+                    View All Contracts
+                  </Link>
+                </Button>
+              )}
             </div>
           ) : (
             <div className='space-y-4'>

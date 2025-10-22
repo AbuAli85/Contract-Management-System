@@ -114,6 +114,21 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       // Use simple select first, then fetch related data separately
       let query = supabase.from('contracts').select('*');
 
+      // ✅ FIX: Apply status filter if provided
+      if (status && status !== 'all' && status !== 'active') {
+        console.log(`🔍 Filtering contracts by status: ${status}`);
+        // Handle different status values
+        if (status === 'pending') {
+          // Include all pending-related statuses
+          query = query.in('status', ['pending', 'legal_review', 'hr_review', 'final_approval', 'signature']);
+        } else {
+          query = query.eq('status', status);
+        }
+      } else if (status === 'active') {
+        // Default behavior for active status
+        query = query.eq('status', 'active');
+      }
+
       // Non-admin users only see contracts they're involved in
       if (!isAdmin) {
         query = query.or(
@@ -121,9 +136,19 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
         );
       }
 
+      const queryStartTime = Date.now();
       const { data: contractsData, error: contractsError } = await query
         .order('created_at', { ascending: false })
         .limit(100); // Increased limit to show more contracts
+      
+      const queryTime = Date.now() - queryStartTime;
+      console.log('📊 Query execution:', {
+        status: status || 'all',
+        queryTime: `${queryTime}ms`,
+        resultCount: contractsData?.length || 0,
+        isAdmin,
+        timestamp: new Date().toISOString()
+      });
 
       if (contractsError) {
         console.warn(
@@ -250,10 +275,6 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       );
       contracts = [];
     }
-
-    console.log(
-      `✅ Contracts API: Successfully fetched ${contracts?.length || 0} contracts`
-    );
 
     // Get basic statistics with error handling
     let totalContracts = 0;
@@ -383,6 +404,18 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       stats.avg_duration =
         validDurations > 0 ? Math.round(totalDuration / validDurations) : 0;
     }
+
+    console.log(
+      `✅ Contracts API: Successfully fetched ${contracts?.length || 0} contracts`,
+      {
+        status: status || 'all',
+        total: contracts.length,
+        pending: stats.pending,
+        active: stats.active,
+        sampleIds: contracts.slice(0, 3).map(c => c.id),
+        timestamp: new Date().toISOString()
+      }
+    );
 
     console.log('✅ Contracts API: Request completed successfully');
 
