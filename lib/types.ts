@@ -132,7 +132,7 @@ export interface Contract {
   contract_type?: string | null;
   terms?: string | null;
   department?: string | null;
-  currency?: string | null;
+  currency?: 'USD' | 'OMR' | 'SAR' | 'AED' | 'EUR' | 'GBP' | null;
   end_date?: string | null;
   duration?: string | null;
   parties?: Party[] | null;

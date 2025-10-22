@@ -11,6 +11,9 @@ import {
 import { usePermissions } from '@/hooks/use-permissions';
 import { useAuth } from '@/lib/auth-service';
 import { Button } from '@/components/ui/button';
+import { CurrencyDisplay } from '@/components/ui/currency-display';
+import { CurrencyIndicator } from '@/components/ui/currency-indicator';
+import { useCurrencyPreference } from '@/hooks/use-currency-preference';
 import {
   Table,
   TableBody,
@@ -252,6 +255,9 @@ function ContractsContent() {
 
   // Add authentication check
   const { user, loading: authLoading } = useAuth();
+  
+  // Get user's preferred currency
+  const { preferredCurrency } = useCurrencyPreference();
 
   // Get pagination params from URL
   const currentPage = parseInt(searchParams?.get('page') || '1', 10);
@@ -892,9 +898,15 @@ function ContractsContent() {
             <div>
               <p className='text-sm text-indigo-100 font-medium'>Total Value</p>
               <p className='text-lg font-bold'>
-                ${contractStats.total_value.toLocaleString()}
+                <CurrencyDisplay
+                  amount={contractStats.total_value}
+                  currency="USD"
+                  displayCurrency={preferredCurrency}
+                  showTooltip={true}
+                  className="text-white"
+                />
               </p>
-              <p className='text-xs text-indigo-200 mt-1'>OMR</p>
+              <p className='text-xs text-indigo-200 mt-1'>All contracts</p>
             </div>
             <div className='p-2 bg-blue-400/20 rounded-lg'>
               <TrendingUp className='h-6 w-6 text-indigo-200' />
@@ -1066,6 +1078,11 @@ function ContractsContent() {
           {t('dashboard.description')}
         </p>
       </header>
+
+      {/* Currency Indicator */}
+      <div className='mb-4'>
+        <CurrencyIndicator currency={preferredCurrency} />
+      </div>
 
       {/* Statistics Cards */}
       {showStats && (
