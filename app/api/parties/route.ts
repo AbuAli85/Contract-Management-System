@@ -34,6 +34,14 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
   try {
     console.log(`[${requestId}] 🚀 Parties API Request started`);
     
+    // Validate environment variables
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_URL environment variable is not set');
+    }
+    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is not set');
+    }
+    
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -66,38 +74,75 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       }
     );
 
-    // Get authenticated user with timeout
+    // Get authenticated user with timeout and retry logic
     const authStartTime = Date.now();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    const authDuration = Date.now() - authStartTime;
+    let authAttempts = 0;
+    const maxAuthAttempts = 3;
+    let user: any = null;
+    let authError: any = null;
 
-    console.log(`[${requestId}] 🔐 Auth check completed in ${authDuration}ms`);
+    while (authAttempts < maxAuthAttempts && !user && !authError) {
+      authAttempts++;
+      try {
+        const authResult = await supabase.auth.getUser();
+        user = authResult.data.user;
+        authError = authResult.error;
+        
+        if (authError) {
+          console.warn(`[${requestId}] ⚠️ Auth attempt ${authAttempts} failed:`, {
+            message: authError.message,
+            status: authError.status,
+          });
+          
+          // Wait before retry (exponential backoff)
+          if (authAttempts < maxAuthAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * authAttempts));
+          }
+        }
+      } catch (error) {
+        console.error(`[${requestId}] 💥 Auth attempt ${authAttempts} threw error:`, error);
+        authError = error;
+        
+        if (authAttempts < maxAuthAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * authAttempts));
+        }
+      }
+    }
+
+    const authDuration = Date.now() - authStartTime;
+    console.log(`[${requestId}] 🔐 Auth check completed in ${authDuration}ms (${authAttempts} attempts)`);
 
     if (authError) {
-      console.error(`[${requestId}] ❌ Auth error:`, {
+      console.error(`[${requestId}] ❌ Auth failed after ${authAttempts} attempts:`, {
         message: authError.message,
         status: authError.status,
+        attempts: authAttempts,
       });
       return NextResponse.json(
         { 
           success: false,
           error: 'Authentication failed',
-          message: authError.message 
+          message: authError.message,
+          details: process.env.NODE_ENV === 'development' ? {
+            attempts: authAttempts,
+            duration: `${authDuration}ms`,
+          } : undefined,
         }, 
         { status: 401 }
       );
     }
 
     if (!user) {
-      console.warn(`[${requestId}] ⚠️ No authenticated user found`);
+      console.warn(`[${requestId}] ⚠️ No authenticated user found after ${authAttempts} attempts`);
       return NextResponse.json(
         { 
           success: false,
           error: 'Unauthorized',
-          message: 'You must be logged in to access this resource' 
+          message: 'You must be logged in to access this resource',
+          details: process.env.NODE_ENV === 'development' ? {
+            attempts: authAttempts,
+            duration: `${authDuration}ms`,
+          } : undefined,
         }, 
         { status: 401 }
       );
@@ -119,23 +164,61 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       userId: user.id 
     });
 
-    // Fetch parties from the database with pagination
+    // Fetch parties from the database with pagination and retry logic
     const queryStartTime = Date.now();
-    const { data: parties, error, count } = await supabase
-      .from('parties')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let queryAttempts = 0;
+    const maxQueryAttempts = 3;
+    let parties: any[] | null = null;
+    let count: number | null = null;
+    let queryError: any = null;
+
+    while (queryAttempts < maxQueryAttempts && !parties && !queryError) {
+      queryAttempts++;
+      try {
+        console.log(`[${requestId}] 📝 Database query attempt ${queryAttempts}`);
+        
+        const queryResult = await supabase
+          .from('parties')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+        
+        parties = queryResult.data;
+        count = queryResult.count;
+        queryError = queryResult.error;
+        
+        if (queryError) {
+          console.warn(`[${requestId}] ⚠️ Query attempt ${queryAttempts} failed:`, {
+            message: queryError.message,
+            code: queryError.code,
+            hint: queryError.hint,
+          });
+          
+          // Wait before retry (exponential backoff)
+          if (queryAttempts < maxQueryAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * queryAttempts));
+          }
+        }
+      } catch (error) {
+        console.error(`[${requestId}] 💥 Query attempt ${queryAttempts} threw error:`, error);
+        queryError = error;
+        
+        if (queryAttempts < maxQueryAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * queryAttempts));
+        }
+      }
+    }
+
     const queryDuration = Date.now() - queryStartTime;
+    console.log(`[${requestId}] 📝 Database query completed in ${queryDuration}ms (${queryAttempts} attempts)`);
 
-    console.log(`[${requestId}] 📝 Database query completed in ${queryDuration}ms`);
-
-    if (error) {
-      console.error(`[${requestId}] ❌ Database error:`, {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
+    if (queryError) {
+      console.error(`[${requestId}] ❌ Database query failed after ${queryAttempts} attempts:`, {
+        message: queryError.message,
+        details: queryError.details,
+        hint: queryError.hint,
+        code: queryError.code,
+        attempts: queryAttempts,
       });
       
       return NextResponse.json(
@@ -145,9 +228,11 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
           message: 'A database error occurred while fetching parties',
           details: process.env.NODE_ENV === 'development' 
             ? {
-                message: error.message,
-                code: error.code,
-                hint: error.hint,
+                message: queryError.message,
+                code: queryError.code,
+                hint: queryError.hint,
+                attempts: queryAttempts,
+                duration: `${queryDuration}ms`,
               }
             : undefined,
         },
@@ -155,9 +240,34 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       );
     }
 
-    // Check for empty results
-    if (!parties || parties.length === 0) {
+    // Validate and check results
+    if (!parties) {
+      console.warn(`[${requestId}] ⚠️ Parties data is null - this might indicate a database issue`);
+      parties = [];
+    }
+
+    if (!Array.isArray(parties)) {
+      console.error(`[${requestId}] ❌ Parties data is not an array:`, typeof parties);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Invalid data format',
+          message: 'The server returned invalid data format',
+          details: process.env.NODE_ENV === 'development' 
+            ? {
+                dataType: typeof parties,
+                isArray: Array.isArray(parties),
+              }
+            : undefined,
+        },
+        { status: 500 }
+      );
+    }
+
+    if (parties.length === 0) {
       console.log(`[${requestId}] ℹ️ No parties found (empty result set)`);
+    } else {
+      console.log(`[${requestId}] ✅ Retrieved ${parties.length} parties successfully`);
     }
 
     const totalDuration = Date.now() - startTime;
@@ -171,18 +281,46 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       }
     });
 
-    // Transform data to include basic information
-    // Contract counts will be calculated separately to avoid foreign key issues
-    const partiesWithCounts = parties?.map(party => ({
-      ...party,
-      total_contracts: 0, // Will be calculated separately
-      active_contracts: 0, // Will be calculated separately
-    }));
+    // Transform data to include basic information with validation
+    const partiesWithCounts = parties.map(party => {
+      try {
+        // Validate required fields
+        if (!party.id) {
+          console.warn(`[${requestId}] ⚠️ Party missing ID:`, party);
+        }
+        if (!party.name_en && !party.name_ar) {
+          console.warn(`[${requestId}] ⚠️ Party missing names:`, party.id);
+        }
 
-    return NextResponse.json({
+        return {
+          ...party,
+          total_contracts: 0, // Will be calculated separately
+          active_contracts: 0, // Will be calculated separately
+        };
+      } catch (error) {
+        console.error(`[${requestId}] ❌ Error processing party:`, {
+          partyId: party.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        
+        // Return a safe fallback
+        return {
+          id: party.id || 'unknown',
+          name_en: party.name_en || 'Unknown Party',
+          name_ar: party.name_ar || '',
+          type: party.type || 'Generic',
+          status: party.status || 'Active',
+          total_contracts: 0,
+          active_contracts: 0,
+          ...party,
+        };
+      }
+    });
+
+    const response = {
       success: true,
-      parties: partiesWithCounts || [],
-      count: parties?.length || 0,
+      parties: partiesWithCounts,
+      count: parties.length,
       total: count || 0,
       pagination: {
         page,
@@ -196,17 +334,45 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       _meta: process.env.NODE_ENV === 'development' ? {
         requestId,
         duration: `${totalDuration}ms`,
+        authAttempts,
+        queryAttempts,
+        breakdown: {
+          auth: `${authDuration}ms`,
+          query: `${queryDuration}ms`,
+        },
       } : undefined,
+    };
+
+    console.log(`[${requestId}] ✅ Response prepared:`, {
+      partiesCount: partiesWithCounts.length,
+      totalCount: count,
+      duration: `${totalDuration}ms`,
     });
+
+    return NextResponse.json(response);
   } catch (error) {
     const totalDuration = Date.now() - startTime;
     
-    console.error(`[${requestId}] 💥 Unexpected error:`, {
+    // Enhanced error logging with more context
+    const errorDetails = {
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.constructor.name : typeof error,
       duration: `${totalDuration}ms`,
       timestamp: new Date().toISOString(),
-    });
+      requestId,
+      url: request.url,
+      method: request.method,
+      userAgent: request.headers.get('user-agent'),
+    };
+    
+    console.error(`[${requestId}] 💥 Unexpected error:`, errorDetails);
+    
+    // Log to external service if configured (e.g., Sentry, LogRocket)
+    if (process.env.NODE_ENV === 'production') {
+      // Example: Sentry.captureException(error, { extra: errorDetails });
+      console.error('Production error - consider logging to external service:', errorDetails);
+    }
     
     return NextResponse.json(
       { 
@@ -217,11 +383,13 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
           ? {
               message: error instanceof Error ? error.message : 'Unknown error',
               type: error instanceof Error ? error.constructor.name : typeof error,
+              stack: error instanceof Error ? error.stack : undefined,
             }
           : undefined,
         _meta: process.env.NODE_ENV === 'development' ? {
           requestId,
           duration: `${totalDuration}ms`,
+          timestamp: new Date().toISOString(),
         } : undefined,
       },
       { status: 500 }

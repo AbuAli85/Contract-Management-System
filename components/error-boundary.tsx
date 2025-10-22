@@ -1,93 +1,165 @@
 'use client';
 
-import React, { Component, type ReactNode } from 'react';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { AlertTriangle, RefreshCw, Home, Bug, Wifi, WifiOff } from 'lucide-react';
+import Link from 'next/link';
 
-interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-}
-
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
-  error: Error | null;
-  errorInfo: React.ErrorInfo | null;
+  error?: Error;
+  errorInfo?: React.ErrorInfo;
+  retryCount: number;
 }
 
-/**
- * Error Boundary Component
- * 
- * Catches JavaScript errors anywhere in the child component tree,
- * logs those errors, and displays a fallback UI instead of the
- * component tree that crashed.
- * 
- * Usage:
- * ```tsx
- * <ErrorBoundary>
- *   <YourComponent />
- * </ErrorBoundary>
- * ```
- */
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+  maxRetries?: number;
+}
+
+export class PartiesErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  private retryTimeoutId: NodeJS.Timeout | null = null;
+
+  constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
+    this.state = { 
+      hasError: false, 
+      retryCount: 0 
     };
   }
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { 
+      hasError: true, 
+      error 
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log error details for debugging
-    console.error('Error Boundary caught an error:', {
-      error: error.toString(),
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-    });
+    console.error('Parties Error Boundary caught an error:', error, errorInfo);
+    
+    this.setState({ error, errorInfo });
+    
+    // Call custom error handler if provided
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
 
-    this.setState({
-      error,
-      errorInfo,
-    });
+    // Log to external service in production
+    if (process.env.NODE_ENV === 'production') {
+      // Example: Sentry.captureException(error, { extra: errorInfo });
+      console.error('Production error - consider logging to external service:', {
+        error: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+      });
+    }
   }
 
-  handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    });
-    
-    // Reload the page to reset the app state
+  componentWillUnmount() {
+    if (this.retryTimeoutId) {
+      clearTimeout(this.retryTimeoutId);
+    }
+  }
+
+  handleRetry = () => {
+    const { maxRetries = 3 } = this.props;
+    const { retryCount } = this.state;
+
+    if (retryCount < maxRetries) {
+      this.setState(prevState => ({ 
+        hasError: false, 
+        retryCount: prevState.retryCount + 1 
+      }));
+    } else {
+      // Reset retry count after max retries reached
+      this.setState({ retryCount: 0 });
+    }
+  };
+
+  handleReload = () => {
     window.location.reload();
   };
 
-  handleGoHome = () => {
-    window.location.href = '/';
+  getErrorMessage = (error: Error): { title: string; message: string; canRetry: boolean } => {
+    const errorMessage = error.message.toLowerCase();
+    
+    // Network/connection errors
+    if (errorMessage.includes('timeout') || errorMessage.includes('abort')) {
+      return {
+        title: 'Request Timeout',
+        message: 'The server took too long to respond. This might be due to network issues or server load.',
+        canRetry: true,
+      };
+    }
+    
+    if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+      return {
+        title: 'Network Error',
+        message: 'Unable to connect to the server. Please check your internet connection.',
+        canRetry: true,
+      };
+    }
+    
+    // Authentication errors
+    if (errorMessage.includes('unauthorized') || errorMessage.includes('401')) {
+      return {
+        title: 'Authentication Required',
+        message: 'Your session has expired. Please log in again to continue.',
+        canRetry: false,
+      };
+    }
+    
+    // Server errors
+    if (errorMessage.includes('500') || errorMessage.includes('internal server error')) {
+      return {
+        title: 'Server Error',
+        message: 'The server encountered an error while processing your request. Please try again later.',
+        canRetry: true,
+      };
+    }
+    
+    // Database errors
+    if (errorMessage.includes('database') || errorMessage.includes('failed to fetch parties')) {
+      return {
+        title: 'Database Error',
+        message: 'Unable to retrieve parties data from the database. Please try again.',
+        canRetry: true,
+      };
+    }
+    
+    // React/Component errors
+    if (errorMessage.includes('component') || errorMessage.includes('render')) {
+      return {
+        title: 'Component Error',
+        message: 'There was an error rendering the parties page. Please refresh the page.',
+        canRetry: true,
+      };
+    }
+    
+    // Default error
+    return {
+      title: 'Application Error',
+      message: error.message || 'Something went wrong with the parties page',
+      canRetry: true,
+    };
   };
 
   render() {
-    if (this.state.hasError) {
-      // Custom fallback UI
-      if (this.props.fallback) {
-        return this.props.fallback;
+    if (this.state.hasError && this.state.error) {
+      const { fallback: Fallback } = this.props;
+      const { error, retryCount } = this.state;
+      const errorInfo = this.getErrorMessage(error);
+      const { maxRetries = 3 } = this.props;
+
+      // Use custom fallback if provided
+      if (Fallback) {
+        return <Fallback error={error} retry={this.handleRetry} />;
       }
 
-      // Default error UI
       return (
         <div className='flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950'>
           <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
@@ -98,58 +170,97 @@ export class ErrorBoundary extends Component<Props, State> {
                 </div>
                 <div>
                   <CardTitle className='text-red-900 dark:text-red-100'>
-                    Oops! Something went wrong
+                    {errorInfo.title}
                   </CardTitle>
                   <CardDescription className='text-red-700 dark:text-red-300'>
-                    We encountered an unexpected error while loading this page
+                    {errorInfo.message}
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className='space-y-4'>
-              <div className='rounded-md bg-red-50 p-4 dark:bg-red-950'>
-                <p className='text-sm font-semibold text-red-900 dark:text-red-100'>
-                  Error Details:
-                </p>
-                <p className='mt-2 text-sm text-red-800 dark:text-red-200'>
-                  {this.state.error?.toString()}
-                </p>
-                {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
-                  <details className='mt-4'>
-                    <summary className='cursor-pointer text-sm font-medium text-red-900 dark:text-red-100'>
-                      Component Stack Trace
+              {/* Retry information */}
+              {retryCount > 0 && (
+                <div className='rounded-lg bg-yellow-50 p-3 dark:bg-yellow-900/20'>
+                  <p className='text-sm text-yellow-800 dark:text-yellow-200'>
+                    <RefreshCw className='mr-2 inline h-4 w-4' />
+                    Retry attempt {retryCount} of {maxRetries}
+                  </p>
+                </div>
+              )}
+
+              {/* Technical details in development */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-900'>
+                  <details className='text-sm'>
+                    <summary className='cursor-pointer font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2'>
+                      <Bug className='h-4 w-4' />
+                      Technical Details
                     </summary>
-                    <pre className='mt-2 max-h-64 overflow-auto rounded bg-red-100 p-2 text-xs text-red-900 dark:bg-red-900 dark:text-red-100'>
-                      {this.state.errorInfo.componentStack}
-                    </pre>
+                    <div className='mt-2 space-y-2'>
+                      <div>
+                        <strong>Error:</strong> {error.message}
+                      </div>
+                      <div>
+                        <strong>Component Stack:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {this.state.errorInfo?.componentStack}
+                        </pre>
+                      </div>
+                      <div>
+                        <strong>Stack Trace:</strong>
+                        <pre className='mt-1 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-32'>
+                          {error.stack}
+                        </pre>
+                      </div>
+                    </div>
                   </details>
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div className='flex flex-wrap gap-2'>
+                {errorInfo.canRetry && retryCount < maxRetries && (
+                  <Button
+                    onClick={this.handleRetry}
+                    className='flex-1 min-w-[120px]'
+                  >
+                    <RefreshCw className='mr-2 h-4 w-4' />
+                    Try Again ({maxRetries - retryCount} left)
+                  </Button>
                 )}
-              </div>
-
-              <div className='space-y-2'>
-                <p className='text-sm text-slate-600 dark:text-slate-400'>
-                  What you can do:
-                </p>
-                <ul className='list-inside list-disc space-y-1 text-sm text-slate-600 dark:text-slate-400'>
-                  <li>Try refreshing the page</li>
-                  <li>Clear your browser cache and cookies</li>
-                  <li>Check your internet connection</li>
-                  <li>Contact support if the problem persists</li>
-                </ul>
-              </div>
-
-              <div className='flex flex-wrap gap-3 pt-4'>
-                <Button
-                  onClick={this.handleReset}
-                  className='bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800'
-                >
+                
+                <Button variant='outline' onClick={this.handleReload}>
                   <RefreshCw className='mr-2 h-4 w-4' />
                   Reload Page
                 </Button>
-                <Button variant='outline' onClick={this.handleGoHome}>
-                  <Home className='mr-2 h-4 w-4' />
-                  Go to Home
+                
+                <Button variant='outline' asChild>
+                  <Link href='/en/dashboard'>
+                    <Home className='mr-2 h-4 w-4' />
+                    Back to Dashboard
+                  </Link>
                 </Button>
+              </div>
+
+              {/* Network status indicator */}
+              <div className='flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400'>
+                {typeof navigator !== 'undefined' && navigator.onLine ? (
+                  <>
+                    <Wifi className='h-4 w-4 text-green-500' />
+                    Online
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className='h-4 w-4 text-red-500' />
+                    Offline - Check your internet connection
+                  </>
+                )}
+              </div>
+
+              {/* Help text */}
+              <div className='text-xs text-gray-500 dark:text-gray-400'>
+                If this problem persists, please contact support with the error details above.
               </div>
             </CardContent>
           </Card>
@@ -161,18 +272,37 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-/**
- * Hook-based Error Boundary wrapper for functional components
- */
-export function withErrorBoundary<P extends object>(
+// Higher-order component for easier usage
+export function withPartiesErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
 ) {
-  return function WithErrorBoundary(props: P) {
+  return function WrappedComponent(props: P) {
     return (
-      <ErrorBoundary fallback={fallback}>
+      <PartiesErrorBoundary {...errorBoundaryProps}>
         <Component {...props} />
-      </ErrorBoundary>
+      </PartiesErrorBoundary>
     );
   };
+}
+
+// Hook for error boundary state
+export function useErrorBoundary() {
+  const [error, setError] = React.useState<Error | null>(null);
+
+  const resetError = React.useCallback(() => {
+    setError(null);
+  }, []);
+
+  const captureError = React.useCallback((error: Error) => {
+    setError(error);
+  }, []);
+
+  React.useEffect(() => {
+    if (error) {
+      throw error;
+    }
+  }, [error]);
+
+  return { captureError, resetError };
 }

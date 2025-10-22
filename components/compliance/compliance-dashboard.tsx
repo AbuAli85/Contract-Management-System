@@ -20,8 +20,8 @@ import {
   XCircle,
   Loader2,
 } from 'lucide-react';
-import type { ComplianceReport, DocumentAlert } from '@/lib/document-monitor';
-import { formatDocumentType, getSeverityColor } from '@/lib/document-monitor';
+import type { ComplianceReport, DocumentAlert } from '@/lib/document-monitor-types';
+import { formatDocumentType, getSeverityColor } from '@/lib/document-monitor-types';
 import { format } from 'date-fns';
 
 interface ComplianceDashboardProps {
