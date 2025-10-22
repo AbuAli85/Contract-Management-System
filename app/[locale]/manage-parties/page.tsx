@@ -103,9 +103,9 @@ interface EnhancedParty extends Party {
   cr_status: 'valid' | 'expiring' | 'expired' | 'missing';
   license_status: 'valid' | 'expiring' | 'expired' | 'missing';
   overall_status: 'active' | 'warning' | 'critical' | 'inactive';
-  days_until_cr_expiry?: number;
-  days_until_license_expiry?: number;
-  contract_count?: number;
+  days_until_cr_expiry?: number | undefined;
+  days_until_license_expiry?: number | undefined;
+  contract_count?: number | undefined;
 }
 
 // Statistics interface
@@ -152,12 +152,13 @@ export default function ManagePartiesPage() {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [documentFilter, setDocumentFilter] = useState('all');
   const [sortBy, setSortBy] = useState<
-    'name' | 'cr_expiry_date' | 'license_expiry_date' | 'contracts'
+    'name' | 'cr_expiry_date' | 'license_expiry' | 'contracts'
   >('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showStats, setShowStats] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { toast } = useToast();
   const isMountedRef = useRef(true);
 
@@ -207,8 +208,8 @@ export default function ManagePartiesPage() {
     const crExpiry = party.cr_expiry_date
       ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
       : null;
-    const licenseExpiry = party.license_expiry_date
-      ? differenceInDays(parseISO(party.license_expiry_date), new Date())
+    const licenseExpiry = party.license_expiry
+      ? differenceInDays(parseISO(party.license_expiry), new Date())
       : null;
 
     if (
@@ -271,8 +272,8 @@ export default function ManagePartiesPage() {
         ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
         : null;
 
-      const licenseExpiryDays = party.license_expiry_date
-        ? differenceInDays(parseISO(party.license_expiry_date), new Date())
+      const licenseExpiryDays = party.license_expiry
+        ? differenceInDays(parseISO(party.license_expiry), new Date())
         : null;
 
       return {
@@ -283,11 +284,11 @@ export default function ManagePartiesPage() {
         ),
         license_status: getDocumentStatusType(
           licenseExpiryDays,
-          party.license_expiry_date || null
+          party.license_expiry || null
         ),
         overall_status: getOverallStatus(party),
-        days_until_cr_expiry: crExpiryDays || undefined,
-        days_until_license_expiry: licenseExpiryDays || undefined,
+        days_until_cr_expiry: crExpiryDays ?? undefined,
+        days_until_license_expiry: licenseExpiryDays ?? undefined,
       };
     });
 
@@ -321,7 +322,7 @@ export default function ManagePartiesPage() {
           aValue = a.days_until_cr_expiry ?? Infinity;
           bValue = b.days_until_cr_expiry ?? Infinity;
           break;
-        case 'license_expiry_date':
+        case 'license_expiry':
           aValue = a.days_until_license_expiry ?? Infinity;
           bValue = b.days_until_license_expiry ?? Infinity;
           break;
@@ -403,7 +404,7 @@ export default function ManagePartiesPage() {
   const handleFormClose = () => {
     setShowForm(false);
     setSelectedParty(null);
-    fetchPartiesWithContractCount(); // Refresh the list after form submission
+    refetch(); // Refresh the list after form submission
   };
 
   const handleBulkDelete = async () => {
@@ -412,6 +413,9 @@ export default function ManagePartiesPage() {
     setBulkActionLoading(true);
     try {
       const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize Supabase client');
+      }
 
       const { error } = await supabase
         .from('parties')
@@ -427,7 +431,7 @@ export default function ManagePartiesPage() {
       });
 
       setSelectedParties([]);
-      fetchPartiesWithContractCount();
+      refetch();
     } catch (error) {
       console.error('Error deleting parties:', error);
       toast({
@@ -443,7 +447,7 @@ export default function ManagePartiesPage() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await fetchPartiesWithContractCount();
+      await refetch();
       toast({
         title: 'Refreshed',
         description: 'Party data has been updated',
@@ -467,7 +471,7 @@ export default function ManagePartiesPage() {
         'CR Status': party.cr_status,
         'CR Expiry': party.cr_expiry_date || 'N/A',
         'License Status': party.license_status,
-        'License Expiry': party.license_expiry_date || 'N/A',
+        'License Expiry': party.license_expiry || 'N/A',
         'Contact Person': party.contact_person || 'N/A',
         'Contact Email': party.contact_email || 'N/A',
         'Contact Phone': party.contact_phone || 'N/A',
@@ -681,6 +685,79 @@ export default function ManagePartiesPage() {
         <p className='ml-3 text-lg text-slate-700 dark:text-slate-300'>
           Loading parties...
         </p>
+      </div>
+    );
+  }
+
+  // Error state handling with retry option
+  if (error) {
+    return (
+      <div className='flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950'>
+        <Card className='w-full max-w-2xl border-red-200 dark:border-red-800'>
+          <CardHeader>
+            <div className='flex items-center gap-3'>
+              <div className='rounded-full bg-red-100 p-3 dark:bg-red-900'>
+                <AlertTriangle className='h-6 w-6 text-red-600 dark:text-red-300' />
+              </div>
+              <div>
+                <CardTitle className='text-red-900 dark:text-red-100'>
+                  Failed to Load Parties
+                </CardTitle>
+                <CardDescription className='text-red-700 dark:text-red-300'>
+                  We encountered an error while fetching party data
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div className='rounded-md bg-red-50 p-4 dark:bg-red-950'>
+              <p className='text-sm text-red-800 dark:text-red-200'>
+                <strong>Error:</strong> {error instanceof Error ? error.message : 'Unknown error occurred'}
+              </p>
+            </div>
+            
+            <div className='space-y-2'>
+              <p className='text-sm text-slate-600 dark:text-slate-400'>
+                This could be due to:
+              </p>
+              <ul className='list-inside list-disc space-y-1 text-sm text-slate-600 dark:text-slate-400'>
+                <li>Network connectivity issues</li>
+                <li>Database connection timeout</li>
+                <li>Server error or maintenance</li>
+                <li>Permission or authorization issues</li>
+              </ul>
+            </div>
+
+            <div className='flex flex-wrap gap-3 pt-4'>
+              <Button
+                onClick={() => refetch()}
+                className='bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800'
+              >
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Try Again
+              </Button>
+              <Button variant='outline' asChild>
+                <Link href='/'>
+                  <ArrowLeftIcon className='mr-2 h-4 w-4' />
+                  Back to Home
+                </Link>
+              </Button>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  toast({
+                    title: 'Error Details',
+                    description: error instanceof Error ? error.stack : JSON.stringify(error),
+                    variant: 'destructive',
+                  });
+                }}
+              >
+                <Eye className='mr-2 h-4 w-4' />
+                View Details
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -928,7 +1005,7 @@ export default function ManagePartiesPage() {
               {/* Sort By */}
               <Select
                 value={sortBy}
-                onValueChange={(value: typeof sortBy) => setSortBy(value)}
+                onValueChange={(value) => setSortBy(value as typeof sortBy)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder='Sort by' />
@@ -936,7 +1013,7 @@ export default function ManagePartiesPage() {
                 <SelectContent>
                   <SelectItem value='name'>Name</SelectItem>
                   <SelectItem value='cr_expiry_date'>CR Expiry</SelectItem>
-                  <SelectItem value='license_expiry_date'>
+                  <SelectItem value='license_expiry'>
                     License Expiry
                   </SelectItem>
                   <SelectItem value='contracts'>Contract Count</SelectItem>
@@ -1111,7 +1188,7 @@ export default function ManagePartiesPage() {
                     {filteredParties.map(party => {
                       const crStatus = getDocumentStatus(party.cr_expiry_date);
                       const licenseStatus = getDocumentStatus(
-                        party.license_expiry_date
+                        party.license_expiry
                       );
                       const isSelected = selectedParties.includes(party.id);
 
@@ -1318,11 +1395,11 @@ export default function ManagePartiesPage() {
                                     <EditIcon className='mr-2 h-4 w-4' />
                                     Edit Details
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <Link href={`/manage-parties/${party.id}`}>
-                                      <Eye className='mr-2 h-4 w-4' />
-                                      View Profile
-                                    </Link>
+                                  <DropdownMenuItem
+                                    onClick={() => router.push(`/manage-parties/${party.id}`)}
+                                  >
+                                    <Eye className='mr-2 h-4 w-4' />
+                                    View Profile
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -1353,7 +1430,7 @@ export default function ManagePartiesPage() {
             {filteredParties.map(party => {
               const crStatus = getDocumentStatus(party.cr_expiry_date);
               const licenseStatus = getDocumentStatus(
-                party.license_expiry_date
+                party.license_expiry
               );
               const isSelected = selectedParties.includes(party.id);
 
@@ -1403,11 +1480,11 @@ export default function ManagePartiesPage() {
                               <EditIcon className='mr-2 h-4 w-4' />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/manage-parties/${party.id}`}>
-                                <Eye className='mr-2 h-4 w-4' />
-                                View Profile
-                              </Link>
+                            <DropdownMenuItem
+                              onClick={() => router.push(`/manage-parties/${party.id}`)}
+                            >
+                              <Eye className='mr-2 h-4 w-4' />
+                              View Profile
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

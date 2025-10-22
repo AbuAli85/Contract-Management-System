@@ -28,7 +28,12 @@ const partySchema = z.object({
 });
 
 export const GET = withRBAC('party:read:own', async (request: Request) => {
+  const startTime = Date.now();
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
   try {
+    console.log(`[${requestId}] 🚀 Parties API Request started`);
+    
     const cookieStore = await cookies();
 
     const supabase = createServerClient(
@@ -61,49 +66,110 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
       }
     );
 
-    // Get authenticated user
+    // Get authenticated user with timeout
+    const authStartTime = Date.now();
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
+    const authDuration = Date.now() - authStartTime;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.log(`[${requestId}] 🔐 Auth check completed in ${authDuration}ms`);
+
+    if (authError) {
+      console.error(`[${requestId}] ❌ Auth error:`, {
+        message: authError.message,
+        status: authError.status,
+      });
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Authentication failed',
+          message: authError.message 
+        }, 
+        { status: 401 }
+      );
+    }
+
+    if (!user) {
+      console.warn(`[${requestId}] ⚠️ No authenticated user found`);
+      return NextResponse.json(
+        { 
+          success: false,
+          error: 'Unauthorized',
+          message: 'You must be logged in to access this resource' 
+        }, 
+        { status: 401 }
+      );
     }
 
     // Parse pagination from query params
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1'));
     const limit = Math.min(
-      parseInt(url.searchParams.get('limit') || '20'),
+      Math.max(1, parseInt(url.searchParams.get('limit') || '20')),
       100
     );
     const offset = (page - 1) * limit;
 
-    console.log('📊 Parties Query params:', { page, limit, offset });
+    console.log(`[${requestId}] 📊 Query params:`, { 
+      page, 
+      limit, 
+      offset,
+      userId: user.id 
+    });
 
     // Fetch parties from the database with pagination
+    const queryStartTime = Date.now();
     const { data: parties, error, count } = await supabase
       .from('parties')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+    const queryDuration = Date.now() - queryStartTime;
+
+    console.log(`[${requestId}] 📝 Database query completed in ${queryDuration}ms`);
 
     if (error) {
-      console.error('Error fetching parties:', error);
+      console.error(`[${requestId}] ❌ Database error:`, {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+      });
+      
       return NextResponse.json(
         { 
           success: false,
           error: 'Failed to fetch parties',
-          details: error.message
+          message: 'A database error occurred while fetching parties',
+          details: process.env.NODE_ENV === 'development' 
+            ? {
+                message: error.message,
+                code: error.code,
+                hint: error.hint,
+              }
+            : undefined,
         },
         { status: 500 }
       );
     }
 
-    console.log(
-      `✅ Fetched ${parties?.length || 0} parties (total: ${count})`
-    );
+    // Check for empty results
+    if (!parties || parties.length === 0) {
+      console.log(`[${requestId}] ℹ️ No parties found (empty result set)`);
+    }
+
+    const totalDuration = Date.now() - startTime;
+    console.log(`[${requestId}] ✅ Request completed successfully`, {
+      resultCount: parties?.length || 0,
+      totalCount: count || 0,
+      duration: `${totalDuration}ms`,
+      breakdown: {
+        auth: `${authDuration}ms`,
+        query: `${queryDuration}ms`,
+      }
+    });
 
     // Transform data to include basic information
     // Contract counts will be calculated separately to avoid foreign key issues
@@ -127,16 +193,36 @@ export const GET = withRBAC('party:read:own', async (request: Request) => {
         hasPrev: page > 1,
       },
       timestamp: new Date().toISOString(),
+      _meta: process.env.NODE_ENV === 'development' ? {
+        requestId,
+        duration: `${totalDuration}ms`,
+      } : undefined,
     });
   } catch (error) {
-    console.error('API error:', error);
+    const totalDuration = Date.now() - startTime;
+    
+    console.error(`[${requestId}] 💥 Unexpected error:`, {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: `${totalDuration}ms`,
+      timestamp: new Date().toISOString(),
+    });
+    
     return NextResponse.json(
       { 
         success: false,
         error: 'Internal server error',
+        message: 'An unexpected error occurred while processing your request',
         details: process.env.NODE_ENV === 'development'
-          ? (error as Error).message
+          ? {
+              message: error instanceof Error ? error.message : 'Unknown error',
+              type: error instanceof Error ? error.constructor.name : typeof error,
+            }
           : undefined,
+        _meta: process.env.NODE_ENV === 'development' ? {
+          requestId,
+          duration: `${totalDuration}ms`,
+        } : undefined,
       },
       { status: 500 }
     );

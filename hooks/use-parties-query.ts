@@ -48,24 +48,60 @@ interface PartyInput {
   notes?: string;
 }
 
-// Fetch parties with pagination
+// Fetch parties with pagination and timeout
 async function fetchParties(
   page: number,
   limit: number
 ): Promise<PartiesResponse> {
-  const response = await fetch(`/api/parties?page=${page}&limit=${limit}`);
+  // Create AbortController for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const response = await fetch(`/api/parties?page=${page}&limit=${limit}`, {
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      // Try to get error message from response
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch {
+        // If parsing fails, use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || data.details || 'Failed to fetch parties');
+    }
+
+    return data;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    
+    if (error instanceof Error) {
+      // Handle abort/timeout errors
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout: The server took too long to respond. Please try again.');
+      }
+      // Handle network errors
+      if (error.message.includes('fetch')) {
+        throw new Error('Network error: Please check your internet connection and try again.');
+      }
+    }
+    
+    throw error;
   }
-
-  const data = await response.json();
-
-  if (!data.success) {
-    throw new Error(data.error || 'Failed to fetch parties');
-  }
-
-  return data;
 }
 
 // Fetch single party
@@ -145,7 +181,7 @@ async function deleteParty(id: string): Promise<void> {
   }
 }
 
-// Hook: usePartiesQuery
+// Hook: usePartiesQuery with retry logic
 export function usePartiesQuery(page: number = 1, limit: number = 20) {
   return useQuery({
     queryKey: partiesKeys.list(page, limit),
@@ -154,6 +190,9 @@ export function usePartiesQuery(page: number = 1, limit: number = 20) {
     gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+    // Retry configuration with exponential backoff
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // exponential backoff: 1s, 2s, 4s
   });
 }
 
@@ -246,15 +285,15 @@ export function useUpdatePartyMutation() {
       queryClient.setQueryData(partiesKeys.detail(id), updatedParty);
 
       // Optimistically update all list queries
-      queryClient.setQueriesData<PartiesResponse>(
+      queryClient.setQueriesData(
         { queryKey: partiesKeys.lists() },
-        (old) => {
+        (old: PartiesResponse | undefined): PartiesResponse | undefined => {
           if (!old) return old;
 
           return {
             ...old,
             parties: old.parties.map((party) =>
-              party.id === id ? { ...party, ...updatedParty } : party
+              party.id === id ? ({ ...party, ...updatedParty } as Party) : party
             ),
           };
         }
