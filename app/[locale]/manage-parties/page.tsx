@@ -86,7 +86,7 @@ import {
   WifiOff,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, parseISO, differenceInDays } from 'date-fns';
+import { format, parseISO, differenceInDays, isValid, parse } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import {
@@ -96,6 +96,59 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+
+// Safe date parsing functions to prevent "Invalid time value" errors
+const safeParseISO = (dateString: string | null | undefined): Date | null => {
+  if (!dateString || typeof dateString !== 'string') return null;
+  
+  try {
+    const parsed = parseISO(dateString);
+    if (isValid(parsed)) {
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('Invalid ISO date string:', dateString, error);
+  }
+  
+  // Try alternative parsing for common formats
+  try {
+    const formats = ['yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'dd-MM-yyyy'];
+    for (const formatStr of formats) {
+      const parsed = parse(dateString, formatStr, new Date());
+      if (isValid(parsed)) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to parse date with alternative formats:', dateString, error);
+  }
+  
+  return null;
+};
+
+const safeFormatDate = (dateString: string | null | undefined, formatStr: string = 'MMM dd, yyyy'): string => {
+  const date = safeParseISO(dateString);
+  if (!date) return 'Invalid date';
+  
+  try {
+    return format(date, formatStr);
+  } catch (error) {
+    console.warn('Failed to format date:', date, error);
+    return 'Invalid date';
+  }
+};
+
+const safeDifferenceInDays = (dateString: string | null | undefined, compareDate: Date = new Date()): number | null => {
+  const date = safeParseISO(dateString);
+  if (!date) return null;
+  
+  try {
+    return differenceInDays(date, compareDate);
+  } catch (error) {
+    console.warn('Failed to calculate date difference:', date, error);
+    return null;
+  }
+};
 
 interface PartyWithContractCount extends Party {
   contract_count?: number;
@@ -322,11 +375,11 @@ function ManagePartiesContent() {
     if (party.status === 'Suspended') return 'critical';
 
     const crStatus = getDocumentStatusType(
-      party.cr_expiry_date ? differenceInDays(parseISO(party.cr_expiry_date), new Date()) : null,
+      safeDifferenceInDays(party.cr_expiry_date),
       party.cr_expiry_date || null
     );
     const licenseStatus = getDocumentStatusType(
-      party.license_expiry ? differenceInDays(parseISO(party.license_expiry), new Date()) : null,
+      safeDifferenceInDays(party.license_expiry),
       party.license_expiry || null
     );
 
@@ -336,12 +389,8 @@ function ManagePartiesContent() {
   };
 
   const enhanceParty = (party: Party): EnhancedParty => {
-    const crExpiryDays = party.cr_expiry_date 
-      ? differenceInDays(parseISO(party.cr_expiry_date), new Date())
-      : null;
-    const licenseExpiryDays = party.license_expiry
-      ? differenceInDays(parseISO(party.license_expiry), new Date())
-      : null;
+    const crExpiryDays = safeDifferenceInDays(party.cr_expiry_date);
+    const licenseExpiryDays = safeDifferenceInDays(party.license_expiry);
 
     return {
       ...party,
@@ -372,10 +421,10 @@ function ManagePartiesContent() {
           party.crn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
           party.contact_email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        // Status filter
+      // Status filter
         const matchesStatus = statusFilter === 'all' || party.status === statusFilter;
 
-        // Type filter
+      // Type filter
         const matchesType = typeFilter === 'all' || party.type === typeFilter;
 
         // Document filter
@@ -391,31 +440,31 @@ function ManagePartiesContent() {
       filtered.sort((a, b) => {
         let aVal: any, bVal: any;
 
-        switch (sortBy) {
-          case 'name':
+      switch (sortBy) {
+        case 'name':
             aVal = a.name_en || '';
             bVal = b.name_en || '';
-            break;
-          case 'cr_expiry_date':
+          break;
+        case 'cr_expiry_date':
             aVal = a.cr_expiry_date ? new Date(a.cr_expiry_date).getTime() : 0;
             bVal = b.cr_expiry_date ? new Date(b.cr_expiry_date).getTime() : 0;
-            break;
-          case 'license_expiry':
+          break;
+        case 'license_expiry':
             aVal = a.license_expiry ? new Date(a.license_expiry).getTime() : 0;
             bVal = b.license_expiry ? new Date(b.license_expiry).getTime() : 0;
-            break;
-          case 'contracts':
+          break;
+        case 'contracts':
             aVal = a.contract_count || 0;
             bVal = b.contract_count || 0;
-            break;
-          default:
+          break;
+        default:
             aVal = a.name_en || '';
             bVal = b.name_en || '';
-        }
+      }
 
-        if (sortOrder === 'asc') {
+      if (sortOrder === 'asc') {
           return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-        } else {
+      } else {
           return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
         }
       });
@@ -430,7 +479,7 @@ function ManagePartiesContent() {
   // Calculate statistics
   const partyStats = useMemo((): PartyStats => {
     if (!parties || !Array.isArray(parties)) {
-      return {
+    return {
         total: 0,
         active: 0,
         inactive: 0,
@@ -616,8 +665,8 @@ function ManagePartiesContent() {
                 <p className='text-sm text-yellow-800 dark:text-yellow-200'>
                   <Clock className='mr-2 inline h-4 w-4' />
                   Attempted {retryCount} retries automatically
-                </p>
-              </div>
+              </p>
+            </div>
             )}
 
             {/* Technical details in development */}
@@ -636,13 +685,13 @@ function ManagePartiesContent() {
                     }, null, 2)}
                   </pre>
                 </details>
-              </div>
+            </div>
             )}
 
             {/* Action buttons */}
             <div className='flex flex-wrap gap-2'>
               {errorInfo.canRetry && (
-                <Button
+              <Button
                   onClick={handleRetry}
                   disabled={isRefreshing}
                   className='flex-1 min-w-[120px]'
@@ -654,11 +703,11 @@ function ManagePartiesContent() {
                     </>
                   ) : (
                     <>
-                      <RefreshCw className='mr-2 h-4 w-4' />
-                      Try Again
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Try Again
                     </>
                   )}
-                </Button>
+              </Button>
               )}
               
               <Button variant='outline' asChild>
@@ -768,11 +817,11 @@ function ManagePartiesContent() {
           <p className='text-muted-foreground'>
             Manage your business parties and organizations
           </p>
-        </div>
-        <div className='flex gap-2'>
-          <Button
-            variant='outline'
-            onClick={handleRefresh}
+          </div>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              onClick={handleRefresh}
             disabled={isRefreshing}
           >
             {isRefreshing ? (
@@ -780,17 +829,17 @@ function ManagePartiesContent() {
             ) : (
               <RefreshCw className='mr-2 h-4 w-4' />
             )}
-            Refresh
-          </Button>
+              Refresh
+            </Button>
           <Button onClick={handleAddNew}>
             <PlusCircleIcon className='mr-2 h-4 w-4' />
-            Add New Party
-          </Button>
+              Add New Party
+            </Button>
+          </div>
         </div>
-      </div>
 
       {/* Statistics Cards */}
-      {showStats && (
+        {showStats && (
         <div className='mb-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -802,8 +851,8 @@ function ManagePartiesContent() {
               <p className='text-xs text-muted-foreground'>
                 {partyStats.active} active
               </p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -815,8 +864,8 @@ function ManagePartiesContent() {
               <p className='text-xs text-muted-foreground'>
                 {partyStats.clients} clients
               </p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -826,12 +875,12 @@ function ManagePartiesContent() {
             <CardContent>
               <div className='text-2xl font-bold text-red-600'>
                 {partyStats.expired_documents}
-              </div>
+                  </div>
               <p className='text-xs text-muted-foreground'>
                 {partyStats.expiring_documents} expiring soon
               </p>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -843,10 +892,10 @@ function ManagePartiesContent() {
               <p className='text-xs text-muted-foreground'>
                 Across all parties
               </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
       {/* Filters and Search */}
       <Card className='mb-6'>
@@ -855,22 +904,22 @@ function ManagePartiesContent() {
             <Filter className='h-5 w-5' />
             Filters & Search
           </CardTitle>
-        </CardHeader>
+          </CardHeader>
         <CardContent>
           <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
             <div className='space-y-2'>
               <Label htmlFor='search'>Search</Label>
-              <div className='relative'>
+                <div className='relative'>
                 <Search className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
-                <Input
-                  id='search'
+                  <Input
+                    id='search'
                   placeholder='Search parties...'
-                  value={searchTerm}
+                    value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className='pl-10'
-                />
+                  />
+                </div>
               </div>
-            </div>
 
             <div className='space-y-2'>
               <Label>Status</Label>
@@ -916,32 +965,32 @@ function ManagePartiesContent() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
 
       {/* Parties Table */}
       <Card>
         <CardHeader>
-          <div className='flex items-center justify-between'>
+              <div className='flex items-center justify-between'>
             <CardTitle>
               Parties ({filteredParties.length} of {totalCount})
             </CardTitle>
             <div className='flex items-center gap-2'>
-              <Button
-                variant='outline'
-                size='sm'
+                  <Button
+                    variant='outline'
+                    size='sm'
                 onClick={() => setCurrentView(currentView === 'table' ? 'grid' : 'table')}
-              >
+                  >
                 {currentView === 'table' ? (
                   <Grid className='h-4 w-4' />
-                ) : (
+                    ) : (
                   <List className='h-4 w-4' />
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
         <CardContent>
           {isFetching && !isLoading && (
             <div className='mb-4 flex items-center gap-2 text-sm text-muted-foreground'>
@@ -951,12 +1000,12 @@ function ManagePartiesContent() {
           )}
 
           {currentView === 'table' ? (
-            <div className='overflow-x-auto'>
-              <Table>
+              <div className='overflow-x-auto'>
+                <Table>
                 <TableHeader>
-                  <TableRow>
+                    <TableRow>
                     <TableHead className='w-[50px]'>
-                      <Checkbox
+                        <Checkbox
                         checked={selectedParties.length === filteredParties.length}
                         onCheckedChange={(checked) => {
                           if (checked) {
@@ -965,8 +1014,8 @@ function ManagePartiesContent() {
                             setSelectedParties([]);
                           }
                         }}
-                      />
-                    </TableHead>
+                        />
+                      </TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
@@ -974,13 +1023,13 @@ function ManagePartiesContent() {
                     <TableHead>License Expiry</TableHead>
                     <TableHead>Contracts</TableHead>
                     <TableHead className='w-[100px]'>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
+                    </TableRow>
+                  </TableHeader>
                 <TableBody>
                   {filteredParties.map((party) => (
                     <TableRow key={party.id}>
                       <TableCell>
-                        <Checkbox
+                            <Checkbox
                           checked={selectedParties.includes(party.id)}
                           onCheckedChange={(checked) => {
                             if (checked) {
@@ -989,21 +1038,21 @@ function ManagePartiesContent() {
                               setSelectedParties(prev => prev.filter(id => id !== party.id));
                             }
                           }}
-                        />
-                      </TableCell>
+                            />
+                          </TableCell>
                       <TableCell>
                         <div>
                           <div className='font-medium'>{party.name_en}</div>
                           {party.name_ar && (
                             <div className='text-sm text-muted-foreground'>
-                              {party.name_ar}
+                                  {party.name_ar}
+                                  </div>
+                                )}
                             </div>
-                          )}
-                        </div>
-                      </TableCell>
+                          </TableCell>
                       <TableCell>
                         <Badge variant='outline'>{party.type}</Badge>
-                      </TableCell>
+                          </TableCell>
                       <TableCell>
                         <Badge
                           variant={
@@ -1016,11 +1065,11 @@ function ManagePartiesContent() {
                         >
                           {party.status}
                         </Badge>
-                      </TableCell>
+                          </TableCell>
                       <TableCell>
                         {party.cr_expiry_date ? (
                           <div className='text-sm'>
-                            <div>{format(parseISO(party.cr_expiry_date), 'MMM dd, yyyy')}</div>
+                            <div>{safeFormatDate(party.cr_expiry_date, 'MMM dd, yyyy')}</div>
                             <div className={cn(
                               'text-xs',
                               party.cr_status === 'expired' && 'text-red-600',
@@ -1031,8 +1080,8 @@ function ManagePartiesContent() {
                               {party.cr_status === 'expiring' && `${party.days_until_cr_expiry} days left`}
                               {party.cr_status === 'valid' && 'Valid'}
                               {party.cr_status === 'missing' && 'Missing'}
-                            </div>
-                          </div>
+                                  </div>
+                                </div>
                         ) : (
                           <span className='text-muted-foreground'>Not set</span>
                         )}
@@ -1040,7 +1089,7 @@ function ManagePartiesContent() {
                       <TableCell>
                         {party.license_expiry ? (
                           <div className='text-sm'>
-                            <div>{format(parseISO(party.license_expiry), 'MMM dd, yyyy')}</div>
+                            <div>{safeFormatDate(party.license_expiry, 'MMM dd, yyyy')}</div>
                             <div className={cn(
                               'text-xs',
                               party.license_status === 'expired' && 'text-red-600',
@@ -1051,43 +1100,43 @@ function ManagePartiesContent() {
                               {party.license_status === 'expiring' && `${party.days_until_license_expiry} days left`}
                               {party.license_status === 'valid' && 'Valid'}
                               {party.license_status === 'missing' && 'Missing'}
-                            </div>
-                          </div>
+                                </div>
+                                </div>
                         ) : (
                           <span className='text-muted-foreground'>Not set</span>
-                        )}
-                      </TableCell>
+                              )}
+                          </TableCell>
                       <TableCell>
                         <Badge variant='outline'>
-                          {party.contract_count || 0}
-                        </Badge>
-                      </TableCell>
+                                {party.contract_count || 0}
+                              </Badge>
+                          </TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant='ghost' size='sm'>
-                              <MoreHorizontal className='h-4 w-4' />
-                            </Button>
-                          </DropdownMenuTrigger>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant='ghost' size='sm'>
+                                    <MoreHorizontal className='h-4 w-4' />
+                                  </Button>
+                                </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleEdit(party)}>
-                              <EditIcon className='mr-2 h-4 w-4' />
+                                    <EditIcon className='mr-2 h-4 w-4' />
                               Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
                             <DropdownMenuItem className='text-red-600'>
-                              <Trash2 className='mr-2 h-4 w-4' />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
+                                    <Trash2 className='mr-2 h-4 w-4' />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
                   ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableBody>
+                </Table>
+              </div>
           ) : (
             <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
               {filteredParties.map((party) => (
@@ -1098,8 +1147,8 @@ function ManagePartiesContent() {
                         <CardTitle className='text-lg'>{party.name_en}</CardTitle>
                         {party.name_ar && (
                           <CardDescription>{party.name_ar}</CardDescription>
-                        )}
-                      </div>
+                            )}
+                        </div>
                       <Badge
                         variant={
                           party.overall_status === 'active'
@@ -1111,25 +1160,25 @@ function ManagePartiesContent() {
                       >
                         {party.status}
                       </Badge>
-                    </div>
+                        </div>
                   </CardHeader>
                   <CardContent>
-                    <div className='space-y-2'>
+                      <div className='space-y-2'>
                       <div className='flex items-center gap-2'>
                         <Building2 className='h-4 w-4 text-muted-foreground' />
                         <span className='text-sm'>{party.type}</span>
-                      </div>
-                      {party.contact_email && (
+                        </div>
+                          {party.contact_email && (
                         <div className='flex items-center gap-2'>
                           <Mail className='h-4 w-4 text-muted-foreground' />
                           <span className='text-sm'>{party.contact_email}</span>
-                        </div>
-                      )}
+                            </div>
+                          )}
                       <div className='flex items-center gap-2'>
                         <Briefcase className='h-4 w-4 text-muted-foreground' />
                         <span className='text-sm'>{party.contract_count || 0} contracts</span>
-                      </div>
-                    </div>
+                            </div>
+                        </div>
                     <div className='mt-4 flex gap-2'>
                       <Button
                         variant='outline'
@@ -1147,27 +1196,27 @@ function ManagePartiesContent() {
                   </CardContent>
                 </Card>
               ))}
-            </div>
-          )}
+          </div>
+        )}
         </CardContent>
       </Card>
-
+        
       {/* Pagination */}
       {totalCount > pageSize && (
-        <div className='mt-6'>
-          <PaginationControls
-            currentPage={currentPage}
-            totalPages={Math.ceil(totalCount / pageSize)}
-            pageSize={pageSize}
-            totalItems={totalCount}
+          <div className='mt-6'>
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={Math.ceil(totalCount / pageSize)}
+              pageSize={pageSize}
+              totalItems={totalCount}
             onPageChange={(page) => {
               const params = new URLSearchParams(searchParams?.toString() || '');
               params.set('page', page.toString());
               router.push(`${window.location.pathname}?${params.toString()}`);
             }}
-          />
-        </div>
-      )}
+            />
+          </div>
+        )}
 
       {/* Party Form Modal */}
       {showForm && (
