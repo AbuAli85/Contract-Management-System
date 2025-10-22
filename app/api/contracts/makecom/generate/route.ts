@@ -170,6 +170,10 @@ export const POST = withAnyRBAC(
         );
       }
 
+      // Set location fields - use bilingual fields if available, otherwise fallback to work_location
+      const location_en = contractData.location_en || contractData.work_location || '';
+      const location_ar = contractData.location_ar || contractData.work_location || '';
+
       // Fetch promoter data including image URLs if promoter_id is provided
       let enrichedContractData = { ...contractData };
       if (contractData.promoter_id) {
@@ -295,6 +299,13 @@ export const POST = withAnyRBAC(
           console.warn(`⚠️ Invalid URL format: ${urlString}, using placeholder`);
           return type === 'logo' ? placeholderLogo : type === 'signature' ? placeholderSignature : placeholderImage;
         }
+      };
+
+      // Add location fields to enriched data
+      enrichedContractData = {
+        ...enrichedContractData,
+        location_en,
+        location_ar,
       };
 
       // ✨ CRITICAL FIX: Ensure ALL image URLs are valid and non-empty
@@ -581,6 +592,9 @@ export const POST = withAnyRBAC(
                 basic_salary: enhancedPayload.basic_salary,
                 start_date: enhancedPayload.contract_start_date,
                 end_date: enhancedPayload.contract_end_date,
+                work_location: enhancedPayload.work_location,
+                location_en: enhancedPayload.location_en,
+                location_ar: enhancedPayload.location_ar,
               },
               imageFields: {
                 image_1: enhancedPayload.image_1,
