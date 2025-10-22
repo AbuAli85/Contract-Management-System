@@ -1,0 +1,27 @@
+warning: in the working copy of 'lib/metrics.ts', CRLF will be replaced by LF the next time Git touches it
+[1mdiff --git a/lib/metrics.ts b/lib/metrics.ts[m
+[1mindex 6e638ab..81b06ce 100644[m
+[1m--- a/lib/metrics.ts[m
+[1m+++ b/lib/metrics.ts[m
+[36m@@ -201,7 +201,7 @@[m [mexport async function getContractMetrics([m
+     // Build base query based on user role[m
+     let query = supabase[m
+       .from('contracts')[m
+[31m-      .select('status, contract_value, start_date, end_date, created_at, contract_start_date, contract_end_date');[m
+[32m+[m[32m      .select('status, contract_value, start_date, end_date, created_at');[m
+ [m
+     // RBAC: Non-admins see only their contracts[m
+     if (userRole !== 'admin' && userId) {[m
+[36m@@ -289,9 +289,9 @@[m [mexport async function getContractMetrics([m
+         metrics.totalValue += Number(contract.contract_value);[m
+       }[m
+ [m
+[31m-      // Calculate duration - try both field names[m
+[31m-      const startDate = contract.start_date || contract.contract_start_date;[m
+[31m-      const endDate = contract.end_date || contract.contract_end_date;[m
+[32m+[m[32m      // Calculate duration using start_date and end_date columns[m
+[32m+[m[32m      const startDate = contract.start_date;[m
+[32m+[m[32m      const endDate = contract.end_date;[m
+ [m
+       if (startDate && endDate) {[m
+         const start = new Date(startDate);[m
