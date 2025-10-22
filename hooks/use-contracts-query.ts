@@ -20,6 +20,7 @@ interface ContractsResponse {
   contracts: ContractWithRelations[];
   count: number;
   total: number;
+  totalContracts: number; // Actual total count from database
   pagination: {
     page: number;
     limit: number;

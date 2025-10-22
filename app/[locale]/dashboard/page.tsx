@@ -20,6 +20,7 @@ import {
   LogOut,
   Settings,
   Bell,
+  Loader2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,9 +32,18 @@ interface User {
   last_name?: string;
 }
 
+interface DashboardStats {
+  totalContracts: number;
+  activeContracts: number;
+  pendingContracts: number;
+  scope: 'system-wide' | 'user-specific';
+}
+
 function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -94,12 +104,40 @@ function DashboardContent() {
               return;
             }
             setUser(data.user);
+            // After getting user, fetch dashboard stats
+            await fetchDashboardStats();
           }
         }
       } catch (error) {
         console.error('Error getting user info:', error);
       } finally {
         setLoading(false);
+      }
+    };
+
+    // Fetch dashboard statistics from centralized metrics API
+    const fetchDashboardStats = async () => {
+      try {
+        setStatsLoading(true);
+        const response = await fetch('/api/metrics/contracts');
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.metrics) {
+            setStats({
+              totalContracts: data.metrics.total,
+              activeContracts: data.metrics.active,
+              pendingContracts: data.metrics.pending,
+              scope: data.scope,
+            });
+          }
+        } else {
+          console.error('Failed to fetch dashboard stats');
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+      } finally {
+        setStatsLoading(false);
       }
     };
 
@@ -184,51 +222,89 @@ function DashboardContent() {
               <FileText className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>24</div>
-              <p className='text-xs text-muted-foreground'>
-                +2 from last month
-              </p>
+              {statsLoading ? (
+                <div className='flex items-center space-x-2'>
+                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                  <span className='text-sm text-muted-foreground'>Loading...</span>
+                </div>
+              ) : (
+                <>
+                  <div className='text-2xl font-bold'>
+                    {stats?.totalContracts ?? 0}
+                  </div>
+                  <p className='text-xs text-muted-foreground'>
+                    {stats?.scope === 'system-wide' ? 'System-wide' : 'Your contracts'}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Active Promoters
+                Active Contracts
+              </CardTitle>
+              <FileText className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className='flex items-center space-x-2'>
+                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                  <span className='text-sm text-muted-foreground'>Loading...</span>
+                </div>
+              ) : (
+                <>
+                  <div className='text-2xl font-bold'>
+                    {stats?.activeContracts ?? 0}
+                  </div>
+                  <p className='text-xs text-muted-foreground'>
+                    Currently active
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Pending Contracts
+              </CardTitle>
+              <TrendingUp className='h-4 w-4 text-muted-foreground' />
+            </CardHeader>
+            <CardContent>
+              {statsLoading ? (
+                <div className='flex items-center space-x-2'>
+                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                  <span className='text-sm text-muted-foreground'>Loading...</span>
+                </div>
+              ) : (
+                <>
+                  <div className='text-2xl font-bold'>
+                    {stats?.pendingContracts ?? 0}
+                  </div>
+                  <p className='text-xs text-muted-foreground'>
+                    Awaiting approval
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Quick Actions
               </CardTitle>
               <Users className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>12</div>
-              <p className='text-xs text-muted-foreground'>+1 from last week</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-medium'>Revenue</CardTitle>
-              <TrendingUp className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>$45,231</div>
-              <p className='text-xs text-muted-foreground'>
-                +20.1% from last month
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-              <CardTitle className='text-sm font-bold'>
-                Pending Approvals
-              </CardTitle>
-              <User className='h-4 w-4 text-muted-foreground' />
-            </CardHeader>
-            <CardContent>
-              <div className='text-2xl font-bold'>3</div>
-              <p className='text-xs text-muted-foreground'>
-                Requires attention
-              </p>
+              <div className='text-2xl font-bold'>
+                <Button size='sm' asChild className='w-full'>
+                  <Link href='/en/contracts/new'>Create Contract</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

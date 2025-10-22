@@ -211,7 +211,8 @@ function ContractsContent() {
 
   // Extract contracts and total count from React Query response
   const contracts = contractsData?.contracts || [];
-  const totalCount = contractsData?.total || 0;
+  // Use totalContracts (actual DB count) not total (paginated results length)
+  const totalCount = contractsData?.totalContracts || 0;
 
   // All hooks must be called at the top level, before any conditional returns
   const deleteContractMutation = useDeleteContractMutationQuery();
@@ -264,7 +265,8 @@ function ContractsContent() {
       const now = new Date();
 
       return {
-        total: enhanced.length,
+        // Use totalCount (actual DB total) not enhanced.length (paginated results)
+        total: totalCount,
         active: enhanced.filter(c => c.status_type === 'active').length,
         expired: enhanced.filter(c => c.status_type === 'expired').length,
         upcoming: enhanced.filter(c => c.status_type === 'upcoming').length,
@@ -298,7 +300,7 @@ function ContractsContent() {
         avg_duration: 0,
       };
     }
-  }, [contracts]);
+  }, [contracts, totalCount]);
 
   // Enhanced filtering and sorting (no client-side pagination, data is already paginated from API)
   const filteredAndSortedContracts = useMemo(() => {
@@ -742,7 +744,11 @@ function ContractsContent() {
                 Total Contracts
               </p>
               <p className='text-2xl font-bold'>{contractStats.total}</p>
-              <p className='text-xs text-blue-200 mt-1'>All contracts</p>
+              <p className='text-xs text-blue-200 mt-1'>
+                {totalCount === contractStats.total 
+                  ? 'All contracts in database' 
+                  : `Showing ${contracts.length} of ${contractStats.total}`}
+              </p>
             </div>
             <div className='p-2 bg-blue-400/20 rounded-lg'>
               <FileText className='h-6 w-6 text-blue-200' />
