@@ -43,6 +43,7 @@ function PendingContractsPageContent() {
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [showPartialResults, setShowPartialResults] = useState(false);
+  const [forceLoad, setForceLoad] = useState(false);
   const fetchAttemptedRef = useRef(false);
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -223,38 +224,59 @@ function PendingContractsPageContent() {
       hasPermission,
       isAdmin: permissions.isAdmin,
       isLoading: permissions.isLoading,
-      timestamp: new Date().toISOString()
+      canRead: permissions.can('contract:read:own'),
+      forceLoad,
+      timestamp: new Date().toISOString(),
+      fetchAttempted: fetchAttemptedRef.current
     });
+
+    // ✅ FIX: Force load after 4 seconds regardless of permissions (safety net)
+    const forceLoadTimeout = setTimeout(() => {
+      if (!fetchAttemptedRef.current) {
+        console.warn('⚠️ Force loading after 4 seconds - permissions check may be stuck');
+        setForceLoad(true);
+      }
+    }, 4000);
 
     // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
     const permissionTimeout = setTimeout(() => {
-      if (permissions.isLoading) {
+      if (permissions.isLoading && !fetchAttemptedRef.current) {
         console.warn('⚠️ Permissions taking too long to load, proceeding with fetch anyway...');
         fetchPendingContracts();
       }
-    }, 5000); // 5 second timeout for permissions
+    }, 2000); // Reduced to 2 seconds for faster response
 
-    if (!permissions.isLoading) {
+    if (!permissions.isLoading || forceLoad) {
       clearTimeout(permissionTimeout);
+      clearTimeout(forceLoadTimeout);
       
-      if (hasPermission) {
+      if (hasPermission || forceLoad) {
+        console.log('✅ Permission granted (or forced), fetching pending contracts...');
         fetchPendingContracts();
       } else {
-        setLoading(false);
-        setPermissionError(true);
         console.warn('⚠️ Insufficient permissions for pending contracts:', {
           required: 'contract:read:own or admin role',
           hasPermission,
-          isAdmin: permissions.isAdmin
+          isAdmin: permissions.isAdmin,
+          canRead: permissions.can('contract:read:own')
         });
+        setLoading(false);
+        setPermissionError(true);
       }
+    } else {
+      console.log('⏳ Waiting for permissions to load...');
     }
 
     return () => {
       mountedRef.current = false;
       clearTimeout(permissionTimeout);
+      clearTimeout(forceLoadTimeout);
+      // Cancel any ongoing fetch when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin, fetchPendingContracts]);
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin, fetchPendingContracts, forceLoad]);
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
