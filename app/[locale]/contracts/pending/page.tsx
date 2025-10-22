@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail } from 'lucide-react';
+import { Clock, Search, Filter, Eye, AlertTriangle, ShieldAlert, Mail, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePermissions } from '@/hooks/use-permissions';
 
@@ -28,7 +28,7 @@ interface Contract {
   first_party: { name_en: string } | null;
   second_party: { name_en: string } | null;
   promoter: { name_en: string } | null;
-  promoters: { name_en: string }[] | null;
+  promoters: { name_en: string } | null;
 }
 
 export default function PendingContractsPage() {
@@ -38,34 +38,24 @@ export default function PendingContractsPage() {
   const [permissionError, setPermissionError] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showSlowLoadingMessage, setShowSlowLoadingMessage] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const fetchAttemptedRef = useRef(false);
+  const mountedRef = useRef(true);
   
   // Check permissions
   const permissions = usePermissions();
   const hasPermission = permissions.can('contract:read:own') || permissions.isAdmin || false;
 
-  useEffect(() => {
-    // Log permission check for debugging
-    console.log('📋 Pending Contracts - Permission Check:', {
-      hasPermission,
-      isAdmin: permissions.isAdmin,
-      isLoading: permissions.isLoading,
-      timestamp: new Date().toISOString()
-    });
-
-    if (!permissions.isLoading && hasPermission) {
-      fetchPendingContracts();
-    } else if (!permissions.isLoading && !hasPermission) {
-      setLoading(false);
-      setPermissionError(true);
-      console.warn('⚠️ Insufficient permissions for pending contracts:', {
-        required: 'contract:read:own or admin role',
-        hasPermission,
-        isAdmin: permissions.isAdmin
-      });
+  // ✅ FIX: Use useCallback to memoize the fetch function
+  const fetchPendingContracts = useCallback(async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchAttemptedRef.current) {
+      console.log('⏸️ Fetch already in progress, skipping...');
+      return;
     }
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
 
-  const fetchPendingContracts = async () => {
+    fetchAttemptedRef.current = true;
+    
     // ✅ FIX: Add AbortController for timeout handling
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
@@ -75,7 +65,9 @@ export default function PendingContractsPage() {
 
     // Show "taking longer than expected" message after 3 seconds
     const slowLoadingTimeoutId = setTimeout(() => {
-      setShowSlowLoadingMessage(true);
+      if (mountedRef.current) {
+        setShowSlowLoadingMessage(true);
+      }
     }, 3000);
 
     const startTime = Date.now();
@@ -89,7 +81,8 @@ export default function PendingContractsPage() {
       console.log('🔍 Pending Contracts Debug:', {
         timestamp: new Date().toISOString(),
         endpoint: '/api/contracts?status=pending',
-        timeout: '10 seconds'
+        timeout: '10 seconds',
+        retryCount
       });
       
       const response = await fetch('/api/contracts?status=pending', {
@@ -97,6 +90,8 @@ export default function PendingContractsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        // Add cache control to prevent stale data
+        cache: 'no-store',
       });
       
       clearTimeout(timeoutId);
@@ -105,6 +100,8 @@ export default function PendingContractsPage() {
       console.log(`⏱️ API Response time: ${queryTime}ms`);
       
       const data = await response.json();
+
+      if (!mountedRef.current) return;
 
       if (response.status === 403) {
         // Permission denied
@@ -115,15 +112,24 @@ export default function PendingContractsPage() {
         // Not authenticated
         setError('Please log in to view pending contracts');
         console.error('❌ Authentication required for pending contracts');
-      } else if (response.ok && data.success) {
-        setContracts(data.contracts || []);
+      } else if (response.ok && data.success !== false) {
+        // ✅ FIX: Handle both success=true and undefined success (backward compatibility)
+        const contractsList = data.contracts || [];
+        setContracts(contractsList);
+        setError(null); // Clear any previous errors
         console.log('✅ Loaded pending contracts:', {
-          count: data.contracts?.length || 0,
+          count: contractsList.length,
           queryTime: `${queryTime}ms`,
-          sampleIds: (data.contracts || []).slice(0, 3).map((c: any) => c.id),
+          sampleIds: contractsList.slice(0, 3).map((c: any) => c.id),
           totalPending: data.pendingContracts,
+          stats: data.stats,
           timestamp: new Date().toISOString()
         });
+        
+        // Show helpful message if 0 results
+        if (contractsList.length === 0) {
+          console.log('ℹ️ No pending contracts found - this is normal, not an error');
+        }
       } else {
         setError(data.error || 'Failed to fetch pending contracts');
         console.error('❌ Error fetching pending contracts:', {
@@ -137,6 +143,8 @@ export default function PendingContractsPage() {
       clearTimeout(slowLoadingTimeoutId);
       const queryTime = Date.now() - startTime;
       
+      if (!mountedRef.current) return;
+      
       if (err.name === 'AbortError') {
         setError('Request timeout - the server took too long to respond. Please try again.');
         console.error('❌ Request timeout after 10 seconds:', {
@@ -144,10 +152,11 @@ export default function PendingContractsPage() {
           timestamp: new Date().toISOString()
         });
       } else {
-        setError('Failed to fetch pending contracts. Please check your connection and try again.');
+        setError(`Network error: ${err.message || 'Please check your connection and try again.'}`);
         console.error('❌ Exception fetching pending contracts:', {
           error: err,
           message: err.message,
+          name: err.name,
           queryTime: `${queryTime}ms`,
           timestamp: new Date().toISOString()
         });
@@ -155,10 +164,61 @@ export default function PendingContractsPage() {
     } finally {
       clearTimeout(timeoutId);
       clearTimeout(slowLoadingTimeoutId);
-      setLoading(false);
-      setShowSlowLoadingMessage(false);
+      if (mountedRef.current) {
+        setLoading(false);
+        setShowSlowLoadingMessage(false);
+      }
+      fetchAttemptedRef.current = false;
     }
-  };
+  }, [retryCount]);
+
+  // ✅ FIX: Simplified useEffect with proper dependencies
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    // Log permission check for debugging
+    console.log('📋 Pending Contracts - Permission Check:', {
+      hasPermission,
+      isAdmin: permissions.isAdmin,
+      isLoading: permissions.isLoading,
+      timestamp: new Date().toISOString()
+    });
+
+    // ✅ FIX: Add timeout to prevent infinite loading if permissions never load
+    const permissionTimeout = setTimeout(() => {
+      if (permissions.isLoading) {
+        console.warn('⚠️ Permissions taking too long to load, proceeding with fetch anyway...');
+        fetchPendingContracts();
+      }
+    }, 5000); // 5 second timeout for permissions
+
+    if (!permissions.isLoading) {
+      clearTimeout(permissionTimeout);
+      
+      if (hasPermission) {
+        fetchPendingContracts();
+      } else {
+        setLoading(false);
+        setPermissionError(true);
+        console.warn('⚠️ Insufficient permissions for pending contracts:', {
+          required: 'contract:read:own or admin role',
+          hasPermission,
+          isAdmin: permissions.isAdmin
+        });
+      }
+    }
+
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(permissionTimeout);
+    };
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin, fetchPendingContracts]);
+
+  // ✅ FIX: Add manual retry function
+  const handleRetry = useCallback(() => {
+    setRetryCount(prev => prev + 1);
+    fetchPendingContracts();
+  }, [fetchPendingContracts]);
 
   const filteredContracts = contracts.filter(
     contract =>
@@ -272,18 +332,51 @@ export default function PendingContractsPage() {
     );
   }
 
+  // ✅ FIX: Improved loading state with retry option
   if (loading) {
     return (
-      <div className='container mx-auto py-6'>
-        <div className='flex h-64 flex-col items-center justify-center'>
-          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900'></div>
-          <span className='ml-2 mt-3 text-base font-medium'>Loading pending contracts...</span>
-          {showSlowLoadingMessage && (
-            <p className='mt-2 text-sm text-muted-foreground'>
-              This is taking longer than expected. Please wait...
+      <div className='container mx-auto py-6 space-y-4'>
+        <div className='flex items-center gap-3 mb-6'>
+          <Clock className='h-8 w-8 text-orange-600' />
+          <div>
+            <h1 className='text-3xl font-bold'>Pending Contracts</h1>
+            <p className='text-muted-foreground'>
+              View all contracts awaiting approval
             </p>
-          )}
+          </div>
         </div>
+        
+        <Card>
+          <CardContent className='py-12'>
+            <div className='flex flex-col items-center justify-center space-y-4'>
+              <Loader2 className='h-12 w-12 animate-spin text-orange-600' />
+              <div className='text-center space-y-2'>
+                <p className='text-base font-medium'>Loading pending contracts...</p>
+                {showSlowLoadingMessage && (
+                  <>
+                    <p className='text-sm text-muted-foreground'>
+                      This is taking longer than expected. The server might be busy.
+                    </p>
+                    <p className='text-xs text-muted-foreground'>
+                      Request will timeout after 10 seconds
+                    </p>
+                  </>
+                )}
+              </div>
+              {showSlowLoadingMessage && (
+                <Button 
+                  variant='outline' 
+                  size='sm'
+                  onClick={handleRetry}
+                  className='mt-4'
+                >
+                  <RefreshCw className='mr-2 h-4 w-4' />
+                  Cancel and Retry
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -305,11 +398,25 @@ export default function PendingContractsPage() {
           <AlertTriangle className='h-4 w-4' />
           <AlertTitle>Failed to Load Pending Contracts</AlertTitle>
           <AlertDescription className='space-y-3'>
-            <p>{error}</p>
-            <div className='flex gap-2 mt-3'>
-              <Button onClick={fetchPendingContracts} variant='outline' size='sm'>
-                <Clock className='mr-2 h-4 w-4' />
-                Retry
+            <p className='font-medium'>{error}</p>
+            <div className='text-sm space-y-2'>
+              <p className='text-muted-foreground'>Possible causes:</p>
+              <ul className='list-disc list-inside space-y-1 ml-2'>
+                <li>Network connectivity issues</li>
+                <li>Server timeout (request took too long)</li>
+                <li>Database query performance issues</li>
+                <li>Permission or authentication problems</li>
+              </ul>
+            </div>
+            <div className='flex flex-wrap gap-2 mt-4'>
+              <Button 
+                onClick={handleRetry} 
+                variant='default' 
+                size='sm'
+                className='bg-orange-600 hover:bg-orange-700'
+              >
+                <RefreshCw className='mr-2 h-4 w-4' />
+                Retry Now
               </Button>
               <Button variant='outline' size='sm' asChild>
                 <Link href='/en/contracts'>
@@ -317,7 +424,18 @@ export default function PendingContractsPage() {
                   View All Contracts
                 </Link>
               </Button>
+              <Button variant='outline' size='sm' asChild>
+                <Link href='/en/dashboard'>
+                  <Clock className='mr-2 h-4 w-4' />
+                  Go to Dashboard
+                </Link>
+              </Button>
             </div>
+            {retryCount > 0 && (
+              <p className='text-xs text-muted-foreground mt-2'>
+                Retry attempts: {retryCount}
+              </p>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -326,12 +444,31 @@ export default function PendingContractsPage() {
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div>
-              <CardTitle>Pending Contracts</CardTitle>
+              <CardTitle className='flex items-center gap-2'>
+                Pending Contracts
+                {contracts.length > 0 && (
+                  <Badge variant='secondary' className='ml-2'>
+                    {contracts.length}
+                  </Badge>
+                )}
+              </CardTitle>
               <CardDescription>
-                {filteredContracts.length} of {contracts.length} contracts
+                {filteredContracts.length === contracts.length 
+                  ? `${contracts.length} ${contracts.length === 1 ? 'contract' : 'contracts'} awaiting approval`
+                  : `Showing ${filteredContracts.length} of ${contracts.length} contracts`}
               </CardDescription>
             </div>
             <div className='flex items-center gap-2'>
+              <Button 
+                variant='outline' 
+                size='sm'
+                onClick={handleRetry}
+                disabled={loading}
+                className='hover:bg-orange-50 hover:border-orange-200'
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <div className='relative'>
                 <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400' />
                 <Input
@@ -341,33 +478,68 @@ export default function PendingContractsPage() {
                   className='w-64 pl-10'
                 />
               </div>
-              <Button variant='outline' size='sm'>
-                <Filter className='mr-2 h-4 w-4' />
-                Filter
-              </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {filteredContracts.length === 0 ? (
-            <div className='flex h-48 flex-col items-center justify-center'>
-              <div className='rounded-full bg-green-100 p-4 mb-4'>
-                <Clock className='h-8 w-8 text-green-600' />
+            <div className='flex flex-col items-center justify-center py-12 space-y-4'>
+              <div className='rounded-full bg-green-100 p-4'>
+                <Clock className='h-12 w-12 text-green-600' />
               </div>
-              <h3 className='text-lg font-semibold mb-2'>No Pending Contracts</h3>
-              <p className='text-muted-foreground mb-4 text-center max-w-md'>
-                {searchTerm ? 
-                  'No contracts match your search criteria. Try adjusting your search.' :
-                  'All contracts have been reviewed and approved. Great work!'
-                }
-              </p>
-              {!searchTerm && (
+              <div className='text-center space-y-2'>
+                <h3 className='text-lg font-semibold'>
+                  {searchTerm ? 'No Matching Contracts' : 'No Pending Contracts'}
+                </h3>
+                <p className='text-muted-foreground max-w-md'>
+                  {searchTerm ? (
+                    <>
+                      No contracts match your search criteria "<strong>{searchTerm}</strong>". 
+                      Try adjusting your search or clear filters.
+                    </>
+                  ) : contracts.length === 0 ? (
+                    <>
+                      There are currently no contracts awaiting approval. 
+                      All contracts have been reviewed and approved. Great work!
+                    </>
+                  ) : (
+                    'Filters removed all results. Try adjusting your filters.'
+                  )}
+                </p>
+              </div>
+              <div className='flex gap-2'>
+                {searchTerm && (
+                  <Button 
+                    variant='default' 
+                    size='sm'
+                    onClick={() => setSearchTerm('')}
+                    className='bg-orange-600 hover:bg-orange-700'
+                  >
+                    <Search className='mr-2 h-4 w-4' />
+                    Clear Search
+                  </Button>
+                )}
                 <Button variant='outline' size='sm' asChild>
                   <Link href='/en/contracts'>
                     <Eye className='mr-2 h-4 w-4' />
                     View All Contracts
                   </Link>
                 </Button>
+                <Button 
+                  variant='outline' 
+                  size='sm'
+                  onClick={handleRetry}
+                >
+                  <RefreshCw className='mr-2 h-4 w-4' />
+                  Refresh
+                </Button>
+              </div>
+              {!searchTerm && contracts.length === 0 && (
+                <div className='mt-4 p-4 bg-green-50 border border-green-200 rounded-lg'>
+                  <p className='text-sm text-green-800 text-center'>
+                    ✅ All contracts are up to date. Check back later for new submissions.
+                  </p>
+                </div>
               )}
             </div>
           ) : (
@@ -405,9 +577,7 @@ export default function PendingContractsPage() {
                         </span>
                         <span>
                           Employee:{' '}
-                          {contract.promoters && contract.promoters.length > 0
-                            ? contract.promoters[0]?.name_en || 'N/A'
-                            : 'N/A'}
+                          {contract.promoters?.name_en || contract.promoter?.name_en || 'N/A'}
                         </span>
                         <span>
                           Submitted:{' '}
