@@ -43,6 +43,7 @@ export default function ApprovedContractsPage() {
   const fetchAttemptedRef = useRef(false);
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const forceLoadRef = useRef(false);
   
   // Check permissions
   const permissions = usePermissions();
@@ -204,6 +205,7 @@ export default function ApprovedContractsPage() {
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
         console.warn('⚠️ Force loading after 4 seconds - permissions check may be stuck');
+        forceLoadRef.current = true;
         setForceLoad(true);
       }
     }, 4000);
@@ -216,11 +218,11 @@ export default function ApprovedContractsPage() {
       }
     }, 2000); // Reduced to 2 seconds for faster response
 
-    if (!permissions.isLoading || forceLoad) {
+    if (!permissions.isLoading || forceLoadRef.current) {
       clearTimeout(permissionTimeout);
       clearTimeout(forceLoadTimeout);
       
-      if (hasPermission || forceLoad) {
+      if (hasPermission || forceLoadRef.current) {
         console.log('✅ Permission granted (or forced), fetching approved contracts...');
         // Call fetchApprovedContracts directly to avoid dependency loop
         fetchApprovedContracts();
@@ -247,7 +249,7 @@ export default function ApprovedContractsPage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin, forceLoad]);
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {

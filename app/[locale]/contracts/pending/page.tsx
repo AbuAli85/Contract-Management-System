@@ -47,6 +47,7 @@ function PendingContractsPageContent() {
   const fetchAttemptedRef = useRef(false);
   const mountedRef = useRef(true);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const forceLoadRef = useRef(false);
   
   // Check permissions
   const permissions = usePermissions();
@@ -235,6 +236,7 @@ function PendingContractsPageContent() {
     const forceLoadTimeout = setTimeout(() => {
       if (!fetchAttemptedRef.current) {
         console.warn('⚠️ Force loading after 4 seconds - permissions check may be stuck');
+        forceLoadRef.current = true;
         setForceLoad(true);
       }
     }, 4000);
@@ -247,11 +249,11 @@ function PendingContractsPageContent() {
       }
     }, 2000); // Reduced to 2 seconds for faster response
 
-    if (!permissions.isLoading || forceLoad) {
+    if (!permissions.isLoading || forceLoadRef.current) {
       clearTimeout(permissionTimeout);
       clearTimeout(forceLoadTimeout);
       
-      if (hasPermission || forceLoad) {
+      if (hasPermission || forceLoadRef.current) {
         console.log('✅ Permission granted (or forced), fetching pending contracts...');
         // Call fetchPendingContracts directly to avoid dependency loop
         fetchPendingContracts();
@@ -278,7 +280,7 @@ function PendingContractsPageContent() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin, forceLoad]);
+  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
