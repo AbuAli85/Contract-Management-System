@@ -1,158 +1,105 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getDashboardMetrics } from '@/lib/metrics';
 import { createClient } from '@/lib/supabase/server';
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
 
+/**
+ * GET /api/dashboard/stats
+ * Returns dashboard statistics using centralized metrics service
+ * CONSISTENT with all other pages in the application
+ */
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Dashboard stats: Starting request...');
 
     const supabase = await createClient();
 
-    // Get current user with better error handling
+    // Get current user
     console.log('🔍 Dashboard stats: Getting user...');
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
 
-    // For now, allow the API to work even without authentication for testing
     if (userError) {
-      console.warn(
-        '🔍 Dashboard stats: User error (continuing anyway):',
-        userError
-      );
+      console.warn('🔍 Dashboard stats: User error:', userError.message);
     }
 
-    if (!user) {
-      console.warn('🔍 Dashboard stats: No user found (continuing anyway)');
+    // Get user role
+    let userRole = 'user';
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (userData?.role) {
+        userRole = userData.role;
+      }
     }
 
-    console.log('🔍 Dashboard stats: Proceeding with data fetch...');
+    console.log('🔍 Dashboard stats: Fetching metrics...', {
+      userId: user?.id,
+      userRole,
+      isAdmin: userRole === 'admin',
+    });
 
-    // Simplified queries with better error handling
-    const queries = [
-      // Total contracts
-      supabase.from('contracts').select('*', { count: 'exact', head: true }),
+    // Get force refresh from query params
+    const { searchParams } = new URL(request.url);
+    const forceRefresh = searchParams.get('refresh') === 'true';
 
-      // Total promoters
-      supabase.from('promoters').select('*', { count: 'exact', head: true }),
+    // Get all metrics using centralized service
+    const metrics = await getDashboardMetrics({
+      ...(user?.id && { userId: user.id }),
+      userRole,
+      forceRefresh,
+    });
 
-      // Total parties
-      supabase.from('parties').select('*', { count: 'exact', head: true }),
-
-      // Active promoters
-      supabase
-        .from('promoters')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active'),
-
-      // Pending contracts
-      supabase
-        .from('contracts')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-
-      // Recent contracts (last 7 days)
-      supabase
-        .from('contracts')
-        .select('*', { count: 'exact', head: true })
-        .gte(
-          'created_at',
-          new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-        ),
-    ];
-
-    console.log('🔍 Dashboard stats: Executing queries...');
-    const results = await Promise.all(
-      queries.map(async (query, index) => {
-        try {
-          const result = await query;
-          console.log(`🔍 Dashboard stats: Query ${index} result:`, {
-            count: result.count,
-            error: result.error?.message,
-          });
-          return result;
-        } catch (error) {
-          console.error(`🔍 Dashboard stats: Query ${index} failed:`, error);
-          return {
-            count: 0,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          };
-        }
-      })
-    );
-
-    // Extract results
-    const [
-      contractsResult,
-      promotersResult,
-      partiesResult,
-      activePromotersResult,
-      pendingContractsResult,
-      recentContractsResult,
-    ] = results;
-
-    // Check for errors but don't fail completely
-    const errors = results.filter((r: any) => r.error).map((r: any) => r.error);
-    if (errors.length > 0) {
-      console.warn(
-        '🔍 Dashboard stats: Some database errors (continuing):',
-        errors
-      );
-    }
-
-    // Build stats object with fallback values
+    // Build stats object compatible with existing dashboard
     const stats = {
-      // Core metrics
-      totalContracts: contractsResult.count || 0,
-      activeContracts: 0, // Will be calculated from status
-      pendingContracts: pendingContractsResult.count || 0,
-      completedContracts: 0, // Will be calculated from status
-      totalPromoters: promotersResult.count || 0,
-      activePromoters: activePromotersResult.count || 0,
-      totalParties: partiesResult.count || 0,
-      pendingApprovals: pendingContractsResult.count || 0,
-      recentActivity: recentContractsResult.count || 0,
-
-      // Document expiry alerts (simplified)
-      expiringDocuments: 0,
-      expiringIds: 0,
-      expiringPassports: 0,
+      // Core metrics from centralized service
+      totalContracts: metrics.contracts.total,
+      activeContracts: metrics.contracts.active,
+      pendingContracts: metrics.contracts.pending,
+      completedContracts: metrics.contracts.completed,
+      totalPromoters: metrics.promoters.total,
+      activePromoters: metrics.promoters.active,
+      totalParties: metrics.parties.total,
+      pendingApprovals: metrics.contracts.pending,
+      recentActivity: 0, // TODO: Add to metrics service if needed
 
       // Status breakdown
-      contractsByStatus: {
-        active: 0,
-        pending: pendingContractsResult.count || 0,
-        completed: 0,
-        cancelled: 0,
-      },
+      contractsByStatus: metrics.contracts.byStatus,
 
-      // Monthly trends
-      monthlyData: [],
+      // Expiring contracts
+      expiringDocuments: metrics.contracts.expiringSoon,
 
-      // Health metrics
-      systemHealth: 98,
+      // Scope information
+      scope: metrics.scope,
+      scopeLabel: metrics.scopeLabel,
 
-      // Growth metrics
-      contractGrowth: 0,
-      promoterGrowth: 0,
-
-      // Performance indicators
-      avgProcessingTime: '0',
-      completionRate: 0,
+      // Metadata
+      timestamp: metrics.timestamp,
+      cacheHit: !forceRefresh,
 
       // Debug info
       debug: {
         userAuthenticated: !!user,
-        userError: userError?.message || null,
-        queryErrors: errors,
+        userRole,
+        isAdmin: userRole === 'admin',
+        scope: metrics.scope,
         timestamp: new Date().toISOString(),
       },
     };
 
-    console.log('🔍 Dashboard stats: Final stats:', stats);
+    console.log('🔍 Dashboard stats: Final stats:', {
+      totalContracts: stats.totalContracts,
+      scope: stats.scope,
+      scopeLabel: stats.scopeLabel,
+    });
 
     return NextResponse.json(stats);
   } catch (error) {

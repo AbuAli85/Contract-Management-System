@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { withRBAC, withAnyRBAC } from '@/lib/rbac/guard';
+import { getContractMetrics } from '@/lib/metrics';
 
 // Force dynamic rendering for this API route
 export const dynamic = 'force-dynamic';
@@ -286,134 +287,59 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       contracts = [];
     }
 
-    // Get basic statistics with error handling
-    let totalContracts = 0;
-    let statusData: any[] = [];
-
+    // Get comprehensive metrics using centralized service
+    // This ensures consistency across all pages
+    let metrics;
     try {
-      const { count: totalCount, error: countError } = await supabase
+      metrics = await getContractMetrics({
+        userId: user.id,
+        userRole: isAdmin ? 'admin' : 'user',
+        includeExpiringSoon: true,
+        expiryDaysThreshold: 30,
+      });
+      console.log('✅ Contracts API: Using centralized metrics:', {
+        total: metrics.total,
+        active: metrics.active,
+        pending: metrics.pending,
+        scope: isAdmin ? 'admin (all contracts)' : 'user (own contracts)',
+      });
+    } catch (error) {
+      console.warn('⚠️ Contracts API: Failed to get centralized metrics, using fallback');
+      // Fallback to basic counts if metrics service fails
+      const { count: totalCount } = await supabase
         .from('contracts')
         .select('*', { count: 'exact', head: true });
-
-      if (countError) {
-        console.warn(
-          '⚠️ Contracts API: Error counting contracts:',
-          countError.message
-        );
-      } else {
-        totalContracts = totalCount || 0;
-      }
-    } catch (error) {
-      console.warn('⚠️ Contracts API: Could not count contracts');
+      
+      metrics = {
+        total: totalCount || 0,
+        active: 0,
+        pending: 0,
+        approved: 0,
+        expired: 0,
+        completed: 0,
+        cancelled: 0,
+        expiringSoon: 0,
+        totalValue: 0,
+        averageDuration: 0,
+        byStatus: {},
+      };
     }
 
-    try {
-      const { data: statusResult, error: statusError } = await supabase
-        .from('contracts')
-        .select('status');
-
-      if (statusError) {
-        console.warn(
-          '⚠️ Contracts API: Error fetching status data:',
-          statusError.message
-        );
-      } else {
-        statusData = statusResult || [];
-      }
-    } catch (error) {
-      console.warn('⚠️ Contracts API: Could not fetch status data');
-    }
-
-    // Calculate comprehensive statistics from actual contracts data
+    // Map centralized metrics to legacy stats format for backward compatibility
     const stats = {
-      total: contracts.length,
-      active: 0,
-      expired: 0,
-      upcoming: 0,
+      total: contracts.length, // Current page count
+      active: metrics.active,
+      expired: metrics.expired,
+      upcoming: 0, // Not in centralized metrics yet
       unknown: 0,
-      expiring_soon: 0,
-      total_value: 0,
-      avg_duration: 0,
+      expiring_soon: metrics.expiringSoon,
+      total_value: metrics.totalValue,
+      avg_duration: metrics.averageDuration,
       generated: 0,
-      pending: 0,
+      pending: metrics.pending,
+      completed: metrics.completed,
+      cancelled: metrics.cancelled,
     };
-
-    // Calculate stats from actual contracts data
-    if (contracts && contracts.length > 0) {
-      const now = new Date();
-      let totalValue = 0;
-      let totalDuration = 0;
-      let validDurations = 0;
-
-      contracts.forEach((contract: any) => {
-        // Count by status
-        switch (contract.status) {
-          case 'active':
-            stats.active++;
-            break;
-          case 'expired':
-            stats.expired++;
-            break;
-          case 'pending':
-          case 'legal_review':
-          case 'hr_review':
-          case 'final_approval':
-          case 'signature':
-            stats.pending++;
-            break;
-          case 'draft':
-          case 'generated':
-            stats.generated++;
-            break;
-          default:
-            stats.unknown++;
-        }
-
-        // Calculate contract value
-        if (
-          contract.contract_value ||
-          contract.value ||
-          contract.basic_salary
-        ) {
-          const value =
-            contract.contract_value || contract.value || contract.basic_salary;
-          if (typeof value === 'number' && !isNaN(value)) {
-            totalValue += value;
-          }
-        }
-
-        // Calculate duration and expiry
-        if (contract.contract_start_date && contract.contract_end_date) {
-          try {
-            const startDate = new Date(contract.contract_start_date);
-            const endDate = new Date(contract.contract_end_date);
-
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              const duration = Math.ceil(
-                (endDate.getTime() - startDate.getTime()) /
-                  (1000 * 60 * 60 * 24)
-              );
-              totalDuration += duration;
-              validDurations++;
-
-              // Check if expiring soon (within 30 days)
-              const daysUntilExpiry = Math.ceil(
-                (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-              );
-              if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
-                stats.expiring_soon++;
-              }
-            }
-          } catch (error) {
-            console.warn('Error calculating contract duration:', error);
-          }
-        }
-      });
-
-      stats.total_value = totalValue;
-      stats.avg_duration =
-        validDurations > 0 ? Math.round(totalDuration / validDurations) : 0;
-    }
 
     console.log(
       `✅ Contracts API: Successfully fetched ${contracts?.length || 0} contracts`,
@@ -433,15 +359,21 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
       success: true,
       contracts: contracts || [],
       stats,
-      total: contracts.length,
-      totalContracts: totalContracts || 0,
-      activeContracts: stats.active,
-      pendingContracts: stats.pending,
+      total: contracts.length, // Current page count
+      totalContracts: metrics.total, // Total count from centralized metrics
+      activeContracts: metrics.active,
+      pendingContracts: metrics.pending,
+      completedContracts: metrics.completed,
+      cancelledContracts: metrics.cancelled,
       generatedContracts: stats.generated,
-      expiringSoon: stats.expiring_soon,
-      totalValue: stats.total_value,
-      averageDuration: stats.avg_duration,
+      expiringSoon: metrics.expiringSoon,
+      totalValue: metrics.totalValue,
+      averageDuration: metrics.averageDuration,
+      scope: isAdmin ? 'system-wide' : 'user-specific',
+      scopeLabel: isAdmin ? 'All contracts in system' : 'Your contracts only',
       lastUpdated: new Date().toISOString(),
+      // Include full metrics for advanced use
+      metrics: metrics,
     });
   } catch (error) {
     console.error('❌ Contracts API: Unexpected error:', error);

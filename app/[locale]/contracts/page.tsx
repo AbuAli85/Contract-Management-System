@@ -95,6 +95,7 @@ import {
   Share,
   FileDown,
   Plus,
+  Info,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslations } from 'next-intl';
@@ -784,26 +785,42 @@ function ContractsContent() {
   // Enhanced Statistics cards component
   const StatisticsCards = () => (
     <div className='grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8'>
-      <Card className='bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
-        <CardContent className='p-4'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-blue-100 font-medium'>
-                Total Contracts
-              </p>
-              <p className='text-2xl font-bold'>{contractStats.total}</p>
-              <p className='text-xs text-blue-200 mt-1'>
-                {totalCount === contractStats.total 
-                  ? 'All contracts in database' 
-                  : `Showing ${contracts.length} of ${contractStats.total}`}
-              </p>
-            </div>
-            <div className='p-2 bg-blue-400/20 rounded-lg'>
-              <FileText className='h-6 w-6 text-blue-200' />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Card className='bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-help'>
+              <CardContent className='p-4'>
+                <div className='flex items-center justify-between'>
+                  <div>
+                    <div className='flex items-center gap-1'>
+                      <p className='text-sm text-blue-100 font-medium'>
+                        Total Contracts
+                      </p>
+                      <Info className='h-3 w-3 text-blue-200' />
+                    </div>
+                    <p className='text-2xl font-bold'>{contractStats.total}</p>
+                    <p className='text-xs text-blue-200 mt-1'>
+                      {totalCount === contractStats.total 
+                        ? 'All contracts in database' 
+                        : `Showing ${contracts.length} of ${contractStats.total}`}
+                    </p>
+                  </div>
+                  <div className='p-2 bg-blue-400/20 rounded-lg'>
+                    <FileText className='h-6 w-6 text-blue-200' />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className='max-w-xs'>
+              Total number of contracts. Based on your access level, you see:
+              <br />• Admins: All contracts in system
+              <br />• Users: Only your own contracts
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <Card className='bg-gradient-to-br from-green-500 via-green-600 to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300'>
         <CardContent className='p-4'>
