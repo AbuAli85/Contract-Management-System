@@ -234,114 +234,130 @@ export const POST = withAnyRBAC(
       // This ensures all image slots (body, header, footer, with various naming conventions) have valid URLs
       const placeholderImage =
         'https://via.placeholder.com/200x200/cccccc/666666.png?text=No+Image';
+      const placeholderLogo =
+        'https://via.placeholder.com/300x100/0066cc/ffffff.png?text=Logo';
+      const placeholderSignature =
+        'https://via.placeholder.com/200x100/333333/ffffff.png?text=Signature';
 
-      // Function to ensure valid URL
-      const ensureValidUrl = (url: string | null | undefined): string => {
-        if (!url || url.trim() === '') {
+      // Function to ensure valid URL with strict validation
+      const ensureValidUrl = (
+        url: string | null | undefined,
+        type: 'image' | 'logo' | 'signature' = 'image'
+      ): string => {
+        // Return appropriate placeholder if URL is null/undefined/empty
+        if (!url || url.toString().trim() === '') {
+          console.warn(`⚠️ Empty URL detected, using placeholder for ${type}`);
+          if (type === 'logo') return placeholderLogo;
+          if (type === 'signature') return placeholderSignature;
           return placeholderImage;
         }
+        
         // Basic URL validation
+        const urlString = url.toString().trim();
         try {
-          new URL(url);
-          return url;
+          const parsedUrl = new URL(urlString);
+          // Ensure it's http or https
+          if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+            console.warn(`⚠️ Invalid protocol: ${parsedUrl.protocol}, using placeholder`);
+            return type === 'logo' ? placeholderLogo : type === 'signature' ? placeholderSignature : placeholderImage;
+          }
+          return urlString;
         } catch {
-          return placeholderImage;
+          console.warn(`⚠️ Invalid URL format: ${urlString}, using placeholder`);
+          return type === 'logo' ? placeholderLogo : type === 'signature' ? placeholderSignature : placeholderImage;
         }
       };
 
+      // ✨ CRITICAL FIX: Ensure ALL image URLs are valid and non-empty
+      // This prevents the "[400] Invalid requests[12].replaceImage: The URL should not be empty" error
       enrichedContractData = {
         ...enrichedContractData,
-        // Header/Footer images (various naming conventions)
-        header_logo: enrichedContractData.header_logo || placeholderImage,
-        footer_logo: enrichedContractData.footer_logo || placeholderImage,
-        header_image: enrichedContractData.header_image || placeholderImage,
-        footer_image: enrichedContractData.footer_image || placeholderImage,
+        // Header/Footer images (various naming conventions) - use ensureValidUrl
+        header_logo: ensureValidUrl(enrichedContractData.header_logo, 'logo'),
+        footer_logo: ensureValidUrl(enrichedContractData.footer_logo, 'logo'),
+        header_image: ensureValidUrl(enrichedContractData.header_image, 'logo'),
+        footer_image: ensureValidUrl(enrichedContractData.footer_image, 'logo'),
 
-        // Company/Party logos
-        company_logo: enrichedContractData.company_logo || placeholderImage,
-        company_logo_url:
-          enrichedContractData.company_logo_url || placeholderImage,
-        first_party_logo:
-          enrichedContractData.first_party_logo || placeholderImage,
-        second_party_logo:
-          enrichedContractData.second_party_logo || placeholderImage,
-        party_1_logo: enrichedContractData.party_1_logo || placeholderImage,
-        party_2_logo: enrichedContractData.party_2_logo || placeholderImage,
+        // Company/Party logos - use ensureValidUrl with 'logo' type
+        company_logo: ensureValidUrl(enrichedContractData.company_logo, 'logo'),
+        company_logo_url: ensureValidUrl(enrichedContractData.company_logo_url, 'logo'),
+        first_party_logo: ensureValidUrl(enrichedContractData.first_party_logo, 'logo'),
+        first_party_logo_url: ensureValidUrl(enrichedContractData.first_party_logo_url, 'logo'),
+        second_party_logo: ensureValidUrl(enrichedContractData.second_party_logo, 'logo'),
+        second_party_logo_url: ensureValidUrl(enrichedContractData.second_party_logo_url, 'logo'),
+        party_1_logo: ensureValidUrl(enrichedContractData.party_1_logo, 'logo'),
+        party_2_logo: ensureValidUrl(enrichedContractData.party_2_logo, 'logo'),
 
-        // Signature images
-        first_party_signature:
-          enrichedContractData.first_party_signature || placeholderImage,
-        second_party_signature:
-          enrichedContractData.second_party_signature || placeholderImage,
-        party_1_signature:
-          enrichedContractData.party_1_signature || placeholderImage,
-        party_2_signature:
-          enrichedContractData.party_2_signature || placeholderImage,
-        witness_signature:
-          enrichedContractData.witness_signature || placeholderImage,
-        signature_1: enrichedContractData.signature_1 || placeholderImage,
-        signature_2: enrichedContractData.signature_2 || placeholderImage,
+        // Signature images - use ensureValidUrl with 'signature' type
+        first_party_signature: ensureValidUrl(enrichedContractData.first_party_signature, 'signature'),
+        second_party_signature: ensureValidUrl(enrichedContractData.second_party_signature, 'signature'),
+        party_1_signature: ensureValidUrl(enrichedContractData.party_1_signature, 'signature'),
+        party_2_signature: ensureValidUrl(enrichedContractData.party_2_signature, 'signature'),
+        witness_signature: ensureValidUrl(enrichedContractData.witness_signature, 'signature'),
+        signature_1: ensureValidUrl(enrichedContractData.signature_1, 'signature'),
+        signature_2: ensureValidUrl(enrichedContractData.signature_2, 'signature'),
 
         // Official stamps/seals
-        stamp_image: enrichedContractData.stamp_image || placeholderImage,
-        stamp: enrichedContractData.stamp || placeholderImage,
-        official_stamp: enrichedContractData.official_stamp || placeholderImage,
-        seal: enrichedContractData.seal || placeholderImage,
+        stamp_image: ensureValidUrl(enrichedContractData.stamp_image),
+        stamp: ensureValidUrl(enrichedContractData.stamp),
+        official_stamp: ensureValidUrl(enrichedContractData.official_stamp),
+        seal: ensureValidUrl(enrichedContractData.seal),
 
         // QR codes/Barcodes
-        qr_code: enrichedContractData.qr_code || placeholderImage,
-        barcode: enrichedContractData.barcode || placeholderImage,
+        qr_code: ensureValidUrl(enrichedContractData.qr_code),
+        barcode: ensureValidUrl(enrichedContractData.barcode),
 
         // Watermarks/Background
-        watermark: enrichedContractData.watermark || placeholderImage,
-        background_image:
-          enrichedContractData.background_image || placeholderImage,
+        watermark: ensureValidUrl(enrichedContractData.watermark),
+        background_image: ensureValidUrl(enrichedContractData.background_image),
 
-        // Promoter images (ensure these have valid URLs)
-        promoter_id_card_url: ensureValidUrl(
-          enrichedContractData.promoter_id_card_url
-        ),
-        promoter_passport_url: ensureValidUrl(
-          enrichedContractData.promoter_passport_url
-        ),
-        id_card_url: ensureValidUrl(enrichedContractData.id_card_url),
-        passport_url: ensureValidUrl(enrichedContractData.passport_url),
-        // Make.com compatible field names (stored_*)
+        // Promoter images (CRITICAL - these are the main ones)
+        promoter_id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url),
+        promoter_passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url),
+        id_card_url: ensureValidUrl(enrichedContractData.promoter_id_card_url || enrichedContractData.id_card_url),
+        passport_url: ensureValidUrl(enrichedContractData.promoter_passport_url || enrichedContractData.passport_url),
+        
+        // ✨ Make.com compatible field names (stored_*) - CRITICAL FIX
         stored_promoter_id_card_image_url: ensureValidUrl(
-          enrichedContractData.promoter_id_card_url
+          enrichedContractData.promoter_id_card_url || enrichedContractData.id_card_url
         ),
         stored_promoter_passport_image_url: ensureValidUrl(
-          enrichedContractData.promoter_passport_url
+          enrichedContractData.promoter_passport_url || enrichedContractData.passport_url
         ),
         stored_first_party_logo_url: ensureValidUrl(
-          enrichedContractData.first_party_logo_url || enrichedContractData.first_party_logo
+          enrichedContractData.first_party_logo_url || enrichedContractData.first_party_logo,
+          'logo'
         ),
         stored_second_party_logo_url: ensureValidUrl(
-          enrichedContractData.second_party_logo_url || enrichedContractData.second_party_logo
+          enrichedContractData.second_party_logo_url || enrichedContractData.second_party_logo,
+          'logo'
         ),
 
-        // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
-        image_1: enrichedContractData.image_1 || placeholderImage,
-        image_2: enrichedContractData.image_2 || placeholderImage,
-        image_3: enrichedContractData.image_3 || placeholderImage,
-        image_4: enrichedContractData.image_4 || placeholderImage,
-        image_5: enrichedContractData.image_5 || placeholderImage,
-        image_6: enrichedContractData.image_6 || placeholderImage,
-        image_7: enrichedContractData.image_7 || placeholderImage,
-        image_8: enrichedContractData.image_8 || placeholderImage,
-        image_9: enrichedContractData.image_9 || placeholderImage,
-        image_10: enrichedContractData.image_10 || placeholderImage,
-        image_11: enrichedContractData.image_11 || placeholderImage,
-        image_12: enrichedContractData.image_12 || placeholderImage,
+        // Generic numbered placeholders (ensure all 12 have valid URLs)
+        image_1: ensureValidUrl(enrichedContractData.image_1),
+        image_2: ensureValidUrl(enrichedContractData.image_2),
+        image_3: ensureValidUrl(enrichedContractData.image_3),
+        image_4: ensureValidUrl(enrichedContractData.image_4),
+        image_5: ensureValidUrl(enrichedContractData.image_5),
+        image_6: ensureValidUrl(enrichedContractData.image_6),
+        image_7: ensureValidUrl(enrichedContractData.image_7),
+        image_8: ensureValidUrl(enrichedContractData.image_8),
+        image_9: ensureValidUrl(enrichedContractData.image_9),
+        image_10: ensureValidUrl(enrichedContractData.image_10),
+        image_11: ensureValidUrl(enrichedContractData.image_11),
+        image_12: ensureValidUrl(enrichedContractData.image_12),
       };
 
       // Log the enriched data for debugging
-      console.log('🔍 Enriched contract data with image URLs:', {
+      console.log('🔍 Enriched contract data with ALL image URLs:', {
         promoter_id_card_url: enrichedContractData.promoter_id_card_url,
         promoter_passport_url: enrichedContractData.promoter_passport_url,
-        id_card_url: enrichedContractData.id_card_url,
-        passport_url: enrichedContractData.passport_url,
-        promoter_passport_number: enrichedContractData.promoter_passport_number,
+        stored_promoter_id_card_image_url: enrichedContractData.stored_promoter_id_card_image_url,
+        stored_promoter_passport_image_url: enrichedContractData.stored_promoter_passport_image_url,
+        stored_first_party_logo_url: enrichedContractData.stored_first_party_logo_url,
+        stored_second_party_logo_url: enrichedContractData.stored_second_party_logo_url,
+        first_party_logo: enrichedContractData.first_party_logo,
+        image_12: enrichedContractData.image_12,
       });
 
       // Generate contract with Make.com integration
@@ -451,13 +467,21 @@ export const POST = withAnyRBAC(
 
           if (makecomWebhookUrl) {
             console.log('📤 Triggering Make.com webhook:', makecomWebhookUrl);
-            console.log('📋 Enhanced payload prepared:', {
+            console.log('📋 Enhanced payload - checking critical fields:', {
               contract_id: enhancedPayload.contract_id,
               contract_number: enhancedPayload.contract_number,
-              stored_promoter_id_card_image_url: enhancedPayload.stored_promoter_id_card_image_url?.substring(0, 50) + '...',
-              stored_promoter_passport_image_url: enhancedPayload.stored_promoter_passport_image_url?.substring(0, 50) + '...',
-              stored_first_party_logo_url: enhancedPayload.stored_first_party_logo_url?.substring(0, 50) + '...',
+              has_stored_id_card: !!enhancedPayload.stored_promoter_id_card_image_url,
+              has_stored_passport: !!enhancedPayload.stored_promoter_passport_image_url,
+              has_stored_logo: !!enhancedPayload.stored_first_party_logo_url,
+              stored_promoter_id_card_image_url: enhancedPayload.stored_promoter_id_card_image_url,
+              stored_promoter_passport_image_url: enhancedPayload.stored_promoter_passport_image_url,
+              stored_first_party_logo_url: enhancedPayload.stored_first_party_logo_url,
             });
+            
+            // Log full payload in development for debugging
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🔍 Full enhanced payload:', JSON.stringify(enhancedPayload, null, 2));
+            }
 
             // Retry up to 3 times with exponential backoff
             let lastError: any = null;
