@@ -80,14 +80,21 @@ export interface MakeComPayload {
   promoter_id_card_number?: string;
   promoter_id_card_url?: string;
   promoter_passport_url?: string;
+  // Make.com compatible field names (stored_*)
+  stored_promoter_id_card_image_url?: string;
+  stored_promoter_passport_image_url?: string;
   first_party_name_en?: string;
   first_party_name_ar?: string;
   first_party_crn?: string;
   first_party_logo?: string;
+  first_party_logo_url?: string;
+  stored_first_party_logo_url?: string;
   second_party_name_en?: string;
   second_party_name_ar?: string;
   second_party_crn?: string;
   second_party_logo?: string;
+  second_party_logo_url?: string;
+  stored_second_party_logo_url?: string;
   // Additional image fields for Make.com template compatibility
   header_logo?: string;
   footer_logo?: string;
@@ -355,16 +362,25 @@ export class GeneralContractService {
       promoter_passport_url: ensureValidImageUrl(
         contract.promoter?.passport_url
       ),
+      // Make.com compatible field names (stored_*)
+      stored_promoter_id_card_image_url: ensureValidImageUrl(contract.promoter?.id_card_url),
+      stored_promoter_passport_image_url: ensureValidImageUrl(
+        contract.promoter?.passport_url
+      ),
       // First party (client) data with validated image URLs
       first_party_name_en: contract.client?.name_en || '',
       first_party_name_ar: contract.client?.name_ar || '',
       first_party_crn: contract.client?.crn || '',
       first_party_logo: ensureValidImageUrl(contract.client?.logo_url),
+      first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
+      stored_first_party_logo_url: ensureValidImageUrl(contract.client?.logo_url),
       // Second party (employer) data with validated image URLs
       second_party_name_en: contract.employer?.name_en || '',
       second_party_name_ar: contract.employer?.name_ar || '',
       second_party_crn: contract.employer?.crn || '',
       second_party_logo: ensureValidImageUrl(contract.employer?.logo_url),
+      second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
+      stored_second_party_logo_url: ensureValidImageUrl(contract.employer?.logo_url),
       // Additional image fields for Make.com template compatibility
       header_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as header
       footer_logo: ensureValidImageUrl(contract.employer?.logo_url), // Use employer logo as footer

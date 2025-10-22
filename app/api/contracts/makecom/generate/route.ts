@@ -306,6 +306,19 @@ export const POST = withAnyRBAC(
         ),
         id_card_url: ensureValidUrl(enrichedContractData.id_card_url),
         passport_url: ensureValidUrl(enrichedContractData.passport_url),
+        // Make.com compatible field names (stored_*)
+        stored_promoter_id_card_image_url: ensureValidUrl(
+          enrichedContractData.promoter_id_card_url
+        ),
+        stored_promoter_passport_image_url: ensureValidUrl(
+          enrichedContractData.promoter_passport_url
+        ),
+        stored_first_party_logo_url: ensureValidUrl(
+          enrichedContractData.first_party_logo_url || enrichedContractData.first_party_logo
+        ),
+        stored_second_party_logo_url: ensureValidUrl(
+          enrichedContractData.second_party_logo_url || enrichedContractData.second_party_logo
+        ),
 
         // Generic numbered placeholders (in case template uses img_1, img_2, etc.)
         image_1: enrichedContractData.image_1 || placeholderImage,
@@ -433,37 +446,127 @@ export const POST = withAnyRBAC(
               : {}),
           };
 
-          // Trigger Make.com webhook (replace with your actual Make.com webhook URL)
+          // Trigger Make.com webhook with retry logic
           const makecomWebhookUrl = process.env.MAKECOM_WEBHOOK_URL;
 
           if (makecomWebhookUrl) {
-            const response = await fetch(makecomWebhookUrl, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(enhancedPayload),
+            console.log('📤 Triggering Make.com webhook:', makecomWebhookUrl);
+            console.log('📋 Enhanced payload prepared:', {
+              contract_id: enhancedPayload.contract_id,
+              contract_number: enhancedPayload.contract_number,
+              stored_promoter_id_card_image_url: enhancedPayload.stored_promoter_id_card_image_url?.substring(0, 50) + '...',
+              stored_promoter_passport_image_url: enhancedPayload.stored_promoter_passport_image_url?.substring(0, 50) + '...',
+              stored_first_party_logo_url: enhancedPayload.stored_first_party_logo_url?.substring(0, 50) + '...',
             });
 
-            makecomResponse = {
-              status: response.status,
-              success: response.ok,
-              timestamp: new Date().toISOString(),
-            };
+            // Retry up to 3 times with exponential backoff
+            let lastError: any = null;
+            let retrySucceeded = false;
+            
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              try {
+                console.log(`🔄 Webhook attempt ${attempt}/3...`);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-            if (response.ok) {
-              console.log('✅ Make.com webhook triggered successfully');
+                const response = await fetch(makecomWebhookUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Webhook-Secret': process.env.MAKE_WEBHOOK_SECRET || '',
+                    'User-Agent': 'Contract-Management-System/1.0',
+                  },
+                  body: JSON.stringify(enhancedPayload),
+                  signal: controller.signal,
+                });
 
-              // Update contract status
-              await supabase
-                .from('contracts')
-                .update({ status: 'processing' })
-                .eq('id', contract.id);
-            } else {
-              console.error('❌ Make.com webhook failed:', response.statusText);
+                clearTimeout(timeoutId);
+
+                const responseText = await response.text();
+                
+                console.log('📥 Webhook response:', {
+                  status: response.status,
+                  statusText: response.statusText,
+                  ok: response.ok,
+                  body: responseText.substring(0, 200),
+                });
+
+                makecomResponse = {
+                  status: response.status,
+                  success: response.ok,
+                  body: responseText,
+                  attempt,
+                  timestamp: new Date().toISOString(),
+                };
+
+                if (response.ok) {
+                  console.log(`✅ Make.com webhook triggered successfully on attempt ${attempt}`);
+
+                  // Update contract status
+                  await supabase
+                    .from('contracts')
+                    .update({ status: 'processing' })
+                    .eq('id', contract.id);
+
+                  retrySucceeded = true;
+                  break; // Success, exit retry loop
+                } else {
+                  console.error(`❌ Make.com webhook failed (attempt ${attempt}):`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: responseText,
+                  });
+                  
+                  lastError = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: responseText,
+                    attempt,
+                  };
+
+                  // Wait before retry (exponential backoff)
+                  if (attempt < 3) {
+                    const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
+                    console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                  }
+                }
+              } catch (fetchError) {
+                console.error(`❌ Webhook request error (attempt ${attempt}):`, fetchError);
+                
+                lastError = {
+                  error: fetchError instanceof Error ? fetchError.message : 'Unknown error',
+                  attempt,
+                };
+
+                // Wait before retry
+                if (attempt < 3) {
+                  const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000);
+                  console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+                  await new Promise(resolve => setTimeout(resolve, waitTime));
+                }
+              }
+            }
+
+            if (!retrySucceeded) {
+              console.error('❌ All 3 webhook attempts failed');
+              makecomResponse = {
+                status: 500,
+                success: false,
+                error: 'All webhook attempts failed',
+                lastError,
+                timestamp: new Date().toISOString(),
+              };
             }
           } else {
             console.warn('⚠️ MAKECOM_WEBHOOK_URL not configured');
+            makecomResponse = {
+              status: 0,
+              success: false,
+              error: 'Webhook URL not configured',
+              timestamp: new Date().toISOString(),
+            };
           }
         } catch (makecomError) {
           console.error('❌ Make.com webhook error:', makecomError);
