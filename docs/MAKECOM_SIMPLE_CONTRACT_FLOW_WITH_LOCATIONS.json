@@ -301,11 +301,11 @@
                     },
                     {
                         "name": "stored_location_en",
-                        "value": "{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}"
+                        "value": "{{ifempty(1.location_en; 1.work_location)}}"
                     },
                     {
                         "name": "stored_location_ar",
-                        "value": "{{if(length(1.location_ar) > 0; 1.location_ar; 1.work_location)}}"
+                        "value": "{{ifempty(1.location_ar; 1.work_location)}}"
                     },
                     {
                         "name": "stored_basic_salary",

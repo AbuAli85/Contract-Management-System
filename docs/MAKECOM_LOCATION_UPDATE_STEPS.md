@@ -25,11 +25,11 @@ Add these **2 new variables** to the `variables` array:
 ```json
 {
   "name": "stored_location_en",
-  "value": "{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}"
+  "value": "{{ifempty(1.location_en; 1.work_location)}}"
 },
 {
   "name": "stored_location_ar",
-  "value": "{{if(length(1.location_ar) > 0; 1.location_ar; 1.work_location)}}"
+  "value": "{{ifempty(1.location_ar; 1.work_location)}}"
 }
 ```
 
@@ -71,11 +71,11 @@ Insert these variables **after** `stored_work_location` in the variables array.
   // 👇 ADD THESE TWO NEW VARIABLES HERE 👇
   {
     "name": "stored_location_en",
-    "value": "{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}"
+    "value": "{{ifempty(1.location_en; 1.work_location)}}"
   },
   {
     "name": "stored_location_ar",
-    "value": "{{if(length(1.location_ar) > 0; 1.location_ar; 1.work_location)}}"
+    "value": "{{ifempty(1.location_ar; 1.work_location)}}"
   },
   // 👆 END OF NEW VARIABLES 👆
   {
@@ -89,15 +89,15 @@ Insert these variables **after** `stored_work_location` in the variables array.
 ### Explanation of Fallback Logic
 
 ```
-{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}
+{{ifempty(1.location_en; 1.work_location)}}
 ```
 
 This formula means:
-- **If** `location_en` exists and has content
-  - **Then** use `location_en`
-  - **Else** use `work_location` as fallback
+- **If** `location_en` is empty or doesn't exist
+  - **Then** use `work_location` as fallback
+  - **Else** use `location_en`
 
-This ensures backward compatibility with contracts that only have `work_location`.
+The `ifempty()` function is Make.com's built-in function that checks if a value is empty and provides a fallback. This ensures backward compatibility with contracts that only have `work_location`.
 
 ---
 
@@ -304,7 +304,7 @@ After making the changes, test with these scenarios:
 ### Problem: Fallback not working
 
 **Check:**
-1. Module 55 formula syntax: `{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}`
+1. Module 55 formula syntax: `{{ifempty(1.location_en; 1.work_location)}}`
 2. Webhook payload includes `work_location` field
 3. Variables are saved correctly in module 55
 
@@ -316,11 +316,11 @@ After making the changes, test with these scenarios:
 ```json
 {
   "name": "stored_location_en",
-  "value": "{{if(length(1.location_en) > 0; 1.location_en; 1.work_location)}}"
+  "value": "{{ifempty(1.location_en; 1.work_location)}}"
 },
 {
   "name": "stored_location_ar",
-  "value": "{{if(length(1.location_ar) > 0; 1.location_ar; 1.work_location)}}"
+  "value": "{{ifempty(1.location_ar; 1.work_location)}}"
 }
 ```
 
