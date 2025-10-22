@@ -53,9 +53,9 @@ export default function ApprovedContractsPage() {
   );
 
   // ✅ FIX: Use useCallback to memoize the fetch function
-  const fetchApprovedContracts = useCallback(async () => {
+  const fetchApprovedContracts = useCallback(async (force = false) => {
     // Prevent multiple simultaneous fetches
-    if (fetchAttemptedRef.current) {
+    if (fetchAttemptedRef.current && !force) {
       console.log('⏸️ Fetch already in progress, skipping...');
       return;
     }
@@ -252,13 +252,14 @@ export default function ApprovedContractsPage() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
+  }, [permissions.isLoading, fetchApprovedContracts]); // ✅ FIX: Only depend on isLoading and fetch function
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    fetchApprovedContracts();
-  }, []);
+    fetchAttemptedRef.current = false; // Reset flag before retry
+    fetchApprovedContracts(true); // Force fetch even if one is in progress
+  }, [fetchApprovedContracts]);
 
   // ✅ FIX: Add cancel function for slow loading
   const handleCancel = useCallback(() => {

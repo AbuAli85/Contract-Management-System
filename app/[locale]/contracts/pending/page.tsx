@@ -57,9 +57,9 @@ function PendingContractsPageContent() {
   );
 
   // ✅ FIX: Use useCallback to memoize the fetch function
-  const fetchPendingContracts = useCallback(async () => {
+  const fetchPendingContracts = useCallback(async (force = false) => {
     // Prevent multiple simultaneous fetches
-    if (fetchAttemptedRef.current) {
+    if (fetchAttemptedRef.current && !force) {
       console.log('⏸️ Fetch already in progress, skipping...');
       return;
     }
@@ -283,13 +283,14 @@ function PendingContractsPageContent() {
         abortControllerRef.current.abort();
       }
     };
-  }, [permissions.isLoading, hasPermission, permissions.isAdmin]);
+  }, [permissions.isLoading, fetchPendingContracts]); // ✅ FIX: Only depend on isLoading and fetch function
 
   // ✅ FIX: Add manual retry function
   const handleRetry = useCallback(() => {
     setRetryCount(prev => prev + 1);
-    fetchPendingContracts();
-  }, []);
+    fetchAttemptedRef.current = false; // Reset flag before retry
+    fetchPendingContracts(true); // Force fetch even if one is in progress
+  }, [fetchPendingContracts]);
 
   // ✅ FIX: Add cancel function for slow loading
   const handleCancel = useCallback(() => {
