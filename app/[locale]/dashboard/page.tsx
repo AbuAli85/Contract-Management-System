@@ -39,10 +39,18 @@ interface DashboardStats {
   scope: 'system-wide' | 'user-specific';
 }
 
+interface PromoterStats {
+  total: number;
+  active: number;
+  onAssignments: number;
+  available: number;
+}
+
 function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [promoterStats, setPromoterStats] = useState<PromoterStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const router = useRouter();
 
@@ -119,10 +127,11 @@ function DashboardContent() {
     const fetchDashboardStats = async () => {
       try {
         setStatsLoading(true);
-        const response = await fetch('/api/metrics/contracts');
         
-        if (response.ok) {
-          const data = await response.json();
+        // Fetch contract metrics
+        const contractsResponse = await fetch('/api/metrics/contracts');
+        if (contractsResponse.ok) {
+          const data = await contractsResponse.json();
           if (data.success && data.metrics) {
             setStats({
               totalContracts: data.metrics.total,
@@ -131,8 +140,20 @@ function DashboardContent() {
               scope: data.scope,
             });
           }
-        } else {
-          console.error('Failed to fetch dashboard stats');
+        }
+
+        // Fetch promoter metrics
+        const promotersResponse = await fetch('/api/dashboard/promoter-metrics');
+        if (promotersResponse.ok) {
+          const data = await promotersResponse.json();
+          if (data.success && data.metrics) {
+            setPromoterStats({
+              total: data.metrics.total,
+              active: data.metrics.active,
+              onAssignments: data.metrics.onAssignments || 0,
+              available: data.metrics.available || data.metrics.active,
+            });
+          }
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -245,7 +266,7 @@ function DashboardContent() {
               <CardTitle className='text-sm font-medium'>
                 Active Contracts
               </CardTitle>
-              <FileText className='h-4 w-4 text-muted-foreground' />
+              <TrendingUp className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
               {statsLoading ? (
@@ -259,7 +280,7 @@ function DashboardContent() {
                     {stats?.activeContracts ?? 0}
                   </div>
                   <p className='text-xs text-muted-foreground'>
-                    Currently active
+                    Currently in force
                   </p>
                 </>
               )}
@@ -269,9 +290,9 @@ function DashboardContent() {
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Pending Contracts
+                Total Promoters
               </CardTitle>
-              <TrendingUp className='h-4 w-4 text-muted-foreground' />
+              <Users className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
               {statsLoading ? (
@@ -282,10 +303,10 @@ function DashboardContent() {
               ) : (
                 <>
                   <div className='text-2xl font-bold'>
-                    {stats?.pendingContracts ?? 0}
+                    {promoterStats?.total ?? 0}
                   </div>
                   <p className='text-xs text-muted-foreground'>
-                    Awaiting approval
+                    {promoterStats?.active ?? 0} active in system
                   </p>
                 </>
               )}
@@ -295,16 +316,26 @@ function DashboardContent() {
           <Card>
             <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
               <CardTitle className='text-sm font-medium'>
-                Quick Actions
+                Promoters Working
               </CardTitle>
               <Users className='h-4 w-4 text-muted-foreground' />
             </CardHeader>
             <CardContent>
-              <div className='text-2xl font-bold'>
-                <Button size='sm' asChild className='w-full'>
-                  <Link href='/en/contracts/new'>Create Contract</Link>
-                </Button>
-              </div>
+              {statsLoading ? (
+                <div className='flex items-center space-x-2'>
+                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
+                  <span className='text-sm text-muted-foreground'>Loading...</span>
+                </div>
+              ) : (
+                <>
+                  <div className='text-2xl font-bold'>
+                    {promoterStats?.onAssignments ?? 0}
+                  </div>
+                  <p className='text-xs text-muted-foreground'>
+                    On active assignments
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
