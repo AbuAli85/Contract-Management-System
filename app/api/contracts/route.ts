@@ -263,6 +263,15 @@ export const GET = withRBAC('contract:read:own', async (request: NextRequest) =>
           console.warn(`⚠️ Promoter data not found for contract ${contract.id} with promoter_id ${contract.promoter_id}`);
         }
 
+        // Debug: Log promoter data for first few contracts
+        if (contracts.indexOf(contract) < 3) {
+          console.log(`🔍 Contract ${contract.contract_number}:`, {
+            promoter_id: contract.promoter_id,
+            promoter_data: promoter,
+            has_promoter: !!promoter
+          });
+        }
+
         return {
           ...contract,
           first_party: firstParty,

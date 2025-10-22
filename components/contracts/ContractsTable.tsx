@@ -431,45 +431,39 @@ const ContractsTable = React.memo(({ className }: ContractsTableProps) => {
     setError(null);
 
     try {
-      const supabase = createClient();
-      if (!supabase) {
-        throw new Error('Failed to initialize Supabase client');
+      // Use the API endpoint that includes proper promoter relationships
+      const response = await fetch('/api/contracts');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const { data, error } = await supabase
-        .from('contracts')
-        .select(
-          `
-    *,
-    employer:parties!contracts_employer_id_fkey (name_en, name_ar, crn),
-    client:parties!contracts_client_id_fkey (name_en, name_ar, crn),
-    promoter_id
-  `
-        )
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch contracts');
+      }
 
       setContracts(
-        (data || []).map((contract: any) => ({
+        (data.data || []).map((contract: any) => ({
           id: contract.id || '',
           contract_number: contract.contract_number || '',
           employer_id: contract.employer_id || '',
           client_id: contract.client_id || '',
           promoter_id: contract.promoter_id || '',
-          employer_name_en: contract.employer?.name_en || '',
-          employer_name_ar: contract.employer?.name_ar || '',
-          employer_crn: contract.employer?.crn || '',
-          client_name_en: contract.client?.name_en || '',
-          client_name_ar: contract.client?.name_ar || '',
-          client_crn: contract.client?.crn || '',
-          promoter_name_en: contract.promoter?.name_en || '',
-          promoter_name_ar: contract.promoter?.name_ar || '',
+          employer_name_en: contract.first_party?.name_en || contract.client?.name_en || '',
+          employer_name_ar: contract.first_party?.name_ar || contract.client?.name_ar || '',
+          employer_crn: contract.first_party?.crn || contract.client?.crn || '',
+          client_name_en: contract.second_party?.name_en || contract.employer?.name_en || '',
+          client_name_ar: contract.second_party?.name_ar || contract.employer?.name_ar || '',
+          client_crn: contract.second_party?.crn || contract.employer?.crn || '',
+          promoter_name_en: contract.promoters?.name_en || '',
+          promoter_name_ar: contract.promoters?.name_ar || '',
           email: contract.email || '',
-          job_title: contract.job_title || '',
+          job_title: contract.job_title || contract.title || '',
           work_location: contract.work_location || '',
-          start_date: contract.start_date || '',
-          end_date: contract.end_date || '',
-          value: contract.value ?? 0,
+          start_date: contract.start_date || contract.contract_start_date || '',
+          end_date: contract.end_date || contract.contract_end_date || '',
+          value: contract.contract_value || contract.value || contract.basic_salary || contract.amount || 0,
           status: contract.status || '',
           is_current: contract.is_current ?? false,
           created_at: contract.created_at || '',

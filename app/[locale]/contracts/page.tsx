@@ -277,6 +277,17 @@ function ContractsContent() {
   // Use totalContracts (actual DB count) not total (paginated results length)
   const totalCount = contractsData?.totalContracts || 0;
 
+  // Debug: Log contract data to see promoter information
+  if (contracts.length > 0 && contracts[0]) {
+    console.log('🔍 Frontend - Sample contract data:', {
+      contract_id: contracts[0].id,
+      contract_number: contracts[0].contract_number,
+      promoter_id: contracts[0].promoter_id,
+      promoters: contracts[0].promoters,
+      has_promoter_data: !!contracts[0].promoters
+    });
+  }
+
   // All hooks must be called at the top level, before any conditional returns
   const deleteContractMutation = useDeleteContractMutationQuery();
   const { toast } = useToast();
