@@ -307,12 +307,16 @@ async function handleGET(request: Request) {
         // Count contracts for each party
         contractData.forEach((contract: any) => {
           // Check all possible foreign key columns
+          // Convert all IDs to strings for consistent comparison (handles TEXT vs UUID)
           const partyIdFields = [
             contract.employer_id,
             contract.client_id,
             contract.first_party_id,
             contract.second_party_id,
-          ].filter(id => id && partyIds.includes(id));
+          ]
+            .filter(id => id != null) // Filter out null/undefined
+            .map(id => String(id)) // Convert to string for safe comparison
+            .filter(id => partyIds.includes(id)); // Check if in current batch
           
           // Count unique party involvements
           const uniquePartyIds = [...new Set(partyIdFields)];
