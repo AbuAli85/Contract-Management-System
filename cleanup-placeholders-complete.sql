@@ -1,9 +1,23 @@
 -- Complete cleanup script: Remove placeholder parties safely
 -- Run this entire script in your Supabase SQL Editor
--- Simple approach: Update contracts first, then delete parties
+-- Strategy: Drop custom triggers, update, delete, recreate triggers
 
 -- ============================================================
--- STEP 1: Check current state
+-- STEP 1: Drop custom triggers temporarily (not system triggers)
+-- ============================================================
+
+SELECT 
+  '🔧 Temporarily dropping custom triggers...' as status;
+
+DROP TRIGGER IF EXISTS sync_contract_party_ids_trigger ON contracts CASCADE;
+DROP TRIGGER IF EXISTS sync_contract_parties_trigger ON contracts CASCADE;
+DROP TRIGGER IF EXISTS sync_contract_party_columns_trigger ON contracts CASCADE;
+
+SELECT 
+  '✅ Custom triggers dropped' as status;
+
+-- ============================================================
+-- STEP 2: Check current state
 -- ============================================================
 
 SELECT 
@@ -23,54 +37,40 @@ WHERE
   OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
 
 -- ============================================================
--- STEP 2: Show affected contracts before update
--- ============================================================
-
-SELECT 
-  '📋 Affected Contracts (will be nullified):' as info;
-
-SELECT 
-  contract_number,
-  title,
-  status,
-  CASE WHEN employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as employer_is_placeholder,
-  CASE WHEN client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as client_is_placeholder,
-  CASE WHEN first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as first_party_is_placeholder,
-  CASE WHEN second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as second_party_is_placeholder
-FROM contracts
-WHERE 
-  employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
-  OR client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
-  OR first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
-  OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
-LIMIT 10;
-
--- ============================================================
 -- STEP 3: Update contracts - NULL out placeholder references
 -- ============================================================
 
 SELECT 
   '🔧 Nullifying placeholder references in contracts...' as status;
 
--- Update employer_id
+-- Update all at once
 UPDATE contracts
-SET employer_id = NULL
-WHERE employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
-
--- Update client_id
-UPDATE contracts
-SET client_id = NULL
-WHERE client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
-
--- Update first_party_id
-UPDATE contracts
-SET first_party_id = NULL
-WHERE first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
-
--- Update second_party_id
-UPDATE contracts
-SET second_party_id = NULL
-WHERE second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+SET 
+  employer_id = CASE 
+    WHEN employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') 
+    THEN NULL 
+    ELSE employer_id 
+  END,
+  client_id = CASE 
+    WHEN client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') 
+    THEN NULL 
+    ELSE client_id 
+  END,
+  first_party_id = CASE 
+    WHEN first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') 
+    THEN NULL 
+    ELSE first_party_id 
+  END,
+  second_party_id = CASE 
+    WHEN second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') 
+    THEN NULL 
+    ELSE second_party_id 
+  END
+WHERE 
+  employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
+  OR client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
+  OR first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
+  OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
 
 SELECT 
   '✅ Contract references nullified' as status;
@@ -92,7 +92,43 @@ SELECT
   '✅ Placeholders deleted' as status;
 
 -- ============================================================
--- STEP 5: Verification & Final Status
+-- STEP 5: Recreate the trigger
+-- ============================================================
+
+SELECT 
+  '🔧 Recreating sync trigger...' as status;
+
+CREATE OR REPLACE FUNCTION sync_contract_party_ids()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Sync first_party_id and employer_id (both UUID)
+  IF NEW.first_party_id IS NOT NULL AND NEW.employer_id IS NULL THEN
+    NEW.employer_id = NEW.first_party_id;
+  ELSIF NEW.employer_id IS NOT NULL AND NEW.first_party_id IS NULL THEN
+    NEW.first_party_id = NEW.employer_id;
+  END IF;
+  
+  -- Sync second_party_id and client_id (both UUID)
+  IF NEW.second_party_id IS NOT NULL AND NEW.client_id IS NULL THEN
+    NEW.client_id = NEW.second_party_id;
+  ELSIF NEW.client_id IS NOT NULL AND NEW.second_party_id IS NULL THEN
+    NEW.second_party_id = NEW.client_id;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER sync_contract_party_ids_trigger
+  BEFORE INSERT OR UPDATE ON contracts
+  FOR EACH ROW
+  EXECUTE FUNCTION sync_contract_party_ids();
+
+SELECT 
+  '✅ Trigger recreated' as status;
+
+-- ============================================================
+-- STEP 6: Verification & Final Status
 -- ============================================================
 
 SELECT 
@@ -141,7 +177,7 @@ SELECT
   '─────────────────────────────────────' as divider;
 
 SELECT 
-  'Contracts Without Parties' as metric,
+  'Contracts Without ANY Parties' as metric,
   COUNT(*) as count,
   CASE WHEN COUNT(*) = 0 THEN '✅ ALL ASSIGNED' ELSE '⚠️ NEEDS REVIEW' END as status
 FROM contracts
@@ -159,3 +195,28 @@ SELECT
 
 SELECT 
   '═══════════════════════════════════════' as divider;
+
+-- Show top parties with contract counts as final verification
+SELECT 
+  '📊 Top 5 Parties (Verification):' as info;
+
+WITH party_counts AS (
+  SELECT 
+    p.name_en,
+    COUNT(DISTINCT c.id) as total_contracts
+  FROM parties p
+  LEFT JOIN contracts c ON (
+    c.employer_id = p.id OR 
+    c.client_id = p.id OR 
+    c.first_party_id = p.id OR 
+    c.second_party_id = p.id
+  )
+  GROUP BY p.id, p.name_en
+)
+SELECT 
+  name_en,
+  total_contracts
+FROM party_counts
+WHERE total_contracts > 0
+ORDER BY total_contracts DESC
+LIMIT 5;
