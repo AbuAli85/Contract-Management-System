@@ -32,6 +32,7 @@ import { PromotersEmptyState } from './promoters-empty-state';
 import { PromotersTimeoutState } from './promoters-timeout-state';
 import { MetricsCardsSkeleton } from './metric-card-skeleton';
 import { RefreshIndicator } from './promoters-refresh-indicator';
+import { PromotersStatsCharts } from './promoters-stats-charts';
 
 interface PromotersResponse {
   success: boolean;
@@ -1136,6 +1137,17 @@ export function EnhancedPromotersViewRefactored({
           />
         )}
       </section>
+
+      {/* Data Insights & Charts */}
+      {!isLoading && dashboardPromoters.length > 0 && (
+        <section aria-labelledby='insights-heading' className='mt-6'>
+          <h2 id='insights-heading' className='sr-only'>Data Insights and Analytics</h2>
+          <PromotersStatsCharts 
+            metrics={metrics} 
+            promoters={dashboardPromoters}
+          />
+        </section>
+      )}
       
       {/* Refresh Indicator */}
       <RefreshIndicator isFetching={isFetching && !isLoading} showFloating={true} />

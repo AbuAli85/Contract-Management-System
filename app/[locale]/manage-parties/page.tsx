@@ -1183,9 +1183,9 @@ function ManagePartiesContent() {
                                       Loading promoters...
                                     </span>
                                   </div>
-                                ) : promotersByEmployer[party.id]?.length > 0 ? (
+                                ) : promotersByEmployer[party.id] && promotersByEmployer[party.id]!.length > 0 ? (
                                   <div className='grid gap-3 md:grid-cols-2 lg:grid-cols-3'>
-                                    {promotersByEmployer[party.id].map((promoter) => (
+                                    {promotersByEmployer[party.id]!.map((promoter) => (
                                       <Card key={promoter.id} className='border-slate-200 dark:border-slate-700'>
                                         <CardContent className='p-4'>
                                           <div className='flex items-start gap-3'>
