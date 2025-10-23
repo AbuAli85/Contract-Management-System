@@ -90,10 +90,15 @@ export const GET = withRBAC(
         );
       }
 
-      console.log('✅ PDF download authorized, redirecting to:', contract.pdf_url);
+      console.log('✅ PDF download authorized, returning PDF URL:', contract.pdf_url);
 
-      // Redirect to the PDF URL (external service or file storage)
-      return NextResponse.redirect(contract.pdf_url, 302);
+      // Return the PDF URL instead of redirecting to avoid redirect loops
+      return NextResponse.json({
+        success: true,
+        pdf_url: contract.pdf_url,
+        message: 'PDF download authorized',
+        contract_id: contractId,
+      });
     } catch (error) {
       console.error('❌ Error in GET /api/contracts/[id]/pdf/download:', error);
       return NextResponse.json(
