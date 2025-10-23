@@ -2,8 +2,9 @@
 -- Date: 2025-10-23
 -- Issue: first_party_id and second_party_id are TEXT but should be UUID to match parties table
 
--- Step 1: Drop dependent views temporarily
+-- Step 1: Drop all dependent views temporarily
 DROP VIEW IF EXISTS contracts_needing_promoters CASCADE;
+DROP VIEW IF EXISTS contracts_with_converted_values CASCADE;
 
 -- Step 2: Check if columns exist and are TEXT type
 DO $$
@@ -106,7 +107,19 @@ ORDER BY
     END,
     c.created_at DESC;
 
--- Add indexes if they don't exist
+-- Step 4: Recreate the contracts_with_converted_values view with proper UUID types
+CREATE OR REPLACE VIEW contracts_with_converted_values AS
+SELECT 
+    c.*,
+    c.value as original_value,
+    c.currency as original_currency,
+    convert_currency(c.value, c.currency::currency_code, 'USD'::currency_code) as value_usd,
+    convert_currency(c.value, c.currency::currency_code, 'OMR'::currency_code) as value_omr,
+    convert_currency(c.value, c.currency::currency_code, 'SAR'::currency_code) as value_sar,
+    convert_currency(c.value, c.currency::currency_code, 'AED'::currency_code) as value_aed
+FROM contracts c;
+
+-- Step 5: Add indexes if they don't exist
 CREATE INDEX IF NOT EXISTS idx_contracts_first_party_id ON contracts(first_party_id);
 CREATE INDEX IF NOT EXISTS idx_contracts_second_party_id ON contracts(second_party_id);
 
