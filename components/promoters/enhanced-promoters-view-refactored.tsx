@@ -30,6 +30,8 @@ import { PromotersSkeleton } from './promoters-skeleton';
 import { PromotersErrorState } from './promoters-error-state';
 import { PromotersEmptyState } from './promoters-empty-state';
 import { PromotersTimeoutState } from './promoters-timeout-state';
+import { MetricsCardsSkeleton } from './metric-card-skeleton';
+import { RefreshIndicator } from './promoters-refresh-indicator';
 
 interface PromotersResponse {
   success: boolean;
@@ -1124,12 +1126,19 @@ export function EnhancedPromotersViewRefactored({
       {/* Enhanced Metrics */}
       <section aria-labelledby='metrics-heading'>
         <h2 id='metrics-heading' className='sr-only'>Promoter Statistics</h2>
-        <PromotersMetricsCards 
-          metrics={metrics} 
-          onCardClick={handleMetricCardClick}
-          activeFilter={activeMetricFilter}
-        />
+        {isLoading ? (
+          <MetricsCardsSkeleton />
+        ) : (
+          <PromotersMetricsCards 
+            metrics={metrics} 
+            onCardClick={handleMetricCardClick}
+            activeFilter={activeMetricFilter}
+          />
+        )}
       </section>
+      
+      {/* Refresh Indicator */}
+      <RefreshIndicator isFetching={isFetching && !isLoading} showFloating={true} />
 
       {/* Enhanced Filters */}
       <section aria-labelledby='filters-heading'>
