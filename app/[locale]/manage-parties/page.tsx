@@ -159,6 +159,8 @@ const safeDifferenceInDays = (dateString: string | null | undefined, compareDate
 
 interface PartyWithContractCount extends Party {
   contract_count?: number;
+  total_contracts?: number;
+  active_contracts?: number;
 }
 
 // Enhanced Party interface
@@ -169,6 +171,8 @@ interface EnhancedParty extends Party {
   days_until_cr_expiry?: number | undefined;
   days_until_license_expiry?: number | undefined;
   contract_count?: number | undefined;
+  total_contracts?: number;
+  active_contracts?: number;
 }
 
 // Statistics interface
@@ -406,7 +410,7 @@ function ManagePartiesContent() {
       overall_status: getOverallStatus(party),
       days_until_cr_expiry: crExpiryDays ?? undefined,
       days_until_license_expiry: licenseExpiryDays ?? undefined,
-      contract_count: 0, // Will be calculated separately
+      contract_count: party.total_contracts || 0, // Use total_contracts from API
     };
   };
 

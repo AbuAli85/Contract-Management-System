@@ -20,6 +20,8 @@ export interface Party {
   email?: string | null;
   phone?: string | null;
   address?: string | null;
+  total_contracts?: number;
+  active_contracts?: number;
 }
 
 export interface Promoter {
