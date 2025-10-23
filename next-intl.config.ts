@@ -34,8 +34,8 @@ export const routing = defineRouting({
 export const { Link, redirect, usePathname, useRouter } =
   createNavigation(routing);
 
-// Export the request configuration as a named export
-export const getRequestConfig = createRequestConfig(async ({ requestLocale }) => {
+// Export the request configuration as a default export (required by next-intl)
+export default createRequestConfig(async ({ requestLocale }) => {
   try {
     const locale = await requestLocale;
 
