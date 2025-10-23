@@ -1,0 +1,42 @@
+fix: Resolve contract counting issue showing 0 for all parties
+
+PROBLEM:
+- Manage Parties page displayed 0 contracts for all 18 parties
+- 219 contracts exist in database but weren't being counted
+- Root cause: API returned hardcoded zeros instead of querying database
+
+SOLUTION:
+1. Updated /api/parties API to calculate actual contract counts
+   - Queries contracts table for all foreign key relationships
+   - Checks employer_id, client_id, first_party_id, second_party_id
+   - Counts unique party involvements (handles dual roles)
+   - Distinguishes total vs active contracts
+
+2. Updated Manage Parties page to use API contract counts
+   - Modified enhanceParty function to use total_contracts field
+   - Updated TypeScript interfaces to support new fields
+
+3. Updated Party type definition to include contract count fields
+   - Added total_contracts and active_contracts to global Party interface
+
+TECHNICAL DETAILS:
+- Handles NULL foreign key values gracefully
+- Parties can appear in multiple roles (employer/client)
+- Active contracts = status in ['active', 'pending', 'approved']
+- Added performance tracking (~100-200ms query time)
+
+FILES MODIFIED:
+- app/api/parties/route.ts
+- app/[locale]/manage-parties/page.tsx
+- lib/types.ts
+
+TESTING:
+✅ Build successful (npm run build)
+✅ No linter errors
+✅ TypeScript compilation clean
+
+EXPECTED RESULT:
+- Manage Parties now shows accurate contract counts
+- Example: "Amjad Al Maerifa LLC: 73 contracts"
+- Total contracts across parties matches database
+
