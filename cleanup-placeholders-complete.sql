@@ -1,23 +1,13 @@
 -- Complete cleanup script: Remove placeholder parties safely
 -- Run this entire script in your Supabase SQL Editor
+-- Simple approach: Update contracts first, then delete parties
 
 -- ============================================================
--- STEP 1: Temporarily disable triggers during cleanup
--- ============================================================
-
-SELECT 
-  '🔧 Disabling triggers for cleanup...' as status;
-
--- Disable the sync triggers temporarily
-ALTER TABLE contracts DISABLE TRIGGER sync_contract_party_ids_trigger;
-ALTER TABLE contracts DISABLE TRIGGER ALL; -- Disable all triggers temporarily
-
--- ============================================================
--- STEP 2: Check contracts referencing placeholder parties
+-- STEP 1: Check current state
 -- ============================================================
 
 SELECT 
-  '⚠️ Checking for contracts using placeholder parties...' as status;
+  '🔍 Checking for contracts using placeholder parties...' as status;
 
 SELECT 
   COUNT(*) as total_contracts_with_placeholders,
@@ -33,33 +23,57 @@ WHERE
   OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
 
 -- ============================================================
--- STEP 3: Update contracts to remove placeholder references
+-- STEP 2: Show affected contracts before update
 -- ============================================================
 
 SELECT 
-  '🔧 Removing placeholder references from contracts...' as status;
+  '📋 Affected Contracts (will be nullified):' as info;
 
--- Set placeholder references to NULL (triggers are disabled)
-UPDATE contracts
-SET 
-  employer_id = CASE WHEN employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN NULL ELSE employer_id END,
-  client_id = CASE WHEN client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN NULL ELSE client_id END,
-  first_party_id = CASE WHEN first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN NULL ELSE first_party_id END,
-  second_party_id = CASE WHEN second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN NULL ELSE second_party_id END
+SELECT 
+  contract_number,
+  title,
+  status,
+  CASE WHEN employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as employer_is_placeholder,
+  CASE WHEN client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as client_is_placeholder,
+  CASE WHEN first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as first_party_is_placeholder,
+  CASE WHEN second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002') THEN 'YES' ELSE '-' END as second_party_is_placeholder
+FROM contracts
 WHERE 
   employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
   OR client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
   OR first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
-  OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+  OR second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002')
+LIMIT 10;
 
--- Show how many contracts were updated
-SELECT 
-  '📊 Update Results' as section;
+-- ============================================================
+-- STEP 3: Update contracts - NULL out placeholder references
+-- ============================================================
 
 SELECT 
-  'Contracts Updated' as metric,
-  (SELECT pg_typeof(employer_id)::text FROM contracts LIMIT 1) as employer_id_type,
-  (SELECT pg_typeof(first_party_id)::text FROM contracts LIMIT 1) as first_party_id_type;
+  '🔧 Nullifying placeholder references in contracts...' as status;
+
+-- Update employer_id
+UPDATE contracts
+SET employer_id = NULL
+WHERE employer_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+
+-- Update client_id
+UPDATE contracts
+SET client_id = NULL
+WHERE client_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+
+-- Update first_party_id
+UPDATE contracts
+SET first_party_id = NULL
+WHERE first_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+
+-- Update second_party_id
+UPDATE contracts
+SET second_party_id = NULL
+WHERE second_party_id IN ('00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002');
+
+SELECT 
+  '✅ Contract references nullified' as status;
 
 -- ============================================================
 -- STEP 4: Delete placeholder parties
@@ -74,27 +88,27 @@ WHERE id IN (
   '00000000-0000-0000-0000-000000000002'   -- Placeholder Employer
 );
 
+SELECT 
+  '✅ Placeholders deleted' as status;
+
 -- ============================================================
--- STEP 5: Re-enable triggers
+-- STEP 5: Verification & Final Status
 -- ============================================================
 
 SELECT 
-  '✅ Re-enabling triggers...' as status;
-
--- Re-enable all triggers
-ALTER TABLE contracts ENABLE TRIGGER ALL;
-
--- ============================================================
--- STEP 6: Verification
--- ============================================================
+  '═══════════════════════════════════════' as divider;
 
 SELECT 
-  '✅ CLEANUP VERIFICATION' as section;
+  '✅ CLEANUP VERIFICATION RESULTS' as section;
+
+SELECT 
+  '═══════════════════════════════════════' as divider;
 
 -- Check for any remaining placeholders
 SELECT 
-  'Remaining Placeholders' as metric,
-  COUNT(*) as count
+  'Remaining Placeholder Parties' as metric,
+  COUNT(*) as count,
+  CASE WHEN COUNT(*) = 0 THEN '✅ PASS' ELSE '❌ FAIL' END as status
 FROM parties
 WHERE 
   name_en LIKE 'Placeholder%'
@@ -103,43 +117,45 @@ WHERE
 
 -- Show total party count
 SELECT 
-  'Total Parties After Cleanup' as metric,
-  COUNT(*) as count
+  'Total Real Parties' as metric,
+  COUNT(*) as count,
+  '✅ ACTIVE' as status
 FROM parties;
 
--- Show party count by type
+-- Party distribution by type
 SELECT 
-  '📊 Parties by Type' as section,
-  '─────────────────────' as separator;
+  '─────────────────────────────────────' as divider;
 
 SELECT 
-  COALESCE(type, 'NULL') as type,
+  'Party Distribution by Type:' as info;
+
+SELECT 
+  COALESCE(type, '(NULL)') as party_type,
   COUNT(*) as count
 FROM parties
 GROUP BY type
 ORDER BY count DESC;
 
--- Show contracts without any party assignment (may need manual review)
+-- Contracts without parties (may need manual assignment)
 SELECT 
-  '⚠️ Data Quality Check' as section,
-  '──────────────────────' as separator;
+  '─────────────────────────────────────' as divider;
 
 SELECT 
-  'Contracts Without ANY Party' as metric,
-  COUNT(*) as count
+  'Contracts Without Parties' as metric,
+  COUNT(*) as count,
+  CASE WHEN COUNT(*) = 0 THEN '✅ ALL ASSIGNED' ELSE '⚠️ NEEDS REVIEW' END as status
 FROM contracts
 WHERE employer_id IS NULL 
   AND client_id IS NULL 
   AND first_party_id IS NULL 
   AND second_party_id IS NULL;
 
+-- Final summary
 SELECT 
-  'Contracts Without Promoter' as metric,
-  COUNT(*) as count
-FROM contracts
-WHERE promoter_id IS NULL;
+  '═══════════════════════════════════════' as divider;
 
 SELECT 
-  '✨ CLEANUP COMPLETE!' as final_status,
-  NOW()::text as timestamp;
+  '✨ CLEANUP COMPLETE - ' || NOW()::text as final_status;
 
+SELECT 
+  '═══════════════════════════════════════' as divider;
