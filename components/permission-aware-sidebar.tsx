@@ -150,7 +150,7 @@ export function PermissionAwareSidebar({
       items: [
         {
           href: `/${locale}/generate-contract`,
-          label: 'Simple Contracts',
+          label: 'eXtra Contracts',
           labelAr: 'العقود البسيطة',
           icon: FilePlus,
           permission: 'contract:create',

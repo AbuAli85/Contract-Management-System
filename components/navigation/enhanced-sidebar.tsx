@@ -185,7 +185,7 @@ export function EnhancedSidebar({ className }: EnhancedSidebarProps) {
 
   const adminNavItems = [
     {
-      label: 'Simple Contract Generator',
+      label: 'eXtra Contract Generator',
       href: '/simple-contract',
       icon: '📝',
       permission: 'dashboard.view' as const,

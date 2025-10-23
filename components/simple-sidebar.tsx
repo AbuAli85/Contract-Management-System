@@ -43,7 +43,7 @@ export function SimpleSidebar({ isOpen, onClose }: SimpleSidebarProps) {
       badge: 'NEW',
     },
     {
-      label: 'Simple Contracts',
+      label: 'eXtra Contracts',
       href: '/en/generate-contract',
       icon: FileText,
       description: 'Employment contracts',

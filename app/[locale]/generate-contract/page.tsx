@@ -2,8 +2,7 @@
 
 import { useAuth } from '@/app/providers';
 import { useEnhancedRBAC } from '@/components/auth/enhanced-rbac-provider';
-import SimpleContractGeneratorWithValidation from '@/components/SimpleContractGeneratorWithValidation';
-import LoadingPage from '@/components/LoadingPage';
+import SimpleContractGenerator from '@/components/SimpleContractGenerator';
 
 export default function GenerateContractPage() {
   const { loading } = useAuth();
@@ -12,10 +11,12 @@ export default function GenerateContractPage() {
 
   if (loading || isLoading) {
     return (
-      <LoadingPage
-        message='Loading your dashboard...'
-        subMessage='Please wait while we prepare your workspace'
-      />
+      <div className='flex items-center justify-center min-h-screen'>
+        <div className='text-center'>
+          <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-primary mx-auto mb-4'></div>
+          <p>Loading authentication...</p>
+        </div>
+      </div>
     );
   }
 
@@ -25,7 +26,7 @@ export default function GenerateContractPage() {
         <div className='text-center'>
           <h1 className='text-2xl font-bold mb-4'>Access Denied</h1>
           <p className='text-muted-foreground'>
-            You don't have permission to access contract generation.
+            You don't have permission to access eXtra contract generation.
           </p>
         </div>
       </div>
@@ -34,7 +35,7 @@ export default function GenerateContractPage() {
 
   return (
     <div className='container mx-auto py-6'>
-      <SimpleContractGeneratorWithValidation />
+      <SimpleContractGenerator pageTitle="eXtra Contracts" />
     </div>
   );
 }

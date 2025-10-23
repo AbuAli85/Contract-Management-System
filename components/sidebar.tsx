@@ -140,7 +140,7 @@ function SidebarContent({
           description: 'Overview and analytics',
         },
         {
-          title: 'Simple Contracts',
+          title: 'eXtra Contracts',
           href: '/generate-contract',
           icon: FilePlus,
           description: 'Employment contracts',
